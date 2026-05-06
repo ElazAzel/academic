@@ -15,7 +15,7 @@ const permissions = [
   "quizzes:write",
   "assignments:review",
   "certificates:issue",
-  "payments:manage",
+  "invites:manage",
   "analytics:read",
   "audit:read",
   "settings:manage",

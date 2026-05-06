@@ -2,6 +2,73 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-07 — Удаление Stripe/billing, полные дашборды ролей, доменные типы
+
+Автор/agent: Antigravity (Planning Mode)
+Тип изменения: **breaking** — schema, UI, architecture
+
+### Что сделано
+
+1. **Billing удалён.** Платформа использует invite-доступ (InviteLink + выданные credentials).
+   - Удалены: `PaymentStatus`, `PaymentType` enum, `Payment` model из Prisma schema
+   - Удалены: `STRIPE_*` переменные из `lib/env.ts` и `.env.example`
+   - `server/modules/billing/service.ts` → stub (throws "disabled")
+   - `app/api/v1/payments/checkout/route.ts` → disabled stub
+   - `app/api/v1/webhooks/stripe/route.ts` → disabled stub
+   - `app/admin/payments/page.tsx` → redirect to invite management
+   - Seed: `payments:manage` → `invites:manage`
+
+2. **Доменные типы** — `types/domain.ts`
+   - 30+ TypeScript интерфейсов: CourseSummary, ModuleDetail, LessonDetail, StudentProgress, ContinueLearning, QuizSummary, AssignmentSummary, SubmissionForReview, QuestionFromStudent, RiskItem, CuratorLoad, CohortSummary, CertificateSummary, InviteLinkSummary, DashboardMetric
+   - Enums: RoleKey, CourseStatus, ProgressStatus, EnrollmentStatus, SubmissionStatus, RiskType, RiskSeverity
+   - ROLE_LABELS, RISK_LABELS — локализованные словари
+
+3. **Mock-данные** — `lib/mock-data.ts`
+   - Typed mock данные для всех ролей: курсы, прогресс, вопросы, задания, риски, кураторы, потоки, сертификаты, инвайты
+   - Функции метрик: getStudentMetrics, getCuratorMetrics, getSuperCuratorMetrics, getAdminMetrics, getInstructorMetrics, getObserverMetrics
+
+4. **UI-компоненты** — новые:
+   - `components/ui/avatar.tsx` — инициалы + image
+   - `components/ui/tabs.tsx` — animated tab switcher
+   - `components/ui/table.tsx` — full table suite (Table, TableHeader, TableBody, TableRow, TableHead, TableCell)
+   - `components/ui/skeleton.tsx` — loading placeholder
+   - `components/ui/separator.tsx` — divider
+
+5. **Dashboard widgets** — `components/lms/dashboard-widgets.tsx` полная перезапись:
+   - MetricGrid, ContinueLearningCard, CourseProgressGrid, CourseManageGrid, QuestionsQueue, SubmissionsQueue, RisksList, CuratorLoadTable
+
+6. **Универсальный AppShell** — `components/layout/app-shell.tsx`
+   - Role-based sidebar навигация для 6 ролей
+   - Badge с текущей ролью
+   - Полные меню: student(7), curator(6), super_curator(6), instructor(7), admin(9), customer_observer(4)
+
+7. **Полные дашборды ролей:**
+   - `app/student/page.tsx` — MetricGrid + ContinueLearningCard + табы (Курсы, Ответы куратора, Дедлайны, Уведомления)
+   - `app/curator/page.tsx` — MetricGrid + табы (Вопросы, Задания, Риски)
+   - `app/super-curator/page.tsx` — MetricGrid + табы (Нагрузка кураторов, Потоки, Риски, Нераспределённые)
+   - `app/admin/page.tsx` — MetricGrid + action buttons + табы (Курсы, Потоки, Инвайты, Сертификаты, Аудит)
+   - `app/instructor/page.tsx` — MetricGrid + табы (Мои курсы, Аналитика, Вопросы от кураторов)
+   - `app/customer-observer/page.tsx` — MetricGrid + прогресс потоков + табы (Сертификаты, Отчёты)
+
+### Проверки
+
+- [ ] `npm run typecheck` — нет TS ошибок (TODO: запустить локально)
+- [ ] `npm run build` — production build проходит
+- [ ] Visually verify all 6 dashboards in browser
+
+### Риски
+
+- Breaking: Payment model удалён из schema, нужен `npx prisma migrate dev` для сброса текущей БД
+- Billing API routes — stubs, но файлы остаются для обратной совместимости
+- Все суб-страницы (settings, courses, lessons) всё ещё используют WorkspacePage shell
+
+### Следующие шаги
+
+- Запустить PostgreSQL через Docker, `prisma migrate dev`, `prisma db seed`
+- Заменить mock-данные в дашбордах на server actions с реальной БД
+- Реализовать страницы курсов и уроков для слушателя
+- Добавить instructor course editor
+
 ## 2026-05-07 — Подготовлена публикация проекта в GitHub
 
 Автор/agent: Codex  

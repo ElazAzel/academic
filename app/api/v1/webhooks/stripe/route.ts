@@ -1,13 +1,6 @@
-import { errorResponse, ok } from "@/lib/http";
-import { handleStripeWebhook } from "@/server/modules/billing/service";
+import { errorResponse } from "@/lib/http";
 
-export async function POST(request: Request) {
-  try {
-    const rawBody = await request.text();
-    const signature = request.headers.get("stripe-signature");
-    return ok(await handleStripeWebhook(rawBody, signature));
-  } catch (error) {
-    return errorResponse(error);
-  }
+/** Stripe webhooks are disabled. The platform uses invite-based access. */
+export async function POST() {
+  return errorResponse(new Error("Stripe webhooks are disabled."));
 }
-
