@@ -1,0 +1,21 @@
+openapi: 3.1.0
+info:
+  title: AI Strategic Academy Gateway Contract
+  version: 0.1.0
+paths:
+  /healthz:
+    get:
+      responses:
+        "200":
+          description: Gateway alive
+  /courses:
+    get:
+      responses:
+        "200":
+          description: Aggregated courses
+  /progress/{userId}:
+    get:
+      responses:
+        "200":
+          description: User progress summary
+

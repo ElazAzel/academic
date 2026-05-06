@@ -1,0 +1,20 @@
+{
+  "app.name": "AI Strategic Academy",
+  "nav.login": "Войти",
+  "nav.register": "Регистрация",
+  "dashboard.continue": "Продолжить обучение",
+  "dashboard.myCourses": "Мои курсы",
+  "dashboard.notifications": "Уведомления",
+  "roles.admin": "Администратор",
+  "roles.instructor": "Преподаватель",
+  "roles.student": "Слушатель",
+  "roles.curator": "Куратор",
+  "roles.super_curator": "Супер-куратор",
+  "roles.customer_observer": "Заказчик / наблюдатель",
+  "status.draft": "Черновик",
+  "status.published": "Опубликован",
+  "status.archived": "Архивирован",
+  "empty.noCourses": "Пока нет назначенных курсов",
+  "empty.noNotifications": "Новых уведомлений нет"
+}
+

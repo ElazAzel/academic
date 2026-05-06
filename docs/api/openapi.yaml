@@ -1,0 +1,196 @@
+openapi: 3.1.0
+info:
+  title: AI Strategic Academy API
+  version: 0.1.0
+  description: REST API for the closed academy LMS.
+servers:
+  - url: http://localhost:3000/api/v1
+paths:
+  /healthz:
+    get:
+      summary: Liveness check
+      responses:
+        "200":
+          description: Service is alive
+  /readyz:
+    get:
+      summary: Readiness check
+      responses:
+        "200":
+          description: Database and runtime are ready
+  /auth/register:
+    post:
+      summary: Register email/password account
+      responses:
+        "201":
+          description: User created
+  /auth/forgot-password:
+    post:
+      summary: Request password reset
+      responses:
+        "200":
+          description: Reset event accepted
+  /auth/reset-password:
+    post:
+      summary: Reset password with token
+      responses:
+        "200":
+          description: Password reset
+  /auth/verify-email:
+    post:
+      summary: Verify email token
+      responses:
+        "200":
+          description: Email verified
+  /me:
+    get:
+      summary: Current profile
+      responses:
+        "200":
+          description: Profile
+  /courses:
+    get:
+      summary: List courses
+      responses:
+        "200":
+          description: Courses
+    post:
+      summary: Create course
+      responses:
+        "201":
+          description: Course created
+  /courses/{courseId}:
+    get:
+      summary: Get course
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Course
+    patch:
+      summary: Update course
+      responses:
+        "200":
+          description: Course updated
+  /courses/{courseId}/modules:
+    post:
+      summary: Create module
+      responses:
+        "201":
+          description: Module created
+  /modules/{moduleId}/lessons:
+    post:
+      summary: Create lesson
+      responses:
+        "201":
+          description: Lesson created
+  /lessons/{lessonId}:
+    get:
+      summary: Get lesson
+      responses:
+        "200":
+          description: Lesson
+  /enrollments:
+    get:
+      summary: List enrollments
+      responses:
+        "200":
+          description: Enrollments
+    post:
+      summary: Enroll student
+      responses:
+        "201":
+          description: Enrollment created
+  /quizzes:
+    get:
+      summary: List quizzes
+      responses:
+        "200":
+          description: Quizzes
+  /quizzes/{quizId}/attempts:
+    post:
+      summary: Submit quiz attempt
+      responses:
+        "201":
+          description: Attempt graded
+  /assignments:
+    get:
+      summary: List assignments
+      responses:
+        "200":
+          description: Assignments
+  /assignments/{assignmentId}/submissions:
+    post:
+      summary: Submit homework
+      responses:
+        "201":
+          description: Submission created
+  /progress:
+    get:
+      summary: Get progress
+      responses:
+        "200":
+          description: Progress snapshot
+    post:
+      summary: Mark lesson progress
+      responses:
+        "200":
+          description: Progress updated
+  /certificates:
+    get:
+      summary: List certificates
+      responses:
+        "200":
+          description: Certificates
+    post:
+      summary: Issue certificate
+      responses:
+        "201":
+          description: Certificate issued
+  /payments/checkout:
+    post:
+      summary: Create Stripe Checkout Session
+      responses:
+        "201":
+          description: Checkout URL
+  /webhooks/stripe:
+    post:
+      summary: Verified Stripe webhook
+      responses:
+        "200":
+          description: Event handled
+  /analytics:
+    get:
+      summary: Admin analytics overview
+      responses:
+        "200":
+          description: Metrics
+  /audit-logs:
+    get:
+      summary: Audit logs
+      responses:
+        "200":
+          description: Audit events
+  /notifications:
+    get:
+      summary: Notification center
+      responses:
+        "200":
+          description: Notifications
+  /search:
+    get:
+      summary: Search courses, lessons, users
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search result
+

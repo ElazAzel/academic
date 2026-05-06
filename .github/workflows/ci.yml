@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: academy
+          POSTGRES_PASSWORD: academy
+          POSTGRES_DB: academy
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U academy -d academy"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://academy:academy@localhost:5432/academy?schema=public
+      NEXTAUTH_SECRET: ci-secret-ci-secret-ci-secret-ci-secret
+      NEXTAUTH_URL: http://localhost:3000
+      APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+

@@ -1,0 +1,100 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum RoleKey {
+  admin
+  instructor
+  student
+  curator
+  super_curator
+  customer_observer
+}
+
+type User {
+  id: ID!
+  email: String!
+  name: String
+  roles: [RoleKey!]!
+}
+
+type Course {
+  id: ID!
+  slug: String!
+  title: String!
+  description: String!
+  status: CourseStatus!
+  modules: [Module!]!
+}
+
+type Module {
+  id: ID!
+  title: String!
+  order: Int!
+  lessons: [Lesson!]!
+}
+
+type Lesson {
+  id: ID!
+  title: String!
+  order: Int!
+  type: String!
+}
+
+type Enrollment {
+  id: ID!
+  user: User!
+  course: Course!
+  status: String!
+}
+
+type Query {
+  me: User
+  courses(status: CourseStatus): [Course!]!
+  course(id: ID, slug: String): Course
+  enrollments(userId: ID): [Enrollment!]!
+  search(query: String!): SearchResult!
+}
+
+type SearchResult {
+  courses: [Course!]!
+  lessons: [Lesson!]!
+  users: [User!]!
+}
+
+input CreateCourseInput {
+  title: String!
+  description: String!
+  goal: String
+  durationHours: Int
+}
+
+input SubmitQuizAttemptInput {
+  quizId: ID!
+  answers: JSON!
+}
+
+scalar JSON
+
+type QuizAttemptResult {
+  id: ID!
+  score: Float!
+  passed: Boolean!
+}
+
+type Mutation {
+  createCourse(input: CreateCourseInput!): Course!
+  publishCourse(id: ID!): Course!
+  enrollStudent(courseId: ID!, userId: ID!, cohortId: ID): Enrollment!
+  submitQuizAttempt(input: SubmitQuizAttemptInput!): QuizAttemptResult!
+}
+
+# Resolver stubs live in server/graphql/resolvers.ts.
+
