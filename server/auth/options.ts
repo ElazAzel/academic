@@ -11,8 +11,9 @@ const prisma = getPrisma();
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
+  secret: env.NEXTAUTH_SECRET,
   session: {
-    strategy: "database"
+    strategy: "jwt"
   },
   pages: {
     signIn: "/login"
@@ -64,17 +65,25 @@ export const authOptions: AuthOptions = {
     })
   ],
   callbacks: {
-    async session({ session, user }) {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        include: { roles: { include: { role: true } } }
-      });
-      if (session.user && dbUser) {
-        session.user.id = dbUser.id;
-        session.user.email = dbUser.email;
-        session.user.name = dbUser.name;
-        session.user.image = dbUser.image;
-        session.user.roles = dbUser.roles.map((entry) => entry.role.key);
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token?.id && typeof token.id === "string") {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          include: { roles: { include: { role: true } } }
+        });
+        if (session.user && dbUser) {
+          session.user.id = dbUser.id;
+          session.user.email = dbUser.email;
+          session.user.name = dbUser.name;
+          session.user.image = dbUser.image;
+          session.user.roles = dbUser.roles.map((entry) => entry.role.key);
+        }
       }
       return session;
     }
