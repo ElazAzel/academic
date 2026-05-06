@@ -14,6 +14,7 @@
 - Созданы доменные server modules для auth/RBAC, courses, enrollments, quizzes, assignments, progress, certificates, billing, analytics, notifications, search, audit.
 - Созданы docs, OpenAPI, GraphQL schema, Prisma schema, seed, tests, Docker/Compose/K8s/CI templates.
 - Проверки bootstrap: `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run test`, `npm.cmd run build` проходили успешно.
+- Git remote нормализован до `origin`, удалённый initial commit `ElazAzel/academic` с `LICENSE` объединён с локальной историей без force-push.
 - Docker runtime не проверялся локально, потому что Docker CLI в среде не обнаружен.
 
 ## Правило обновления проекта
@@ -64,6 +65,7 @@
 | Security | Security doc, RBAC, webhook verification, env examples | done | `docs/security.md` и server guards существуют |
 | Security | Rate limiting with Redis and privacy workflows | planned | Distributed limiter, export/delete PII process |
 | DevOps | Docker, Compose, K8s, CI templates | done | Infra files созданы |
+| DevOps | GitHub remote/upstream для `ElazAzel/academic` | in_progress | Remote переименован в `origin`, remote `LICENSE` смержен; финальный `git push -u origin main` выполняется отдельно |
 | DevOps | Реальный deployment validation | planned | Vercel/Docker/K8s smoke checks documented |
 | UI | Light Russian LMS shell and role pages | done | Pages build in production |
 | UI | Data-connected role dashboards | planned | Pages consume API via server actions/hooks |

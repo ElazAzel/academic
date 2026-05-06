@@ -2,6 +2,40 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-07 — Подготовлена публикация проекта в GitHub
+
+Автор/agent: Codex  
+Тип изменения: repository operations / documentation  
+Файлы/модули:
+
+- `LICENSE`
+- `.git/config`
+- `docs/updates.md`
+- `docs/implementation-plan.md`
+
+Summary:
+
+- Remote `Academic` переименован в стандартный `origin` для корректной работы git tooling и cloud task diff.
+- Удалённая ветка `main` из `https://github.com/ElazAzel/academic` подтянута локально.
+- Initial commit удалённого репозитория с `LICENSE` объединён с локальной историей через merge без force-push.
+- Локальный проект подготовлен к публикации в `origin/main`.
+
+Проверки:
+
+- `git status --short --branch` показал чистую ветку `main` перед операцией.
+- `git fetch origin main` прошёл успешно.
+- `git merge FETCH_HEAD --allow-unrelated-histories --no-edit` прошёл успешно и добавил `LICENSE`.
+
+Риски:
+
+- Истории локального проекта и удалённого initial commit были unrelated; решено через обычный merge, чтобы сохранить удалённый `LICENSE`.
+- Push зависит от доступной GitHub-аутентификации в локальном окружении.
+
+Next steps:
+
+- Выполнить `git push -u origin main`.
+- После успешной публикации использовать `origin/main` как upstream для дальнейших задач и cloud diff.
+
 ## 2026-05-07 — Добавлены auth UI flow и публичная проверка сертификатов
 
 Автор/agent: Codex  
