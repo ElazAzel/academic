@@ -58,15 +58,15 @@
 8. **Документация** — `docs/QUICKSTART.md`
    - Docker setup, Prisma migrate, seed, тестовые аккаунты
 
-### Файлы (новые): 14 файлов
-### Файлы (перезаписаны): 3 файла
+**Файлы (новые)**: 14 файлов
+**Файлы (перезаписаны)**: 3 файла
 
 ## 2026-05-07 — Удаление Stripe/billing, полные дашборды ролей, доменные типы
 
 Автор/agent: Antigravity (Planning Mode)
 Тип изменения: **breaking** — schema, UI, architecture
 
-### Что сделано
+### Список изменений
 
 1. **Billing удалён.** Платформа использует invite-доступ (InviteLink + выданные credentials).
    - Удалены: `PaymentStatus`, `PaymentType` enum, `Payment` model из Prisma schema

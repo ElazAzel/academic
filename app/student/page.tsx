@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/layout/app-shell";
-import { ContinueLearningCard, CourseProgressGrid, MetricGrid, QuestionsQueue } from "@/components/lms/dashboard-widgets";
+import { ContinueLearningCard, CourseProgressGrid, MetricGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
 import { Tabs } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";

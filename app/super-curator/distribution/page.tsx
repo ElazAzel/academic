@@ -3,8 +3,6 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Select } from "@/components/ui/select";
 import { Users } from "lucide-react";
 
 const UNASSIGNED = [
