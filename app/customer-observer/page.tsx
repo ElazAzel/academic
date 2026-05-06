@@ -2,16 +2,19 @@ import { AppShell } from "@/components/layout/app-shell";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
 import { Tabs } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { getCustomerObserverDashboard } from "@/server/actions/dashboard";
 import { getObserverMetrics, MOCK_COHORTS, MOCK_CERTIFICATES } from "@/lib/mock-data";
 
-export default function CustomerObserverDashboardPage() {
-  const metrics = getObserverMetrics();
+export default async function CustomerObserverDashboardPage() {
+  const data = await getCustomerObserverDashboard();
+
+  const metrics = data?.metrics ?? getObserverMetrics();
+
   return (
     <AppShell role="customer_observer">
       <PageHeader title="Дашборд проекта" description="Прогресс, посещаемость, сертификаты и отчёты." badge="Заказчик" />

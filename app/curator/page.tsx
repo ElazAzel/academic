@@ -7,6 +7,7 @@ import {
 } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
 import { Tabs } from "@/components/ui/tabs";
+import { getCuratorDashboard } from "@/server/actions/dashboard";
 import {
   getCuratorMetrics,
   MOCK_QUESTIONS,
@@ -14,9 +15,15 @@ import {
   MOCK_RISKS,
 } from "@/lib/mock-data";
 
-export default function CuratorDashboardPage() {
-  const metrics = getCuratorMetrics();
-  const openQuestions = MOCK_QUESTIONS.filter((q) => q.status === "open");
+export default async function CuratorDashboardPage() {
+  const data = await getCuratorDashboard();
+
+  const metrics = data?.metrics ?? getCuratorMetrics();
+  const questions = data?.questions ?? MOCK_QUESTIONS;
+  const submissions = data?.submissions ?? MOCK_SUBMISSIONS;
+  const risks = data?.risks ?? MOCK_RISKS;
+
+  const openQuestions = questions.filter((q) => q.status === "open");
 
   return (
     <AppShell role="curator">
@@ -35,12 +42,12 @@ export default function CuratorDashboardPage() {
               content: <QuestionsQueue questions={openQuestions} />,
             },
             {
-              label: `Задания (${MOCK_SUBMISSIONS.length})`,
-              content: <SubmissionsQueue submissions={MOCK_SUBMISSIONS} />,
+              label: `Задания (${submissions.length})`,
+              content: <SubmissionsQueue submissions={submissions} />,
             },
             {
-              label: `Риски (${MOCK_RISKS.length})`,
-              content: <RisksList risks={MOCK_RISKS} />,
+              label: `Риски (${risks.length})`,
+              content: <RisksList risks={risks} />,
             },
           ]}
         />

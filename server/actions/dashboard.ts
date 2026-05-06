@@ -385,3 +385,62 @@ export async function getAdminDashboard() {
     return { metrics, courses: formattedCourses, cohorts: formattedCohorts, invites: formattedInvites, certificates: formattedCerts };
   }, null);
 }
+
+// ── Преподаватель ───────────────────────────────────────────────────
+
+export async function getInstructorDashboard() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  return safeQuery(async () => {
+    const courses = await prisma.course.findMany({
+      where: { instructors: { some: { userId: user.id } } },
+      orderBy: { createdAt: "desc" },
+      include: {
+        instructors: { include: { user: { select: { id: true, name: true, email: true } } } },
+        _count: { select: { modules: true } },
+      },
+    });
+
+    const formattedCourses: CourseSummary[] = courses.map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      title: c.title,
+      description: c.description,
+      durationHours: c.durationHours,
+      status: c.status as CourseSummary["status"],
+      traversalMode: c.traversalMode as "sequential" | "open",
+      modulesCount: c._count.modules,
+      lessonsCount: 0,
+      instructors: c.instructors.map((ci) => ({
+        id: ci.user.id,
+        name: ci.user.name ?? "",
+        email: ci.user.email,
+      })),
+    }));
+
+    const metrics: DashboardMetric[] = [
+      { label: "Мои курсы", value: courses.length, tone: "primary" },
+      { label: "Слушатели", value: 0, tone: "info" },
+      { label: "Средний прогресс", value: "0%", tone: "warning" },
+      { label: "Вопросы от кураторов", value: 0, tone: "success" },
+    ];
+
+    return { metrics, courses: formattedCourses };
+  }, null);
+}
+
+// ── Заказчик ────────────────────────────────────────────────────────
+
+export async function getCustomerObserverDashboard() {
+  return safeQuery(async () => {
+    const metrics: DashboardMetric[] = [
+      { label: "Проекты", value: 1, tone: "primary" },
+      { label: "Потоки", value: 0, tone: "info" },
+      { label: "Прогресс", value: "0%", tone: "warning" },
+      { label: "Сертификаты", value: 0, tone: "success" },
+    ];
+
+    return { metrics };
+  }, null);
+}

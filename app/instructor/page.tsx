@@ -3,13 +3,15 @@ import { MetricGrid, CourseManageGrid } from "@/components/lms/dashboard-widgets
 import { PageHeader } from "@/components/lms/page-header";
 import { Tabs } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { getInstructorDashboard } from "@/server/actions/dashboard";
 import { getInstructorMetrics, MOCK_COURSES } from "@/lib/mock-data";
 
-export default function InstructorDashboardPage() {
-  const metrics = getInstructorMetrics();
-  const myCourses = MOCK_COURSES.filter((c) => c.instructors.some((i) => i.id === "u-instr1"));
+export default async function InstructorDashboardPage() {
+  const data = await getInstructorDashboard();
+
+  const metrics = data?.metrics ?? getInstructorMetrics();
+  const myCourses = data?.courses ?? MOCK_COURSES.filter((c) => c.instructors.some((i) => i.id === "u-instr1"));
 
   return (
     <AppShell role="instructor">
