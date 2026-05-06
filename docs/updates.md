@@ -2,6 +2,65 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-07 — Server Actions, полные суб-страницы ролей, страницы курсов/уроков
+
+Автор/agent: Antigravity
+Тип изменения: feature — backend actions, full pages
+
+### Что сделано
+
+1. **Server Actions** — `server/actions/dashboard.ts`
+   - `getStudentDashboard()` — реальные Prisma-запросы для слушателя (enrollments, progress, questions)
+   - `getCuratorDashboard()` — вопросы, задания, риски слушателей куратора
+   - `getSuperCuratorDashboard()` — нагрузка кураторов, потоки
+   - `getAdminDashboard()` — курсы, потоки, инвайты, сертификаты
+   - `safeQuery()` wrapper: graceful fallback если БД недоступна
+
+2. **Server Actions** — `server/actions/courses.ts`
+   - `getCourseForStudent(courseId)` — курс с модулями, уроками и прогрессом
+   - `getLessonForStudent(lessonId)` — урок с медиа, тестами, заданиями
+   - `askCuratorQuestion(lessonId, text)` — задать вопрос куратору
+
+3. **Страница курса слушателя** — `app/student/courses/[courseId]/page.tsx`
+   - Прогресс-бар курса с инструкторами
+   - Цель курса и порог сертификации
+   - Модули: развёрнутые уроки, иконки типов, статусы (✓ / ▶ / 🔒)
+   - Sequential lock визуализация
+   - Навигация по урокам
+
+4. **Страница урока слушателя** — `app/student/lessons/[lessonId]/page.tsx`
+   - YouTube видео embed (16:9 responsive)
+   - Текстовый контент (blocks)
+   - Прикреплённые файлы
+   - Тест: карточка с кнопкой "Пройти тест"
+   - "Задать вопрос куратору": форма + история вопросов
+   - Навигация: ← предыдущий / следующий → урок
+   - Breadcrumb: Мои курсы > Курс > Модуль
+
+5. **Суб-страницы куратора:**
+   - `app/curator/students/page.tsx` — таблица слушателей с прогрессом, рисками
+   - `app/curator/questions/page.tsx` — открытые/отвеченные вопросы
+   - `app/curator/assignments/page.tsx` — задания на проверку
+   - `app/curator/risks/page.tsx` — риски слушателей
+
+6. **Суб-страницы супер-куратора:**
+   - `app/super-curator/curators/page.tsx` — таблица кураторов
+   - `app/super-curator/distribution/page.tsx` — назначение кураторов нераспределённым слушателям
+   - `app/super-curator/risks/page.tsx` — риски по потокам
+   - `app/super-curator/reports/page.tsx` — отчёты с кнопками скачивания
+
+7. **Суб-страницы администратора:**
+   - `app/admin/invites/page.tsx` — полная страница инвайтов (создание формы + таблица + copy/delete)
+   - `app/admin/users/page.tsx` — таблица пользователей + импорт Excel
+   - `app/admin/courses/page.tsx` — сетка курсов с кнопкой создания
+   - `app/student/my-courses/page.tsx` — реальный список курсов
+
+8. **Документация** — `docs/QUICKSTART.md`
+   - Docker setup, Prisma migrate, seed, тестовые аккаунты
+
+### Файлы (новые): 14 файлов
+### Файлы (перезаписаны): 3 файла
+
 ## 2026-05-07 — Удаление Stripe/billing, полные дашборды ролей, доменные типы
 
 Автор/agent: Antigravity (Planning Mode)
