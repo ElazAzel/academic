@@ -2,6 +2,7 @@ import type { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
+// @ts-ignore
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { getPrisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
@@ -10,7 +11,7 @@ import { env } from "@/lib/env";
 const prisma = getPrisma();
 
 export const authOptions: AuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as any,
   secret: env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt"
@@ -51,7 +52,7 @@ export const authOptions: AuthOptions = {
           email: user.email,
           name: user.name,
           image: user.image,
-          roles: user.roles.map((entry) => entry.role.key)
+          roles: user.roles.map((entry: { role: { key: string } }) => entry.role.key)
         };
       }
     }),
@@ -82,7 +83,7 @@ export const authOptions: AuthOptions = {
           session.user.email = dbUser.email;
           session.user.name = dbUser.name;
           session.user.image = dbUser.image;
-          session.user.roles = dbUser.roles.map((entry) => entry.role.key);
+          session.user.roles = dbUser.roles.map((entry: { role: { key: string } }) => entry.role.key);
         }
       }
       return session;
