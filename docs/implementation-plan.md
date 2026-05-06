@@ -65,7 +65,7 @@
 | Security | Security doc, RBAC, webhook verification, env examples | done | `docs/security.md` и server guards существуют |
 | Security | Rate limiting with Redis and privacy workflows | planned | Distributed limiter, export/delete PII process |
 | DevOps | Docker, Compose, K8s, CI templates | done | Infra files созданы |
-| DevOps | GitHub remote/upstream для `ElazAzel/academic` | in_progress | Remote переименован в `origin`, remote `LICENSE` смержен; финальный `git push -u origin main` выполняется отдельно |
+| DevOps | GitHub remote/upstream для `ElazAzel/academic` | done | Remote переименован в `origin`, remote `LICENSE` смержен, `main` опубликован и отслеживает `origin/main` |
 | DevOps | Реальный deployment validation | planned | Vercel/Docker/K8s smoke checks documented |
 | UI | Light Russian LMS shell and role pages | done | Pages build in production |
 | UI | Data-connected role dashboards | planned | Pages consume API via server actions/hooks |
