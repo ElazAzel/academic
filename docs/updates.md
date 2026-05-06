@@ -2,6 +2,47 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-07 — Добавлены auth UI flow и публичная проверка сертификатов
+
+Автор/agent: Codex  
+Тип изменения: runtime / UI / API / documentation  
+Файлы/модули:
+
+- `components/auth/*`
+- `app/forgot-password/page.tsx`
+- `app/reset-password/page.tsx`
+- `app/verify-email/page.tsx`
+- `app/certificates/verify/[verificationCode]/page.tsx`
+- `app/api/v1/certificates/verify/[verificationCode]/route.ts`
+- `server/modules/certificates/service.ts`
+- `docs/api/openapi.yaml`
+- `docs/implementation-plan.md`
+
+Summary:
+
+- Подключена форма восстановления пароля к `/api/v1/auth/forgot-password`.
+- Добавлены страницы сброса пароля и подтверждения email с поддержкой `?token=...`.
+- Добавлена публичная страница проверки сертификата по verification code.
+- Добавлен REST endpoint публичной проверки сертификата без раскрытия email и внутренних данных слушателя.
+- OpenAPI и implementation plan обновлены под новый API/UI срез.
+
+Проверки:
+
+- `npm.cmd run lint` прошёл успешно.
+- `npm.cmd run typecheck` прошёл успешно.
+- `npm.cmd run test` прошёл успешно: 8 test files, 11 tests. В sandbox запуск упёрся в `spawn EPERM`, повторный escalated запуск прошёл.
+- `npm.cmd run build` прошёл успешно, включая новые routes `/reset-password`, `/verify-email`, `/certificates/verify/[verificationCode]` и `/api/v1/certificates/verify/[verificationCode]`.
+
+Риски:
+
+- Email delivery остаётся scaffold: reset/verify tokens создаются, но production SMTP/provider ещё не подключён.
+- Certificate template assets и финальный visual PDF остаются production-hardening.
+
+Next steps:
+
+- Подключить transactional email provider и шаблоны писем для reset/verify flows.
+- Добавить public certificate verification smoke/e2e после подключения тестовой БД.
+
 ## 2026-05-07 — Добавлен agent-операционный слой документации
 
 Автор/agent: Codex  
@@ -22,8 +63,9 @@ Summary:
 
 Проверки:
 
-- Запланировано выполнить `npm.cmd run lint`.
-- Запланировано выполнить `npm.cmd run typecheck`.
+- `npm.cmd run lint` прошёл успешно.
+- `npm.cmd run typecheck` прошёл успешно.
+- Проверка `skills/**/*/SKILL.md` на наличие YAML frontmatter `name` и `description` прошла успешно.
 
 Риски:
 
@@ -98,4 +140,3 @@ Next steps:
 
 - Что сделать дальше.
 ```
-

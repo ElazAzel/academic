@@ -43,7 +43,7 @@
 | Domain | Задача | Status | Acceptance |
 |---|---|---|---|
 | Auth/RBAC | Email/password, OAuth examples, session, server-side permissions | done | Auth.js endpoint, register/reset/verify routes, RBAC utilities |
-| Auth/RBAC | Полный UI flow подтверждения email и восстановления пароля | planned | Пользователь проходит flow end-to-end без ручных токенов |
+| Auth/RBAC | Полный UI flow подтверждения email и восстановления пароля | in_progress | UI pages/forms подключены к REST; email provider delivery остаётся production-hardening |
 | Courses | CRUD курсов, модулей, уроков через REST services | done | Route handlers используют server modules, не UI DB calls |
 | Courses | Production editor UI для курса, модулей, уроков и материалов | planned | Преподаватель создаёт published course через UI |
 | Progress | Lesson/module/course progress и continue learning logic | done | Progress service пересчитывает проценты |
@@ -53,7 +53,7 @@
 | Assignments | Submissions с текстом/fileUrl, review service | done | Submission service и review service созданы |
 | Assignments | File upload signing и review queue UI | planned | Загрузка через S3-compatible adapter, очередь куратора |
 | Certificates | Certificate issuance rule и PDF generation scaffold | done | Certificate service генерирует number, QR, PDF |
-| Certificates | Production certificate templates and verification page | planned | Public verification URL показывает валидность сертификата |
+| Certificates | Production certificate templates and verification page | in_progress | Public verification URL и API добавлены; template assets остаются production-hardening |
 | Billing | Checkout session и verified webhook scaffold | done | Mock mode без секретов, Stripe mode с signature verification |
 | Billing | Production reconciliation and subscription access rules | planned | Payment status синхронизирует enrollments идемпотентно |
 | Analytics | Admin overview metrics | done | API возвращает users, enrollments, completion, revenue |
@@ -97,4 +97,3 @@ MVP считается готовым, когда:
 - `docs/security.md` — security checklist и риски.
 - `docs/todo.md` — незавершённые production-hardening задачи.
 - `docs/updates.md` — журнал всех обновлений.
-

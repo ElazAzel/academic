@@ -151,6 +151,20 @@ paths:
       responses:
         "201":
           description: Certificate issued
+  /certificates/verify/{verificationCode}:
+    get:
+      summary: Public certificate verification
+      parameters:
+        - name: verificationCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Public certificate verification data
+        "404":
+          description: Certificate not found
   /payments/checkout:
     post:
       summary: Create Stripe Checkout Session
@@ -193,4 +207,3 @@ paths:
       responses:
         "200":
           description: Search result
-

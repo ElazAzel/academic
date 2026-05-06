@@ -61,6 +61,32 @@ export async function listCertificates(userId?: string) {
   });
 }
 
+export async function verifyCertificateByCode(verificationCode: string) {
+  const certificate = await prisma.certificate.findUnique({
+    where: { verificationCode },
+    include: {
+      user: { select: { name: true } },
+      course: { select: { title: true, durationHours: true } }
+    }
+  });
+
+  if (!certificate) {
+    return null;
+  }
+
+  return {
+    valid: certificate.revokedAt === null,
+    number: certificate.number,
+    verificationCode: certificate.verificationCode,
+    verificationUrl: certificate.verificationUrl,
+    studentName: certificate.user.name ?? "Слушатель академии",
+    courseTitle: certificate.course.title,
+    durationHours: certificate.course.durationHours,
+    issuedAt: certificate.issuedAt,
+    revokedAt: certificate.revokedAt
+  };
+}
+
 export async function generateCertificatePdf(certificateId: string) {
   const certificate = await prisma.certificate.findUnique({
     where: { id: certificateId },
@@ -88,4 +114,3 @@ export async function generateCertificatePdf(certificateId: string) {
 
   return pdf.save();
 }
-

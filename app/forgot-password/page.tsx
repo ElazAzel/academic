@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
 export default function ForgotPasswordPage() {
   return (
@@ -11,13 +10,9 @@ export default function ForgotPasswordPage() {
           <CardDescription>Введите email, и платформа создаст безопасный reset token.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
-            <Input name="email" type="email" placeholder="email@example.com" required />
-            <Button className="w-full" type="submit">Отправить ссылку</Button>
-          </form>
+          <ForgotPasswordForm />
         </CardContent>
       </Card>
     </main>
   );
 }
-
