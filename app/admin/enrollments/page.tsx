@@ -7,6 +7,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { Plus, Download } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { listEnrollments } from "@/server/modules/courses/service";
+import { getEnrollmentData } from "@/server/actions/dashboard";
+import { EnrollStudentForm } from "@/components/admin/enroll-student-form";
 
 export const dynamic = "force-dynamic";
 
@@ -20,51 +22,57 @@ const STATUS_BADGE = {
 
 export default async function AdminEnrollmentsPage() {
   await requireRolePage(["admin"]);
-  const enrollments = await listEnrollments();
+  const [enrollments, formData] = await Promise.all([
+    listEnrollments(),
+    getEnrollmentData()
+  ]);
 
   return (
     <AppShell role="admin">
       <PageHeader title="Зачисления" description="Управление доступом слушателей к курсам и потокам." badge="Администратор" />
-      <div className="space-y-6 mt-6">
-        <div className="flex gap-3">
-          <Button><Plus className="h-4 w-4 mr-2" />Зачислить слушателя</Button>
-          <Button variant="secondary"><Download className="h-4 w-4 mr-2" />Экспорт CSV</Button>
-        </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Слушатель</TableHead>
-              <TableHead>Курс</TableHead>
-              <TableHead>Поток</TableHead>
-              <TableHead>Статус</TableHead>
-              <TableHead>Дата</TableHead>
-              <TableHead className="text-right">Действия</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {enrollments.map((e) => {
-              const badge = STATUS_BADGE[e.status as keyof typeof STATUS_BADGE] ?? STATUS_BADGE.ACTIVE;
-              return (
-                <TableRow key={e.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Avatar name={e.user.name ?? e.user.email} className="h-7 w-7 text-[10px]" />
-                      <div>
-                        <p className="text-sm font-medium">{e.user.name ?? e.user.email}</p>
-                        <p className="text-xs text-muted-foreground">{e.user.email}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm">{e.course.title}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{e.cohort?.name ?? "Без потока"}</TableCell>
-                  <TableCell><Badge className={badge.className}>{badge.label}</Badge></TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{e.createdAt.toLocaleDateString("ru-RU")}</TableCell>
-                  <TableCell className="text-right"><Button size="sm" variant="secondary">Управление</Button></TableCell>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold">Активные зачисления</h2>
+            <Button variant="secondary" size="sm"><Download className="h-4 w-4 mr-2" />Экспорт CSV</Button>
+          </div>
+          <div className="border rounded-2xl bg-white overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Слушатель</TableHead>
+                  <TableHead>Курс</TableHead>
+                  <TableHead>Статус</TableHead>
+                  <TableHead className="text-right">Действия</TableHead>
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+              </TableHeader>
+              <TableBody>
+                {enrollments.map((e) => {
+                  const badge = STATUS_BADGE[e.status as keyof typeof STATUS_BADGE] ?? STATUS_BADGE.ACTIVE;
+                  return (
+                    <TableRow key={e.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar name={e.user.name ?? e.user.email} className="h-7 w-7 text-[10px]" />
+                          <div>
+                            <p className="text-sm font-medium">{e.user.name ?? e.user.email}</p>
+                            <p className="text-xs text-muted-foreground">{e.user.email}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">{e.course.title}</TableCell>
+                      <TableCell><Badge className={badge.className}>{badge.label}</Badge></TableCell>
+                      <TableCell className="text-right"><Button size="sm" variant="ghost">Удалить</Button></TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+        <div className="lg:col-span-1">
+          <EnrollStudentForm data={formData} />
+        </div>
       </div>
     </AppShell>
   );

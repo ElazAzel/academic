@@ -244,6 +244,37 @@ export async function getCuratorDashboard() {
   }, null);
 }
 
+export async function getEnrollmentData() {
+  await requireRole(["admin"]);
+
+  return safeQuery(async () => {
+    const [students, courses, cohorts, curators] = await Promise.all([
+      prisma.user.findMany({
+        where: { roles: { some: { role: { key: "student" } } } },
+        select: { id: true, name: true, email: true },
+        orderBy: { name: "asc" }
+      }),
+      prisma.course.findMany({
+        where: { status: "PUBLISHED" },
+        select: { id: true, title: true },
+        orderBy: { title: "asc" }
+      }),
+      prisma.cohort.findMany({
+        where: { status: "active" },
+        select: { id: true, name: true, courseId: true },
+        orderBy: { name: "asc" }
+      }),
+      prisma.user.findMany({
+        where: { roles: { some: { role: { key: { in: ["curator", "super_curator"] } } } } },
+        select: { id: true, name: true, email: true },
+        orderBy: { name: "asc" }
+      })
+    ]);
+
+    return { students, courses, cohorts, curators };
+  }, { students: [], courses: [], cohorts: [], curators: [] });
+}
+
 export async function getCuratorStudents() {
   const user = await getCurrentUser();
   if (!user) return [];
