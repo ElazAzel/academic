@@ -8,20 +8,46 @@ import { Loader2, Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
+import { QuestionEditorItem } from "./question-editor-item";
+
 interface QuizEditFormProps {
   quiz: {
     id: string;
     title: string;
     passThreshold: number;
     maxAttempts: number;
-    questions: { id: string; prompt: string; type: string; points: number }[];
+    questions: { id: string; prompt: string; type: string; points: number; options: any; correctAnswer: any }[];
   };
 }
 
 export function QuizEditForm({ quiz }: QuizEditFormProps) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
+  const [questions, setQuestions] = useState(quiz.questions);
   const router = useRouter();
+
+  async function handleQuestionUpdate(questionId: string, data: any) {
+    const res = await fetch(`/api/v1/quizzes/${quiz.id}/questions/${questionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      setQuestions(questions.map(q => q.id === questionId ? { ...q, ...data } : q));
+      router.refresh();
+    }
+  }
+
+  async function handleQuestionDelete(questionId: string) {
+    if (!confirm("Удалить этот вопрос?")) return;
+    const res = await fetch(`/api/v1/quizzes/${quiz.id}/questions/${questionId}`, {
+      method: "DELETE"
+    });
+    if (res.ok) {
+      setQuestions(questions.filter(q => q.id !== questionId));
+      router.refresh();
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,24 +104,31 @@ export function QuizEditForm({ quiz }: QuizEditFormProps) {
         <div className="lg:col-span-2 space-y-6">
           <Card className="rounded-3xl border-2">
             <CardHeader>
-              <CardTitle className="text-lg">Вопросы теста ({quiz.questions.length})</CardTitle>
+              <CardTitle className="text-lg">Вопросы теста ({questions.length})</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {quiz.questions.map((q, i) => (
-                <div key={q.id} className="flex items-start gap-4 p-4 border rounded-2xl bg-muted/10">
-                  <span className="text-sm font-bold text-muted-foreground pt-1">{i + 1}.</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{q.prompt}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">{q.type} · {q.points} БАЛЛ(ОВ)</p>
-                  </div>
-                  <Button size="sm" variant="ghost" className="text-rose-600 hover:text-rose-700 hover:bg-rose-50">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+              {questions.map((q) => (
+                <QuestionEditorItem 
+                  key={q.id} 
+                  question={q} 
+                  onUpdate={handleQuestionUpdate} 
+                  onDelete={handleQuestionDelete} 
+                />
               ))}
-              <Button variant="ghost" className="w-full border-2 border-dashed rounded-2xl h-14 text-muted-foreground hover:text-primary hover:border-primary/50">
+              <Button variant="ghost" type="button" className="w-full border-2 border-dashed rounded-2xl h-14 text-muted-foreground hover:text-primary hover:border-primary/50" onClick={async () => {
+                const res = await fetch(`/api/v1/quizzes/${quiz.id}/questions`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ prompt: "Новый вопрос", type: "SINGLE_CHOICE", points: 1 })
+                });
+                if (res.ok) {
+                  const newQ = await res.json();
+                  setQuestions([...questions, newQ]);
+                  router.refresh();
+                }
+              }}>
                 <Plus className="h-4 w-4 mr-2" />
-                Добавить вопрос (будет доступно в след. версии)
+                Добавить вопрос
               </Button>
             </CardContent>
           </Card>
