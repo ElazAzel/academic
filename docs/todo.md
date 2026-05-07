@@ -19,5 +19,5 @@
 ## Microservices
 
 - Expand reference services in `services/*` into independent deployables if the monolith reaches scaling pressure.
-- Add outbox/inbox tables and message broker contracts before extracting billing, notification, or analytics services.
-
+- Add outbox/inbox tables and message broker contracts before extracting invite access, notification, or analytics services.
+- If Stripe/billing returns later, design it as a separate ADR with signed webhooks, idempotent reconciliation, tests, docs, and feature-flagged rollout.

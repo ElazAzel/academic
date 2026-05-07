@@ -15,6 +15,8 @@ import {
   MOCK_RISKS,
 } from "@/lib/mock-data";
 
+export const dynamic = "force-dynamic";
+
 export default async function CuratorDashboardPage() {
   const data = await getCuratorDashboard();
 

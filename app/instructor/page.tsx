@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { getInstructorDashboard } from "@/server/actions/dashboard";
 import { getInstructorMetrics, MOCK_COURSES } from "@/lib/mock-data";
 
+export const dynamic = "force-dynamic";
+
 export default async function InstructorDashboardPage() {
   const data = await getInstructorDashboard();
 

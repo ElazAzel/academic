@@ -13,6 +13,8 @@ import {
   MOCK_QUESTIONS,
 } from "@/lib/mock-data";
 
+export const dynamic = "force-dynamic";
+
 export default async function StudentDashboardPage() {
   // Attempt to fetch real data from DB, fallback to mock data if DB is unavailable
   const data = await getStudentDashboard();
