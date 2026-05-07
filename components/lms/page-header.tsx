@@ -1,9 +1,7 @@
-import { Badge } from "@/components/ui/badge";
-
 export function PageHeader({
   title,
   description,
-  badge
+  badge: _badge
 }: {
   title: string;
   description: string;
