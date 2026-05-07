@@ -215,7 +215,7 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
                       <p className="text-lg font-bold">{assignment.title}</p>
                       <div className="flex flex-wrap gap-2">
                         {assignment.deadline && (
-                          <Badge variant="secondary" className="text-[10px]">Дедлайн: {assignment.deadline.slice(0, 10)}</Badge>
+                          <Badge className="bg-secondary/50 text-[10px]">Дедлайн: {assignment.deadline.slice(0, 10)}</Badge>
                         )}
                         <Badge className={assignment.submissionStatus ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}>
                           {assignment.submissionStatus ? `Статус: ${assignment.submissionStatus}` : "Не отправлено"}
