@@ -48,9 +48,9 @@ export default async function InstructorDashboardPage() {
                     <div key={c.id} className="space-y-1.5">
                       <div className="flex items-center justify-between text-sm">
                         <span>{c.title}</span>
-                        <span className="font-medium">38%</span>
+                        <span className="font-medium">{c.avgProgress ?? 0}%</span>
                       </div>
-                      <Progress value={38} />
+                      <Progress value={c.avgProgress ?? 0} />
                     </div>
                   ))}
                 </CardContent>

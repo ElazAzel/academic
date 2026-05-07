@@ -87,34 +87,46 @@ export default async function StudentDashboardPage() {
               label: "Дедлайны",
               content: (
                 <div className="space-y-3">
-                  <Card className="transition-shadow hover:shadow-sm">
-                    <CardContent className="flex items-center gap-4 py-4">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
-                        <Clock className="h-5 w-5 text-amber-600" aria-hidden />
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Модуль 2: Практика</p>
-                        <p className="text-xs text-muted-foreground">
-                          AI Strategy Fundamentals · до 18 мая 2026
-                        </p>
-                      </div>
-                      <Badge className="border-amber-200 bg-amber-50 text-amber-700">11 дн.</Badge>
-                    </CardContent>
-                  </Card>
-                  <Card className="transition-shadow hover:shadow-sm">
-                    <CardContent className="flex items-center gap-4 py-4">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100">
-                        <Clock className="h-5 w-5 text-sky-600" aria-hidden />
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Модуль 1: Основы</p>
-                        <p className="text-xs text-muted-foreground">
-                          Prompt Engineering for Leaders · до 25 мая 2026
-                        </p>
-                      </div>
-                      <Badge className="border-sky-200 bg-sky-50 text-sky-700">18 дн.</Badge>
-                    </CardContent>
-                  </Card>
+                  {data?.deadlines && data.deadlines.length > 0 ? (
+                    data.deadlines.map((d) => {
+                      const daysLeft = Math.ceil((new Date(d.dueAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                      const isOverdue = daysLeft < 0;
+
+                      return (
+                        <Card key={d.moduleId} className="transition-shadow hover:shadow-sm">
+                          <CardContent className="flex items-center gap-4 py-4">
+                            <span className={cn(
+                              "flex h-10 w-10 items-center justify-center rounded-xl",
+                              isOverdue ? "bg-red-100" : daysLeft <= 3 ? "bg-amber-100" : "bg-sky-100"
+                            )}>
+                              <Clock className={cn(
+                                "h-5 w-5",
+                                isOverdue ? "text-red-600" : daysLeft <= 3 ? "text-amber-600" : "text-sky-600"
+                              )} aria-hidden />
+                            </span>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{d.moduleTitle}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {d.courseTitle} · до {new Date(d.dueAt).toLocaleDateString("ru-RU")}
+                              </p>
+                            </div>
+                            <Badge className={cn(
+                              "border-none",
+                              isOverdue ? "bg-red-50 text-red-700" : daysLeft <= 3 ? "bg-amber-50 text-amber-700" : "bg-sky-50 text-sky-700"
+                            )}>
+                              {isOverdue ? "Просрочено" : `${daysLeft} дн.`}
+                            </Badge>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  ) : (
+                    <Card>
+                      <CardContent className="py-10 text-center text-muted-foreground">
+                        У вас пока нет установленных дедлайнов.
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               ),
             },

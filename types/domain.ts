@@ -50,6 +50,7 @@ export interface CourseSummary {
   traversalMode: "sequential" | "open";
   modulesCount: number;
   lessonsCount: number;
+  avgProgress?: number;
   instructors: UserSummary[];
 }
 
@@ -171,6 +172,7 @@ export interface CohortSummary {
 export interface CohortDeadline {
   moduleId: string;
   moduleTitle: string;
+  courseTitle?: string;
   dueAt: string;
 }
 

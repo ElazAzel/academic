@@ -2,19 +2,28 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { QuestionsQueue } from "@/components/lms/dashboard-widgets";
 import { Tabs } from "@/components/ui/tabs";
-import { MOCK_QUESTIONS } from "@/lib/mock-data";
+import { getCuratorQuestions } from "@/server/actions/dashboard";
+import { requireRolePage } from "@/lib/auth/page-guards";
 
-export default function CuratorQuestionsPage() {
-  const open = MOCK_QUESTIONS.filter((q) => q.status === "open");
-  const answered = MOCK_QUESTIONS.filter((q) => q.status === "answered");
+export const dynamic = "force-dynamic";
+
+export default async function CuratorQuestionsPage() {
+  await requireRolePage(["curator", "super_curator"]);
+  
+  const [open, answered] = await Promise.all([
+    getCuratorQuestions("open"),
+    getCuratorQuestions("answered"),
+  ]);
 
   return (
     <AppShell role="curator">
       <PageHeader title="Вопросы слушателей" description="Все вопросы ваших слушателей по урокам." badge="Куратор" />
-      <Tabs tabs={[
-        { label: `Открытые (${open.length})`, content: <QuestionsQueue questions={open} /> },
-        { label: `Отвеченные (${answered.length})`, content: <QuestionsQueue questions={answered} /> },
-      ]} />
+      <div className="mt-6">
+        <Tabs tabs={[
+          { label: `Открытые (${open.length})`, content: <QuestionsQueue questions={open} /> },
+          { label: `Отвеченные (${answered.length})`, content: <QuestionsQueue questions={answered} /> },
+        ]} />
+      </div>
     </AppShell>
   );
 }
