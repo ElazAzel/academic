@@ -59,7 +59,7 @@ export default async function InstructorEditCoursePage({ params }: { params: Pro
             </CardHeader>
             <CardContent className="py-10 text-center">
               <p className="text-muted-foreground text-sm mb-4">Управление модулями и уроками доступно в детальном редакторе.</p>
-              <Button disabled variant="outline">Открыть редактор контента</Button>
+              <Button disabled variant="secondary">Открыть редактор контента</Button>
             </CardContent>
           </Card>
         </div>

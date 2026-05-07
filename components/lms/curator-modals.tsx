@@ -126,14 +126,14 @@ export function ReviewSubmissionModal({
           </div>
         </div>
         <div className="p-6 bg-muted/20 flex flex-wrap gap-3 justify-end">
-          <Button variant="outline" onClick={() => handleReview("REJECTED")} disabled={pending} className="text-rose-600 border-rose-200 hover:bg-rose-50">
-            <XCircle className="h-4 w-4" /> Отклонить
+          <Button variant="ghost" onClick={() => handleReview("REJECTED")} disabled={pending} className="text-rose-600 border border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+            <XCircle className="h-4 w-4 mr-2" /> Отклонить
           </Button>
-          <Button variant="outline" onClick={() => handleReview("NEEDS_REVISION")} disabled={pending} className="text-amber-600 border-amber-200 hover:bg-amber-50">
-            <RotateCcw className="h-4 w-4" /> На доработку
+          <Button variant="ghost" onClick={() => handleReview("NEEDS_REVISION")} disabled={pending} className="text-amber-600 border border-amber-200 hover:bg-amber-50 hover:text-amber-700">
+            <RotateCcw className="h-4 w-4 mr-2" /> На доработку
           </Button>
           <Button onClick={() => handleReview("ACCEPTED")} disabled={pending} className="bg-emerald-600 hover:bg-emerald-700">
-            <CheckCircle2 className="h-4 w-4" /> Зачесть задание
+            <CheckCircle2 className="h-4 w-4 mr-2" /> Зачесть задание
           </Button>
         </div>
       </div>
