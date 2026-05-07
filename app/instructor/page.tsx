@@ -5,12 +5,26 @@ import { Tabs } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { getInstructorDashboard } from "@/server/actions/dashboard";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 import { getInstructorMetrics, MOCK_COURSES } from "@/lib/mock-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function InstructorDashboardPage() {
+  await requireRolePage(["instructor"]);
   const data = await getInstructorDashboard();
+  const demoMode = isDemoModeEnabled();
+
+  if (!data && !demoMode) {
+    return (
+      <AppShell role="instructor">
+        <PageHeader title="Дашборд преподавателя" description="Ваши курсы, модули, уроки и аналитика." badge="Преподаватель" />
+        <DashboardUnavailable />
+      </AppShell>
+    );
+  }
 
   const metrics = data?.metrics ?? getInstructorMetrics();
   const myCourses = data?.courses ?? MOCK_COURSES.filter((c) => c.instructors.some((i) => i.id === "u-instr1"));

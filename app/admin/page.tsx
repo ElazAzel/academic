@@ -4,6 +4,9 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Tabs } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { getAdminDashboard } from "@/server/actions/dashboard";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 import {
   getAdminMetrics,
   MOCK_COURSES,
@@ -14,7 +17,22 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
+  await requireRolePage(["admin"]);
   const data = await getAdminDashboard();
+  const demoMode = isDemoModeEnabled();
+
+  if (!data && !demoMode) {
+    return (
+      <AppShell role="admin">
+        <PageHeader
+          title="Дашборд администратора"
+          description="Обзор всех систем, потоков и выданных сертификатов."
+          badge="Администратор"
+        />
+        <DashboardUnavailable />
+      </AppShell>
+    );
+  }
 
   const metrics = data?.metrics ?? getAdminMetrics();
   const courses = data?.courses ?? MOCK_COURSES;

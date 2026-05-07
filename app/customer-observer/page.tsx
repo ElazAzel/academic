@@ -8,14 +8,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { getCustomerObserverDashboard } from "@/server/actions/dashboard";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { getObserverMetrics, MOCK_COHORTS, MOCK_CERTIFICATES } from "@/lib/mock-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function CustomerObserverDashboardPage() {
+  await requireRolePage(["customer_observer"]);
   const data = await getCustomerObserverDashboard();
+  const demoMode = isDemoModeEnabled();
 
   const metrics = data?.metrics ?? getObserverMetrics();
+  const cohorts = demoMode ? MOCK_COHORTS : [];
+  const certificates = demoMode ? MOCK_CERTIFICATES : [];
 
   return (
     <AppShell role="customer_observer">
@@ -27,7 +33,7 @@ export default async function CustomerObserverDashboardPage() {
             <CardTitle className="text-base">Прогресс по потокам</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {MOCK_COHORTS.map((c) => (
+            {cohorts.length > 0 ? cohorts.map((c) => (
               <div key={c.id} className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
                   <span>{c.name}</span>
@@ -35,7 +41,7 @@ export default async function CustomerObserverDashboardPage() {
                 </div>
                 <Progress value={42} />
               </div>
-            ))}
+            )) : <p className="text-sm text-muted-foreground">Пока нет потоков для отчёта.</p>}
           </CardContent>
         </Card>
         <Tabs tabs={[
@@ -52,7 +58,7 @@ export default async function CustomerObserverDashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {MOCK_CERTIFICATES.map((cert) => (
+                  {certificates.map((cert) => (
                     <TableRow key={cert.id}>
                       <TableCell><code className="rounded bg-muted px-2 py-0.5 text-xs">{cert.number}</code></TableCell>
                       <TableCell className="text-sm">{cert.studentName}</TableCell>

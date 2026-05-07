@@ -2,6 +2,99 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-07 — Issued credentials вместо публичной регистрации
+
+Автор/agent: Codex
+Тип изменения: auth / user provisioning / documentation
+Файлы/модули:
+
+- `scripts/provision-users.ts`
+- `app/register/page.tsx`
+- `app/api/v1/auth/register/route.ts`
+- `app/login/page.tsx`
+- `components/auth/register-form.tsx`
+- `.env.example`
+- `.gitignore`
+- `README.md`
+- `docs/api/openapi.yaml`
+- `docs/specification.md`
+- `docs/implementation-plan.md`
+- `tests/integration/auth-register-disabled.test.ts`
+- `tests/integration/seed.test.ts`
+
+Summary:
+
+- Публичная self-registration модель отключена: `/api/v1/auth/register` возвращает typed `410 Gone`, `/register` объясняет, что аккаунты выдаёт академия.
+- Удалена UI-форма регистрации и ссылка "Регистрация" со страницы входа.
+- Добавлен `npm.cmd run users:provision` для создания 4000 слушателей, 50 кураторов, главного куратора, администратора и наблюдающего.
+- Скрипт создаёт/обновляет роли и permissions, создаёт email/password аккаунты и пишет credentials CSV в ignored `var/credentials`.
+- Добавлены env-параметры `PROVISION_STUDENT_COUNT`, `PROVISION_CURATOR_COUNT`, `PROVISION_EMAIL_DOMAIN`, `PROVISION_OUTPUT_DIR`, `PROVISION_RESET_EXISTING_PASSWORDS`.
+
+Проверки:
+
+- `npm.cmd run lint -- --max-warnings=0` — прошёл успешно.
+- `npm.cmd run typecheck` — прошёл успешно.
+- `npm.cmd run test` — прошёл успешно: 9 test files, 13 tests.
+- `npm.cmd run build` — прошёл успешно.
+- `npm.cmd run users:provision` — не выполнил создание аккаунтов, потому что текущий `DATABASE_URL` из `.env` недоступен с этой машины.
+
+Риски:
+
+- Credentials CSV содержит реальные временные пароли; директория `var/` добавлена в `.gitignore` и не должна коммититься.
+- Для production нужно сначала настроить `DATABASE_URL` и применить миграции, затем запускать provisioning.
+- Если используется Supabase, нужен доступный из среды запуска pooler/direct URL; текущий direct DB endpoint не принимает подключение из этой среды.
+
+Next steps:
+
+- Запустить `npm.cmd run users:provision` против production PostgreSQL только после проверки сетевого доступа к `DATABASE_URL`.
+- Перед выдачей пользователям хранить CSV в защищённом канале и удалить локальную копию после операционной передачи.
+
+## 2026-05-07 — P0 защита role pages и отключение production mock fallback
+
+Автор/agent: Codex
+Тип изменения: security / auth / production hardening
+Файлы/модули:
+
+- `lib/auth/page-guards.ts`
+- `middleware.ts`
+- `app/403/page.tsx`
+- `app/{admin,student,curator,instructor,super-curator,customer-observer}/page.tsx`
+- `components/lms/dashboard-unavailable.tsx`
+- `components/auth/login-form.tsx`
+- `server/auth/options.ts`
+- `server/auth/provider-flags.ts`
+- `server/modules/auth/service.ts`
+- `server/modules/progress/service.ts`
+- `.env.example`
+
+Summary:
+
+- Добавлен `requireRolePage()` и server-side role guard для основных кабинетов ролей.
+- Добавлен `middleware.ts` для базового отсечения приватных route prefixes до входа.
+- Production mock fallback отключён: фейковые dashboard data используются только при `NEXT_PUBLIC_DEMO_MODE=true`; иначе показывается явное состояние недоступности данных.
+- Добавлена `/403` страница для аккаунтов без нужной роли.
+- OAuth providers и кнопки Google/GitHub подключаются только при наличии реальных client id/secret.
+- Регистрация теперь создаёт роль `student`, если seed ещё не создал её в новой базе.
+- `markLessonProgress()` требует active enrollment и блокирует ручное прохождение sequential-уроков без предыдущих обязательных lessons.
+
+Проверки:
+
+- `npm.cmd run lint -- --max-warnings=0` — прошёл успешно.
+- `npm.cmd run typecheck` — прошёл успешно.
+- `npm.cmd run build` — требуется финальный повтор после записи.
+- `npm.cmd run test` — требуется финальный повтор; ранее локально мог блокироваться sandbox `spawn EPERM`.
+
+Риски:
+
+- Живой Vercel URL `https://academic-silk-ten.vercel.app` сейчас отвечает `500` на `/api/readyz`, что указывает на отсутствующий/неготовый production `DATABASE_URL` или неприменённые миграции.
+- `/api/auth/providers` на живом URL отвечает, но `/api/auth/session` и регистрация будут зависеть от готовности БД.
+
+Next steps:
+
+- Настроить Vercel env: `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `APP_URL`.
+- Выполнить `npm.cmd run db:migrate` и `npm.cmd run db:seed` против managed PostgreSQL.
+- После деплоя проверить `/api/readyz`, `/login`, `/register`, `/admin`, `/student`.
+
 ## 2026-05-07 — Стабилизация GitHub/Vercel и invite-only контракта
 
 Автор/agent: Codex

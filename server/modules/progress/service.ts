@@ -1,4 +1,4 @@
-import { ProgressStatus } from "@prisma/client";
+import { EnrollmentStatus, ProgressStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { clamp } from "@/lib/utils";
@@ -30,6 +30,33 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId: lesson.module.course.id } }
   });
+  if (!enrollment || enrollment.status !== EnrollmentStatus.ACTIVE) {
+    throw new ApiError("forbidden", "Нет доступа к этому уроку", 403);
+  }
+
+  if (lesson.module.course.traversalMode === "sequential") {
+    const orderedLessons = lesson.module.course.modules
+      .flatMap((module) => module.lessons.map((item) => ({ ...item, moduleOrder: module.order })))
+      .sort((left, right) => left.moduleOrder - right.moduleOrder || left.order - right.order);
+    const currentIndex = orderedLessons.findIndex((item) => item.id === lesson.id);
+    const previousRequiredLessonIds = orderedLessons
+      .slice(0, Math.max(currentIndex, 0))
+      .filter((item) => item.isRequired)
+      .map((item) => item.id);
+
+    if (previousRequiredLessonIds.length > 0) {
+      const completedPreviousLessons = await prisma.lessonProgress.count({
+        where: {
+          userId,
+          lessonId: { in: previousRequiredLessonIds },
+          status: ProgressStatus.COMPLETED
+        }
+      });
+      if (completedPreviousLessons !== previousRequiredLessonIds.length) {
+        throw new ApiError("forbidden", "Сначала завершите предыдущие обязательные уроки", 403);
+      }
+    }
+  }
 
   const lessonProgress = await prisma.lessonProgress.upsert({
     where: { userId_lessonId: { userId, lessonId } },
@@ -127,4 +154,3 @@ export async function getProgressSnapshot(userId: string) {
   });
   return { enrollments, continueLearning };
 }
-

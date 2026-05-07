@@ -85,7 +85,7 @@ erDiagram
 |---|---|---|
 | `/api/v1/healthz` | GET | Liveness |
 | `/api/v1/readyz` | GET | Readiness |
-| `/api/v1/auth/register` | POST | Регистрация |
+| `/api/v1/auth/register` | POST | Disabled self-registration endpoint, `410 Gone` |
 | `/api/v1/auth/forgot-password` | POST | Запрос сброса |
 | `/api/v1/auth/reset-password` | POST | Сброс пароля |
 | `/api/v1/me` | GET | Текущий профиль |
