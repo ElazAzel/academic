@@ -7,12 +7,6 @@ import { getAdminDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
-import {
-  getAdminMetrics,
-  MOCK_COURSES,
-  MOCK_COHORTS,
-  MOCK_CERTIFICATES,
-} from "@/lib/mock-data";
 
 export const dynamic = "force-dynamic";
 

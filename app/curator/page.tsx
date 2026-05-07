@@ -11,12 +11,6 @@ import { getCuratorDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
-import {
-  getCuratorMetrics,
-  MOCK_QUESTIONS,
-  MOCK_SUBMISSIONS,
-  MOCK_RISKS,
-} from "@/lib/mock-data";
 
 export const dynamic = "force-dynamic";
 

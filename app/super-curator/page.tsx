@@ -7,11 +7,6 @@ import { getSuperCuratorDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
-import {
-  getSuperCuratorMetrics,
-  MOCK_CURATOR_LOADS,
-  MOCK_COHORTS,
-} from "@/lib/mock-data";
 
 export const dynamic = "force-dynamic";
 

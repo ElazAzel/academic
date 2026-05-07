@@ -33,8 +33,9 @@ export default async function InstructorCoursesPage() {
     lessonsCount: course.modules.reduce((acc, m) => acc + m.lessons.length, 0),
     durationHours: course.durationHours,
     instructors: course.instructors.map(i => ({
-      id: i.id,
-      name: i.user.name ?? i.user.email
+      id: i.userId,
+      name: i.user.name ?? i.user.email,
+      email: i.user.email
     }))
   }));
 
