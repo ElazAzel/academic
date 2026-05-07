@@ -44,7 +44,7 @@ export default async function InstructorCoursesPage() {
 
   return (
     <AppShell role="instructor">
-      <PageHeader title="Мои курсы" description="Список ваших курсов с draft/published/archived состояниями." badge="Преподаватель" />
+      <PageHeader title="Мои курсы" description="Управление статусами (черновик, опубликован, архив) и контентом." badge="Преподаватель" />
       <div className="space-y-6 mt-6">
         <Button><Plus className="h-4 w-4 mr-2" />Создать курс</Button>
         {courses.length > 0 ? (

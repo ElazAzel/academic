@@ -43,7 +43,9 @@ export default async function InstructorQuizzesPage() {
                       {q.course?.title} {q.lesson ? `· ${q.lesson.title}` : ""} · {q._count.questions} вопросов · порог {q.passThreshold}% · {q.maxAttempts} попытки
                     </p>
                   </div>
-                  <Button size="sm" variant="secondary">Редактировать</Button>
+                  <Button size="sm" variant="secondary" asChild>
+                    <Link href={`/instructor/quizzes/${q.id}/edit`}>Редактировать</Link>
+                  </Button>
                 </CardContent>
               </Card>
             ))

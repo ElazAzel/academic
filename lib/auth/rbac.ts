@@ -25,10 +25,10 @@ export type Permission = (typeof permissions)[number];
 
 export const rolePermissions: Record<RoleKey, Permission[]> = {
   admin: [...permissions],
-  instructor: ["courses:read", "courses:write", "lessons:write", "quizzes:write", "analytics:read", "reports:read"],
+  instructor: ["courses:read", "courses:write", "lessons:write", "quizzes:write", "progress:write", "analytics:read", "reports:read"],
   student: ["courses:read", "progress:write"],
   curator: ["courses:read", "assignments:review", "progress:write", "notifications:write", "reports:read"],
-  super_curator: ["users:read", "users:write", "roles:manage", "courses:read", "assignments:review", "analytics:read", "notifications:write", "reports:read"],
+  super_curator: ["users:read", "users:write", "roles:manage", "courses:read", "assignments:review", "progress:write", "quizzes:write", "analytics:read", "notifications:write", "reports:read"],
   customer_observer: ["courses:read", "analytics:read", "reports:read"]
 };
 

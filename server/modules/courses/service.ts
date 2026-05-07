@@ -118,6 +118,30 @@ export async function createModule(courseId: string, input: {
   return courseModule;
 }
 
+export async function updateModule(moduleId: string, input: {
+  title?: string;
+  description?: string;
+  order?: number;
+  recommendedDays?: number;
+  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+}, actorId: string) {
+  const courseModule = await prisma.module.update({
+    where: { id: moduleId },
+    data: {
+      ...input,
+      status: input.status ? CourseStatus[input.status] : undefined
+    }
+  });
+  await logAudit({ actorId, action: "module.updated", entity: "module", entityId: courseModule.id, metadata: input });
+  return courseModule;
+}
+
+export async function deleteModule(moduleId: string, actorId: string) {
+  const courseModule = await prisma.module.delete({ where: { id: moduleId } });
+  await logAudit({ actorId, action: "module.deleted", entity: "module", entityId: moduleId });
+  return courseModule;
+}
+
 export async function createLesson(moduleId: string, input: {
   title: string;
   summary?: string;
@@ -147,6 +171,34 @@ export async function createLesson(moduleId: string, input: {
   return lesson;
 }
 
+export async function updateLesson(lessonId: string, input: {
+  title?: string;
+  summary?: string;
+  order?: number;
+  type?: keyof typeof LessonType;
+  content?: Record<string, unknown>;
+  videoUrl?: string;
+  durationMinutes?: number;
+  isRequired?: boolean;
+}, actorId: string) {
+  const lesson = await prisma.lesson.update({
+    where: { id: lessonId },
+    data: {
+      ...input,
+      type: input.type ? LessonType[input.type] : undefined,
+      content: input.content ? toJsonValue(input.content) : undefined
+    }
+  });
+  await logAudit({ actorId, action: "lesson.updated", entity: "lesson", entityId: lesson.id, metadata: input });
+  return lesson;
+}
+
+export async function deleteLesson(lessonId: string, actorId: string) {
+  const lesson = await prisma.lesson.delete({ where: { id: lessonId } });
+  await logAudit({ actorId, action: "lesson.deleted", entity: "lesson", entityId: lessonId });
+  return lesson;
+}
+
 export async function getLesson(lessonId: string) {
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
@@ -162,6 +214,17 @@ export async function getLesson(lessonId: string) {
     throw new ApiError("not_found", "Урок не найден", 404);
   }
   return lesson;
+}
+
+export async function getModule(moduleId: string) {
+  const courseModule = await prisma.module.findUnique({
+    where: { id: moduleId },
+    include: { course: true, lessons: { orderBy: { order: "asc" } } }
+  });
+  if (!courseModule) {
+    throw new ApiError("not_found", "Модуль не найден", 404);
+  }
+  return courseModule;
 }
 
 export async function listEnrollments() {
