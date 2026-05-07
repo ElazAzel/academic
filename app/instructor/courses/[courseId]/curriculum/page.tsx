@@ -40,7 +40,6 @@ export default async function CourseCurriculumPage({ params }: { params: Promise
 
       <div className="mt-8">
         <CurriculumEditor 
-          courseId={courseId} 
           initialModules={course.modules.map(m => ({
             id: m.id,
             title: m.title,
