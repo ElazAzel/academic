@@ -1,46 +1,46 @@
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
-import Link from "next/link";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { getQuizForStudent } from "@/server/modules/learning/service";
+import { QuizView } from "./quiz-view";
+import { ApiError } from "@/lib/http";
 
-export default function StudentQuizPage({ params }: { params: { quizId: string } }) {
-  const MOCK_QUESTIONS = [
-    { id: "q1", text: "Что такое ROI в контексте AI-проекта?", options: ["Доход", "Возврат инвестиций", "Риск", "Капитал"], correct: 1 },
-    { id: "q2", text: "Какой ключевой фактор влияет на TCO AI-решения?", options: ["Цвет логотипа", "Стоимость инференса", "Название проекта", "Размер команды"], correct: 1 },
-    { id: "q3", text: "Что означает sequential traversal mode?", options: ["Уроки в любом порядке", "Уроки по порядку", "Только видео", "Только тесты"], correct: 1 },
-  ];
+export const dynamic = "force-dynamic";
+
+export default async function StudentQuizPage({ params }: { params: Promise<{ quizId: string }> }) {
+  const user = await requireRolePage(["student"]);
+  const { quizId } = await params;
+
+  let quiz;
+  try {
+    quiz = await getQuizForStudent(user.id, quizId);
+  } catch (error) {
+    if (error instanceof ApiError && error.code === "not_found") {
+      notFound();
+    }
+    throw error;
+  }
 
   return (
     <AppShell role="student">
       <div className="mb-4">
-        <Link href="/student/my-courses"><Button size="sm" variant="secondary"><ArrowLeft className="h-4 w-4" />Назад к курсу</Button></Link>
+        <Button asChild size="sm" variant="secondary">
+          <Link href={`/student/lessons/${quiz.lessonId}`}>
+            <ArrowLeft className="h-4 w-4" />
+            Назад к уроку
+          </Link>
+        </Button>
       </div>
-      <PageHeader title="Тест: Unit-экономика" description={`Тест ${params.quizId} · 3 вопроса · порог 80% · 3 попытки`} badge="Тест" />
-      <div className="space-y-4">
-        {MOCK_QUESTIONS.map((q, i) => (
-          <Card key={q.id} className="rounded-2xl">
-            <CardContent className="py-5 space-y-3">
-              <p className="text-sm font-medium">{i + 1}. {q.text}</p>
-              <div className="space-y-2">
-                {q.options.map((opt, j) => (
-                  <label key={j} className="flex items-center gap-3 rounded-xl border p-3 cursor-pointer hover:bg-muted transition-colors">
-                    <input type="radio" name={q.id} className="h-4 w-4 text-primary" />
-                    <span className="text-sm">{opt}</span>
-                  </label>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        <div className="flex justify-end gap-2 pt-2">
-          <Button>
-            <CheckCircle2 className="h-4 w-4" />
-            Отправить ответы
-          </Button>
-        </div>
-      </div>
+      <PageHeader 
+        title={quiz.title} 
+        description={`${quiz.questionsCount} вопросов · порог ${quiz.passThreshold}% · ${quiz.maxAttempts} попытки`} 
+        badge="Тест" 
+      />
+      <QuizView quiz={quiz} />
     </AppShell>
   );
 }

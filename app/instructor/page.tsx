@@ -26,8 +26,8 @@ export default async function InstructorDashboardPage() {
     );
   }
 
-  const metrics = data?.metrics ?? getInstructorMetrics();
-  const myCourses = data?.courses ?? MOCK_COURSES.filter((c) => c.instructors.some((i) => i.id === "u-instr1"));
+  const metrics = data?.metrics ?? [];
+  const myCourses = data?.courses ?? [];
 
   return (
     <AppShell role="instructor">

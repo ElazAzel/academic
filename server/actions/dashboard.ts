@@ -110,17 +110,24 @@ export async function getStudentDashboard() {
       answeredAt: q.answeredAt?.toISOString(),
     }));
 
-    const activeCourses = enrollments.filter((e) => e.courseProgress[0]?.status !== "COMPLETED").length;
+    const activeCourses = enrollments.filter((e) => {
+      const cp = e.courseProgress[0];
+      return cp?.status !== "COMPLETED";
+    }).length;
+
     const avgPercent = coursesProgress.length > 0
       ? Math.round(coursesProgress.reduce((s, c) => s + c.percent, 0) / coursesProgress.length)
       : 0;
-    const certificates = await prisma.certificate.count({ where: { userId: user.id } });
+
+    const certificatesCount = await prisma.certificate.count({ where: { userId: user.id } });
+
+    const openQuestionsCount = formattedQuestions.filter((q) => q.status === "open").length;
 
     const metrics: DashboardMetric[] = [
       { label: "Активные курсы", value: activeCourses, tone: "primary" },
       { label: "Средний прогресс", value: `${avgPercent}%`, tone: avgPercent > 50 ? "success" : "warning" },
-      { label: "Сертификаты", value: certificates, tone: "success" },
-      { label: "Вопросов куратору", value: formattedQuestions.filter((q) => q.status === "open").length, tone: "info" },
+      { label: "Сертификаты", value: certificatesCount, tone: "success" },
+      { label: "Вопросы куратору", value: openQuestionsCount, tone: openQuestionsCount > 0 ? "info" : "primary" },
     ];
 
     return { metrics, coursesProgress, continueLearning, questions: formattedQuestions };
@@ -419,10 +426,21 @@ export async function getInstructorDashboard() {
       })),
     }));
 
+    const courseIds = courses.map((c) => c.id);
+    const studentsCount = await prisma.enrollment.count({
+      where: { courseId: { in: courseIds }, status: "ACTIVE" }
+    });
+
+    const avgProgressResult = await prisma.courseProgress.aggregate({
+      where: { courseId: { in: courseIds } },
+      _avg: { percent: true }
+    });
+    const avgProgress = Math.round(avgProgressResult._avg.percent ?? 0);
+
     const metrics: DashboardMetric[] = [
       { label: "Мои курсы", value: courses.length, tone: "primary" },
-      { label: "Слушатели", value: 0, tone: "info" },
-      { label: "Средний прогресс", value: "0%", tone: "warning" },
+      { label: "Слушатели", value: studentsCount, tone: "info" },
+      { label: "Средний прогресс", value: `${avgProgress}%`, tone: avgProgress > 50 ? "success" : "warning" },
       { label: "Вопросы от кураторов", value: 0, tone: "success" },
     ];
 

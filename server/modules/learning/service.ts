@@ -11,7 +11,9 @@ import type {
   StudentCourseLearningDetail,
   StudentLessonLearningDetail,
   StudentModuleLearningDetail,
-  StudentProgress
+  StudentProgress,
+  StudentQuizDetail,
+  StudentAssignmentDetail
 } from "@/types/domain";
 
 const prisma = getPrisma();
@@ -357,5 +359,89 @@ export async function askCuratorQuestion(userId: string, lessonId: string, text:
     text: question.text,
     status: question.status,
     createdAt: question.createdAt.toISOString()
+  };
+}
+
+export async function getQuizForStudent(userId: string, quizId: string): Promise<StudentQuizDetail> {
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: quizId },
+    include: {
+      questions: { orderBy: { order: "asc" } },
+      course: { select: { id: true, title: true } },
+      lesson: { select: { id: true } }
+    }
+  });
+
+  if (!quiz) {
+    throw new ApiError("not_found", "Тест не найден", 404);
+  }
+
+  // Check access via lesson
+  if (quiz.lessonId) {
+    await assertLessonAccess(userId, quiz.lessonId);
+  }
+
+  return {
+    id: quiz.id,
+    title: quiz.title,
+    passThreshold: quiz.passThreshold,
+    maxAttempts: quiz.maxAttempts,
+    questionsCount: quiz.questions.length,
+    courseId: quiz.courseId ?? "",
+    courseTitle: quiz.course?.title ?? "",
+    lessonId: quiz.lessonId ?? "",
+    questions: quiz.questions.map((q) => ({
+      id: q.id,
+      type: q.type,
+      text: q.prompt,
+      options: Array.isArray(q.options) ? (q.options as string[]) : []
+    }))
+  };
+}
+
+export async function getAssignmentForStudent(userId: string, assignmentId: string): Promise<StudentAssignmentDetail> {
+  const assignment = await prisma.assignment.findUnique({
+    where: { id: assignmentId },
+    include: {
+      course: { select: { id: true, title: true } },
+      lesson: { select: { id: true } },
+      submissions: {
+        where: { userId },
+        orderBy: { submittedAt: "desc" },
+        take: 1
+      }
+    }
+  });
+
+  if (!assignment) {
+    throw new ApiError("not_found", "Задание не найдено", 404);
+  }
+
+  // Check access via lesson
+  if (assignment.lessonId) {
+    await assertLessonAccess(userId, assignment.lessonId);
+  }
+
+  const submission = assignment.submissions[0];
+
+  return {
+    id: assignment.id,
+    title: assignment.title,
+    deadline: assignment.deadline?.toISOString() ?? null,
+    maxAttempts: assignment.maxAttempts,
+    submissionStatus: submission?.status ?? null,
+    courseId: assignment.courseId ?? "",
+    courseTitle: assignment.course?.title ?? "",
+    lessonId: assignment.lessonId ?? "",
+    instructions: assignment.instructions,
+    submission: submission ? {
+      id: submission.id,
+      answerText: submission.answerText,
+      fileUrl: submission.fileUrl,
+      status: submission.status,
+      feedback: submission.feedback,
+      score: submission.score,
+      submittedAt: submission.submittedAt.toISOString()
+    } : null
   };
 }

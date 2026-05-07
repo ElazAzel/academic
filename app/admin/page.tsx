@@ -34,10 +34,10 @@ export default async function AdminDashboardPage() {
     );
   }
 
-  const metrics = data?.metrics ?? getAdminMetrics();
-  const courses = data?.courses ?? MOCK_COURSES;
-  const cohorts = data?.cohorts ?? MOCK_COHORTS;
-  const certificates = data?.certificates ?? MOCK_CERTIFICATES;
+  const metrics = data?.metrics ?? [];
+  const courses = data?.courses ?? [];
+  const cohorts = data?.cohorts ?? [];
+  const certificates = data?.certificates ?? [];
 
   return (
     <AppShell role="admin">

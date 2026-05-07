@@ -215,6 +215,36 @@ export interface AssignmentSummary {
   submissionStatus?: SubmissionStatus | null;
 }
 
+export interface StudentQuizDetail extends QuizSummary {
+  courseId: string;
+  courseTitle: string;
+  lessonId: string;
+  questions: QuizQuestionDetail[];
+}
+
+export interface QuizQuestionDetail {
+  id: string;
+  type: string;
+  text: string;
+  options: string[];
+}
+
+export interface StudentAssignmentDetail extends AssignmentSummary {
+  courseId: string;
+  courseTitle: string;
+  lessonId: string;
+  instructions: string;
+  submission?: {
+    id: string;
+    answerText?: string | null;
+    fileUrl?: string | null;
+    status: SubmissionStatus;
+    feedback?: string | null;
+    score?: number | null;
+    submittedAt: string;
+  } | null;
+}
+
 export interface SubmissionForReview {
   id: string;
   assignmentTitle: string;

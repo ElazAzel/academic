@@ -33,9 +33,9 @@ export default async function SuperCuratorDashboardPage() {
     );
   }
 
-  const metrics = data?.metrics ?? getSuperCuratorMetrics();
-  const curatorLoads = data?.curatorLoads ?? MOCK_CURATOR_LOADS;
-  const cohorts = data?.cohorts ?? MOCK_COHORTS;
+  const metrics = data?.metrics ?? [];
+  const curatorLoads = data?.curatorLoads ?? [];
+  const cohorts = data?.cohorts ?? [];
 
   return (
     <AppShell role="super_curator">

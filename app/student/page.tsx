@@ -36,10 +36,10 @@ export default async function StudentDashboardPage() {
     );
   }
   
-  const metrics = data?.metrics ?? getStudentMetrics();
-  const continueLearning = data?.continueLearning ?? MOCK_CONTINUE_LEARNING;
-  const coursesProgress = data?.coursesProgress ?? MOCK_STUDENT_PROGRESS;
-  const questions = data?.questions ?? MOCK_QUESTIONS;
+  const metrics = data?.metrics ?? [];
+  const continueLearning = data?.continueLearning ?? null;
+  const coursesProgress = data?.coursesProgress ?? [];
+  const questions = data?.questions ?? [];
 
   const answeredQuestions = questions.filter((q) => q.status === "answered");
 

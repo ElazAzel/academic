@@ -38,10 +38,10 @@ export default async function CuratorDashboardPage() {
     );
   }
 
-  const metrics = data?.metrics ?? getCuratorMetrics();
-  const questions = data?.questions ?? MOCK_QUESTIONS;
-  const submissions = data?.submissions ?? MOCK_SUBMISSIONS;
-  const risks = data?.risks ?? MOCK_RISKS;
+  const metrics = data?.metrics ?? [];
+  const questions = data?.questions ?? [];
+  const submissions = data?.submissions ?? [];
+  const risks = data?.risks ?? [];
 
   const openQuestions = questions.filter((q) => q.status === "open");
 
