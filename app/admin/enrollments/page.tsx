@@ -5,14 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar } from "@/components/ui/avatar";
 import { Plus, Download } from "lucide-react";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { listEnrollments } from "@/server/modules/courses/service";
 
-const MOCK_ENROLLMENTS = [
-  { id: "e1", studentName: "Слушатель 1", email: "student1@academy.local", course: "AI Strategy Fundamentals", cohort: "Поток Q2-2026", status: "ACTIVE" as const, enrolledAt: "2026-04-15" },
-  { id: "e2", studentName: "Слушатель 2", email: "student2@academy.local", course: "AI Strategy Fundamentals", cohort: "Поток Q2-2026", status: "ACTIVE" as const, enrolledAt: "2026-04-15" },
-  { id: "e3", studentName: "Слушатель 3", email: "student3@academy.local", course: "Prompt Engineering for Leaders", cohort: "Поток Весна-2026", status: "ACTIVE" as const, enrolledAt: "2026-03-01" },
-  { id: "e4", studentName: "Слушатель 4", email: "student4@academy.local", course: "Prompt Engineering for Leaders", cohort: "Поток Весна-2026", status: "PAUSED" as const, enrolledAt: "2026-03-01" },
-  { id: "e5", studentName: "Слушатель 5", email: "student5@academy.local", course: "AI Strategy Fundamentals", cohort: "Поток Q1-2026", status: "COMPLETED" as const, enrolledAt: "2026-01-10" },
-];
+export const dynamic = "force-dynamic";
 
 const STATUS_BADGE = {
   ACTIVE: { className: "border-emerald-200 bg-emerald-50 text-emerald-700", label: "Активен" },
@@ -22,14 +18,17 @@ const STATUS_BADGE = {
   INVITED: { className: "border-gray-200 bg-gray-50 text-gray-600", label: "Приглашён" },
 };
 
-export default function AdminEnrollmentsPage() {
+export default async function AdminEnrollmentsPage() {
+  await requireRolePage(["admin"]);
+  const enrollments = await listEnrollments();
+
   return (
     <AppShell role="admin">
       <PageHeader title="Зачисления" description="Управление доступом слушателей к курсам и потокам." badge="Администратор" />
-      <div className="space-y-6">
+      <div className="space-y-6 mt-6">
         <div className="flex gap-3">
-          <Button><Plus className="h-4 w-4" />Зачислить слушателя</Button>
-          <Button variant="secondary"><Download className="h-4 w-4" />Экспорт CSV</Button>
+          <Button><Plus className="h-4 w-4 mr-2" />Зачислить слушателя</Button>
+          <Button variant="secondary"><Download className="h-4 w-4 mr-2" />Экспорт CSV</Button>
         </div>
         <Table>
           <TableHeader>
@@ -43,23 +42,23 @@ export default function AdminEnrollmentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {MOCK_ENROLLMENTS.map((e) => {
-              const badge = STATUS_BADGE[e.status] ?? STATUS_BADGE.ACTIVE;
+            {enrollments.map((e) => {
+              const badge = STATUS_BADGE[e.status as keyof typeof STATUS_BADGE] ?? STATUS_BADGE.ACTIVE;
               return (
                 <TableRow key={e.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Avatar name={e.studentName} className="h-7 w-7 text-[10px]" />
+                      <Avatar name={e.user.name ?? e.user.email} className="h-7 w-7 text-[10px]" />
                       <div>
-                        <p className="text-sm font-medium">{e.studentName}</p>
-                        <p className="text-xs text-muted-foreground">{e.email}</p>
+                        <p className="text-sm font-medium">{e.user.name ?? e.user.email}</p>
+                        <p className="text-xs text-muted-foreground">{e.user.email}</p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm">{e.course}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{e.cohort}</TableCell>
+                  <TableCell className="text-sm">{e.course.title}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{e.cohort?.name ?? "Без потока"}</TableCell>
                   <TableCell><Badge className={badge.className}>{badge.label}</Badge></TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{e.enrolledAt}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{e.createdAt.toLocaleDateString("ru-RU")}</TableCell>
                   <TableCell className="text-right"><Button size="sm" variant="secondary">Управление</Button></TableCell>
                 </TableRow>
               );
