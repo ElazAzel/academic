@@ -6,7 +6,7 @@
 - Next.js `16.2.5`, React `19.2.4`, Prisma `6.16.2`, and NextAuth `4.24.11` are pinned for repeatable installs.
 - `.npmrc` enables `legacy-peer-deps=true` because NextAuth stable `4.24.x` has a peer range that does not yet include Next `16`, while the project intentionally targets the current Next.js line. Replace this with Auth.js v5+ once the stable adapter path is accepted.
 - PostgreSQL is the system of record. Redis, MailHog, and MinIO are local development dependencies from Docker Compose.
-- Vercel deployments use managed PostgreSQL through `DATABASE_URL`; migrations and seed must run after Production/Preview env vars are set.
+- Production database default changed to self-hosted PostgreSQL inside the platform network. Managed DB providers are not the default target; `DATABASE_URL` must stay in secret storage and must not expose a public PostgreSQL port.
 - Russian is the default UI locale. English dictionary scaffolding is not generated because `--locale=ru`.
 - Theme default is light and academy-focused. The app avoids marketplace pricing pages and multi-vendor course author flows.
 - Mock dashboard data is a demo-only fallback controlled by `NEXT_PUBLIC_DEMO_MODE=true`; production defaults to real data or explicit unavailable/empty states.

@@ -124,7 +124,7 @@ const result = gradeObjectiveQuiz(questions, answers, passThreshold);
 
 Локально: скопировать `.env.example` в `.env`, поднять Docker Compose зависимости, выполнить `npm.cmd install`, `npm.cmd run db:push`, `npm.cmd run db:seed`, `npm.cmd run dev`.
 
-Production: задать реальные `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `APP_URL`, OAuth secrets, SMTP и S3 vars. Для Vercel использовать managed Postgres/S3/SMTP; Stripe secrets не требуются для текущего invite-only профиля. Для Docker/K8s использовать `Dockerfile`, `docker-compose.yml`, `infra/k8s`.
+Production: задать реальные `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `APP_URL`, OAuth secrets, SMTP и S3 vars через локальное/VPS/K8s secret storage. База данных по умолчанию self-hosted: PostgreSQL запускается как внутренний сервис платформы без публичного порта; сторонние провайдеры БД не являются целевым режимом. Stripe secrets не требуются для текущего invite-only профиля. Для Docker/K8s использовать `Dockerfile`, `docker-compose.yml`, `infra/k8s`.
 
 # План миграции и масштабирования
 

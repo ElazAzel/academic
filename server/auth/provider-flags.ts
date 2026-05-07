@@ -1,5 +1,3 @@
-import { env } from "@/lib/env";
-
 export type OAuthProviderFlags = {
   google: boolean;
   github: boolean;
@@ -7,7 +5,7 @@ export type OAuthProviderFlags = {
 
 export function getEnabledOAuthProviders(): OAuthProviderFlags {
   return {
-    google: Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
-    github: Boolean(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET)
+    google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+    github: Boolean(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET)
   };
 }

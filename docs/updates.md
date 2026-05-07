@@ -2,6 +2,58 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-07 — Self-hosted private database and learning flow stabilization
+
+Автор/agent: Codex
+Тип изменения: infra / security / learning / verification
+Файлы/модули:
+
+- `docker-compose.yml`
+- `.env.example`
+- `infra/k8s/postgres.yaml`
+- `infra/k8s/networkpolicy.yaml`
+- `infra/k8s/secret.template.yaml`
+- `lib/auth/role-redirect.ts`
+- `app/page.tsx`
+- `app/login/page.tsx`
+- `app/student/courses/[courseId]/page.tsx`
+- `app/student/modules/[moduleId]/page.tsx`
+- `app/student/lessons/[lessonId]/page.tsx`
+- `server/modules/learning/service.ts`
+- `server/modules/analytics/service.ts`
+- `docs/assumptions.md`
+- `docs/security.md`
+- `docs/todo.md`
+
+Summary:
+
+- Главная страница академии закреплена как форма входа; landing/marketing слой не используется.
+- После входа пользователь направляется в дашборд по своей роли через серверный role redirect.
+- База данных переведена в self-hosted модель: PostgreSQL запускается как внутренний сервис платформы, без публичного порта в Docker Compose.
+- Kubernetes получил `academy-postgres` StatefulSet, ClusterIP Service и NetworkPolicy, разрешающую доступ к БД только pod-ам приложения.
+- `DATABASE_URL`, `POSTGRES_PASSWORD` и MinIO credentials документированы как внутренние секреты, не предназначенные для Git или публичных консолей.
+- Credentials login теперь принимает только активных пользователей; отключённый аккаунт не может войти даже с правильным паролем.
+- Learning flow подключен к server-side service: курс, модуль и урок проверяют активное enrollment, sequential lock и показывают реальные lesson/progress данные.
+
+Проверки:
+
+- `npm.cmd run typecheck` — прошёл успешно.
+- `npm.cmd run test` — прошёл успешно: 9 test files, 13 tests.
+- `npm.cmd run lint -- --max-warnings=0` — прошёл успешно.
+- `npm.cmd run build` — прошёл успешно.
+
+Риски:
+
+- Локальное создание 4053 аккаунтов через `npm.cmd run users:provision` требует запущенный внутренний PostgreSQL и реальный `.env`; CSV с паролями пишется только в ignored `var/credentials`.
+- Админский доступ к самой БД остаётся операционной процедурой: через защищённый shell/port-forward/bastion, а не через публичный DB UI.
+- Для production нужен backup/restore runbook и регулярная проверка восстановления.
+
+Next steps:
+
+- Запустить self-hosted PostgreSQL через Docker/K8s/VPS, применить миграции и seed.
+- Выполнить `npm.cmd run users:provision` в закрытой среде и передать CSV через защищённый канал.
+- Добавить backup jobs, restore rehearsal и admin-only operational access procedure.
+
 ## 2026-05-07 — Issued credentials вместо публичной регистрации
 
 Автор/agent: Codex
@@ -447,3 +499,25 @@ Next steps:
 
 - Что сделать дальше.
 ```
+## 2026-05-07 — Login-first academy, course passing core, private self-hosted DB
+
+Автор/agent: Codex  
+Тип изменения: feature/security/infra
+
+### Что изменено
+
+- Главная страница `/` стала страницей входа; отдельной посадочной страницы академии больше нет.
+- После входа пользователь перенаправляется в типовой кабинет по своей роли.
+- Добавлен server-side learning service: active enrollment, sequential lock, реальные страницы курса/модуля/урока, отметка урока пройденным и вопрос куратору.
+- Добавлен API назначения ролей: админ может назначать все роли, главный куратор — только учебные/операционные роли без доступа к `admin`.
+- Docker Compose переведен на private PostgreSQL: порт БД не публикуется наружу, доступ есть только у app-контейнера по внутренней сети.
+- Kubernetes получил `academy-postgres` StatefulSet, ClusterIP service и NetworkPolicy для доступа к БД только от `academy-web`.
+
+### Проверки
+
+- `npm.cmd run typecheck` — passed.
+
+### Риски и next steps
+
+- Нужно прогнать `lint`, `test`, `build`.
+- Для production self-hosted DB нужны backup/restore runbook, регулярные бэкапы и процедура доступа администратора через защищенный bastion/port-forward.

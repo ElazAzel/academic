@@ -1,6 +1,6 @@
 # AI Strategic Academy
 
-Production-minded bootstrap for a closed Russian-first LMS managed by one academy. The runnable core is a Next.js modular monolith with Prisma/PostgreSQL, Auth.js, REST APIs, GraphQL scaffolds, seed data, tests, Docker, Kubernetes, and Vercel-ready configuration.
+Production-minded bootstrap for a closed Russian-first LMS managed by one academy. The runnable core is a Next.js modular monolith with Prisma/PostgreSQL, Auth.js, REST APIs, GraphQL scaffolds, seed data, tests, Docker, Kubernetes, and self-hosted deployment templates.
 
 ## Quick Start
 
@@ -21,7 +21,15 @@ Open `http://localhost:3000`.
 docker compose up -d postgres redis mailhog minio
 ```
 
-Docker CLI is required for local Postgres/Redis/MailHog/MinIO. If Docker is not installed, point `DATABASE_URL`, `REDIS_URL`, SMTP, and S3 env vars at managed services.
+Docker Compose keeps PostgreSQL and Redis on an internal network without public database ports. For the secure self-hosted flow, run migrations and provisioning inside the app container:
+
+```powershell
+docker compose run --rm app npm run db:migrate
+docker compose run --rm app npm run users:provision
+docker compose up app
+```
+
+Production should use the same model on a VPS or Kubernetes cluster: PostgreSQL is a private service, `DATABASE_URL` is stored only in environment/secret storage, and users never connect to the database directly.
 
 ## Checks
 

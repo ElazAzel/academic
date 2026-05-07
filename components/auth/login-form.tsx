@@ -23,18 +23,23 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
       password: String(formData.get("password")),
       redirect: false
     });
-    setPending(false);
     if (result?.error) {
-      setError("Неверный email или пароль");
+      setPending(false);
+      setError("Неверный логин или пароль");
       return;
     }
-    router.push("/student");
+
+    const targetResponse = await fetch("/api/v1/auth/redirect-target", { cache: "no-store" });
+    const payload = await targetResponse.json().catch(() => null) as { data?: { path?: string } } | null;
+    setPending(false);
+    router.replace(payload?.data?.path ?? "/student");
+    router.refresh();
   }
 
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
       <label className="block text-sm font-medium">
-        Email
+        Логин / Email
         <Input className="mt-2" name="email" type="email" required autoComplete="email" />
       </label>
       <label className="block text-sm font-medium">

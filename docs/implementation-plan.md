@@ -52,7 +52,7 @@
 | Courses | Production editor UI для курса, модулей, уроков и материалов | planned | Преподаватель создаёт published course через UI |
 | Progress | Lesson/module/course progress и continue learning logic | done | Progress service пересчитывает проценты |
 | Progress | Sequential access check in progress mutation | done | `markLessonProgress` требует active enrollment и completed previous required lessons |
-| Progress | Sequential unlock logic в lesson UI | planned | Заблокированные уроки не открываются до условий |
+| Progress | Sequential unlock logic в lesson UI | done | Заблокированные уроки не открываются до условий |
 | Quizzes | Objective autograding, attempts, pass threshold | done | Unit tests покрывают autograding |
 | Quizzes | Полный quiz builder UI и история попыток | planned | Instructor creates quiz, student submits, result visible |
 | Assignments | Submissions с текстом/fileUrl, review service | done | Submission service и review service созданы |
@@ -69,6 +69,7 @@
 | Security | Security doc, RBAC, page guards, disabled billing endpoints, env examples | done | `docs/security.md`, `requireRolePage`, middleware и server guards существуют |
 | Security | Rate limiting with Redis and privacy workflows | planned | Distributed limiter, export/delete PII process |
 | DevOps | Docker, Compose, K8s, CI templates | done | Infra files созданы |
+| DevOps | Self-hosted private PostgreSQL boundary | done | Compose не публикует порт БД, K8s использует ClusterIP + NetworkPolicy, секреты остаются вне Git |
 | DevOps | GitHub remote/upstream для `ElazAzel/academic` | done | Remote переименован в `origin`, remote `LICENSE` смержен, `main` опубликован и отслеживает `origin/main` |
 | DevOps | Реальный deployment validation | planned | Vercel/Docker/K8s smoke checks documented |
 | UI | Light Russian LMS shell and role pages | done | Pages build in production |
@@ -90,7 +91,7 @@ MVP считается готовым, когда:
 
 ## Production Hardening
 
-- Подключить реальные secrets через Vercel/K8s secret storage, не через committed files.
+- Подключить реальные secrets через локальное/VPS/K8s secret storage, не через committed files.
 - Добавить Redis-backed rate limiting.
 - Добавить backup/restore runbook и scheduled backups.
 - Добавить Sentry/Web Vitals или эквивалент monitoring.
@@ -104,3 +105,10 @@ MVP считается готовым, когда:
 - `docs/security.md` — security checklist и риски.
 - `docs/todo.md` — незавершённые production-hardening задачи.
 - `docs/updates.md` — журнал всех обновлений.
+## 2026-05-07 Implementation Delta
+
+- Главная страница академии теперь является страницей входа, без landing/marketing слоя.
+- Логин ведет в дашборд по роли пользователя.
+- Learning core переведен на server-side service с проверкой active enrollment и последовательного доступа к урокам.
+- Назначение ролей реализовано через admin/super_curator API и UI.
+- Production data target: self-hosted private PostgreSQL, а не сторонний managed database provider.

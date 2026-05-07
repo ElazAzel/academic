@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: academy-postgres-private
+  namespace: ai-strategic-academy
+spec:
+  podSelector:
+    matchLabels:
+      app: academy-postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: academy-web
+      ports:
+        - protocol: TCP
+          port: 5432

@@ -5,7 +5,7 @@ const envSchema = z.object({
   APP_URL: z.string().url().default("http://localhost:3000"),
   NEXTAUTH_URL: z.string().url().default("http://localhost:3000"),
   NEXTAUTH_SECRET: z.string().min(16).default("development-secret-change-me"),
-  DATABASE_URL: z.string().min(1).default("postgresql://academy:academy@localhost:5432/academy?schema=public"),
+  DATABASE_URL: z.string().min(1).default("postgresql://academy:academy-local-only@postgres:5432/academy?schema=public"),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GITHUB_CLIENT_ID: z.string().optional(),
@@ -17,4 +17,3 @@ const envSchema = z.object({
 });
 
 export const env = envSchema.parse(process.env);
-

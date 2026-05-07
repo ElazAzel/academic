@@ -35,3 +35,11 @@
 - Privacy: consent log, privacy/terms pages, data export-ready report layer.
 - Observability: health endpoints, structured audit events, monitoring placeholders.
 - Deployment: Docker/K8s secret templates, no real secrets committed.
+
+# Private Database Boundary
+
+- PostgreSQL is deployed as an internal platform service for the self-hosted target.
+- Docker Compose does not publish the PostgreSQL port to the host network; only the app container can reach `postgres:5432`.
+- Kubernetes uses `academy-postgres` as a ClusterIP service plus NetworkPolicy that allows ingress only from `academy-web` pods.
+- `DATABASE_URL`, `POSTGRES_PASSWORD`, and provisioning credentials are secrets. They must be stored in `.env`, Kubernetes Secret, or VPS secret storage, never in Git.
+- Direct database inspection is an admin-only operational action and should happen via bastion/port-forward with audit discipline, not through a public DB console.

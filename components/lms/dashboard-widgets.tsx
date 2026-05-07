@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRight, BookOpen, CheckCircle2, FileText, MessageCircle, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,9 +82,11 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
           <p className="text-sm text-muted-foreground">
             До сертификата: пройти {100 - data.coursePercent}% курса и сдать финальное задание.
           </p>
-          <Button>
+          <Button asChild>
+            <Link href={`/student/lessons/${data.lessonId}`}>
             Открыть урок
             <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
           </Button>
         </div>
       </CardContent>
@@ -120,6 +123,11 @@ export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) 
           </CardHeader>
           <CardContent className="space-y-2">
             <Progress value={c.percent} />
+            <Button asChild className="mt-3 w-full" size="sm" variant="secondary">
+              <Link href={c.nextLessonId ? `/student/lessons/${c.nextLessonId}` : `/student/courses/${c.courseId}`}>
+                {c.nextLessonId ? "Продолжить" : "Открыть курс"}
+              </Link>
+            </Button>
             <p className="text-sm text-muted-foreground">{c.percent}% завершено</p>
           </CardContent>
         </Card>
