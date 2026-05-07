@@ -1,7 +1,6 @@
 export function PageHeader({
   title,
   description,
-  badge: _badge
 }: {
   title: string;
   description: string;

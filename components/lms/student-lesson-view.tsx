@@ -283,12 +283,19 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
             </Button>
           ) : <div />}
           {lesson.nextLesson ? (
-            <Button asChild size="sm" disabled={lesson.nextLesson.locked}>
-              <Link href={lesson.nextLesson.locked ? "#" : `/student/lessons/${lesson.nextLesson.id}`}>
+            lesson.nextLesson.locked ? (
+              <Button size="sm" disabled title="Урок заблокирован">
                 {lesson.nextLesson.title}
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
+              </Button>
+            ) : (
+              <Button asChild size="sm">
+                <Link href={`/student/lessons/${lesson.nextLesson.id}`}>
+                  {lesson.nextLesson.title}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            )
           ) : null}
         </div>
       </div>

@@ -34,8 +34,8 @@ export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
         onSuccess?.();
         router.refresh();
       } else {
-        const errData = await response.json();
-        setError(errData.error || "Не удалось создать курс");
+        const errData = await response.json().catch(() => ({}));
+        setError(errData.error?.message || "Не удалось создать курс");
       }
     } catch {
       setError("Ошибка сети");
@@ -49,20 +49,22 @@ export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
       <h3 className="text-lg font-semibold">Новый курс</h3>
       <div className="space-y-1">
         <label className="text-xs font-medium uppercase text-muted-foreground">Название</label>
-        <Input name="title" required placeholder="Напр: Основы AI" />
+        <Input name="title" required minLength={3} placeholder="Напр: Основы AI" />
       </div>
       <div className="space-y-1">
         <label className="text-xs font-medium uppercase text-muted-foreground">Описание</label>
         <textarea 
           name="description" 
+          required
+          minLength={10}
           className="w-full min-h-[100px] rounded-xl border bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20" 
-          placeholder="О чем этот курс..."
+          placeholder="О чем этот курс (мин. 10 символов)..."
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
           <label className="text-xs font-medium uppercase text-muted-foreground">Часы</label>
-          <Input name="durationHours" type="number" required defaultValue="10" />
+          <Input name="durationHours" type="number" required min={0} defaultValue="10" />
         </div>
         <div className="space-y-1">
           <label className="text-xs font-medium uppercase text-muted-foreground">Режим</label>

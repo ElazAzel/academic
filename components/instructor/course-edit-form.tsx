@@ -47,7 +47,8 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
         setMessage("Курс успешно обновлен!");
         router.refresh();
       } else {
-        setMessage("Ошибка при обновлении");
+        const errData = await response.json().catch(() => ({}));
+        setMessage(errData.error?.message || "Ошибка при обновлении");
       }
     } catch {
       setMessage("Ошибка сети");
@@ -61,7 +62,7 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase text-muted-foreground">Название курса</label>
-          <Input name="title" defaultValue={course.title} required />
+          <Input name="title" defaultValue={course.title} required minLength={3} />
         </div>
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase text-muted-foreground">Статус</label>
@@ -78,6 +79,8 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
         <textarea
           name="description"
           defaultValue={course.description || ""}
+          required
+          minLength={10}
           className="w-full min-h-[120px] rounded-2xl border bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
         />
       </div>
@@ -89,7 +92,7 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
         </div>
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase text-muted-foreground">Длительность (часов)</label>
-          <Input name="durationHours" type="number" defaultValue={course.durationHours} />
+          <Input name="durationHours" type="number" min={0} defaultValue={course.durationHours} />
         </div>
       </div>
 
