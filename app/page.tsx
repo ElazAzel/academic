@@ -8,6 +8,10 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const user = await getCurrentUser();
+<<<<<<< HEAD
+=======
+
+>>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
   if (user) {
     redirect(getDefaultRolePath(user.roles));
   }

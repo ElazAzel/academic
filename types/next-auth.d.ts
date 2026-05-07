@@ -24,4 +24,7 @@ declare module "next-auth/jwt" {
     roles?: RoleKey[];
   }
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2

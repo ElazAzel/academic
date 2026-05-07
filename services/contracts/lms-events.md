@@ -24,6 +24,5 @@ Core event types:
 - `assignment.submitted`
 - `assignment.reviewed`
 - `certificate.issued`
-- `payment.paid`
+- `invite.activated`
 - `notification.sent`
-

@@ -1,7 +1,7 @@
 # Быстрый старт — локальная разработка
 
 ## Требования
-- Node.js >= 20.9.0
+- Node.js >= 24 < 25
 - Docker + Docker Compose
 - npm
 
@@ -14,7 +14,7 @@ npm install --legacy-peer-deps
 ```bash
 cp .env.example .env
 ```
-Проверьте, что `DATABASE_URL` указывает на `postgresql://academy:academy@localhost:5432/academy?schema=public`.
+Проверьте, что `DATABASE_URL` указывает на внутренний PostgreSQL из `docker-compose.yml`: `postgresql://academy:<secret>@postgres:5432/academy?schema=public`. Порт PostgreSQL не публикуется наружу.
 
 ## 3. Запуск PostgreSQL (через Docker)
 ```bash
@@ -24,11 +24,11 @@ docker compose up -d postgres redis mailhog minio
 
 ## 4. Миграция и наполнение БД
 ```bash
-# Создать таблицы в PostgreSQL
-npx prisma migrate dev --name init
+# Создать таблицы в PostgreSQL из app-контейнера, где доступен внутренний host `postgres`
+docker compose run --rm app npm run db:migrate
 
 # Наполнить демо-данными
-npx prisma db seed
+docker compose run --rm app npm run db:seed
 ```
 
 ## 5. Запуск dev-сервера
@@ -55,9 +55,12 @@ npm run dev
 # Запуск всех сервисов (включая приложение)
 docker compose up -d
 
-# Миграция внутри контейнера
-docker compose exec app npx prisma migrate dev --name init
-docker compose exec app npx prisma db seed
+# Миграция и seed внутри контейнера
+docker compose exec app npm run db:migrate
+docker compose exec app npm run db:seed
+
+# Создание выданных аккаунтов закрытой академии
+docker compose exec app npm run users:provision
 ```
 
 ## Полезные команды

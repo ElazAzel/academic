@@ -2,6 +2,205 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-07 — Self-hosted private database and learning flow stabilization
+
+Автор/agent: Codex
+Тип изменения: infra / security / learning / verification
+Файлы/модули:
+
+- `docker-compose.yml`
+- `.env.example`
+- `infra/k8s/postgres.yaml`
+- `infra/k8s/networkpolicy.yaml`
+- `infra/k8s/secret.template.yaml`
+- `lib/auth/role-redirect.ts`
+- `app/page.tsx`
+- `app/login/page.tsx`
+- `app/student/courses/[courseId]/page.tsx`
+- `app/student/modules/[moduleId]/page.tsx`
+- `app/student/lessons/[lessonId]/page.tsx`
+- `server/modules/learning/service.ts`
+- `server/modules/analytics/service.ts`
+- `docs/assumptions.md`
+- `docs/security.md`
+- `docs/todo.md`
+
+Summary:
+
+- Главная страница академии закреплена как форма входа; landing/marketing слой не используется.
+- После входа пользователь направляется в дашборд по своей роли через серверный role redirect.
+- База данных переведена в self-hosted модель: PostgreSQL запускается как внутренний сервис платформы, без публичного порта в Docker Compose.
+- Kubernetes получил `academy-postgres` StatefulSet, ClusterIP Service и NetworkPolicy, разрешающую доступ к БД только pod-ам приложения.
+- `DATABASE_URL`, `POSTGRES_PASSWORD` и MinIO credentials документированы как внутренние секреты, не предназначенные для Git или публичных консолей.
+- Credentials login теперь принимает только активных пользователей; отключённый аккаунт не может войти даже с правильным паролем.
+- Learning flow подключен к server-side service: курс, модуль и урок проверяют активное enrollment, sequential lock и показывают реальные lesson/progress данные.
+- Readiness endpoints теперь возвращают typed `503 service_unavailable`, если self-hosted PostgreSQL недоступен из runtime, вместо generic `500`.
+
+Проверки:
+
+- `npm.cmd run typecheck` — прошёл успешно.
+- `npm.cmd run test` — прошёл успешно: 9 test files, 13 tests.
+- `npm.cmd run lint -- --max-warnings=0` — прошёл успешно.
+- `npm.cmd run build` — прошёл успешно.
+
+Риски:
+
+- Локальное создание 4053 аккаунтов через `npm.cmd run users:provision` требует запущенный внутренний PostgreSQL и реальный `.env`; CSV с паролями пишется только в ignored `var/credentials`.
+- Админский доступ к самой БД остаётся операционной процедурой: через защищённый shell/port-forward/bastion, а не через публичный DB UI.
+- Для production нужен backup/restore runbook и регулярная проверка восстановления.
+
+Next steps:
+
+- Запустить self-hosted PostgreSQL через Docker/K8s/VPS, применить миграции и seed.
+- Выполнить `npm.cmd run users:provision` в закрытой среде и передать CSV через защищённый канал.
+- Добавить backup jobs, restore rehearsal и admin-only operational access procedure.
+
+## 2026-05-07 — Issued credentials вместо публичной регистрации
+
+Автор/agent: Codex
+Тип изменения: auth / user provisioning / documentation
+Файлы/модули:
+
+- `scripts/provision-users.ts`
+- `app/register/page.tsx`
+- `app/api/v1/auth/register/route.ts`
+- `app/login/page.tsx`
+- `components/auth/register-form.tsx`
+- `.env.example`
+- `.gitignore`
+- `README.md`
+- `docs/api/openapi.yaml`
+- `docs/specification.md`
+- `docs/implementation-plan.md`
+- `tests/integration/auth-register-disabled.test.ts`
+- `tests/integration/seed.test.ts`
+
+Summary:
+
+- Публичная self-registration модель отключена: `/api/v1/auth/register` возвращает typed `410 Gone`, `/register` объясняет, что аккаунты выдаёт академия.
+- Удалена UI-форма регистрации и ссылка "Регистрация" со страницы входа.
+- Добавлен `npm.cmd run users:provision` для создания 4000 слушателей, 50 кураторов, главного куратора, администратора и наблюдающего.
+- Скрипт создаёт/обновляет роли и permissions, создаёт email/password аккаунты и пишет credentials CSV в ignored `var/credentials`.
+- Добавлены env-параметры `PROVISION_STUDENT_COUNT`, `PROVISION_CURATOR_COUNT`, `PROVISION_EMAIL_DOMAIN`, `PROVISION_OUTPUT_DIR`, `PROVISION_RESET_EXISTING_PASSWORDS`.
+
+Проверки:
+
+- `npm.cmd run lint -- --max-warnings=0` — прошёл успешно.
+- `npm.cmd run typecheck` — прошёл успешно.
+- `npm.cmd run test` — прошёл успешно: 9 test files, 13 tests.
+- `npm.cmd run build` — прошёл успешно.
+- `npm.cmd run users:provision` — не выполнил создание аккаунтов, потому что текущий `DATABASE_URL` из `.env` недоступен с этой машины.
+
+Риски:
+
+- Credentials CSV содержит реальные временные пароли; директория `var/` добавлена в `.gitignore` и не должна коммититься.
+- Для production нужно сначала настроить `DATABASE_URL` и применить миграции, затем запускать provisioning.
+- Если используется Supabase, нужен доступный из среды запуска pooler/direct URL; текущий direct DB endpoint не принимает подключение из этой среды.
+
+Next steps:
+
+- Запустить `npm.cmd run users:provision` против production PostgreSQL только после проверки сетевого доступа к `DATABASE_URL`.
+- Перед выдачей пользователям хранить CSV в защищённом канале и удалить локальную копию после операционной передачи.
+
+## 2026-05-07 — P0 защита role pages и отключение production mock fallback
+
+Автор/agent: Codex
+Тип изменения: security / auth / production hardening
+Файлы/модули:
+
+- `lib/auth/page-guards.ts`
+- `middleware.ts`
+- `app/403/page.tsx`
+- `app/{admin,student,curator,instructor,super-curator,customer-observer}/page.tsx`
+- `components/lms/dashboard-unavailable.tsx`
+- `components/auth/login-form.tsx`
+- `server/auth/options.ts`
+- `server/auth/provider-flags.ts`
+- `server/modules/auth/service.ts`
+- `server/modules/progress/service.ts`
+- `.env.example`
+
+Summary:
+
+- Добавлен `requireRolePage()` и server-side role guard для основных кабинетов ролей.
+- Добавлен `middleware.ts` для базового отсечения приватных route prefixes до входа.
+- Production mock fallback отключён: фейковые dashboard data используются только при `NEXT_PUBLIC_DEMO_MODE=true`; иначе показывается явное состояние недоступности данных.
+- Добавлена `/403` страница для аккаунтов без нужной роли.
+- OAuth providers и кнопки Google/GitHub подключаются только при наличии реальных client id/secret.
+- Регистрация теперь создаёт роль `student`, если seed ещё не создал её в новой базе.
+- `markLessonProgress()` требует active enrollment и блокирует ручное прохождение sequential-уроков без предыдущих обязательных lessons.
+
+Проверки:
+
+- `npm.cmd run lint -- --max-warnings=0` — прошёл успешно.
+- `npm.cmd run typecheck` — прошёл успешно.
+- `npm.cmd run build` — требуется финальный повтор после записи.
+- `npm.cmd run test` — требуется финальный повтор; ранее локально мог блокироваться sandbox `spawn EPERM`.
+
+Риски:
+
+- Живой Vercel URL `https://academic-silk-ten.vercel.app` сейчас отвечает `500` на `/api/readyz`, что указывает на отсутствующий/неготовый production `DATABASE_URL` или неприменённые миграции.
+- `/api/auth/providers` на живом URL отвечает, но `/api/auth/session` и регистрация будут зависеть от готовности БД.
+
+Next steps:
+
+- Настроить Vercel env: `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `APP_URL`.
+- Выполнить `npm.cmd run db:migrate` и `npm.cmd run db:seed` против managed PostgreSQL.
+- После деплоя проверить `/api/readyz`, `/login`, `/register`, `/admin`, `/student`.
+
+## 2026-05-07 — Стабилизация GitHub/Vercel и invite-only контракта
+
+Автор/agent: Codex
+Тип изменения: CI/CD / Vercel / runtime / documentation
+Файлы/модули:
+
+- `.github/workflows/ci.yml`
+- `vercel.json`
+- `package.json`, `package-lock.json`
+- `app/student/lessons/[lessonId]/page.tsx`
+- `app/{admin,curator,customer-observer,instructor,student,super-curator}/page.tsx`
+- `app/api/v1/payments/checkout/route.ts`
+- `app/api/v1/webhooks/stripe/route.ts`
+- `server/auth/options.ts`
+- `server/modules/analytics/service.ts`
+- `server/modules/billing/service.ts`
+- `lib/auth/rbac.ts`
+- `docs/api/openapi.yaml`
+- `docs/specification.md`
+- `docs/security.md`
+- `docs/assumptions.md`
+- `services/*`
+
+Summary:
+
+- Исправлены TypeScript и ESLint blockers, из-за которых падали GitHub Actions и Vercel build.
+- `payments:manage` заменён на `invites:manage`; платежные endpoints теперь возвращают typed `410 Gone`, а не generic runtime error.
+- Аналитика больше не обращается к удалённой `Payment` модели и отдаёт invite metrics вместе с backward-compatible `revenueCents: 0`.
+- Stripe dependency удалена из runtime dependencies; текущий production contract зафиксирован как invite-only.
+- CI усилен: `npm run lint -- --max-warnings=0` запускается до typecheck/test/build, Vercel использует `npm ci`.
+- Документация, OpenAPI и microservices reference синхронизированы с invite-only моделью.
+- Role dashboards помечены `force-dynamic`, чтобы Vercel build не выполнял Prisma-запросы без `DATABASE_URL` во время static generation.
+
+Проверки:
+
+- `npm.cmd run db:generate` — прошёл успешно.
+- `npm.cmd run lint -- --max-warnings=0` — прошёл успешно.
+- `npm.cmd run typecheck` — прошёл успешно.
+- `npm.cmd run test` — локально блокируется sandbox `spawn EPERM`; escalated повтор в этой сессии был отклонён auto-review лимитом, поэтому финальный статус зависит от GitHub Actions.
+- `npm.cmd run build` — прошёл успешно; role dashboards теперь собираются как dynamic routes без Prisma `DATABASE_URL` noise во время build.
+
+Риски:
+
+- Vercel Production/Preview требуют реальные `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `APP_URL` и OAuth secrets при наличии; значения не коммитятся.
+- До подключения managed PostgreSQL `readyz` будет зависеть от доступности `DATABASE_URL`.
+- Browser plugin ранее мог не стартовать в Codex runtime; если повторится, smoke нужно выполнить Playwright fallback и зафиксировать отдельной записью.
+
+Next steps:
+
+- Запушить ветку `codex/stabilize-github-vercel`, открыть PR в `ElazAzel/academic`.
+- Проверить GitHub Actions job `verify` и Vercel Preview.
+- После merge настроить production env, выполнить миграции/seed против managed PostgreSQL и проверить production deployment.
+
 ## 2026-05-07 — Server Actions, полные суб-страницы ролей, страницы курсов/уроков
 
 Автор/agent: Antigravity

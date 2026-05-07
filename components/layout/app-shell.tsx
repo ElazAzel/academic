@@ -50,6 +50,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
     { href: "/super-curator", label: "Дашборд", icon: LayoutDashboard },
     { href: "/super-curator/curators", label: "Кураторы", icon: UserCheck },
     { href: "/super-curator/distribution", label: "Распределение", icon: Users2 },
+    { href: "/admin/users", label: "Пользователи", icon: Users },
     { href: "/super-curator/risks", label: "Риски потоков", icon: AlertTriangle },
     { href: "/super-curator/reports", label: "Отчёты", icon: BarChart3 },
     { href: "/super-curator/settings", label: "Настройки", icon: Settings },
@@ -103,9 +104,7 @@ export function AppShell({
             className="sticky top-24 space-y-1 rounded-2xl border bg-white/80 p-3 shadow-sm backdrop-blur-xl"
             aria-label={`Кабинет: ${roleLabel}`}
           >
-            <div className="mb-3 rounded-xl bg-primary/5 px-3 py-2">
-              <p className="text-xs font-medium text-primary">{roleLabel}</p>
-            </div>
+            {/* Role label removed as per user request */}
             {links.map((item) => (
               <Link
                 key={item.href}

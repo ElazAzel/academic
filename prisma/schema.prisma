@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("storage_POSTGRES_PRISMA_URL")
+  directUrl = env("storage_POSTGRES_URL_NON_POOLING")
 }
 
 enum RoleKey {
@@ -125,6 +126,8 @@ model User {
   curatorQuestions      LessonQuestion[] @relation("CuratorQuestions")
   riskFlags             RiskFlag[]
 
+  @@index([createdAt])
+  @@index([status])
   @@map("users")
 }
 
@@ -277,6 +280,8 @@ model Course {
   inviteLinks    InviteLink[]
   riskFlags      RiskFlag[]
 
+  @@index([createdAt])
+  @@index([status])
   @@map("courses")
 }
 
@@ -373,6 +378,8 @@ model Cohort {
   riskFlags RiskFlag[]
   inviteLinks InviteLink[]
 
+  @@index([createdAt])
+  @@index([status])
   @@map("cohorts")
 }
 
@@ -556,6 +563,8 @@ model AssignmentSubmission {
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   reviewedBy User?      @relation("SubmissionReviewer", fields: [reviewedById], references: [id])
 
+  @@index([submittedAt])
+  @@index([status])
   @@map("assignment_submissions")
 }
 
@@ -595,6 +604,7 @@ model Certificate {
   course     Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
   enrollment Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
 
+  @@index([issuedAt])
   @@map("certificates")
 }
 
@@ -691,6 +701,7 @@ model InviteLink {
   project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdBy User?    @relation("InviteCreator", fields: [createdById], references: [id])
 
+  @@index([createdAt])
   @@map("invite_links")
 }
 

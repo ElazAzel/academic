@@ -15,14 +15,20 @@ function normalizeAnswer(value: unknown) {
 }
 
 export function gradeObjectiveQuiz(
-  questions: ObjectiveQuestion[],
+  questions: (ObjectiveQuestion & { options?: unknown })[],
   answers: Record<string, unknown>,
   passThreshold: number
 ) {
   const total = questions.reduce((sum, question) => sum + question.points, 0);
   const earned = questions.reduce((sum, question) => {
-    const correct = question.correctAnswer as { value?: unknown; values?: unknown[] };
-    const expected = correct.values ?? correct.value;
+    const correct = question.correctAnswer as { value?: unknown; values?: unknown[]; index?: number };
+    let expected = correct.values ?? correct.value;
+
+    // Handle legacy index-based correct answers
+    if (expected === undefined && typeof correct.index === "number" && Array.isArray(question.options)) {
+      expected = question.options[correct.index];
+    }
+
     const actual = answers[question.id];
     const match = JSON.stringify(normalizeAnswer(expected)) === JSON.stringify(normalizeAnswer(actual));
     return sum + (match ? question.points : 0);

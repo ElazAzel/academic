@@ -19,7 +19,18 @@ import type {
   CohortSummary,
   CertificateSummary,
   InviteLinkSummary,
+  CohortDeadline,
 } from "@/types/domain";
+import { requireRole } from "@/lib/auth/page-guards";
+
+export interface CuratorStudentItem {
+  id: string;
+  name: string;
+  email: string;
+  course: string;
+  progress: number;
+  risk: boolean;
+}
 
 // ── Вспомогательные ─────────────────────────────────────────────────
 
@@ -40,14 +51,30 @@ export async function getStudentDashboard() {
   if (!user) return null;
 
   return safeQuery(async () => {
-    const enrollments = await prisma.enrollment.findMany({
-      where: { userId: user.id, status: "ACTIVE" },
-      include: {
-        course: { select: { id: true, slug: true, title: true, description: true, durationHours: true, status: true } },
-        courseProgress: true,
-        cohort: { include: { deadlines: { include: { module: true } } } },
-      },
-    });
+    const [enrollments, lastProgress, questions, certificatesCount] = await Promise.all([
+      prisma.enrollment.findMany({
+        where: { userId: user.id, status: "ACTIVE" },
+        include: {
+          course: { select: { id: true, slug: true, title: true, description: true, durationHours: true, status: true } },
+          courseProgress: true,
+          cohort: { include: { deadlines: { include: { module: true } } } },
+        },
+      }),
+      prisma.lessonProgress.findFirst({
+        where: { userId: user.id, status: { in: ["IN_PROGRESS", "NOT_STARTED"] } },
+        orderBy: { updatedAt: "desc" },
+        include: { lesson: { include: { module: { include: { course: true } } } } },
+      }),
+      prisma.lessonQuestion.findMany({
+        where: { studentId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        include: {
+          lesson: { include: { module: { include: { course: true } } } },
+        },
+      }),
+      prisma.certificate.count({ where: { userId: user.id } })
+    ]);
 
     const coursesProgress: StudentProgress[] = enrollments.map((e) => {
       const cp = e.courseProgress[0];
@@ -59,23 +86,20 @@ export async function getStudentDashboard() {
       };
     });
 
-    // Продолжить обучение — последний незавершённый урок
-    const lastProgress = await prisma.lessonProgress.findFirst({
-      where: { userId: user.id, status: { in: ["IN_PROGRESS", "NOT_STARTED"] } },
-      orderBy: { updatedAt: "desc" },
-      include: { lesson: { include: { module: { include: { course: true } } } } },
-    });
-
     let continueLearning: ContinueLearning | null = null;
     if (lastProgress) {
       const lesson = lastProgress.lesson;
       const course = lesson.module.course;
-      const cp = await prisma.courseProgress.findUnique({
-        where: { userId_courseId: { userId: user.id, courseId: course.id } },
-      });
-      const mp = await prisma.moduleProgress.findUnique({
-        where: { userId_moduleId: { userId: user.id, moduleId: lesson.moduleId } },
-      });
+      
+      const [cp, mp] = await Promise.all([
+        prisma.courseProgress.findUnique({
+          where: { userId_courseId: { userId: user.id, courseId: course.id } },
+        }),
+        prisma.moduleProgress.findUnique({
+          where: { userId_moduleId: { userId: user.id, moduleId: lesson.moduleId } },
+        })
+      ]);
+
       continueLearning = {
         courseId: course.id,
         courseTitle: course.title,
@@ -86,16 +110,6 @@ export async function getStudentDashboard() {
         modulePercent: mp?.percent ?? 0,
       };
     }
-
-    // Ответы куратора
-    const questions = await prisma.lessonQuestion.findMany({
-      where: { studentId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: {
-        lesson: { include: { module: { include: { course: true } } } },
-      },
-    });
 
     const formattedQuestions: QuestionFromStudent[] = questions.map((q) => ({
       id: q.id,
@@ -110,20 +124,40 @@ export async function getStudentDashboard() {
       answeredAt: q.answeredAt?.toISOString(),
     }));
 
-    const activeCourses = enrollments.filter((e) => e.courseProgress[0]?.status !== "COMPLETED").length;
+    const activeCourses = enrollments.filter((e) => {
+      const cp = e.courseProgress[0];
+      return cp?.status !== "COMPLETED";
+    }).length;
+
     const avgPercent = coursesProgress.length > 0
       ? Math.round(coursesProgress.reduce((s, c) => s + c.percent, 0) / coursesProgress.length)
       : 0;
-    const certificates = await prisma.certificate.count({ where: { userId: user.id } });
+
+    const openQuestionsCount = formattedQuestions.filter((q) => q.status === "open").length;
 
     const metrics: DashboardMetric[] = [
       { label: "Активные курсы", value: activeCourses, tone: "primary" },
       { label: "Средний прогресс", value: `${avgPercent}%`, tone: avgPercent > 50 ? "success" : "warning" },
-      { label: "Сертификаты", value: certificates, tone: "success" },
-      { label: "Вопросов куратору", value: formattedQuestions.filter((q) => q.status === "open").length, tone: "info" },
+      { label: "Сертификаты", value: certificatesCount, tone: "success" },
+      { label: "Вопросы куратору", value: openQuestionsCount, tone: openQuestionsCount > 0 ? "info" : "primary" },
     ];
 
-    return { metrics, coursesProgress, continueLearning, questions: formattedQuestions };
+    const now = new Date();
+    const deadlines: CohortDeadline[] = enrollments.flatMap((e) => 
+      e.cohort?.deadlines.map((d) => {
+        const daysLeft = Math.ceil((d.dueAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        return {
+          moduleId: d.moduleId,
+          moduleTitle: d.module.title,
+          dueAt: d.dueAt.toISOString(),
+          courseTitle: e.course.title,
+          daysLeft,
+          isOverdue: daysLeft < 0
+        };
+      }) ?? []
+    );
+
+    return { metrics, coursesProgress, continueLearning, questions: formattedQuestions, deadlines };
   }, null);
 }
 
@@ -141,15 +175,33 @@ export async function getCuratorDashboard() {
     });
     const studentIds = assignments.map((a) => a.studentId);
 
-    // Вопросы
-    const questions = await prisma.lessonQuestion.findMany({
-      where: { curatorId: user.id, status: "open" },
-      orderBy: { createdAt: "desc" },
-      include: {
-        student: { select: { name: true, email: true } },
-        lesson: { include: { module: { include: { course: true } } } },
-      },
-    });
+    const [questions, submissions, risks] = await Promise.all([
+      prisma.lessonQuestion.findMany({
+        where: { curatorId: user.id, status: "open" },
+        orderBy: { createdAt: "desc" },
+        include: {
+          student: { select: { name: true, email: true } },
+          lesson: { include: { module: { include: { course: true } } } },
+        },
+      }),
+      prisma.assignmentSubmission.findMany({
+        where: { userId: { in: studentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
+        orderBy: { submittedAt: "desc" },
+        include: {
+          assignment: { include: { course: true, lesson: true } },
+          user: { select: { name: true, email: true } },
+        },
+      }),
+      prisma.riskFlag.findMany({
+        where: { userId: { in: studentIds }, status: "open" },
+        orderBy: { createdAt: "desc" },
+        include: {
+          user: { select: { name: true, email: true } },
+          course: { select: { title: true } },
+          cohort: { select: { name: true } },
+        },
+      }),
+    ]);
 
     const formattedQuestions: QuestionFromStudent[] = questions.map((q) => ({
       id: q.id,
@@ -161,16 +213,6 @@ export async function getCuratorDashboard() {
       status: "open" as const,
       createdAt: q.createdAt.toISOString(),
     }));
-
-    // Задания на проверку
-    const submissions = await prisma.assignmentSubmission.findMany({
-      where: { userId: { in: studentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
-      orderBy: { submittedAt: "desc" },
-      include: {
-        assignment: { include: { course: true, lesson: true } },
-        user: { select: { name: true, email: true } },
-      },
-    });
 
     const formattedSubmissions: SubmissionForReview[] = submissions.map((s) => ({
       id: s.id,
@@ -185,17 +227,6 @@ export async function getCuratorDashboard() {
       submittedAt: s.submittedAt.toISOString(),
       status: s.status as SubmissionForReview["status"],
     }));
-
-    // Риски
-    const risks = await prisma.riskFlag.findMany({
-      where: { userId: { in: studentIds }, status: "open" },
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: { select: { name: true, email: true } },
-        course: { select: { title: true } },
-        cohort: { select: { name: true } },
-      },
-    });
 
     const formattedRisks: RiskItem[] = risks.map((r) => ({
       id: r.id,
@@ -218,6 +249,124 @@ export async function getCuratorDashboard() {
 
     return { metrics, questions: formattedQuestions, submissions: formattedSubmissions, risks: formattedRisks };
   }, null);
+}
+
+export async function getEnrollmentData(): Promise<{
+  students: { id: string; name: string | null; email: string }[];
+  courses: { id: string; title: string }[];
+  cohorts: { id: string; name: string; courseId: string }[];
+  curators: { id: string; name: string | null; email: string }[];
+}> {
+  await requireRole(["admin"]);
+
+  return safeQuery(async () => {
+    const [students, courses, cohorts, curators] = await Promise.all([
+      prisma.user.findMany({
+        where: { roles: { some: { role: { key: "student" } } } },
+        select: { id: true, name: true, email: true },
+        orderBy: { name: "asc" }
+      }),
+      prisma.course.findMany({
+        where: { status: "PUBLISHED" },
+        select: { id: true, title: true },
+        orderBy: { title: "asc" }
+      }),
+      prisma.cohort.findMany({
+        where: { status: "active" },
+        select: { id: true, name: true, courseId: true },
+        orderBy: { name: "asc" }
+      }),
+      prisma.user.findMany({
+        where: { roles: { some: { role: { key: { in: ["curator", "super_curator"] } } } } },
+        select: { id: true, name: true, email: true },
+        orderBy: { name: "asc" }
+      })
+    ]);
+
+    return { 
+      students, 
+      courses, 
+      cohorts: cohorts.map(c => ({ 
+        id: c.id, 
+        name: c.name, 
+        courseId: c.courseId ?? "" 
+      })), 
+      curators 
+    };
+  }, { 
+    students: [] as { id: string; name: string | null; email: string }[], 
+    courses: [] as { id: string; title: string }[], 
+    cohorts: [] as { id: string; name: string; courseId: string }[], 
+    curators: [] as { id: string; name: string | null; email: string }[] 
+  });
+}
+
+export async function getCuratorStudents() {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  return safeQuery(async () => {
+    const assignments = await prisma.curatorAssignment.findMany({
+      where: { curatorId: user.id, active: true },
+      include: {
+        student: {
+          include: {
+            enrollments: {
+              include: {
+                course: { select: { title: true } },
+                courseProgress: true
+              }
+            },
+            riskFlags: {
+              where: { resolvedAt: null },
+              take: 1
+            }
+          }
+        }
+      }
+    });
+
+    return assignments.map((a) => {
+      const enrollment = a.student.enrollments[0];
+      return {
+        id: a.student.id,
+        name: a.student.name ?? a.student.email,
+        email: a.student.email,
+        course: enrollment?.course?.title ?? "Не зачислен",
+        progress: enrollment?.courseProgress[0]?.percent ?? 0,
+        risk: a.student.riskFlags.length > 0
+      };
+    });
+  }, []);
+}
+
+export async function getCuratorQuestions(status: "open" | "answered" = "open") {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  return safeQuery(async () => {
+    const questions = await prisma.lessonQuestion.findMany({
+      where: { curatorId: user.id, status },
+      orderBy: { createdAt: "desc" },
+      include: {
+        student: { select: { name: true, email: true } },
+        lesson: { include: { module: { include: { course: true } } } },
+      },
+    });
+
+    return questions.map((q) => ({
+      id: q.id,
+      text: q.text,
+      studentName: q.student.name ?? q.student.email,
+      courseTitle: q.lesson.module.course.title,
+      moduleTitle: q.lesson.module.title,
+      lessonTitle: q.lesson.title,
+      status: q.status as "open" | "answered",
+      createdAt: q.createdAt.toISOString(),
+      answer: q.answer,
+      answeredAt: q.answeredAt?.toISOString(),
+    }));
+  }, []);
 }
 
 // ── Супер-куратор ───────────────────────────────────────────────────
@@ -298,21 +447,42 @@ export async function getSuperCuratorDashboard() {
 
 export async function getAdminDashboard() {
   return safeQuery(async () => {
-    const [coursesCount, cohortsCount, usersCount, certsCount] = await Promise.all([
+    const [
+      coursesCount, 
+      cohortsCount, 
+      usersCount, 
+      certsCount,
+      courses,
+      cohorts,
+      invites,
+      certificates
+    ] = await Promise.all([
       prisma.course.count(),
       prisma.cohort.count(),
       prisma.user.count(),
       prisma.certificate.count(),
+      prisma.course.findMany({
+        orderBy: { createdAt: "desc" },
+        include: {
+          modules: { select: { id: true } },
+          instructors: { include: { user: { select: { id: true, name: true, email: true } } } },
+          _count: { select: { modules: true } },
+        },
+      }),
+      prisma.cohort.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { course: { select: { title: true } }, _count: { select: { enrollments: true } } },
+      }),
+      prisma.inviteLink.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { course: { select: { title: true } }, cohort: { select: { name: true } } },
+      }),
+      prisma.certificate.findMany({
+        orderBy: { issuedAt: "desc" },
+        take: 20,
+        include: { user: { select: { name: true } }, course: { select: { title: true } } },
+      }),
     ]);
-
-    const courses = await prisma.course.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        modules: { select: { id: true } },
-        instructors: { include: { user: { select: { id: true, name: true, email: true } } } },
-        _count: { select: { modules: true } },
-      },
-    });
 
     const formattedCourses: CourseSummary[] = courses.map((c) => ({
       id: c.id,
@@ -332,10 +502,6 @@ export async function getAdminDashboard() {
       })),
     }));
 
-    const cohorts = await prisma.cohort.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { course: { select: { title: true } }, _count: { select: { enrollments: true } } },
-    });
     const formattedCohorts: CohortSummary[] = cohorts.map((c) => ({
       id: c.id,
       name: c.name,
@@ -346,10 +512,6 @@ export async function getAdminDashboard() {
       studentsCount: c._count.enrollments,
     }));
 
-    const invites = await prisma.inviteLink.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { course: { select: { title: true } }, cohort: { select: { name: true } } },
-    });
     const formattedInvites: InviteLinkSummary[] = invites.map((i) => ({
       id: i.id,
       token: i.token,
@@ -361,11 +523,6 @@ export async function getAdminDashboard() {
       status: i.status,
     }));
 
-    const certificates = await prisma.certificate.findMany({
-      orderBy: { issuedAt: "desc" },
-      take: 20,
-      include: { user: { select: { name: true } }, course: { select: { title: true } } },
-    });
     const formattedCerts: CertificateSummary[] = certificates.map((c) => ({
       id: c.id,
       number: c.number,
@@ -393,6 +550,7 @@ export async function getInstructorDashboard() {
   if (!user) return null;
 
   return safeQuery(async () => {
+    // Сначала получаем список курсов, чтобы использовать их ID в других запросах
     const courses = await prisma.course.findMany({
       where: { instructors: { some: { userId: user.id } } },
       orderBy: { createdAt: "desc" },
@@ -402,31 +560,129 @@ export async function getInstructorDashboard() {
       },
     });
 
-    const formattedCourses: CourseSummary[] = courses.map((c) => ({
-      id: c.id,
-      slug: c.slug,
-      title: c.title,
-      description: c.description,
-      durationHours: c.durationHours,
-      status: c.status as CourseSummary["status"],
-      traversalMode: c.traversalMode as "sequential" | "open",
-      modulesCount: c._count.modules,
-      lessonsCount: 0,
-      instructors: c.instructors.map((ci) => ({
-        id: ci.user.id,
-        name: ci.user.name ?? "",
-        email: ci.user.email,
-      })),
-    }));
+    const courseIds = courses.map((c) => c.id);
+
+    // Параллельно получаем статистику по этим курсам
+    const [studentsCount, avgProgressResult] = await Promise.all([
+      prisma.enrollment.count({
+        where: { courseId: { in: courseIds }, status: "ACTIVE" }
+      }),
+      prisma.courseProgress.aggregate({
+        where: { courseId: { in: courseIds } },
+        _avg: { percent: true }
+      })
+    ]);
+
+    // Рассчитываем средний прогресс для каждого курса
+    const coursesWithProgress = await Promise.all(
+      courses.map(async (c) => {
+        const avg = await prisma.courseProgress.aggregate({
+          where: { courseId: c.id },
+          _avg: { percent: true }
+        });
+        return {
+          id: c.id,
+          progress: Math.round(avg._avg.percent ?? 0)
+        };
+      })
+    );
+
+    const formattedCourses: CourseSummary[] = courses.map((c) => {
+      const progressInfo = coursesWithProgress.find(p => p.id === c.id);
+      return {
+        id: c.id,
+        slug: c.slug,
+        title: c.title,
+        description: c.description,
+        durationHours: c.durationHours,
+        status: c.status as CourseSummary["status"],
+        traversalMode: c.traversalMode as "sequential" | "open",
+        modulesCount: c._count.modules,
+        lessonsCount: 0,
+        avgProgress: progressInfo?.progress ?? 0,
+        instructors: c.instructors.map((ci) => ({
+          id: ci.user.id,
+          name: ci.user.name ?? "",
+          email: ci.user.email,
+        })),
+      };
+    });
+
+    const avgProgress = Math.round(avgProgressResult._avg.percent ?? 0);
 
     const metrics: DashboardMetric[] = [
       { label: "Мои курсы", value: courses.length, tone: "primary" },
-      { label: "Слушатели", value: 0, tone: "info" },
-      { label: "Средний прогресс", value: "0%", tone: "warning" },
+      { label: "Слушатели", value: studentsCount, tone: "info" },
+      { label: "Средний прогресс", value: `${avgProgress}%`, tone: avgProgress > 50 ? "success" : "warning" },
       { label: "Вопросы от кураторов", value: 0, tone: "success" },
     ];
 
     return { metrics, courses: formattedCourses };
+  }, null);
+}
+
+export async function getInstructorAnalytics() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  return safeQuery(async () => {
+    const courses = await prisma.course.findMany({
+      where: { instructors: { some: { userId: user.id } } },
+      include: {
+        modules: {
+          include: {
+            _count: { select: { lessons: true } }
+          }
+        },
+        _count: { select: { enrollments: true } }
+      }
+    });
+
+    const courseIds = courses.map(c => c.id);
+
+    const [totalEnrollments, avgProgressResult, completedCount, avgQuizScore] = await Promise.all([
+      prisma.enrollment.count({ where: { courseId: { in: courseIds } } }),
+      prisma.courseProgress.aggregate({
+        where: { courseId: { in: courseIds } },
+        _avg: { percent: true }
+      }),
+      prisma.courseProgress.count({
+        where: { courseId: { in: courseIds }, status: "COMPLETED" }
+      }),
+      prisma.quizAttempt.aggregate({
+        where: { quiz: { courseId: { in: courseIds } } },
+        _avg: { score: true }
+      })
+    ]);
+
+    const moduleAnalytics = await Promise.all(
+      courses.flatMap(c => 
+        c.modules.map(async (m) => {
+          const avg = await prisma.moduleProgress.aggregate({
+            where: { moduleId: m.id },
+            _avg: { percent: true }
+          });
+          const completed = await prisma.moduleProgress.count({
+            where: { moduleId: m.id, status: "COMPLETED" }
+          });
+          return {
+            title: m.title,
+            courseTitle: c.title,
+            avgProgress: Math.round(avg._avg.percent ?? 0),
+            completedStudents: completed
+          };
+        })
+      )
+    );
+
+    const metrics: DashboardMetric[] = [
+      { label: "Зачисленных", value: totalEnrollments, tone: "primary" },
+      { label: "Средний прогресс", value: `${Math.round(avgProgressResult._avg.percent ?? 0)}%`, tone: "success" },
+      { label: "Завершивших", value: completedCount, tone: "info" },
+      { label: "Средний балл тестов", value: `${Math.round(avgQuizScore._avg.score ?? 0)}%`, tone: "warning" },
+    ];
+
+    return { metrics, moduleAnalytics };
   }, null);
 }
 

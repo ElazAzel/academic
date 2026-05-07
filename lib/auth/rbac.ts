@@ -13,7 +13,7 @@ export const permissions = [
   "quizzes:write",
   "assignments:review",
   "certificates:issue",
-  "payments:manage",
+  "invites:manage",
   "analytics:read",
   "audit:read",
   "settings:manage",
@@ -25,10 +25,14 @@ export type Permission = (typeof permissions)[number];
 
 export const rolePermissions: Record<RoleKey, Permission[]> = {
   admin: [...permissions],
-  instructor: ["courses:read", "courses:write", "lessons:write", "quizzes:write", "analytics:read", "reports:read"],
+  instructor: ["courses:read", "courses:write", "lessons:write", "quizzes:write", "progress:write", "analytics:read", "reports:read"],
   student: ["courses:read", "progress:write"],
   curator: ["courses:read", "assignments:review", "progress:write", "notifications:write", "reports:read"],
+<<<<<<< HEAD
   super_curator: ["users:read", "roles:manage", "courses:read", "assignments:review", "analytics:read", "notifications:write", "reports:read"],
+=======
+  super_curator: ["users:read", "users:write", "roles:manage", "courses:read", "assignments:review", "progress:write", "quizzes:write", "analytics:read", "notifications:write", "reports:read"],
+>>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
   customer_observer: ["courses:read", "analytics:read", "reports:read"]
 };
 
@@ -41,4 +45,3 @@ export function assertPermission(roles: RoleKey[], permission: Permission) {
     throw new ApiError("forbidden", "Недостаточно прав", 403);
   }
 }
-

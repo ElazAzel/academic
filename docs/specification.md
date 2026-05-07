@@ -1,6 +1,6 @@
 # Executive Summary
 
-AI Strategic Academy — закрытая LMS одной академии для управления курсами, потоками, кураторами, прогрессом, заданиями, сертификатами, оплатами и отчётностью. Основная реализация — Next.js modular monolith с REST API, Prisma/PostgreSQL и русским интерфейсом. Microservices-режим поставляется как reference architecture для будущего масштабирования.
+AI Strategic Academy — закрытая LMS одной академии для управления курсами, потоками, кураторами, прогрессом, заданиями, сертификатами, инвайт-доступом и отчётностью. Основная реализация — Next.js modular monolith с REST API, Prisma/PostgreSQL и русским интерфейсом. Microservices-режим поставляется как reference architecture для будущего масштабирования.
 
 # Требования
 
@@ -12,7 +12,7 @@ AI Strategic Academy — закрытая LMS одной академии для
 | Прогресс и continue learning | Реализуется | Lesson/module/course progress |
 | Тесты и задания | Реализуется | Autograding, attempts, submissions |
 | Сертификаты | Реализуется | Unique number, verification URL, PDF scaffold |
-| Stripe billing | Реализуется | Checkout + verified webhook |
+| Invite-only access | Реализуется | Инвайт-ссылки; Stripe checkout/webhook endpoints оставлены как `410 Gone` compatibility |
 | Аналитика/отчёты | Реализуется | Export-ready data shape |
 | Поиск | Реализуется | PostgreSQL full-text boundary |
 | Уведомления | Реализуется | In-app + email event abstraction |
@@ -36,7 +36,7 @@ flowchart LR
   Actions --> UseCases
   UseCases --> Repos["Repositories"]
   Repos --> DB[(PostgreSQL)]
-  UseCases --> Stripe["Stripe"]
+  UseCases --> Invites["Invite access"]
   UseCases --> Mail["SMTP/MailHog"]
   UseCases --> S3["S3/MinIO"]
   UseCases --> Audit["Audit Log"]
@@ -77,7 +77,7 @@ erDiagram
   users ||--o{ consent_logs : signs
 ```
 
-Основные таблицы: `users`, `roles`, `permissions`, `user_roles`, `role_permissions`, `oauth_accounts`, `courses`, `course_instructors`, `modules`, `lessons`, `lesson_media`, `cohorts`, `cohort_deadlines`, `enrollments`, `lesson_progress`, `module_progress`, `course_progress`, `quizzes`, `quiz_questions`, `quiz_attempts`, `assignments`, `assignment_submissions`, `certificates`, `payments`, `notifications`, `audit_logs`, `consent_logs`, `app_settings`.
+Основные таблицы: `users`, `roles`, `permissions`, `user_roles`, `role_permissions`, `oauth_accounts`, `courses`, `course_instructors`, `modules`, `lessons`, `lesson_media`, `cohorts`, `cohort_deadlines`, `enrollments`, `lesson_progress`, `module_progress`, `course_progress`, `quizzes`, `quiz_questions`, `quiz_attempts`, `assignments`, `assignment_submissions`, `certificates`, `invite_links`, `notifications`, `audit_logs`, `consent_logs`, `app_settings`.
 
 # API спецификация
 
@@ -85,7 +85,7 @@ erDiagram
 |---|---|---|
 | `/api/v1/healthz` | GET | Liveness |
 | `/api/v1/readyz` | GET | Readiness |
-| `/api/v1/auth/register` | POST | Регистрация |
+| `/api/v1/auth/register` | POST | Disabled self-registration endpoint, `410 Gone` |
 | `/api/v1/auth/forgot-password` | POST | Запрос сброса |
 | `/api/v1/auth/reset-password` | POST | Сброс пароля |
 | `/api/v1/me` | GET | Текущий профиль |
@@ -98,8 +98,8 @@ erDiagram
 | `/api/v1/assignments/{id}/submissions` | POST | Сдача задания |
 | `/api/v1/progress` | GET/POST | Прогресс |
 | `/api/v1/certificates` | GET/POST | Сертификаты |
-| `/api/v1/payments/checkout` | POST | Stripe Checkout |
-| `/api/v1/webhooks/stripe` | POST | Stripe webhook |
+| `/api/v1/payments/checkout` | POST | Disabled invite-only compatibility endpoint, `410 Gone` |
+| `/api/v1/webhooks/stripe` | POST | Disabled invite-only compatibility endpoint, `410 Gone` |
 | `/api/v1/analytics` | GET | Аналитика |
 | `/api/v1/audit-logs` | GET | Аудит |
 | `/api/v1/notifications` | GET | Уведомления |
@@ -124,14 +124,14 @@ const result = gradeObjectiveQuiz(questions, answers, passThreshold);
 
 Локально: скопировать `.env.example` в `.env`, поднять Docker Compose зависимости, выполнить `npm.cmd install`, `npm.cmd run db:push`, `npm.cmd run db:seed`, `npm.cmd run dev`.
 
-Production: задать реальные `DATABASE_URL`, `NEXTAUTH_SECRET`, OAuth secrets, Stripe keys, SMTP и S3 vars. Для Vercel использовать managed Postgres/S3/SMTP. Для Docker/K8s использовать `Dockerfile`, `docker-compose.yml`, `infra/k8s`.
+Production: задать реальные `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `APP_URL`, OAuth secrets, SMTP и S3 vars через локальное/VPS/K8s secret storage. База данных по умолчанию self-hosted: PostgreSQL запускается как внутренний сервис платформы без публичного порта; сторонние провайдеры БД не являются целевым режимом. Stripe secrets не требуются для текущего invite-only профиля. Для Docker/K8s использовать `Dockerfile`, `docker-compose.yml`, `infra/k8s`.
 
 # План миграции и масштабирования
 
 1. Запустить modular monolith.
 2. Вынести async-события через outbox.
 3. Первым выделять notification-service и analytics-reporting-service.
-4. Billing отделять только после стабилизации webhook/idempotency.
+4. Invite access отделять только после стабилизации lifecycle, audit trail и лимитов активации.
 5. Course/progress domains разделять после появления независимых SLA.
 
 ```mermaid
@@ -149,9 +149,8 @@ gantt
 
 # Список задач для MVP и roadmap
 
-См. `docs/todo.md`. MVP закрывает runnable core, роли, курсы, прогресс, тесты, задания, сертификаты, оплату, отчёты, аудит, согласия, i18n и deployment templates.
+См. `docs/todo.md`. MVP закрывает runnable core, роли, курсы, прогресс, тесты, задания, сертификаты, инвайты, отчёты, аудит, согласия, i18n и deployment templates.
 
 # Риски и рекомендации по безопасности
 
-Основные риски: утечка персональных данных, обход ролей, небезопасные webhook-и, XSS в учебном контенте, слабая настройка секретов. Рекомендации: серверный RBAC, структурированный контент, verified webhooks, env-only secrets, audit logs, rate limiting, регулярные backup/restore drills.
-
+Основные риски: утечка персональных данных, обход ролей, случайная реактивация платежей, XSS в учебном контенте, слабая настройка секретов. Рекомендации: серверный RBAC, структурированный контент, explicit disabled billing endpoints, env-only secrets, audit logs, rate limiting, регулярные backup/restore drills.

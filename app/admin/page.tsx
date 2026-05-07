@@ -4,20 +4,34 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Tabs } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { getAdminDashboard } from "@/server/actions/dashboard";
-import {
-  getAdminMetrics,
-  MOCK_COURSES,
-  MOCK_COHORTS,
-  MOCK_CERTIFICATES,
-} from "@/lib/mock-data";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
+  await requireRolePage(["admin"]);
   const data = await getAdminDashboard();
+  const demoMode = isDemoModeEnabled();
 
-  const metrics = data?.metrics ?? getAdminMetrics();
-  const courses = data?.courses ?? MOCK_COURSES;
-  const cohorts = data?.cohorts ?? MOCK_COHORTS;
-  const certificates = data?.certificates ?? MOCK_CERTIFICATES;
+  if (!data && !demoMode) {
+    return (
+      <AppShell role="admin">
+        <PageHeader
+          title="Дашборд администратора"
+          description="Обзор всех систем, потоков и выданных сертификатов."
+          badge="Администратор"
+        />
+        <DashboardUnavailable />
+      </AppShell>
+    );
+  }
+
+  const metrics = data?.metrics ?? [];
+  const courses = data?.courses ?? [];
+  const cohorts = data?.cohorts ?? [];
+  const certificates = data?.certificates ?? [];
 
   return (
     <AppShell role="admin">

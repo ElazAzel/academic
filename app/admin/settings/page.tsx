@@ -1,11 +1,9 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Flag, Globe, Mail, Shield, Sliders } from "lucide-react";
+import { Flag, Mail, Shield } from "lucide-react";
 
 const FEATURE_FLAGS = [
   { key: "FEATURE_PUSH_NOTIFICATIONS", label: "Push-уведомления", value: false },

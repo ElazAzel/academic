@@ -38,6 +38,13 @@ export interface UserSummary {
   lastLoginAt?: string | null;
 }
 
+export interface AppSessionUser {
+  id: string;
+  email: string;
+  name?: string | null;
+  roles: RoleKey[];
+}
+
 // ── Курсы ───────────────────────────────────────────────────────────
 export interface CourseSummary {
   id: string;
@@ -50,6 +57,7 @@ export interface CourseSummary {
   traversalMode: "sequential" | "open";
   modulesCount: number;
   lessonsCount: number;
+  avgProgress?: number;
   instructors: UserSummary[];
 }
 
@@ -171,7 +179,10 @@ export interface CohortSummary {
 export interface CohortDeadline {
   moduleId: string;
   moduleTitle: string;
+  courseTitle?: string;
   dueAt: string;
+  daysLeft: number;
+  isOverdue: boolean;
 }
 
 // ── Прогресс ────────────────────────────────────────────────────────
@@ -213,6 +224,36 @@ export interface AssignmentSummary {
   deadline?: string | null;
   maxAttempts: number;
   submissionStatus?: SubmissionStatus | null;
+}
+
+export interface StudentQuizDetail extends QuizSummary {
+  courseId: string;
+  courseTitle: string;
+  lessonId: string;
+  questions: QuizQuestionDetail[];
+}
+
+export interface QuizQuestionDetail {
+  id: string;
+  type: string;
+  text: string;
+  options: string[];
+}
+
+export interface StudentAssignmentDetail extends AssignmentSummary {
+  courseId: string;
+  courseTitle: string;
+  lessonId: string;
+  instructions: string;
+  submission?: {
+    id: string;
+    answerText?: string | null;
+    fileUrl?: string | null;
+    status: SubmissionStatus;
+    feedback?: string | null;
+    score?: number | null;
+    submittedAt: string;
+  } | null;
 }
 
 export interface SubmissionForReview {

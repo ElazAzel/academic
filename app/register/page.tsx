@@ -1,23 +1,26 @@
 import Link from "next/link";
-import { RegisterForm } from "@/components/auth/register-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function RegisterPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Регистрация</CardTitle>
-          <CardDescription>По умолчанию создаётся роль слушателя. Доступ к курсам назначает академия.</CardDescription>
+          <CardTitle className="text-2xl">Регистрация закрыта</CardTitle>
+          <CardDescription>
+            AI Strategic Academy работает по выданным аккаунтам. Логин и пароль выдаёт администратор академии.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <RegisterForm />
-          <p className="mt-5 text-sm text-muted-foreground">
-            Уже есть аккаунт? <Link className="font-medium text-primary" href="/login">Войти</Link>
+        <CardContent className="space-y-4">
+          <p className="text-sm leading-6 text-muted-foreground">
+            Если вы участник потока, используйте полученные credentials на странице входа.
           </p>
+          <Button asChild className="w-full">
+            <Link href="/login">Перейти ко входу</Link>
+          </Button>
         </CardContent>
       </Card>
     </main>
   );
 }
-

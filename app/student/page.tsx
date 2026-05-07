@@ -6,21 +6,35 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
 import { getStudentDashboard } from "@/server/actions/dashboard";
-import {
-  getStudentMetrics,
-  MOCK_CONTINUE_LEARNING,
-  MOCK_STUDENT_PROGRESS,
-  MOCK_QUESTIONS,
-} from "@/lib/mock-data";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { cn } from "@/lib/utils";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
+
+export const dynamic = "force-dynamic";
 
 export default async function StudentDashboardPage() {
-  // Attempt to fetch real data from DB, fallback to mock data if DB is unavailable
+  await requireRolePage(["student"]);
   const data = await getStudentDashboard();
+  const demoMode = isDemoModeEnabled();
+
+  if (!data && !demoMode) {
+    return (
+      <AppShell role="student">
+        <PageHeader
+          title="Дашборд слушателя"
+          description="Ваш прогресс, курсы, задания и уведомления."
+          badge="Слушатель"
+        />
+        <DashboardUnavailable />
+      </AppShell>
+    );
+  }
   
-  const metrics = data?.metrics ?? getStudentMetrics();
-  const continueLearning = data?.continueLearning ?? MOCK_CONTINUE_LEARNING;
-  const coursesProgress = data?.coursesProgress ?? MOCK_STUDENT_PROGRESS;
-  const questions = data?.questions ?? MOCK_QUESTIONS;
+  const metrics = data?.metrics ?? [];
+  const continueLearning = data?.continueLearning ?? null;
+  const coursesProgress = data?.coursesProgress ?? [];
+  const questions = data?.questions ?? [];
 
   const answeredQuestions = questions.filter((q) => q.status === "answered");
 
@@ -74,34 +88,46 @@ export default async function StudentDashboardPage() {
               label: "Дедлайны",
               content: (
                 <div className="space-y-3">
-                  <Card className="transition-shadow hover:shadow-sm">
-                    <CardContent className="flex items-center gap-4 py-4">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
-                        <Clock className="h-5 w-5 text-amber-600" aria-hidden />
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Модуль 2: Практика</p>
-                        <p className="text-xs text-muted-foreground">
-                          AI Strategy Fundamentals · до 18 мая 2026
-                        </p>
-                      </div>
-                      <Badge className="border-amber-200 bg-amber-50 text-amber-700">11 дн.</Badge>
-                    </CardContent>
-                  </Card>
-                  <Card className="transition-shadow hover:shadow-sm">
-                    <CardContent className="flex items-center gap-4 py-4">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100">
-                        <Clock className="h-5 w-5 text-sky-600" aria-hidden />
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Модуль 1: Основы</p>
-                        <p className="text-xs text-muted-foreground">
-                          Prompt Engineering for Leaders · до 25 мая 2026
-                        </p>
-                      </div>
-                      <Badge className="border-sky-200 bg-sky-50 text-sky-700">18 дн.</Badge>
-                    </CardContent>
-                  </Card>
+                  {data?.deadlines && data.deadlines.length > 0 ? (
+                    data.deadlines.map((d) => {
+                      const daysLeft = d.daysLeft;
+                      const isOverdue = d.isOverdue;
+
+                      return (
+                        <Card key={d.moduleId} className="transition-shadow hover:shadow-sm">
+                          <CardContent className="flex items-center gap-4 py-4">
+                            <span className={cn(
+                              "flex h-10 w-10 items-center justify-center rounded-xl",
+                              isOverdue ? "bg-red-100" : daysLeft <= 3 ? "bg-amber-100" : "bg-sky-100"
+                            )}>
+                              <Clock className={cn(
+                                "h-5 w-5",
+                                isOverdue ? "text-red-600" : daysLeft <= 3 ? "text-amber-600" : "text-sky-600"
+                              )} aria-hidden />
+                            </span>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{d.moduleTitle}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {d.courseTitle} · до {new Date(d.dueAt).toLocaleDateString("ru-RU")}
+                              </p>
+                            </div>
+                            <Badge className={cn(
+                              "border-none",
+                              isOverdue ? "bg-red-50 text-red-700" : daysLeft <= 3 ? "bg-amber-50 text-amber-700" : "bg-sky-50 text-sky-700"
+                            )}>
+                              {isOverdue ? "Просрочено" : `${daysLeft} дн.`}
+                            </Badge>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  ) : (
+                    <Card>
+                      <CardContent className="py-10 text-center text-muted-foreground">
+                        У вас пока нет установленных дедлайнов.
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               ),
             },

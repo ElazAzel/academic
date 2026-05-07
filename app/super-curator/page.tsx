@@ -4,18 +4,33 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Tabs } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSuperCuratorDashboard } from "@/server/actions/dashboard";
-import {
-  getSuperCuratorMetrics,
-  MOCK_CURATOR_LOADS,
-  MOCK_COHORTS,
-} from "@/lib/mock-data";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
+
+export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorDashboardPage() {
+  await requireRolePage(["super_curator"]);
   const data = await getSuperCuratorDashboard();
+  const demoMode = isDemoModeEnabled();
 
-  const metrics = data?.metrics ?? getSuperCuratorMetrics();
-  const curatorLoads = data?.curatorLoads ?? MOCK_CURATOR_LOADS;
-  const cohorts = data?.cohorts ?? MOCK_COHORTS;
+  if (!data && !demoMode) {
+    return (
+      <AppShell role="super_curator">
+        <PageHeader
+          title="Дашборд супер-куратора"
+          description="Контроль нагрузки кураторов и мониторинг потоков."
+          badge="Супер-куратор"
+        />
+        <DashboardUnavailable />
+      </AppShell>
+    );
+  }
+
+  const metrics = data?.metrics ?? [];
+  const curatorLoads = data?.curatorLoads ?? [];
+  const cohorts = data?.cohorts ?? [];
 
   return (
     <AppShell role="super_curator">

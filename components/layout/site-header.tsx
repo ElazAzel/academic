@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { GraduationCap, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getCurrentUser } from "@/lib/auth/session";
+import { UserAccountNav } from "@/components/layout/user-account-nav";
 
 const nav = [
   { href: "/student", label: "Слушатель" },
@@ -9,7 +11,9 @@ const nav = [
   { href: "/admin", label: "Админ" }
 ];
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const user = await getCurrentUser();
+
   return (
     <header className="sticky top-0 z-30 border-b bg-white/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
@@ -19,6 +23,7 @@ export function SiteHeader() {
           </span>
           <span>AI Strategic Academy</span>
         </Link>
+        
         <nav className="hidden items-center gap-1 md:flex" aria-label="Основная навигация">
           {nav.map((item) => (
             <Link key={item.href} href={item.href} className="rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
@@ -26,12 +31,19 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <Button asChild size="sm">
-          <Link href="/login">
-            <LogIn className="h-4 w-4" aria-hidden />
-            Войти
-          </Link>
-        </Button>
+
+        <div className="flex items-center gap-4">
+          {user ? (
+            <UserAccountNav user={user} />
+          ) : (
+            <Button asChild size="sm">
+              <Link href="/login">
+                <LogIn className="h-4 w-4 mr-2" aria-hidden />
+                Войти
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
     </header>
   );

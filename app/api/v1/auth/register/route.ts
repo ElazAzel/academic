@@ -1,13 +1,11 @@
-import { created, errorResponse, parseJson } from "@/lib/http";
-import { registerSchema } from "@/lib/validation";
-import { registerUser } from "@/server/modules/auth/service";
+import { ApiError, errorResponse } from "@/lib/http";
 
-export async function POST(request: Request) {
-  try {
-    const input = await parseJson(request, registerSchema);
-    return created(await registerUser(input));
-  } catch (error) {
-    return errorResponse(error);
-  }
+export async function POST() {
+  return errorResponse(
+    new ApiError(
+      "gone",
+      "Самостоятельная регистрация отключена. Аккаунты создаёт академия и выдаёт логин/пароль слушателю.",
+      410
+    )
+  );
 }
-

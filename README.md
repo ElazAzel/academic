@@ -53,6 +53,16 @@ Seed creates Russian-language academy demo data:
 
 Default demo password: `Password123!`
 
+## Issued Credentials
+
+Self-registration is disabled for the closed academy profile. Provision production accounts and generate the local credentials CSV with:
+
+```powershell
+npm.cmd run users:provision
+```
+
+Defaults create 4000 students, 50 curators, one super-curator, one admin, and one customer observer. The CSV is written under ignored `var/credentials/`.
+
 ## Documentation
 
 - [Assumptions](docs/assumptions.md)
@@ -61,4 +71,3 @@ Default demo password: `Password123!`
 - [TODO](docs/todo.md)
 - [OpenAPI](docs/api/openapi.yaml)
 - [GraphQL schema](docs/api/graphql-schema.graphql)
-

@@ -29,7 +29,11 @@ const providers: NonNullable<AuthOptions["providers"]> = [
         where: { email },
         include: { roles: { include: { role: true } } }
       });
+<<<<<<< HEAD
       if (!user?.passwordHash) {
+=======
+      if (!user?.passwordHash || user.status !== "active") {
+>>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
         return null;
       }
       const valid = await verifyPassword(user.passwordHash, password);

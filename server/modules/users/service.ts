@@ -97,3 +97,62 @@ export async function setUserRoles(actor: AppSessionUser, userId: string, roleKe
     }
   });
 }
+<<<<<<< HEAD
+=======
+export async function updateUser(actor: AppSessionUser, userId: string, data: { name?: string; email?: string }) {
+  const isSelf = actor.id === userId;
+  const isAdmin = actor.roles.includes(RoleKey.admin);
+  const isSuperCurator = actor.roles.includes(RoleKey.super_curator);
+
+  if (!isAdmin && !isSuperCurator && !isSelf) {
+    throw new ApiError("forbidden", "Недостаточно прав для редактирования данных пользователя", 403);
+  }
+
+  // Если не админ, проверяем кого редактируем
+  if (!isAdmin && !isSelf) {
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { roles: { include: { role: true } } }
+    });
+
+    if (!targetUser) {
+      throw new ApiError("not_found", "Пользователь не найден", 404);
+    }
+
+    const targetRoles = targetUser.roles.map(r => r.role.key);
+    
+    // Главный куратор может редактировать только определенные роли
+    if (isSuperCurator) {
+      const hasRestrictedRole = targetRoles.some(role => 
+        role === RoleKey.admin || role === RoleKey.super_curator
+      );
+      if (hasRestrictedRole) {
+        throw new ApiError("forbidden", "Главный куратор не может редактировать администраторов или других главных кураторов", 403);
+      }
+    }
+  }
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data,
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      status: true,
+      lastLoginAt: true,
+      roles: { include: { role: true } }
+    }
+  });
+
+  await logAudit({
+    actorId: actor.id,
+    action: "user.updated",
+    entity: "user",
+    entityId: userId,
+    metadata: data
+  });
+
+  return user;
+}
+>>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
