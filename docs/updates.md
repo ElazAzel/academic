@@ -34,6 +34,7 @@ Summary:
 - `DATABASE_URL`, `POSTGRES_PASSWORD` и MinIO credentials документированы как внутренние секреты, не предназначенные для Git или публичных консолей.
 - Credentials login теперь принимает только активных пользователей; отключённый аккаунт не может войти даже с правильным паролем.
 - Learning flow подключен к server-side service: курс, модуль и урок проверяют активное enrollment, sequential lock и показывают реальные lesson/progress данные.
+- Readiness endpoints теперь возвращают typed `503 service_unavailable`, если self-hosted PostgreSQL недоступен из runtime, вместо generic `500`.
 
 Проверки:
 

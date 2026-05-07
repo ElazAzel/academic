@@ -9,6 +9,7 @@ export type ApiErrorCode =
   | "conflict"
   | "gone"
   | "validation_error"
+  | "service_unavailable"
   | "internal_error";
 
 export class ApiError extends Error {
