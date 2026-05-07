@@ -17,7 +17,6 @@ export default async function StudentDashboardPage() {
   await requireRolePage(["student"]);
   const data = await getStudentDashboard();
   const demoMode = isDemoModeEnabled();
-  const now = Date.now();
 
   if (!data && !demoMode) {
     return (
@@ -91,8 +90,8 @@ export default async function StudentDashboardPage() {
                 <div className="space-y-3">
                   {data?.deadlines && data.deadlines.length > 0 ? (
                     data.deadlines.map((d) => {
-                      const daysLeft = Math.ceil((new Date(d.dueAt).getTime() - now) / (1000 * 60 * 60 * 24));
-                      const isOverdue = daysLeft < 0;
+                      const daysLeft = d.daysLeft;
+                      const isOverdue = d.isOverdue;
 
                       return (
                         <Card key={d.moduleId} className="transition-shadow hover:shadow-sm">

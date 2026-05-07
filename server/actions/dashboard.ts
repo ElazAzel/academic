@@ -142,13 +142,19 @@ export async function getStudentDashboard() {
       { label: "Вопросы куратору", value: openQuestionsCount, tone: openQuestionsCount > 0 ? "info" : "primary" },
     ];
 
+    const now = new Date();
     const deadlines: CohortDeadline[] = enrollments.flatMap((e) => 
-      e.cohort?.deadlines.map((d) => ({
-        moduleId: d.moduleId,
-        moduleTitle: d.module.title,
-        dueAt: d.dueAt.toISOString(),
-        courseTitle: e.course.title
-      })) ?? []
+      e.cohort?.deadlines.map((d) => {
+        const daysLeft = Math.ceil((d.dueAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        return {
+          moduleId: d.moduleId,
+          moduleTitle: d.module.title,
+          dueAt: d.dueAt.toISOString(),
+          courseTitle: e.course.title,
+          daysLeft,
+          isOverdue: daysLeft < 0
+        };
+      }) ?? []
     );
 
     return { metrics, coursesProgress, continueLearning, questions: formattedQuestions, deadlines };

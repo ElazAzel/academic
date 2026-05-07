@@ -145,9 +145,12 @@ export interface StudentLessonLearningDetail extends LessonDetail {
   progressPercent: number;
   progressStatus: ProgressStatus;
   moduleTitle: string;
-  moduleId: string;
+  dueAt: string;
   courseTitle: string;
+  daysLeft: number;
+  isOverdue: boolean;
   courseId: string;
+  moduleId: string;
   prevLesson: { id: string; title: string } | null;
   nextLesson: { id: string; title: string; locked: boolean } | null;
   myQuestions: LessonQuestionSummary[];
@@ -181,6 +184,8 @@ export interface CohortDeadline {
   moduleTitle: string;
   courseTitle?: string;
   dueAt: string;
+  daysLeft: number;
+  isOverdue: boolean;
 }
 
 // ── Прогресс ────────────────────────────────────────────────────────
