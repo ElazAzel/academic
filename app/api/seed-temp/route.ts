@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const passwordHash = await hashPassword("Password123!");
+    const passwordHash = await hashPassword("20122011Elaz");
     
     async function upsertUser(email: string, name: string, roleKey: RoleKey) {
       const user = await prisma.user.upsert({
