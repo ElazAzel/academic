@@ -1,17 +1,15 @@
-"use client";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, Trash2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Save, Trash2, ChevronDown, ChevronUp, Loader2, Plus, X } from "lucide-react";
 
 interface Question {
   id: string;
   prompt: string;
   type: string;
   points: number;
-  options: unknown;
-  correctAnswer: unknown;
+  options: any;
+  correctAnswer: any;
 }
 
 export function QuestionEditorItem({ question, onUpdate, onDelete }: { 
@@ -23,6 +21,9 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
   const [pending, setPending] = useState(false);
   const [data, setData] = useState(question);
 
+  const options = Array.isArray(data.options) ? data.options : [];
+  const correctAnswer = data.correctAnswer as any;
+
   async function handleSave() {
     setPending(true);
     try {
@@ -30,6 +31,34 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
       setIsExpanded(false);
     } finally {
       setPending(false);
+    }
+  }
+
+  function addOption() {
+    const newOptions = [...options, ""];
+    setData({ ...data, options: newOptions });
+  }
+
+  function updateOption(index: number, value: string) {
+    const newOptions = [...options];
+    newOptions[index] = value;
+    setData({ ...data, options: newOptions });
+  }
+
+  function removeOption(index: number) {
+    const newOptions = options.filter((_, i) => i !== index);
+    setData({ ...data, options: newOptions });
+  }
+
+  function toggleCorrect(value: string) {
+    if (data.type === "SINGLE_CHOICE") {
+      setData({ ...data, correctAnswer: { value } });
+    } else if (data.type === "MULTIPLE_CHOICE") {
+      const currentValues = Array.isArray(correctAnswer.values) ? correctAnswer.values : [];
+      const newValues = currentValues.includes(value) 
+        ? currentValues.filter((v: string) => v !== value)
+        : [...currentValues, value];
+      setData({ ...data, correctAnswer: { values: newValues } });
     }
   }
 
@@ -58,6 +87,18 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase text-muted-foreground">Тип</label>
+              <select
+                className="w-full h-10 rounded-xl border bg-white px-3 text-sm"
+                value={data.type}
+                onChange={(e) => setData({ ...data, type: e.target.value, options: (e.target.value === "SHORT_ANSWER" ? [] : options) })}
+              >
+                <option value="SINGLE_CHOICE">Один вариант</option>
+                <option value="MULTIPLE_CHOICE">Несколько вариантов</option>
+                <option value="SHORT_ANSWER">Краткий ответ</option>
+              </select>
+            </div>
+            <div className="space-y-2">
               <label className="text-xs font-semibold uppercase text-muted-foreground">Баллы</label>
               <Input
                 type="number"
@@ -65,21 +106,53 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
                 onChange={(e) => setData({ ...data, points: Number(e.target.value) })}
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Тип</label>
-              <select
-                className="w-full h-10 rounded-xl border bg-white px-3 text-sm"
-                value={data.type}
-                onChange={(e) => setData({ ...data, type: e.target.value })}
-              >
-                <option value="SINGLE_CHOICE">Один вариант</option>
-                <option value="MULTIPLE_CHOICE">Несколько вариантов</option>
-                <option value="SHORT_ANSWER">Краткий ответ</option>
-              </select>
-            </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          {data.type !== "SHORT_ANSWER" && (
+            <div className="space-y-3 pt-2">
+              <label className="text-xs font-semibold uppercase text-muted-foreground">Варианты ответов</label>
+              {options.map((opt, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div 
+                    className={`h-5 w-5 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors ${
+                      (data.type === "SINGLE_CHOICE" ? correctAnswer.value === opt : correctAnswer.values?.includes(opt))
+                      ? "bg-primary border-primary text-white" 
+                      : "border-muted-foreground/30"
+                    }`}
+                    onClick={() => toggleCorrect(opt)}
+                  >
+                    { (data.type === "SINGLE_CHOICE" ? correctAnswer.value === opt : correctAnswer.values?.includes(opt)) && <div className="h-2 w-2 bg-white rounded-full" /> }
+                  </div>
+                  <Input 
+                    value={opt} 
+                    onChange={(e) => updateOption(i, e.target.value)}
+                    placeholder={`Вариант ${i + 1}`}
+                    className="h-9"
+                  />
+                  <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-rose-600" onClick={() => removeOption(i)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" className="w-full border-dashed rounded-xl h-10" onClick={addOption}>
+                <Plus className="h-3 w-3 mr-2" />
+                Добавить вариант
+              </Button>
+            </div>
+          )}
+
+          {data.type === "SHORT_ANSWER" && (
+            <div className="space-y-2 pt-2">
+              <label className="text-xs font-semibold uppercase text-muted-foreground">Правильный ответ</label>
+              <Input 
+                value={correctAnswer.value || ""} 
+                onChange={(e) => setData({ ...data, correctAnswer: { value: e.target.value } })}
+                placeholder="Текст ответа"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-4">
             <Button size="sm" variant="ghost" className="text-rose-600" onClick={() => onDelete(question.id)}>
               <Trash2 className="h-4 w-4 mr-2" />
               Удалить
