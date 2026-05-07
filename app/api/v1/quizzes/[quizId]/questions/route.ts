@@ -2,7 +2,7 @@ import { errorResponse, created, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { z } from "zod";
-import { QuestionType } from "@prisma/client";
+import { Prisma, QuestionType } from "@prisma/client";
 
 type Context = { params: Promise<{ quizId: string }> };
 
@@ -26,7 +26,11 @@ export async function POST(request: Request, context: Context) {
     
     const question = await prisma.quizQuestion.create({
       data: {
-        ...input,
+        prompt: input.prompt,
+        type: (input.type || "SINGLE_CHOICE") as QuestionType,
+        points: input.points || 1,
+        options: (input.options || []) as Prisma.InputJsonValue,
+        correctAnswer: (input.correctAnswer || {}) as Prisma.InputJsonValue,
         quizId,
         order: count
       }
