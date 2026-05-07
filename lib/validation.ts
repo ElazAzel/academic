@@ -27,7 +27,7 @@ export const lessonSchema = z.object({
   order: z.number().int().positive(),
   type: z.enum(["VIDEO", "TEXT", "DOCUMENT", "VIDEO_DOCUMENT", "QUIZ", "ASSIGNMENT", "LIVE", "RECORDING", "MIXED"]).default("MIXED"),
   content: z.record(z.unknown()).default({}),
-  videoUrl: z.string().url().nullish().or(z.literal("")),
+  videoUrl: z.string().nullish().or(z.literal("")),
   durationMinutes: z.number().int().min(0).default(0),
   isRequired: z.boolean().default(true)
 });
