@@ -20,10 +20,10 @@ paths:
           description: Database and runtime are ready
   /auth/register:
     post:
-      summary: Register email/password account
+      summary: Disabled self-registration endpoint
       responses:
-        "201":
-          description: User created
+        "410":
+          description: Self-registration is disabled; academy provisions issued credentials
   /auth/forgot-password:
     post:
       summary: Request password reset

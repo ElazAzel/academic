@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-export const registerSchema = z.object({
-  email: z.string().email(),
-  name: z.string().min(2).max(120),
-  password: z.string().min(10).max(128),
-  consentAccepted: z.literal(true)
-});
-
 export const courseSchema = z.object({
   title: z.string().min(3).max(160),
   description: z.string().min(10),
@@ -68,4 +61,3 @@ export const checkoutSchema = z.object({
   currency: z.string().length(3).default("usd"),
   type: z.enum(["ONE_TIME", "SUBSCRIPTION"]).default("ONE_TIME")
 });
-

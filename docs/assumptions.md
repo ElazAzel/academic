@@ -9,8 +9,10 @@
 - Vercel deployments use managed PostgreSQL through `DATABASE_URL`; migrations and seed must run after Production/Preview env vars are set.
 - Russian is the default UI locale. English dictionary scaffolding is not generated because `--locale=ru`.
 - Theme default is light and academy-focused. The app avoids marketplace pricing pages and multi-vendor course author flows.
+- Mock dashboard data is a demo-only fallback controlled by `NEXT_PUBLIC_DEMO_MODE=true`; production defaults to real data or explicit unavailable/empty states.
 - Certificate issuance defaults to 85% course completion plus accepted final assignment. The threshold is configurable through `CERTIFICATE_COMPLETION_THRESHOLD`.
 - The current academy profile is invite-only. Stripe/payment providers are deprecated for this branch; payment routes stay for backward compatibility and return `410 Gone`. SMTP, OAuth, S3, and push providers are configured through env vars only; no secrets are committed.
+- Self-registration is disabled. Accounts are provisioned by the academy with issued email/password credentials; default provisioning creates 4000 students, 50 curators, one super-curator, one admin, and one customer observer.
 - Passwords use Argon2id hashing through `@node-rs/argon2`.
 - REST is implemented as the primary API. GraphQL is a schema/resolver scaffold behind `FEATURE_GRAPHQL`.
 - PostgreSQL full-text search is the MVP search engine. The repository boundary allows replacing it later.

@@ -6,6 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
 import { getStudentDashboard } from "@/server/actions/dashboard";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 import {
   getStudentMetrics,
   MOCK_CONTINUE_LEARNING,
@@ -16,8 +19,22 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function StudentDashboardPage() {
-  // Attempt to fetch real data from DB, fallback to mock data if DB is unavailable
+  await requireRolePage(["student"]);
   const data = await getStudentDashboard();
+  const demoMode = isDemoModeEnabled();
+
+  if (!data && !demoMode) {
+    return (
+      <AppShell role="student">
+        <PageHeader
+          title="Дашборд слушателя"
+          description="Ваш прогресс, курсы, задания и уведомления."
+          badge="Слушатель"
+        />
+        <DashboardUnavailable />
+      </AppShell>
+    );
+  }
   
   const metrics = data?.metrics ?? getStudentMetrics();
   const continueLearning = data?.continueLearning ?? MOCK_CONTINUE_LEARNING;

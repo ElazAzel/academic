@@ -4,6 +4,9 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Tabs } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSuperCuratorDashboard } from "@/server/actions/dashboard";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 import {
   getSuperCuratorMetrics,
   MOCK_CURATOR_LOADS,
@@ -13,7 +16,22 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorDashboardPage() {
+  await requireRolePage(["super_curator"]);
   const data = await getSuperCuratorDashboard();
+  const demoMode = isDemoModeEnabled();
+
+  if (!data && !demoMode) {
+    return (
+      <AppShell role="super_curator">
+        <PageHeader
+          title="Дашборд супер-куратора"
+          description="Контроль нагрузки кураторов и мониторинг потоков."
+          badge="Супер-куратор"
+        />
+        <DashboardUnavailable />
+      </AppShell>
+    );
+  }
 
   const metrics = data?.metrics ?? getSuperCuratorMetrics();
   const curatorLoads = data?.curatorLoads ?? MOCK_CURATOR_LOADS;

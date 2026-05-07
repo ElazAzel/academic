@@ -16,6 +16,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "users:provision": "tsx scripts/provision-users.ts",
     "verify": "npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
