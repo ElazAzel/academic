@@ -148,7 +148,7 @@ export async function createLesson(moduleId: string, input: {
   order: number;
   type: keyof typeof LessonType;
   content: Record<string, unknown>;
-  videoUrl?: string;
+  videoUrl?: string | null;
   durationMinutes: number;
 }, actorId: string) {
   const courseModule = await prisma.module.findUnique({ where: { id: moduleId } });
@@ -177,7 +177,7 @@ export async function updateLesson(lessonId: string, input: {
   order?: number;
   type?: keyof typeof LessonType;
   content?: Record<string, unknown>;
-  videoUrl?: string;
+  videoUrl?: string | null;
   durationMinutes?: number;
   isRequired?: boolean;
 }, actorId: string) {
