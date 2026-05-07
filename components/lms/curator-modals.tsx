@@ -66,7 +66,7 @@ export function ReviewSubmissionModal({
   submission, 
   onClose 
 }: { 
-  submission: { id: string; studentName: string; assignmentTitle: string; answerText?: string }; 
+  submission: { id: string; studentName: string; assignmentTitle: string; answerText?: string | null }; 
   onClose: () => void 
 }) {
   const [feedback, setFeedback] = useState("");
