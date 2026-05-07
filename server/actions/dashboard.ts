@@ -595,6 +595,71 @@ export async function getInstructorDashboard() {
   }, null);
 }
 
+export async function getInstructorAnalytics() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  return safeQuery(async () => {
+    const courses = await prisma.course.findMany({
+      where: { instructors: { some: { userId: user.id } } },
+      include: {
+        modules: {
+          include: {
+            _count: { select: { lessons: true } }
+          }
+        },
+        _count: { select: { enrollments: true } }
+      }
+    });
+
+    const courseIds = courses.map(c => c.id);
+
+    const [totalEnrollments, avgProgressResult, completedCount, avgQuizScore] = await Promise.all([
+      prisma.enrollment.count({ where: { courseId: { in: courseIds } } }),
+      prisma.courseProgress.aggregate({
+        where: { courseId: { in: courseIds } },
+        _avg: { percent: true }
+      }),
+      prisma.courseProgress.count({
+        where: { courseId: { in: courseIds }, status: "COMPLETED" }
+      }),
+      prisma.quizAttempt.aggregate({
+        where: { quiz: { courseId: { in: courseIds } } },
+        _avg: { score: true }
+      })
+    ]);
+
+    const moduleAnalytics = await Promise.all(
+      courses.flatMap(c => 
+        c.modules.map(async (m) => {
+          const avg = await prisma.moduleProgress.aggregate({
+            where: { moduleId: m.id },
+            _avg: { percent: true }
+          });
+          const completed = await prisma.moduleProgress.count({
+            where: { moduleId: m.id, status: "COMPLETED" }
+          });
+          return {
+            title: m.title,
+            courseTitle: c.title,
+            avgProgress: Math.round(avg._avg.percent ?? 0),
+            completedStudents: completed
+          };
+        })
+      )
+    );
+
+    const metrics: DashboardMetric[] = [
+      { label: "Зачисленных", value: totalEnrollments, tone: "primary" },
+      { label: "Средний прогресс", value: `${Math.round(avgProgressResult._avg.percent ?? 0)}%`, tone: "success" },
+      { label: "Завершивших", value: completedCount, tone: "info" },
+      { label: "Средний балл тестов", value: `${Math.round(avgQuizScore._avg.score ?? 0)}%`, tone: "warning" },
+    ];
+
+    return { metrics, moduleAnalytics };
+  }, null);
+}
+
 // ── Заказчик ────────────────────────────────────────────────────────
 
 export async function getCustomerObserverDashboard() {

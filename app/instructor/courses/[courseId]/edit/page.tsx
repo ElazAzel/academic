@@ -1,45 +1,91 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BookOpen } from "lucide-react";
 import Link from "next/link";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { getCourse } from "@/server/modules/courses/service";
+import { CourseEditForm } from "@/components/instructor/course-edit-form";
+import { notFound } from "next/navigation";
 
-export default function InstructorEditCoursePage({ params }: { params: { courseId: string } }) {
+export const dynamic = "force-dynamic";
+
+export default async function InstructorEditCoursePage({ params }: { params: Promise<{ courseId: string }> }) {
+  await requireRolePage(["instructor", "admin"]);
+  const { courseId } = await params;
+  
+  let course;
+  try {
+    course = await getCourse(courseId);
+  } catch (err) {
+    notFound();
+  }
+
   return (
     <AppShell role="instructor">
       <div className="mb-4">
-        <Link href="/instructor/courses"><Button size="sm" variant="secondary"><ArrowLeft className="h-4 w-4" />Назад к курсам</Button></Link>
+        <Link href="/instructor/courses">
+          <Button size="sm" variant="secondary">
+            <ArrowLeft className="h-4 w-4" />
+            Назад к списку
+          </Button>
+        </Link>
       </div>
-      <PageHeader title="Редактировать курс" description={`Редактор курса ${params.courseId}: описание, инструкторы, настройки доступа.`} badge="Преподаватель" />
-      <Card className="rounded-2xl">
-        <CardContent className="space-y-4 py-6">
-          <div>
-            <label className="text-sm font-medium">Название курса *</label>
-            <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue="AI Strategy Fundamentals" />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Описание *</label>
-            <textarea className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm min-h-[100px]" defaultValue="Практический курс по AI-стратегии для руководителей и менеджеров." />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="text-sm font-medium">Цель курса</label>
-              <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue="Внедрять AI безопасно и результативно" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Длительность (часов)</label>
-              <input type="number" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={18} />
-            </div>
-          </div>
-          <Separator />
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary">Отмена</Button>
-            <Button>Сохранить</Button>
-          </div>
-        </CardContent>
-      </Card>
+
+      <PageHeader 
+        title={course.title} 
+        description="Редактирование основных параметров курса." 
+        badge="Преподаватель" 
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="rounded-3xl border-2">
+            <CardHeader>
+              <CardTitle className="text-lg">Основные настройки</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CourseEditForm course={course} />
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-3xl border-2 border-dashed">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                Состав курса (Учебный план)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-10 text-center">
+              <p className="text-muted-foreground text-sm mb-4">Управление модулями и уроками доступно в детальном редакторе.</p>
+              <Button disabled variant="outline">Открыть редактор контента</Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-1 space-y-6">
+          <Card className="rounded-3xl bg-primary/5 border-primary/10">
+            <CardHeader>
+              <CardTitle className="text-base text-primary">Статистика курса</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Модулей:</span>
+                <span className="font-bold">{course.modules.length}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Всего уроков:</span>
+                <span className="font-bold">{course.modules.reduce((acc, m) => acc + m.lessons.length, 0)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Потоков:</span>
+                <span className="font-bold">{course.cohorts.length}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </AppShell>
   );
 }

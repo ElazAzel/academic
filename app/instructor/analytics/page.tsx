@@ -4,37 +4,48 @@ import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs } from "@/components/ui/tabs";
-import type { DashboardMetric } from "@/types/domain";
+import { getInstructorAnalytics } from "@/server/actions/dashboard";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
 
-const ANALYTICS: DashboardMetric[] = [
-  { label: "Зачисленных", value: 85, tone: "primary" },
-  { label: "Средний прогресс", value: "54%", tone: "success" },
-  { label: "Завершивших", value: 20, tone: "info" },
-  { label: "Средний балл тестов", value: "78%", tone: "warning" },
-];
+export const dynamic = "force-dynamic";
 
-const MODULES = [
-  { title: "Модуль 1: Стратегия AI", avgProgress: 82, completedStudents: 65 },
-  { title: "Модуль 2: Практика", avgProgress: 45, completedStudents: 30 },
-  { title: "Модуль 3: Финальный проект", avgProgress: 12, completedStudents: 5 },
-];
+export default async function InstructorAnalyticsPage() {
+  await requireRolePage(["instructor"]);
+  const data = await getInstructorAnalytics();
+  const demoMode = isDemoModeEnabled();
 
-export default function InstructorAnalyticsPage() {
+  if (!data && !demoMode) {
+    return (
+      <AppShell role="instructor">
+        <PageHeader title="Аналитика курса" description="Прогресс, тесты, задания и активность слушателей." badge="Преподаватель" />
+        <DashboardUnavailable />
+      </AppShell>
+    );
+  }
+
+  const metrics = data?.metrics ?? [];
+  const moduleAnalytics = data?.moduleAnalytics ?? [];
+
   return (
     <AppShell role="instructor">
       <PageHeader title="Аналитика курса" description="Прогресс, тесты, задания и активность слушателей." badge="Преподаватель" />
       <div className="space-y-6">
-        <MetricGrid metrics={ANALYTICS} />
+        <MetricGrid metrics={metrics} />
         <Tabs tabs={[
           {
             label: "По модулям",
             content: (
               <div className="space-y-3">
-                {MODULES.map((m) => (
+                {moduleAnalytics.length > 0 ? moduleAnalytics.map((m) => (
                   <Card key={m.title} className="transition-shadow hover:shadow-sm">
                     <CardContent className="py-4">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-medium">{m.title}</p>
+                        <div>
+                          <p className="text-sm font-bold">{m.title}</p>
+                          <p className="text-xs text-muted-foreground">{m.courseTitle}</p>
+                        </div>
                         <span className="text-xs text-muted-foreground">{m.completedStudents} завершили</span>
                       </div>
                       <div className="flex items-center gap-3">
@@ -43,13 +54,15 @@ export default function InstructorAnalyticsPage() {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                )) : (
+                  <Card><CardContent className="py-10 text-center text-muted-foreground">Данные по модулям отсутствуют.</CardContent></Card>
+                )}
               </div>
             ),
           },
           {
             label: "По тестам",
-            content: <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">Аналитика по тестам будет доступна в следующем обновлении.</CardContent></Card>,
+            content: <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">Аналитика по тестам (распределение оценок) будет доступна в следующем обновлении.</CardContent></Card>,
           },
         ]} />
       </div>

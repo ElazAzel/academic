@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CheckCircle2, FileText, MessageCircle, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -5,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
+import { AnswerQuestionModal, ReviewSubmissionModal } from "./curator-modals";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type {
   ContinueLearning,
@@ -180,6 +184,8 @@ export function CourseManageGrid({ courses }: { courses: CourseSummary[] }) {
 
 // ── Очередь вопросов ────────────────────────────────────────────────
 export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[] }) {
+  const [selectedQuestion, setSelectedQuestion] = useState<QuestionFromStudent | null>(null);
+
   if (questions.length === 0) {
     return (
       <Card>
@@ -217,17 +223,25 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
               </p>
             </div>
             {q.status === "open" && (
-              <Button size="sm" variant="secondary">Ответить</Button>
+              <Button size="sm" variant="secondary" onClick={() => setSelectedQuestion(q)}>Ответить</Button>
             )}
           </CardContent>
         </Card>
       ))}
+      {selectedQuestion && (
+        <AnswerQuestionModal 
+          question={selectedQuestion} 
+          onClose={() => setSelectedQuestion(null)} 
+        />
+      )}
     </div>
   );
 }
 
 // ── Очередь заданий на проверку ─────────────────────────────────────
 export function SubmissionsQueue({ submissions }: { submissions: SubmissionForReview[] }) {
+  const [selectedSubmission, setSelectedSubmission] = useState<SubmissionForReview | null>(null);
+
   if (submissions.length === 0) {
     return (
       <Card>
@@ -239,39 +253,47 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
     );
   }
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Слушатель</TableHead>
-          <TableHead>Задание</TableHead>
-          <TableHead>Курс</TableHead>
-          <TableHead>Попытка</TableHead>
-          <TableHead>Статус</TableHead>
-          <TableHead className="text-right">Действие</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {submissions.map((s) => (
-          <TableRow key={s.id}>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <Avatar name={s.studentName} className="h-7 w-7 text-[10px]" />
-                <span className="text-sm font-medium">{s.studentName}</span>
-              </div>
-            </TableCell>
-            <TableCell className="text-sm">{s.assignmentTitle}</TableCell>
-            <TableCell className="text-sm text-muted-foreground">{s.courseTitle}</TableCell>
-            <TableCell className="text-sm">#{s.attemptNumber}</TableCell>
-            <TableCell>
-              <SubmissionBadge status={s.status} />
-            </TableCell>
-            <TableCell className="text-right">
-              <Button size="sm">Проверить</Button>
-            </TableCell>
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Слушатель</TableHead>
+            <TableHead>Задание</TableHead>
+            <TableHead>Курс</TableHead>
+            <TableHead>Попытка</TableHead>
+            <TableHead>Статус</TableHead>
+            <TableHead className="text-right">Действие</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {submissions.map((s) => (
+            <TableRow key={s.id}>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Avatar name={s.studentName} className="h-7 w-7 text-[10px]" />
+                  <span className="text-sm font-medium">{s.studentName}</span>
+                </div>
+              </TableCell>
+              <TableCell className="text-sm">{s.assignmentTitle}</TableCell>
+              <TableCell className="text-sm text-muted-foreground">{s.courseTitle}</TableCell>
+              <TableCell className="text-sm">#{s.attemptNumber}</TableCell>
+              <TableCell>
+                <SubmissionBadge status={s.status} />
+              </TableCell>
+              <TableCell className="text-right">
+                <Button size="sm" onClick={() => setSelectedSubmission(s)}>Проверить</Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      {selectedSubmission && (
+        <ReviewSubmissionModal 
+          submission={selectedSubmission} 
+          onClose={() => setSelectedSubmission(null)} 
+        />
+      )}
+    </>
   );
 }
 
