@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, RoleKey } from "@prisma/client";
 import { hashPassword } from "@/lib/auth/password";
 
 const prisma = new PrismaClient();
@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const passwordHash = await hashPassword("Password123!");
     
-    async function upsertUser(email: string, name: string, roleKey: string) {
+    async function upsertUser(email: string, name: string, roleKey: RoleKey) {
       const user = await prisma.user.upsert({
         where: { email },
         update: { name, passwordHash },
@@ -46,8 +46,9 @@ export async function GET() {
     }
     
     return NextResponse.json({ success: true, message: "Все аккаунты успешно созданы!" });
-  } catch (err: any) {
+  } catch (err) {
     console.error(err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
