@@ -96,6 +96,10 @@ export interface LessonSummary {
 }
 
 export interface LessonLearningSummary extends LessonSummary {
+  moduleId: string;
+  moduleTitle: string;
+  progressStatus: ProgressStatus;
+  progressPercent: number;
   locked: boolean;
   lockReason?: string | null;
 }

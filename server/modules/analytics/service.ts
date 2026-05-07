@@ -9,16 +9,18 @@ export async function getAdminOverview() {
     enrollments,
     completions,
     quizAttempts,
-    payments,
-    certificates
+    certificates,
+    activeInviteLinks,
+    inviteActivations
   ] = await Promise.all([
     prisma.user.count({ where: { status: "active" } }),
     prisma.course.count(),
     prisma.enrollment.count(),
     prisma.courseProgress.count({ where: { status: "COMPLETED" } }),
     prisma.quizAttempt.findMany({ select: { score: true, passed: true } }),
-    prisma.payment.findMany({ where: { status: "PAID" }, select: { amountCents: true, currency: true } }),
-    prisma.certificate.count()
+    prisma.certificate.count(),
+    prisma.inviteLink.count({ where: { status: "active" } }),
+    prisma.inviteLink.aggregate({ _sum: { activationCount: true } })
   ]);
 
   const completionRate = enrollments === 0 ? 0 : Math.round((completions / enrollments) * 100);
@@ -26,7 +28,6 @@ export async function getAdminOverview() {
     quizAttempts.length === 0
       ? 0
       : Math.round(quizAttempts.reduce((sum, attempt) => sum + attempt.score, 0) / quizAttempts.length);
-  const revenueCents = payments.reduce((sum, payment) => sum + payment.amountCents, 0);
 
   return {
     activeUsers,
@@ -35,9 +36,10 @@ export async function getAdminOverview() {
     completionRate,
     averageQuizScore,
     passedQuizAttempts: quizAttempts.filter((attempt) => attempt.passed).length,
-    revenueCents,
-    currency: payments[0]?.currency ?? "usd",
-    certificates
+    revenueCents: 0,
+    currency: "rub",
+    certificates,
+    activeInviteLinks,
+    inviteActivations: inviteActivations._sum.activationCount ?? 0
   };
 }
-
