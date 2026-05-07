@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
 import { getStudentDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { cn } from "@/lib/utils";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 
