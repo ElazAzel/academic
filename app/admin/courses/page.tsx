@@ -15,9 +15,11 @@ export default async function AdminCoursesPage() {
   
   const courses: CourseSummary[] = coursesDb.map(course => ({
     id: course.id,
+    slug: course.slug,
     title: course.title,
     description: course.description ?? "",
     status: course.status,
+    traversalMode: course.traversalMode === "open" ? "open" : "sequential",
     modulesCount: course.modules.length,
     lessonsCount: course.modules.reduce((acc, m) => acc + m.lessons.length, 0),
     durationHours: course.durationHours,

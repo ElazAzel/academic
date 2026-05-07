@@ -24,7 +24,7 @@ export default async function CuratorAssignmentsPage() {
     },
     include: {
       user: true,
-      assignment: { include: { course: true } }
+      assignment: { include: { course: true, lesson: true } }
     },
     orderBy: { submittedAt: "desc" }
   });
@@ -32,7 +32,9 @@ export default async function CuratorAssignmentsPage() {
   const submissions: SubmissionForReview[] = submissionsDb.map(sub => ({
     id: sub.id,
     studentName: sub.user.name ?? sub.user.email,
+    studentEmail: sub.user.email,
     assignmentTitle: sub.assignment.title,
+    lessonTitle: sub.assignment.lesson?.title ?? "Без урока",
     courseTitle: sub.assignment.course?.title ?? "Без курса",
     attemptNumber: sub.attemptNumber,
     status: sub.status,

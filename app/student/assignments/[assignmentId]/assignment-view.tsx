@@ -52,11 +52,11 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
             {assignment.instructions}
           </div>
           <div className="flex flex-wrap gap-3">
-            <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
+            <Badge className="border-sky-200 bg-sky-50 text-sky-700">
               Попыток: {assignment.maxAttempts}
             </Badge>
             {assignment.deadline && (
-              <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+              <Badge className="border-amber-200 bg-amber-50 text-amber-700">
                 Дедлайн: {new Date(assignment.deadline).toLocaleDateString("ru-RU")}
               </Badge>
             )}

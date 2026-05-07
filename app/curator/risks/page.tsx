@@ -32,9 +32,12 @@ export default async function CuratorRisksPage() {
   const risks: RiskItem[] = riskFlagsDb.map(risk => ({
     id: risk.id,
     studentName: risk.user.name ?? risk.user.email,
+    studentEmail: risk.user.email,
     courseTitle: risk.course?.title ?? "Общий",
     type: risk.type,
     severity: risk.severity,
+    status: risk.resolvedAt ? "resolved" : "active",
+    createdAt: risk.createdAt.toISOString()
   }));
 
   return (
