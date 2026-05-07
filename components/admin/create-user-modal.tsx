@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createUserAction } from "@/server/actions/admin";
-import { Loader2, UserPlus, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { ROLE_LABELS, type RoleKey } from "@/types/domain";
 
 export function CreateUserModal({ 

@@ -1,10 +1,8 @@
-import { Download, Upload, UserPlus } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { UserRoleEditor } from "@/components/admin/user-role-editor";
 import { PageHeader } from "@/components/lms/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";

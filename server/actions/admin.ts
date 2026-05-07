@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/page-guards";
 import { enrollStudent as enrollStudentService } from "@/server/modules/courses/service";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
+import { RoleKey } from "@prisma/client";
 
 const prisma = getPrisma();
 
@@ -132,7 +133,7 @@ export async function createUserAction(formData: FormData) {
     
     const email = formData.get("email") as string;
     const name = formData.get("name") as string || undefined;
-    const roleKeys = formData.getAll("roles") as any[];
+    const roleKeys = formData.getAll("roles") as RoleKey[];
 
     if (!email) {
       throw new Error("Email обязателен");
