@@ -34,9 +34,9 @@ export default async function CuratorRisksPage() {
     studentName: risk.user.name ?? risk.user.email,
     studentEmail: risk.user.email,
     courseTitle: risk.course?.title ?? "Общий",
-    type: risk.type,
-    severity: risk.severity,
-    status: risk.resolvedAt ? "resolved" : "active",
+    type: risk.type as RiskItem["type"],
+    severity: risk.severity as RiskItem["severity"],
+    status: risk.resolvedAt ? "resolved" : "open",
     createdAt: risk.createdAt.toISOString()
   }));
 
