@@ -40,14 +40,30 @@ export async function getStudentDashboard() {
   if (!user) return null;
 
   return safeQuery(async () => {
-    const enrollments = await prisma.enrollment.findMany({
-      where: { userId: user.id, status: "ACTIVE" },
-      include: {
-        course: { select: { id: true, slug: true, title: true, description: true, durationHours: true, status: true } },
-        courseProgress: true,
-        cohort: { include: { deadlines: { include: { module: true } } } },
-      },
-    });
+    const [enrollments, lastProgress, questions, certificatesCount] = await Promise.all([
+      prisma.enrollment.findMany({
+        where: { userId: user.id, status: "ACTIVE" },
+        include: {
+          course: { select: { id: true, slug: true, title: true, description: true, durationHours: true, status: true } },
+          courseProgress: true,
+          cohort: { include: { deadlines: { include: { module: true } } } },
+        },
+      }),
+      prisma.lessonProgress.findFirst({
+        where: { userId: user.id, status: { in: ["IN_PROGRESS", "NOT_STARTED"] } },
+        orderBy: { updatedAt: "desc" },
+        include: { lesson: { include: { module: { include: { course: true } } } } },
+      }),
+      prisma.lessonQuestion.findMany({
+        where: { studentId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        include: {
+          lesson: { include: { module: { include: { course: true } } } },
+        },
+      }),
+      prisma.certificate.count({ where: { userId: user.id } })
+    ]);
 
     const coursesProgress: StudentProgress[] = enrollments.map((e) => {
       const cp = e.courseProgress[0];
@@ -59,23 +75,20 @@ export async function getStudentDashboard() {
       };
     });
 
-    // Продолжить обучение — последний незавершённый урок
-    const lastProgress = await prisma.lessonProgress.findFirst({
-      where: { userId: user.id, status: { in: ["IN_PROGRESS", "NOT_STARTED"] } },
-      orderBy: { updatedAt: "desc" },
-      include: { lesson: { include: { module: { include: { course: true } } } } },
-    });
-
     let continueLearning: ContinueLearning | null = null;
     if (lastProgress) {
       const lesson = lastProgress.lesson;
       const course = lesson.module.course;
-      const cp = await prisma.courseProgress.findUnique({
-        where: { userId_courseId: { userId: user.id, courseId: course.id } },
-      });
-      const mp = await prisma.moduleProgress.findUnique({
-        where: { userId_moduleId: { userId: user.id, moduleId: lesson.moduleId } },
-      });
+      
+      const [cp, mp] = await Promise.all([
+        prisma.courseProgress.findUnique({
+          where: { userId_courseId: { userId: user.id, courseId: course.id } },
+        }),
+        prisma.moduleProgress.findUnique({
+          where: { userId_moduleId: { userId: user.id, moduleId: lesson.moduleId } },
+        })
+      ]);
+
       continueLearning = {
         courseId: course.id,
         courseTitle: course.title,
@@ -86,16 +99,6 @@ export async function getStudentDashboard() {
         modulePercent: mp?.percent ?? 0,
       };
     }
-
-    // Ответы куратора
-    const questions = await prisma.lessonQuestion.findMany({
-      where: { studentId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: {
-        lesson: { include: { module: { include: { course: true } } } },
-      },
-    });
 
     const formattedQuestions: QuestionFromStudent[] = questions.map((q) => ({
       id: q.id,
@@ -118,8 +121,6 @@ export async function getStudentDashboard() {
     const avgPercent = coursesProgress.length > 0
       ? Math.round(coursesProgress.reduce((s, c) => s + c.percent, 0) / coursesProgress.length)
       : 0;
-
-    const certificatesCount = await prisma.certificate.count({ where: { userId: user.id } });
 
     const openQuestionsCount = formattedQuestions.filter((q) => q.status === "open").length;
 
@@ -405,6 +406,7 @@ export async function getInstructorDashboard() {
   if (!user) return null;
 
   return safeQuery(async () => {
+    // Сначала получаем список курсов, чтобы использовать их ID в других запросах
     const courses = await prisma.course.findMany({
       where: { instructors: { some: { userId: user.id } } },
       orderBy: { createdAt: "desc" },
@@ -413,6 +415,19 @@ export async function getInstructorDashboard() {
         _count: { select: { modules: true } },
       },
     });
+
+    const courseIds = courses.map((c) => c.id);
+
+    // Параллельно получаем статистику по этим курсам
+    const [studentsCount, avgProgressResult] = await Promise.all([
+      prisma.enrollment.count({
+        where: { courseId: { in: courseIds }, status: "ACTIVE" }
+      }),
+      prisma.courseProgress.aggregate({
+        where: { courseId: { in: courseIds } },
+        _avg: { percent: true }
+      })
+    ]);
 
     const formattedCourses: CourseSummary[] = courses.map((c) => ({
       id: c.id,
@@ -431,15 +446,6 @@ export async function getInstructorDashboard() {
       })),
     }));
 
-    const courseIds = courses.map((c) => c.id);
-    const studentsCount = await prisma.enrollment.count({
-      where: { courseId: { in: courseIds }, status: "ACTIVE" }
-    });
-
-    const avgProgressResult = await prisma.courseProgress.aggregate({
-      where: { courseId: { in: courseIds } },
-      _avg: { percent: true }
-    });
     const avgProgress = Math.round(avgProgressResult._avg.percent ?? 0);
 
     const metrics: DashboardMetric[] = [
