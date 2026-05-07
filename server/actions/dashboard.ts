@@ -19,7 +19,9 @@ import type {
   CohortSummary,
   CertificateSummary,
   InviteLinkSummary,
+  CohortDeadline,
 } from "@/types/domain";
+import { requireRole } from "@/lib/auth/page-guards";
 
 export interface CuratorStudentItem {
   id: string;
@@ -270,8 +272,22 @@ export async function getEnrollmentData() {
       })
     ]);
 
-    return { students, courses, cohorts, curators };
-  }, { students: [], courses: [], cohorts: [], curators: [] });
+    return { 
+      students, 
+      courses, 
+      cohorts: cohorts.map(c => ({ 
+        id: c.id, 
+        name: c.name, 
+        courseId: c.courseId || "" 
+      })), 
+      curators 
+    };
+  }, { 
+    students: [] as { id: string; name: string | null; email: string }[], 
+    courses: [] as { id: string; title: string }[], 
+    cohorts: [] as { id: string; name: string; courseId: string }[], 
+    curators: [] as { id: string; name: string | null; email: string }[] 
+  });
 }
 
 export async function getCuratorStudents() {
@@ -282,7 +298,7 @@ export async function getCuratorStudents() {
     const assignments = await prisma.curatorAssignment.findMany({
       where: { curatorId: user.id, active: true },
       include: {
-        user: {
+        student: {
           include: {
             enrollments: {
               include: {
@@ -300,14 +316,14 @@ export async function getCuratorStudents() {
     });
 
     return assignments.map((a) => {
-      const enrollment = a.user.enrollments[0];
+      const enrollment = a.student.enrollments[0];
       return {
-        id: a.user.id,
-        name: a.user.name ?? a.user.email,
-        email: a.user.email,
+        id: a.student.id,
+        name: a.student.name ?? a.student.email,
+        email: a.student.email,
         course: enrollment?.course?.title ?? "Не зачислен",
         progress: enrollment?.courseProgress[0]?.percent ?? 0,
-        risk: a.user.riskFlags.length > 0
+        risk: a.student.riskFlags.length > 0
       };
     });
   }, []);
