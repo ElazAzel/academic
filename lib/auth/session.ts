@@ -1,17 +1,14 @@
-import { getServerSession } from "next-auth";
 import type { RoleKey } from "@prisma/client";
-import { authOptions } from "@/server/auth/options";
 import { ApiError } from "@/lib/http";
 import { assertPermission, type Permission } from "@/lib/auth/rbac";
-
-export type AppSessionUser = {
-  id: string;
-  email: string;
-  name?: string | null;
-  roles: RoleKey[];
-};
+import { AppSessionUser } from "@/types/domain";
 
 export async function getCurrentUser(): Promise<AppSessionUser | null> {
+  if (typeof window !== "undefined") return null;
+  
+  const { getServerSession } = await import("next-auth");
+  const { authOptions } = await import("@/server/auth/options");
+  
   const session = await getServerSession(authOptions);
   const user = session?.user as AppSessionUser | undefined;
   return user ?? null;

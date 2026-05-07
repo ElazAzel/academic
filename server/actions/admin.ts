@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
 import { enrollStudent as enrollStudentService } from "@/server/modules/courses/service";
 import { getPrisma } from "@/lib/prisma";
@@ -21,7 +20,7 @@ export async function enrollStudentAction(formData: FormData) {
     throw new Error("Не указан студент или курс");
   }
 
-  const enrollment = await enrollStudentService({ userId, courseId, cohortId }, actor.id);
+  await enrollStudentService({ userId, courseId, cohortId }, actor.id);
 
   if (curatorId) {
     await prisma.curatorAssignment.upsert({

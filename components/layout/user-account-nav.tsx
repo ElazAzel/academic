@@ -1,9 +1,9 @@
 "use client";
 
 import { signOut } from "next-auth/react";
-import { LogOut, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { AppSessionUser } from "@/lib/auth/session";
+import type { AppSessionUser } from "@/types/domain";
 
 export function UserAccountNav({ user }: { user: AppSessionUser }) {
   return (

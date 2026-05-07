@@ -18,7 +18,7 @@ export default async function InstructorEditCoursePage({ params }: { params: Pro
   let course;
   try {
     course = await getCourse(courseId);
-  } catch (err) {
+  } catch {
     notFound();
   }
 

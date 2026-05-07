@@ -22,7 +22,7 @@ export function AnswerQuestionModal({
     try {
       await answerQuestionAction(question.id, answer);
       onClose();
-    } catch (err) {
+    } catch {
       alert("Ошибка при сохранении ответа");
     } finally {
       setPending(false);
@@ -38,7 +38,7 @@ export function AnswerQuestionModal({
         </div>
         <div className="p-6 space-y-4">
           <div className="bg-muted/50 p-4 rounded-2xl italic text-sm text-muted-foreground">
-            "{question.text}"
+            &quot;{question.text}&quot;
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase text-muted-foreground">Ваш ответ</label>
@@ -78,7 +78,7 @@ export function ReviewSubmissionModal({
     try {
       await reviewSubmissionAction(submission.id, { status, score, feedback });
       onClose();
-    } catch (err) {
+    } catch {
       alert("Ошибка при сохранении проверки");
     } finally {
       setPending(false);

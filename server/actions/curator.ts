@@ -14,7 +14,7 @@ export async function answerQuestionAction(questionId: string, answer: string) {
     throw new Error("Ответ не может быть пустым");
   }
 
-  const question = await prisma.question.update({
+  await prisma.question.update({
     where: { id: questionId },
     data: {
       answer,
@@ -44,7 +44,7 @@ export async function reviewSubmissionAction(submissionId: string, input: {
 }) {
   const actor = await requireRole(["curator", "super_curator", "admin"]);
 
-  const submission = await prisma.assignmentSubmission.update({
+  await prisma.assignmentSubmission.update({
     where: { id: submissionId },
     data: {
       status: input.status,

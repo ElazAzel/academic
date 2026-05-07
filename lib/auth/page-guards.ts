@@ -15,3 +15,16 @@ export async function requireRolePage(allowedRoles: RoleKey[]) {
 
   return user;
 }
+export async function requireRole(allowedRoles: RoleKey[]) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    throw new Error("Необходима авторизация");
+  }
+
+  if (!allowedRoles.some((role) => user.roles.includes(role))) {
+    throw new Error("Недостаточно прав");
+  }
+
+  return user;
+}

@@ -37,7 +37,7 @@ export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
         const errData = await response.json();
         setError(errData.error || "Не удалось создать курс");
       }
-    } catch (err) {
+    } catch {
       setError("Ошибка сети");
     } finally {
       setPending(false);

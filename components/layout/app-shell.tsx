@@ -103,9 +103,7 @@ export function AppShell({
             className="sticky top-24 space-y-1 rounded-2xl border bg-white/80 p-3 shadow-sm backdrop-blur-xl"
             aria-label={`Кабинет: ${roleLabel}`}
           >
-            <div className="mb-3 rounded-xl bg-primary/5 px-3 py-2">
-              <p className="text-xs font-medium text-primary">{roleLabel}</p>
-            </div>
+            {/* Role label removed as per user request */}
             {links.map((item) => (
               <Link
                 key={item.href}

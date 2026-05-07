@@ -38,6 +38,13 @@ export interface UserSummary {
   lastLoginAt?: string | null;
 }
 
+export interface AppSessionUser {
+  id: string;
+  email: string;
+  name?: string | null;
+  roles: RoleKey[];
+}
+
 // ── Курсы ───────────────────────────────────────────────────────────
 export interface CourseSummary {
   id: string;

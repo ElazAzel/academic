@@ -1,8 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { CourseManageGrid } from "@/components/lms/dashboard-widgets";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { listCourses } from "@/server/modules/courses/service";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import type { CourseSummary } from "@/types/domain";

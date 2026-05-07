@@ -49,7 +49,7 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
       } else {
         setMessage("Ошибка при обновлении");
       }
-    } catch (err) {
+    } catch {
       setMessage("Ошибка сети");
     } finally {
       setPending(false);

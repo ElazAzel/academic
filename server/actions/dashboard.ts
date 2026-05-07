@@ -19,7 +19,6 @@ import type {
   CohortSummary,
   CertificateSummary,
   InviteLinkSummary,
-  UserSummary,
 } from "@/types/domain";
 
 export interface CuratorStudentItem {

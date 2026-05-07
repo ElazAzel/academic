@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar } from "@/components/ui/avatar";
-import { Plus, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { listEnrollments } from "@/server/modules/courses/service";
 import { getEnrollmentData } from "@/server/actions/dashboard";
