@@ -17,7 +17,7 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
 
   const quiz = await prisma.quiz.findUnique({
     where: { id: quizId },
-    include: { lesson: true }
+    include: { lesson: true, _count: { select: { questions: true } } }
   });
 
   if (!quiz) notFound();
@@ -87,11 +87,11 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
             <div className="bg-muted/50 rounded-2xl p-4 text-sm space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Всего вопросов:</span>
-                <span>{quiz.questionsCount}</span>
+                <span>{quiz._count.questions}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Правильных ответов:</span>
-                <span className="font-medium text-emerald-600">{Math.round((attempt.score / 100) * quiz.questionsCount)}</span>
+                <span className="font-medium text-emerald-600">{Math.round((attempt.score / 100) * quiz._count.questions)}</span>
               </div>
             </div>
 
