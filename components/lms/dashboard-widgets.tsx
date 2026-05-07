@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, CheckCircle2, Clock, FileText, MessageCircle, AlertTriangle, Users } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, FileText, MessageCircle, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";

@@ -2,10 +2,9 @@
 
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 

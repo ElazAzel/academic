@@ -1,10 +1,9 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "installCommand": "npm ci",
   "regions": ["fra1"],
   "env": {
     "NEXT_OUTPUT_MODE": ""
   }
 }
-

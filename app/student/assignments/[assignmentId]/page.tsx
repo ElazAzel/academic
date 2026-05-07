@@ -10,8 +10,14 @@ import { ArrowLeft, Send, Upload } from "lucide-react";
 import Link from "next/link";
 
 export default function StudentAssignmentPage({ params }: { params: { assignmentId: string } }) {
+  void params;
   const [answer, setAnswer] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const handleSubmit = () => {
+    if (!answer.trim()) return;
+    setSubmitting(true);
+    setTimeout(() => setSubmitting(false), 800);
+  };
 
   return (
     <AppShell role="student">
@@ -54,7 +60,7 @@ export default function StudentAssignmentPage({ params }: { params: { assignment
               </div>
             </div>
             <div className="flex justify-end">
-              <Button disabled={submitting || !answer.trim()}>
+              <Button disabled={submitting || !answer.trim()} onClick={handleSubmit}>
                 <Send className="h-4 w-4" />
                 {submitting ? "Отправка..." : "Отправить"}
               </Button>

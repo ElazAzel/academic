@@ -13,7 +13,7 @@ export const permissions = [
   "quizzes:write",
   "assignments:review",
   "certificates:issue",
-  "payments:manage",
+  "invites:manage",
   "analytics:read",
   "audit:read",
   "settings:manage",
@@ -41,4 +41,3 @@ export function assertPermission(roles: RoleKey[], permission: Permission) {
     throw new ApiError("forbidden", "Недостаточно прав", 403);
   }
 }
-

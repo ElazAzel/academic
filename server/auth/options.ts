@@ -1,9 +1,10 @@
 import type { AuthOptions } from "next-auth";
+import type { Adapter } from "next-auth/adapters";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
-// @ts-ignore
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import type { RoleKey } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import { env } from "@/lib/env";
@@ -11,7 +12,7 @@ import { env } from "@/lib/env";
 const prisma = getPrisma();
 
 export const authOptions: AuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma) as Adapter,
   secret: env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt"
@@ -47,12 +48,14 @@ export const authOptions: AuthOptions = {
           where: { id: user.id },
           data: { lastLoginAt: new Date() }
         });
+        const roles: RoleKey[] = user.roles.map((entry) => entry.role.key);
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
           image: user.image,
-          roles: user.roles.map((entry: { role: { key: string } }) => entry.role.key)
+          roles
         };
       }
     }),
@@ -83,11 +86,10 @@ export const authOptions: AuthOptions = {
           session.user.email = dbUser.email;
           session.user.name = dbUser.name;
           session.user.image = dbUser.image;
-          session.user.roles = dbUser.roles.map((entry: { role: { key: string } }) => entry.role.key);
+          session.user.roles = dbUser.roles.map((entry) => entry.role.key);
         }
       }
       return session;
     }
   }
 };
-

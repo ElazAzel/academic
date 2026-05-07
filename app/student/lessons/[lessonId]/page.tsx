@@ -12,16 +12,36 @@ import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   CheckCircle2,
   FileText,
   MessageCircle,
-  PlayCircle,
   Send,
 } from "lucide-react";
+import type { LessonDetail, ProgressStatus } from "@/types/domain";
+
+type LessonQuestion = {
+  id: string;
+  text: string;
+  status: "open" | "answered";
+  createdAt: string;
+  answer: string | null;
+};
+
+type StudentLessonView = Omit<LessonDetail, "progressPercent" | "progressStatus"> & {
+  progressPercent: number;
+  progressStatus: ProgressStatus;
+  moduleTitle: string;
+  courseTitle: string;
+  courseId: string;
+  prevLesson: { id: string; title: string } | null;
+  nextLesson: { id: string; title: string } | null;
+  myQuestions: LessonQuestion[];
+};
 
 // TODO: Replace with getLessonForStudent(lessonId)
-function getMockLesson(lessonId: string) {
+function getMockLesson(lessonId: string): StudentLessonView {
+  const progressStatus: ProgressStatus = "IN_PROGRESS";
+
   return {
     id: lessonId,
     order: 2,
@@ -30,7 +50,7 @@ function getMockLesson(lessonId: string) {
     type: "VIDEO_DOCUMENT" as const,
     durationMinutes: 40,
     isRequired: true,
-    progressStatus: "IN_PROGRESS" as const,
+    progressStatus,
     progressPercent: 60,
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     content: {
@@ -125,7 +145,7 @@ export default function StudentLessonPage({ params }: { params: { lessonId: stri
               </div>
               <Progress value={lesson.progressPercent} />
             </div>
-            <Button size="sm" variant={lesson.progressPercent >= 100 ? "secondary" : "default"}>
+            <Button size="sm" variant={lesson.progressPercent >= 100 ? "secondary" : "primary"}>
               {lesson.progressPercent >= 100 ? (
                 <><CheckCircle2 className="h-4 w-4" /> Завершён</>
               ) : (

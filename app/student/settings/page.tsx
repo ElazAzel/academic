@@ -3,12 +3,10 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs } from "@/components/ui/tabs";
 import { Avatar } from "@/components/ui/avatar";
-import { Bell, Key, Shield, User } from "lucide-react";
 
 export default function StudentSettingsPage() {
   return (

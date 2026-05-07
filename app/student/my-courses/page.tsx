@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { CourseProgressGrid } from "@/components/lms/dashboard-widgets";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
 import { MOCK_STUDENT_PROGRESS } from "@/lib/mock-data";
 

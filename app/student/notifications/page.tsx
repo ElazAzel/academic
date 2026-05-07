@@ -1,8 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Bell, CheckCircle2, MessageCircle, FileText, Clock } from "lucide-react";
+import { Bell, MessageCircle, FileText, Clock } from "lucide-react";
 
 const MOCK_NOTIFICATIONS = [
   { id: "n1", type: "answer" as const, title: "Куратор ответил на вопрос", body: "По уроку «Unit-экономика AI»", time: "2 часа назад", read: false },

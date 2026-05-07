@@ -7,6 +7,7 @@ export type ApiErrorCode =
   | "forbidden"
   | "not_found"
   | "conflict"
+  | "gone"
   | "validation_error"
   | "internal_error";
 
@@ -74,4 +75,3 @@ export async function parseJson<T>(request: Request, schema: ZodSchema<T>) {
 export function getSearchParam(request: Request, key: string, fallback = "") {
   return new URL(request.url).searchParams.get(key) ?? fallback;
 }
-
