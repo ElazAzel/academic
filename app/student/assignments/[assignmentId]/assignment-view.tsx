@@ -34,7 +34,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
         const error = await response.json();
         alert(error.message || "Ошибка при отправке задания");
       }
-    } catch (err) {
+    } catch {
       alert("Сетевая ошибка");
     } finally {
       setSubmitting(false);

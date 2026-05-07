@@ -7,7 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Copy, Link2, Plus, Trash2 } from "lucide-react";
 
-export function InvitesView({ invites, courses, cohorts }: { invites: any[], courses: any[], cohorts: any[] }) {
+export function InvitesView({
+  invites,
+  courses,
+  cohorts,
+}: {
+  invites: Array<{
+    id: string;
+    token: string;
+    courseTitle?: string | null;
+    cohortName?: string | null;
+    activationCount: number;
+    maxActivations: number;
+    expiresAt?: string | null;
+    status: string;
+  }>;
+  courses: Array<{ id: string; title: string }>;
+  cohorts: Array<{ id: string; name: string }>;
+}) {
   const [showCreate, setShowCreate] = useState(false);
 
   return (
@@ -31,14 +48,14 @@ export function InvitesView({ invites, courses, cohorts }: { invites: any[], cou
                 <label className="text-sm font-medium">Курс</label>
                 <select className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm">
                   <option value="">Все курсы</option>
-                  {courses.map((c: any) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                  {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-sm font-medium">Поток</label>
                 <select className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm">
                   <option value="">Все потоки</option>
-                  {cohorts.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {cohorts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div>

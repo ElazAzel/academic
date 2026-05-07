@@ -35,7 +35,7 @@ export default async function CuratorAssignmentsPage() {
     assignmentTitle: sub.assignment.title,
     courseTitle: sub.assignment.course?.title ?? "Без курса",
     attemptNumber: sub.attemptNumber,
-    status: sub.status as any,
+    status: sub.status,
     submittedAt: sub.submittedAt.toISOString()
   }));
 

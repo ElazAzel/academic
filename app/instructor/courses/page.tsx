@@ -28,7 +28,7 @@ export default async function InstructorCoursesPage() {
     id: course.id,
     title: course.title,
     description: course.description ?? "",
-    status: course.status as any,
+    status: course.status,
     modulesCount: course.modules.length,
     lessonsCount: course.modules.reduce((acc, m) => acc + m.lessons.length, 0),
     durationHours: course.durationHours,

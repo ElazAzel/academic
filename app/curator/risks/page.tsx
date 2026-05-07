@@ -33,8 +33,8 @@ export default async function CuratorRisksPage() {
     id: risk.id,
     studentName: risk.user.name ?? risk.user.email,
     courseTitle: risk.course?.title ?? "Общий",
-    type: risk.type as any,
-    severity: risk.severity as any,
+    type: risk.type,
+    severity: risk.severity,
   }));
 
   return (

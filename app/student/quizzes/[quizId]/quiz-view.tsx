@@ -37,7 +37,7 @@ export function QuizView({ quiz }: { quiz: StudentQuizDetail }) {
         const error = await response.json();
         alert(error.message || "Ошибка при отправке теста");
       }
-    } catch (err) {
+    } catch {
       alert("Сетевая ошибка при отправке теста");
     } finally {
       setSubmitting(false);
