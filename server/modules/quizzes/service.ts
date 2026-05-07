@@ -2,6 +2,7 @@ import type { Prisma, QuizQuestion } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { logAudit } from "@/server/modules/audit/service";
+import { markLessonProgress } from "@/server/modules/progress/service";
 
 const prisma = getPrisma();
 
@@ -85,6 +86,15 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
     entityId: attempt.id,
     metadata: { quizId, score: result.score, passed: result.passed }
   });
+
+  if (result.passed && quiz.lessonId) {
+    try {
+      await markLessonProgress(userId, quiz.lessonId, 100);
+    } catch (e) {
+      console.error("Failed to update progress after quiz:", e);
+    }
+  }
+
   return { ...attempt, grading: result };
 }
 

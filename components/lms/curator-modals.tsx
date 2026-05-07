@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { answerQuestionAction, reviewSubmissionAction } from "@/server/actions/curator";
-import { Loader2, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import { answerQuestionAction, forwardQuestionAction, reviewSubmissionAction } from "@/server/actions/curator";
+import { Loader2, CheckCircle2, XCircle, RotateCcw, Share2 } from "lucide-react";
 
 // --- Модалка ответа на вопрос ---
 export function AnswerQuestionModal({ 
@@ -24,6 +24,18 @@ export function AnswerQuestionModal({
       onClose();
     } catch {
       alert("Ошибка при сохранении ответа");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleForward() {
+    setPending(true);
+    try {
+      await forwardQuestionAction(question.id);
+      onClose();
+    } catch {
+      alert("Ошибка при передаче вопроса");
     } finally {
       setPending(false);
     }
@@ -51,6 +63,10 @@ export function AnswerQuestionModal({
           </div>
         </div>
         <div className="p-6 bg-muted/20 flex gap-3 justify-end">
+          <Button variant="ghost" onClick={handleForward} disabled={pending} className="text-amber-600 hover:text-amber-700 hover:bg-amber-50">
+            <Share2 className="h-4 w-4 mr-2" /> Эксперту
+          </Button>
+          <div className="flex-1" />
           <Button variant="secondary" onClick={onClose} disabled={pending}>Отмена</Button>
           <Button onClick={handleAnswer} disabled={pending || !answer.trim()}>
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Отправить ответ"}

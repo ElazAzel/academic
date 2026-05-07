@@ -153,3 +153,47 @@ export async function updateUser(actor: AppSessionUser, userId: string, data: { 
 
   return user;
 }
+
+export async function createUser(actor: AppSessionUser, data: { email: string; name?: string; roleKeys: RoleKey[] }) {
+  const isAdmin = actor.roles.includes(RoleKey.admin);
+  const isSuperCurator = actor.roles.includes(RoleKey.super_curator);
+
+  if (!isAdmin && !isSuperCurator) {
+    throw new ApiError("forbidden", "Недостаточно прав для создания пользователя", 403);
+  }
+
+  const assignableRoles = getAssignableRolesForActor(actor.roles);
+  const forbiddenRoles = data.roleKeys.filter((role) => !assignableRoles.includes(role));
+  if (forbiddenRoles.length > 0) {
+    throw new ApiError("forbidden", "Недостаточно прав для назначения некоторых ролей", 403, { roles: forbiddenRoles });
+  }
+
+  const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
+  if (existingUser) {
+    throw new ApiError("bad_request", "Пользователь с таким email уже существует", 400);
+  }
+
+  const roles = await prisma.role.findMany({ where: { key: { in: data.roleKeys } } });
+  
+  const user = await prisma.user.create({
+    data: {
+      email: data.email,
+      name: data.name,
+      roles: {
+        create: roles.map(role => ({ roleId: role.id }))
+      }
+    },
+    include: { roles: { include: { role: true } } }
+  });
+
+  await logAudit({
+    actorId: actor.id,
+    action: "user.created",
+    entity: "user",
+    entityId: user.id,
+    metadata: { email: data.email, roles: data.roleKeys }
+  });
+
+  return user;
+}
+

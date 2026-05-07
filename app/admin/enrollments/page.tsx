@@ -9,6 +9,7 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { listEnrollments } from "@/server/modules/courses/service";
 import { getEnrollmentData } from "@/server/actions/dashboard";
 import { EnrollStudentForm } from "@/components/admin/enroll-student-form";
+import { DeleteEnrollmentButton } from "@/components/admin/delete-enrollment-button";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +63,9 @@ export default async function AdminEnrollmentsPage() {
                       </TableCell>
                       <TableCell className="text-sm">{e.course.title}</TableCell>
                       <TableCell><Badge className={badge.className}>{badge.label}</Badge></TableCell>
-                      <TableCell className="text-right"><Button size="sm" variant="ghost">Удалить</Button></TableCell>
+                      <TableCell className="text-right">
+                        <DeleteEnrollmentButton enrollmentId={e.id} />
+                      </TableCell>
                     </TableRow>
                   );
                 })}

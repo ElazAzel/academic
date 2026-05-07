@@ -144,7 +144,7 @@ export async function deleteModule(moduleId: string, actorId: string) {
 
 export async function createLesson(moduleId: string, input: {
   title: string;
-  summary?: string;
+  summary?: string | null;
   order: number;
   type: keyof typeof LessonType;
   content: Record<string, unknown>;

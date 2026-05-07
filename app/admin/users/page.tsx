@@ -11,6 +11,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getAssignableRolesForActor, listUsers } from "@/server/modules/users/service";
 import { ROLE_LABELS, type RoleKey } from "@/types/domain";
+import { UserManagementToolbar } from "@/components/admin/user-management-toolbar";
 
 export const dynamic = "force-dynamic";
 
@@ -24,11 +25,7 @@ export default async function AdminUsersPage() {
     <AppShell role={actor.roles.includes("admin") ? "admin" : "super_curator"}>
       <PageHeader title="Пользователи" description="Выданные аккаунты, статусы входа и роли пользователей академии." badge={badge} />
       <div className="space-y-6">
-        <div className="flex flex-wrap gap-3">
-          <Button disabled><UserPlus className="h-4 w-4" />Добавить вручную</Button>
-          <Button variant="secondary" disabled><Upload className="h-4 w-4" />Импорт из Excel</Button>
-          <Button variant="secondary" disabled><Download className="h-4 w-4" />Экспорт CSV</Button>
-        </div>
+        <UserManagementToolbar assignableRoles={assignableRoles} />
 
         <Tabs tabs={[
           {

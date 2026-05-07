@@ -404,13 +404,29 @@ export async function getSuperCuratorDashboard() {
       const riskStudents = await prisma.riskFlag.count({
         where: { userId: { in: studentIds }, status: "open" },
       });
+
+      // Расчет среднего времени ответа
+      const answeredQuestions = await prisma.lessonQuestion.findMany({
+        where: { curatorId, status: "answered", answeredAt: { not: null } },
+        select: { createdAt: true, answeredAt: true }
+      });
+      
+      let avgResponseHours = 0;
+      if (answeredQuestions.length > 0) {
+        const totalHours = answeredQuestions.reduce((sum, q) => {
+          const diff = q.answeredAt!.getTime() - q.createdAt.getTime();
+          return sum + (diff / (1000 * 60 * 60));
+        }, 0);
+        avgResponseHours = Math.round(totalHours / answeredQuestions.length * 10) / 10;
+      }
+
       curatorLoads.push({
         curatorId,
         curatorName: data.name,
         studentsCount: studentIds.length,
         openQuestions,
         pendingReviews,
-        avgResponseHours: 0,
+        avgResponseHours,
         riskStudents,
       });
     }
@@ -610,11 +626,18 @@ export async function getInstructorDashboard() {
 
     const avgProgress = Math.round(avgProgressResult._avg.percent ?? 0);
 
+    const openQuestionsCount = await prisma.lessonQuestion.count({
+      where: { 
+        lesson: { module: { courseId: { in: courseIds } } },
+        status: "forwarded" 
+      }
+    });
+
     const metrics: DashboardMetric[] = [
       { label: "Мои курсы", value: courses.length, tone: "primary" },
       { label: "Слушатели", value: studentsCount, tone: "info" },
       { label: "Средний прогресс", value: `${avgProgress}%`, tone: avgProgress > 50 ? "success" : "warning" },
-      { label: "Вопросы от кураторов", value: 0, tone: "success" },
+      { label: "Вопросы от кураторов", value: openQuestionsCount, tone: openQuestionsCount > 0 ? "warning" : "success" },
     ];
 
     return { metrics, courses: formattedCourses };

@@ -88,3 +88,65 @@ export async function assignCuratorAction(input: { studentId: string; curatorId:
     throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
   }
 }
+
+export async function deleteEnrollmentAction(enrollmentId: string) {
+  try {
+    const actor = await requireRole(["admin"]);
+    
+    // Также удаляем привязку куратора, если она есть для этого студента в этом потоке
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { id: enrollmentId }
+    });
+
+    if (enrollment && enrollment.cohortId) {
+      await prisma.curatorAssignment.deleteMany({
+        where: { 
+          studentId: enrollment.userId,
+          cohortId: enrollment.cohortId
+        }
+      });
+    }
+
+    await prisma.enrollment.delete({
+      where: { id: enrollmentId }
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "enrollment.deleted",
+      entity: "enrollment",
+      entityId: enrollmentId
+    });
+
+    revalidatePath("/admin/enrollments");
+    return { success: true };
+  } catch (error) {
+    console.error("Delete enrollment error:", error);
+    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+  }
+}
+
+export async function createUserAction(formData: FormData) {
+  try {
+    const actor = await requireRole(["admin", "super_curator"]);
+    
+    const email = formData.get("email") as string;
+    const name = formData.get("name") as string || undefined;
+    const roleKeys = formData.getAll("roles") as any[];
+
+    if (!email) {
+      throw new Error("Email обязателен");
+    }
+
+    const { createUser } = await import("@/server/modules/users/service");
+    await createUser(actor, { email, name, roleKeys });
+
+    revalidatePath("/admin/users");
+    return { success: true };
+  } catch (error) {
+    console.error("Create user error:", error);
+    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+  }
+}
+
+
