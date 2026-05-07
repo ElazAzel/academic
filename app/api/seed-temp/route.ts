@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient, RoleKey, CourseStatus, LessonType, QuestionType } from "@prisma/client";
+import { PrismaClient, RoleKey } from "@prisma/client";
 import { hashPassword } from "@/lib/auth/password";
 
 const prisma = new PrismaClient();
@@ -37,7 +37,7 @@ export async function GET() {
     }
 
     // Создаем пользователей
-    const admin = await upsertUser("admin@academy.local", "Администратор", "admin");
+    await upsertUser("admin@academy.local", "Администратор", "admin");
     const instructor = await upsertUser("instructor1@academy.local", "Преподаватель", "instructor");
     await upsertUser("curator@academy.local", "Куратор", "curator");
     await upsertUser("supercurator@academy.local", "Супер-куратор", "super_curator");
@@ -132,7 +132,7 @@ export async function GET() {
       }
     });
 
-    const quiz = await prisma.quiz.upsert({
+    await prisma.quiz.upsert({
       where: { id: "demo-quiz-1" },
       update: {},
       create: {
