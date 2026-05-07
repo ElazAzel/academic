@@ -8,8 +8,8 @@ interface Question {
   prompt: string;
   type: string;
   points: number;
-  options: any;
-  correctAnswer: any;
+  options: unknown;
+  correctAnswer: unknown;
 }
 
 export function QuestionEditorItem({ question, onUpdate, onDelete }: { 
@@ -21,8 +21,8 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
   const [pending, setPending] = useState(false);
   const [data, setData] = useState(question);
 
-  const options = Array.isArray(data.options) ? data.options : [];
-  const correctAnswer = data.correctAnswer as any;
+  const options = Array.isArray(data.options) ? data.options as string[] : [];
+  const correctAnswer = data.correctAnswer as { value?: string; values?: string[] };
 
   async function handleSave() {
     setPending(true);
@@ -134,7 +134,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
                   </Button>
                 </div>
               ))}
-              <Button type="button" variant="outline" size="sm" className="w-full border-dashed rounded-xl h-10" onClick={addOption}>
+              <Button type="button" variant="secondary" size="sm" className="w-full border-dashed rounded-xl h-10" onClick={addOption}>
                 <Plus className="h-3 w-3 mr-2" />
                 Добавить вариант
               </Button>
