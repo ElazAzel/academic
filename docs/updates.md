@@ -301,3 +301,25 @@ Next steps:
 
 - Что сделать дальше.
 ```
+## 2026-05-07 — Login-first academy, course passing core, private self-hosted DB
+
+Автор/agent: Codex  
+Тип изменения: feature/security/infra
+
+### Что изменено
+
+- Главная страница `/` стала страницей входа; отдельной посадочной страницы академии больше нет.
+- После входа пользователь перенаправляется в типовой кабинет по своей роли.
+- Добавлен server-side learning service: active enrollment, sequential lock, реальные страницы курса/модуля/урока, отметка урока пройденным и вопрос куратору.
+- Добавлен API назначения ролей: админ может назначать все роли, главный куратор — только учебные/операционные роли без доступа к `admin`.
+- Docker Compose переведен на private PostgreSQL: порт БД не публикуется наружу, доступ есть только у app-контейнера по внутренней сети.
+- Kubernetes получил `academy-postgres` StatefulSet, ClusterIP service и NetworkPolicy для доступа к БД только от `academy-web`.
+
+### Проверки
+
+- `npm.cmd run typecheck` — passed.
+
+### Риски и next steps
+
+- Нужно прогнать `lint`, `test`, `build`.
+- Для production self-hosted DB нужны backup/restore runbook, регулярные бэкапы и процедура доступа администратора через защищенный bastion/port-forward.

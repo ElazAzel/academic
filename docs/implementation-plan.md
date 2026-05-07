@@ -99,3 +99,10 @@ MVP считается готовым, когда:
 - `docs/security.md` — security checklist и риски.
 - `docs/todo.md` — незавершённые production-hardening задачи.
 - `docs/updates.md` — журнал всех обновлений.
+## 2026-05-07 Implementation Delta
+
+- Главная страница академии теперь является страницей входа, без landing/marketing слоя.
+- Логин ведет в дашборд по роли пользователя.
+- Learning core переведен на server-side service с проверкой active enrollment и последовательного доступа к урокам.
+- Назначение ролей реализовано через admin/super_curator API и UI.
+- Production data target: self-hosted private PostgreSQL, а не сторонний managed database provider.

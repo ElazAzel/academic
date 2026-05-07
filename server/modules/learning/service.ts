@@ -191,16 +191,16 @@ export async function getContinueLearning(userId: string): Promise<ContinueLearn
     if (!nextLesson) {
       continue;
     }
-    const module = course.modules.find((item) => item.id === nextLesson.moduleId);
+    const courseModule = course.modules.find((item) => item.id === nextLesson.moduleId);
     return {
       courseId: course.id,
       courseTitle: course.title,
-      moduleTitle: module?.title ?? nextLesson.moduleTitle,
+      moduleTitle: courseModule?.title ?? nextLesson.moduleTitle,
       lessonId: nextLesson.id,
       lessonTitle: nextLesson.title,
       coursePercent: course.coursePercent,
-      modulePercent: module?.progressPercent ?? 0,
-      deadlineDate: module?.deadlineDate ?? null
+      modulePercent: courseModule?.progressPercent ?? 0,
+      deadlineDate: courseModule?.deadlineDate ?? null
     };
   }
   return null;
@@ -218,15 +218,15 @@ export async function getCourseForStudent(userId: string, courseId: string): Pro
 }
 
 export async function getModuleForStudent(userId: string, moduleId: string): Promise<StudentModuleLearningDetail> {
-  const module = await prisma.module.findUnique({
+  const courseModule = await prisma.module.findUnique({
     where: { id: moduleId },
     select: { courseId: true }
   });
-  if (!module) {
+  if (!courseModule) {
     throw new ApiError("not_found", "Модуль не найден", 404);
   }
 
-  const course = await getCourseForStudent(userId, module.courseId);
+  const course = await getCourseForStudent(userId, courseModule.courseId);
   const learningModule = course.modules.find((item) => item.id === moduleId);
   if (!learningModule) {
     throw new ApiError("not_found", "Модуль не найден", 404);
