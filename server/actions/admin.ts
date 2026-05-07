@@ -9,68 +9,82 @@ import { logAudit } from "@/server/modules/audit/service";
 const prisma = getPrisma();
 
 export async function enrollStudentAction(formData: FormData) {
-  const actor = await requireRole(["admin"]);
-  
-  const userId = formData.get("userId") as string;
-  const courseId = formData.get("courseId") as string;
-  const cohortId = formData.get("cohortId") as string || undefined;
-  const curatorId = formData.get("curatorId") as string || undefined;
+  try {
+    const actor = await requireRole(["admin"]);
+    
+    const userId = formData.get("userId") as string;
+    const courseId = formData.get("courseId") as string;
+    const cohortId = formData.get("cohortId") as string || undefined;
+    const curatorId = formData.get("curatorId") as string || undefined;
 
-  if (!userId || !courseId) {
-    throw new Error("Не указан студент или курс");
+    if (!userId || !courseId) {
+      throw new Error("Не указан студент или курс");
+    }
+
+    if (curatorId && !cohortId) {
+      throw new Error("Для назначения куратора необходимо выбрать поток (когорту)");
+    }
+
+    await enrollStudentService({ userId, courseId, cohortId }, actor.id);
+
+    if (curatorId && cohortId) {
+      await prisma.curatorAssignment.upsert({
+        where: { 
+          cohortId_studentId: { 
+            cohortId,
+            studentId: userId 
+          } 
+        },
+        update: { curatorId, active: true },
+        create: {
+          curatorId,
+          studentId: userId,
+          cohortId,
+          active: true
+        }
+      });
+    }
+
+    revalidatePath("/admin/enrollments");
+    return { success: true };
+  } catch (error) {
+    console.error("Enrollment error:", error);
+    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
   }
-
-  await enrollStudentService({ userId, courseId, cohortId }, actor.id);
-
-  if (curatorId) {
-    await prisma.curatorAssignment.upsert({
-      where: { 
-        cohortId_studentId: { 
-          cohortId: cohortId || "default-cohort", // Если когорты нет, используем заглушку или логику без когорты
-          studentId: userId 
-        } 
-      },
-      update: { curatorId, active: true },
-      create: {
-        curatorId,
-        studentId: userId,
-        cohortId: cohortId || "default-cohort",
-        active: true
-      }
-    });
-  }
-
-  revalidatePath("/admin/enrollments");
-  return { success: true };
 }
 
 export async function assignCuratorAction(input: { studentId: string; curatorId: string; cohortId: string }) {
-  const actor = await requireRole(["admin"]);
+  try {
+    const actor = await requireRole(["admin"]);
 
-  await prisma.curatorAssignment.upsert({
-    where: { 
-      cohortId_studentId: { 
-        cohortId: input.cohortId, 
-        studentId: input.studentId 
-      } 
-    },
-    update: { curatorId: input.curatorId, active: true },
-    create: {
-      curatorId: input.curatorId,
-      studentId: input.studentId,
-      cohortId: input.cohortId,
-      active: true
-    }
-  });
+    await prisma.curatorAssignment.upsert({
+      where: { 
+        cohortId_studentId: { 
+          cohortId: input.cohortId, 
+          studentId: input.studentId 
+        } 
+      },
+      update: { curatorId: input.curatorId, active: true },
+      create: {
+        curatorId: input.curatorId,
+        studentId: input.studentId,
+        cohortId: input.cohortId,
+        active: true
+      }
+    });
 
-  await logAudit({
-    actorId: actor.id,
-    action: "curator.assigned",
-    entity: "curator_assignment",
-    entityId: `${input.cohortId}-${input.studentId}`,
-    metadata: input
-  });
+    await logAudit({
+      actorId: actor.id,
+      action: "curator.assigned",
+      entity: "curator_assignment",
+      entityId: `${input.cohortId}-${input.studentId}`,
+      metadata: input
+    });
 
-  revalidatePath("/admin/enrollments");
-  return { success: true };
+    revalidatePath("/admin/enrollments");
+    return { success: true };
+  } catch (error) {
+    console.error("Assign curator error:", error);
+    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+  }
 }
