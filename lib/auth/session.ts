@@ -1,6 +1,7 @@
 import { ApiError } from "@/lib/http";
 import { assertPermission, type Permission } from "@/lib/auth/rbac";
-export type { AppSessionUser } from "@/types/domain";
+import type { AppSessionUser } from "@/types/domain";
+export type { AppSessionUser };
 
 export async function getCurrentUser(): Promise<AppSessionUser | null> {
   if (typeof window !== "undefined") return null;

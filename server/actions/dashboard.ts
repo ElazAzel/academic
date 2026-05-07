@@ -251,7 +251,12 @@ export async function getCuratorDashboard() {
   }, null);
 }
 
-export async function getEnrollmentData() {
+export async function getEnrollmentData(): Promise<{
+  students: { id: string; name: string | null; email: string }[];
+  courses: { id: string; title: string }[];
+  cohorts: { id: string; name: string; courseId: string }[];
+  curators: { id: string; name: string | null; email: string }[];
+}> {
   await requireRole(["admin"]);
 
   return safeQuery(async () => {
@@ -284,7 +289,7 @@ export async function getEnrollmentData() {
       cohorts: cohorts.map(c => ({ 
         id: c.id, 
         name: c.name, 
-        courseId: c.courseId || "" 
+        courseId: c.courseId ?? "" 
       })), 
       curators 
     };
