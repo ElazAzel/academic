@@ -1,3 +1,4 @@
+import { RoleKey } from "@prisma/client";
 import { z } from "zod";
 
 export const registerSchema = z.object({
@@ -55,6 +56,14 @@ export const assignmentSubmissionSchema = z.object({
 export const progressSchema = z.object({
   lessonId: z.string().min(1),
   percent: z.number().int().min(0).max(100)
+});
+
+export const lessonQuestionSchema = z.object({
+  text: z.string().trim().min(5).max(3000)
+});
+
+export const roleAssignmentSchema = z.object({
+  roles: z.array(z.nativeEnum(RoleKey)).min(1).max(6)
 });
 
 export const certificateIssueSchema = z.object({

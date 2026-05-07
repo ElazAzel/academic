@@ -1,24 +1,16 @@
-import Link from "next/link";
-import { LoginForm } from "@/components/auth/login-form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { redirect } from "next/navigation";
+import { LoginScreen } from "@/components/auth/login-screen";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getDefaultRolePath } from "@/lib/auth/role-redirect";
+import { getEnabledOAuthProviders } from "@/server/auth/provider-flags";
 
-export default function LoginPage() {
-  return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Вход</CardTitle>
-          <CardDescription>Используйте email/password или OAuth-провайдера академии.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LoginForm />
-          <div className="mt-5 flex justify-between text-sm text-muted-foreground">
-            <Link href="/forgot-password">Забыли пароль?</Link>
-            <Link href="/register">Регистрация</Link>
-          </div>
-        </CardContent>
-      </Card>
-    </main>
-  );
+export const dynamic = "force-dynamic";
+
+export default async function LoginPage() {
+  const user = await getCurrentUser();
+  if (user) {
+    redirect(getDefaultRolePath(user.roles));
+  }
+
+  return <LoginScreen oauthProviders={getEnabledOAuthProviders()} />;
 }
-

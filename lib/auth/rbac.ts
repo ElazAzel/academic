@@ -28,7 +28,7 @@ export const rolePermissions: Record<RoleKey, Permission[]> = {
   instructor: ["courses:read", "courses:write", "lessons:write", "quizzes:write", "analytics:read", "reports:read"],
   student: ["courses:read", "progress:write"],
   curator: ["courses:read", "assignments:review", "progress:write", "notifications:write", "reports:read"],
-  super_curator: ["courses:read", "assignments:review", "analytics:read", "notifications:write", "reports:read"],
+  super_curator: ["users:read", "roles:manage", "courses:read", "assignments:review", "analytics:read", "notifications:write", "reports:read"],
   customer_observer: ["courses:read", "analytics:read", "reports:read"]
 };
 

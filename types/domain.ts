@@ -74,6 +74,13 @@ export interface ModuleDetail extends ModuleSummary {
   lessons: LessonSummary[];
 }
 
+export interface ModuleLearningDetail extends ModuleSummary {
+  progressPercent: number;
+  progressStatus: ProgressStatus;
+  deadlineDate?: string | null;
+  lessons: LessonLearningSummary[];
+}
+
 // ── Уроки ───────────────────────────────────────────────────────────
 export type LessonType = "VIDEO" | "TEXT" | "DOCUMENT" | "VIDEO_DOCUMENT" | "QUIZ" | "ASSIGNMENT" | "LIVE" | "RECORDING" | "MIXED";
 
@@ -88,6 +95,11 @@ export interface LessonSummary {
   progressPercent?: number;
 }
 
+export interface LessonLearningSummary extends LessonSummary {
+  locked: boolean;
+  lockReason?: string | null;
+}
+
 export interface LessonDetail extends LessonSummary {
   summary?: string | null;
   content: Record<string, unknown>;
@@ -95,6 +107,43 @@ export interface LessonDetail extends LessonSummary {
   media: LessonMediaItem[];
   quizzes: QuizSummary[];
   assignments: AssignmentSummary[];
+}
+
+export interface StudentCourseLearningDetail extends CourseSummary {
+  goal?: string | null;
+  completionThreshold: number;
+  enrollmentId: string;
+  cohortName?: string | null;
+  coursePercent: number;
+  progressStatus: ProgressStatus;
+  modules: ModuleLearningDetail[];
+  nextLessonId?: string | null;
+}
+
+export interface LessonQuestionSummary {
+  id: string;
+  text: string;
+  status: "open" | "answered";
+  createdAt: string;
+  answer?: string | null;
+  answeredAt?: string | null;
+}
+
+export interface StudentLessonLearningDetail extends LessonDetail {
+  progressPercent: number;
+  progressStatus: ProgressStatus;
+  moduleTitle: string;
+  moduleId: string;
+  courseTitle: string;
+  courseId: string;
+  prevLesson: { id: string; title: string } | null;
+  nextLesson: { id: string; title: string; locked: boolean } | null;
+  myQuestions: LessonQuestionSummary[];
+}
+
+export interface StudentModuleLearningDetail extends ModuleLearningDetail {
+  courseId: string;
+  courseTitle: string;
 }
 
 export interface LessonMediaItem {

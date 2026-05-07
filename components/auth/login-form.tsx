@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
 
-export function LoginForm() {
+export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFlags }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const hasOAuth = oauthProviders.google || oauthProviders.github;
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -21,18 +23,23 @@ export function LoginForm() {
       password: String(formData.get("password")),
       redirect: false
     });
-    setPending(false);
     if (result?.error) {
-      setError("Неверный email или пароль");
+      setPending(false);
+      setError("Неверный логин или пароль");
       return;
     }
-    router.push("/student");
+
+    const targetResponse = await fetch("/api/v1/auth/redirect-target", { cache: "no-store" });
+    const payload = await targetResponse.json().catch(() => null) as { data?: { path?: string } } | null;
+    setPending(false);
+    router.replace(payload?.data?.path ?? "/student");
+    router.refresh();
   }
 
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
       <label className="block text-sm font-medium">
-        Email
+        Логин / Email
         <Input className="mt-2" name="email" type="email" required autoComplete="email" />
       </label>
       <label className="block text-sm font-medium">
@@ -43,11 +50,16 @@ export function LoginForm() {
       <Button className="w-full" type="submit" disabled={pending}>
         {pending ? "Входим..." : "Войти"}
       </Button>
-      <div className="grid gap-2 sm:grid-cols-2">
-        <Button type="button" variant="secondary" onClick={() => signIn("google")}>Google</Button>
-        <Button type="button" variant="secondary" onClick={() => signIn("github")}>GitHub</Button>
-      </div>
+      {hasOAuth ? (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {oauthProviders.google ? (
+            <Button type="button" variant="secondary" onClick={() => signIn("google")}>Google</Button>
+          ) : null}
+          {oauthProviders.github ? (
+            <Button type="button" variant="secondary" onClick={() => signIn("github")}>GitHub</Button>
+          ) : null}
+        </div>
+      ) : null}
     </form>
   );
 }
-
