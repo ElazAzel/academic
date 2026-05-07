@@ -148,15 +148,33 @@ export async function getCuratorDashboard() {
     });
     const studentIds = assignments.map((a) => a.studentId);
 
-    // Вопросы
-    const questions = await prisma.lessonQuestion.findMany({
-      where: { curatorId: user.id, status: "open" },
-      orderBy: { createdAt: "desc" },
-      include: {
-        student: { select: { name: true, email: true } },
-        lesson: { include: { module: { include: { course: true } } } },
-      },
-    });
+    const [questions, submissions, risks] = await Promise.all([
+      prisma.lessonQuestion.findMany({
+        where: { curatorId: user.id, status: "open" },
+        orderBy: { createdAt: "desc" },
+        include: {
+          student: { select: { name: true, email: true } },
+          lesson: { include: { module: { include: { course: true } } } },
+        },
+      }),
+      prisma.assignmentSubmission.findMany({
+        where: { userId: { in: studentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
+        orderBy: { submittedAt: "desc" },
+        include: {
+          assignment: { include: { course: true, lesson: true } },
+          user: { select: { name: true, email: true } },
+        },
+      }),
+      prisma.riskFlag.findMany({
+        where: { userId: { in: studentIds }, status: "open" },
+        orderBy: { createdAt: "desc" },
+        include: {
+          user: { select: { name: true, email: true } },
+          course: { select: { title: true } },
+          cohort: { select: { name: true } },
+        },
+      }),
+    ]);
 
     const formattedQuestions: QuestionFromStudent[] = questions.map((q) => ({
       id: q.id,
@@ -168,16 +186,6 @@ export async function getCuratorDashboard() {
       status: "open" as const,
       createdAt: q.createdAt.toISOString(),
     }));
-
-    // Задания на проверку
-    const submissions = await prisma.assignmentSubmission.findMany({
-      where: { userId: { in: studentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
-      orderBy: { submittedAt: "desc" },
-      include: {
-        assignment: { include: { course: true, lesson: true } },
-        user: { select: { name: true, email: true } },
-      },
-    });
 
     const formattedSubmissions: SubmissionForReview[] = submissions.map((s) => ({
       id: s.id,
@@ -192,17 +200,6 @@ export async function getCuratorDashboard() {
       submittedAt: s.submittedAt.toISOString(),
       status: s.status as SubmissionForReview["status"],
     }));
-
-    // Риски
-    const risks = await prisma.riskFlag.findMany({
-      where: { userId: { in: studentIds }, status: "open" },
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: { select: { name: true, email: true } },
-        course: { select: { title: true } },
-        cohort: { select: { name: true } },
-      },
-    });
 
     const formattedRisks: RiskItem[] = risks.map((r) => ({
       id: r.id,
@@ -305,21 +302,42 @@ export async function getSuperCuratorDashboard() {
 
 export async function getAdminDashboard() {
   return safeQuery(async () => {
-    const [coursesCount, cohortsCount, usersCount, certsCount] = await Promise.all([
+    const [
+      coursesCount, 
+      cohortsCount, 
+      usersCount, 
+      certsCount,
+      courses,
+      cohorts,
+      invites,
+      certificates
+    ] = await Promise.all([
       prisma.course.count(),
       prisma.cohort.count(),
       prisma.user.count(),
       prisma.certificate.count(),
+      prisma.course.findMany({
+        orderBy: { createdAt: "desc" },
+        include: {
+          modules: { select: { id: true } },
+          instructors: { include: { user: { select: { id: true, name: true, email: true } } } },
+          _count: { select: { modules: true } },
+        },
+      }),
+      prisma.cohort.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { course: { select: { title: true } }, _count: { select: { enrollments: true } } },
+      }),
+      prisma.inviteLink.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { course: { select: { title: true } }, cohort: { select: { name: true } } },
+      }),
+      prisma.certificate.findMany({
+        orderBy: { issuedAt: "desc" },
+        take: 20,
+        include: { user: { select: { name: true } }, course: { select: { title: true } } },
+      }),
     ]);
-
-    const courses = await prisma.course.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        modules: { select: { id: true } },
-        instructors: { include: { user: { select: { id: true, name: true, email: true } } } },
-        _count: { select: { modules: true } },
-      },
-    });
 
     const formattedCourses: CourseSummary[] = courses.map((c) => ({
       id: c.id,
@@ -339,10 +357,6 @@ export async function getAdminDashboard() {
       })),
     }));
 
-    const cohorts = await prisma.cohort.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { course: { select: { title: true } }, _count: { select: { enrollments: true } } },
-    });
     const formattedCohorts: CohortSummary[] = cohorts.map((c) => ({
       id: c.id,
       name: c.name,
@@ -353,10 +367,6 @@ export async function getAdminDashboard() {
       studentsCount: c._count.enrollments,
     }));
 
-    const invites = await prisma.inviteLink.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { course: { select: { title: true } }, cohort: { select: { name: true } } },
-    });
     const formattedInvites: InviteLinkSummary[] = invites.map((i) => ({
       id: i.id,
       token: i.token,
@@ -368,11 +378,6 @@ export async function getAdminDashboard() {
       status: i.status,
     }));
 
-    const certificates = await prisma.certificate.findMany({
-      orderBy: { issuedAt: "desc" },
-      take: 20,
-      include: { user: { select: { name: true } }, course: { select: { title: true } } },
-    });
     const formattedCerts: CertificateSummary[] = certificates.map((c) => ({
       id: c.id,
       number: c.number,
