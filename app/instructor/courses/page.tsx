@@ -11,10 +11,11 @@ export const dynamic = "force-dynamic";
 
 export default async function InstructorCoursesPage() {
   const user = await requireRolePage(["instructor", "admin"]);
+  const isAdmin = user.roles.includes("admin");
   const prisma = getPrisma();
 
   const coursesDb = await prisma.course.findMany({
-    where: {
+    where: isAdmin ? {} : {
       instructors: { some: { userId: user.id } }
     },
     include: {

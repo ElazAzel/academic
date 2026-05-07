@@ -15,13 +15,14 @@ import { ROLE_LABELS, type RoleKey } from "@/types/domain";
 export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
-  const actor = await requireRolePage(["admin"]);
+  const actor = await requireRolePage(["admin", "super_curator"]);
   const users = await listUsers({ take: 200 });
   const assignableRoles = getAssignableRolesForActor(actor.roles);
+  const badge = actor.roles.includes("admin") ? "Администратор" : "Главный куратор";
 
   return (
-    <AppShell role="admin">
-      <PageHeader title="Пользователи" description="Выданные аккаунты, статусы входа и роли пользователей академии." badge="Администратор" />
+    <AppShell role={actor.roles.includes("admin") ? "admin" : "super_curator"}>
+      <PageHeader title="Пользователи" description="Выданные аккаунты, статусы входа и роли пользователей академии." badge={badge} />
       <div className="space-y-6">
         <div className="flex flex-wrap gap-3">
           <Button disabled><UserPlus className="h-4 w-4" />Добавить вручную</Button>
