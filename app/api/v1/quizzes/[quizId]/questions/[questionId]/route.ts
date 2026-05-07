@@ -2,7 +2,7 @@ import { errorResponse, ok, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { z } from "zod";
-import { QuestionType } from "@prisma/client";
+import { Prisma, QuestionType } from "@prisma/client";
 
 type Context = { params: Promise<{ quizId: string, questionId: string }> };
 
@@ -24,7 +24,11 @@ export async function PATCH(request: Request, context: Context) {
     
     const question = await prisma.quizQuestion.update({
       where: { id: questionId },
-      data: input
+      data: {
+        ...input,
+        options: input.options as Prisma.InputJsonValue,
+        correctAnswer: input.correctAnswer as Prisma.InputJsonValue
+      }
     });
     
     return ok(question);

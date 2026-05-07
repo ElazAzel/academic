@@ -10,13 +10,13 @@ interface Question {
   prompt: string;
   type: string;
   points: number;
-  options: any;
-  correctAnswer: any;
+  options: unknown;
+  correctAnswer: unknown;
 }
 
 export function QuestionEditorItem({ question, onUpdate, onDelete }: { 
   question: Question, 
-  onUpdate: (id: string, data: any) => Promise<void>,
+  onUpdate: (id: string, data: Partial<Question>) => Promise<void>,
   onDelete: (id: string) => Promise<void>
 }) {
   const [isExpanded, setIsExpanded] = useState(false);

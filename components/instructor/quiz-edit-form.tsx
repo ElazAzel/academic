@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
@@ -16,7 +16,7 @@ interface QuizEditFormProps {
     title: string;
     passThreshold: number;
     maxAttempts: number;
-    questions: { id: string; prompt: string; type: string; points: number; options: any; correctAnswer: any }[];
+    questions: { id: string; prompt: string; type: string; points: number; options: unknown; correctAnswer: unknown }[];
   };
 }
 
@@ -26,7 +26,7 @@ export function QuizEditForm({ quiz }: QuizEditFormProps) {
   const [questions, setQuestions] = useState(quiz.questions);
   const router = useRouter();
 
-  async function handleQuestionUpdate(questionId: string, data: any) {
+  async function handleQuestionUpdate(questionId: string, data: Partial<Parameters<typeof QuestionEditorItem>[0]["question"]>) {
     const res = await fetch(`/api/v1/quizzes/${quiz.id}/questions/${questionId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
