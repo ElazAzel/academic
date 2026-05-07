@@ -47,7 +47,7 @@ export async function listQuizzes() {
   });
 }
 
-export async function submitQuizAttempt(quizId: string, userId: string, answers: Record<string, unknown>) {
+export async function submitQuizAttempt(quizId: string, userId: string, answers: Record<string, unknown>, skipLimit = false) {
   const quiz = await prisma.quiz.findUnique({
     where: { id: quizId },
     include: { questions: { orderBy: { order: "asc" } } }
@@ -55,9 +55,11 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
   if (!quiz) {
     throw new ApiError("not_found", "Тест не найден", 404);
   }
-  const attempts = await prisma.quizAttempt.count({ where: { quizId, userId } });
-  if (attempts >= quiz.maxAttempts) {
-    throw new ApiError("forbidden", "Лимит попыток исчерпан", 403);
+  if (!skipLimit) {
+    const attempts = await prisma.quizAttempt.count({ where: { quizId, userId } });
+    if (attempts >= quiz.maxAttempts) {
+      throw new ApiError("forbidden", "Лимит попыток исчерпан", 403);
+    }
   }
   const result = gradeObjectiveQuiz(quiz.questions, answers, quiz.passThreshold);
   const attempt = await prisma.quizAttempt.create({
