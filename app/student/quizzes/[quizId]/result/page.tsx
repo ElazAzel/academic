@@ -24,7 +24,7 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
 
   const attempt = await prisma.quizAttempt.findFirst({
     where: { quizId, userId: user.id },
-    orderBy: { createdAt: "desc" }
+    orderBy: { startedAt: "desc" }
   });
 
   if (!attempt) {
