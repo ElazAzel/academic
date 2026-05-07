@@ -15,8 +15,6 @@ export async function requireRolePage(allowedRoles: RoleKey[]) {
 
   return user;
 }
-<<<<<<< HEAD
-=======
 export async function requireRole(allowedRoles: RoleKey[]) {
   const user = await getCurrentUser();
 
@@ -30,4 +28,3 @@ export async function requireRole(allowedRoles: RoleKey[]) {
 
   return user;
 }
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2

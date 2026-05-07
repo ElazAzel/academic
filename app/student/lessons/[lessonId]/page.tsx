@@ -11,19 +11,9 @@ export default async function StudentLessonPage({ params }: { params: Promise<{ 
   const user = await requireRolePage(["student"]);
   const { lessonId } = await params;
 
-<<<<<<< HEAD
-  try {
-    const lesson = await getLessonForStudent(user.id, lessonId);
-    return (
-      <AppShell role="student">
-        <StudentLessonView lesson={lesson} />
-      </AppShell>
-    );
-=======
   let lesson;
   try {
     lesson = await getLessonForStudent(user.id, lessonId);
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
   } catch (error) {
     if (error instanceof ApiError && error.code === "not_found") {
       notFound();
@@ -33,13 +23,10 @@ export default async function StudentLessonPage({ params }: { params: Promise<{ 
     }
     throw error;
   }
-<<<<<<< HEAD
-=======
 
   return (
     <AppShell role="student">
       <StudentLessonView lesson={lesson} />
     </AppShell>
   );
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
 }

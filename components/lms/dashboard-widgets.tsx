@@ -1,13 +1,8 @@
-<<<<<<< HEAD
-import Link from "next/link";
-import { ArrowRight, BookOpen, CheckCircle2, Clock, FileText, MessageCircle, AlertTriangle, Users } from "lucide-react";
-=======
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, CheckCircle2, FileText, MessageCircle, AlertTriangle } from "lucide-react";
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
+import { ArrowRight, BookOpen, CheckCircle2, FileText, MessageCircle, AlertTriangle, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";

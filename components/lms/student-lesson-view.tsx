@@ -9,10 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-<<<<<<< HEAD
-import { Tabs } from "@/components/ui/tabs";
-=======
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
 import type { StudentLessonLearningDetail } from "@/types/domain";
 
 function getContentBlocks(content: Record<string, unknown>) {
@@ -125,158 +121,6 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
           </CardContent>
         </Card>
 
-<<<<<<< HEAD
-        <Tabs
-          tabs={[
-            {
-              label: "Материалы",
-              content: (
-                <div className="space-y-4">
-                  <Card className="rounded-2xl">
-                    <CardContent className="space-y-3 py-6">
-                      {contentBlocks.length > 0 ? contentBlocks.map((block, index) =>
-                        block.type === "heading" ? (
-                          <h2 key={`${block.text}-${index}`} className="text-lg font-semibold">{block.text}</h2>
-                        ) : (
-                          <p key={`${block.text}-${index}`} className="text-sm leading-6 text-muted-foreground">{block.text}</p>
-                        )
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Материалы урока пока не опубликованы.</p>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {lesson.media.length > 0 ? (
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base">Прикрепленные файлы</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {lesson.media.map((item) => (
-                          <a
-                            key={item.id}
-                            href={item.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-3 rounded-xl border p-3 transition-colors hover:bg-muted"
-                          >
-                            <FileText className="h-5 w-5 shrink-0 text-primary" />
-                            <span className="text-sm">{item.filename ?? item.url}</span>
-                          </a>
-                        ))}
-                      </CardContent>
-                    </Card>
-                  ) : null}
-                </div>
-              )
-            },
-            {
-              label: lesson.quizzes.length > 0 ? `Тесты (${lesson.quizzes.length})` : "Тесты",
-              content: lesson.quizzes.length > 0 ? (
-                <div className="space-y-3">
-                  {lesson.quizzes.map((quiz) => (
-                    <Card key={quiz.id} className="transition-shadow hover:shadow-sm">
-                      <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                          <FileText className="h-5 w-5 text-primary" />
-                        </span>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{quiz.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {quiz.questionsCount} вопросов · порог {quiz.passThreshold}% · {quiz.maxAttempts} попытки
-                          </p>
-                        </div>
-                        <Button asChild size="sm">
-                          <Link href={`/student/quizzes/${quiz.id}`}>Пройти тест</Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card><CardContent className="py-10 text-center text-muted-foreground">Тестов в этом уроке нет.</CardContent></Card>
-              )
-            },
-            {
-              label: "Задания",
-              content: lesson.assignments.length > 0 ? (
-                <div className="space-y-3">
-                  {lesson.assignments.map((assignment) => (
-                    <Card key={assignment.id} className="transition-shadow hover:shadow-sm">
-                      <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{assignment.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {assignment.deadline ? `Дедлайн: ${assignment.deadline.slice(0, 10)} · ` : ""}
-                            {assignment.submissionStatus ? `Статус: ${assignment.submissionStatus}` : "Еще не отправлено"}
-                          </p>
-                        </div>
-                        <Button asChild size="sm">
-                          <Link href={`/student/assignments/${assignment.id}`}>Открыть</Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card><CardContent className="py-10 text-center text-muted-foreground">Заданий в этом уроке нет.</CardContent></Card>
-              )
-            },
-            {
-              label: "Вопрос куратору",
-              content: (
-                <div className="space-y-4">
-                  <Card className="rounded-2xl">
-                    <CardHeader>
-                      <CardTitle className="text-base">Задать вопрос куратору</CardTitle>
-                      <CardDescription>Вопрос попадет назначенному куратору вашего потока.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <textarea
-                        className="min-h-[100px] w-full resize-y rounded-xl border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        placeholder="Опишите вопрос по материалу урока..."
-                        value={questionText}
-                        onChange={(event) => setQuestionText(event.target.value)}
-                      />
-                      <div className="flex justify-end">
-                        <Button onClick={askQuestion} disabled={sending || !questionText.trim()}>
-                          <Send className="h-4 w-4" />
-                          {sending ? "Отправка..." : "Отправить"}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {lesson.myQuestions.length > 0 ? (
-                    <>
-                      <Separator />
-                      <h2 className="text-sm font-medium">Мои вопросы по этому уроку</h2>
-                      {lesson.myQuestions.map((question) => (
-                        <Card key={question.id} className="transition-shadow hover:shadow-sm">
-                          <CardContent className="py-4">
-                            <div className="mb-2 flex items-center gap-2">
-                              <MessageCircle className="h-4 w-4 text-primary" />
-                              <Badge className={question.status === "open" ? "border-amber-200 bg-amber-50 text-amber-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}>
-                                {question.status === "open" ? "Ожидает ответа" : "Отвечен"}
-                              </Badge>
-                            </div>
-                            <p className="text-sm">{question.text}</p>
-                            {question.answer ? (
-                              <div className="mt-2 rounded-lg bg-emerald-50 p-3">
-                                <p className="text-sm text-emerald-800">{question.answer}</p>
-                              </div>
-                            ) : null}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </>
-                  ) : null}
-                </div>
-              )
-            }
-          ]}
-        />
-=======
         {/* Блок: Материалы */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -446,7 +290,6 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
             </div>
           )}
         </div>
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
 
         <div className="flex items-center justify-between gap-3 pt-2">
           {lesson.prevLesson ? (
@@ -458,14 +301,6 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
             </Button>
           ) : <div />}
           {lesson.nextLesson ? (
-<<<<<<< HEAD
-            <Button asChild size="sm" disabled={lesson.nextLesson.locked}>
-              <Link href={lesson.nextLesson.locked ? "#" : `/student/lessons/${lesson.nextLesson.id}`}>
-                {lesson.nextLesson.title}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-=======
             lesson.nextLesson.locked ? (
               <Button size="sm" disabled title="Урок заблокирован">
                 {lesson.nextLesson.title}
@@ -479,7 +314,6 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
                 </Link>
               </Button>
             )
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
           ) : null}
         </div>
       </div>

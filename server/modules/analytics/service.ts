@@ -11,11 +11,7 @@ export async function getAdminOverview() {
     quizAttempts,
     certificates,
     activeInviteLinks,
-<<<<<<< HEAD
-    inviteActivations
-=======
     inviteActivationStats
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
   ] = await Promise.all([
     prisma.user.count({ where: { status: "active" } }),
     prisma.course.count(),
@@ -44,10 +40,6 @@ export async function getAdminOverview() {
     currency: "rub",
     certificates,
     activeInviteLinks,
-<<<<<<< HEAD
-    inviteActivations: inviteActivations._sum.activationCount ?? 0
-=======
     inviteActivations: inviteActivationStats._sum.activationCount ?? 0
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
   };
 }

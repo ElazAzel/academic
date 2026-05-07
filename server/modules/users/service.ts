@@ -97,8 +97,6 @@ export async function setUserRoles(actor: AppSessionUser, userId: string, roleKe
     }
   });
 }
-<<<<<<< HEAD
-=======
 export async function updateUser(actor: AppSessionUser, userId: string, data: { name?: string; email?: string }) {
   const isSelf = actor.id === userId;
   const isAdmin = actor.roles.includes(RoleKey.admin);
@@ -155,4 +153,3 @@ export async function updateUser(actor: AppSessionUser, userId: string, data: { 
 
   return user;
 }
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2

@@ -22,11 +22,7 @@
 - Add outbox/inbox tables and message broker contracts before extracting invite access, notification, or analytics services.
 - If Stripe/billing returns later, design it as a separate ADR with signed webhooks, idempotent reconciliation, tests, docs, and feature-flagged rollout.
 
-<<<<<<< HEAD
-# Self-hosted DB hardening
-=======
 ## Self-hosted DB hardening
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
 
 - Add a tested backup/restore runbook for `academy-postgres`.
 - Add scheduled encrypted database backups with retention policy.

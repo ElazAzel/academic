@@ -29,50 +29,9 @@ export default async function StudentModulePage({ params }: { params: Promise<{ 
   const user = await requireRolePage(["student"]);
   const { moduleId } = await params;
 
-<<<<<<< HEAD
-  try {
-    const module = await getModuleForStudent(user.id, moduleId);
-    return (
-      <AppShell role="student">
-        <PageHeader
-          title={module.title}
-          description={module.description ?? `${module.lessonsCount} уроков, ${module.recommendedDays} рекомендуемых дней.`}
-          badge="Модуль"
-        />
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="space-y-2 py-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Прогресс модуля</span>
-                <span className="font-medium">{module.progressPercent}%</span>
-              </div>
-              <Progress value={module.progressPercent} />
-            </CardContent>
-          </Card>
-          <div className="space-y-2">
-            {module.lessons.map((lesson) => (
-              <Link key={lesson.id} href={lesson.locked ? "#" : `/student/lessons/${lesson.id}`} className={lesson.locked ? "block cursor-not-allowed opacity-50" : "block"}>
-                <Card className="transition-shadow hover:shadow-sm">
-                  <CardContent className="flex items-center gap-4 py-3">
-                    <span className="w-6 text-xs text-muted-foreground">{lesson.order}.</span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{lesson.title}</p>
-                      <p className="text-xs text-muted-foreground">{lesson.type} · {lesson.durationMinutes} мин.</p>
-                    </div>
-                    <LessonStatusIcon lesson={lesson} />
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </AppShell>
-    );
-=======
   let learningModule;
   try {
     learningModule = await getModuleForStudent(user.id, moduleId);
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
   } catch (error) {
     if (error instanceof ApiError && error.code === "not_found") {
       notFound();
@@ -82,8 +41,6 @@ export default async function StudentModulePage({ params }: { params: Promise<{ 
     }
     throw error;
   }
-<<<<<<< HEAD
-=======
 
   return (
     <AppShell role="student">
@@ -121,5 +78,4 @@ export default async function StudentModulePage({ params }: { params: Promise<{ 
       </div>
     </AppShell>
   );
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
 }

@@ -11,13 +11,9 @@ import type {
   StudentCourseLearningDetail,
   StudentLessonLearningDetail,
   StudentModuleLearningDetail,
-<<<<<<< HEAD
-  StudentProgress
-=======
   StudentProgress,
   StudentQuizDetail,
   StudentAssignmentDetail
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
 } from "@/types/domain";
 
 const prisma = getPrisma();
@@ -365,8 +361,6 @@ export async function askCuratorQuestion(userId: string, lessonId: string, text:
     createdAt: question.createdAt.toISOString()
   };
 }
-<<<<<<< HEAD
-=======
 
 export async function getQuizForStudent(userId: string, quizId: string): Promise<StudentQuizDetail> {
   const quiz = await prisma.quiz.findUnique({
@@ -451,4 +445,3 @@ export async function getAssignmentForStudent(userId: string, assignmentId: stri
     } : null
   };
 }
->>>>>>> e63fa65c366d6aebc4d97c18216ba9069a19a7c2
