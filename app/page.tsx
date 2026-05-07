@@ -10,7 +10,7 @@ export default function HomePage() {
     ["Курсы и потоки", "Курс → модуль → урок → прогресс → сертификат", BookOpen],
     ["Кураторский контроль", "Риски, задания, вопросы и SLA ответа", Users],
     ["Отчётность", "Цифровой след для проектов и заказчиков", BarChart3],
-    ["Безопасность", "RBAC, аудит, согласия и verified webhooks", ShieldCheck]
+    ["Безопасность", "RBAC, аудит, согласия и серверные проверки", ShieldCheck]
   ] as const;
 
   return (
@@ -25,7 +25,7 @@ export default function HomePage() {
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
               Платформа одной академии для курсов, потоков, кураторов, домашних заданий,
-              тестов, сертификатов, оплат и отчётности без маркетплейсной сложности.
+              тестов, сертификатов, инвайтов и отчётности без маркетплейсной сложности.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
@@ -68,4 +68,3 @@ export default function HomePage() {
     </div>
   );
 }
-

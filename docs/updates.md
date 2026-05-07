@@ -2,6 +2,59 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-07 — Стабилизация GitHub/Vercel и invite-only контракта
+
+Автор/agent: Codex
+Тип изменения: CI/CD / Vercel / runtime / documentation
+Файлы/модули:
+
+- `.github/workflows/ci.yml`
+- `vercel.json`
+- `package.json`, `package-lock.json`
+- `app/student/lessons/[lessonId]/page.tsx`
+- `app/{admin,curator,customer-observer,instructor,student,super-curator}/page.tsx`
+- `app/api/v1/payments/checkout/route.ts`
+- `app/api/v1/webhooks/stripe/route.ts`
+- `server/auth/options.ts`
+- `server/modules/analytics/service.ts`
+- `server/modules/billing/service.ts`
+- `lib/auth/rbac.ts`
+- `docs/api/openapi.yaml`
+- `docs/specification.md`
+- `docs/security.md`
+- `docs/assumptions.md`
+- `services/*`
+
+Summary:
+
+- Исправлены TypeScript и ESLint blockers, из-за которых падали GitHub Actions и Vercel build.
+- `payments:manage` заменён на `invites:manage`; платежные endpoints теперь возвращают typed `410 Gone`, а не generic runtime error.
+- Аналитика больше не обращается к удалённой `Payment` модели и отдаёт invite metrics вместе с backward-compatible `revenueCents: 0`.
+- Stripe dependency удалена из runtime dependencies; текущий production contract зафиксирован как invite-only.
+- CI усилен: `npm run lint -- --max-warnings=0` запускается до typecheck/test/build, Vercel использует `npm ci`.
+- Документация, OpenAPI и microservices reference синхронизированы с invite-only моделью.
+- Role dashboards помечены `force-dynamic`, чтобы Vercel build не выполнял Prisma-запросы без `DATABASE_URL` во время static generation.
+
+Проверки:
+
+- `npm.cmd run db:generate` — прошёл успешно.
+- `npm.cmd run lint -- --max-warnings=0` — прошёл успешно.
+- `npm.cmd run typecheck` — прошёл успешно.
+- `npm.cmd run test` — локально блокируется sandbox `spawn EPERM`; escalated повтор в этой сессии был отклонён auto-review лимитом, поэтому финальный статус зависит от GitHub Actions.
+- `npm.cmd run build` — прошёл успешно; role dashboards теперь собираются как dynamic routes без Prisma `DATABASE_URL` noise во время build.
+
+Риски:
+
+- Vercel Production/Preview требуют реальные `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `APP_URL` и OAuth secrets при наличии; значения не коммитятся.
+- До подключения managed PostgreSQL `readyz` будет зависеть от доступности `DATABASE_URL`.
+- Browser plugin ранее мог не стартовать в Codex runtime; если повторится, smoke нужно выполнить Playwright fallback и зафиксировать отдельной записью.
+
+Next steps:
+
+- Запушить ветку `codex/stabilize-github-vercel`, открыть PR в `ElazAzel/academic`.
+- Проверить GitHub Actions job `verify` и Vercel Preview.
+- После merge настроить production env, выполнить миграции/seed против managed PostgreSQL и проверить production deployment.
+
 ## 2026-05-07 — Server Actions, полные суб-страницы ролей, страницы курсов/уроков
 
 Автор/agent: Antigravity

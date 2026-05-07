@@ -2,10 +2,8 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { ArrowRight, BookOpen, CheckCircle2, Lock, PlayCircle } from "lucide-react";
+import { BookOpen, CheckCircle2, Lock, PlayCircle } from "lucide-react";
 
 const MOCK_LESSONS = [
   { id: "l1", order: 1, title: "Введение в AI-стратегию", type: "VIDEO", duration: 25, status: "COMPLETED" as const, percent: 100 },
@@ -21,6 +19,7 @@ const STATUS_ICON = {
 };
 
 export default function StudentModulePage({ params }: { params: { moduleId: string } }) {
+  void params;
   return (
     <AppShell role="student">
       <PageHeader title="Модуль 1: Стратегия AI" description="Основы AI-стратегии для бизнес-решений. 3 урока, 7 рекомендуемых дней." badge="Модуль" />

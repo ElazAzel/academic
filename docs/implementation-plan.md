@@ -5,13 +5,13 @@
 
 ## Цель проекта
 
-Создать закрытую LMS одной академии для управления курсами, потоками, кураторами, заданиями, тестами, сертификатами, платежами, аналитикой и отчётностью. Система должна оставаться production-minded: безопасной, расширяемой, документированной и удобной для AI-assisted разработки.
+Создать закрытую LMS одной академии для управления курсами, потоками, кураторами, заданиями, тестами, сертификатами, инвайт-доступом, аналитикой и отчётностью. Система должна оставаться production-minded: безопасной, расширяемой, документированной и удобной для AI-assisted разработки.
 
 ## Текущее состояние на 2026-05-07
 
 - Создан runnable Next.js modular monolith: App Router, TypeScript strict, Prisma/PostgreSQL, Auth.js, Tailwind, REST API, GraphQL scaffold.
 - Созданы основные страницы ролей: публичная зона, слушатель, куратор, супер-куратор, преподаватель, администратор, заказчик-наблюдатель.
-- Созданы доменные server modules для auth/RBAC, courses, enrollments, quizzes, assignments, progress, certificates, billing, analytics, notifications, search, audit.
+- Созданы доменные server modules для auth/RBAC, courses, enrollments, quizzes, assignments, progress, certificates, invite-only billing compatibility, analytics, notifications, search, audit.
 - Созданы docs, OpenAPI, GraphQL schema, Prisma schema, seed, tests, Docker/Compose/K8s/CI templates.
 - Проверки bootstrap: `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run test`, `npm.cmd run build` проходили успешно.
 - Git remote нормализован до `origin`, удалённый initial commit `ElazAzel/academic` с `LICENSE` объединён с локальной историей без force-push.
@@ -35,7 +35,7 @@
 | MVP hardening | Подключение реальной БД, миграций, seed, базового auth flow, роли и данные demo | in_progress |
 | Learning core | Полный UX курсов, модулей, уроков, тестов, заданий и прогресса | in_progress |
 | Academy operations | Потоки, кураторы, риски, вопросы, отчёты, аудит, согласия | planned |
-| Payments and certificates | Stripe production flow, verified webhooks, PDF certificates, verification URL | planned |
+| Invite access and certificates | Инвайт-доступ, disabled payment endpoints, PDF certificates, verification URL | in_progress |
 | Production readiness | Observability, backup/restore, rate limit, security review, deployment validation | planned |
 | Scale path | Outbox, event contracts, extraction-ready services, reporting projections | planned |
 
@@ -55,14 +55,14 @@
 | Assignments | File upload signing и review queue UI | planned | Загрузка через S3-compatible adapter, очередь куратора |
 | Certificates | Certificate issuance rule и PDF generation scaffold | done | Certificate service генерирует number, QR, PDF |
 | Certificates | Production certificate templates and verification page | in_progress | Public verification URL и API добавлены; template assets остаются production-hardening |
-| Billing | Checkout session и verified webhook scaffold | done | Mock mode без секретов, Stripe mode с signature verification |
-| Billing | Production reconciliation and subscription access rules | planned | Payment status синхронизирует enrollments идемпотентно |
-| Analytics | Admin overview metrics | done | API возвращает users, enrollments, completion, revenue |
+| Invite access | InviteLink model, admin invite UX, `invites:manage` permission | done | Доступ выдаётся через инвайт-ссылки, не через оплату |
+| Billing compatibility | Checkout/webhook routes return typed `410 Gone`; Stripe dependency removed | done | Старые маршруты не падают `500` и явно документируют invite-only профиль |
+| Analytics | Admin overview metrics | done | API возвращает users, enrollments, completion, invite metrics и backward-compatible zero revenue |
 | Analytics | Export-ready reports CSV/PDF/XLSX | planned | Admin/customer observer скачивает отчёты |
 | Search | PostgreSQL full-text boundary | done | Search service ищет courses, lessons, users |
 | Notifications | In-app notification templates/events | done | Notification service хранит русские templates |
 | Notifications | Email provider and push provider production wiring | planned | SMTP/provider отправка и retry policy |
-| Security | Security doc, RBAC, webhook verification, env examples | done | `docs/security.md` и server guards существуют |
+| Security | Security doc, RBAC, disabled billing endpoints, env examples | done | `docs/security.md` и server guards существуют |
 | Security | Rate limiting with Redis and privacy workflows | planned | Distributed limiter, export/delete PII process |
 | DevOps | Docker, Compose, K8s, CI templates | done | Infra files созданы |
 | DevOps | GitHub remote/upstream для `ElazAzel/academic` | done | Remote переименован в `origin`, remote `LICENSE` смержен, `main` опубликован и отслеживает `origin/main` |
@@ -79,7 +79,7 @@ MVP считается готовым, когда:
 - слушатель может войти, пройти урок, сдать тест/задание и видеть прогресс;
 - куратор видит вопросы, задания и риски;
 - сертификат выдаётся по правилам и проверяется по URL;
-- платежи через Stripe корректно открывают доступ;
+- инвайт-ссылки корректно открывают доступ, а платежные endpoints отвечают `410 Gone`;
 - отчёты по курсу/потоку/слушателям экспортируются;
 - security checklist и deployment checklist закрыты.
 

@@ -1,5 +1,4 @@
 export const service = {
   name: "billing-service",
-  owns: ["payments", "stripe_webhooks", "access_reconciliation"]
+  owns: ["disabled_payment_routes", "invite_access_contract", "future_billing_extension"]
 };
-

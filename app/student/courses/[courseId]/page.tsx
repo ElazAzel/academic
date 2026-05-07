@@ -4,7 +4,6 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -17,7 +16,7 @@ import {
   PlayCircle,
   Video,
 } from "lucide-react";
-import type { LessonSummary, ModuleDetail } from "@/types/domain";
+import type { ModuleDetail } from "@/types/domain";
 
 // TODO: Replace with server action getCourseForStudent(courseId)
 function getMockCourse(courseId: string) {

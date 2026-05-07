@@ -1,12 +1,10 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar } from "@/components/ui/avatar";
 import { Plus, Download } from "lucide-react";
-import { MOCK_COHORTS } from "@/lib/mock-data";
 
 const MOCK_ENROLLMENTS = [
   { id: "e1", studentName: "Слушатель 1", email: "student1@academy.local", course: "AI Strategy Fundamentals", cohort: "Поток Q2-2026", status: "ACTIVE" as const, enrolledAt: "2026-04-15" },
