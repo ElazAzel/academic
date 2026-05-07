@@ -31,7 +31,7 @@ export async function GET(_request: Request, context: Context) {
 
 export async function PATCH(request: Request, context: Context) {
   try {
-    const user = await requireUser("courses:write");
+    await requireUser("courses:write");
     const { assignmentId } = await context.params;
     const input = await parseJson(request, updateAssignmentSchema);
     

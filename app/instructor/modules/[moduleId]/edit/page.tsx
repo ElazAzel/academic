@@ -27,7 +27,7 @@ export default async function InstructorEditModulePage({ params }: { params: Pro
       />
 
       <div className="mt-8">
-        <ModuleEditForm module={courseModule as any} />
+        <ModuleEditForm module={courseModule as unknown as Parameters<typeof ModuleEditForm>[0]["module"]} />
       </div>
     </AppShell>
   );

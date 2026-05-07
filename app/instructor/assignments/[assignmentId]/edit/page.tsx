@@ -27,7 +27,7 @@ export default async function InstructorEditAssignmentPage({ params }: { params:
       />
 
       <div className="mt-8">
-        <AssignmentEditForm assignment={assignment as any} />
+        <AssignmentEditForm assignment={assignment as unknown as Parameters<typeof AssignmentEditForm>[0]["assignment"]} />
       </div>
     </AppShell>
   );

@@ -32,7 +32,7 @@ export async function GET(_request: Request, context: Context) {
 
 export async function PATCH(request: Request, context: Context) {
   try {
-    const user = await requireUser("quizzes:write");
+    await requireUser("quizzes:write");
     const { quizId } = await context.params;
     const input = await parseJson(request, updateQuizSchema);
     

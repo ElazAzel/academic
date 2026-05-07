@@ -15,7 +15,7 @@ interface LessonEditFormProps {
     title: string;
     type: string;
     summary: string | null;
-    content: any;
+    content: { text?: string } | null;
     videoUrl: string | null;
     durationMinutes: number;
     isRequired: boolean;

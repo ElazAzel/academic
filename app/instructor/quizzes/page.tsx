@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, FileText } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 

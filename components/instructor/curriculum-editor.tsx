@@ -22,11 +22,10 @@ interface Module {
 }
 
 interface CurriculumEditorProps {
-  courseId: string;
   initialModules: Module[];
 }
 
-export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorProps) {
+export function CurriculumEditor({ initialModules }: CurriculumEditorProps) {
   const [modules, setModules] = useState(initialModules);
   const router = useRouter();
 

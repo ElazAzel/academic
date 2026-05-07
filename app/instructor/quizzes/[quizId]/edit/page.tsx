@@ -28,7 +28,7 @@ export default async function InstructorEditQuizPage({ params }: { params: Promi
       />
 
       <div className="mt-8">
-        <QuizEditForm quiz={quiz as any} />
+        <QuizEditForm quiz={quiz as unknown as Parameters<typeof QuizEditForm>[0]["quiz"]} />
       </div>
     </AppShell>
   );

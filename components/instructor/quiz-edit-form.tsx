@@ -14,7 +14,7 @@ interface QuizEditFormProps {
     title: string;
     passThreshold: number;
     maxAttempts: number;
-    questions: any[];
+    questions: { id: string; prompt: string; type: string; points: number }[];
   };
 }
 

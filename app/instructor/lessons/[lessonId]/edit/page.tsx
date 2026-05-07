@@ -27,7 +27,7 @@ export default async function InstructorEditLessonPage({ params }: { params: Pro
       />
 
       <div className="mt-8">
-        <LessonEditForm lesson={lesson as any} />
+        <LessonEditForm lesson={lesson as unknown as Parameters<typeof LessonEditForm>[0]["lesson"]} />
       </div>
     </AppShell>
   );
