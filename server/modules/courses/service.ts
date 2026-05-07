@@ -173,7 +173,7 @@ export async function createLesson(moduleId: string, input: {
 
 export async function updateLesson(lessonId: string, input: {
   title?: string;
-  summary?: string;
+  summary?: string | null;
   order?: number;
   type?: keyof typeof LessonType;
   content?: Record<string, unknown>;

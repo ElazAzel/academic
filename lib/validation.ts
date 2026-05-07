@@ -23,12 +23,13 @@ export const moduleSchema = z.object({
 
 export const lessonSchema = z.object({
   title: z.string().min(2).max(160),
-  summary: z.string().optional(),
+  summary: z.string().nullish(),
   order: z.number().int().positive(),
   type: z.enum(["VIDEO", "TEXT", "DOCUMENT", "VIDEO_DOCUMENT", "QUIZ", "ASSIGNMENT", "LIVE", "RECORDING", "MIXED"]).default("MIXED"),
   content: z.record(z.unknown()).default({}),
   videoUrl: z.string().url().nullish().or(z.literal("")),
-  durationMinutes: z.number().int().min(0).default(0)
+  durationMinutes: z.number().int().min(0).default(0),
+  isRequired: z.boolean().default(true)
 });
 
 export const enrollmentSchema = z.object({

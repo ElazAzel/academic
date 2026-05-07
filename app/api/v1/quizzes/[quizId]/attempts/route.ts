@@ -8,7 +8,7 @@ type Context = { params: Promise<{ quizId: string }> };
 export async function POST(request: Request, context: Context) {
   try {
     const user = await requireUser("progress:write");
-    const skipLimit = user.roles.includes("instructor") || user.roles.includes("admin") || user.roles.includes("super_curator");
+    const skipLimit = user.roles.includes("instructor") || user.roles.includes("admin") || user.roles.includes("super_curator") || user.roles.includes("curator");
     const { quizId } = await context.params;
     const input = await parseJson(request, quizAttemptSchema);
     return created(await submitQuizAttempt(quizId, user.id, input.answers, skipLimit));
