@@ -12,7 +12,10 @@ export function getPrisma() {
       process.env.storage_POSTGRES_PRISMA_URL ??
       process.env.DATABASE_URL ??
       "postgresql://academy:academy-local-only@postgres:5432/academy?schema=public";
-    const pool = new Pool({ connectionString });
+    const pool = new Pool({ 
+      connectionString,
+      ssl: connectionString.includes("localhost") ? false : { rejectUnauthorized: false }
+    });
     const adapter = new PrismaPg(pool);
     globalForPrisma.prisma = new PrismaClient({
       adapter,
