@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient, RoleKey } from "@prisma/client";
+import { RoleKey } from "@prisma/client";
 import { hashPassword } from "@/lib/auth/password";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 

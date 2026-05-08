@@ -3,9 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("storage_POSTGRES_PRISMA_URL")
-  directUrl = env("storage_POSTGRES_URL_NON_POOLING")
+  provider = "postgresql"
 }
 
 enum RoleKey {
@@ -437,6 +435,7 @@ model LessonProgress {
   enrollment Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
 
   @@unique([userId, lessonId])
+  @@index([userId])
   @@map("lesson_progress")
 }
 
@@ -455,6 +454,7 @@ model ModuleProgress {
   enrollment Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
 
   @@unique([userId, moduleId])
+  @@index([userId])
   @@map("module_progress")
 }
 
@@ -473,6 +473,7 @@ model CourseProgress {
   enrollment Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
 
   @@unique([userId, courseId])
+  @@index([userId])
   @@map("course_progress")
 }
 
