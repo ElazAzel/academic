@@ -18,10 +18,10 @@ function getContentBlocks(content: Record<string, unknown> | string | null | und
   if (!content || typeof content !== "object") {
     return [];
   }
-  if (typeof (content as any).text === "string") {
-    return [{ type: "paragraph", text: (content as any).text }];
+  if (content && typeof content === "object" && "text" in content && typeof (content as { text: unknown }).text === "string") {
+    return [{ type: "paragraph", text: (content as { text: string }).text }];
   }
-  const blocks = (content as any).blocks;
+  const blocks = content && typeof content === "object" && "blocks" in content ? (content as { blocks: unknown }).blocks : null;
   if (!Array.isArray(blocks)) {
     return [];
   }

@@ -94,10 +94,10 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
         const errData = await response.json().catch(() => ({}));
         setModuleError(errData.error?.message || "Не удалось создать модуль");
       } else {
-        const module = await response.json();
-        setModules([...modules, { id: module.id, title: module.title, order: module.order, lessons: [] }]);
+        const newModule = await response.json();
+        setModules([...modules, { id: newModule.id, title: newModule.title, order: newModule.order, lessons: [] }]);
         setShowNewModule(false);
-        setActiveLessonForm(module.id);
+        setActiveLessonForm(newModule.id);
       }
     } catch {
       setModuleError("Ошибка сети при создании модуля");
