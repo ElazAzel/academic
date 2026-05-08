@@ -39,18 +39,19 @@ export default async function CourseCurriculumPage({ params }: { params: Promise
       />
 
       <div className="mt-8">
-        <CurriculumEditor 
-          initialModules={course.modules.map(m => ({
+        <CurriculumEditor
+          courseId={courseId}
+          initialModules={course.modules.map((m) => ({
             id: m.id,
             title: m.title,
             order: m.order,
-            lessons: m.lessons.map(l => ({
+            lessons: m.lessons.map((l) => ({
               id: l.id,
               title: l.title,
               type: l.type,
               order: l.order
             }))
-          }))} 
+          }))}
         />
       </div>
     </AppShell>

@@ -11,8 +11,17 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import type { StudentLessonLearningDetail } from "@/types/domain";
 
-function getContentBlocks(content: Record<string, unknown>) {
-  const blocks = content.blocks;
+function getContentBlocks(content: Record<string, unknown> | string | null | undefined) {
+  if (typeof content === "string") {
+    return [{ type: "paragraph", text: content }];
+  }
+  if (!content || typeof content !== "object") {
+    return [];
+  }
+  if (typeof (content as any).text === "string") {
+    return [{ type: "paragraph", text: (content as any).text }];
+  }
+  const blocks = (content as any).blocks;
   if (!Array.isArray(blocks)) {
     return [];
   }
