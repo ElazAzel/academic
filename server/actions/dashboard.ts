@@ -395,10 +395,14 @@ export async function getSuperCuratorDashboard() {
     }
 
     const curatorIds = Array.from(curatorMap.keys());
-    const allStudentIds = [...new Set(curatorAssignments.map((ca) => ca.studentId))];
+    const allStudentIds = Array.from(new Set(Array.from(curatorMap.values()).flatMap(d => Array.from(d.studentIds))));
 
-    // Bolt optimization: Bulk query all data to avoid N+1 problem (Reduced from 1+4N to 5 queries)
-    const [openQuestionsGroup, pendingReviewsGroup, riskFlagsGroup, allAnsweredQuestions] = await Promise.all([
+    const [
+      openQuestionsGrouped,
+      pendingReviewsGrouped,
+      riskStudentsGrouped,
+      answeredQuestions,
+    ] = await Promise.all([
       prisma.lessonQuestion.groupBy({
         by: ["curatorId"],
         where: { curatorId: { in: curatorIds }, status: "open" },
@@ -420,41 +424,33 @@ export async function getSuperCuratorDashboard() {
       }),
     ]);
 
-    // Create lookup maps for performance O(1) access
-    const openQuestionsMap = new Map(openQuestionsGroup.map((g) => [g.curatorId, g._count._all]));
-    const pendingReviewsByStudentMap = new Map(pendingReviewsGroup.map((g) => [g.userId, g._count._all]));
-    const riskFlagsByStudentMap = new Map(riskFlagsGroup.map((g) => [g.userId, g._count._all]));
-
-    const answeredByCuratorMap = new Map<string, { createdAt: Date; answeredAt: Date }[]>();
-    for (const q of allAnsweredQuestions) {
-      if (q.curatorId) {
-        if (!answeredByCuratorMap.has(q.curatorId)) answeredByCuratorMap.set(q.curatorId, []);
-        answeredByCuratorMap.get(q.curatorId)!.push({ createdAt: q.createdAt, answeredAt: q.answeredAt! });
-      }
-    }
+    const openQuestionsMap = new Map(openQuestionsGrouped.map((g) => [g.curatorId, g._count._all]));
+    const pendingReviewsMap = new Map(pendingReviewsGrouped.map((g) => [g.userId, g._count._all]));
+    const riskStudentsMap = new Map(riskStudentsGrouped.map((g) => [g.userId, g._count._all]));
 
     const curatorLoads: CuratorLoad[] = [];
     for (const [curatorId, data] of curatorMap) {
       const studentIds = Array.from(data.studentIds);
 
-      // Use pre-aggregated data from bulk queries
       const openQuestions = openQuestionsMap.get(curatorId) ?? 0;
 
       let pendingReviews = 0;
       let riskStudents = 0;
-      for (const studentId of studentIds) {
-        pendingReviews += pendingReviewsByStudentMap.get(studentId) ?? 0;
-        riskStudents += riskFlagsByStudentMap.get(studentId) ?? 0;
+      for (const sId of studentIds) {
+        pendingReviews += pendingReviewsMap.get(sId) ?? 0;
+        riskStudents += riskStudentsMap.get(sId) ?? 0;
       }
 
-      const curatorAnswered = answeredByCuratorMap.get(curatorId) ?? [];
+      // Расчет среднего времени ответа
+      const curatorAnsweredQuestions = answeredQuestions.filter(q => q.curatorId === curatorId);
+      
       let avgResponseHours = 0;
-      if (curatorAnswered.length > 0) {
-        const totalHours = curatorAnswered.reduce((sum, q) => {
-          const diff = q.answeredAt.getTime() - q.createdAt.getTime();
+      if (curatorAnsweredQuestions.length > 0) {
+        const totalHours = curatorAnsweredQuestions.reduce((sum, q) => {
+          const diff = q.answeredAt!.getTime() - q.createdAt.getTime();
           return sum + (diff / (1000 * 60 * 60));
         }, 0);
-        avgResponseHours = Math.round((totalHours / curatorAnswered.length) * 10) / 10;
+        avgResponseHours = Math.round(totalHours / curatorAnsweredQuestions.length * 10) / 10;
       }
 
       curatorLoads.push({
