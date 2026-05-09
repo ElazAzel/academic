@@ -1,8 +1,11 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { requireRolePage } from "@/lib/auth/page-guards";
 
-export default function InstructorSettingsPage() {
+export default async function InstructorSettingsPage() {
+  await requireRolePage(["instructor", "admin"]);
+
   return (
     <AppShell role="instructor">
       <PageHeader title="Настройки" description="Настройки профиля преподавателя." badge="Преподаватель" />

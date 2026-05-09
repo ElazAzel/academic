@@ -63,7 +63,12 @@ export async function createCourse(input: {
       goal: input.goal,
       coverUrl: input.coverUrl,
       durationHours: input.durationHours,
-      traversalMode: input.traversalMode
+      traversalMode: input.traversalMode,
+      instructors: {
+        create: {
+          userId: actorId
+        }
+      }
     }
   });
   await logAudit({ actorId, action: "course.created", entity: "course", entityId: course.id });

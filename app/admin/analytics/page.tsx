@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import type { DashboardMetric } from "@/types/domain";
+import { requireRolePage } from "@/lib/auth/page-guards";
 
 const ANALYTICS_METRICS: DashboardMetric[] = [
   { label: "Активных пользователей", value: 156, tone: "primary" },
@@ -19,7 +20,9 @@ const COURSE_STATS = [
   { title: "Data Privacy & AI Governance", enrolled: 26, completed: 2, avgProgress: 22 },
 ];
 
-export default function AdminAnalyticsPage() {
+export default async function AdminAnalyticsPage() {
+  await requireRolePage(["admin"]);
+
   return (
     <AppShell role="admin">
       <PageHeader title="Аналитика" description="Активность пользователей, завершения курсов, тесты и экспорт." badge="Администратор" />

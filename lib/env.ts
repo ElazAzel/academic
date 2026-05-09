@@ -17,3 +17,7 @@ const envSchema = z.object({
 });
 
 export const env = envSchema.parse(process.env);
+
+process.env.APP_URL ??= env.APP_URL;
+process.env.NEXTAUTH_URL ??= env.NEXTAUTH_URL;
+process.env.NEXTAUTH_SECRET ??= env.NEXTAUTH_SECRET;

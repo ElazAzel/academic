@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
+import { readApiData, readApiErrorMessage } from "@/lib/api-client";
+
+interface CreatedCourse {
+  id: string;
+}
 
 export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
   const [pending, setPending] = useState(false);
@@ -12,13 +17,17 @@ export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending) {
+      return;
+    }
+
     setPending(true);
     setError("");
 
     const formData = new FormData(event.currentTarget);
     const data = {
-      title: formData.get("title") as string,
-      description: formData.get("description") as string,
+      title: String(formData.get("title") ?? ""),
+      description: String(formData.get("description") ?? ""),
       durationHours: Number(formData.get("durationHours")),
       traversalMode: formData.get("traversalMode") as "sequential" | "open",
     };
@@ -31,11 +40,15 @@ export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
       });
 
       if (response.ok) {
+        const course = await readApiData<CreatedCourse>(response);
         onSuccess?.();
-        router.refresh();
+        if (course?.id) {
+          router.push(`/instructor/courses/${course.id}/edit`);
+        } else {
+          router.refresh();
+        }
       } else {
-        const errData = await response.json().catch(() => ({}));
-        setError(errData.error?.message || "Не удалось создать курс");
+        setError(await readApiErrorMessage(response, "Не удалось создать курс"));
       }
     } catch {
       setError("Ошибка сети");
@@ -45,7 +58,7 @@ export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-2xl border">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border bg-white p-6">
       <h3 className="text-lg font-semibold">Новый курс</h3>
       <div className="space-y-1">
         <label className="text-xs font-medium uppercase text-muted-foreground">Название</label>
@@ -53,11 +66,11 @@ export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
       <div className="space-y-1">
         <label className="text-xs font-medium uppercase text-muted-foreground">Описание</label>
-        <textarea 
-          name="description" 
+        <textarea
+          name="description"
           required
           minLength={10}
-          className="w-full min-h-[100px] rounded-xl border bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20" 
+          className="min-h-[100px] w-full rounded-xl border bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20"
           placeholder="О чем этот курс (мин. 10 символов)..."
         />
       </div>
@@ -68,13 +81,13 @@ export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
         </div>
         <div className="space-y-1">
           <label className="text-xs font-medium uppercase text-muted-foreground">Режим</label>
-          <select name="traversalMode" className="w-full h-10 rounded-xl border bg-white px-3 text-sm">
+          <select name="traversalMode" className="h-10 w-full rounded-xl border bg-white px-3 text-sm">
             <option value="sequential">Последовательный</option>
             <option value="open">Свободный</option>
           </select>
         </div>
       </div>
-      {error && <p className="text-sm text-rose-600">{error}</p>}
+      {error ? <p className="text-sm text-rose-600">{error}</p> : null}
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Создаем..." : "Создать курс"}
       </Button>

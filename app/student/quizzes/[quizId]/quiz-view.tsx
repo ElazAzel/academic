@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { readApiErrorMessage } from "@/lib/api-client";
 import type { StudentQuizDetail } from "@/types/domain";
 
 export function QuizView({ quiz }: { quiz: StudentQuizDetail }) {
@@ -12,15 +13,20 @@ export function QuizView({ quiz }: { quiz: StudentQuizDetail }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const handleOptionChange = (questionId: string, option: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: option }));
-  };
+  function handleOptionChange(questionId: string, option: string) {
+    setAnswers((current) => ({ ...current, [questionId]: option }));
+  }
 
-  const handleSubmit = async () => {
-    if (Object.keys(answers).length < quiz.questions.length) {
-      if (!confirm("Вы ответили не на все вопросы. Все равно отправить?")) {
-        return;
-      }
+  async function handleSubmit() {
+    if (submitting) {
+      return;
+    }
+
+    if (
+      Object.keys(answers).length < quiz.questions.length &&
+      !confirm("Вы ответили не на все вопросы. Все равно отправить?")
+    ) {
+      return;
     }
 
     setSubmitting(true);
@@ -33,41 +39,41 @@ export function QuizView({ quiz }: { quiz: StudentQuizDetail }) {
 
       if (response.ok) {
         router.push(`/student/quizzes/${quiz.id}/result`);
-      } else {
-        const error = await response.json();
-        alert(error.message || "Ошибка при отправке теста");
+        return;
       }
+
+      alert(await readApiErrorMessage(response, "Ошибка при отправке теста"));
     } catch {
       alert("Сетевая ошибка при отправке теста");
     } finally {
       setSubmitting(false);
     }
-  };
+  }
 
   return (
     <div className="space-y-4">
-      {quiz.questions.map((q, i) => (
-        <Card key={q.id} className="rounded-2xl transition-shadow hover:shadow-sm">
-          <CardContent className="py-5 space-y-3">
+      {quiz.questions.map((question, index) => (
+        <Card key={question.id} className="rounded-2xl transition-shadow hover:shadow-sm">
+          <CardContent className="space-y-3 py-5">
             <p className="text-sm font-medium">
-              {i + 1}. {q.text}
+              {index + 1}. {question.text}
             </p>
             <div className="space-y-2">
-              {q.options.map((opt, j) => (
+              {question.options.map((option) => (
                 <label
-                  key={j}
-                  className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-all ${
-                    answers[q.id] === opt ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted"
+                  key={option}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-all ${
+                    answers[question.id] === option ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted"
                   }`}
                 >
                   <input
                     type="radio"
-                    name={q.id}
+                    name={question.id}
                     className="h-4 w-4 text-primary focus:ring-primary"
-                    checked={answers[q.id] === opt}
-                    onChange={() => handleOptionChange(q.id, opt)}
+                    checked={answers[question.id] === option}
+                    onChange={() => handleOptionChange(question.id, option)}
                   />
-                  <span className="text-sm">{opt}</span>
+                  <span className="text-sm">{option}</span>
                 </label>
               ))}
             </div>
@@ -77,11 +83,7 @@ export function QuizView({ quiz }: { quiz: StudentQuizDetail }) {
 
       <div className="flex justify-end gap-2 pt-2">
         <Button onClick={handleSubmit} disabled={submitting}>
-          {submitting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <CheckCircle2 className="h-4 w-4" />
-          )}
+          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
           {submitting ? "Отправка..." : "Завершить тест"}
         </Button>
       </div>

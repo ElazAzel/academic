@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, FileText } from "lucide-react";
+import { requireRolePage } from "@/lib/auth/page-guards";
 
 const REPORTS = [
   { id: "r1", title: "Еженедельный отчёт по кураторам", type: "weekly", lastGenerated: "2026-05-05", format: "CSV" },
@@ -12,7 +13,9 @@ const REPORTS = [
   { id: "r4", title: "Прогресс по потокам", type: "progress", lastGenerated: "2026-05-06", format: "CSV" },
 ];
 
-export default function SuperCuratorReportsPage() {
+export default async function SuperCuratorReportsPage() {
+  await requireRolePage(["super_curator"]);
+
   return (
     <AppShell role="super_curator">
       <PageHeader title="Отчёты" description="Регулярные и ad-hoc отчёты для супер-куратора." badge="Супер-куратор" />

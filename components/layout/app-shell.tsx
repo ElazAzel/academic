@@ -40,9 +40,9 @@ const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
   ],
   curator: [
     { href: "/curator", label: "Дашборд", icon: LayoutDashboard },
-    { href: "/curator/students", label: "Мои слушатели", icon: Users },
+    { href: "/curator/students", label: "Слушатели", icon: Users },
     { href: "/curator/questions", label: "Вопросы", icon: MessageCircle },
-    { href: "/curator/assignments", label: "Задания", icon: ClipboardCheck },
+    { href: "/curator/assignments", label: "Проверка", icon: ClipboardCheck },
     { href: "/curator/risks", label: "Риски", icon: AlertTriangle },
     { href: "/curator/settings", label: "Настройки", icon: Settings },
   ],
@@ -50,9 +50,9 @@ const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
     { href: "/super-curator", label: "Дашборд", icon: LayoutDashboard },
     { href: "/super-curator/curators", label: "Кураторы", icon: UserCheck },
     { href: "/super-curator/distribution", label: "Распределение", icon: Users2 },
-    { href: "/admin/users", label: "Пользователи", icon: Users },
+    { href: "/super-curator/users", label: "Пользователи", icon: Users },
     { href: "/super-curator/risks", label: "Риски потоков", icon: AlertTriangle },
-    { href: "/super-curator/reports", label: "Отчёты", icon: BarChart3 },
+    { href: "/super-curator/reports", label: "Отчеты", icon: BarChart3 },
     { href: "/super-curator/settings", label: "Настройки", icon: Settings },
   ],
   instructor: [
@@ -60,7 +60,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
     { href: "/instructor/courses", label: "Мои курсы", icon: BookOpen },
     { href: "/instructor/assignments", label: "Задания", icon: ClipboardCheck },
     { href: "/instructor/quizzes", label: "Тесты", icon: FileText },
-    { href: "/instructor/questions", label: "Вопросы от кураторов", icon: HelpCircle },
+    { href: "/instructor/questions", label: "Вопросы", icon: HelpCircle },
     { href: "/instructor/analytics", label: "Аналитика", icon: BarChart3 },
     { href: "/instructor/settings", label: "Настройки", icon: Settings },
   ],
@@ -71,13 +71,13 @@ const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
     { href: "/admin/enrollments", label: "Зачисления", icon: UserCheck },
     { href: "/admin/invites", label: "Инвайты", icon: Link2 },
     { href: "/admin/analytics", label: "Аналитика", icon: BarChart3 },
-    { href: "/admin/audit-logs", label: "Журнал действий", icon: FileText },
+    { href: "/admin/audit-logs", label: "Аудит", icon: FileText },
     { href: "/admin/roles", label: "Роли", icon: ShieldCheck },
     { href: "/admin/settings", label: "Настройки", icon: Settings },
   ],
   customer_observer: [
     { href: "/customer-observer", label: "Дашборд проекта", icon: LayoutDashboard },
-    { href: "/customer-observer/reports", label: "Отчёты", icon: BarChart3 },
+    { href: "/customer-observer/reports", label: "Отчеты", icon: BarChart3 },
     { href: "/customer-observer/certificates", label: "Сертификаты", icon: ShieldCheck },
     { href: "/customer-observer/settings", label: "Настройки", icon: Settings },
   ],
@@ -104,20 +104,20 @@ export function AppShell({
             className="sticky top-24 space-y-1 rounded-2xl border bg-white/80 p-3 shadow-sm backdrop-blur-xl"
             aria-label={`Кабинет: ${roleLabel}`}
           >
-            {/* Role label removed as per user request */}
             {links.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <item.icon className="h-4 w-4 shrink-0" aria-hidden />
                 <span className="flex-1">{item.label}</span>
-                {item.badge != null && item.badge > 0 && (
+                {item.badge != null && item.badge > 0 ? (
                   <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-white">
                     {item.badge}
                   </span>
-                )}
+                ) : null}
               </Link>
             ))}
           </nav>

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
 import { QuestionEditorItem } from "./question-editor-item";
+import { readApiData } from "@/lib/api-client";
 
 interface QuizEditFormProps {
   quiz: {
@@ -122,7 +123,7 @@ export function QuizEditForm({ quiz }: QuizEditFormProps) {
                   body: JSON.stringify({ prompt: "Новый вопрос", type: "SINGLE_CHOICE", points: 1 })
                 });
                 if (res.ok) {
-                  const newQ = await res.json();
+                  const newQ = await readApiData<QuizEditFormProps["quiz"]["questions"][number]>(res);
                   setQuestions([...questions, newQ]);
                   router.refresh();
                 }

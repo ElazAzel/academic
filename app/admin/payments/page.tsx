@@ -2,8 +2,11 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link2 } from "lucide-react";
+import { requireRolePage } from "@/lib/auth/page-guards";
 
-export default function AdminInvitesPage() {
+export default async function AdminPaymentsPage() {
+  await requireRolePage(["admin"]);
+
   return (
     <AppShell role="admin">
       <PageHeader title="Инвайт-доступ" description="Платформа использует инвайты и назначенные логины для доступа." badge="Администратор" />

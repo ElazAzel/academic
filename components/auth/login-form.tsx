@@ -15,14 +15,20 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending) {
+      return;
+    }
+
     setPending(true);
     setError("");
+
     const formData = new FormData(event.currentTarget);
     const result = await signIn("credentials", {
-      email: String(formData.get("email")),
-      password: String(formData.get("password")),
-      redirect: false
+      email: String(formData.get("email") ?? "").trim().toLowerCase(),
+      password: String(formData.get("password") ?? ""),
+      redirect: false,
     });
+
     if (result?.error) {
       setPending(false);
       setError("Неверный логин или пароль");
@@ -30,10 +36,8 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
     }
 
     const targetResponse = await fetch("/api/v1/auth/redirect-target", { cache: "no-store" });
-    const payload = await targetResponse.json().catch(() => null) as { data?: { path?: string } } | null;
-    setPending(false);
+    const payload = (await targetResponse.json().catch(() => null)) as { data?: { path?: string } } | null;
     router.replace(payload?.data?.path ?? "/student");
-    router.refresh();
   }
 
   return (
@@ -53,10 +57,14 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
       {hasOAuth ? (
         <div className="grid gap-2 sm:grid-cols-2">
           {oauthProviders.google ? (
-            <Button type="button" variant="secondary" onClick={() => signIn("google")}>Google</Button>
+            <Button type="button" variant="secondary" onClick={() => signIn("google")}>
+              Google
+            </Button>
           ) : null}
           {oauthProviders.github ? (
-            <Button type="button" variant="secondary" onClick={() => signIn("github")}>GitHub</Button>
+            <Button type="button" variant="secondary" onClick={() => signIn("github")}>
+              GitHub
+            </Button>
           ) : null}
         </div>
       ) : null}

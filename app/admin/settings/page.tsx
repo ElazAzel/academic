@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
 import { Flag, Mail, Shield } from "lucide-react";
+import { requireRolePage } from "@/lib/auth/page-guards";
 
 const FEATURE_FLAGS = [
   { key: "FEATURE_PUSH_NOTIFICATIONS", label: "Push-уведомления", value: false },
@@ -11,7 +12,9 @@ const FEATURE_FLAGS = [
   { key: "FEATURE_TELEGRAM_NOTIFICATIONS", label: "Telegram-уведомления", value: false },
 ];
 
-export default function AdminSettingsPage() {
+export default async function AdminSettingsPage() {
+  await requireRolePage(["admin"]);
+
   return (
     <AppShell role="admin">
       <PageHeader title="Настройки платформы" description="Feature flags, интеграции, уведомления и безопасность." badge="Администратор" />

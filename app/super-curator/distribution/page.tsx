@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Users } from "lucide-react";
+import { requireRolePage } from "@/lib/auth/page-guards";
 
 const UNASSIGNED = [
   { id: "s11", name: "Слушатель 11", email: "student11@academy.local", course: "AI Strategy Fundamentals" },
@@ -12,7 +13,9 @@ const UNASSIGNED = [
 
 const CURATORS = ["Куратор Мадина", "Куратор Арман", "Куратор Дана"];
 
-export default function SuperCuratorDistributionPage() {
+export default async function SuperCuratorDistributionPage() {
+  await requireRolePage(["super_curator"]);
+
   return (
     <AppShell role="super_curator">
       <PageHeader title="Распределение слушателей" description="Назначение кураторов нераспределённым слушателям." badge="Супер-куратор" />

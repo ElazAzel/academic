@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Shield } from "lucide-react";
 import { ROLE_LABELS } from "@/types/domain";
 import type { RoleKey } from "@/types/domain";
+import { requireRolePage } from "@/lib/auth/page-guards";
 
 const ROLES = [
   { key: "admin" as RoleKey, permissions: ["users:manage", "courses:manage", "enrollments:manage", "invites:manage", "analytics:read", "audit:read", "settings:manage", "roles:manage"] },
@@ -15,7 +16,9 @@ const ROLES = [
   { key: "customer_observer" as RoleKey, permissions: ["analytics:read", "reports:read", "certificates:read"] },
 ];
 
-export default function AdminRolesPage() {
+export default async function AdminRolesPage() {
+  await requireRolePage(["admin"]);
+
   return (
     <AppShell role="admin">
       <PageHeader title="Роли и права" description="RBAC матрица: роли и серверные permissions." badge="Администратор" />

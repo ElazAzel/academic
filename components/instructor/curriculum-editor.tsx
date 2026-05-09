@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Plus, GripVertical, Pencil, Trash2, BookOpen, FileText, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BookOpen, CheckCircle2, FileText, GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { readApiData, readApiErrorMessage } from "@/lib/api-client";
 
 interface Lesson {
   id: string;
@@ -26,6 +27,19 @@ interface CurriculumEditorProps {
   initialModules: Module[];
 }
 
+type CreatedModule = Pick<Module, "id" | "title" | "order">;
+type CreatedLesson = Pick<Lesson, "id" | "title" | "type" | "order">;
+
+function LessonIcon({ type }: { type: string }) {
+  if (type === "QUIZ") {
+    return <CheckCircle2 className="h-4 w-4 text-primary" />;
+  }
+  if (type === "ASSIGNMENT") {
+    return <FileText className="h-4 w-4 text-primary" />;
+  }
+  return <BookOpen className="h-4 w-4 text-primary" />;
+}
+
 export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorProps) {
   const [modules, setModules] = useState(initialModules);
   const [showNewModule, setShowNewModule] = useState(false);
@@ -37,44 +51,46 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
   const router = useRouter();
 
   async function handleDeleteModule(moduleId: string) {
-    if (!confirm("Удалить этот модуль со всеми уроками?")) return;
-    try {
-      const res = await fetch(`/api/v1/modules/${moduleId}`, { method: "DELETE" });
-      if (res.ok) {
-        setModules(modules.filter((m) => m.id !== moduleId));
-        router.refresh();
-      }
-    } catch {
-      alert("Ошибка при удалении");
+    if (!confirm("Удалить этот модуль со всеми уроками?")) {
+      return;
+    }
+
+    const response = await fetch(`/api/v1/modules/${moduleId}`, { method: "DELETE" });
+    if (response.ok) {
+      setModules((current) => current.filter((moduleItem) => moduleItem.id !== moduleId));
+      router.refresh();
     }
   }
 
   async function handleDeleteLesson(lessonId: string) {
-    if (!confirm("Удалить этот урок?")) return;
-    try {
-      const res = await fetch(`/api/v1/lessons/${lessonId}`, { method: "DELETE" });
-      if (res.ok) {
-        setModules(
-          modules.map((m) => ({
-            ...m,
-            lessons: m.lessons.filter((l) => l.id !== lessonId)
-          }))
-        );
-        router.refresh();
-      }
-    } catch {
-      alert("Ошибка при удалении");
+    if (!confirm("Удалить этот урок?")) {
+      return;
+    }
+
+    const response = await fetch(`/api/v1/lessons/${lessonId}`, { method: "DELETE" });
+    if (response.ok) {
+      setModules((current) =>
+        current.map((moduleItem) => ({
+          ...moduleItem,
+          lessons: moduleItem.lessons.filter((lesson) => lesson.id !== lessonId),
+        })),
+      );
+      router.refresh();
     }
   }
 
   async function handleAddModule(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pendingModule) {
+      return;
+    }
+
     setPendingModule(true);
     setModuleError(null);
 
     const formData = new FormData(event.currentTarget);
-    const title = (formData.get("title") as string)?.trim();
-    const description = (formData.get("description") as string)?.trim() || null;
+    const title = String(formData.get("title") ?? "").trim();
+    const description = String(formData.get("description") ?? "").trim() || undefined;
     const order = Number(formData.get("order"));
     const recommendedDays = Number(formData.get("recommendedDays"));
 
@@ -88,17 +104,23 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
       const response = await fetch(`/api/v1/courses/${courseId}/modules`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, order, recommendedDays })
+        body: JSON.stringify({ title, description, order, recommendedDays }),
       });
+
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        setModuleError(errData.error?.message || "Не удалось создать модуль");
-      } else {
-        const newModule = await response.json();
-        setModules([...modules, { id: newModule.id, title: newModule.title, order: newModule.order, lessons: [] }]);
-        setShowNewModule(false);
-        setActiveLessonForm(newModule.id);
+        setModuleError(await readApiErrorMessage(response, "Не удалось создать модуль"));
+        return;
       }
+
+      const newModule = await readApiData<CreatedModule>(response);
+      setModules((current) => [
+        ...current,
+        { id: newModule.id, title: newModule.title, order: newModule.order, lessons: [] },
+      ]);
+      setShowNewModule(false);
+      setActiveLessonForm(newModule.id);
+      event.currentTarget.reset();
+      router.refresh();
     } catch {
       setModuleError("Ошибка сети при создании модуля");
     } finally {
@@ -108,14 +130,18 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
 
   async function handleAddLesson(event: React.FormEvent<HTMLFormElement>, moduleId: string) {
     event.preventDefault();
+    if (pendingLesson) {
+      return;
+    }
+
     setPendingLesson(true);
     setLessonError(null);
 
     const formData = new FormData(event.currentTarget);
-    const title = (formData.get("title") as string)?.trim();
-    const type = (formData.get("type") as string) || "TEXT";
-    const summary = (formData.get("summary") as string)?.trim() || null;
-    const contentText = (formData.get("contentText") as string)?.trim() || "";
+    const title = String(formData.get("title") ?? "").trim();
+    const type = String(formData.get("type") ?? "TEXT");
+    const summary = String(formData.get("summary") ?? "").trim() || null;
+    const contentText = String(formData.get("contentText") ?? "").trim();
     const durationMinutes = Number(formData.get("durationMinutes"));
     const order = Number(formData.get("order"));
 
@@ -135,24 +161,25 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
           summary,
           durationMinutes,
           order,
-          content: { blocks: [{ type: "paragraph", text: contentText }] }
-        })
+          content: { blocks: contentText ? [{ type: "paragraph", text: contentText }] : [] },
+        }),
       });
+
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        setLessonError(errData.error?.message || "Не удалось создать урок");
-      } else {
-        const lesson = await response.json();
-        setModules(
-          modules.map((m) =>
-            m.id === moduleId
-              ? { ...m, lessons: [...m.lessons, { id: lesson.id, title: lesson.title, type: lesson.type, order: lesson.order }] }
-              : m
-          )
-        );
-        setActiveLessonForm(null);
-        router.push(`/instructor/lessons/${lesson.id}/edit`);
+        setLessonError(await readApiErrorMessage(response, "Не удалось создать урок"));
+        return;
       }
+
+      const lesson = await readApiData<CreatedLesson>(response);
+      setModules((current) =>
+        current.map((moduleItem) =>
+          moduleItem.id === moduleId
+            ? { ...moduleItem, lessons: [...moduleItem.lessons, lesson] }
+            : moduleItem,
+        ),
+      );
+      setActiveLessonForm(null);
+      router.push(`/instructor/lessons/${lesson.id}/edit`);
     } catch {
       setLessonError("Ошибка сети при создании урока");
     } finally {
@@ -165,87 +192,116 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold">Учебный план</h2>
-          <p className="text-sm text-muted-foreground">Работайте с модулями и уроками курса. Добавляйте новые элементы и редактируйте существующие.</p>
+          <p className="text-sm text-muted-foreground">
+            Добавляйте модули и уроки в том порядке, в котором студент будет проходить курс.
+          </p>
         </div>
-        <Button variant="secondary" onClick={() => setShowNewModule(!showNewModule)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button variant="secondary" onClick={() => setShowNewModule((value) => !value)}>
+          <Plus className="h-4 w-4" />
           {showNewModule ? "Отменить" : "Добавить модуль"}
         </Button>
       </div>
 
-      {showNewModule && (
+      {showNewModule ? (
         <Card className="rounded-3xl border-2 p-6">
           <form onSubmit={handleAddModule} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase text-muted-foreground">Название модуля</label>
-                <input name="title" type="text" className="w-full rounded-xl border bg-white px-3 py-2 text-sm" placeholder="Название модуля" required />
+                <input name="title" className="w-full rounded-xl border bg-white px-3 py-2 text-sm" required />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase text-muted-foreground">Порядок</label>
-                <input name="order" type="number" min={1} defaultValue={modules.length + 1} className="w-full rounded-xl border bg-white px-3 py-2 text-sm" required />
+                <input
+                  name="order"
+                  type="number"
+                  min={1}
+                  defaultValue={modules.length + 1}
+                  className="w-full rounded-xl border bg-white px-3 py-2 text-sm"
+                  required
+                />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-muted-foreground">Рекомендовано дней</label>
-                <input name="recommendedDays" type="number" min={1} defaultValue={7} className="w-full rounded-xl border bg-white px-3 py-2 text-sm" required />
+                <label className="text-xs font-semibold uppercase text-muted-foreground">Дней на модуль</label>
+                <input
+                  name="recommendedDays"
+                  type="number"
+                  min={1}
+                  defaultValue={7}
+                  className="w-full rounded-xl border bg-white px-3 py-2 text-sm"
+                  required
+                />
               </div>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
-              <textarea name="description" className="w-full rounded-2xl border bg-white px-4 py-3 text-sm" placeholder="Краткое описание модуля" />
-            </div>
-
+            <textarea
+              name="description"
+              className="w-full rounded-2xl border bg-white px-4 py-3 text-sm"
+              placeholder="Краткое описание модуля"
+            />
             {moduleError ? <p className="text-sm text-rose-600">{moduleError}</p> : null}
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="secondary" onClick={() => setShowNewModule(false)} disabled={pendingModule}>Отменить</Button>
-              <Button type="submit" disabled={pendingModule}>{pendingModule ? "Создаем..." : "Создать модуль"}</Button>
+              <Button type="button" variant="secondary" onClick={() => setShowNewModule(false)} disabled={pendingModule}>
+                Отмена
+              </Button>
+              <Button type="submit" disabled={pendingModule}>
+                {pendingModule ? "Создаем..." : "Создать модуль"}
+              </Button>
             </div>
           </form>
         </Card>
-      )}
+      ) : null}
 
       <div className="space-y-6">
-        {modules.map((m) => (
-          <div key={m.id} className="space-y-4">
-            <div className="flex items-center justify-between bg-muted/30 p-4 rounded-2xl border">
-              <div className="flex items-center gap-3">
-                <GripVertical className="h-5 w-5 text-muted-foreground/50" />
-                <span className="text-sm font-bold text-muted-foreground w-6">{m.order}.</span>
-                <h3 className="font-semibold">{m.title}</h3>
+        {modules.map((moduleItem) => (
+          <div key={moduleItem.id} className="space-y-4">
+            <div className="flex items-center justify-between rounded-2xl border bg-muted/30 p-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground/50" />
+                <span className="w-6 shrink-0 text-sm font-bold text-muted-foreground">{moduleItem.order}.</span>
+                <h3 className="truncate font-semibold">{moduleItem.title}</h3>
               </div>
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="ghost" asChild>
-                  <Link href={`/instructor/modules/${m.id}/edit`}>
+                  <Link href={`/instructor/modules/${moduleItem.id}/edit`} prefetch={false}>
                     <Pencil className="h-4 w-4" />
                   </Link>
                 </Button>
-                <Button size="sm" variant="ghost" className="text-rose-600 hover:text-rose-700 hover:bg-rose-50" onClick={() => handleDeleteModule(m.id)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                  onClick={() => handleDeleteModule(moduleItem.id)}
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
-            <div className="pl-10 space-y-3">
-              {m.lessons.map((l) => (
-                <Card key={l.id} className="group transition-shadow hover:shadow-sm">
-                  <CardContent className="flex items-center gap-4 py-3">
-                    <GripVertical className="h-4 w-4 text-muted-foreground/30" />
-                    <span className="text-xs text-muted-foreground w-4">{l.order}.</span>
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                      {l.type === "QUIZ" ? <CheckCircle2 className="h-4 w-4 text-primary" /> : l.type === "ASSIGNMENT" ? <FileText className="h-4 w-4 text-primary" /> : <BookOpen className="h-4 w-4 text-primary" />}
+            <div className="space-y-3 pl-0 sm:pl-10">
+              {moduleItem.lessons.map((lesson) => (
+                <Card key={lesson.id} className="group transition-shadow hover:shadow-sm">
+                  <CardContent className="flex items-center gap-3 py-3">
+                    <GripVertical className="hidden h-4 w-4 shrink-0 text-muted-foreground/30 sm:block" />
+                    <span className="w-4 shrink-0 text-xs text-muted-foreground">{lesson.order}.</span>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                      <LessonIcon type={lesson.type} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{l.title}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{l.type}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{lesson.title}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{lesson.type}</p>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
                       <Button size="sm" variant="ghost" asChild>
-                        <Link href={`/instructor/lessons/${l.id}/edit`}>
+                        <Link href={`/instructor/lessons/${lesson.id}/edit`} prefetch={false}>
                           <Pencil className="h-4 w-4" />
                         </Link>
                       </Button>
-                      <Button size="sm" variant="ghost" className="text-rose-600 hover:text-rose-700 hover:bg-rose-50" onClick={() => handleDeleteLesson(l.id)}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                        onClick={() => handleDeleteLesson(lesson.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -253,62 +309,86 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                 </Card>
               ))}
 
-              <div className="space-y-3">
-                {activeLessonForm === m.id ? (
-                  <Card className="rounded-3xl border-2 p-4">
-                    <form onSubmit={(event) => handleAddLesson(event, m.id)} className="space-y-4">
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        <div className="space-y-2">
-                          <label className="text-xs font-semibold uppercase text-muted-foreground">Название урока</label>
-                          <input name="title" type="text" className="w-full rounded-xl border bg-white px-3 py-2 text-sm" placeholder="Название урока" required />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-xs font-semibold uppercase text-muted-foreground">Тип урока</label>
-                          <select name="type" className="w-full rounded-xl border bg-white px-3 py-2 text-sm">
-                            <option value="VIDEO">Видео</option>
-                            <option value="TEXT">Текст</option>
-                            <option value="VIDEO_DOCUMENT">Видео + документ</option>
-                            <option value="QUIZ">Тест</option>
-                            <option value="ASSIGNMENT">Задание</option>
-                            <option value="MIXED">Смешанный</option>
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-xs font-semibold uppercase text-muted-foreground">Порядок</label>
-                          <input name="order" type="number" min={1} defaultValue={m.lessons.length + 1} className="w-full rounded-xl border bg-white px-3 py-2 text-sm" required />
-                        </div>
-                      </div>
-
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        <div className="space-y-2">
-                          <label className="text-xs font-semibold uppercase text-muted-foreground">Длительность</label>
-                          <input name="durationMinutes" type="number" min={0} defaultValue={10} className="w-full rounded-xl border bg-white px-3 py-2 text-sm" required />
-                        </div>
-                        <div className="space-y-2 col-span-2">
-                          <label className="text-xs font-semibold uppercase text-muted-foreground">Краткое описание</label>
-                          <input name="summary" type="text" className="w-full rounded-xl border bg-white px-3 py-2 text-sm" placeholder="Описание урока" />
-                        </div>
-                      </div>
-
+              {activeLessonForm === moduleItem.id ? (
+                <Card className="rounded-3xl border-2 p-4">
+                  <form onSubmit={(event) => handleAddLesson(event, moduleItem.id)} className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-3">
                       <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase text-muted-foreground">Текстовый контент</label>
-                        <textarea name="contentText" rows={4} className="w-full rounded-2xl border bg-white px-4 py-3 text-sm" placeholder="Основной текст урока" />
+                        <label className="text-xs font-semibold uppercase text-muted-foreground">Название урока</label>
+                        <input name="title" className="w-full rounded-xl border bg-white px-3 py-2 text-sm" required />
                       </div>
-
-                      {lessonError ? <p className="text-sm text-rose-600">{lessonError}</p> : null}
-                      <div className="flex justify-end gap-2">
-                        <Button type="button" variant="secondary" onClick={() => setActiveLessonForm(null)} disabled={pendingLesson}>Отменить</Button>
-                        <Button type="submit" disabled={pendingLesson}>{pendingLesson ? "Создание..." : "Создать урок"}</Button>
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase text-muted-foreground">Тип урока</label>
+                        <select name="type" className="w-full rounded-xl border bg-white px-3 py-2 text-sm">
+                          <option value="VIDEO">Видео</option>
+                          <option value="TEXT">Текст</option>
+                          <option value="VIDEO_DOCUMENT">Видео + документ</option>
+                          <option value="QUIZ">Тест</option>
+                          <option value="ASSIGNMENT">Задание</option>
+                          <option value="MIXED">Смешанный</option>
+                        </select>
                       </div>
-                    </form>
-                  </Card>
-                ) : (
-                  <Button variant="ghost" size="sm" className="w-full border-2 border-dashed rounded-xl h-12 text-muted-foreground hover:text-primary hover:border-primary/50" onClick={() => setActiveLessonForm(m.id)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Добавить урок
-                  </Button>
-                )}
-              </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase text-muted-foreground">Порядок</label>
+                        <input
+                          name="order"
+                          type="number"
+                          min={1}
+                          defaultValue={moduleItem.lessons.length + 1}
+                          className="w-full rounded-xl border bg-white px-3 py-2 text-sm"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase text-muted-foreground">Минуты</label>
+                        <input
+                          name="durationMinutes"
+                          type="number"
+                          min={0}
+                          defaultValue={10}
+                          className="w-full rounded-xl border bg-white px-3 py-2 text-sm"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2 sm:col-span-2">
+                        <label className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
+                        <input
+                          name="summary"
+                          className="w-full rounded-xl border bg-white px-3 py-2 text-sm"
+                          placeholder="Краткое описание урока"
+                        />
+                      </div>
+                    </div>
+                    <textarea
+                      name="contentText"
+                      rows={4}
+                      className="w-full rounded-2xl border bg-white px-4 py-3 text-sm"
+                      placeholder="Основной текст урока"
+                    />
+                    {lessonError ? <p className="text-sm text-rose-600">{lessonError}</p> : null}
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="secondary" onClick={() => setActiveLessonForm(null)} disabled={pendingLesson}>
+                        Отмена
+                      </Button>
+                      <Button type="submit" disabled={pendingLesson}>
+                        {pendingLesson ? "Создание..." : "Создать урок"}
+                      </Button>
+                    </div>
+                  </form>
+                </Card>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-12 w-full rounded-xl border-2 border-dashed text-muted-foreground hover:border-primary/50 hover:text-primary"
+                  onClick={() => setActiveLessonForm(moduleItem.id)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Добавить урок
+                </Button>
+              )}
             </div>
           </div>
         ))}

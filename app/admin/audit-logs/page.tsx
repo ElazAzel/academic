@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download, Filter, Search } from "lucide-react";
+import { requireRolePage } from "@/lib/auth/page-guards";
 
 const MOCK_LOGS = [
   { id: "a1", action: "user.login", actor: "admin@academy.local", entity: "user", time: "2026-05-07 01:15:22", ip: "192.168.1.1" },
@@ -23,7 +24,9 @@ const ACTION_COLORS: Record<string, string> = {
   "assignment.reviewed": "border-primary/20 bg-primary/5 text-primary",
 };
 
-export default function AdminAuditLogsPage() {
+export default async function AdminAuditLogsPage() {
+  await requireRolePage(["admin"]);
+
   return (
     <AppShell role="admin">
       <PageHeader title="Журнал действий" description="Аудит действий администраторов, кураторов и пользователей." badge="Администратор" />
