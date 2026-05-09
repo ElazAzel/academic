@@ -670,30 +670,34 @@ export async function getInstructorAnalytics() {
       })
     ]);
 
-    const moduleIds = courses.flatMap((c) => c.modules.map((m) => m.id));
+    const moduleIds = courses.flatMap(c => c.modules.map(m => m.id));
 
-    const [moduleAvgProgress, moduleCompletedCount] = await Promise.all([
+    const [moduleAvgProgress, moduleCompletedCounts] = await Promise.all([
       prisma.moduleProgress.groupBy({
         by: ["moduleId"],
         where: { moduleId: { in: moduleIds } },
-        _avg: { percent: true },
+        _avg: { percent: true }
       }),
       prisma.moduleProgress.groupBy({
         by: ["moduleId"],
         where: { moduleId: { in: moduleIds }, status: "COMPLETED" },
-        _count: { _all: true },
-      }),
+        _count: { _all: true }
+      })
     ]);
 
-    const avgMap = new Map(moduleAvgProgress.map((s) => [s.moduleId, Math.round(s._avg.percent ?? 0)]));
-    const completedMap = new Map(moduleCompletedCount.map((s) => [s.moduleId, s._count._all]));
+    const avgProgressMap = new Map(
+      moduleAvgProgress.map(res => [res.moduleId, Math.round(res._avg.percent ?? 0)])
+    );
+    const completedMap = new Map(
+      moduleCompletedCounts.map(res => [res.moduleId, res._count._all])
+    );
 
-    const moduleAnalytics = courses.flatMap((c) =>
-      c.modules.map((m) => ({
+    const moduleAnalytics = courses.flatMap(c =>
+      c.modules.map(m => ({
         title: m.title,
         courseTitle: c.title,
-        avgProgress: avgMap.get(m.id) ?? 0,
-        completedStudents: completedMap.get(m.id) ?? 0,
+        avgProgress: avgProgressMap.get(m.id) ?? 0,
+        completedStudents: completedMap.get(m.id) ?? 0
       }))
     );
 
