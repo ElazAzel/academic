@@ -1,5 +1,7 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import QRCode from "qrcode";
+import fs from "fs";
+import path from "path";
 import { env } from "@/lib/env";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
@@ -97,20 +99,96 @@ export async function generateCertificatePdf(certificateId: string) {
   }
 
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([842, 595]);
+  const pageWidth = 842;
+  const pageHeight = 595;
+  const page = pdf.addPage([pageWidth, pageHeight]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
   const qrPng = await QRCode.toDataURL(certificate.verificationUrl);
   const qrImage = await pdf.embedPng(qrPng);
 
-  page.drawText("AI Strategic Academy", { x: 72, y: 500, size: 28, font: bold, color: rgb(0.07, 0.09, 0.15) });
-  page.drawText("Certificate of Completion", { x: 72, y: 455, size: 20, font, color: rgb(0.25, 0.29, 0.36) });
-  page.drawText(certificate.user.name ?? certificate.user.email, { x: 72, y: 390, size: 34, font: bold, color: rgb(0.12, 0.23, 0.47) });
-  page.drawText(certificate.course.title, { x: 72, y: 340, size: 22, font, color: rgb(0.07, 0.09, 0.15) });
-  page.drawText(`Certificate number: ${certificate.number}`, { x: 72, y: 285, size: 12, font });
-  page.drawText(`Issued: ${certificate.issuedAt.toISOString().slice(0, 10)}`, { x: 72, y: 260, size: 12, font });
-  page.drawImage(qrImage, { x: 640, y: 80, width: 120, height: 120 });
-  page.drawText("Verify online", { x: 656, y: 60, size: 10, font });
+  // Load assets safely
+  const assetsDir = path.join(process.cwd(), "public/assets/certificates");
+
+  try {
+    const borderPath = path.join(assetsDir, "border.png");
+    if (fs.existsSync(borderPath)) {
+      const borderBytes = fs.readFileSync(borderPath);
+      const borderImage = await pdf.embedPng(borderBytes);
+      page.drawImage(borderImage, { x: 0, y: 0, width: pageWidth, height: pageHeight });
+    }
+  } catch (e) {
+    console.error("Failed to load border asset:", e);
+  }
+
+  // Fallback border if image not available or as a supplementary frame
+  page.drawRectangle({
+    x: 20, y: 20, width: pageWidth - 40, height: pageHeight - 40,
+    borderColor: rgb(0.12, 0.23, 0.47), borderWidth: 2,
+  });
+  page.drawRectangle({
+    x: 25, y: 25, width: pageWidth - 50, height: pageHeight - 50,
+    borderColor: rgb(0.85, 0.73, 0.35), borderWidth: 1,
+  });
+
+  // Typography and Layout
+  const textTitle = "AI Strategic Academy";
+  const titleWidth = bold.widthOfTextAtSize(textTitle, 36);
+  page.drawText(textTitle, { x: (pageWidth - titleWidth) / 2, y: 500, size: 36, font: bold, color: rgb(0.12, 0.23, 0.47) });
+
+  const textSubtitle = "CERTIFICATE OF COMPLETION";
+  const subtitleWidth = font.widthOfTextAtSize(textSubtitle, 16);
+  page.drawText(textSubtitle, { x: (pageWidth - subtitleWidth) / 2, y: 460, size: 16, font, color: rgb(0.4, 0.4, 0.4) });
+
+  const textPresentedTo = "This is proudly presented to";
+  const presentedWidth = italic.widthOfTextAtSize(textPresentedTo, 14);
+  page.drawText(textPresentedTo, { x: (pageWidth - presentedWidth) / 2, y: 420, size: 14, font: italic, color: rgb(0.3, 0.3, 0.3) });
+
+  const studentName = certificate.user.name ?? certificate.user.email;
+  const nameWidth = bold.widthOfTextAtSize(studentName, 42);
+  page.drawText(studentName, { x: (pageWidth - nameWidth) / 2, y: 360, size: 42, font: bold, color: rgb(0.12, 0.23, 0.47) });
+
+  const textFor = "for successfully completing the course";
+  const forWidth = font.widthOfTextAtSize(textFor, 14);
+  page.drawText(textFor, { x: (pageWidth - forWidth) / 2, y: 320, size: 14, font, color: rgb(0.3, 0.3, 0.3) });
+
+  const courseTitle = certificate.course.title;
+  const courseWidth = bold.widthOfTextAtSize(courseTitle, 24);
+  page.drawText(courseTitle, { x: (pageWidth - courseWidth) / 2, y: 280, size: 24, font: bold, color: rgb(0.1, 0.1, 0.1) });
+
+  // Signatures and Seals
+  try {
+    const signaturePath = path.join(assetsDir, "signature.png");
+    if (fs.existsSync(signaturePath)) {
+      const signatureBytes = fs.readFileSync(signaturePath);
+      const signatureImage = await pdf.embedPng(signatureBytes);
+      page.drawImage(signatureImage, { x: 150, y: 130, width: 120, height: 40 });
+    }
+  } catch (e) {
+    console.error("Failed to load signature asset:", e);
+  }
+
+  page.drawLine({ start: { x: 120, y: 120 }, end: { x: 300, y: 120 }, thickness: 1, color: rgb(0.5, 0.5, 0.5) });
+  page.drawText("Authorized Signature", { x: 160, y: 100, size: 12, font, color: rgb(0.3, 0.3, 0.3) });
+
+  try {
+    const sealPath = path.join(assetsDir, "seal.png");
+    if (fs.existsSync(sealPath)) {
+      const sealBytes = fs.readFileSync(sealPath);
+      const sealImage = await pdf.embedPng(sealBytes);
+      page.drawImage(sealImage, { x: 360, y: 100, width: 120, height: 120 });
+    }
+  } catch (e) {
+    console.error("Failed to load seal asset:", e);
+  }
+
+  // QR Code and Details
+  page.drawImage(qrImage, { x: 620, y: 120, width: 100, height: 100 });
+  page.drawText("Verify online", { x: 635, y: 100, size: 10, font, color: rgb(0.3, 0.3, 0.3) });
+
+  page.drawText(`Certificate ID: ${certificate.number}`, { x: 60, y: 60, size: 10, font, color: rgb(0.5, 0.5, 0.5) });
+  page.drawText(`Issued: ${certificate.issuedAt.toISOString().slice(0, 10)}`, { x: 60, y: 45, size: 10, font, color: rgb(0.5, 0.5, 0.5) });
 
   return pdf.save();
 }
