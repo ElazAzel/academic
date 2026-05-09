@@ -1,7 +1,29 @@
 import { getPrisma } from "@/lib/prisma";
 import { toJsonValue } from "@/lib/json";
+import nodemailer from "nodemailer";
 
 const prisma = getPrisma();
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "localhost",
+  port: parseInt(process.env.SMTP_PORT || "1025", 10),
+  secure: process.env.SMTP_PORT === "465",
+  auth: process.env.SMTP_USER ? {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
+  } : undefined,
+});
+
+export async function sendEmail(to: string, subject: string, text: string, html?: string) {
+  const from = process.env.EMAIL_FROM || "noreply@academy.local";
+  return transporter.sendMail({
+    from,
+    to,
+    subject,
+    text,
+    html: html || text,
+  });
+}
 
 export type NotificationEvent =
   | "access_granted"
@@ -41,7 +63,8 @@ export async function createNotification(input: {
   data?: Record<string, unknown>;
 }) {
   const rendered = renderNotificationTemplate(input.event, { title: input.title, body: input.body });
-  return prisma.notification.create({
+
+  const notification = await prisma.notification.create({
     data: {
       userId: input.userId,
       type: input.event,
@@ -52,6 +75,22 @@ export async function createNotification(input: {
       data: toJsonValue(input.data ?? {})
     }
   });
+
+  // Fetch user to get their email address
+  const user = await prisma.user.findUnique({
+    where: { id: input.userId },
+    select: { email: true }
+  });
+
+  if (user?.email && (input.channel === "email" || input.channel === "email_and_in_app" || !input.channel)) {
+    try {
+      await sendEmail(user.email, rendered.title, rendered.body);
+    } catch (error) {
+      console.error(`Failed to send email notification to ${user.email}`, error);
+    }
+  }
+
+  return notification;
 }
 
 export async function listNotifications(userId: string) {
