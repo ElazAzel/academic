@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/lms/page-header";
 import { CourseManageGrid } from "@/components/lms/dashboard-widgets";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import Link from "next/link";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import type { CourseSummary } from "@/types/domain";
@@ -46,7 +47,9 @@ export default async function InstructorCoursesPage() {
     <AppShell role="instructor">
       <PageHeader title="Мои курсы" description="Управление статусами (черновик, опубликован, архив) и контентом." badge="Преподаватель" />
       <div className="space-y-6 mt-6">
-        <Button><Plus className="h-4 w-4 mr-2" />Создать курс</Button>
+        <Link href="/admin/courses">
+          <Button><Plus className="h-4 w-4 mr-2" />Создать курс</Button>
+        </Link>
         {courses.length > 0 ? (
           <CourseManageGrid courses={courses} />
         ) : (

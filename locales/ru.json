@@ -15,6 +15,20 @@
   "status.published": "Опубликован",
   "status.archived": "Архивирован",
   "empty.noCourses": "Пока нет назначенных курсов",
-  "empty.noNotifications": "Новых уведомлений нет"
+  "empty.noNotifications": "Новых уведомлений нет",
+  "common.save": "Сохранить",
+  "common.cancel": "Отмена",
+  "common.delete": "Удалить",
+  "common.edit": "Редактировать",
+  "common.loading": "Загрузка...",
+  "course.title": "Название курса",
+  "course.description": "Описание",
+  "course.status": "Статус",
+  "course.traversal": "Режим прохождения",
+  "course.duration": "Длительность (часов)",
+  "lesson.title": "Название урока",
+  "lesson.type": "Тип урока",
+  "lesson.duration": "Длительность (мин.)",
+  "lesson.required": "Обязательный урок"
 }
 

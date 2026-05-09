@@ -11,7 +11,8 @@ export const courseSchema = z.object({
 });
 
 export const updateCourseSchema = courseSchema.partial().extend({
-  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional()
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
+  traversalMode: z.enum(["sequential", "open"]).optional(),
 });
 
 export const moduleSchema = z.object({
