@@ -56,7 +56,6 @@ export function errorResponse(error: unknown) {
     );
   }
 
-  console.error(error);
   return NextResponse.json(
     { error: { code: "internal_error", message: "Внутренняя ошибка сервера" } },
     { status: 500 }
