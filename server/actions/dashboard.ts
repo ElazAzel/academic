@@ -678,24 +678,35 @@ export async function getInstructorAnalytics() {
       })
     ]);
 
-    const moduleAnalytics = await Promise.all(
-      courses.flatMap(c => 
-        c.modules.map(async (m) => {
-          const avg = await prisma.moduleProgress.aggregate({
-            where: { moduleId: m.id },
-            _avg: { percent: true }
-          });
-          const completed = await prisma.moduleProgress.count({
-            where: { moduleId: m.id, status: "COMPLETED" }
-          });
-          return {
-            title: m.title,
-            courseTitle: c.title,
-            avgProgress: Math.round(avg._avg.percent ?? 0),
-            completedStudents: completed
-          };
-        })
-      )
+    const moduleIds = courses.flatMap(c => c.modules.map(m => m.id));
+
+    const [moduleAvgProgress, moduleCompletedCounts] = await Promise.all([
+      prisma.moduleProgress.groupBy({
+        by: ["moduleId"],
+        where: { moduleId: { in: moduleIds } },
+        _avg: { percent: true }
+      }),
+      prisma.moduleProgress.groupBy({
+        by: ["moduleId"],
+        where: { moduleId: { in: moduleIds }, status: "COMPLETED" },
+        _count: { _all: true }
+      })
+    ]);
+
+    const avgProgressMap = new Map(
+      moduleAvgProgress.map(res => [res.moduleId, Math.round(res._avg.percent ?? 0)])
+    );
+    const completedMap = new Map(
+      moduleCompletedCounts.map(res => [res.moduleId, res._count._all])
+    );
+
+    const moduleAnalytics = courses.flatMap(c =>
+      c.modules.map(m => ({
+        title: m.title,
+        courseTitle: c.title,
+        avgProgress: avgProgressMap.get(m.id) ?? 0,
+        completedStudents: completedMap.get(m.id) ?? 0
+      }))
     );
 
     const metrics: DashboardMetric[] = [
