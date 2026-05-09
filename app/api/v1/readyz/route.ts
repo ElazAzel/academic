@@ -6,7 +6,6 @@ export async function GET() {
     await getPrisma().$queryRaw`SELECT 1`;
     return ok({ status: "ready", database: "ok" });
   } catch (error) {
-    console.error(error);
     return errorResponse(new ApiError("service_unavailable", "Database is not reachable", 503));
   }
 }
