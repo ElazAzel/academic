@@ -2,6 +2,7 @@ import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { hashPassword } from "@/lib/auth/password";
 import { logAudit } from "@/server/modules/audit/service";
+import { sendEmail } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
@@ -11,13 +12,26 @@ export async function requestPasswordReset(emailInput: string) {
   if (!user) {
     return { accepted: true };
   }
+  const token = crypto.randomUUID();
   await prisma.verificationToken.create({
     data: {
       identifier: `reset:${email}`,
-      token: crypto.randomUUID(),
+      token,
       expires: new Date(Date.now() + 1000 * 60 * 30)
     }
   });
+
+  const resetLink = `${process.env.APP_URL || "http://localhost:3000"}/reset-password?token=${token}`;
+  try {
+    await sendEmail(
+      email,
+      "Сброс пароля",
+      `Для сброса пароля перейдите по ссылке: ${resetLink}`
+    );
+  } catch (error) {
+    console.error(`Failed to send password reset email to ${email}`, error);
+  }
+
   await logAudit({ actorId: user.id, action: "auth.password_reset_requested", entity: "user", entityId: user.id });
   return { accepted: true };
 }
