@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Copy, Link2, Plus, Trash2 } from "lucide-react";
+import { Copy, Link2, Plus, Trash2, Loader2 } from "lucide-react";
+import { createInviteAction, deleteInviteAction } from "@/server/actions/invites";
 
 export function InvitesView({
   invites,
@@ -26,6 +27,35 @@ export function InvitesView({
   cohorts: Array<{ id: string; name: string }>;
 }) {
   const [showCreate, setShowCreate] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  async function handleCreate(formData: FormData) {
+    startTransition(async () => {
+      try {
+        await createInviteAction(formData);
+        setShowCreate(false);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Ошибка при создании");
+      }
+    });
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Вы уверены?")) return;
+    startTransition(async () => {
+      try {
+        await deleteInviteAction(id);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Ошибка при удалении");
+      }
+    });
+  }
+
+  function copyToClipboard(token: string) {
+    const url = `${window.location.origin}/register?invite=${token}`;
+    navigator.clipboard.writeText(url);
+    alert("Ссылка скопирована!");
+  }
 
   return (
     <div className="space-y-6">
@@ -38,44 +68,49 @@ export function InvitesView({
 
       {showCreate && (
         <Card className="rounded-2xl border-primary/20">
-          <CardHeader>
-            <CardTitle className="text-base">Новая инвайт-ссылка</CardTitle>
-            <CardDescription>Создайте ссылку для доступа к курсу или потоку.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium">Курс</label>
-                <select className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm">
-                  <option value="">Все курсы</option>
-                  {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
-                </select>
+          <form action={handleCreate}>
+            <CardHeader>
+              <CardTitle className="text-base">Новая инвайт-ссылка</CardTitle>
+              <CardDescription>Создайте ссылку для доступа к курсу или потоку.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-sm font-medium">Курс</label>
+                  <select name="courseId" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm">
+                    <option value="">Все курсы</option>
+                    {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Поток</label>
+                  <select name="cohortId" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm">
+                    <option value="">Все потоки</option>
+                    {cohorts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Макс. активаций</label>
+                  <input name="maxActivations" type="number" defaultValue={20} className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Срок действия</label>
+                  <input name="expiresAt" type="date" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" />
+                </div>
               </div>
               <div>
-                <label className="text-sm font-medium">Поток</label>
-                <select className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm">
-                  <option value="">Все потоки</option>
-                  {cohorts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <label className="text-sm font-medium">Разрешённые email (по одному на строку, опционально)</label>
+                <textarea name="allowedEmails" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm min-h-[80px]" placeholder="user1@company.com&#10;user2@company.com" />
               </div>
-              <div>
-                <label className="text-sm font-medium">Макс. активаций</label>
-                <input type="number" defaultValue={20} className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" />
+              <div className="flex gap-2 justify-end">
+                <Button variant="secondary" type="button" onClick={() => setShowCreate(false)} disabled={isPending}>Отмена</Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Создать ссылку
+                </Button>
               </div>
-              <div>
-                <label className="text-sm font-medium">Срок действия</label>
-                <input type="date" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Разрешённые email (по одному на строку, опционально)</label>
-              <textarea className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm min-h-[80px]" placeholder="user1@company.com&#10;user2@company.com" />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button variant="secondary" onClick={() => setShowCreate(false)}>Отмена</Button>
-              <Button>Создать ссылку</Button>
-            </div>
-          </CardContent>
+            </CardContent>
+          </form>
         </Card>
       )}
 
@@ -117,10 +152,17 @@ export function InvitesView({
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-1 justify-end">
-                    <Button size="sm" variant="secondary" title="Копировать ссылку">
+                    <Button size="sm" variant="secondary" title="Копировать ссылку" onClick={() => copyToClipboard(inv.token)}>
                       <Copy className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="sm" variant="secondary" title="Деактивировать">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      title="Удалить"
+                      className="text-rose-600 hover:text-rose-700"
+                      onClick={() => handleDelete(inv.id)}
+                      disabled={isPending}
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>

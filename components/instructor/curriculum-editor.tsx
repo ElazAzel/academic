@@ -179,7 +179,7 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
         ),
       );
       setActiveLessonForm(null);
-      router.push(`/instructor/lessons/${lesson.id}/edit`);
+      router.refresh();
     } catch {
       setLessonError("Ошибка сети при создании урока");
     } finally {

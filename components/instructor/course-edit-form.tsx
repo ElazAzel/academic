@@ -14,6 +14,8 @@ interface CourseEditFormProps {
     goal: string | null;
     durationHours: number;
     status: string;
+    traversalMode: string;
+    coverUrl?: string | null;
   };
 }
 
@@ -34,6 +36,8 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
       goal: formData.get("goal") as string,
       durationHours: Number(formData.get("durationHours")),
       status: formData.get("status") as string,
+      traversalMode: formData.get("traversalMode") as string,
+      coverUrl: formData.get("coverUrl") as string || null,
     };
 
     try {
@@ -93,6 +97,20 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase text-muted-foreground">Длительность (часов)</label>
           <Input name="durationHours" type="number" min={0} defaultValue={course.durationHours} />
+        </div>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2">
+        <div className="space-y-2">
+          <label className="text-xs font-semibold uppercase text-muted-foreground">Режим прохождения</label>
+          <select name="traversalMode" defaultValue={course.traversalMode} className="w-full h-10 rounded-xl border bg-white px-3 text-sm">
+            <option value="sequential">Последовательный</option>
+            <option value="open">Свободный</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold uppercase text-muted-foreground">URL обложки</label>
+          <Input name="coverUrl" defaultValue={course.coverUrl || ""} placeholder="https://..." />
         </div>
       </div>
 

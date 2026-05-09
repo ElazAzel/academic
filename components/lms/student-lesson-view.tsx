@@ -47,15 +47,23 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
 
   async function markCompleted() {
     setSavingProgress(true);
-    const response = await fetch("/api/v1/progress", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ lessonId: lesson.id, percent: 100 })
-    });
-    setSavingProgress(false);
-    if (response.ok) {
-      setProgressPercent(100);
-      router.refresh();
+    try {
+      const response = await fetch("/api/v1/progress", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ lessonId: lesson.id, percent: 100 })
+      });
+      if (response.ok) {
+        setProgressPercent(100);
+        router.refresh();
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        alert(errData.error?.message || "Не удалось сохранить прогресс");
+      }
+    } catch {
+      alert("Ошибка сети");
+    } finally {
+      setSavingProgress(false);
     }
   }
 

@@ -5,16 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download, Filter, Search } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getPrisma } from "@/lib/prisma";
 
-const MOCK_LOGS = [
-  { id: "a1", action: "user.login", actor: "admin@academy.local", entity: "user", time: "2026-05-07 01:15:22", ip: "192.168.1.1" },
-  { id: "a2", action: "course.published", actor: "instructor1@academy.local", entity: "course/AI Strategy Fundamentals", time: "2026-05-06 18:30:10", ip: "10.0.0.5" },
-  { id: "a3", action: "enrollment.created", actor: "admin@academy.local", entity: "enrollment/student1→AI Strategy", time: "2026-05-06 14:22:05", ip: "192.168.1.1" },
-  { id: "a4", action: "invite.created", actor: "admin@academy.local", entity: "invite/INV-2026-001", time: "2026-05-06 12:00:00", ip: "192.168.1.1" },
-  { id: "a5", action: "assignment.reviewed", actor: "curator@academy.local", entity: "submission/s-sub1", time: "2026-05-05 20:15:00", ip: "10.0.0.12" },
-  { id: "a6", action: "progress.lesson_marked", actor: "student2@academy.local", entity: "lesson/Unit-экономика AI", time: "2026-05-05 16:40:00", ip: "172.16.0.55" },
-  { id: "a7", action: "user.password_changed", actor: "student3@academy.local", entity: "user/student3", time: "2026-05-04 10:10:00", ip: "172.16.0.60" },
-];
+export const dynamic = "force-dynamic";
 
 const ACTION_COLORS: Record<string, string> = {
   "user.login": "border-sky-200 bg-sky-50 text-sky-700",
@@ -22,10 +15,19 @@ const ACTION_COLORS: Record<string, string> = {
   "enrollment.created": "border-amber-200 bg-amber-50 text-amber-700",
   "invite.created": "border-violet-200 bg-violet-50 text-violet-700",
   "assignment.reviewed": "border-primary/20 bg-primary/5 text-primary",
+  "course.created": "border-emerald-200 bg-emerald-50 text-emerald-700",
+  "course.updated": "border-amber-200 bg-amber-50 text-amber-700",
 };
 
 export default async function AdminAuditLogsPage() {
   await requireRolePage(["admin"]);
+  const prisma = getPrisma();
+
+  const logs = await prisma.auditLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    include: { actor: { select: { name: true, email: true } } }
+  });
 
   return (
     <AppShell role="admin">
@@ -50,17 +52,17 @@ export default async function AdminAuditLogsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {MOCK_LOGS.map((l) => (
+            {logs.map((l) => (
               <TableRow key={l.id}>
                 <TableCell>
                   <Badge className={ACTION_COLORS[l.action] ?? "border-gray-200 bg-gray-50 text-gray-600"}>
                     {l.action}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm">{l.actor}</TableCell>
-                <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{l.entity}</TableCell>
-                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{l.time}</TableCell>
-                <TableCell className="text-xs text-muted-foreground font-mono">{l.ip}</TableCell>
+                <TableCell className="text-sm">{l.actor?.name ?? l.actor?.email ?? "Система"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{l.entity}/{l.entityId}</TableCell>
+                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{l.createdAt.toLocaleString("ru-RU")}</TableCell>
+                <TableCell className="text-xs text-muted-foreground font-mono">{l.ipAddress ?? "-"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
