@@ -394,30 +394,67 @@ export async function getSuperCuratorDashboard() {
       curatorMap.get(key)!.studentIds.add(ca.studentId);
     }
 
+    const curatorIds = Array.from(curatorMap.keys());
+    const allStudentIds = [...new Set(curatorAssignments.map((ca) => ca.studentId))];
+
+    // Bolt optimization: Bulk query all data to avoid N+1 problem (Reduced from 1+4N to 5 queries)
+    const [openQuestionsGroup, pendingReviewsGroup, riskFlagsGroup, allAnsweredQuestions] = await Promise.all([
+      prisma.lessonQuestion.groupBy({
+        by: ["curatorId"],
+        where: { curatorId: { in: curatorIds }, status: "open" },
+        _count: { _all: true },
+      }),
+      prisma.assignmentSubmission.groupBy({
+        by: ["userId"],
+        where: { userId: { in: allStudentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
+        _count: { _all: true },
+      }),
+      prisma.riskFlag.groupBy({
+        by: ["userId"],
+        where: { userId: { in: allStudentIds }, status: "open" },
+        _count: { _all: true },
+      }),
+      prisma.lessonQuestion.findMany({
+        where: { curatorId: { in: curatorIds }, status: "answered", answeredAt: { not: null } },
+        select: { curatorId: true, createdAt: true, answeredAt: true },
+      }),
+    ]);
+
+    // Create lookup maps for performance O(1) access
+    const openQuestionsMap = new Map(openQuestionsGroup.map((g) => [g.curatorId, g._count._all]));
+    const pendingReviewsByStudentMap = new Map(pendingReviewsGroup.map((g) => [g.userId, g._count._all]));
+    const riskFlagsByStudentMap = new Map(riskFlagsGroup.map((g) => [g.userId, g._count._all]));
+
+    const answeredByCuratorMap = new Map<string, { createdAt: Date; answeredAt: Date }[]>();
+    for (const q of allAnsweredQuestions) {
+      if (q.curatorId) {
+        if (!answeredByCuratorMap.has(q.curatorId)) answeredByCuratorMap.set(q.curatorId, []);
+        answeredByCuratorMap.get(q.curatorId)!.push({ createdAt: q.createdAt, answeredAt: q.answeredAt! });
+      }
+    }
+
     const curatorLoads: CuratorLoad[] = [];
     for (const [curatorId, data] of curatorMap) {
       const studentIds = Array.from(data.studentIds);
-      const openQuestions = await prisma.lessonQuestion.count({ where: { curatorId, status: "open" } });
-      const pendingReviews = await prisma.assignmentSubmission.count({
-        where: { userId: { in: studentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
-      });
-      const riskStudents = await prisma.riskFlag.count({
-        where: { userId: { in: studentIds }, status: "open" },
-      });
 
-      // Расчет среднего времени ответа
-      const answeredQuestions = await prisma.lessonQuestion.findMany({
-        where: { curatorId, status: "answered", answeredAt: { not: null } },
-        select: { createdAt: true, answeredAt: true }
-      });
-      
+      // Use pre-aggregated data from bulk queries
+      const openQuestions = openQuestionsMap.get(curatorId) ?? 0;
+
+      let pendingReviews = 0;
+      let riskStudents = 0;
+      for (const studentId of studentIds) {
+        pendingReviews += pendingReviewsByStudentMap.get(studentId) ?? 0;
+        riskStudents += riskFlagsByStudentMap.get(studentId) ?? 0;
+      }
+
+      const curatorAnswered = answeredByCuratorMap.get(curatorId) ?? [];
       let avgResponseHours = 0;
-      if (answeredQuestions.length > 0) {
-        const totalHours = answeredQuestions.reduce((sum, q) => {
-          const diff = q.answeredAt!.getTime() - q.createdAt.getTime();
+      if (curatorAnswered.length > 0) {
+        const totalHours = curatorAnswered.reduce((sum, q) => {
+          const diff = q.answeredAt.getTime() - q.createdAt.getTime();
           return sum + (diff / (1000 * 60 * 60));
         }, 0);
-        avgResponseHours = Math.round(totalHours / answeredQuestions.length * 10) / 10;
+        avgResponseHours = Math.round((totalHours / curatorAnswered.length) * 10) / 10;
       }
 
       curatorLoads.push({
