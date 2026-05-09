@@ -522,3 +522,35 @@ Next steps:
 
 - Нужно прогнать `lint`, `test`, `build`.
 - Для production self-hosted DB нужны backup/restore runbook, регулярные бэкапы и процедура доступа администратора через защищенный bastion/port-forward.
+
+## $(date +%Y-%m-%d) — Wire transactional email provider
+
+Автор/agent: Jules
+Тип изменения: feature / email
+Файлы/модули:
+
+- `package.json`
+- `server/modules/notifications/service.ts`
+- `server/modules/auth/service.ts`
+
+Summary:
+
+- Добавлен пакет `nodemailer`.
+- В `server/modules/notifications/service.ts` добавлена утилита `sendEmail`, которая использует настройки SMTP из переменных окружения, что позволяет локально использовать MailHog, а на проде — любой реальный провайдер.
+- Настроен `createNotification` на отправку письма, если указан соответствующий `channel`.
+- В `server/modules/auth/service.ts` настроена отправка письма для восстановления пароля через ту же утилиту `sendEmail`.
+
+Проверки:
+
+- `npm run typecheck`, `npm run lint`, `npm run build` прошли успешно.
+- `vitest run tests/unit/notifications.test.ts` прошёл успешно.
+- Код-ревью пройдено.
+
+Риски:
+
+- Необходима корректная настройка SMTP-переменных на проде. Ошибки отправки логируются (catch), чтобы не блокировать процесс создания уведомления в БД.
+
+Next steps:
+
+- Добавить логирование исходящих писем в аудит, если это необходимо.
+- Проверить доставку на реальном SMTP (SendGrid/Resend).
