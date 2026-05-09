@@ -590,39 +590,31 @@ export async function getInstructorDashboard() {
     ]);
 
     // Рассчитываем средний прогресс для каждого курса
-    const coursesWithProgress = await Promise.all(
-      courses.map(async (c) => {
-        const avg = await prisma.courseProgress.aggregate({
-          where: { courseId: c.id },
-          _avg: { percent: true }
-        });
-        return {
-          id: c.id,
-          progress: Math.round(avg._avg.percent ?? 0)
-        };
-      })
-    );
-
-    const formattedCourses: CourseSummary[] = courses.map((c) => {
-      const progressInfo = coursesWithProgress.find(p => p.id === c.id);
-      return {
-        id: c.id,
-        slug: c.slug,
-        title: c.title,
-        description: c.description,
-        durationHours: c.durationHours,
-        status: c.status as CourseSummary["status"],
-        traversalMode: c.traversalMode as "sequential" | "open",
-        modulesCount: c._count.modules,
-        lessonsCount: 0,
-        avgProgress: progressInfo?.progress ?? 0,
-        instructors: c.instructors.map((ci) => ({
-          id: ci.user.id,
-          name: ci.user.name ?? "",
-          email: ci.user.email,
-        })),
-      };
+    const progressStats = await prisma.courseProgress.groupBy({
+      by: ["courseId"],
+      where: { courseId: { in: courseIds } },
+      _avg: { percent: true },
     });
+
+    const progressMap = new Map(progressStats.map((s) => [s.courseId, Math.round(s._avg.percent ?? 0)]));
+
+    const formattedCourses: CourseSummary[] = courses.map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      title: c.title,
+      description: c.description,
+      durationHours: c.durationHours,
+      status: c.status as CourseSummary["status"],
+      traversalMode: c.traversalMode as "sequential" | "open",
+      modulesCount: c._count.modules,
+      lessonsCount: 0,
+      avgProgress: progressMap.get(c.id) ?? 0,
+      instructors: c.instructors.map((ci) => ({
+        id: ci.user.id,
+        name: ci.user.name ?? "",
+        email: ci.user.email,
+      })),
+    }));
 
     const avgProgress = Math.round(avgProgressResult._avg.percent ?? 0);
 
