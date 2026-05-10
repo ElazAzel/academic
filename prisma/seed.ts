@@ -1,7 +1,8 @@
-import { PrismaClient, RoleKey, CourseStatus, LessonType, QuestionType } from "@prisma/client";
+import { RoleKey, CourseStatus, LessonType, QuestionType } from "@prisma/client";
+import { getPrisma } from "../lib/prisma";
 import { hashPassword } from "../lib/auth/password";
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 const permissions = [
   "users:read",
@@ -176,52 +177,103 @@ async function main() {
         });
 
         if (lessonOrder === 2) {
-          const quiz = await prisma.quiz.create({
-            data: {
-              courseId: course.id,
-              lessonId: lesson.id,
-              title: `Тест: ${title}`,
-              passThreshold: 80,
-              maxAttempts: 3,
-              questions: {
-                create: [
-                  {
-                    type: QuestionType.SINGLE_CHOICE,
-                    prompt: "Что является главным результатом курса?",
-                    options: [
-                      { id: "a", label: "Проверяемый образовательный результат" },
-                      { id: "b", label: "Случайный набор видео" }
-                    ],
-                    correctAnswer: { value: "a" },
-                    points: 1,
-                    order: 1
+          const quizTitle = `Тест: ${title}`;
+          const quiz = await prisma.quiz.findFirst({
+            where: { courseId: course.id, lessonId: lesson.id, title: quizTitle },
+            include: { questions: true }
+          });
+          const existingQuiz = quiz
+            ? await prisma.quiz.update({
+                where: { id: quiz.id },
+                data: { passThreshold: 80, maxAttempts: 3 },
+                include: { questions: true }
+              })
+            : await prisma.quiz.create({
+                data: {
+                  courseId: course.id,
+                  lessonId: lesson.id,
+                  title: quizTitle,
+                  passThreshold: 80,
+                  maxAttempts: 3,
+                  questions: {
+                    create: [
+                      {
+                        type: QuestionType.SINGLE_CHOICE,
+                        prompt: "Что является главным результатом курса?",
+                        options: [
+                          { id: "a", label: "Проверяемый образовательный результат" },
+                          { id: "b", label: "Случайный набор видео" }
+                        ],
+                        correctAnswer: { value: "a" },
+                        points: 1,
+                        order: 1
+                      }
+                    ]
                   }
-                ]
+                },
+                include: { questions: true }
+              });
+
+          if (existingQuiz.questions.length === 0) {
+            await prisma.quizQuestion.create({
+              data: {
+                quizId: existingQuiz.id,
+                type: QuestionType.SINGLE_CHOICE,
+                prompt: "Что является главным результатом курса?",
+                options: [
+                  { id: "a", label: "Проверяемый образовательный результат" },
+                  { id: "b", label: "Случайный набор видео" }
+                ],
+                correctAnswer: { value: "a" },
+                points: 1,
+                order: 1
               }
-            }
-          });
-          await prisma.assignment.create({
-            data: {
+            });
+          }
+
+          const assignmentTitle = `Практическое задание: ${title}`;
+          const assignment = await prisma.assignment.findFirst({
+            where: {
               courseId: course.id,
               lessonId: lesson.id,
-              title: `Практическое задание: ${title}`,
-              instructions: "Загрузите короткий план внедрения AI в вашей организации.",
-              maxAttempts: 3
+              title: assignmentTitle
             }
           });
-          if (quiz.title.length === 0) {
+          const assignmentData = {
+            instructions: "Загрузите короткий план внедрения AI в вашей организации.",
+            maxAttempts: 3
+          };
+          if (assignment) {
+            await prisma.assignment.update({ where: { id: assignment.id }, data: assignmentData });
+          } else {
+            await prisma.assignment.create({
+              data: {
+                courseId: course.id,
+                lessonId: lesson.id,
+                title: assignmentTitle,
+                ...assignmentData
+              }
+            });
+          }
+          if (existingQuiz.title.length === 0) {
             throw new Error("Seed quiz was not created");
           }
         }
       }
     }
 
-    const cohortA = await prisma.cohort.create({
-      data: { courseId: course.id, projectId: project.id, name: `${title} — Поток A` }
-    });
-    const cohortB = await prisma.cohort.create({
-      data: { courseId: course.id, projectId: project.id, name: `${title} — Поток B` }
-    });
+    const cohortAName = `${title} — Поток A`;
+    const cohortBName = `${title} — Поток B`;
+    const cohortA =
+      (await prisma.cohort.findFirst({ where: { courseId: course.id, projectId: project.id, name: cohortAName } })) ??
+      (await prisma.cohort.create({
+        data: { courseId: course.id, projectId: project.id, name: cohortAName }
+      }));
+    const cohortB =
+      (await prisma.cohort.findFirst({ where: { courseId: course.id, projectId: project.id, name: cohortBName } })) ??
+      (await prisma.cohort.create({
+        data: { courseId: course.id, projectId: project.id, name: cohortBName }
+      }));
 
     const cohorts = [cohortA, cohortB];
     for (const [index, student] of students.entries()) {

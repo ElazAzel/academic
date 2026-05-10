@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+if (typeof process.loadEnvFile === "function") {
+  try {
+    process.loadEnvFile(".env");
+  } catch {
+    // Next.js and production hosts usually load environment variables before app code runs.
+  }
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_URL: z.string().url().default("http://localhost:3000"),

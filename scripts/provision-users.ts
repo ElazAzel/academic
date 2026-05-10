@@ -1,7 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { randomBytes } from "node:crypto";
-import { PrismaClient, RoleKey } from "@prisma/client";
+import { RoleKey } from "@prisma/client";
+import { getPrisma } from "../lib/prisma";
 import { hashPassword } from "../lib/auth/password";
 
 type ProvisionAccount = {
@@ -10,7 +11,7 @@ type ProvisionAccount = {
   role: RoleKey;
 };
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 const permissions = [
   "users:read",

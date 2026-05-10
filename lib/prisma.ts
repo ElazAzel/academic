@@ -2,6 +2,14 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
+if (typeof process.loadEnvFile === "function") {
+  try {
+    process.loadEnvFile(".env");
+  } catch {
+    // Next.js and production hosts usually load environment variables before app code runs.
+  }
+}
+
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
