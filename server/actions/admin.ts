@@ -49,7 +49,6 @@ export async function enrollStudentAction(formData: FormData) {
     revalidatePath("/admin/enrollments");
     return { success: true };
   } catch (error) {
-    console.error("Enrollment error:", error);
     throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
   }
 }
@@ -85,7 +84,6 @@ export async function assignCuratorAction(input: { studentId: string; curatorId:
     revalidatePath("/admin/enrollments");
     return { success: true };
   } catch (error) {
-    console.error("Assign curator error:", error);
     throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
   }
 }
@@ -122,7 +120,6 @@ export async function deleteEnrollmentAction(enrollmentId: string) {
     revalidatePath("/admin/enrollments");
     return { success: true };
   } catch (error) {
-    console.error("Delete enrollment error:", error);
     throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
   }
 }
@@ -145,7 +142,6 @@ export async function createUserAction(formData: FormData) {
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    console.error("Create user error:", error);
     throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
   }
 }

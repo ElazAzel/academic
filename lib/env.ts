@@ -13,7 +13,8 @@ const envSchema = z.object({
   CERTIFICATE_COMPLETION_THRESHOLD: z.coerce.number().int().min(1).max(100).default(85),
   FEATURE_GRAPHQL: z.coerce.boolean().default(false),
   RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().positive().default(60),
-  RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120)
+  RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
+  REDIS_URL: z.string().optional()
 });
 
 export const env = envSchema.parse(process.env);

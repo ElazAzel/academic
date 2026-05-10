@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { RoleKey } from "@prisma/client";
 import { hashPassword } from "@/lib/auth/password";
@@ -7,7 +8,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const passwordHash = await hashPassword("20122011Elaz");
+    const seedPassword = process.env.SEED_USER_PASSWORD || randomBytes(16).toString("hex");
+    if (!process.env.SEED_USER_PASSWORD) {
+      console.log(`[Seed] Generated random password for temporary users: ${seedPassword}`);
+    }
+    const passwordHash = await hashPassword(seedPassword);
     
     async function upsertUser(email: string, name: string, roleKey: RoleKey) {
       const user = await prisma.user.upsert({
@@ -195,7 +200,7 @@ export async function GET() {
       course: courseSlug
     });
   } catch (err) {
-    console.error(err);
+
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

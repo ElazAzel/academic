@@ -394,30 +394,63 @@ export async function getSuperCuratorDashboard() {
       curatorMap.get(key)!.studentIds.add(ca.studentId);
     }
 
+    const curatorIds = Array.from(curatorMap.keys());
+    const allStudentIds = Array.from(new Set(Array.from(curatorMap.values()).flatMap(d => Array.from(d.studentIds))));
+
+    const [
+      openQuestionsGrouped,
+      pendingReviewsGrouped,
+      riskStudentsGrouped,
+      answeredQuestions,
+    ] = await Promise.all([
+      prisma.lessonQuestion.groupBy({
+        by: ["curatorId"],
+        where: { curatorId: { in: curatorIds }, status: "open" },
+        _count: { _all: true },
+      }),
+      prisma.assignmentSubmission.groupBy({
+        by: ["userId"],
+        where: { userId: { in: allStudentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
+        _count: { _all: true },
+      }),
+      prisma.riskFlag.groupBy({
+        by: ["userId"],
+        where: { userId: { in: allStudentIds }, status: "open" },
+        _count: { _all: true },
+      }),
+      prisma.lessonQuestion.findMany({
+        where: { curatorId: { in: curatorIds }, status: "answered", answeredAt: { not: null } },
+        select: { curatorId: true, createdAt: true, answeredAt: true },
+      }),
+    ]);
+
+    const openQuestionsMap = new Map(openQuestionsGrouped.map((g) => [g.curatorId, g._count._all]));
+    const pendingReviewsMap = new Map(pendingReviewsGrouped.map((g) => [g.userId, g._count._all]));
+    const riskStudentsMap = new Map(riskStudentsGrouped.map((g) => [g.userId, g._count._all]));
+
     const curatorLoads: CuratorLoad[] = [];
     for (const [curatorId, data] of curatorMap) {
       const studentIds = Array.from(data.studentIds);
-      const openQuestions = await prisma.lessonQuestion.count({ where: { curatorId, status: "open" } });
-      const pendingReviews = await prisma.assignmentSubmission.count({
-        where: { userId: { in: studentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
-      });
-      const riskStudents = await prisma.riskFlag.count({
-        where: { userId: { in: studentIds }, status: "open" },
-      });
+
+      const openQuestions = openQuestionsMap.get(curatorId) ?? 0;
+
+      let pendingReviews = 0;
+      let riskStudents = 0;
+      for (const sId of studentIds) {
+        pendingReviews += pendingReviewsMap.get(sId) ?? 0;
+        riskStudents += riskStudentsMap.get(sId) ?? 0;
+      }
 
       // Расчет среднего времени ответа
-      const answeredQuestions = await prisma.lessonQuestion.findMany({
-        where: { curatorId, status: "answered", answeredAt: { not: null } },
-        select: { createdAt: true, answeredAt: true }
-      });
+      const curatorAnsweredQuestions = answeredQuestions.filter(q => q.curatorId === curatorId);
       
       let avgResponseHours = 0;
-      if (answeredQuestions.length > 0) {
-        const totalHours = answeredQuestions.reduce((sum, q) => {
+      if (curatorAnsweredQuestions.length > 0) {
+        const totalHours = curatorAnsweredQuestions.reduce((sum, q) => {
           const diff = q.answeredAt!.getTime() - q.createdAt.getTime();
           return sum + (diff / (1000 * 60 * 60));
         }, 0);
-        avgResponseHours = Math.round(totalHours / answeredQuestions.length * 10) / 10;
+        avgResponseHours = Math.round(totalHours / curatorAnsweredQuestions.length * 10) / 10;
       }
 
       curatorLoads.push({
@@ -590,39 +623,31 @@ export async function getInstructorDashboard() {
     ]);
 
     // Рассчитываем средний прогресс для каждого курса
-    const coursesWithProgress = await Promise.all(
-      courses.map(async (c) => {
-        const avg = await prisma.courseProgress.aggregate({
-          where: { courseId: c.id },
-          _avg: { percent: true }
-        });
-        return {
-          id: c.id,
-          progress: Math.round(avg._avg.percent ?? 0)
-        };
-      })
-    );
-
-    const formattedCourses: CourseSummary[] = courses.map((c) => {
-      const progressInfo = coursesWithProgress.find(p => p.id === c.id);
-      return {
-        id: c.id,
-        slug: c.slug,
-        title: c.title,
-        description: c.description,
-        durationHours: c.durationHours,
-        status: c.status as CourseSummary["status"],
-        traversalMode: c.traversalMode as "sequential" | "open",
-        modulesCount: c._count.modules,
-        lessonsCount: 0,
-        avgProgress: progressInfo?.progress ?? 0,
-        instructors: c.instructors.map((ci) => ({
-          id: ci.user.id,
-          name: ci.user.name ?? "",
-          email: ci.user.email,
-        })),
-      };
+    const progressStats = await prisma.courseProgress.groupBy({
+      by: ["courseId"],
+      where: { courseId: { in: courseIds } },
+      _avg: { percent: true },
     });
+
+    const progressMap = new Map(progressStats.map((s) => [s.courseId, Math.round(s._avg.percent ?? 0)]));
+
+    const formattedCourses: CourseSummary[] = courses.map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      title: c.title,
+      description: c.description,
+      durationHours: c.durationHours,
+      status: c.status as CourseSummary["status"],
+      traversalMode: c.traversalMode as "sequential" | "open",
+      modulesCount: c._count.modules,
+      lessonsCount: 0,
+      avgProgress: progressMap.get(c.id) ?? 0,
+      instructors: c.instructors.map((ci) => ({
+        id: ci.user.id,
+        name: ci.user.name ?? "",
+        email: ci.user.email,
+      })),
+    }));
 
     const avgProgress = Math.round(avgProgressResult._avg.percent ?? 0);
 
@@ -678,24 +703,35 @@ export async function getInstructorAnalytics() {
       })
     ]);
 
-    const moduleAnalytics = await Promise.all(
-      courses.flatMap(c => 
-        c.modules.map(async (m) => {
-          const avg = await prisma.moduleProgress.aggregate({
-            where: { moduleId: m.id },
-            _avg: { percent: true }
-          });
-          const completed = await prisma.moduleProgress.count({
-            where: { moduleId: m.id, status: "COMPLETED" }
-          });
-          return {
-            title: m.title,
-            courseTitle: c.title,
-            avgProgress: Math.round(avg._avg.percent ?? 0),
-            completedStudents: completed
-          };
-        })
-      )
+    const moduleIds = courses.flatMap(c => c.modules.map(m => m.id));
+
+    const [moduleAvgProgress, moduleCompletedCounts] = await Promise.all([
+      prisma.moduleProgress.groupBy({
+        by: ["moduleId"],
+        where: { moduleId: { in: moduleIds } },
+        _avg: { percent: true }
+      }),
+      prisma.moduleProgress.groupBy({
+        by: ["moduleId"],
+        where: { moduleId: { in: moduleIds }, status: "COMPLETED" },
+        _count: { _all: true }
+      })
+    ]);
+
+    const avgProgressMap = new Map(
+      moduleAvgProgress.map(res => [res.moduleId, Math.round(res._avg.percent ?? 0)])
+    );
+    const completedMap = new Map(
+      moduleCompletedCounts.map(res => [res.moduleId, res._count._all])
+    );
+
+    const moduleAnalytics = courses.flatMap(c =>
+      c.modules.map(m => ({
+        title: m.title,
+        courseTitle: c.title,
+        avgProgress: avgProgressMap.get(m.id) ?? 0,
+        completedStudents: completedMap.get(m.id) ?? 0
+      }))
     );
 
     const metrics: DashboardMetric[] = [
