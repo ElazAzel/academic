@@ -200,7 +200,7 @@ export async function GET() {
       course: courseSlug
     });
   } catch (err) {
-    console.error(err);
+
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
