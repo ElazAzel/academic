@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 
 export function Avatar({ name, image, className }: { name: string; image?: string | null; className?: string }) {
   const initials = name
@@ -18,7 +17,8 @@ export function Avatar({ name, image, className }: { name: string; image?: strin
       aria-label={name}
     >
       {image ? (
-        <Image src={image} alt={name} fill sizes="120px" className="object-cover" />
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img src={image} alt={name} className="h-full w-full object-cover" />
       ) : (
         initials
       )}
