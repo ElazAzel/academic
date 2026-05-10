@@ -4,7 +4,7 @@ import { hashPassword } from "../lib/auth/password";
 async function main() {
   const prisma = getPrisma();
   const users = await prisma.user.findMany();
-  
+
   const newPassword = "Password123!";
   const newHash = await hashPassword(newPassword);
 
@@ -14,9 +14,9 @@ async function main() {
     try {
       await prisma.user.update({
         where: { id: user.id },
-        data: { 
+        data: {
           passwordHash: newHash,
-          status: "active" 
+          status: "active"
         }
       });
       console.log(`✅ Обновлен: ${user.email}`);

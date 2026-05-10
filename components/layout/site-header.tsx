@@ -4,13 +4,6 @@ import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
 import { UserAccountNav } from "@/components/layout/user-account-nav";
 
-const nav = [
-  { href: "/student", label: "Слушатель" },
-  { href: "/curator", label: "Куратор" },
-  { href: "/instructor", label: "Преподаватель" },
-  { href: "/admin", label: "Админ" }
-];
-
 export async function SiteHeader() {
   const user = await getCurrentUser();
 
@@ -25,11 +18,7 @@ export async function SiteHeader() {
         </Link>
         
         <nav className="hidden items-center gap-1 md:flex" aria-label="Основная навигация">
-          {nav.map((item) => (
-            <Link key={item.href} href={item.href} className="rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
-              {item.label}
-            </Link>
-          ))}
+          {/* Menu links have been removed per user request */}
         </nav>
 
         <div className="flex items-center gap-4">
@@ -48,4 +37,3 @@ export async function SiteHeader() {
     </header>
   );
 }
-
