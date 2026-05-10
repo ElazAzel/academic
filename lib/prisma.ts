@@ -40,6 +40,7 @@ export function getPrisma() {
     const pool = new Pool({ 
       connectionString: normalizePostgresConnectionString(connectionString),
       ssl: isLocal ? false : {
+      ssl: isLocal ? false : { 
         rejectUnauthorized: false,
       },
       max: 10,
