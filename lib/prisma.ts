@@ -14,6 +14,20 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
+function normalizePostgresConnectionString(connectionString: string) {
+  try {
+    const url = new URL(connectionString);
+    // `pg` lets sslmode from the URL override the explicit ssl object below.
+    // Supabase certificates can otherwise fail on Vercel with a self-signed-chain error.
+    for (const key of ["sslmode", "sslcert", "sslkey", "sslrootcert"]) {
+      url.searchParams.delete(key);
+    }
+    return url.toString();
+  } catch {
+    return connectionString;
+  }
+}
+
 export function getPrisma() {
   if (!globalForPrisma.prisma) {
     const connectionString =
@@ -24,7 +38,7 @@ export function getPrisma() {
     const isLocal = connectionString.includes("localhost") || connectionString.includes("127.0.0.1");
 
     const pool = new Pool({ 
-      connectionString,
+      connectionString: normalizePostgresConnectionString(connectionString),
       ssl: isLocal ? false : { 
         rejectUnauthorized: false,
       },
