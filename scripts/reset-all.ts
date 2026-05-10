@@ -5,7 +5,6 @@ async function main() {
   const prisma = getPrisma();
   const users = await prisma.user.findMany();
 
-  
   const newPassword = "Password123!";
   const newHash = await hashPassword(newPassword);
 
@@ -18,9 +17,6 @@ async function main() {
         data: {
           passwordHash: newHash,
           status: "active"
-        data: { 
-          passwordHash: newHash,
-          status: "active" 
         }
       });
       console.log(`✅ Обновлен: ${user.email}`);
