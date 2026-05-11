@@ -1,10 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-test("loads public landing and student dashboard scaffold", async ({ page }) => {
+test("loads login page from root", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "AI Strategic Academy" })).toBeVisible();
-  await page.getByRole("link", { name: "Посмотреть кабинет" }).click();
-  await expect(page.getByRole("heading", { name: "Дашборд слушателя" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Вход в академию" })).toBeVisible();
+  await expect(page.getByText("Забыли пароль?")).toBeVisible();
 });
 
 test("shows login form", async ({ page }) => {

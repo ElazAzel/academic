@@ -55,7 +55,7 @@ describe("RBAC", () => {
   });
 
   it("returns false for unknown permission", () => {
-    expect(hasPermission(["student"], "settings:manage" as any)).toBe(false);
+    expect(hasPermission(["student"], "settings:manage")).toBe(false);
   });
 
   it("defaults to student permissions for empty roles", () => {
