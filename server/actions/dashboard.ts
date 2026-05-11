@@ -371,6 +371,50 @@ export async function getCuratorQuestions(status: "open" | "answered" = "open") 
   }, []);
 }
 
+export async function getSuperCuratorQuestions(status: "open" | "answered" = "open") {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  return safeQuery(async () => {
+    // Получаем ID всех кураторов под этим супер-куратором
+    const curatorIds = await prisma.curatorAssignment.findMany({
+      where: { superCuratorId: user.id, active: true },
+      select: { curatorId: true },
+      distinct: ["curatorId"],
+    });
+    const ids = curatorIds.map((c) => c.curatorId);
+
+    const questions = await prisma.lessonQuestion.findMany({
+      where: {
+        OR: [
+          { curatorId: { in: ids } },
+          { curatorId: null },
+        ],
+        status,
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        student: { select: { name: true, email: true } },
+        lesson: { include: { module: { include: { course: true } } } },
+      },
+    });
+
+    return questions.map((q) => ({
+      id: q.id,
+      text: q.text,
+      studentName: q.student.name ?? q.student.email,
+      courseTitle: q.lesson.module.course.title,
+      moduleTitle: q.lesson.module.title,
+      lessonTitle: q.lesson.title,
+      status: q.status as "open" | "answered",
+      createdAt: q.createdAt.toISOString(),
+      answer: q.answer,
+      answeredAt: q.answeredAt?.toISOString(),
+      curatorId: q.curatorId,
+    }));
+  }, []);
+}
+
 // ── Супер-куратор ───────────────────────────────────────────────────
 
 export async function getSuperCuratorDashboard() {
@@ -517,7 +561,7 @@ export async function getAdminDashboard() {
       prisma.course.findMany({
         orderBy: { createdAt: "desc" },
         include: {
-          modules: { select: { id: true } },
+          modules: { include: { _count: { select: { lessons: true } } } },
           instructors: { include: { user: { select: { id: true, name: true, email: true } } } },
           _count: { select: { modules: true } },
         },
@@ -547,7 +591,7 @@ export async function getAdminDashboard() {
       status: c.status as CourseSummary["status"],
       traversalMode: c.traversalMode as "sequential" | "open",
       modulesCount: c._count.modules,
-      lessonsCount: 0,
+      lessonsCount: c.modules.reduce((sum, m) => sum + m._count.lessons, 0),
       instructors: c.instructors.map((ci) => ({
         id: ci.user.id,
         name: ci.user.name ?? "",
@@ -609,6 +653,7 @@ export async function getInstructorDashboard() {
       where: { instructors: { some: { userId: user.id } } },
       orderBy: { createdAt: "desc" },
       include: {
+        modules: { include: { _count: { select: { lessons: true } } } },
         instructors: { include: { user: { select: { id: true, name: true, email: true } } } },
         _count: { select: { modules: true } },
       },
@@ -645,7 +690,7 @@ export async function getInstructorDashboard() {
       status: c.status as CourseSummary["status"],
       traversalMode: c.traversalMode as "sequential" | "open",
       modulesCount: c._count.modules,
-      lessonsCount: 0,
+      lessonsCount: c.modules.reduce((sum, m) => sum + m._count.lessons, 0),
       avgProgress: progressMap.get(c.id) ?? 0,
       instructors: c.instructors.map((ci) => ({
         id: ci.user.id,

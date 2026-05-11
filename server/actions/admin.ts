@@ -124,6 +124,140 @@ export async function deleteEnrollmentAction(enrollmentId: string) {
   }
 }
 
+export async function assignCuratorFromSupervisorAction(formData: FormData) {
+  try {
+    const actor = await requireRole(["super_curator", "admin"]);
+
+    const studentId = formData.get("studentId") as string;
+    const curatorId = formData.get("curatorId") as string;
+    const cohortId = formData.get("cohortId") as string;
+
+    if (!studentId || !curatorId || !cohortId) {
+      throw new Error("Студент, куратор и поток обязательны");
+    }
+
+    await prisma.curatorAssignment.upsert({
+      where: { cohortId_studentId: { cohortId, studentId } },
+      update: { curatorId, active: true, superCuratorId: actor.roles.includes("super_curator") ? actor.id : undefined },
+      create: { curatorId, studentId, cohortId, active: true, superCuratorId: actor.roles.includes("super_curator") ? actor.id : undefined },
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "curator.assigned_from_supervisor",
+      entity: "curator_assignment",
+      entityId: `${cohortId}-${studentId}`,
+      metadata: { curatorId, cohortId },
+    });
+
+    revalidatePath("/super-curator/distribution");
+    revalidatePath("/super-curator");
+    return { success: true };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+  }
+}
+
+export async function createCohortAction(formData: FormData) {
+  try {
+    const actor = await requireRole(["admin"]);
+    const name = formData.get("name") as string;
+    const courseId = formData.get("courseId") as string;
+    const startsAt = formData.get("startsAt") as string || undefined;
+    const endsAt = formData.get("endsAt") as string || undefined;
+
+    if (!name || !courseId) {
+      throw new Error("Название и курс обязательны");
+    }
+
+    await prisma.cohort.create({
+      data: {
+        name,
+        courseId,
+        startsAt: startsAt ? new Date(startsAt) : null,
+        endsAt: endsAt ? new Date(endsAt) : null,
+        status: "active"
+      }
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "cohort.created",
+      entity: "cohort",
+      entityId: name,
+      metadata: { courseId, startsAt, endsAt }
+    });
+
+    revalidatePath("/admin/cohorts");
+    return { success: true };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+  }
+}
+
+export async function updateCohortAction(formData: FormData) {
+  try {
+    const actor = await requireRole(["admin"]);
+    const id = formData.get("id") as string;
+    const name = formData.get("name") as string;
+    const courseId = formData.get("courseId") as string;
+    const startsAt = formData.get("startsAt") as string || undefined;
+    const endsAt = formData.get("endsAt") as string || undefined;
+    const status = formData.get("status") as string;
+
+    if (!id || !name) {
+      throw new Error("ID и название обязательны");
+    }
+
+    await prisma.cohort.update({
+      where: { id },
+      data: {
+        name,
+        ...(courseId && { courseId }),
+        startsAt: startsAt ? new Date(startsAt) : null,
+        endsAt: endsAt ? new Date(endsAt) : null,
+        status: status || "active"
+      }
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "cohort.updated",
+      entity: "cohort",
+      entityId: id,
+      metadata: { name, courseId, status }
+    });
+
+    revalidatePath("/admin/cohorts");
+    return { success: true };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+  }
+}
+
+export async function deleteCohortAction(id: string) {
+  try {
+    const actor = await requireRole(["admin"]);
+
+    await prisma.cohort.update({
+      where: { id },
+      data: { status: "archived" }
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "cohort.archived",
+      entity: "cohort",
+      entityId: id
+    });
+
+    revalidatePath("/admin/cohorts");
+    return { success: true };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+  }
+}
+
 export async function createUserAction(formData: FormData) {
   try {
     const actor = await requireRole(["admin", "super_curator"]);

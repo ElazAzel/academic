@@ -65,6 +65,7 @@ export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
   super_curator: [
     { href: "/super-curator", label: "Дашборд", icon: "LayoutDashboard" },
     { href: "/super-curator/curators", label: "Кураторы", icon: "UserCheck" },
+    { href: "/super-curator/questions", label: "Вопросы", icon: "MessageCircle" },
     { href: "/super-curator/distribution", label: "Распределение", icon: "Users2" },
     { href: "/super-curator/users", label: "Пользователи", icon: "Users" },
     { href: "/super-curator/risks", label: "Риски потоков", icon: "AlertTriangle" },
@@ -84,6 +85,7 @@ export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
     { href: "/admin", label: "Дашборд", icon: "LayoutDashboard" },
     { href: "/admin/courses", label: "Курсы", icon: "BookOpen" },
     { href: "/admin/users", label: "Пользователи", icon: "Users" },
+    { href: "/admin/cohorts", label: "Потоки", icon: "Users2" },
     { href: "/admin/enrollments", label: "Зачисления", icon: "UserCheck" },
     { href: "/admin/invites", label: "Инвайты", icon: "Link2" },
     { href: "/admin/analytics", label: "Аналитика", icon: "BarChart3" },

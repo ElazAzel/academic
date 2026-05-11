@@ -22,8 +22,21 @@ export async function GET(request: Request) {
     let csvContent = "";
     let filename = "";
 
+    // Для super_curator: scoped к своим кураторам
+    const getScopedStudentIds = async () => {
+      if (!isSuperCurator || isAdmin) return null;
+      const assignments = await prisma.curatorAssignment.findMany({
+        where: { superCuratorId: user.id, active: true },
+        select: { studentId: true },
+      });
+      return assignments.map(a => a.studentId);
+    };
+
     if (type === "progress") {
+      const scopedIds = await getScopedStudentIds();
+      const where = scopedIds ? { userId: { in: scopedIds } } : {};
       const enrollments = await prisma.enrollment.findMany({
+        where,
         include: {
           user: { select: { name: true, email: true } },
           course: { select: { title: true } },
@@ -38,7 +51,10 @@ export async function GET(request: Request) {
       });
       filename = "progress_report.csv";
     } else if (type === "risk") {
+      const scopedIds = await getScopedStudentIds();
+      const where = scopedIds ? { userId: { in: scopedIds } } : {};
       const risks = await prisma.riskFlag.findMany({
+        where,
         include: {
           user: { select: { name: true, email: true } },
           course: { select: { title: true } }
