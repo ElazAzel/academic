@@ -137,6 +137,7 @@ model User {
   studentQuestions      LessonQuestion[] @relation("StudentQuestions")
   curatorQuestions      LessonQuestion[] @relation("CuratorQuestions")
   riskFlags             RiskFlag[]
+  activityLogs          ActivityLog[]
 
   @@index([createdAt])
   @@index([status])
