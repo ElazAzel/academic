@@ -1,40 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CheckCircle2, FileText, MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, FileText, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import type { StudentLessonLearningDetail } from "@/types/domain";
 
+function CollapsibleSection({ title, defaultOpen = true, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-2xl border bg-card">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between px-5 py-4 text-left font-semibold transition-colors hover:bg-muted/30"
+      >
+        {title}
+        <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")} />
+      </button>
+      {open && <div className="px-5 pb-5">{children}</div>}
+    </div>
+  );
+}
+
 function getContentBlocks(content: Record<string, unknown> | string | null | undefined) {
-  if (typeof content === "string") {
-    return [{ type: "paragraph", text: content }];
-  }
-  if (!content || typeof content !== "object") {
-    return [];
-  }
-  if (content && typeof content === "object" && "text" in content && typeof (content as { text: unknown }).text === "string") {
-    return [{ type: "paragraph", text: (content as { text: string }).text }];
-  }
-  const blocks = content && typeof content === "object" && "blocks" in content ? (content as { blocks: unknown }).blocks : null;
-  if (!Array.isArray(blocks)) {
-    return [];
-  }
+  if (typeof content === "string") return [{ type: "paragraph", text: content }];
+  if (!content || typeof content !== "object") return [];
+  if ("text" in content && typeof (content as { text: unknown }).text === "string") return [{ type: "paragraph", text: (content as { text: string }).text }];
+  const blocks = content && "blocks" in content ? (content as { blocks: unknown }).blocks : null;
+  if (!Array.isArray(blocks)) return [];
   return blocks.flatMap((block) => {
-    if (!block || typeof block !== "object" || !("text" in block)) {
-      return [];
-    }
-    const typedBlock = block as { type?: unknown; text?: unknown };
-    if (typeof typedBlock.text !== "string") {
-      return [];
-    }
-    return [{ type: typeof typedBlock.type === "string" ? typedBlock.type : "paragraph", text: typedBlock.text }];
+    if (!block || typeof block !== "object" || !("text" in block)) return [];
+    const t = (block as { text?: unknown }).text;
+    if (typeof t !== "string") return [];
+    return [{ type: typeof (block as { type?: unknown }).type === "string" ? (block as { type: string }).type : "paragraph", text: t }];
   });
 }
 
@@ -45,71 +49,99 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
   const [savingProgress, setSavingProgress] = useState(false);
   const [progressPercent, setProgressPercent] = useState(lesson.progressPercent);
   const contentBlocks = getContentBlocks(lesson.content);
+  const isCompleted = progressPercent >= 100;
 
-  async function markCompleted() {
+  const markCompleted = useCallback(async () => {
     setSavingProgress(true);
     try {
-      const response = await fetch("/api/v1/progress", {
+      const res = await fetch("/api/v1/progress", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ lessonId: lesson.id, percent: 100 })
+        body: JSON.stringify({ lessonId: lesson.id, percent: 100 }),
       });
-      if (response.ok) {
+      if (res.ok) {
         setProgressPercent(100);
         router.refresh();
       } else {
-        const errData = await response.json().catch(() => ({}));
-        toast.error(errData.error?.message || "Не удалось сохранить прогресс");
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error?.message || "Не удалось сохранить прогресс");
       }
     } catch {
       toast.error("Ошибка сети");
     } finally {
       setSavingProgress(false);
     }
-  }
+  }, [lesson.id, router]);
 
-  async function askQuestion() {
-    if (!questionText.trim()) {
-      return;
-    }
+  const askQuestion = useCallback(async () => {
+    if (!questionText.trim()) return;
     setSending(true);
-    const response = await fetch(`/api/v1/lessons/${lesson.id}/questions`, {
+    const res = await fetch(`/api/v1/lessons/${lesson.id}/questions`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text: questionText })
+      body: JSON.stringify({ text: questionText }),
     });
     setSending(false);
-    if (response.ok) {
+    if (res.ok) {
       setQuestionText("");
       router.refresh();
     }
-  }
+  }, [questionText, lesson.id, router]);
 
   return (
     <>
-      <nav className="mb-4 flex items-center gap-2 text-xs text-muted-foreground">
-        <Link href="/student/my-courses" className="transition-colors hover:text-foreground">Мои курсы</Link>
+      {/* Breadcrumbs */}
+      <nav className="mb-4 flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+        <Link href="/student/my-courses" className="hover:text-foreground transition-colors">Мои курсы</Link>
         <span>/</span>
-        <Link href={`/student/courses/${lesson.courseId}`} className="transition-colors hover:text-foreground">{lesson.courseTitle}</Link>
+        <Link href={`/student/courses/${lesson.courseId}`} className="hover:text-foreground transition-colors">{lesson.courseTitle}</Link>
         <span>/</span>
         <span className="text-foreground">{lesson.moduleTitle}</span>
       </nav>
 
+      {/* Sticky progress bar */}
+      <div className="sticky top-20 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-background/80 backdrop-blur-md border-b mb-6">
+        <div className="flex items-center gap-4">
+          <div className="flex-1 space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Прогресс урока</span>
+              <span className="font-medium">{progressPercent}%</span>
+            </div>
+            <Progress value={progressPercent} className="h-1.5" />
+          </div>
+          <Button
+            size="sm"
+            variant={isCompleted ? "secondary" : "primary"}
+            onClick={markCompleted}
+            disabled={savingProgress || isCompleted}
+            className="shrink-0"
+          >
+            {isCompleted ? (
+              <><CheckCircle2 className="h-4 w-4" /> Завершён</>
+            ) : savingProgress ? (
+              "Сохранение..."
+            ) : (
+              "Отметить пройденным"
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Title */}
       <div className="mb-6">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <Badge className="border-sky-200 bg-sky-50 text-sky-700">Урок {lesson.order}</Badge>
           <Badge className="border-primary/20 bg-primary/5 text-primary">{lesson.durationMinutes} мин.</Badge>
-          {progressPercent >= 100 ? (
-            <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">Завершен</Badge>
-          ) : null}
+          {isCompleted && <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">Завершён</Badge>}
         </div>
-        <h1 className="text-2xl font-semibold sm:text-3xl">{lesson.title}</h1>
-        {lesson.summary ? <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{lesson.summary}</p> : null}
+        <h1 className="text-xl font-semibold sm:text-2xl">{lesson.title}</h1>
+        {lesson.summary && <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{lesson.summary}</p>}
       </div>
 
-      <div className="space-y-6">
-        {lesson.videoUrl ? (
-          <Card className="overflow-hidden rounded-2xl">
+      <div className="space-y-4">
+        {/* Video */}
+        {lesson.videoUrl && (
+          <div className="overflow-hidden rounded-2xl">
             <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
               <iframe
                 className="absolute inset-0 h-full w-full"
@@ -119,196 +151,140 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
                 allowFullScreen
               />
             </div>
-          </Card>
-        ) : null}
-
-        <Card>
-          <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center">
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Прогресс урока</span>
-                <span className="font-medium">{progressPercent}%</span>
-              </div>
-              <Progress value={progressPercent} />
-            </div>
-            <Button size="sm" variant={progressPercent >= 100 ? "secondary" : "primary"} onClick={markCompleted} disabled={savingProgress || progressPercent >= 100}>
-              {progressPercent >= 100 ? (
-                <><CheckCircle2 className="h-4 w-4" /> Завершен</>
-              ) : savingProgress ? "Сохраняем..." : "Отметить пройденным"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Блок: Материалы */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-1 rounded-full bg-primary" />
-            <h2 className="text-xl font-bold">Материалы урока</h2>
           </div>
-          <Card className="rounded-3xl border-2">
-            <CardContent className="space-y-4 py-8">
-              {contentBlocks.length > 0 ? contentBlocks.map((block, index) =>
+        )}
+
+        {/* Materials */}
+        <CollapsibleSection title="Материалы урока" defaultOpen={true}>
+          {contentBlocks.length > 0 ? (
+            <div className="space-y-4">
+              {contentBlocks.map((block, i) =>
                 block.type === "heading" ? (
-                  <h2 key={`${block.text}-${index}`} className="text-xl font-bold mt-4">{block.text}</h2>
+                  <h3 key={i} className="text-lg font-bold mt-2">{block.text}</h3>
                 ) : (
-                  <p key={`${block.text}-${index}`} className="text-base leading-relaxed text-muted-foreground">{block.text}</p>
+                  <p key={i} className="text-sm leading-relaxed text-muted-foreground">{block.text}</p>
                 )
-              ) : (
-                <p className="text-sm text-muted-foreground">Материалы урока пока не опубликованы.</p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Материалы урока пока не опубликованы.</p>
+          )}
 
           {lesson.media.length > 0 && (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-2 sm:grid-cols-2 mt-4">
               {lesson.media.map((item) => (
                 <a
                   key={item.id}
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-2xl border-2 p-4 transition-all hover:border-primary/30 hover:bg-primary/5"
+                  className="flex items-center gap-3 rounded-xl border p-3 transition-all hover:border-primary/30 hover:bg-primary/5"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                    <FileText className="h-5 w-5 text-primary" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                    <FileText className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <p className="truncate text-sm font-medium">{item.filename ?? "Файл"}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{item.type}</p>
+                    <p className="text-[10px] text-muted-foreground">{item.type}</p>
                   </div>
                 </a>
               ))}
             </div>
           )}
-        </div>
+        </CollapsibleSection>
 
-        <Separator className="my-8" />
-
-        {/* Блок: Тесты */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-1 rounded-full bg-primary" />
-            <h2 className="text-xl font-bold">Проверка знаний</h2>
-          </div>
-          {lesson.quizzes.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2">
+        {/* Quizzes */}
+        {lesson.quizzes.length > 0 && (
+          <CollapsibleSection title={`Тесты (${lesson.quizzes.length})`} defaultOpen={false}>
+            <div className="space-y-2">
               {lesson.quizzes.map((quiz) => (
-                <Card key={quiz.id} className="rounded-3xl border-2 transition-all hover:border-primary/20">
-                  <CardContent className="flex items-center gap-4 py-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <FileText className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold">{quiz.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {quiz.questionsCount} вопр. · порог {quiz.passThreshold}%
-                      </p>
-                    </div>
-                    <Button asChild size="sm" className="rounded-xl">
-                      <Link href={`/student/quizzes/${quiz.id}`}>Пройти</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <div key={quiz.id} className="flex items-center gap-3 rounded-xl border p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{quiz.title}</p>
+                    <p className="text-xs text-muted-foreground">{quiz.questionsCount} вопр. · порог {quiz.passThreshold}%</p>
+                  </div>
+                  <Button asChild size="sm">
+                    <Link href={`/student/quizzes/${quiz.id}`}>Пройти</Link>
+                  </Button>
+                </div>
               ))}
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">В этом уроке нет тестов.</p>
-          )}
-        </div>
+          </CollapsibleSection>
+        )}
 
-        <Separator className="my-8" />
-
-        {/* Блок: Задания */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-1 rounded-full bg-primary" />
-            <h2 className="text-xl font-bold">Практические задания</h2>
-          </div>
-          {lesson.assignments.length > 0 ? (
-            <div className="grid gap-4">
-              {lesson.assignments.map((assignment) => (
-                <Card key={assignment.id} className="rounded-3xl border-2 transition-all hover:border-primary/20">
-                  <CardContent className="flex flex-col gap-4 py-6 sm:flex-row sm:items-center">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-lg font-bold">{assignment.title}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {assignment.deadline && (
-                          <Badge className="bg-secondary/50 text-[10px]">Дедлайн: {assignment.deadline.slice(0, 10)}</Badge>
-                        )}
-                        <Badge className={assignment.submissionStatus ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}>
-                          {assignment.submissionStatus ? `Статус: ${assignment.submissionStatus}` : "Не отправлено"}
-                        </Badge>
-                      </div>
+        {/* Assignments */}
+        {lesson.assignments.length > 0 && (
+          <CollapsibleSection title={`Задания (${lesson.assignments.length})`} defaultOpen={false}>
+            <div className="space-y-2">
+              {lesson.assignments.map((a) => (
+                <div key={a.id} className="flex items-center gap-3 rounded-xl border p-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{a.title}</p>
+                    <div className="flex flex-wrap gap-1.5 mt-0.5">
+                      {a.deadline && <Badge className="text-[10px]">Дедлайн: {a.deadline.slice(0, 10)}</Badge>}
+                      <Badge className={a.submissionStatus ? "bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]" : "bg-amber-50 text-amber-700 border-amber-200 text-[10px]"}>
+                        {a.submissionStatus ?? "Не отправлено"}
+                      </Badge>
                     </div>
-                    <Button asChild className="rounded-xl">
-                      <Link href={`/student/assignments/${assignment.id}`}>Открыть задание</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <Button asChild size="sm">
+                    <Link href={`/student/assignments/${a.id}`}>Открыть</Link>
+                  </Button>
+                </div>
               ))}
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">Практические задания отсутствуют.</p>
-          )}
-        </div>
+          </CollapsibleSection>
+        )}
 
-        <Separator className="my-8" />
-
-        {/* Блок: Вопрос куратору */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-1 rounded-full bg-primary" />
-            <h2 className="text-xl font-bold">Поддержка</h2>
-          </div>
-          <Card className="rounded-3xl border-2 bg-primary/5 border-primary/10">
-            <CardHeader>
-              <CardTitle className="text-lg text-primary">Задать вопрос куратору</CardTitle>
-              <CardDescription>Опишите вашу проблему или вопрос по материалам урока.</CardDescription>
+        {/* Support */}
+        <CollapsibleSection title="Поддержка" defaultOpen={false}>
+          <Card className="border-primary/10 bg-primary/5 mb-4">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-primary">Задать вопрос куратору</CardTitle>
+              <CardDescription className="text-xs">Опишите вашу проблему по материалам урока.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               <textarea
-                className="min-h-[120px] w-full resize-none rounded-2xl border-2 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="min-h-[80px] w-full resize-none rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 dark:bg-gray-950"
                 placeholder="Ваш вопрос..."
                 value={questionText}
-                onChange={(event) => setQuestionText(event.target.value)}
+                onChange={(e) => setQuestionText(e.target.value)}
               />
               <div className="flex justify-end">
-                <Button onClick={askQuestion} disabled={sending || !questionText.trim()} className="rounded-xl px-6">
-                  <Send className="h-4 w-4 mr-2" />
-                  {sending ? "Отправка..." : "Отправить вопрос"}
+                <Button onClick={askQuestion} disabled={sending || !questionText.trim()} size="sm">
+                  <Send className="h-4 w-4 mr-1" />
+                  {sending ? "Отправка..." : "Отправить"}
                 </Button>
               </div>
             </CardContent>
           </Card>
 
           {lesson.myQuestions.length > 0 && (
-            <div className="space-y-3 mt-6">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">История вопросов</h3>
-              {lesson.myQuestions.map((question) => (
-                <Card key={question.id} className="rounded-2xl border shadow-sm">
-                  <CardContent className="py-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <Badge className={question.status === "open" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}>
-                        {question.status === "open" ? "Ожидает ответа" : "Отвечен"}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <MessageCircle className="h-3 w-3" /> Вопрос по уроку
-                      </span>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground">История вопросов</p>
+              {lesson.myQuestions.map((q) => (
+                <div key={q.id} className="rounded-xl border p-3">
+                  <div className="mb-1 flex items-center justify-between">
+                    <Badge className={q.status === "open" ? "bg-amber-50 text-amber-700 border-amber-200 text-[10px]" : "bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]"}>
+                      {q.status === "open" ? "Ожидает ответа" : "Отвечен"}
+                    </Badge>
+                  </div>
+                  <p className="text-sm">{q.text}</p>
+                  {q.answer && (
+                    <div className="mt-2 rounded-lg bg-emerald-50/50 border border-emerald-100 p-3">
+                      <p className="text-xs text-emerald-900">{q.answer}</p>
                     </div>
-                    <p className="text-sm leading-relaxed">{question.text}</p>
-                    {question.answer && (
-                      <div className="mt-3 rounded-xl bg-emerald-50/50 border border-emerald-100 p-4">
-                        <p className="text-xs font-bold text-emerald-800 mb-1 uppercase tracking-tight">Ответ куратора:</p>
-                        <p className="text-sm text-emerald-900">{question.answer}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                  )}
+                </div>
               ))}
             </div>
           )}
-        </div>
+        </CollapsibleSection>
 
+        {/* Navigation */}
         <div className="flex items-center justify-between gap-3 pt-2">
           {lesson.prevLesson ? (
             <Button asChild variant="secondary" size="sm">

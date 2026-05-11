@@ -1,15 +1,16 @@
-import { Download, FileText } from "lucide-react";
+import Link from "next/link";
+import { Download, Users, AlertTriangle, Award } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireRolePage } from "@/lib/auth/page-guards";
 
 const REPORTS = [
- { id: "progress", title: "Прогресс по потокам", format: "CSV", updatedAt: "2026-05-06" },
- { id: "students", title: "Активность слушателей", format: "XLSX", updatedAt: "2026-05-06" },
- { id: "certificates", title: "Выданные сертификаты", format: "CSV", updatedAt: "2026-05-05" },
+ { id: "progress", title: "Прогресс по потокам", description: "Все зачисления и прогресс по потокам.", type: "progress", format: "CSV", icon: Users },
+ { id: "risk", title: "Риски слушателей", description: "Неактивные и отстающие слушатели.", type: "risk", format: "CSV", icon: AlertTriangle },
+ { id: "certificates", title: "Выданные сертификаты", description: "Все выпущенные сертификаты.", type: "certificates", format: "CSV", icon: Award },
 ];
 
 export default async function CustomerObserverReportsPage() {
@@ -17,29 +18,31 @@ export default async function CustomerObserverReportsPage() {
 
  return (
   <AppShell role="customer_observer">
-   <PageHeader
-    title="Отчеты проекта"
-    description="Экспорт прогресса, активности и сертификации по доступным потокам."
-  />
-   <div className="mt-6 space-y-3">
-    {REPORTS.map((report) => (
-     <Card key={report.id} className="transition-shadow hover:shadow-sm">
-      <CardContent className="flex items-center gap-4 py-4">
-       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-        <FileText className="h-5 w-5 text-primary"/>
-       </span>
-       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{report.title}</p>
-        <p className="text-xs text-muted-foreground">Обновлен: {report.updatedAt}</p>
-       </div>
-       <Badge>{report.format}</Badge>
-       <Button size="sm" variant="secondary">
-        <Download className="h-4 w-4"/>
-        Скачать
-       </Button>
-      </CardContent>
-     </Card>
-    ))}
+   <PageHeader title="Экспорт статистики" description="Скачать отчёты по доступным потокам в CSV."/>
+   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    {REPORTS.map((r) => {
+     const Icon = r.icon;
+     return (
+      <Card key={r.id} className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+       <CardHeader>
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 mb-2">
+         <Icon className="h-5 w-5 text-primary"/>
+        </span>
+        <CardTitle>{r.title}</CardTitle>
+        <CardDescription>{r.description}</CardDescription>
+       </CardHeader>
+       <CardContent className="flex items-center justify-between">
+        <Badge>{r.format}</Badge>
+        <Button asChild size="sm">
+         <Link href={`/api/v1/reports?type=${r.type}`}>
+          <Download className="h-4 w-4"/>
+          Скачать
+         </Link>
+        </Button>
+       </CardContent>
+      </Card>
+     );
+    })}
    </div>
   </AppShell>
  );
