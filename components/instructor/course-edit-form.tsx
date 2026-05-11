@@ -22,6 +22,7 @@ interface CourseEditFormProps {
 export function CourseEditForm({ course }: CourseEditFormProps) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(true);
   const router = useRouter();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -49,13 +50,16 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
 
       if (response.ok) {
         setMessage("Курс успешно обновлен!");
+        setSuccess(true);
         router.refresh();
       } else {
         const errData = await response.json().catch(() => ({}));
         setMessage(errData.error?.message || "Ошибка при обновлении");
+        setSuccess(false);
       }
     } catch {
       setMessage("Ошибка сети");
+      setSuccess(false);
     } finally {
       setPending(false);
     }
@@ -115,7 +119,7 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
       </div>
 
       <div className="flex items-center justify-between pt-4">
-        <span className={message.includes("успешно") ? "text-emerald-600 text-sm" : "text-rose-600 text-sm"}>{message}</span>
+        <span className={success ? "text-emerald-600 text-sm" : "text-rose-600 text-sm"}>{message}</span>
         <Button type="submit" disabled={pending}>
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {pending ? "Сохраняем..." : "Сохранить изменения"}

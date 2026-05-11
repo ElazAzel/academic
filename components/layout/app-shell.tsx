@@ -71,7 +71,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
     { href: "/admin/enrollments", label: "Зачисления", icon: UserCheck },
     { href: "/admin/invites", label: "Инвайты", icon: Link2 },
     { href: "/admin/analytics", label: "Аналитика", icon: BarChart3 },
-    { href: "/admin/audit-logs", label: "Аудит", icon: FileText },
+    { href: "/admin/audit", label: "Аудит", icon: FileText },
     { href: "/admin/roles", label: "Роли", icon: ShieldCheck },
     { href: "/admin/settings", label: "Настройки", icon: Settings },
   ],

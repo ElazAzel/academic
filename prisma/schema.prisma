@@ -86,6 +86,20 @@ enum ImportStatus {
   FAILED
 }
 
+enum UserAccountStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  DELETED
+}
+
+enum QuestionStatus {
+  OPEN
+  ANSWERED
+  FORWARDED
+  CLOSED
+}
+
 model User {
   id              String    @id @default(cuid())
   email           String    @unique
@@ -532,6 +546,8 @@ model QuizAttempt {
 
   @@index([quizId])
   @@index([userId])
+  @@index([submittedAt])
+  @@index([passed])
   @@map("quiz_attempts")
 }
 
@@ -580,6 +596,24 @@ model AssignmentSubmission {
   @@map("assignment_submissions")
 }
 
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  action    String
+  resource  String?
+  resourceId String? @map("resource_id")
+  metadata  Json     @default("{}")
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
+  @@map("activity_logs")
+}
+
 model LessonQuestion {
   id          String   @id @default(cuid())
   lessonId    String   @map("lesson_id")
@@ -596,6 +630,11 @@ model LessonQuestion {
   student User   @relation("StudentQuestions", fields: [studentId], references: [id], onDelete: Cascade)
   curator User?  @relation("CuratorQuestions", fields: [curatorId], references: [id])
 
+  @@index([lessonId])
+  @@index([studentId])
+  @@index([curatorId])
+  @@index([status])
+  @@index([createdAt])
   @@map("lesson_questions")
 }
 

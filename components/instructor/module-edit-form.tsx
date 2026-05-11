@@ -23,6 +23,7 @@ interface ModuleEditFormProps {
 export function ModuleEditForm({ module }: ModuleEditFormProps) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(true);
   const router = useRouter();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -47,13 +48,16 @@ export function ModuleEditForm({ module }: ModuleEditFormProps) {
 
       if (response.ok) {
         setMessage("Модуль успешно обновлен!");
+        setSuccess(true);
         router.refresh();
       } else {
         const errData = await response.json().catch(() => ({}));
         setMessage(errData.error?.message || "Ошибка при обновлении");
+        setSuccess(false);
       }
     } catch {
       setMessage("Ошибка сети");
+      setSuccess(false);
     } finally {
       setPending(false);
     }
@@ -69,7 +73,7 @@ export function ModuleEditForm({ module }: ModuleEditFormProps) {
           </Button>
         </Link>
         <div className="flex items-center gap-4">
-          <span className={message.includes("успешно") ? "text-emerald-600 text-sm font-medium" : "text-rose-600 text-sm font-medium"}>{message}</span>
+          <span className={success ? "text-emerald-600 text-sm font-medium" : "text-rose-600 text-sm font-medium"}>{message}</span>
           <Button type="submit" disabled={pending}>
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {pending ? "Сохраняем..." : "Сохранить модуль"}

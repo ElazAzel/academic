@@ -11,7 +11,7 @@ import Link from "next/link";
 import { QuestionEditorItem } from "./question-editor-item";
 import { readApiData } from "@/lib/api-client";
 
-interface QuizEditFormProps {
+export interface QuizEditFormProps {
   quiz: {
     id: string;
     title: string;
@@ -24,6 +24,7 @@ interface QuizEditFormProps {
 export function QuizEditForm({ quiz }: QuizEditFormProps) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(true);
   const [questions, setQuestions] = useState(quiz.questions);
   const router = useRouter();
 
@@ -71,13 +72,16 @@ export function QuizEditForm({ quiz }: QuizEditFormProps) {
 
       if (response.ok) {
         setMessage("Тест успешно обновлен!");
+        setSuccess(true);
         router.refresh();
       } else {
         const errData = await response.json().catch(() => ({}));
         setMessage(errData.error?.message || "Ошибка при обновлении");
+        setSuccess(false);
       }
     } catch {
       setMessage("Ошибка сети");
+      setSuccess(false);
     } finally {
       setPending(false);
     }
@@ -93,7 +97,7 @@ export function QuizEditForm({ quiz }: QuizEditFormProps) {
           </Button>
         </Link>
         <div className="flex items-center gap-4">
-          <span className={message.includes("успешно") ? "text-emerald-600 text-sm font-medium" : "text-rose-600 text-sm font-medium"}>{message}</span>
+          <span className={success ? "text-emerald-600 text-sm font-medium" : "text-rose-600 text-sm font-medium"}>{message}</span>
           <Button type="submit" disabled={pending}>
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {pending ? "Сохраняем..." : "Сохранить настройки"}
