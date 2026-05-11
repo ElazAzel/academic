@@ -1,8 +1,35 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
+import { fetchProgressData, fetchRiskData, fetchCertificateData } from "@/lib/reports/data";
+import { generateProgressCsv, generateRiskCsv, generateCertificateCsv } from "@/lib/reports/csv-generator";
+import { generateProgressXlsx, generateRiskXlsx, generateCertificateXlsx } from "@/lib/reports/xlsx-generator";
+import { generateProgressPdf, generateRiskPdf } from "@/lib/reports/pdf-generator";
+import type { ReportFormat } from "@/lib/reports/types";
 
 const prisma = getPrisma();
+
+const MIME: Record<ReportFormat, string> = {
+  csv: "text/csv; charset=utf-8",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  pdf: "application/pdf",
+};
+
+const EXT: Record<ReportFormat, string> = {
+  csv: ".csv",
+  xlsx: ".xlsx",
+  pdf: ".pdf",
+};
+
+function respond(content: string | Buffer, format: ReportFormat, filename: string) {
+  const body = typeof content === "string" ? content : new Uint8Array(content);
+  return new NextResponse(body, {
+    headers: {
+      "Content-Type": MIME[format],
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    },
+  });
+}
 
 export async function GET(request: Request) {
   try {
@@ -18,112 +45,56 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
+    const format = (searchParams.get("format") || "csv") as ReportFormat;
 
-    let csvContent = "";
-    let filename = "";
+    if (!["csv", "xlsx", "pdf"].includes(format)) {
+      return NextResponse.json({ error: "Unsupported format. Use csv, xlsx, or pdf." }, { status: 400 });
+    }
 
-    // Для super_curator: scoped к своим кураторам
     const getScopedStudentIds = async () => {
-      if (!isSuperCurator || isAdmin) return null;
+      if (!isSuperCurator || isAdmin) return undefined;
       const assignments = await prisma.curatorAssignment.findMany({
         where: { superCuratorId: user.id, active: true },
         select: { studentId: true },
       });
-      return assignments.map(a => a.studentId);
+      return assignments.map((a) => a.studentId);
     };
 
-    if (type === "progress") {
-      const scopedIds = await getScopedStudentIds();
-      const where = scopedIds ? { userId: { in: scopedIds } } : {};
-      const enrollments = await prisma.enrollment.findMany({
-        where,
-        include: {
-          user: { select: { name: true, email: true } },
-          course: { select: { title: true } },
-          cohort: { select: { name: true } },
-          courseProgress: true
-        }
-      });
-      csvContent = "User,Email,Course,Cohort,Progress (%)\n";
-      enrollments.forEach(e => {
-        const progress = Array.isArray(e.courseProgress) && e.courseProgress.length > 0 ? e.courseProgress[0].percent : 0;
-        csvContent += `"${e.user.name || ""}","${e.user.email}","${e.course.title}","${e.cohort?.name || ""}","${progress}"\n`;
-      });
-      filename = "progress_report.csv";
-    } else if (type === "risk") {
-      const scopedIds = await getScopedStudentIds();
-      const where = scopedIds ? { userId: { in: scopedIds } } : {};
-      const risks = await prisma.riskFlag.findMany({
-        where,
-        include: {
-          user: { select: { name: true, email: true } },
-          course: { select: { title: true } }
-        }
-      });
-      csvContent = "User,Email,Course,Type,Severity,Status\n";
-      risks.forEach(r => {
-        csvContent += `"${r.user.name || ""}","${r.user.email}","${r.course?.title || ""}","${r.type}","${r.severity}","${r.status}"\n`;
-      });
-      filename = "risk_report.csv";
-    } else if (type === "certificates") {
-      const certs = await prisma.certificate.findMany({
-        include: {
-          user: { select: { name: true, email: true } },
-          course: { select: { title: true } }
-        }
-      });
-      csvContent = "Number,User,Email,Course,Issued At\n";
-      certs.forEach(c => {
-        csvContent += `"${c.number}","${c.user.name || ""}","${c.user.email}","${c.course.title}","${c.issuedAt.toISOString().slice(0, 10)}"\n`;
-      });
-      filename = "certificates_report.csv";
-    } else if (type === "curator_progress" && isCurator) {
-      const assigned = await prisma.curatorAssignment.findMany({
-        where: { curatorId: user.id },
-        select: { studentId: true }
-      });
-      const enrollments = await prisma.enrollment.findMany({
-        where: { userId: { in: assigned.map(a => a.studentId) } },
-        include: {
-          user: { select: { name: true, email: true } },
-          course: { select: { title: true } },
-          cohort: { select: { name: true } },
-          courseProgress: true
-        }
-      });
-      csvContent = "User,Email,Course,Cohort,Progress (%)\n";
-      enrollments.forEach(e => {
-        const progress = Array.isArray(e.courseProgress) && e.courseProgress.length > 0 ? e.courseProgress[0].percent : 0;
-        csvContent += `"${e.user.name || ""}","${e.user.email}","${e.course.title}","${e.cohort?.name || ""}","${progress}"\n`;
-      });
-      filename = "curator_progress_report.csv";
-    } else if (type === "curator_risk" && isCurator) {
-      const assigned = await prisma.curatorAssignment.findMany({
-        where: { curatorId: user.id },
-        select: { studentId: true }
-      });
-      const risks = await prisma.riskFlag.findMany({
-        where: { userId: { in: assigned.map(a => a.studentId) } },
-        include: {
-          user: { select: { name: true, email: true } },
-          course: { select: { title: true } }
-        }
-      });
-      csvContent = "User,Email,Course,Type,Severity,Status\n";
-      risks.forEach(r => {
-        csvContent += `"${r.user.name || ""}","${r.user.email}","${r.course?.title || ""}","${r.type}","${r.severity}","${r.status}"\n`;
-      });
-      filename = "curator_risk_report.csv";
-    } else {
-      return NextResponse.json({ error: "Unknown report type" }, { status: 400 });
+    const scopedIds = await getScopedStudentIds();
+
+    if (type === "progress" || (type === "curator_progress" && isCurator)) {
+      const studentIds = type === "curator_progress"
+        ? (await prisma.curatorAssignment.findMany({ where: { curatorId: user.id }, select: { studentId: true } })).map((a) => a.studentId)
+        : scopedIds;
+      const rows = await fetchProgressData(studentIds);
+      const filename = `${type}_report${EXT[format]}`;
+
+      if (format === "xlsx") return respond(await generateProgressXlsx(rows), format, filename);
+      if (format === "pdf") return respond(await generateProgressPdf(rows), format, filename);
+      return respond(generateProgressCsv(rows), format, filename);
     }
 
-    return new NextResponse(csvContent, {
-      headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${filename}"`
-      }
-    });
+    if (type === "risk" || (type === "curator_risk" && isCurator)) {
+      const studentIds = type === "curator_risk"
+        ? (await prisma.curatorAssignment.findMany({ where: { curatorId: user.id }, select: { studentId: true } })).map((a) => a.studentId)
+        : scopedIds;
+      const rows = await fetchRiskData(studentIds);
+      const filename = `${type}_report${EXT[format]}`;
+
+      if (format === "xlsx") return respond(await generateRiskXlsx(rows), format, filename);
+      if (format === "pdf") return respond(await generateRiskPdf(rows), format, filename);
+      return respond(generateRiskCsv(rows), format, filename);
+    }
+
+    if (type === "certificates") {
+      const rows = await fetchCertificateData();
+      const filename = `certificates_report${EXT[format]}`;
+
+      if (format === "xlsx") return respond(await generateCertificateXlsx(rows), format, filename);
+      return respond(generateCertificateCsv(rows), format, filename);
+    }
+
+    return NextResponse.json({ error: "Unknown report type" }, { status: 400 });
   } catch {
     return NextResponse.json({ error: "Failed to generate report" }, { status: 500 });
   }

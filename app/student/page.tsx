@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/lms/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Clock, MessageCircle, BookOpen } from "lucide-react";
+import { ArrowRight, Clock, MessageCircle } from "lucide-react";
 import { getStudentDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { cn } from "@/lib/utils";

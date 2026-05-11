@@ -2,35 +2,39 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Download, FileText, Users, AlertTriangle, Award } from "lucide-react";
+import { Download, Users, AlertTriangle, Award, FileSpreadsheet, FileText } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
+
+const FORMATS = [
+  { id: "csv", label: "CSV", icon: FileText },
+  { id: "xlsx", label: "Excel", icon: FileSpreadsheet },
+  { id: "pdf", label: "PDF", icon: FileText },
+] as const;
 
 const REPORTS = [
   {
     id: "progress",
     title: "Прогресс по курсам",
-    description: "Все зачисления и прогресс слушателей по всем курсам и потокам.",
+    description: "Все зачисления и прогресс слушателей по всем курсам и потокам с группировкой, сводками и диаграммами.",
     type: "progress",
-    format: "CSV",
     icon: Users,
+    formats: ["csv", "xlsx", "pdf"],
   },
   {
     id: "risk",
     title: "Риски слушателей",
-    description: "Неактивные, просроченные и отстающие слушатели.",
+    description: "Неактивные, просроченные и отстающие слушатели с цветовой индикацией уровней.",
     type: "risk",
-    format: "CSV",
     icon: AlertTriangle,
+    formats: ["csv", "xlsx", "pdf"],
   },
   {
     id: "certificates",
     title: "Выданные сертификаты",
     description: "Все выпущенные сертификаты с номерами и датами.",
     type: "certificates",
-    format: "CSV",
     icon: Award,
+    formats: ["csv", "xlsx"],
   },
 ];
 
@@ -39,8 +43,8 @@ export default async function AdminReportsPage() {
 
   return (
     <AppShell role="admin">
-      <PageHeader title="Экспорт статистики" description="Скачать отчёты по платформе в CSV." />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <PageHeader title="Экспорт статистики" description="Скачать отчёты по платформе в CSV, Excel или PDF." />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {REPORTS.map((r) => {
           const Icon = r.icon;
           return (
@@ -52,14 +56,23 @@ export default async function AdminReportsPage() {
                 <CardTitle>{r.title}</CardTitle>
                 <CardDescription>{r.description}</CardDescription>
               </CardHeader>
-              <CardContent className="flex items-center justify-between">
-                <Badge>{r.format}</Badge>
-                <Button asChild size="sm">
-                  <Link href={`/api/v1/reports?type=${r.type}`}>
-                    <Download className="h-4 w-4" />
-                    Скачать
-                  </Link>
-                </Button>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {FORMATS.filter((f) => r.formats.includes(f.id)).map((fmt) => {
+                    const FmtIcon = fmt.icon;
+                    return (
+                      <Link
+                        key={fmt.id}
+                        href={`/api/v1/reports?type=${r.type}&format=${fmt.id}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30"
+                      >
+                        <FmtIcon className="h-3.5 w-3.5" />
+                        {fmt.label}
+                        <Download className="h-3 w-3 ml-0.5 text-muted-foreground" />
+                      </Link>
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
           );

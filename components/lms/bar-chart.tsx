@@ -10,11 +10,9 @@ interface BarItem {
 
 export function BarChart({
   items,
-  height = 200,
   className,
 }: {
   items: BarItem[];
-  height?: number;
   className?: string;
 }) {
   const chartMax = Math.max(...items.map((i) => i.maxValue ?? i.value), 1);

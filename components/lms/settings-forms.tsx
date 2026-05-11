@@ -4,7 +4,6 @@ import { useTransition, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { updateProfileSettingsAction, updatePasswordAction } from "@/server/actions/settings";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";

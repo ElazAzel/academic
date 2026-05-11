@@ -2,7 +2,6 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { NAV_BY_ROLE, ICON_MAP } from "@/components/layout/navigation";
-import type { NavItem } from "@/components/layout/navigation";
 import { cn } from "@/lib/utils";
 import type { RoleKey } from "@/types/domain";
 import { ROLE_LABELS } from "@/types/domain";

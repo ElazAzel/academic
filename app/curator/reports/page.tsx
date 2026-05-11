@@ -2,27 +2,31 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Download, Users, AlertTriangle } from "lucide-react";
+import { Download, Users, AlertTriangle, FileSpreadsheet, FileText } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
+
+const FORMATS = [
+  { id: "csv", label: "CSV", icon: FileText },
+  { id: "xlsx", label: "Excel", icon: FileSpreadsheet },
+  { id: "pdf", label: "PDF", icon: FileText },
+] as const;
 
 const REPORTS = [
   {
     id: "curator_progress",
     title: "Прогресс слушателей",
-    description: "Прогресс ваших закреплённых слушателей по курсам.",
+    description: "Прогресс ваших закреплённых слушателей по курсам с группировкой и диаграммами.",
     type: "curator_progress",
-    format: "CSV",
     icon: Users,
+    formats: ["csv", "xlsx", "pdf"],
   },
   {
     id: "curator_risk",
     title: "Риски слушателей",
-    description: "Риски только по вашим слушателям.",
+    description: "Риски только по вашим слушателям с цветовой индикацией уровней.",
     type: "curator_risk",
-    format: "CSV",
     icon: AlertTriangle,
+    formats: ["csv", "xlsx", "pdf"],
   },
 ];
 
@@ -31,7 +35,7 @@ export default async function CuratorReportsPage() {
 
   return (
     <AppShell role="curator">
-      <PageHeader title="Экспорт статистики" description="Скачать отчёты по вашим слушателям в CSV." />
+      <PageHeader title="Экспорт статистики" description="Скачать отчёты по вашим слушателям в CSV, Excel или PDF." />
       <div className="grid gap-4 md:grid-cols-2">
         {REPORTS.map((r) => {
           const Icon = r.icon;
@@ -44,14 +48,23 @@ export default async function CuratorReportsPage() {
                 <CardTitle>{r.title}</CardTitle>
                 <CardDescription>{r.description}</CardDescription>
               </CardHeader>
-              <CardContent className="flex items-center justify-between">
-                <Badge>{r.format}</Badge>
-                <Button asChild size="sm">
-                  <Link href={`/api/v1/reports?type=${r.type}`}>
-                    <Download className="h-4 w-4" />
-                    Скачать
-                  </Link>
-                </Button>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {FORMATS.filter((f) => r.formats.includes(f.id)).map((fmt) => {
+                    const FmtIcon = fmt.icon;
+                    return (
+                      <Link
+                        key={fmt.id}
+                        href={`/api/v1/reports?type=${r.type}&format=${fmt.id}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30"
+                      >
+                        <FmtIcon className="h-3.5 w-3.5" />
+                        {fmt.label}
+                        <Download className="h-3 w-3 ml-0.5 text-muted-foreground" />
+                      </Link>
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
           );
