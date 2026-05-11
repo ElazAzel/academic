@@ -1,8 +1,8 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { BarChart, DonutChart } from "@/components/lms/bar-chart";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { getInstructorAnalytics } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
@@ -36,33 +36,58 @@ export default async function InstructorAnalyticsPage() {
     <Tabs tabs={[
      {
       label: "По модулям",
-      content: (
-       <div className="space-y-3">
-        {moduleAnalytics.length > 0 ? moduleAnalytics.map((m) => (
-         <Card key={m.title} className="transition-shadow hover:shadow-sm">
-          <CardContent className="py-4">
-           <div className="flex items-center justify-between mb-2">
-            <div>
-             <p className="text-sm font-bold">{m.title}</p>
-             <p className="text-xs text-muted-foreground">{m.courseTitle}</p>
+      content: moduleAnalytics.length > 0 ? (
+       <div className="grid gap-6 md:grid-cols-3">
+        <Card className="md:col-span-2">
+         <CardHeader>
+          <CardTitle>Прогресс по модулям</CardTitle>
+          <CardDescription>Средний процент прохождения</CardDescription>
+         </CardHeader>
+         <CardContent>
+          <BarChart
+           items={moduleAnalytics.map((m) => ({
+            label: m.title,
+            value: m.avgProgress,
+            sublabel: `${m.completedStudents} завершили`,
+           }))}
+          />
+         </CardContent>
+        </Card>
+        <Card>
+         <CardHeader>
+          <CardTitle>Общий прогресс</CardTitle>
+          <CardDescription>Среднее по всем модулям</CardDescription>
+         </CardHeader>
+         <CardContent className="flex flex-col items-center gap-4 pt-4">
+          <DonutChart
+           value={moduleAnalytics.reduce((a, b) => a + b.avgProgress, 0) / Math.max(moduleAnalytics.length, 1)}
+           size={120}
+           strokeWidth={8}
+          />
+          <div className="space-y-1 text-center">
+           {moduleAnalytics.map((m) => (
+            <div key={m.title} className="flex items-center justify-between gap-4 text-xs">
+             <span className="text-muted-foreground truncate max-w-[100px]">{m.title}</span>
+             <span className="font-medium">{m.avgProgress}%</span>
             </div>
-            <span className="text-xs text-muted-foreground">{m.completedStudents} завершили</span>
-           </div>
-           <div className="flex items-center gap-3">
-            <Progress value={m.avgProgress} className="flex-1"/>
-            <span className="text-sm font-medium w-10 text-right">{m.avgProgress}%</span>
-           </div>
-          </CardContent>
-         </Card>
-        )) : (
-         <Card><CardContent className="py-10 text-center text-muted-foreground">Данные по модулям отсутствуют.</CardContent></Card>
-        )}
+           ))}
+          </div>
+         </CardContent>
+        </Card>
        </div>
+      ) : (
+       <Card><CardContent className="py-10 text-center text-muted-foreground">Данные по модулям отсутствуют.</CardContent></Card>
       ),
      },
      {
       label: "По тестам",
-      content: <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">Аналитика по тестам (распределение оценок) будет доступна в следующем обновлении.</CardContent></Card>,
+      content: (
+       <Card>
+        <CardContent className="py-10 text-center text-muted-foreground text-sm">
+          Аналитика по тестам (распределение оценок) будет доступна в следующем обновлении.
+        </CardContent>
+       </Card>
+      ),
      },
     ]}/>
    </div>

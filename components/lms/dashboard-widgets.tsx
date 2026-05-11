@@ -34,8 +34,8 @@ const TONE_CLASSES: Record<DashboardMetric["tone"], string> = {
 export function MetricGrid({ metrics }: { metrics: DashboardMetric[] }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {metrics.map((m) => (
-        <Card key={m.label} className="rounded-2xl transition-shadow hover:shadow-panel">
+      {metrics.map((m, i) => (
+        <Card key={m.label} className="animate-slide-up rounded-2xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5" style={{ animationDelay: `${i * 50}ms` }}>
           <CardHeader className="pb-2">
             <CardDescription className="text-xs">{m.label}</CardDescription>
             <CardTitle className={`text-3xl font-semibold ${TONE_CLASSES[m.tone]}`}>

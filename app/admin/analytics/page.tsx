@@ -1,9 +1,9 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
-import { Card, CardContent } from "@/components/ui/card";
+import { BarChart, DonutChart } from "@/components/lms/bar-chart";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import type { DashboardMetric } from "@/types/domain";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
@@ -14,7 +14,6 @@ export default async function AdminAnalyticsPage() {
  await requireRolePage(["admin"]);
  const prisma = getPrisma();
 
- // Реальный сбор данных для админ-аналитики
  const [
   activeUsersCount,
   avgProgressAgg,
@@ -56,6 +55,8 @@ export default async function AdminAnalyticsPage() {
   };
  });
 
+ const bestCourse = [...courseStats].sort((a, b) => b.avgProgress - a.avgProgress)[0];
+
  return (
   <AppShell role="admin">
    <PageHeader title="Аналитика" description="Активность пользователей, завершения курсов, тесты и экспорт."/>
@@ -64,23 +65,46 @@ export default async function AdminAnalyticsPage() {
     <Tabs tabs={[
      {
       label: "По курсам",
-      content: (
-       <div className="space-y-3">
-        {courseStats.map((c) => (
-         <Card key={c.title} className="transition-shadow hover:shadow-sm">
-          <CardContent className="py-4">
-           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium">{c.title}</p>
-            <span className="text-xs text-muted-foreground">{c.enrolled} зачислено · {c.completed} завершено</span>
-           </div>
-           <div className="flex items-center gap-3">
-            <Progress value={c.avgProgress} className="flex-1"/>
-            <span className="text-sm font-medium w-10 text-right">{c.avgProgress}%</span>
-           </div>
+      content: courseStats.length > 0 ? (
+       <div className="grid gap-6 md:grid-cols-3">
+        <Card className="md:col-span-2">
+         <CardHeader>
+          <CardTitle>Прогресс по курсам</CardTitle>
+          <CardDescription>Средний процент прохождения</CardDescription>
+         </CardHeader>
+         <CardContent>
+          <BarChart
+           items={courseStats.map((c) => ({
+            label: c.title,
+            value: c.avgProgress,
+            sublabel: `${c.enrolled} зачислено · ${c.completed} завершено`,
+           }))}
+          />
+         </CardContent>
+        </Card>
+        <div className="space-y-4">
+         <Card>
+          <CardHeader className="pb-2">
+           <CardTitle className="text-sm">Лучший курс</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-2 pt-2">
+           <DonutChart value={bestCourse?.avgProgress ?? 0} size={100} strokeWidth={6} />
+           <p className="text-sm font-medium text-center">{bestCourse?.title}</p>
+           <p className="text-xs text-muted-foreground">{bestCourse?.avgProgress}% средний прогресс</p>
           </CardContent>
          </Card>
-        ))}
+         <Card>
+          <CardHeader className="pb-2">
+           <CardTitle className="text-sm">Всего сертификатов</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-2">
+           <p className="text-3xl font-bold">{certsCount}</p>
+          </CardContent>
+         </Card>
+        </div>
        </div>
+      ) : (
+       <Card><CardContent className="py-10 text-center text-muted-foreground">Нет данных по курсам.</CardContent></Card>
       ),
      },
      {
