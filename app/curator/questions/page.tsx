@@ -8,22 +8,22 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 export const dynamic = "force-dynamic";
 
 export default async function CuratorQuestionsPage() {
-  await requireRolePage(["curator", "super_curator"]);
-  
-  const [open, answered] = await Promise.all([
-    getCuratorQuestions("open"),
-    getCuratorQuestions("answered"),
-  ]);
+ await requireRolePage(["curator", "super_curator"]);
+ 
+ const [open, answered] = await Promise.all([
+  getCuratorQuestions("open"),
+  getCuratorQuestions("answered"),
+ ]);
 
-  return (
-    <AppShell role="curator">
-      <PageHeader title="Вопросы слушателей" description="Все вопросы ваших слушателей по урокам." badge="Куратор" />
-      <div className="mt-6">
-        <Tabs tabs={[
-          { label: `Открытые (${open.length})`, content: <QuestionsQueue questions={open} /> },
-          { label: `Отвеченные (${answered.length})`, content: <QuestionsQueue questions={answered} /> },
-        ]} />
-      </div>
-    </AppShell>
-  );
+ return (
+  <AppShell role="curator">
+   <PageHeader title="Вопросы слушателей" description="Все вопросы ваших слушателей по урокам."/>
+   <div className="mt-6">
+    <Tabs tabs={[
+     { label: `Открытые (${open.length})`, content: <QuestionsQueue questions={open}/> },
+     { label: `Отвеченные (${answered.length})`, content: <QuestionsQueue questions={answered}/> },
+    ]}/>
+   </div>
+  </AppShell>
+ );
 }

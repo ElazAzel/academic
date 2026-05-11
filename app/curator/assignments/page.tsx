@@ -8,45 +8,45 @@ import type { SubmissionForReview } from "@/types/domain";
 export const dynamic = "force-dynamic";
 
 export default async function CuratorAssignmentsPage() {
-  const user = await requireRolePage(["curator", "super_curator"]);
-  const prisma = getPrisma();
+ const user = await requireRolePage(["curator", "super_curator"]);
+ const prisma = getPrisma();
 
-  const assignedStudents = await prisma.curatorAssignment.findMany({
-    where: { curatorId: user.id },
-    select: { studentId: true }
-  });
-  const studentIds = assignedStudents.map(a => a.studentId);
+ const assignedStudents = await prisma.curatorAssignment.findMany({
+  where: { curatorId: user.id },
+  select: { studentId: true }
+ });
+ const studentIds = assignedStudents.map(a => a.studentId);
 
-  const submissionsDb = await prisma.assignmentSubmission.findMany({
-    where: { 
-      userId: { in: studentIds },
-      status: { in: ["SUBMITTED", "IN_REVIEW", "NEEDS_REVISION"] }
-    },
-    include: {
-      user: true,
-      assignment: { include: { course: true, lesson: true } }
-    },
-    orderBy: { submittedAt: "desc" }
-  });
+ const submissionsDb = await prisma.assignmentSubmission.findMany({
+  where: { 
+   userId: { in: studentIds },
+   status: { in: ["SUBMITTED", "IN_REVIEW", "NEEDS_REVISION"] }
+  },
+  include: {
+   user: true,
+   assignment: { include: { course: true, lesson: true } }
+  },
+  orderBy: { submittedAt: "desc" }
+ });
 
-  const submissions: SubmissionForReview[] = submissionsDb.map(sub => ({
-    id: sub.id,
-    studentName: sub.user.name ?? sub.user.email,
-    studentEmail: sub.user.email,
-    assignmentTitle: sub.assignment.title,
-    lessonTitle: sub.assignment.lesson?.title ?? "Без урока",
-    courseTitle: sub.assignment.course?.title ?? "Без курса",
-    attemptNumber: sub.attemptNumber,
-    status: sub.status,
-    submittedAt: sub.submittedAt.toISOString()
-  }));
+ const submissions: SubmissionForReview[] = submissionsDb.map(sub => ({
+  id: sub.id,
+  studentName: sub.user.name ?? sub.user.email,
+  studentEmail: sub.user.email,
+  assignmentTitle: sub.assignment.title,
+  lessonTitle: sub.assignment.lesson?.title ?? "Без урока",
+  courseTitle: sub.assignment.course?.title ?? "Без курса",
+  attemptNumber: sub.attemptNumber,
+  status: sub.status,
+  submittedAt: sub.submittedAt.toISOString()
+ }));
 
-  return (
-    <AppShell role="curator">
-      <PageHeader title="Задания на проверку" description="Работы слушателей, ожидающие вашей оценки." badge="Куратор" />
-      <div className="mt-6">
-        <SubmissionsQueue submissions={submissions} />
-      </div>
-    </AppShell>
-  );
+ return (
+  <AppShell role="curator">
+   <PageHeader title="Задания на проверку" description="Работы слушателей, ожидающие вашей оценки."/>
+   <div className="mt-6">
+    <SubmissionsQueue submissions={submissions}/>
+   </div>
+  </AppShell>
+ );
 }

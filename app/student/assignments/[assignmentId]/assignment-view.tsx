@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { readApiErrorMessage } from "@/lib/api-client";
+import { toast } from "sonner";
 import type { StudentAssignmentDetail } from "@/types/domain";
 
 export function AssignmentView({ assignment }: { assignment: StudentAssignmentDetail }) {
@@ -37,9 +38,9 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
         return;
       }
 
-      alert(await readApiErrorMessage(response, "Ошибка при отправке задания"));
+      toast.error(await readApiErrorMessage(response, "Ошибка при отправке задания"));
     } catch {
-      alert("Сетевая ошибка");
+      toast.error("Сетевая ошибка");
     } finally {
       setSubmitting(false);
     }

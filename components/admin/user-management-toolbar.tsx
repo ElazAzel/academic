@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Upload, UserPlus } from "lucide-react";
 import { CreateUserModal } from "./create-user-modal";
-import { RoleKey } from "@/types/domain";
+import type { RoleKey } from "@/types/domain";
 
 export function UserManagementToolbar({ assignableRoles }: { assignableRoles: RoleKey[] }) {
   const [showAddModal, setShowAddModal] = useState(false);

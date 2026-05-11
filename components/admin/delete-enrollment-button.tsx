@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { deleteEnrollmentAction } from "@/server/actions/admin";
 import { Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function DeleteEnrollmentButton({ enrollmentId }: { enrollmentId: string }) {
   const [pending, setPending] = useState(false);
@@ -16,7 +17,7 @@ export function DeleteEnrollmentButton({ enrollmentId }: { enrollmentId: string 
     try {
       await deleteEnrollmentAction(enrollmentId);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Ошибка при удалении");
+      toast.error(err instanceof Error ? err.message : "Ошибка при удалении");
     } finally {
       setPending(false);
     }

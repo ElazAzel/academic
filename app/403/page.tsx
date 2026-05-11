@@ -3,8 +3,13 @@ import { ShieldAlert } from "lucide-react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getDefaultRolePath } from "@/lib/auth/role-redirect";
 
-export default function ForbiddenPage() {
+export default async function ForbiddenPage() {
+  const user = await getCurrentUser();
+  const homePath = user ? getDefaultRolePath(user.roles) : "/login";
+
   return (
     <div className="min-h-screen">
       <SiteHeader />
@@ -22,7 +27,7 @@ export default function ForbiddenPage() {
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button asChild>
-                <Link href="/student">Вернуться в кабинет</Link>
+                <Link href={homePath}>Вернуться в кабинет</Link>
               </Button>
               <Button asChild variant="secondary">
                 <Link href="/login">Войти другим аккаунтом</Link>

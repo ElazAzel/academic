@@ -13,19 +13,24 @@ export function ForgotPasswordForm() {
     setPending(true);
     setMessage("");
 
-    const formData = new FormData(event.currentTarget);
-    const response = await fetch("/api/v1/auth/forgot-password", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email: String(formData.get("email")) })
-    });
+    try {
+      const formData = new FormData(event.currentTarget);
+      const response = await fetch("/api/v1/auth/forgot-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: String(formData.get("email")) })
+      });
 
-    setPending(false);
-    setMessage(
-      response.ok
-        ? "Если такой email есть в системе, ссылка для восстановления будет отправлена."
-        : "Не удалось создать запрос на восстановление. Проверьте email и попробуйте ещё раз."
-    );
+      setPending(false);
+      setMessage(
+        response.ok
+          ? "Если такой email есть в системе, ссылка для восстановления будет отправлена."
+          : "Не удалось создать запрос на восстановление. Проверьте email и попробуйте ещё раз."
+      );
+    } catch {
+      setPending(false);
+      setMessage("Не удалось создать запрос. Проверьте подключение к интернету.");
+    }
   }
 
   return (
@@ -34,7 +39,7 @@ export function ForgotPasswordForm() {
         Email
         <Input className="mt-2" name="email" type="email" placeholder="email@example.com" required autoComplete="email" />
       </label>
-      {message ? <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground">{message}</p> : null}
+      {message ? <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground" role="alert">{message}</p> : null}
       <Button className="w-full" type="submit" disabled={pending}>
         {pending ? "Отправляем..." : "Отправить ссылку"}
       </Button>

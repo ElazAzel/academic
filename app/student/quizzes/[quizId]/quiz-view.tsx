@@ -6,6 +6,7 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { readApiErrorMessage } from "@/lib/api-client";
+import { toast } from "sonner";
 import type { StudentQuizDetail } from "@/types/domain";
 
 export function QuizView({ quiz }: { quiz: StudentQuizDetail }) {
@@ -42,9 +43,9 @@ export function QuizView({ quiz }: { quiz: StudentQuizDetail }) {
         return;
       }
 
-      alert(await readApiErrorMessage(response, "Ошибка при отправке теста"));
+      toast.error(await readApiErrorMessage(response, "Ошибка при отправке теста"));
     } catch {
-      alert("Сетевая ошибка при отправке теста");
+      toast.error("Сетевая ошибка при отправке теста");
     } finally {
       setSubmitting(false);
     }

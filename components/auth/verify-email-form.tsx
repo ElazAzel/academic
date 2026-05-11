@@ -13,15 +13,20 @@ export function VerifyEmailForm({ token }: { token?: string }) {
     setPending(true);
     setMessage("");
 
-    const formData = new FormData(event.currentTarget);
-    const response = await fetch("/api/v1/auth/verify-email", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ token: String(formData.get("token")) })
-    });
+    try {
+      const formData = new FormData(event.currentTarget);
+      const response = await fetch("/api/v1/auth/verify-email", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: String(formData.get("token")) })
+      });
 
-    setPending(false);
-    setMessage(response.ok ? "Email подтверждён. Аккаунт готов к работе." : "Не удалось подтвердить email. Проверьте токен.");
+      setPending(false);
+      setMessage(response.ok ? "Email подтверждён. Аккаунт готов к работе." : "Не удалось подтвердить email. Проверьте токен.");
+    } catch {
+      setPending(false);
+      setMessage("Не удалось подтвердить email. Проверьте подключение к интернету.");
+    }
   }
 
   return (
@@ -30,7 +35,7 @@ export function VerifyEmailForm({ token }: { token?: string }) {
         Токен подтверждения
         <Input className="mt-2" name="token" defaultValue={token} required />
       </label>
-      {message ? <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground">{message}</p> : null}
+      {message ? <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground" role="alert">{message}</p> : null}
       <Button className="w-full" type="submit" disabled={pending}>
         {pending ? "Проверяем..." : "Подтвердить email"}
       </Button>

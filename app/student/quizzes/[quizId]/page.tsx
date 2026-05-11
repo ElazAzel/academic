@@ -12,35 +12,34 @@ import { ApiError } from "@/lib/http";
 export const dynamic = "force-dynamic";
 
 export default async function StudentQuizPage({ params }: { params: Promise<{ quizId: string }> }) {
-  const user = await requireRolePage(["student"]);
-  const { quizId } = await params;
+ const user = await requireRolePage(["student"]);
+ const { quizId } = await params;
 
-  let quiz;
-  try {
-    quiz = await getQuizForStudent(user.id, quizId);
-  } catch (error) {
-    if (error instanceof ApiError && error.code === "not_found") {
-      notFound();
-    }
-    throw error;
+ let quiz;
+ try {
+  quiz = await getQuizForStudent(user.id, quizId);
+ } catch (error) {
+  if (error instanceof ApiError && error.code === "not_found") {
+   notFound();
   }
+  throw error;
+ }
 
-  return (
-    <AppShell role="student">
-      <div className="mb-4">
-        <Button asChild size="sm" variant="secondary">
-          <Link href={`/student/lessons/${quiz.lessonId}`}>
-            <ArrowLeft className="h-4 w-4" />
-            Назад к уроку
-          </Link>
-        </Button>
-      </div>
-      <PageHeader 
-        title={quiz.title} 
-        description={`${quiz.questionsCount} вопросов · порог ${quiz.passThreshold}% · ${quiz.maxAttempts} попытки`} 
-        badge="Тест" 
-      />
-      <QuizView quiz={quiz} />
-    </AppShell>
-  );
+ return (
+  <AppShell role="student">
+   <div className="mb-4">
+    <Button asChild size="sm" variant="secondary">
+     <Link href={`/student/lessons/${quiz.lessonId}`}>
+      <ArrowLeft className="h-4 w-4"/>
+      Назад к уроку
+     </Link>
+    </Button>
+   </div>
+   <PageHeader 
+    title={quiz.title} 
+    description={`${quiz.questionsCount} вопросов · порог ${quiz.passThreshold}% · ${quiz.maxAttempts} попытки`} 
+  />
+   <QuizView quiz={quiz}/>
+  </AppShell>
+ );
 }

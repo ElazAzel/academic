@@ -4,20 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { requireRolePage } from "@/lib/auth/page-guards";
 
 export default async function InstructorQuestionsPage() {
-  await requireRolePage(["instructor", "admin"]);
+ await requireRolePage(["instructor", "admin"]);
 
-  return (
-    <AppShell role="instructor">
-      <PageHeader title="Вопросы от кураторов" description="Список вопросов." badge="Преподаватель" />
-      <Card className="rounded-2xl mt-6">
-        <CardHeader>
-          <CardTitle className="text-base">Вопросы</CardTitle>
-          <CardDescription>Раздел в разработке</CardDescription>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Здесь будут отображаться вопросы от кураторов.
-        </CardContent>
-      </Card>
-    </AppShell>
-  );
+ return (
+  <AppShell role="instructor">
+   <PageHeader title="Вопросы от кураторов" description="Список вопросов."/>
+   <Card className="rounded-2xl mt-6">
+    <CardHeader>
+     <CardTitle className="text-base">Вопросы</CardTitle>
+     <CardDescription>Раздел в разработке</CardDescription>
+    </CardHeader>
+    <CardContent className="text-sm text-muted-foreground">
+     Здесь будут отображаться вопросы от кураторов.
+    </CardContent>
+   </Card>
+  </AppShell>
+ );
 }

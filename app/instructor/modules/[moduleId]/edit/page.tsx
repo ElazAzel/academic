@@ -8,27 +8,26 @@ import { notFound } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export default async function InstructorEditModulePage({ params }: { params: Promise<{ moduleId: string }> }) {
-  await requireRolePage(["instructor", "admin"]);
-  const { moduleId } = await params;
-  
-  let courseModule;
-  try {
-    courseModule = await getModule(moduleId);
-  } catch {
-    notFound();
-  }
+ await requireRolePage(["instructor", "admin"]);
+ const { moduleId } = await params;
+ 
+ let courseModule;
+ try {
+  courseModule = await getModule(moduleId);
+ } catch {
+  notFound();
+ }
 
-  return (
-    <AppShell role="instructor">
-      <PageHeader 
-        title="Редактор модуля" 
-        description={`Редактирование модуля: ${courseModule.title}.`} 
-        badge="Преподаватель" 
-      />
+ return (
+  <AppShell role="instructor">
+   <PageHeader 
+    title="Редактор модуля" 
+    description={`Редактирование модуля: ${courseModule.title}.`} 
+  />
 
-      <div className="mt-8">
-        <ModuleEditForm module={courseModule as unknown as Parameters<typeof ModuleEditForm>[0]["module"]} />
-      </div>
-    </AppShell>
-  );
+   <div className="mt-8">
+    <ModuleEditForm module={courseModule as unknown as Parameters<typeof ModuleEditForm>[0]["module"]}/>
+   </div>
+  </AppShell>
+ );
 }

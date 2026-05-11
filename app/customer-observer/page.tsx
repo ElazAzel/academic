@@ -15,78 +15,78 @@ import { getObserverMetrics, MOCK_COHORTS, MOCK_CERTIFICATES } from "@/lib/mock-
 export const dynamic = "force-dynamic";
 
 export default async function CustomerObserverDashboardPage() {
-  await requireRolePage(["customer_observer"]);
-  const data = await getCustomerObserverDashboard();
-  const demoMode = isDemoModeEnabled();
+ await requireRolePage(["customer_observer"]);
+ const data = await getCustomerObserverDashboard();
+ const demoMode = isDemoModeEnabled();
 
-  const metrics = data?.metrics ?? getObserverMetrics();
-  const cohorts = demoMode ? MOCK_COHORTS : [];
-  const certificates = demoMode ? MOCK_CERTIFICATES : [];
+ const metrics = data?.metrics ?? getObserverMetrics();
+ const cohorts = demoMode ? MOCK_COHORTS : [];
+ const certificates = demoMode ? MOCK_CERTIFICATES : [];
 
-  return (
-    <AppShell role="customer_observer">
-      <PageHeader title="Дашборд проекта" description="Прогресс, посещаемость, сертификаты и отчёты." badge="Заказчик" />
-      <div className="space-y-6">
-        <MetricGrid metrics={metrics} />
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <CardTitle className="text-base">Прогресс по потокам</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {cohorts.length > 0 ? cohorts.map((c) => (
-              <div key={c.id} className="space-y-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <span>{c.name}</span>
-                  <span className="font-medium">{c.studentsCount} сл.</span>
-                </div>
-                <Progress value={42} />
-              </div>
-            )) : <p className="text-sm text-muted-foreground">Пока нет потоков для отчёта.</p>}
-          </CardContent>
-        </Card>
-        <Tabs tabs={[
-          {
-            label: "Сертификаты",
-            content: (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Номер</TableHead>
-                    <TableHead>Слушатель</TableHead>
-                    <TableHead>Курс</TableHead>
-                    <TableHead>Дата</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {certificates.map((cert) => (
-                    <TableRow key={cert.id}>
-                      <TableCell><code className="rounded bg-muted px-2 py-0.5 text-xs">{cert.number}</code></TableCell>
-                      <TableCell className="text-sm">{cert.studentName}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{cert.courseTitle}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{new Date(cert.issuedAt).toLocaleDateString("ru-RU")}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ),
-          },
-          {
-            label: "Отчёты",
-            content: (
-              <Card>
-                <CardContent className="space-y-3 pt-6">
-                  {["Отчёт по курсу", "Отчёт по потоку", "Отчёт по слушателям", "Отчёт по сертификатам"].map((r) => (
-                    <div key={r} className="flex items-center justify-between rounded-xl border p-3">
-                      <span className="text-sm">{r}</span>
-                      <Button size="sm" variant="secondary"><Download className="h-4 w-4" aria-hidden /> CSV</Button>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            ),
-          },
-        ]} />
-      </div>
-    </AppShell>
-  );
+ return (
+  <AppShell role="customer_observer">
+   <PageHeader title="Дашборд проекта" description="Прогресс, посещаемость, сертификаты и отчёты."/>
+   <div className="space-y-6">
+    <MetricGrid metrics={metrics}/>
+    <Card className="rounded-2xl">
+     <CardHeader>
+      <CardTitle className="text-base">Прогресс по потокам</CardTitle>
+     </CardHeader>
+     <CardContent className="space-y-4">
+      {cohorts.length > 0 ? cohorts.map((c) => (
+       <div key={c.id} className="space-y-1.5">
+        <div className="flex items-center justify-between text-sm">
+         <span>{c.name}</span>
+         <span className="font-medium">{c.studentsCount} сл.</span>
+        </div>
+        <Progress value={42}/>
+       </div>
+      )) : <p className="text-sm text-muted-foreground">Пока нет потоков для отчёта.</p>}
+     </CardContent>
+    </Card>
+    <Tabs tabs={[
+     {
+      label: "Сертификаты",
+      content: (
+       <Table>
+        <TableHeader>
+         <TableRow>
+          <TableHead>Номер</TableHead>
+          <TableHead>Слушатель</TableHead>
+          <TableHead>Курс</TableHead>
+          <TableHead>Дата</TableHead>
+         </TableRow>
+        </TableHeader>
+        <TableBody>
+         {certificates.map((cert) => (
+          <TableRow key={cert.id}>
+           <TableCell><code className="rounded bg-muted px-2 py-0.5 text-xs">{cert.number}</code></TableCell>
+           <TableCell className="text-sm">{cert.studentName}</TableCell>
+           <TableCell className="text-sm text-muted-foreground">{cert.courseTitle}</TableCell>
+           <TableCell className="text-xs text-muted-foreground">{new Date(cert.issuedAt).toLocaleDateString("ru-RU")}</TableCell>
+          </TableRow>
+         ))}
+        </TableBody>
+       </Table>
+      ),
+     },
+     {
+      label: "Отчёты",
+      content: (
+       <Card>
+        <CardContent className="space-y-3 pt-6">
+         {["Отчёт по курсу", "Отчёт по потоку", "Отчёт по слушателям", "Отчёт по сертификатам"].map((r) => (
+          <div key={r} className="flex items-center justify-between rounded-xl border p-3">
+           <span className="text-sm">{r}</span>
+           <Button size="sm" variant="secondary"><Download className="h-4 w-4" aria-hidden/> CSV</Button>
+          </div>
+         ))}
+        </CardContent>
+       </Card>
+      ),
+     },
+    ]}/>
+   </div>
+  </AppShell>
+ );
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, CheckCircle2, FileText, MessageCircle, Send } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,10 +59,10 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
         router.refresh();
       } else {
         const errData = await response.json().catch(() => ({}));
-        alert(errData.error?.message || "Не удалось сохранить прогресс");
+        toast.error(errData.error?.message || "Не удалось сохранить прогресс");
       }
     } catch {
-      alert("Ошибка сети");
+      toast.error("Ошибка сети");
     } finally {
       setSavingProgress(false);
     }

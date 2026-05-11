@@ -35,22 +35,26 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
       return;
     }
 
-    const targetResponse = await fetch("/api/v1/auth/redirect-target", { cache: "no-store" });
-    const payload = (await targetResponse.json().catch(() => null)) as { data?: { path?: string } } | null;
-    router.replace(payload?.data?.path ?? "/student");
+    try {
+      const targetResponse = await fetch("/api/v1/auth/redirect-target", { cache: "no-store" });
+      const payload = (await targetResponse.json().catch(() => null)) as { data?: { path?: string } } | null;
+      router.replace(payload?.data?.path ?? "/student");
+    } catch {
+      router.replace("/student");
+    }
   }
 
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
       <label className="block text-sm font-medium">
         Логин / Email
-        <Input className="mt-2" name="email" type="email" required autoComplete="email" />
+        <Input className="mt-2" name="email" type="email" required autoComplete="email" onChange={() => setError("")} />
       </label>
       <label className="block text-sm font-medium">
         Пароль
-        <Input className="mt-2" name="password" type="password" required autoComplete="current-password" />
+        <Input className="mt-2" name="password" type="password" required autoComplete="current-password" onChange={() => setError("")} />
       </label>
-      {error ? <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}
       <Button className="w-full" type="submit" disabled={pending}>
         {pending ? "Входим..." : "Войти"}
       </Button>

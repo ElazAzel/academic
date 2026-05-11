@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { answerQuestionAction, forwardQuestionAction, reviewSubmissionAction } from "@/server/actions/curator";
 import { Loader2, CheckCircle2, XCircle, RotateCcw, Share2 } from "lucide-react";
+import { toast } from "sonner";
 
 // --- Модалка ответа на вопрос ---
 export function AnswerQuestionModal({ 
@@ -23,7 +24,7 @@ export function AnswerQuestionModal({
       await answerQuestionAction(question.id, answer);
       onClose();
     } catch {
-      alert("Ошибка при сохранении ответа");
+      toast.error("Ошибка при сохранении ответа");
     } finally {
       setPending(false);
     }
@@ -35,7 +36,7 @@ export function AnswerQuestionModal({
       await forwardQuestionAction(question.id);
       onClose();
     } catch {
-      alert("Ошибка при передаче вопроса");
+      toast.error("Ошибка при передаче вопроса");
     } finally {
       setPending(false);
     }
@@ -95,7 +96,7 @@ export function ReviewSubmissionModal({
       await reviewSubmissionAction(submission.id, { status, score, feedback });
       onClose();
     } catch {
-      alert("Ошибка при сохранении проверки");
+      toast.error("Ошибка при сохранении проверки");
     } finally {
       setPending(false);
     }

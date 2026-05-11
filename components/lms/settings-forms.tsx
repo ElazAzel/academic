@@ -4,6 +4,7 @@ import { useTransition, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { updateProfileSettingsAction, updatePasswordAction } from "@/server/actions/settings";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function ProfileSettingsForm({ user }: { user: { name: string | null; email: string; } }) {
   const [isPending, startTransition] = useTransition();
@@ -12,9 +13,9 @@ export function ProfileSettingsForm({ user }: { user: { name: string | null; ema
     startTransition(async () => {
       try {
         await updateProfileSettingsAction(formData);
-        alert("Профиль успешно обновлен");
+        toast.success("Профиль успешно обновлен");
       } catch (err) {
-        alert(err instanceof Error ? err.message : "Ошибка при обновлении профиля");
+        toast.error(err instanceof Error ? err.message : "Ошибка при обновлении профиля");
       }
     });
   }
@@ -49,10 +50,10 @@ export function SecuritySettingsForm() {
     startTransition(async () => {
       try {
         await updatePasswordAction(formData);
-        alert("Пароль успешно изменен");
+        toast.success("Пароль успешно изменен");
         formRef.current?.reset();
       } catch (err) {
-        alert(err instanceof Error ? err.message : "Ошибка при изменении пароля");
+        toast.error(err instanceof Error ? err.message : "Ошибка при изменении пароля");
       }
     });
   }

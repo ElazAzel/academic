@@ -11,49 +11,48 @@ import { notFound } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export default async function CourseCurriculumPage({ params }: { params: Promise<{ courseId: string }> }) {
-  await requireRolePage(["instructor", "admin"]);
-  const { courseId } = await params;
-  
-  let course;
-  try {
-    course = await getCourse(courseId);
-  } catch {
-    notFound();
-  }
+ await requireRolePage(["instructor", "admin"]);
+ const { courseId } = await params;
+ 
+ let course;
+ try {
+  course = await getCourse(courseId);
+ } catch {
+  notFound();
+ }
 
-  return (
-    <AppShell role="instructor">
-      <div className="mb-4">
-        <Link href={`/instructor/courses/${courseId}/edit`}>
-          <Button size="sm" variant="secondary">
-            <ArrowLeft className="h-4 w-4" />
-            Назад к настройкам
-          </Button>
-        </Link>
-      </div>
+ return (
+  <AppShell role="instructor">
+   <div className="mb-4">
+    <Link href={`/instructor/courses/${courseId}/edit`}>
+     <Button size="sm" variant="secondary">
+      <ArrowLeft className="h-4 w-4"/>
+      Назад к настройкам
+     </Button>
+    </Link>
+   </div>
 
-      <PageHeader 
-        title="Учебный план" 
-        description={`Структура курса: ${course.title}. Добавляйте модули и уроки.`} 
-        badge="Преподаватель" 
-      />
+   <PageHeader 
+    title="Учебный план" 
+    description={`Структура курса: ${course.title}. Добавляйте модули и уроки.`} 
+  />
 
-      <div className="mt-8">
-        <CurriculumEditor
-          courseId={courseId}
-          initialModules={course.modules.map((m) => ({
-            id: m.id,
-            title: m.title,
-            order: m.order,
-            lessons: m.lessons.map((l) => ({
-              id: l.id,
-              title: l.title,
-              type: l.type,
-              order: l.order
-            }))
-          }))}
-        />
-      </div>
-    </AppShell>
-  );
+   <div className="mt-8">
+    <CurriculumEditor
+     courseId={courseId}
+     initialModules={course.modules.map((m) => ({
+      id: m.id,
+      title: m.title,
+      order: m.order,
+      lessons: m.lessons.map((l) => ({
+       id: l.id,
+       title: l.title,
+       type: l.type,
+       order: l.order
+      }))
+     }))}
+   />
+   </div>
+  </AppShell>
+ );
 }

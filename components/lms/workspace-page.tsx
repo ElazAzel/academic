@@ -6,17 +6,15 @@ import { Badge } from "@/components/ui/badge";
 export function WorkspacePage({
   title,
   description,
-  badge,
   items = ["Курсы", "Прогресс", "Отчёты"]
 }: {
   title: string;
   description: string;
-  badge?: string;
   items?: string[];
 }) {
   return (
     <AppShell>
-      <PageHeader title={title} description={description} badge={badge} />
+      <PageHeader title={title} description={description} />
       <div className="grid gap-4 md:grid-cols-3">
         {items.map((item) => (
           <Card key={item}>

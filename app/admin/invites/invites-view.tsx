@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Copy, Link2, Plus, Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { createInviteAction, deleteInviteAction } from "@/server/actions/invites";
 
 export function InvitesView({
@@ -35,7 +36,7 @@ export function InvitesView({
         await createInviteAction(formData);
         setShowCreate(false);
       } catch (err) {
-        alert(err instanceof Error ? err.message : "Ошибка при создании");
+        toast.error(err instanceof Error ? err.message : "Ошибка при создании");
       }
     });
   }
@@ -46,7 +47,7 @@ export function InvitesView({
       try {
         await deleteInviteAction(id);
       } catch (err) {
-        alert(err instanceof Error ? err.message : "Ошибка при удалении");
+        toast.error(err instanceof Error ? err.message : "Ошибка при удалении");
       }
     });
   }
@@ -54,7 +55,7 @@ export function InvitesView({
   function copyToClipboard(token: string) {
     const url = `${window.location.origin}/register?invite=${token}`;
     navigator.clipboard.writeText(url);
-    alert("Ссылка скопирована!");
+    toast.success("Ссылка скопирована!");
   }
 
   return (
