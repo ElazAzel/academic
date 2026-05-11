@@ -20,7 +20,7 @@ export async function PATCH(request: Request, context: Context) {
     const user = await requireUser("courses:write");
     const { courseId } = await context.params;
     const input = await parseJson(request, updateCourseSchema);
-    return ok(await updateCourse(courseId, input, user.id));
+    return ok(await updateCourse(courseId, input, user.id, user.roles));
   } catch (error) {
     return errorResponse(error);
   }

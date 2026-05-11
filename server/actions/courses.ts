@@ -6,9 +6,11 @@
  */
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
+import { requireRole } from "@/lib/auth/page-guards";
 import type { CourseDetail, ModuleDetail, LessonDetail, LessonSummary } from "@/types/domain";
 
 export async function getCourseForStudent(courseId: string): Promise<CourseDetail | null> {
+  await requireRole(["student", "curator", "super_curator", "instructor", "admin", "customer_observer"]);
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -86,6 +88,7 @@ export async function getCourseForStudent(courseId: string): Promise<CourseDetai
 }
 
 export async function getLessonForStudent(lessonId: string): Promise<LessonDetail | null> {
+  await requireRole(["student", "curator", "super_curator", "instructor"]);
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -147,6 +150,7 @@ export async function getLessonForStudent(lessonId: string): Promise<LessonDetai
 }
 
 export async function askCuratorQuestion(lessonId: string, text: string) {
+  await requireRole(["student"]);
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 

@@ -8,6 +8,7 @@ export type ApiErrorCode =
   | "not_found"
   | "conflict"
   | "gone"
+  | "too_many_requests"
   | "validation_error"
   | "service_unavailable"
   | "internal_error";
@@ -74,4 +75,26 @@ export async function parseJson<T>(request: Request, schema: ZodSchema<T>) {
 
 export function getSearchParam(request: Request, key: string, fallback = "") {
   return new URL(request.url).searchParams.get(key) ?? fallback;
+}
+
+export function verifyCsrf(request: Request) {
+  const origin = request.headers.get("origin");
+  const referer = request.headers.get("referer");
+  const allowedOrigin = process.env.APP_URL || "http://localhost:3000";
+
+  const source = origin ?? referer;
+  if (!source) {
+    throw new ApiError("forbidden", "CSRF: missing origin header", 403);
+  }
+
+  try {
+    const sourceUrl = new URL(source);
+    const allowedUrl = new URL(allowedOrigin);
+
+    if (sourceUrl.hostname !== allowedUrl.hostname || sourceUrl.port !== allowedUrl.port) {
+      throw new ApiError("forbidden", "CSRF: origin mismatch", 403);
+    }
+  } catch {
+    throw new ApiError("forbidden", "CSRF: invalid origin", 403);
+  }
 }

@@ -1,4 +1,4 @@
-import type { Prisma, QuizQuestion } from "@prisma/client";
+import type { Prisma, QuizQuestion, EnrollmentStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { logAudit } from "@/server/modules/audit/service";
@@ -61,6 +61,15 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
   });
   if (!quiz) {
     throw new ApiError("not_found", "Тест не найден", 404);
+  }
+
+  if (quiz.courseId) {
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { userId_courseId: { userId, courseId: quiz.courseId } }
+    });
+    if (!enrollment || enrollment.status !== ("ACTIVE" as EnrollmentStatus)) {
+      throw new ApiError("forbidden", "Нет доступа к тесту: вы не зачислены на курс", 403);
+    }
   }
   if (!skipLimit) {
     const attempts = await prisma.quizAttempt.count({ where: { quizId, userId } });

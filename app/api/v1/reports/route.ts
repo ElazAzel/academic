@@ -7,7 +7,7 @@ const prisma = getPrisma();
 export async function GET(request: Request) {
   try {
     const user = await requireUser();
-    if (!user.roles.includes("super_curator") && !user.roles.includes("customer_observer")) {
+    if (!user.roles.includes("super_curator") && !user.roles.includes("customer_observer") && !user.roles.includes("admin")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

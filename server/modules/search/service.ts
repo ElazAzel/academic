@@ -3,7 +3,7 @@ import { getPrisma } from "@/lib/prisma";
 
 const prisma = getPrisma();
 
-export async function searchAcademy(query: string) {
+export async function searchAcademy(query: string, includeUsers = false) {
   const normalized = query.trim();
   if (!normalized) {
     return { courses: [], lessons: [], users: [] };
@@ -24,16 +24,18 @@ export async function searchAcademy(query: string) {
       ORDER BY ts_rank(to_tsvector('simple', title || ' ' || COALESCE(summary, '')), plainto_tsquery('simple', ${normalized})) DESC
       LIMIT 10
     `),
-    prisma.user.findMany({
-      where: {
-        OR: [
-          { email: { contains: normalized, mode: "insensitive" } },
-          { name: { contains: normalized, mode: "insensitive" } }
-        ]
-      },
-      select: { id: true, email: true, name: true },
-      take: 10
-    })
+    includeUsers
+      ? prisma.user.findMany({
+          where: {
+            OR: [
+              { email: { contains: normalized, mode: "insensitive" } },
+              { name: { contains: normalized, mode: "insensitive" } }
+            ]
+          },
+          select: { id: true, email: true, name: true },
+          take: 10
+        })
+      : Promise.resolve([])
   ]);
 
   return { courses, lessons, users };

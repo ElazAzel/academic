@@ -25,7 +25,8 @@ export async function POST(request: Request) {
         durationHours: input.durationHours ?? 0,
         traversalMode: input.traversalMode ?? "sequential"
       },
-      user.id
+      user.id,
+      user.roles
     ));
   } catch (error) {
     return errorResponse(error);

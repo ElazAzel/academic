@@ -8,6 +8,7 @@ import type { RoleKey } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import { env } from "@/lib/env";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 import { getEnabledOAuthProviders } from "@/server/auth/provider-flags";
 
 const prisma = getPrisma();
@@ -23,6 +24,10 @@ const providers: NonNullable<AuthOptions["providers"]> = [
       const email = credentials?.email?.toLowerCase().trim();
       const password = credentials?.password;
       if (!email || !password) {
+        return null;
+      }
+      const rl = await checkRateLimit(`login:${email}`);
+      if (!rl.allowed) {
         return null;
       }
       const user = await prisma.user.findUnique({
@@ -84,35 +89,32 @@ export const authOptions: AuthOptions = {
   },
   providers,
   callbacks: {
+    async signIn({ account, profile }) {
+      if (account?.provider === "google" || account?.provider === "github") {
+        const email = profile?.email?.toLowerCase().trim();
+        if (!email) return false;
+        const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+        if (!user) return false;
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-      }
-      if (user?.roles) {
         token.roles = user.roles;
-      }
-      if (typeof token.id === "string" && (!Array.isArray(token.roles) || token.roles.length === 0)) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id },
-          include: { roles: { include: { role: true } } }
-        });
-        token.roles = dbUser?.roles.map((entry) => entry.role.key) ?? [];
+        token.email = user.email;
+        token.name = user.name;
+        token.picture = user.image;
       }
       return token;
     },
     async session({ session, token }) {
-      if (token?.id && typeof token.id === "string") {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id },
-          include: { roles: { include: { role: true } } }
-        });
-        if (session.user && dbUser) {
-          session.user.id = dbUser.id;
-          session.user.email = dbUser.email;
-          session.user.name = dbUser.name;
-          session.user.image = dbUser.image;
-          session.user.roles = dbUser.roles.map((entry) => entry.role.key);
-        }
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.roles = (token.roles as RoleKey[]) ?? [];
+        session.user.email = token.email as string;
+        session.user.name = token.name as string | null;
+        session.user.image = token.picture as string | null;
       }
       return session;
     }

@@ -24,13 +24,14 @@ export function getAssignableRolesForActor(actorRoles: RoleKey[]) {
   return [];
 }
 
-export async function listUsers(input: { roleKeys?: RoleKey[]; take?: number } = {}) {
+export async function listUsers(input: { roleKeys?: RoleKey[]; take?: number; skip?: number } = {}) {
   const take = Math.min(input.take ?? 100, 500);
   return prisma.user.findMany({
     where: input.roleKeys?.length
       ? { roles: { some: { role: { key: { in: input.roleKeys } } } } }
       : undefined,
     orderBy: { createdAt: "desc" },
+    skip: input.skip ?? 0,
     take,
     select: {
       id: true,
@@ -40,6 +41,14 @@ export async function listUsers(input: { roleKeys?: RoleKey[]; take?: number } =
       lastLoginAt: true,
       roles: { include: { role: true } }
     }
+  });
+}
+
+export async function countUsers(input: { roleKeys?: RoleKey[] } = {}) {
+  return prisma.user.count({
+    where: input.roleKeys?.length
+      ? { roles: { some: { role: { key: { in: input.roleKeys } } } } }
+      : undefined
   });
 }
 

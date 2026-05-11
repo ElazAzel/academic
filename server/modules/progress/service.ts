@@ -58,83 +58,89 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
     }
   }
 
-  const lessonProgress = await prisma.lessonProgress.upsert({
-    where: { userId_lessonId: { userId, lessonId } },
-    update: {
-      percent,
-      status,
-      lastSeenAt: new Date(),
-      completedAt: status === ProgressStatus.COMPLETED ? new Date() : undefined,
-      enrollmentId: enrollment?.id
-    },
-    create: {
-      userId,
-      lessonId,
-      enrollmentId: enrollment?.id,
-      percent,
-      status,
-      startedAt: new Date(),
-      lastSeenAt: new Date(),
-      completedAt: status === ProgressStatus.COMPLETED ? new Date() : undefined
-    }
-  });
+  const course = lesson.module.course;
 
-  const moduleLessons = lesson.module.lessons;
-  const completedModuleLessons = await prisma.lessonProgress.count({
-    where: {
-      userId,
-      lessonId: { in: moduleLessons.map((item) => item.id) },
-      status: ProgressStatus.COMPLETED
-    }
-  });
-  const modulePercent = moduleLessons.length === 0 ? 0 : Math.round((completedModuleLessons / moduleLessons.length) * 100);
-  await prisma.moduleProgress.upsert({
-    where: { userId_moduleId: { userId, moduleId: lesson.moduleId } },
-    update: {
-      percent: modulePercent,
-      status: modulePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
-      completedAt: modulePercent >= 100 ? new Date() : undefined,
-      enrollmentId: enrollment?.id
-    },
-    create: {
-      userId,
-      moduleId: lesson.moduleId,
-      enrollmentId: enrollment?.id,
-      percent: modulePercent,
-      status: modulePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
-      completedAt: modulePercent >= 100 ? new Date() : undefined
-    }
-  });
+  const result = await prisma.$transaction(async (tx) => {
+    const lessonProgress = await tx.lessonProgress.upsert({
+      where: { userId_lessonId: { userId, lessonId } },
+      update: {
+        percent,
+        status,
+        lastSeenAt: new Date(),
+        completedAt: status === ProgressStatus.COMPLETED ? new Date() : undefined,
+        enrollmentId: enrollment?.id
+      },
+      create: {
+        userId,
+        lessonId,
+        enrollmentId: enrollment?.id,
+        percent,
+        status,
+        startedAt: new Date(),
+        lastSeenAt: new Date(),
+        completedAt: status === ProgressStatus.COMPLETED ? new Date() : undefined
+      }
+    });
 
-  const courseLessons = lesson.module.course.modules.flatMap((module) => module.lessons);
-  const completedCourseLessons = await prisma.lessonProgress.count({
-    where: {
-      userId,
-      lessonId: { in: courseLessons.map((item) => item.id) },
-      status: ProgressStatus.COMPLETED
-    }
-  });
-  const coursePercent = courseLessons.length === 0 ? 0 : Math.round((completedCourseLessons / courseLessons.length) * 100);
-  await prisma.courseProgress.upsert({
-    where: { userId_courseId: { userId, courseId: lesson.module.course.id } },
-    update: {
-      percent: coursePercent,
-      status: coursePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
-      completedAt: coursePercent >= 100 ? new Date() : undefined,
-      enrollmentId: enrollment?.id
-    },
-    create: {
-      userId,
-      courseId: lesson.module.course.id,
-      enrollmentId: enrollment?.id,
-      percent: coursePercent,
-      status: coursePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
-      completedAt: coursePercent >= 100 ? new Date() : undefined
-    }
+    const moduleLessons = lesson.module.lessons;
+    const completedModuleLessons = await tx.lessonProgress.count({
+      where: {
+        userId,
+        lessonId: { in: moduleLessons.map((item) => item.id) },
+        status: ProgressStatus.COMPLETED
+      }
+    });
+    const modulePercent = moduleLessons.length === 0 ? 0 : Math.round((completedModuleLessons / moduleLessons.length) * 100);
+    const moduleProgress = await tx.moduleProgress.upsert({
+      where: { userId_moduleId: { userId, moduleId: lesson.moduleId } },
+      update: {
+        percent: modulePercent,
+        status: modulePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
+        completedAt: modulePercent >= 100 ? new Date() : undefined,
+        enrollmentId: enrollment?.id
+      },
+      create: {
+        userId,
+        moduleId: lesson.moduleId,
+        enrollmentId: enrollment?.id,
+        percent: modulePercent,
+        status: modulePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
+        completedAt: modulePercent >= 100 ? new Date() : undefined
+      }
+    });
+
+    const courseLessons = course.modules.flatMap((m) => m.lessons);
+    const completedCourseLessons = await tx.lessonProgress.count({
+      where: {
+        userId,
+        lessonId: { in: courseLessons.map((item) => item.id) },
+        status: ProgressStatus.COMPLETED
+      }
+    });
+    const coursePercent = courseLessons.length === 0 ? 0 : Math.round((completedCourseLessons / courseLessons.length) * 100);
+    const courseProgress = await tx.courseProgress.upsert({
+      where: { userId_courseId: { userId, courseId: course.id } },
+      update: {
+        percent: coursePercent,
+        status: coursePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
+        completedAt: coursePercent >= 100 ? new Date() : undefined,
+        enrollmentId: enrollment?.id
+      },
+      create: {
+        userId,
+        courseId: course.id,
+        enrollmentId: enrollment?.id,
+        percent: coursePercent,
+        status: coursePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
+        completedAt: coursePercent >= 100 ? new Date() : undefined
+      }
+    });
+
+    return { lessonProgress, moduleProgress, courseProgress, modulePercent, coursePercent };
   });
 
   await logAudit({ actorId: userId, action: "progress.lesson_marked", entity: "lesson", entityId: lessonId, metadata: { percent } });
-  return { lessonProgress, modulePercent, coursePercent };
+  return result;
 }
 
 export async function getProgressSnapshot(userId: string) {

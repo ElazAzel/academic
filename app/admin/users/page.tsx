@@ -1,21 +1,32 @@
+import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { UserRoleEditor } from "@/components/admin/user-role-editor";
 import { PageHeader } from "@/components/lms/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getAssignableRolesForActor, listUsers } from "@/server/modules/users/service";
+import { getAssignableRolesForActor, listUsers, countUsers } from "@/server/modules/users/service";
 import { ROLE_LABELS, type RoleKey } from "@/types/domain";
 import { UserManagementToolbar } from "@/components/admin/user-management-toolbar";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminUsersPage() {
+const PAGE_SIZE = 200;
+
+export default async function AdminUsersPage(props: { searchParams?: Promise<{ page?: string }> }) {
   const actor = await requireRolePage(["admin", "super_curator"]);
-  const users = await listUsers({ take: 200 });
+  const searchParams = await props.searchParams;
+  const currentPage = Math.max(1, Number(searchParams?.page) || 1);
+  const skip = (currentPage - 1) * PAGE_SIZE;
+  const [users, totalUsers] = await Promise.all([
+    listUsers({ take: PAGE_SIZE, skip }),
+    countUsers()
+  ]);
+  const totalPages = Math.ceil(totalUsers / PAGE_SIZE);
   const assignableRoles = getAssignableRolesForActor(actor.roles);
   const badge = actor.roles.includes("admin") ? "Администратор" : "Главный куратор";
 
@@ -93,6 +104,25 @@ export default async function AdminUsersPage() {
             )
           }
         ]} />
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-4">
+            <p className="text-sm text-muted-foreground">
+              {totalUsers} пользователей · страница {currentPage} из {totalPages}
+            </p>
+            <div className="flex gap-2">
+              {currentPage > 1 && (
+                <Button asChild variant="secondary" size="sm">
+                  <Link href={`/admin/users?page=${currentPage - 1}`}>Назад</Link>
+                </Button>
+              )}
+              {currentPage < totalPages && (
+                <Button asChild variant="secondary" size="sm">
+                  <Link href={`/admin/users?page=${currentPage + 1}`}>Вперёд</Link>
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );

@@ -47,6 +47,7 @@ async function safeQuery<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 // ── Слушатель ───────────────────────────────────────────────────────
 
 export async function getStudentDashboard() {
+  await requireRole(["student"]);
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -164,6 +165,7 @@ export async function getStudentDashboard() {
 // ── Куратор ─────────────────────────────────────────────────────────
 
 export async function getCuratorDashboard() {
+  await requireRole(["curator"]);
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -372,6 +374,7 @@ export async function getCuratorQuestions(status: "open" | "answered" = "open") 
 // ── Супер-куратор ───────────────────────────────────────────────────
 
 export async function getSuperCuratorDashboard() {
+  await requireRole(["super_curator"]);
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -495,6 +498,7 @@ export async function getSuperCuratorDashboard() {
 // ── Администратор ───────────────────────────────────────────────────
 
 export async function getAdminDashboard() {
+  await requireRole(["admin"]);
   return safeQuery(async () => {
     const [
       coursesCount, 
@@ -595,6 +599,7 @@ export async function getAdminDashboard() {
 // ── Преподаватель ───────────────────────────────────────────────────
 
 export async function getInstructorDashboard() {
+  await requireRole(["instructor"]);
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -670,6 +675,7 @@ export async function getInstructorDashboard() {
 }
 
 export async function getInstructorAnalytics() {
+  await requireRole(["instructor"]);
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -748,6 +754,7 @@ export async function getInstructorAnalytics() {
 // ── Заказчик ────────────────────────────────────────────────────────
 
 export async function getCustomerObserverDashboard() {
+  await requireRole(["customer_observer"]);
   return safeQuery(async () => {
     const metrics: DashboardMetric[] = [
       { label: "Проекты", value: 1, tone: "primary" },

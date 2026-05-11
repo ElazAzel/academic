@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { listCourses } from "@/server/modules/courses/service";
 import type { CourseSummary } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
@@ -13,18 +13,8 @@ export const dynamic = "force-dynamic";
 export default async function InstructorCoursesPage() {
   const user = await requireRolePage(["instructor", "admin"]);
   const isAdmin = user.roles.includes("admin");
-  const prisma = getPrisma();
 
-  const coursesDb = await prisma.course.findMany({
-    where: isAdmin ? {} : {
-      instructors: { some: { userId: user.id } }
-    },
-    include: {
-      modules: { include: { lessons: true } },
-      instructors: { include: { user: true } }
-    },
-    orderBy: { createdAt: "desc" }
-  });
+  const coursesDb = await listCourses(undefined, isAdmin ? undefined : user.id);
 
   const courses: CourseSummary[] = coursesDb.map(course => ({
     id: course.id,

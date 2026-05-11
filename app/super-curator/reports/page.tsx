@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,10 +8,8 @@ import { Download, FileText } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 
 const REPORTS = [
-  { id: "r1", title: "Еженедельный отчёт по кураторам", type: "weekly", lastGenerated: "2026-05-05", format: "CSV" },
-  { id: "r2", title: "Отчёт по рискам слушателей", type: "risk", lastGenerated: "2026-05-06", format: "XLSX" },
-  { id: "r3", title: "SLA ответов кураторов", type: "sla", lastGenerated: "2026-05-04", format: "PDF" },
-  { id: "r4", title: "Прогресс по потокам", type: "progress", lastGenerated: "2026-05-06", format: "CSV" },
+  { id: "r1", title: "Прогресс по потокам", type: "progress", format: "CSV" },
+  { id: "r2", title: "Отчёт по рискам слушателей", type: "risk", format: "CSV" },
 ];
 
 export default async function SuperCuratorReportsPage() {
@@ -18,7 +17,7 @@ export default async function SuperCuratorReportsPage() {
 
   return (
     <AppShell role="super_curator">
-      <PageHeader title="Отчёты" description="Регулярные и ad-hoc отчёты для супер-куратора." badge="Супер-куратор" />
+      <PageHeader title="Отчёты" description="Ad-hoc отчёты для супер-куратора." badge="Супер-куратор" />
       <div className="space-y-3">
         {REPORTS.map((r) => (
           <Card key={r.id} className="transition-shadow hover:shadow-sm">
@@ -28,12 +27,14 @@ export default async function SuperCuratorReportsPage() {
               </span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{r.title}</p>
-                <p className="text-xs text-muted-foreground">Последний: {r.lastGenerated}</p>
+                <p className="text-xs text-muted-foreground">Формат: {r.format}</p>
               </div>
               <Badge>{r.format}</Badge>
-              <Button size="sm" variant="secondary">
-                <Download className="h-4 w-4" />
-                Скачать
+              <Button asChild size="sm" variant="secondary">
+                <Link href={`/api/v1/reports?type=${r.type}`}>
+                  <Download className="h-4 w-4" />
+                  Скачать
+                </Link>
               </Button>
             </CardContent>
           </Card>

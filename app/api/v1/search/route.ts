@@ -4,8 +4,9 @@ import { searchAcademy } from "@/server/modules/search/service";
 
 export async function GET(request: Request) {
   try {
-    await requireUser("courses:read");
-    return ok(await searchAcademy(getSearchParam(request, "q")));
+    const user = await requireUser("courses:read");
+    const includeUsers = user.roles.includes("admin");
+    return ok(await searchAcademy(getSearchParam(request, "q"), includeUsers));
   } catch (error) {
     return errorResponse(error);
   }

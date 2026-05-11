@@ -7,9 +7,12 @@ import { logAudit } from "@/server/modules/audit/service";
 
 const prisma = getPrisma();
 
-export async function listCourses(status?: CourseStatus) {
+export async function listCourses(status?: CourseStatus, instructorId?: string) {
   return prisma.course.findMany({
-    where: status ? { status } : undefined,
+    where: {
+      ...(status ? { status } : {}),
+      ...(instructorId ? { instructors: { some: { userId: instructorId } } } : {})
+    },
     orderBy: { createdAt: "desc" },
     include: {
       modules: {
@@ -52,9 +55,10 @@ export async function createCourse(input: {
   coverUrl?: string;
   durationHours: number;
   traversalMode: "sequential" | "open";
-}, actorId: string) {
+}, actorId: string, actorRoles?: string[]) {
   const baseSlug = slugify(input.title);
   const slug = `${baseSlug || "course"}-${Date.now().toString(36)}`;
+  const isAdmin = actorRoles?.includes("admin") ?? false;
   const course = await prisma.course.create({
     data: {
       slug,
@@ -64,11 +68,9 @@ export async function createCourse(input: {
       coverUrl: input.coverUrl,
       durationHours: input.durationHours,
       traversalMode: input.traversalMode,
-      instructors: {
-        create: {
-          userId: actorId
-        }
-      }
+      ...(isAdmin ? {} : {
+        instructors: { create: { userId: actorId } }
+      })
     }
   });
   await logAudit({ actorId, action: "course.created", entity: "course", entityId: course.id });
@@ -83,8 +85,13 @@ export async function updateCourse(courseId: string, input: {
   durationHours?: number;
   traversalMode?: "sequential" | "open";
   status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
-}, actorId: string) {
-  await getCourse(courseId);
+}, actorId: string, actorRoles?: string[]) {
+  const existing = await getCourse(courseId);
+  const isAdmin = actorRoles?.includes("admin") ?? false;
+  const isInstructor = existing.instructors.some((i) => i.userId === actorId);
+  if (!isAdmin && !isInstructor) {
+    throw new ApiError("forbidden", "Вы не являетесь преподавателем этого курса", 403);
+  }
   const statusDates =
     input.status === "PUBLISHED"
       ? { publishedAt: new Date(), archivedAt: null }
