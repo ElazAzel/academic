@@ -149,6 +149,43 @@ export interface LessonDetail extends LessonSummary {
   assignments: AssignmentSummary[];
 }
 
+// ── Плеер курса (PR 2) ──────────────────────────────────────────────
+export type CompletionCta = "start" | "continue" | "repeat" | "locked";
+
+export interface LessonPlayerCard {
+  id: string;
+  order: number;
+  title: string;
+  type: LessonType;
+  durationMinutes: number;
+  isRequired: boolean;
+  status: ProgressStatus;
+  lockReason?: string;
+  hasQuiz: boolean;
+  hasAssignment: boolean;
+  completionCta: CompletionCta;
+}
+
+export interface ModulePlayerDetail {
+  id: string;
+  order: number;
+  title: string;
+  progressPercent: number;
+  lessons: LessonPlayerCard[];
+  deadline?: { date: string; overdue: boolean };
+}
+
+export interface StudentCoursePlayerDetail {
+  course: CourseSummary;
+  enrollment: EnrollmentStatus;
+  progress: { completed: number; total: number; percent: number };
+  modules: ModulePlayerDetail[];
+  nextLessonId?: string;
+  curator?: { name: string; unansweredCount: number };
+  certificateEligible: boolean;
+  completionThreshold: number;
+}
+
 export interface StudentCourseLearningDetail extends CourseSummary {
   goal?: string | null;
   completionThreshold: number;
