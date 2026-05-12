@@ -5,8 +5,26 @@ import { logAudit } from "@/server/modules/audit/service";
 
 const prisma = getPrisma();
 
-export async function listAssignments() {
+export async function listAssignments(userId: string, roleKeys: string[]) {
+  const isAdmin = roleKeys.includes("admin");
+  const isInstructor = roleKeys.includes("instructor");
+
+  const where: Record<string, unknown> = {};
+
+  if (!isAdmin) {
+    if (isInstructor) {
+      where.course = {
+        instructors: { some: { userId } }
+      };
+    } else {
+      where.course = {
+        enrollments: { some: { userId, status: { in: ["ACTIVE", "COMPLETED"] } } }
+      };
+    }
+  }
+
   return prisma.assignment.findMany({
+    where,
     include: {
       course: { select: { id: true, title: true } },
       lesson: { select: { id: true, title: true } },

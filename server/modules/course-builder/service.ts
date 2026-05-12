@@ -1,27 +1,14 @@
-import { LessonType, CourseStatus } from "@prisma/client";
+import { CourseStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { toJsonValue } from "@/lib/json";
 import { logAudit } from "@/server/modules/audit/service";
+import { assertInstructorOfCourse, createModule, updateModule, deleteModule, createLesson, updateLesson, deleteLesson } from "@/server/modules/courses/service";
 import type { CourseBuilderDetail, BuilderModuleDetail, BuilderLessonDetail, ContentBlock } from "@/types/domain";
 
 const prisma = getPrisma();
 
-async function assertInstructorOfCourse(actorId: string, courseId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: actorId },
-    include: { roles: { include: { role: { select: { key: true } } } } }
-  });
-  if (!user) throw new Error("Пользователь не найден");
-  const roleKeys = user.roles.map((r) => r.role.key);
-  if (roleKeys.includes("admin")) return;
-  const instructor = await prisma.courseInstructor.findUnique({
-    where: { courseId_userId: { courseId, userId: actorId } }
-  });
-  if (!instructor) {
-    throw new ApiError("forbidden", "Вы не являетесь преподавателем этого курса", 403);
-  }
-}
+export { assertInstructorOfCourse, createModule, updateModule, deleteModule, createLesson, updateLesson, deleteLesson };
 
 function toBuilderDetail(course: Record<string, unknown>): CourseBuilderDetail {
   const c = course as {
@@ -155,118 +142,10 @@ export async function updateCourseSettings(
   return course;
 }
 
-export async function createModule(
-  courseId: string,
-  input: { title: string; description?: string; order: number; recommendedDays: number },
-  actorId: string
-) {
-  await assertInstructorOfCourse(actorId, courseId);
-  const mod = await prisma.module.create({
-    data: { courseId, title: input.title, description: input.description, order: input.order, recommendedDays: input.recommendedDays },
-  });
-  await logAudit({ actorId, action: "module.created", entity: "module", entityId: mod.id });
-  return mod;
-}
-
-export async function updateModule(
-  moduleId: string,
-  input: { title?: string; description?: string | null; order?: number; recommendedDays?: number; status?: "DRAFT" | "PUBLISHED" | "ARCHIVED" },
-  actorId: string
-) {
-  const mod = await prisma.module.findUnique({ where: { id: moduleId }, select: { courseId: true } });
-  if (!mod) throw new ApiError("not_found", "Модуль не найден", 404);
-  await assertInstructorOfCourse(actorId, mod.courseId);
-  const updated = await prisma.module.update({
-    where: { id: moduleId },
-    data: { ...input, status: input.status ? CourseStatus[input.status] : undefined },
-  });
-  await logAudit({ actorId, action: "module.updated", entity: "module", entityId: moduleId, metadata: input as Record<string, unknown> });
-  return updated;
-}
-
-export async function deleteModule(moduleId: string, actorId: string) {
-  const mod = await prisma.module.findUnique({ where: { id: moduleId }, select: { courseId: true } });
-  if (!mod) throw new ApiError("not_found", "Модуль не найден", 404);
-  await assertInstructorOfCourse(actorId, mod.courseId);
-  await prisma.module.delete({ where: { id: moduleId } });
-  await logAudit({ actorId, action: "module.deleted", entity: "module", entityId: moduleId });
-}
-
 export async function reorderModules(courseId: string, moduleIds: string[], actorId: string) {
   await assertInstructorOfCourse(actorId, courseId);
   await prisma.$transaction(moduleIds.map((id, index) => prisma.module.update({ where: { id }, data: { order: index } })));
   await logAudit({ actorId, action: "modules.reordered", entity: "course", entityId: courseId, metadata: { moduleIds } });
-}
-
-export async function createLesson(
-  moduleId: string,
-  input: {
-    title: string;
-    summary?: string | null;
-    order: number;
-    type: keyof typeof LessonType;
-    content?: Record<string, unknown>;
-    videoUrl?: string | null;
-    durationMinutes?: number;
-    isRequired?: boolean;
-  },
-  actorId: string
-) {
-  const courseModule = await prisma.module.findUnique({ where: { id: moduleId }, select: { courseId: true } });
-  if (!courseModule) throw new ApiError("not_found", "Модуль не найден", 404);
-  await assertInstructorOfCourse(actorId, courseModule.courseId);
-  const lesson = await prisma.lesson.create({
-    data: {
-      moduleId,
-      title: input.title,
-      summary: input.summary,
-      order: input.order,
-      type: LessonType[input.type],
-      content: toJsonValue(input.content ?? {}),
-      videoUrl: input.videoUrl,
-      durationMinutes: input.durationMinutes ?? 0,
-      isRequired: input.isRequired ?? true,
-    },
-  });
-  await logAudit({ actorId, action: "lesson.created", entity: "lesson", entityId: lesson.id });
-  return lesson;
-}
-
-export async function updateLesson(
-  lessonId: string,
-  input: {
-    title?: string;
-    summary?: string | null;
-    order?: number;
-    type?: keyof typeof LessonType;
-    content?: Record<string, unknown>;
-    videoUrl?: string | null;
-    durationMinutes?: number;
-    isRequired?: boolean;
-  },
-  actorId: string
-) {
-  const existing = await prisma.lesson.findUnique({ where: { id: lessonId }, include: { module: true } });
-  if (!existing) throw new ApiError("not_found", "Урок не найден", 404);
-  await assertInstructorOfCourse(actorId, existing.module.courseId);
-  const updated = await prisma.lesson.update({
-    where: { id: lessonId },
-    data: {
-      ...input,
-      type: input.type ? LessonType[input.type] : undefined,
-      content: input.content ? toJsonValue(input.content) : undefined,
-    },
-  });
-  await logAudit({ actorId, action: "lesson.updated", entity: "lesson", entityId: lessonId, metadata: input as Record<string, unknown> });
-  return updated;
-}
-
-export async function deleteLesson(lessonId: string, actorId: string) {
-  const existing = await prisma.lesson.findUnique({ where: { id: lessonId }, include: { module: true } });
-  if (!existing) throw new ApiError("not_found", "Урок не найден", 404);
-  await assertInstructorOfCourse(actorId, existing.module.courseId);
-  await prisma.lesson.delete({ where: { id: lessonId } });
-  await logAudit({ actorId, action: "lesson.deleted", entity: "lesson", entityId: lessonId });
 }
 
 export async function reorderLessons(moduleId: string, lessonIds: string[], actorId: string) {

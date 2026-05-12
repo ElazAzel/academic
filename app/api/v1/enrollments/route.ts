@@ -5,8 +5,8 @@ import { enrollStudent, listEnrollments } from "@/server/modules/courses/service
 
 export async function GET() {
   try {
-    await requireUser("reports:read");
-    return ok(await listEnrollments());
+    const user = await requireUser("reports:read");
+    return ok(await listEnrollments(user.id, user.roles));
   } catch (error) {
     return errorResponse(error);
   }

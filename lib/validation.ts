@@ -72,3 +72,24 @@ export const checkoutSchema = z.object({
   currency: z.string().length(3).default("usd"),
   type: z.enum(["ONE_TIME", "SUBSCRIPTION"]).default("ONE_TIME")
 });
+
+export const courseBuilderSettingsSchema = z.object({
+  title: z.string().min(3).max(160).optional(),
+  description: z.string().optional(),
+  goal: z.string().max(500).nullish(),
+  coverUrl: z.string().url().nullish().or(z.literal("")),
+  durationHours: z.number().int().min(0).max(1000).optional(),
+  traversalMode: z.enum(["sequential", "open"]).optional(),
+  completionThreshold: z.number().int().min(0).max(100).optional(),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional()
+});
+
+export const contentBlockSchema = z.object({
+  id: z.string().min(1),
+  type: z.enum(["video", "text", "file", "quiz", "assignment", "rating", "curator_question", "completion"]),
+  data: z.record(z.unknown())
+});
+
+export const lessonBlocksSchema = z.object({
+  blocks: z.array(contentBlockSchema).min(0).max(50)
+});

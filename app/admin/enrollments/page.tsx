@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar } from "@/components/ui/avatar";
 import { Download } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getCurrentUser } from "@/lib/auth/session";
 import { listEnrollments } from "@/server/modules/courses/service";
 import { getEnrollmentData } from "@/server/actions/dashboard";
 import { EnrollStudentForm } from "@/components/admin/enroll-student-form";
@@ -23,8 +24,10 @@ const STATUS_BADGE = {
 
 export default async function AdminEnrollmentsPage() {
  await requireRolePage(["admin"]);
+ const user = await getCurrentUser();
+ if (!user) throw new Error("Unauthorized");
  const [enrollments, formData] = await Promise.all([
-  listEnrollments(),
+  listEnrollments(user.id, user.roles),
   getEnrollmentData()
  ]);
 

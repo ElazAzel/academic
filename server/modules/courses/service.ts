@@ -7,7 +7,7 @@ import { logAudit } from "@/server/modules/audit/service";
 
 const prisma = getPrisma();
 
-async function assertInstructorOfCourse(actorId: string, courseId: string) {
+export async function assertInstructorOfCourse(actorId: string, courseId: string) {
   const user = await prisma.user.findUnique({
     where: { id: actorId },
     include: { roles: { include: { role: { select: { key: true } } } } }
@@ -346,8 +346,24 @@ export async function getBlock(blockId: string) {
   return block;
 }
 
-export async function listEnrollments() {
+export async function listEnrollments(userId: string, roleKeys: string[]) {
+  const isAdmin = roleKeys.includes("admin");
+  const isInstructor = roleKeys.includes("instructor");
+
+  const where: Record<string, unknown> = {};
+
+  if (!isAdmin) {
+    if (isInstructor) {
+      where.course = {
+        instructors: { some: { userId } }
+      };
+    } else {
+      where.userId = userId;
+    }
+  }
+
   return prisma.enrollment.findMany({
+    where,
     include: {
       user: { select: { id: true, name: true, email: true } },
       course: { select: { id: true, title: true, slug: true } },
