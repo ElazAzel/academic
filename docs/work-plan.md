@@ -1,7 +1,7 @@
 # Work Plan — AI Strategic Academy LMS
 
 **Date:** 2026-05-13
-**Status:** All 6 PRs completed (PR-1 through PR-6)
+**Status:** PR-7, PR-8 complete (PR-1 through PR-8)
 
 ---
 
@@ -27,6 +27,8 @@
 | PR-4 | P1 | UI/UX Polish | Fix broken links, wire settings, add pagination | `app/instructor/courses/page.tsx`, settings pages, `app/admin/audit/page.tsx` | All instructor buttons functional; settings save works; audit paginated |
 | PR-5 | P2 | Navigation Cleanup | Redirects from old routes to builder, sidebar update | `app/instructor/courses/[id]/curriculum`, `components/layout/navigation.ts` | Old routes redirect; sidebar points to builder; no 404s |
 | PR-6 | P2 | E2E Tests | Playwright smoke tests for roles, scope boundaries, student happy path | `tests/e2e/*.spec.ts` | All 6 roles login smoke; scope boundary tests; happy path green |
+| PR-7 | P1 | Observer Scope Wiring | Wire ObserverProject/ObserverCohort scope into reports, dashboards, certificates | `server/modules/observer/scope.ts`, `app/api/v1/reports`, `server/actions/dashboard.ts` | Observers see only scoped data; unrestricted observers see all; 101 tests pass |
+| PR-8 | P2 | Notification Preferences | Wire NotificationPreference model to all 5 settings pages | `server/modules/notifications/preferences.ts`, `server/actions/settings.ts`, settings pages | All settings pages save/load notification prefs; lint/typecheck/test/build pass |
 
 ---
 
