@@ -161,6 +161,8 @@ export interface StudentLessonPlayerDetail {
   lesson: StudentLessonLearningDetail;
   blocks: ContentBlock[];
   courseTree: ModulePlayerDetail[];
+  quizDetails: StudentQuizDetail[];
+  assignmentDetails: StudentAssignmentDetail[];
 }
 
 // ── Плеер курса (PR 2) ──────────────────────────────────────────────

@@ -413,7 +413,14 @@ export async function getStudentLessonPlayerDetail(userId: string, lessonId: str
   const course = await getStudentCoursePlayerDetail(userId, lesson.courseId);
   const blocks = parseContentBlocks(lesson.content);
 
-  return { lesson, blocks, courseTree: course.modules };
+  const quizDetails = await Promise.all(
+    lesson.quizzes.map((q) => getQuizForStudent(userId, q.id))
+  );
+  const assignmentDetails = await Promise.all(
+    lesson.assignments.map((a) => getAssignmentForStudent(userId, a.id))
+  );
+
+  return { lesson, blocks, courseTree: course.modules, quizDetails, assignmentDetails };
 }
 
 export async function getModuleForStudent(userId: string, moduleId: string): Promise<StudentModuleLearningDetail> {
