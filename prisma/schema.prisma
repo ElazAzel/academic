@@ -108,6 +108,7 @@ model User {
   passwordHash    String?   @map("password_hash")
   emailVerified   DateTime? @map("email_verified")
   locale          String    @default("ru")
+  // TODO: migrate to UserAccountStatus enum in dedicated PR
   status          String    @default("active")
   lastLoginAt     DateTime? @map("last_login_at")
   createdAt       DateTime  @default(now()) @map("created_at")
@@ -139,6 +140,10 @@ model User {
   curatorQuestions      LessonQuestion[] @relation("CuratorQuestions")
   riskFlags             RiskFlag[]
   activityLogs          ActivityLog[]
+  observerProjects      ObserverProject[]
+  observerCohorts       ObserverCohort[]
+  notificationPreferences NotificationPreference[]
+  lessonRatings         LessonRating[]
 
   @@index([createdAt])
   @@index([status])
@@ -259,6 +264,7 @@ model Project {
   cohorts     Cohort[]
   reports     Report[]
   inviteLinks InviteLink[]
+  observerProjects ObserverProject[]
 
   @@map("projects")
 }
@@ -293,6 +299,7 @@ model Course {
   reports        Report[]
   inviteLinks    InviteLink[]
   riskFlags      RiskFlag[]
+  notificationPreferences NotificationPreference[]
 
   @@index([createdAt])
   @@index([status])
@@ -394,6 +401,7 @@ model Lesson {
   assignments Assignment[]
   progress    LessonProgress[]
   questions   LessonQuestion[]
+  ratings     LessonRating[]
 
   @@unique([moduleId, order])
   @@map("lessons")
@@ -433,6 +441,7 @@ model Cohort {
   curatorAssignments CuratorAssignment[]
   riskFlags RiskFlag[]
   inviteLinks InviteLink[]
+  observerCohorts ObserverCohort[]
 
   @@index([createdAt])
   @@index([status])
@@ -666,6 +675,7 @@ model LessonQuestion {
   curatorId   String?  @map("curator_id")
   text        String   @db.Text
   answer      String?  @db.Text
+  // TODO: migrate to QuestionStatus enum in dedicated PR
   status      String   @default("open")
   attachments Json     @default("[]")
   createdAt   DateTime @default(now()) @map("created_at")
@@ -880,4 +890,68 @@ model ImportJob {
   createdBy User? @relation("ImportCreator", fields: [createdById], references: [id])
 
   @@map("import_jobs")
+}
+
+// ── Observer scope (PR-2) ───────────────────────────────────────────
+
+model ObserverProject {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  projectId String?  @map("project_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, projectId])
+  @@map("observer_projects")
+}
+
+model ObserverCohort {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  cohortId  String   @map("cohort_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cohortId])
+  @@map("observer_cohorts")
+}
+
+// ── Notification preferences (PR-2) ───────────────────────────────────
+
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  channel   String   @default("in_app")
+  courseId  String?  @map("course_id")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, channel, courseId])
+  @@map("notification_preferences")
+}
+
+// ── Lesson rating (PR-2) ─────────────────────────────────────────────
+
+model LessonRating {
+  id        String   @id @default(cuid())
+  lessonId  String   @map("lesson_id")
+  userId    String   @map("user_id")
+  score     Int      @default(0)
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, userId])
+  @@map("lesson_ratings")
 }

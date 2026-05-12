@@ -34,7 +34,7 @@ const providers: NonNullable<AuthOptions["providers"]> = [
         where: { email },
         include: { roles: { include: { role: true } } }
       });
-      if (!user?.passwordHash || user.status !== "active") {
+      if (!user?.passwordHash || user.status !== "ACTIVE") {
         return null;
       }
       const valid = await verifyPassword(user.passwordHash, password);
@@ -97,7 +97,7 @@ export const authOptions: AuthOptions = {
           where: { email },
           select: { id: true, status: true }
         });
-        if (!user || user.status !== "active") return false;
+        if (!user || user.status !== "ACTIVE") return false;
       }
       return true;
     },
