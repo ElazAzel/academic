@@ -4,20 +4,21 @@ import nodemailer from "nodemailer";
 
 const prisma = getPrisma();
 
+import { env } from "@/lib/env";
+
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "localhost",
-  port: parseInt(process.env.SMTP_PORT || "1025", 10),
-  secure: process.env.SMTP_PORT === "465",
-  auth: process.env.SMTP_USER ? {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
+  host: env.SMTP_HOST,
+  port: env.SMTP_PORT,
+  secure: env.SMTP_PORT === 465,
+  auth: env.SMTP_USER ? {
+    user: env.SMTP_USER,
+    pass: env.SMTP_PASSWORD ?? "",
   } : undefined,
 });
 
 export async function sendEmail(to: string, subject: string, text: string, html?: string) {
-  const from = process.env.EMAIL_FROM || "noreply@academy.local";
   return transporter.sendMail({
-    from,
+    from: env.EMAIL_FROM,
     to,
     subject,
     text,

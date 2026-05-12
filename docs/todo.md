@@ -2,12 +2,14 @@
 
 ## Production Hardening
 
-- Wire a real transactional email provider in `server/modules/notifications/service.ts` and keep MailHog only for local development.
-- Add production S3 multipart upload signing in `app/api/v1/media/uploads/route.ts` before large media usage.
-- Add push provider integration in `server/modules/notifications/push.ts`; current implementation stores in-app notifications and documents the event abstraction.
-- Add Redis-backed distributed rate limiting in `lib/security/rate-limit.ts`; current scaffold keeps the interface and safe defaults.
-- Add real PDF styling/signature assets for certificates in `server/modules/certificates/service.ts`.
+- [done] SMTP env vars validated in Zod schema (`lib/env.ts`); transporter uses validated env.
+- [done] S3 presigned upload URL endpoint at `app/api/v1/media/uploads/route.ts`.
+- [done] Push notification provider scaffold (`server/modules/notifications/push.ts`).
+- [done] Sentry monitoring config (`sentry.*.config.ts`, `instrumentation.ts`, `next.config.ts`).
+- Add production S3 bucket configuration and test presigned upload flow.
+- Wire push provider with Firebase Admin SDK or Telegram bot when credentials are available.
 - Add production backup jobs and restore runbooks under `infra/backup/`.
+- Add real PDF styling/signature assets for certificates in `public/assets/certificates/`.
 
 ## Learning Features
 

@@ -22,7 +22,29 @@ const envSchema = z.object({
   FEATURE_GRAPHQL: z.coerce.boolean().default(false),
   RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
-  REDIS_URL: z.string().optional()
+  REDIS_URL: z.string().optional(),
+
+  // SMTP / transactional email
+  SMTP_HOST: z.string().default("localhost"),
+  SMTP_PORT: z.coerce.number().int().positive().default(1025),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASSWORD: z.string().optional(),
+  EMAIL_FROM: z.string().default("noreply@academy.local"),
+
+  // S3-compatible storage
+  S3_ENDPOINT: z.string().default("http://localhost:9000"),
+  S3_REGION: z.string().default("local"),
+  S3_BUCKET: z.string().default("academy-media"),
+  S3_ACCESS_KEY: z.string().default("minio"),
+  S3_SECRET_KEY: z.string().default("minio123"),
+  S3_FORCE_PATH_STYLE: z.coerce.boolean().default(true),
+
+  // Feature flags
+  FEATURE_PUSH_NOTIFICATIONS: z.coerce.boolean().default(false),
+  FEATURE_TELEGRAM_NOTIFICATIONS: z.coerce.boolean().default(false),
+
+  // Monitoring
+  SENTRY_DSN: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);
