@@ -177,7 +177,7 @@ export function CourseManageGrid({ courses }: { courses: CourseSummary[] }) {
             )}
             <div className="mt-4 pt-4 border-t">
               <Button asChild variant="secondary" size="sm" className="w-full">
-                <Link href={`/instructor/courses/${c.id}/edit`}>Управление курсом</Link>
+                <Link href={`/instructor/courses/${c.id}/builder`}>Управление курсом</Link>
               </Button>
             </div>
           </CardContent>
