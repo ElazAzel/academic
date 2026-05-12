@@ -58,7 +58,7 @@ export function MobileNav({
           })}
         </nav>
         <div className="border-t p-4">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground" suppressHydrationWarning>
             AI Strategic Academy &mdash; {new Date().getFullYear()}
           </p>
         </div>

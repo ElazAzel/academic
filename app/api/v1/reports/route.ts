@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
+import { errorResponse } from "@/lib/http";
 import { fetchProgressData, fetchRiskData, fetchCertificateData } from "@/lib/reports/data";
 import { generateProgressCsv, generateRiskCsv, generateCertificateCsv } from "@/lib/reports/csv-generator";
 import { generateProgressXlsx, generateRiskXlsx, generateCertificateXlsx } from "@/lib/reports/xlsx-generator";
@@ -94,8 +95,13 @@ export async function GET(request: Request) {
       return respond(generateCertificateCsv(rows), format, filename);
     }
 
+    if (!type) {
+      return NextResponse.json({ error: "Report type is required" }, { status: 400 });
+    }
+
     return NextResponse.json({ error: "Unknown report type" }, { status: 400 });
-  } catch {
-    return NextResponse.json({ error: "Failed to generate report" }, { status: 500 });
+  } catch (err) {
+    console.error("Reports API error:", err);
+    return errorResponse(err);
   }
 }

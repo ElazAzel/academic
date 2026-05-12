@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,7 +52,7 @@ export default async function CuratorReportsPage() {
                   {FORMATS.filter((f) => r.formats.includes(f.id)).map((fmt) => {
                     const FmtIcon = fmt.icon;
                     return (
-                      <Link
+                      <a
                         key={fmt.id}
                         href={`/api/v1/reports?type=${r.type}&format=${fmt.id}`}
                         className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30"
@@ -61,7 +60,7 @@ export default async function CuratorReportsPage() {
                         <FmtIcon className="h-3.5 w-3.5" />
                         {fmt.label}
                         <Download className="h-3 w-3 ml-0.5 text-muted-foreground" />
-                      </Link>
+                      </a>
                     );
                   })}
                 </div>

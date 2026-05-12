@@ -23,7 +23,7 @@ export function LoginScreen({ oauthProviders }: { oauthProviders: OAuthProviderF
             <div className="animate-float absolute right-12 top-16 h-8 w-8 rounded-lg bg-white/5 blur-md" style={{ animationDelay: "-2s" }} />
           </div>
         </div>
-        <div className="relative z-10 text-sm text-white/50">
+        <div className="relative z-10 text-sm text-white/50" suppressHydrationWarning>
           &copy; {new Date().getFullYear()} AI Strategic Academy
         </div>
         {/* Decorative circles */}

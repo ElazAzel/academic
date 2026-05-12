@@ -38,8 +38,10 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
     try {
       const targetResponse = await fetch("/api/v1/auth/redirect-target", { cache: "no-store" });
       const payload = (await targetResponse.json().catch(() => null)) as { data?: { path?: string } } | null;
+      setPending(false);
       router.replace(payload?.data?.path ?? "/student");
     } catch {
+      setPending(false);
       router.replace("/student");
     }
   }

@@ -99,6 +99,27 @@ describe("Rate Limiter", () => {
   });
 });
 
+describe("Rate Limiter — IP key isolation", () => {
+  it("tracks separate buckets for different IPs", async () => {
+    const ipA = await checkRateLimit("login:ip:10.0.0.1");
+    const ipB = await checkRateLimit("login:ip:10.0.0.2");
+    expect(ipA.allowed).toBe(true);
+    expect(ipB.allowed).toBe(true);
+  });
+
+  it("exhausts one IP bucket without affecting another", async () => {
+    for (let i = 0; i < 5; i++) {
+      await checkRateLimit("login:ip:10.0.0.10");
+    }
+    const blocked = await checkRateLimit("login:ip:10.0.0.10");
+    expect(blocked.allowed).toBe(false);
+
+    const other = await checkRateLimit("login:ip:10.0.0.20");
+    expect(other.allowed).toBe(true);
+    expect(other.remaining).toBe(4);
+  });
+});
+
 describe("CSRF verification", () => {
   it("allows same-origin requests", () => {
     const request = new Request("http://localhost:3000/api/v1/test", {

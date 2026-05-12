@@ -2,12 +2,19 @@ import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { RoleKey } from "@prisma/client";
 import { hashPassword } from "@/lib/auth/password";
+import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not available in production" }, { status: 404 });
+  }
+
   try {
+    await requireUser("settings:manage");
+
     const seedPassword = process.env.SEED_USER_PASSWORD || randomBytes(16).toString("hex");
     if (!process.env.SEED_USER_PASSWORD) {
       console.log(`[Seed] Generated random password for temporary users: ${seedPassword}`);
