@@ -2,9 +2,13 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { Tabs } from "@/components/ui/tabs";
+import { Avatar } from "@/components/ui/avatar";
 import { Flag, Mail, Shield } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getCurrentUser } from "@/lib/auth/session";
+import { updateProfileSettingsAction, updatePasswordAction } from "@/server/actions/settings";
 
 const FEATURE_FLAGS = [
  { key: "FEATURE_PUSH_NOTIFICATIONS", label: "Push-уведомления", value: false },
@@ -14,11 +18,76 @@ const FEATURE_FLAGS = [
 
 export default async function AdminSettingsPage() {
  await requireRolePage(["admin"]);
+ const user = await getCurrentUser();
 
  return (
   <AppShell role="admin">
    <PageHeader title="Настройки платформы" description="Feature flags, интеграции, уведомления и безопасность."/>
    <Tabs tabs={[
+    {
+     label: "Профиль",
+     content: (
+      <form action={updateProfileSettingsAction}>
+       <Card className="rounded-2xl">
+        <CardHeader>
+         <CardTitle className="text-base">Личные данные</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+         <div className="flex items-center gap-4">
+          <Avatar name={user?.name ?? ""} className="h-16 w-16 text-lg"/>
+          <div>
+           <p className="font-medium">{user?.name ?? "Администратор"}</p>
+           <p className="text-sm text-muted-foreground">{user?.email}</p>
+          </div>
+         </div>
+         <Separator/>
+         <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+           <label className="text-sm font-medium">Имя</label>
+           <input name="name" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={user?.name ?? ""}/>
+          </div>
+          <div>
+           <label className="text-sm font-medium">Email</label>
+           <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={user?.email} disabled/>
+          </div>
+         </div>
+         <div className="flex justify-end">
+          <Button type="submit">Сохранить</Button>
+         </div>
+        </CardContent>
+       </Card>
+      </form>
+     ),
+    },
+    {
+     label: "Безопасность",
+     content: (
+      <form action={updatePasswordAction}>
+       <Card className="rounded-2xl">
+        <CardHeader>
+         <CardTitle className="text-base">Безопасность</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+         <div>
+          <label className="text-sm font-medium">Текущий пароль</label>
+          <input name="currentPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Текущий пароль" required/>
+         </div>
+         <div>
+          <label className="text-sm font-medium">Новый пароль</label>
+          <input name="newPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Мин. 10 символов" required minLength={10}/>
+         </div>
+         <div>
+          <label className="text-sm font-medium">Повторите новый пароль</label>
+          <input name="confirmPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Повторите пароль" required/>
+         </div>
+         <div className="flex justify-end">
+          <Button type="submit">Изменить пароль</Button>
+         </div>
+        </CardContent>
+       </Card>
+      </form>
+     ),
+    },
     {
      label: "Feature Flags",
      content: (

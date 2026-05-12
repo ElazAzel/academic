@@ -6,55 +6,60 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs } from "@/components/ui/tabs";
 import { Avatar } from "@/components/ui/avatar";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getCurrentUser } from "@/lib/auth/session";
+import { updateProfileSettingsAction, updatePasswordAction } from "@/server/actions/settings";
 
 export default async function InstructorSettingsPage() {
-  await requireRolePage(["instructor", "admin"]);
+ await requireRolePage(["instructor", "admin"]);
+ const user = await getCurrentUser();
 
-  return (
-    <AppShell role="instructor">
-      <PageHeader title="Профиль и настройки" description="Настройки аккаунта и уведомлений преподавателя."/>
-      <Tabs tabs={[
-        {
-          label: "Профиль",
-          content: (
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-base">Личные данные</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Avatar name="Преподаватель" className="h-16 w-16 text-lg"/>
-                  <div>
-                    <p className="font-medium">Преподаватель</p>
-                    <p className="text-sm text-muted-foreground">instructor@academy.local</p>
-                  </div>
-                </div>
-                <Separator/>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="text-sm font-medium">Имя</label>
-                    <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue="Преподаватель"/>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Email</label>
-                    <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue="instructor@academy.local" disabled/>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Телефон</label>
-                    <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="+7 (___) ___-__-__"/>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Организация</label>
-                    <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Название организации"/>
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <Button>Сохранить</Button>
-                </div>
-              </CardContent>
-            </Card>
-          ),
-        },
+ return (
+  <AppShell role="instructor">
+   <PageHeader title="Профиль и настройки" description="Настройки аккаунта и уведомлений преподавателя."/>
+   <Tabs tabs={[
+    {
+     label: "Профиль",
+     content: (
+      <form action={updateProfileSettingsAction}>
+       <Card className="rounded-2xl">
+        <CardHeader>
+         <CardTitle className="text-base">Личные данные</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+         <div className="flex items-center gap-4">
+          <Avatar name={user?.name ?? ""} className="h-16 w-16 text-lg"/>
+          <div>
+           <p className="font-medium">{user?.name ?? "Преподаватель"}</p>
+           <p className="text-sm text-muted-foreground">{user?.email}</p>
+          </div>
+         </div>
+         <Separator/>
+         <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+           <label className="text-sm font-medium">Имя</label>
+           <input name="name" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={user?.name ?? ""}/>
+          </div>
+          <div>
+           <label className="text-sm font-medium">Email</label>
+           <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={user?.email} disabled/>
+          </div>
+          <div>
+           <label className="text-sm font-medium">Телефон</label>
+           <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="+7 (___) ___-__-__"/>
+          </div>
+          <div>
+           <label className="text-sm font-medium">Организация</label>
+           <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Название организации"/>
+          </div>
+         </div>
+         <div className="flex justify-end">
+          <Button type="submit">Сохранить</Button>
+         </div>
+        </CardContent>
+       </Card>
+      </form>
+     ),
+    },
         {
           label: "Уведомления",
           content: (
@@ -86,33 +91,35 @@ export default async function InstructorSettingsPage() {
             </Card>
           ),
         },
-        {
-          label: "Безопасность",
-          content: (
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-base">Безопасность</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Текущий пароль</label>
-                  <input type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Текущий пароль"/>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Новый пароль</label>
-                  <input type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Мин. 10 символов"/>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Повторите новый пароль</label>
-                  <input type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Повторите пароль"/>
-                </div>
-                <div className="flex justify-end">
-                  <Button>Изменить пароль</Button>
-                </div>
-              </CardContent>
-            </Card>
-          ),
-        },
+    {
+     label: "Безопасность",
+     content: (
+      <form action={updatePasswordAction}>
+       <Card className="rounded-2xl">
+        <CardHeader>
+         <CardTitle className="text-base">Безопасность</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+         <div>
+          <label className="text-sm font-medium">Текущий пароль</label>
+          <input name="currentPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Текущий пароль" required/>
+         </div>
+         <div>
+          <label className="text-sm font-medium">Новый пароль</label>
+          <input name="newPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Мин. 10 символов" required minLength={10}/>
+         </div>
+         <div>
+          <label className="text-sm font-medium">Повторите новый пароль</label>
+          <input name="confirmPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Повторите пароль" required/>
+         </div>
+         <div className="flex justify-end">
+          <Button type="submit">Изменить пароль</Button>
+         </div>
+        </CardContent>
+       </Card>
+      </form>
+     ),
+    },
       ]}/>
     </AppShell>
   );

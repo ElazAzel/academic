@@ -6,6 +6,7 @@ import { Plus, FileText } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import Link from "next/link";
+import { createQuizAction } from "@/server/actions/quiz-assignment";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,9 @@ export default async function InstructorQuizzesPage() {
   <AppShell role="instructor">
    <PageHeader title="Конструктор тестов" description="Создание тестов, вопросов, вариантов ответа и autograding."/>
    <div className="space-y-6 mt-6">
-    <Button><Plus className="h-4 w-4 mr-2"/>Создать тест</Button>
+     <form action={createQuizAction}>
+      <Button type="submit"><Plus className="h-4 w-4 mr-2"/>Создать тест</Button>
+     </form>
     <div className="space-y-3">
      {quizzes.length > 0 ? (
       quizzes.map((q) => (
