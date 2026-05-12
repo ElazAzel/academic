@@ -10,11 +10,12 @@ import { getCustomerObserverDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { listCertificates } from "@/server/modules/certificates/service";
+import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 
 export const dynamic = "force-dynamic";
 
 export default async function CustomerObserverDashboardPage() {
- await requireRolePage(["customer_observer"]);
+ const user = await requireRolePage(["customer_observer"]);
  const data = await getCustomerObserverDashboard();
  const demoMode = isDemoModeEnabled();
 
@@ -29,7 +30,8 @@ export default async function CustomerObserverDashboardPage() {
 
  const metrics = data?.metrics ?? [];
  const cohorts = data?.cohorts ?? [];
- const certificates = await listCertificates();
+ const scopedIds = await getScopedStudentIdsForObserver(user.id);
+ const certificates = await listCertificates(scopedIds ? { userIds: scopedIds } : undefined);
 
  return (
   <AppShell role="customer_observer">

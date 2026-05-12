@@ -6,6 +6,7 @@ import { fetchProgressData, fetchRiskData, fetchCertificateData } from "@/lib/re
 import { generateProgressCsv, generateRiskCsv, generateCertificateCsv } from "@/lib/reports/csv-generator";
 import { generateProgressXlsx, generateRiskXlsx, generateCertificateXlsx } from "@/lib/reports/xlsx-generator";
 import { generateProgressPdf, generateRiskPdf } from "@/lib/reports/pdf-generator";
+import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 import type { ReportFormat } from "@/lib/reports/types";
 
 const prisma = getPrisma();
@@ -83,7 +84,7 @@ export async function GET(request: Request) {
         return [...new Set(enrollments.map((e) => e.userId))];
       }
       if (isObserver) {
-        return undefined; // Без модели привязки наблюдателя к проектам — все данные
+        return getScopedStudentIdsForObserver(user.id);
       }
       return undefined;
     };
