@@ -348,7 +348,7 @@ export async function askCuratorQuestion(userId: string, lessonId: string, text:
   });
 
   if (curatorAssignment?.active) {
-    createNotification({
+    await createNotification({
       userId: curatorAssignment.curatorId,
       event: "question_received",
       data: { studentId: userId, lessonId, questionId: question.id }

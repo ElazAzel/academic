@@ -10,14 +10,16 @@ export function AssignCuratorForm({
   studentId,
   cohortId,
   curators,
+  currentCuratorId,
 }: {
   studentId: string;
   cohortId: string;
   curators: { id: string; name: string | null; email: string }[];
+  currentCuratorId?: string;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
-  const [selectedCurator, setSelectedCurator] = useState("");
+  const [selectedCurator, setSelectedCurator] = useState(currentCuratorId ?? "");
 
   async function handleAssign() {
     if (!selectedCurator) return;

@@ -12,7 +12,7 @@ const prisma = getPrisma();
 export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorDistributionPage() {
- await requireRolePage(["super_curator"]);
+ await requireRolePage(["super_curator", "admin"]);
  const user = await getCurrentUser();
  if (!user) return null;
 
@@ -26,6 +26,26 @@ export default async function SuperCuratorDistributionPage() {
   },
   select: {
    id: true, name: true, email: true,
+   enrollments: {
+    where: { status: "ACTIVE" },
+    include: { course: { select: { title: true } }, cohort: { select: { id: true, name: true } } },
+   },
+  },
+  orderBy: { name: "asc" },
+ });
+
+ // Студенты с куратором: для перераспределения
+ const assignedStudents = await prisma.user.findMany({
+  where: {
+   roles: { some: { role: { key: "student" } } },
+   studentAssignments: { some: { active: true } },
+  },
+  select: {
+   id: true, name: true, email: true,
+   studentAssignments: {
+    where: { active: true },
+    select: { cohortId: true, curatorId: true, curator: { select: { id: true, name: true, email: true } }, cohort: { select: { id: true, name: true } } },
+   },
    enrollments: {
     where: { status: "ACTIVE" },
     include: { course: { select: { title: true } }, cohort: { select: { id: true, name: true } } },
@@ -95,8 +115,35 @@ export default async function SuperCuratorDistributionPage() {
       <CardTitle className="text-base">Перераспределение</CardTitle>
       <CardDescription>Переназначить слушателей между кураторами для балансировки нагрузки.</CardDescription>
      </CardHeader>
-     <CardContent className="py-8 text-center text-muted-foreground">
-      <p className="text-sm">Выберите слушателя и нового куратора для переназначения.</p>
+     <CardContent className="space-y-3">
+      {assignedStudents.length === 0 ? (
+       <p className="text-sm text-muted-foreground py-4 text-center">Нет слушателей с назначенными кураторами.</p>
+      ) : assignedStudents.map((s) => {
+       const assignment = s.studentAssignments[0];
+       return (
+        <div key={s.id} className="flex items-center gap-4 rounded-xl border p-4 transition-shadow hover:shadow-sm">
+         <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium">{s.name ?? s.email}</p>
+          <p className="text-xs text-muted-foreground">
+           {s.email}
+           {s.enrollments.map((e) => ` · ${e.course.title}${e.cohort ? ` (${e.cohort.name})` : ""}`)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+           Текущий куратор: <span className="font-medium text-foreground">{assignment.curator.name ?? assignment.curator.email}</span>
+           {assignment.cohort ? ` · Поток: ${assignment.cohort.name}` : ""}
+          </p>
+         </div>
+         {assignment ? (
+          <AssignCuratorForm
+           studentId={s.id}
+           cohortId={assignment.cohortId}
+           curators={allCurators}
+           currentCuratorId={assignment.curatorId}
+          />
+         ) : null}
+        </div>
+       );
+      })}
      </CardContent>
     </Card>
    </div>
