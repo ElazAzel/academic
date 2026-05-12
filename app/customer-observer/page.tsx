@@ -6,8 +6,6 @@ import { Tabs } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
 import { getCustomerObserverDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
@@ -30,11 +28,8 @@ export default async function CustomerObserverDashboardPage() {
  }
 
  const metrics = data?.metrics ?? [];
- const cohortsDemo = demoMode ? [
-  { id: "1", name: "Весенний поток 2026", studentsCount: 120 },
-  { id: "2", name: "Осенний поток 2026", studentsCount: 85 },
- ] : [];
- const certificates = demoMode ? await listCertificates() : [];
+ const cohorts = data?.cohorts ?? [];
+ const certificates = await listCertificates();
 
  return (
   <AppShell role="customer_observer">
@@ -46,13 +41,13 @@ export default async function CustomerObserverDashboardPage() {
       <CardTitle className="text-base">Прогресс по потокам</CardTitle>
      </CardHeader>
      <CardContent className="space-y-4">
-      {cohortsDemo.length > 0 ? cohortsDemo.map((c) => (
+      {cohorts.length > 0 ? cohorts.map((c) => (
        <div key={c.id} className="space-y-1.5">
         <div className="flex items-center justify-between text-sm">
          <span>{c.name}</span>
-         <span className="font-medium">{c.studentsCount} сл.</span>
+         <span className="font-medium">{c.studentsCount} сл. · {c.avgProgress}%</span>
         </div>
-        <Progress value={42}/>
+        <Progress value={c.avgProgress}/>
        </div>
       )) : <p className="text-sm text-muted-foreground">Пока нет потоков для отчёта.</p>}
      </CardContent>
@@ -87,13 +82,10 @@ export default async function CustomerObserverDashboardPage() {
       label: "Отчёты",
       content: (
        <Card>
-        <CardContent className="space-y-3 pt-6">
-         {["Отчёт по курсу", "Отчёт по потоку", "Отчёт по слушателям", "Отчёт по сертификатам"].map((r) => (
-          <div key={r} className="flex items-center justify-between rounded-xl border p-3">
-           <span className="text-sm">{r}</span>
-           <Button size="sm" variant="secondary"><Download className="h-4 w-4" aria-hidden/> CSV</Button>
-          </div>
-         ))}
+        <CardContent className="pt-6">
+         <p className="text-sm text-muted-foreground text-center py-6">
+          Для экспорта отчётов перейдите на страницу <a href="/customer-observer/reports" className="text-primary underline">Отчёты</a>.
+         </p>
         </CardContent>
        </Card>
       ),

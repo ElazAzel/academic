@@ -30,6 +30,26 @@ Living-документ для фиксации всех изменений, р�
 
 # Current Baseline
 
+## 2026-05-12 — PR-E: Customer Observer Real Data & Reports Fix
+
+- Author: Code AI Agent
+- Scope: replace hardcoded observer dashboard with real DB queries
+- Files changed:
+  - `server/actions/dashboard.ts` — `getCustomerObserverDashboard` now queries real project/cohort/progress/certificate counts
+  - `app/customer-observer/page.tsx` — replaces demo-mode fallback and hardcoded 42% with real cohort progress data
+  - `app/api/v1/reports/route.ts` — observer scoping changed from `[]` (no data) to `undefined` (all data) until scope model is implemented
+- What changed:
+  - Dashboard metrics now show real counts
+  - Cohort progress bars show actual per-cohort average progress
+  - Reports no longer return empty for observers
+- Remaining: scope model (linking observers to projects) requires schema migration — deferred
+- Validation:
+  - `npm run typecheck` — pass
+  - `npm run lint -- --max-warnings=0` — pass
+  - `npm run test` — 93 tests pass
+  - `npm run build` — pass
+- Status: green
+
 ## 2026-05-12 — Full Cross-Scope Access Control Fixes (PR-C, PR-B, PR-D)
 
 - Author: Code AI Agent
@@ -111,13 +131,15 @@ Living-документ для фиксации всех изменений, р�
 | Certificate PDF | green | Ownership check added (audit fix P0) |
 | Module breadcrumb | green | Uses courseId instead of moduleId (audit fix P1) |
 | Quiz/assignment forbidden | green | 403 redirect handlers added (audit fix P1) |
-| Customer observer privacy | yellow | Per-role Prisma queries in reports (PR-8); full scoping deferred to separate PR |
+| Customer observer privacy | yellow | Per-role Prisma queries in reports; scope model needed for project-level filtering |
 | Curator workflows | green | Scope checks added for all curator mutation actions; end-to-end tests still needed |
 | Student happy path | green | normalizeVideoUrl, askQuestion toast/try-catch/sending state (PR-7) |
 | Instructor cross-scope CRUD | green | Course ownership checks added for lesson/module/quiz/assignment CRUD |
 | Curator cross-student access | green | Curator-student relationship checks for answer/review/forward/risk actions |
 | Quiz/assignment scope | green | Instructor-course checks for PATCH/DELETE endpoints |
-| Observer hardcoded data | red | Dashboard shows hardcoded 42% — deferred to PR-E |
+| Observer dashboard | green | Real data (projects, cohorts, progress, certificates) replaces hardcoded 42% and metrics |
+| Observer reports | green | Reports API now returns all scoped data for observers (no more empty `[]`) |
+| Observer project scope | red | No schema model linking observer to projects — all data visible; requires schema migration |
 | Student settings | red | No server actions for profile/password/notifications — deferred to PR-G |
 
 ---

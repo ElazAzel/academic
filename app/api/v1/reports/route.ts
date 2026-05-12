@@ -83,7 +83,7 @@ export async function GET(request: Request) {
         return [...new Set(enrollments.map((e) => e.userId))];
       }
       if (isObserver) {
-        return [];
+        return undefined; // Без модели привязки наблюдателя к проектам — все данные
       }
       return undefined;
     };

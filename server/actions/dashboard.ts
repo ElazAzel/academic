@@ -853,13 +853,42 @@ export async function getInstructorAnalytics() {
 export async function getCustomerObserverDashboard() {
   await requireRole(["customer_observer"]);
   return safeQuery(async () => {
+    const [projects, cohorts, certCount, progressAgg] = await Promise.all([
+      prisma.project.count(),
+      prisma.cohort.findMany({
+        include: {
+          course: { select: { title: true } },
+          enrollments: {
+            include: { courseProgress: { select: { percent: true } } },
+          },
+        },
+      }),
+      prisma.certificate.count(),
+      prisma.courseProgress.aggregate({ _avg: { percent: true } }),
+    ]);
+
+    const avgProgress = Math.round(progressAgg._avg.percent ?? 0);
+    const cohortSummaries = cohorts.map((c) => ({
+      id: c.id,
+      name: c.name,
+      courseTitle: c.course?.title ?? "",
+      studentsCount: c.enrollments.length,
+      avgProgress: c.enrollments.length > 0
+        ? Math.round(
+            c.enrollments.reduce((sum, e) => sum + (e.courseProgress[0]?.percent ?? 0), 0) /
+              c.enrollments.length
+          )
+        : 0,
+      status: c.status,
+    }));
+
     const metrics: DashboardMetric[] = [
-      { label: "Проекты", value: 1, tone: "primary" },
-      { label: "Потоки", value: 0, tone: "info" },
-      { label: "Прогресс", value: "0%", tone: "warning" },
-      { label: "Сертификаты", value: 0, tone: "success" },
+      { label: "Проекты", value: projects, tone: "primary" },
+      { label: "Потоки", value: cohorts.length, tone: "info" },
+      { label: "Прогресс", value: `${avgProgress}%`, tone: avgProgress > 50 ? "success" : "warning" },
+      { label: "Сертификаты", value: certCount, tone: "success" },
     ];
 
-    return { metrics };
+    return { metrics, cohorts: cohortSummaries };
   }, null);
 }
