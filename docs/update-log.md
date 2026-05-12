@@ -30,6 +30,34 @@ Living-документ для фиксации всех изменений, р�
 
 # Current Baseline
 
+## 2026-05-12 — Student Interaction Audit Results & Critical Fixes
+
+- Author: Code AI Agent
+- PR: `audit/student-interactions-full`
+- Scope: full audit execution, P0/P1 bug fixes, audit report
+- Files added:
+  - `docs/student-interaction-audit-results.md`
+- Files changed:
+  - `app/api/v1/certificates/[certificateId]/pdf/route.ts` — certificate ownership check (P0)
+  - `server/actions/curator.ts` — await notifications in forward/answer (P0)
+  - `app/student/modules/[moduleId]/page.tsx` — breadcrumb courseId fix (P1)
+  - `app/student/quizzes/[quizId]/page.tsx` — forbidden handler (P1)
+  - `app/student/assignments/[assignmentId]/page.tsx` — forbidden handler (P1)
+- What changed:
+  - 5-role audit executed (Admin, Instructor, Curator, Super Curator, Customer Observer ↔ Student + Student self-actions + System events)
+  - 5 P0 bugs fixed (certificate ownership, curator notification awaits)
+  - 3 P1 bugs fixed (module breadcrumb, quiz/assignment forbidden handlers)
+  - Full audit matrix (100+ rows) documented in `docs/student-interaction-audit-results.md`
+- Validation performed:
+  - `npm run typecheck` — pass
+  - `npm run lint -- --max-warnings=0` — pass
+  - `npm run test` — 93 tests pass
+  - `npm run build` — pass
+- Result: 5 critical blockers eliminated; audit report created with risk register, PR roadmap, smoke test script, automated test checklist
+- New issues found: 10 unsafe cross-scope access risks (documented, deferred); 9 missing MVP functions; 4 broken user flows (3 fixed, 1 deferred)
+- Follow-up required: instructor lesson/module scoping, curator student-relationship checks, observer real data, student settings server actions — all documented as separate PRs in audit report
+- Status: green (all P0/P1 fixed, remaining issues documented in audit report)
+
 ## 2026-05-12 — Student Interaction Audit Framework
 
 - Author: ChatGPT / Product Recovery Analyst
@@ -47,15 +75,22 @@ Living-документ для фиксации всех изменений, р�
 
 | Area | Status | Notes |
 |---|---|---|
-| Build/deploy | red | Recent merged PR had failed Vercel deployment and must be revalidated |
-| Seed/demo accounts | red | Seed-temp flow can be unsafe or inconvenient if not deterministic |
-| Notifications | red | Default in_app path must not send email |
-| Progress | yellow | Completion must be based on required lessons, not all lessons |
-| Assignment access | red | Submission must verify active enrollment and lesson/course access |
-| Quiz access | yellow | Must verify access by lesson/course and sync progress reliably |
-| Customer observer privacy | unknown | Needs scoped report verification |
-| Curator workflows | yellow | Requires end-to-end tests: question answer, assignment review, risk resolution |
-| Student happy path | yellow | Needs full smoke test from login to lesson completion |
+| Build/deploy | green | eslint-config-next @15.5.18, FlatCompat, build passes (PR-1) |
+| Seed/demo accounts | green | Deterministic SEED_ADMIN_TOKEN auth (PR-2) |
+| Notifications | green | Default in_app path no longer sends email (PR-3); curator notifications awaited (audit fix) |
+| Progress | green | getCompletionBasis helper for required-lesson-based completion (PR-4) |
+| Assignment access | green | Enrollment + courseId resolution in submitAssignment (PR-5) |
+| Quiz access | green | courseId from lesson, unswallowed progress sync error (PR-6) |
+| Certificate PDF | green | Ownership check added (audit fix P0) |
+| Module breadcrumb | green | Uses courseId instead of moduleId (audit fix P1) |
+| Quiz/assignment forbidden | green | 403 redirect handlers added (audit fix P1) |
+| Customer observer privacy | yellow | Per-role Prisma queries in reports (PR-8); full scoping deferred to separate PR |
+| Curator workflows | yellow | Notification awaits fixed; end-to-end tests and remaining scoping deferred |
+| Student happy path | green | normalizeVideoUrl, askQuestion toast/try-catch/sending state (PR-7) |
+| Instructor cross-scope CRUD | red | Any instructor can edit any lesson/module by ID — deferred to separate PR |
+| Curator cross-student access | red | Can act on any student's question/submission/risk by ID — deferred |
+| Observer hardcoded data | red | Dashboard shows hardcoded 42% — deferred |
+| Student settings | red | No server actions for profile/password/notifications — deferred |
 
 ---
 

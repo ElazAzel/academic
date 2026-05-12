@@ -135,14 +135,14 @@ export async function forwardQuestionAction(questionId: string) {
   revalidatePath("/curator/questions");
   // Notify student and original curator
   if (question?.studentId) {
-    createNotification({
+    await createNotification({
       userId: question.studentId,
       event: "question_forwarded",
       data: { lessonId: question.lessonId }
     }).catch((e) => console.error("Failed to notify student:", e));
   }
   if (question?.curatorId) {
-    createNotification({
+    await createNotification({
       userId: question.curatorId,
       event: "question_forwarded",
       data: { lessonId: question.lessonId, studentName: question.student?.name }
@@ -189,14 +189,14 @@ export async function answerForwardedQuestionAction(formData: FormData) {
 
   // Notify student and original curator
   if (question?.studentId) {
-    createNotification({
+    await createNotification({
       userId: question.studentId,
       event: "question_answered",
       data: { lessonId: question.lessonId }
     }).catch((e) => console.error("Failed to notify student:", e));
   }
   if (question?.curatorId) {
-    createNotification({
+    await createNotification({
       userId: question.curatorId,
       event: "question_answered",
       data: { lessonId: question.lessonId, studentName: question.student?.name }
