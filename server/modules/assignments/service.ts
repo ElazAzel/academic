@@ -75,7 +75,53 @@ export async function reviewSubmission(input: {
   score?: number;
   feedback?: string;
 }) {
-  const submission = await prisma.assignmentSubmission.update({
+  // Load submission with full context for scope check
+  const submission = await prisma.assignmentSubmission.findUnique({
+    where: { id: input.submissionId },
+    include: {
+      assignment: {
+        include: {
+          lesson: { include: { module: { select: { courseId: true } } } }
+        }
+      }
+    }
+  });
+  if (!submission) {
+    throw new ApiError("not_found", "Решение не найдено", 404);
+  }
+
+  const courseId = submission.assignment.courseId ?? submission.assignment.lesson?.module.courseId;
+  const studentId = submission.userId;
+
+  // Scope check: reviewer must be admin, course instructor, or assigned curator of the student
+  const reviewer = await prisma.user.findUnique({
+    where: { id: input.reviewerId },
+    include: { roles: { include: { role: true } } }
+  });
+  if (!reviewer) {
+    throw new ApiError("forbidden", "Недостаточно прав", 403);
+  }
+  const roleKeys = reviewer.roles.map((r) => r.role.key);
+  const isAdmin = roleKeys.includes("admin");
+
+  let isAuthorized = isAdmin;
+  if (!isAuthorized && courseId) {
+    const isInstructor = await prisma.courseInstructor.findUnique({
+      where: { courseId_userId: { courseId, userId: input.reviewerId } }
+    });
+    if (isInstructor) isAuthorized = true;
+  }
+  if (!isAuthorized) {
+    const curatorAssignment = await prisma.curatorAssignment.findFirst({
+      where: { studentId, curatorId: input.reviewerId, active: true }
+    });
+    if (curatorAssignment) isAuthorized = true;
+  }
+  if (!isAuthorized) {
+    throw new ApiError("forbidden", "Вы не можете проверять это задание", 403);
+  }
+
+  const updated = await prisma.assignmentSubmission.update({
     where: { id: input.submissionId },
     data: {
       status: input.accepted ? "ACCEPTED" : "NEEDS_REVISION",
@@ -89,9 +135,9 @@ export async function reviewSubmission(input: {
     actorId: input.reviewerId,
     action: "assignment.reviewed",
     entity: "assignment_submission",
-    entityId: submission.id,
+    entityId: updated.id,
     metadata: { accepted: input.accepted, score: input.score }
   });
-  return submission;
+  return updated;
 }
 
