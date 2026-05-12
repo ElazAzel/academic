@@ -1,5 +1,6 @@
-import { errorResponse, ok } from "@/lib/http";
+import { errorResponse, ok, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
+import { courseBuilderSettingsSchema } from "@/lib/validation";
 import { getCourseForBuilder, updateCourseSettings } from "@/server/modules/course-builder/service";
 
 type Context = { params: Promise<{ courseId: string }> };
@@ -18,7 +19,7 @@ export async function PATCH(request: Request, context: Context) {
   try {
     const user = await requireUser("courses:write");
     const { courseId } = await context.params;
-    const input = await request.json();
+    const input = await parseJson(request, courseBuilderSettingsSchema);
     return ok(await updateCourseSettings(courseId, input, user.id));
   } catch (error) {
     return errorResponse(error);
