@@ -57,19 +57,24 @@ export async function listQuizzes() {
 export async function submitQuizAttempt(quizId: string, userId: string, answers: Record<string, unknown>, skipLimit = false) {
   const quiz = await prisma.quiz.findUnique({
     where: { id: quizId },
-    include: { questions: { orderBy: { order: "asc" } } }
+    include: {
+      questions: { orderBy: { order: "asc" } },
+      lesson: { include: { module: { select: { courseId: true } } } }
+    }
   });
   if (!quiz) {
     throw new ApiError("not_found", "Тест не найден", 404);
   }
 
-  if (quiz.courseId) {
-    const enrollment = await prisma.enrollment.findUnique({
-      where: { userId_courseId: { userId, courseId: quiz.courseId } }
-    });
-    if (!enrollment || enrollment.status !== ("ACTIVE" as EnrollmentStatus)) {
-      throw new ApiError("forbidden", "Нет доступа к тесту: вы не зачислены на курс", 403);
-    }
+  const resolvedCourseId = quiz.courseId ?? quiz.lesson?.module.courseId;
+  if (!resolvedCourseId) {
+    throw new ApiError("bad_request", "Тест не привязан к курсу", 400);
+  }
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { userId_courseId: { userId, courseId: resolvedCourseId } }
+  });
+  if (!enrollment || enrollment.status !== ("ACTIVE" as EnrollmentStatus)) {
+    throw new ApiError("forbidden", "Нет доступа к тесту: вы не зачислены на курс", 403);
   }
   if (!skipLimit) {
     const attempts = await prisma.quizAttempt.count({ where: { quizId, userId } });
@@ -97,11 +102,7 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
   });
 
   if (result.passed && quiz.lessonId) {
-    try {
-      await markLessonProgress(userId, quiz.lessonId, 100);
-    } catch (e) {
-      console.error("Failed to update progress after quiz:", e);
-    }
+    await markLessonProgress(userId, quiz.lessonId, 100);
   }
 
   return { ...attempt, grading: result };

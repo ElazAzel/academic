@@ -6,6 +6,11 @@ import { logAudit } from "@/server/modules/audit/service";
 
 const prisma = getPrisma();
 
+function getCompletionBasis<T extends { isRequired: boolean | null }>(lessons: T[]) {
+  const required = lessons.filter((l) => l.isRequired);
+  return required.length > 0 ? required : lessons;
+}
+
 export async function markLessonProgress(userId: string, lessonId: string, percentInput: number) {
   const percent = clamp(percentInput, 0, 100);
   const lesson = await prisma.lesson.findUnique({
@@ -82,7 +87,7 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
       }
     });
 
-    const moduleLessons = lesson.module.lessons;
+    const moduleLessons = getCompletionBasis(lesson.module.lessons);
     const completedModuleLessons = await tx.lessonProgress.count({
       where: {
         userId,
@@ -109,7 +114,7 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
       }
     });
 
-    const courseLessons = course.modules.flatMap((m) => m.lessons);
+    const courseLessons = getCompletionBasis(course.modules.flatMap((m) => m.lessons));
     const completedCourseLessons = await tx.lessonProgress.count({
       where: {
         userId,

@@ -2,6 +2,56 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-12 — 8-PR stabilization: build fix, seed/auth, notifications, progress, assignment/quiz access, student UX, reports scoping
+
+Автор/agent: big-pickle
+Тип изменения: stabilization / bugfix / security
+
+Файлы/модули:
+
+- `package.json` — eslint-config-next reverted to ^15.5.18 (compatible with next 16.2.5)
+- `eslint.config.mjs` — reverted to FlatCompat format
+- `app/instructor/questions/page.tsx` — removed unused CardTitle import
+- `app/api/seed-temp/route.ts` — rewritten: SEED_ADMIN_TOKEN auth, deterministic password, no secret logging
+- `.env.example` — SEED_USER_PASSWORD → SEED_ADMIN_TOKEN
+- `server/modules/notifications/service.ts` — removed `|| !input.channel` from email condition
+- `server/modules/progress/service.ts` — added `getCompletionBasis<T>` helper, applied to module/course progress
+- `server/modules/assignments/service.ts` — enrollment check + courseId resolution from lesson.module.courseId in `submitAssignment`
+- `server/modules/quizzes/service.ts` — courseId resolution from lesson, unswallowed progress sync error
+- `components/lms/student-lesson-view.tsx` — `normalizeVideoUrl` helper, toast error handling in `askQuestion`
+- `app/api/v1/reports/route.ts` — rewritten `getScopedStudentIds` with per-role scoping (admin, curator, super_curator, instructor, customer_observer), removed duplicate inline scoping
+- `tests/unit/assignments.test.ts` — updated mocks for enrollment check
+
+Summary:
+
+- **PR-1 (Green main):** Fixed build by reverting eslint-config-next from 16.2.5 to ^15.5.18, restored FlatCompat config, removed unused CardTitle import.
+- **PR-2 (Seed/auth):** Replaced catch-22 `requireUser("settings:manage")` with SEED_ADMIN_TOKEN check, deterministic password, no secret logging.
+- **PR-3 (Notifications):** Default in_app channel no longer triggers email (removed `|| !input.channel`).
+- **PR-4 (Progress):** Generic `getCompletionBasis<T>` helper uses `isRequired=true` lessons when any exist; applied to module/course progress.
+- **PR-5 (Assignment access):** Resolves courseId from `assignment.lesson.module.courseId`, checks active enrollment, throws 403 if not enrolled.
+- **PR-6 (Quiz access):** Resolves courseId from lesson when `quiz.courseId` is null, unswallowed progress sync error.
+- **PR-7 (Student UX):** YouTube URL normalization (watch?v= → /embed/), toast.error/success on askQuestion, try-catch, sending disabled state.
+- **PR-8 (Reports scoping):** Rewritten `getScopedStudentIds` with explicit per-role Prisma queries; customer_observer denied all data.
+
+Проверки:
+
+- `npm run typecheck` — passed
+- `npm run lint -- --max-warnings=0` — passed
+- `npm run test` — 93 passed, 20 test files
+- `npm run build` — passed
+
+Риски:
+
+- SEED_ADMIN_TOKEN is a dev-only bootstrap; must not be used in production.
+- customer_observer currently has no cohort/project linkage; scoped to empty array (safe default).
+- Reports scoping depends on correct role assignment in the database.
+
+Next steps:
+
+- Wire transactional email provider (SMTP) for password reset and verification flows.
+- Add production backup jobs and restore runbooks.
+- Add test coverage for reports scoping edge cases (multi-role users, customer_observer cohorts).
+
 ## 2026-05-12 — Instructor questions and reports, analytics tabs, curator/instructor settings
 
 Автор/agent: big-pickle

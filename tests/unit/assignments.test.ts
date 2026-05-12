@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 const mockFindUnique = vi.hoisted(() => vi.fn());
+const mockEnrollmentFindUnique = vi.hoisted(() => vi.fn());
 const mockCount = vi.hoisted(() => vi.fn());
 const mockCreate = vi.hoisted(() => vi.fn());
 const mockUpdate = vi.hoisted(() => vi.fn());
@@ -9,6 +10,7 @@ const mockAuditCreate = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
     assignment: { findUnique: mockFindUnique },
+    enrollment: { findUnique: mockEnrollmentFindUnique },
     assignmentSubmission: { count: mockCount, create: mockCreate, update: mockUpdate },
     auditLog: { create: mockAuditCreate },
   }),
@@ -26,7 +28,8 @@ describe("submitAssignment", () => {
   });
 
   it("throws 403 when attempt limit exceeded", async () => {
-    mockFindUnique.mockResolvedValue({ id: "a1", maxAttempts: 2 });
+    mockFindUnique.mockResolvedValue({ id: "a1", maxAttempts: 2, courseId: "c1" });
+    mockEnrollmentFindUnique.mockResolvedValue({ status: "ACTIVE" });
     mockCount.mockResolvedValue(2);
 
     await expect(
@@ -35,7 +38,8 @@ describe("submitAssignment", () => {
   });
 
   it("allows first attempt when maxAttempts is 1", async () => {
-    mockFindUnique.mockResolvedValue({ id: "a1", maxAttempts: 1 });
+    mockFindUnique.mockResolvedValue({ id: "a1", maxAttempts: 1, courseId: "c1" });
+    mockEnrollmentFindUnique.mockResolvedValue({ status: "ACTIVE" });
     mockCount.mockResolvedValue(0);
     mockCreate.mockResolvedValue({
       id: "sub1",
@@ -52,7 +56,8 @@ describe("submitAssignment", () => {
   });
 
   it("creates submission with fileUrl", async () => {
-    mockFindUnique.mockResolvedValue({ id: "a1", maxAttempts: 3 });
+    mockFindUnique.mockResolvedValue({ id: "a1", maxAttempts: 3, courseId: "c1" });
+    mockEnrollmentFindUnique.mockResolvedValue({ status: "ACTIVE" });
     mockCount.mockResolvedValue(0);
     mockCreate.mockResolvedValue({
       id: "sub2",

@@ -12,6 +12,17 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import type { StudentLessonLearningDetail } from "@/types/domain";
 
+function normalizeVideoUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtube.com") || u.hostname.includes("youtu.be")) {
+      const vid = u.searchParams.get("v") || u.pathname.slice(1);
+      if (vid) return `https://www.youtube.com/embed/${vid}`;
+    }
+  } catch {}
+  return url;
+}
+
 function CollapsibleSection({ title, defaultOpen = true, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -76,15 +87,24 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
   const askQuestion = useCallback(async () => {
     if (!questionText.trim()) return;
     setSending(true);
-    const res = await fetch(`/api/v1/lessons/${lesson.id}/questions`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text: questionText }),
-    });
-    setSending(false);
-    if (res.ok) {
-      setQuestionText("");
-      router.refresh();
+    try {
+      const res = await fetch(`/api/v1/lessons/${lesson.id}/questions`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text: questionText }),
+      });
+      if (res.ok) {
+        setQuestionText("");
+        toast.success("Вопрос отправлен куратору");
+        router.refresh();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error?.message || "Не удалось отправить вопрос");
+      }
+    } catch {
+      toast.error("Ошибка сети");
+    } finally {
+      setSending(false);
     }
   }, [questionText, lesson.id, router]);
 
@@ -145,7 +165,7 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
             <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
               <iframe
                 className="absolute inset-0 h-full w-full"
-                src={lesson.videoUrl}
+                src={normalizeVideoUrl(lesson.videoUrl)}
                 title={lesson.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

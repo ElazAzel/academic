@@ -1,8 +1,6 @@
-import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { RoleKey } from "@prisma/client";
 import { hashPassword } from "@/lib/auth/password";
-import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -12,15 +10,15 @@ export async function GET() {
     return NextResponse.json({ error: "Not available in production" }, { status: 404 });
   }
 
-  try {
-    await requireUser("settings:manage");
+  const token = process.env.SEED_ADMIN_TOKEN;
+  if (!token || token.length < 16) {
+    return NextResponse.json({ error: "Set SEED_ADMIN_TOKEN env var to use this endpoint" }, { status: 401 });
+  }
 
-    const seedPassword = process.env.SEED_USER_PASSWORD || randomBytes(16).toString("hex");
-    if (!process.env.SEED_USER_PASSWORD) {
-      console.log(`[Seed] Generated random password for temporary users: ${seedPassword}`);
-    }
+  try {
+    const seedPassword = "Password123!";
     const passwordHash = await hashPassword(seedPassword);
-    
+
     async function upsertUser(email: string, name: string, roleKey: RoleKey) {
       const user = await prisma.user.upsert({
         where: { email },
@@ -32,7 +30,7 @@ export async function GET() {
           emailVerified: new Date(),
         }
       });
-      
+
       const role = await prisma.role.upsert({
         where: { key: roleKey },
         update: {},
@@ -47,18 +45,16 @@ export async function GET() {
       return user;
     }
 
-    // Создаем пользователей
     await upsertUser("admin@academy.local", "Администратор", "admin");
     const instructor = await upsertUser("instructor1@academy.local", "Преподаватель", "instructor");
     await upsertUser("curator@academy.local", "Куратор", "curator");
     await upsertUser("supercurator@academy.local", "Супер-куратор", "super_curator");
     await upsertUser("observer@academy.local", "Заказчик", "customer_observer");
-    
+
     for (let i = 1; i <= 10; i++) {
       await upsertUser(`student${i}@academy.local`, `Слушатель ${i}`, "student");
     }
 
-    // --- Создаем ДЕМО КУРС ---
     const courseSlug = "strategic-thinking-masterclass";
     const course = await prisma.course.upsert({
       where: { slug: courseSlug },
@@ -76,7 +72,6 @@ export async function GET() {
       }
     });
 
-    // Модуль 1: Основы
     const module1 = await prisma.module.upsert({
       where: { courseId_order: { courseId: course.id, order: 1 } },
       update: {},
@@ -89,7 +84,6 @@ export async function GET() {
       }
     });
 
-    // Урок 1.1: Видео
     await prisma.lesson.upsert({
       where: { moduleId_order: { moduleId: module1.id, order: 1 } },
       update: {},
@@ -104,7 +98,6 @@ export async function GET() {
       }
     });
 
-    // Урок 1.2: Текст
     await prisma.lesson.upsert({
       where: { moduleId_order: { moduleId: module1.id, order: 2 } },
       update: {},
@@ -117,7 +110,6 @@ export async function GET() {
       }
     });
 
-    // Модуль 2: Аналитика и Тесты
     const module2 = await prisma.module.upsert({
       where: { courseId_order: { courseId: course.id, order: 2 } },
       update: {},
@@ -130,7 +122,6 @@ export async function GET() {
       }
     });
 
-    // Урок 2.1: Тест
     const quizLesson = await prisma.lesson.upsert({
       where: { moduleId_order: { moduleId: module2.id, order: 1 } },
       update: {},
@@ -175,7 +166,6 @@ export async function GET() {
       }
     });
 
-    // Урок 2.2: Задание
     const assignmentLesson = await prisma.lesson.upsert({
       where: { moduleId_order: { moduleId: module2.id, order: 2 } },
       update: {},
@@ -200,14 +190,14 @@ export async function GET() {
         maxScore: 100
       }
     });
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    return NextResponse.json({
+      success: true,
       message: "Все аккаунты и ДЕМО КУРС успешно созданы!",
+      credentials: { password: seedPassword },
       course: courseSlug
     });
   } catch (err) {
-
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

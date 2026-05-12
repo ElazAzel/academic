@@ -1,5 +1,6 @@
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
+import { EnrollmentStatus } from "@prisma/client";
 import { logAudit } from "@/server/modules/audit/service";
 
 const prisma = getPrisma();
@@ -21,10 +22,26 @@ export async function submitAssignment(input: {
   answerText?: string;
   fileUrl?: string;
 }) {
-  const assignment = await prisma.assignment.findUnique({ where: { id: input.assignmentId } });
+  const assignment = await prisma.assignment.findUnique({
+    where: { id: input.assignmentId },
+    include: { lesson: { include: { module: { select: { courseId: true } } } } }
+  });
   if (!assignment) {
     throw new ApiError("not_found", "Задание не найдено", 404);
   }
+
+  const courseId = assignment.courseId ?? assignment.lesson?.module.courseId;
+  if (!courseId) {
+    throw new ApiError("bad_request", "Задание не привязано к курсу", 400);
+  }
+
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { userId_courseId: { userId: input.userId, courseId } }
+  });
+  if (!enrollment || enrollment.status !== EnrollmentStatus.ACTIVE) {
+    throw new ApiError("forbidden", "Вы не зачислены на этот курс", 403);
+  }
+
   const attemptNumber =
     (await prisma.assignmentSubmission.count({
       where: { assignmentId: input.assignmentId, userId: input.userId }

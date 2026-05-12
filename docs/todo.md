@@ -9,6 +9,14 @@
 - [done] Curator/instructor settings pages implemented (profile, notifications, security tabs).
 - [done] Admin analytics "По пользователям" tab with role distribution chart.
 - [done] Instructor analytics "По тестам" tab with per-quiz avg score breakdown.
+- [done] Build fixed (eslint-config-next @15.5.18, FlatCompat restored).
+- [done] Seed/auth bootstrap unlocked (SEED_ADMIN_TOKEN, deterministic password).
+- [done] Notifications channel filtering fixed (default in_app no longer triggers email).
+- [done] Progress calculation uses `isRequired` lessons when present, falls back to all.
+- [done] Assignment submission checks active enrollment & resolves courseId from lesson.module.
+- [done] Quiz submission resolves courseId from lesson, errors on progress sync no longer swallowed.
+- [done] Student lesson view: YouTube URL normalization, toast error handling for questions.
+- [done] Reports API scoped per-role (admin, curator, super_curator, instructor, customer_observer).
 - Add production S3 bucket configuration and test presigned upload flow.
 - Wire push provider with Firebase Admin SDK or Telegram bot when credentials are available.
 - Add production backup jobs and restore runbooks under `infra/backup/`.

@@ -54,6 +54,21 @@ export async function GET(request: Request) {
     }
 
     const getScopedStudentIds = async () => {
+      if (isAdmin) return undefined;
+      if (isCurator) {
+        const assignments = await prisma.curatorAssignment.findMany({
+          where: { curatorId: user.id, active: true },
+          select: { studentId: true },
+        });
+        return assignments.map((a) => a.studentId);
+      }
+      if (isSuperCurator) {
+        const assignments = await prisma.curatorAssignment.findMany({
+          where: { superCuratorId: user.id, active: true },
+          select: { studentId: true },
+        });
+        return assignments.map((a) => a.studentId);
+      }
       if (isInstructor) {
         const courses = await prisma.course.findMany({
           where: { instructors: { some: { userId: user.id } } },
@@ -67,21 +82,16 @@ export async function GET(request: Request) {
         });
         return [...new Set(enrollments.map((e) => e.userId))];
       }
-      if (!isSuperCurator || isAdmin) return undefined;
-      const assignments = await prisma.curatorAssignment.findMany({
-        where: { superCuratorId: user.id, active: true },
-        select: { studentId: true },
-      });
-      return assignments.map((a) => a.studentId);
+      if (isObserver) {
+        return [];
+      }
+      return undefined;
     };
 
     const scopedIds = await getScopedStudentIds();
 
-    if (type === "progress" || (type === "curator_progress" && isCurator)) {
-      const studentIds = type === "curator_progress"
-        ? (await prisma.curatorAssignment.findMany({ where: { curatorId: user.id }, select: { studentId: true } })).map((a) => a.studentId)
-        : scopedIds;
-      const rows = await fetchProgressData(studentIds);
+    if (type === "progress" || type === "curator_progress") {
+      const rows = await fetchProgressData(scopedIds);
       const filename = `${type}_report${EXT[format]}`;
 
       if (format === "xlsx") return respond(await generateProgressXlsx(rows), format, filename);
@@ -89,11 +99,8 @@ export async function GET(request: Request) {
       return respond(generateProgressCsv(rows), format, filename);
     }
 
-    if (type === "risk" || (type === "curator_risk" && isCurator)) {
-      const studentIds = type === "curator_risk"
-        ? (await prisma.curatorAssignment.findMany({ where: { curatorId: user.id }, select: { studentId: true } })).map((a) => a.studentId)
-        : scopedIds;
-      const rows = await fetchRiskData(studentIds);
+    if (type === "risk" || type === "curator_risk") {
+      const rows = await fetchRiskData(scopedIds);
       const filename = `${type}_report${EXT[format]}`;
 
       if (format === "xlsx") return respond(await generateRiskXlsx(rows), format, filename);

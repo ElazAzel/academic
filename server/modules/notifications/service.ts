@@ -87,7 +87,7 @@ export async function createNotification(input: {
     select: { email: true }
   });
 
-  if (user?.email && (input.channel === "email" || input.channel === "email_and_in_app" || !input.channel)) {
+    if (user?.email && (input.channel === "email" || input.channel === "email_and_in_app")) {
     try {
       await sendEmail(user.email, rendered.title, rendered.body);
     } catch (error) {
