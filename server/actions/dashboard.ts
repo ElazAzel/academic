@@ -785,7 +785,7 @@ export async function getInstructorAnalytics() {
 
     const moduleIds = courses.flatMap(c => c.modules.map(m => m.id));
 
-    const [moduleAvgProgress, moduleCompletedCounts] = await Promise.all([
+    const [moduleAvgProgress, moduleCompletedCounts, quizAnalytics] = await Promise.all([
       prisma.moduleProgress.groupBy({
         by: ["moduleId"],
         where: { moduleId: { in: moduleIds } },
@@ -795,7 +795,13 @@ export async function getInstructorAnalytics() {
         by: ["moduleId"],
         where: { moduleId: { in: moduleIds }, status: "COMPLETED" },
         _count: { _all: true }
-      })
+      }),
+      prisma.quiz.findMany({
+        where: { courseId: { in: courseIds } },
+        include: {
+          attempts: { select: { score: true, passed: true } },
+        },
+      }),
     ]);
 
     const avgProgressMap = new Map(
@@ -814,6 +820,19 @@ export async function getInstructorAnalytics() {
       }))
     );
 
+    const quizStats = quizAnalytics.map(q => {
+      const attempts = q.attempts;
+      const total = attempts.length;
+      const passed = attempts.filter(a => a.passed).length;
+      const avgScore = total > 0 ? Math.round(attempts.reduce((s, a) => s + (a.score ?? 0), 0) / total) : 0;
+      return {
+        title: q.title,
+        totalAttempts: total,
+        passed,
+        avgScore,
+      };
+    });
+
     const metrics: DashboardMetric[] = [
       { label: "Зачисленных", value: totalEnrollments, tone: "primary" },
       { label: "Средний прогресс", value: `${Math.round(avgProgressResult._avg.percent ?? 0)}%`, tone: "success" },
@@ -821,7 +840,7 @@ export async function getInstructorAnalytics() {
       { label: "Средний балл тестов", value: `${Math.round(avgQuizScore._avg.score ?? 0)}%`, tone: "warning" },
     ];
 
-    return { metrics, moduleAnalytics };
+    return { metrics, moduleAnalytics, quizStats };
   }, null);
 }
 

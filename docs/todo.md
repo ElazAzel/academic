@@ -6,10 +6,15 @@
 - [done] S3 presigned upload URL endpoint at `app/api/v1/media/uploads/route.ts`.
 - [done] Push notification provider scaffold (`server/modules/notifications/push.ts`).
 - [done] Sentry monitoring config (`sentry.*.config.ts`, `instrumentation.ts`, `next.config.ts`).
+- [done] Curator/instructor settings pages implemented (profile, notifications, security tabs).
+- [done] Admin analytics "По пользователям" tab with role distribution chart.
+- [done] Instructor analytics "По тестам" tab with per-quiz avg score breakdown.
 - Add production S3 bucket configuration and test presigned upload flow.
 - Wire push provider with Firebase Admin SDK or Telegram bot when credentials are available.
 - Add production backup jobs and restore runbooks under `infra/backup/`.
 - Add real PDF styling/signature assets for certificates in `public/assets/certificates/`.
+
+## Pages still on stubs (none — all 62 role sub-pages implemented)
 
 ## Learning Features
 

@@ -2,7 +2,52 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
-## 2026-05-07 — Self-hosted private database and learning flow stabilization
+## 2026-05-12 — Instructor questions and reports, analytics tabs, curator/instructor settings
+
+Автор/agent: big-pickle
+Тип изменения: feature / UI / analytics
+Файлы/модули:
+
+- `app/instructor/questions/page.tsx` — full forwarded questions UI with answer form
+- `app/instructor/reports/page.tsx` — report export cards with fixed href template
+- `app/instructor/analytics/page.tsx` — added "По тестам" tab with per-quiz avg score
+- `app/admin/analytics/page.tsx` — added "По пользователям" tab with role distribution, recent registrations
+- `app/curator/settings/page.tsx` — реализованы вкладки Профиль/Уведомления/Безопасность
+- `app/instructor/settings/page.tsx` — реализованы вкладки Профиль/Уведомления/Безопасность
+- `app/student/certificates/page.tsx` — fixed PDF download link `/api/certificates` → `/api/v1/certificates`
+- `components/layout/navigation.ts` — added "Отчёты" nav item for instructor
+- `components/ui/textarea.tsx` — new UI component
+- `server/actions/curator.ts` — fixed syntax errors ({{ }}, \r\n), added missing findUnique, converted answerForwardedQuestionAction to FormData, preserved curatorId on instructor answer
+- `server/actions/dashboard.ts` — added getForwardedQuestions(), extended getInstructorAnalytics with per-quiz stats
+- `server/modules/notifications/service.ts` — added `question_forwarded` event type
+- `server/modules/learning/service.ts` — added notification to curator on student question
+- `app/api/v1/reports/route.ts` — added instructor role scoping to reports API
+
+Summary:
+
+- Реализован полный цикл вопросов: студент → куратор → инструктор с уведомлениями
+- Страница отчётов инструктора с экспортом CSV/Excel/PDF
+- Страницы настроек куратора и инструктора (3 вкладки: профиль, уведомления, безопасность)
+- Аналитика "По пользователям" для админа (распределение ролей, последние регистрации)
+- Аналитика "По тестам" для инструктора (средний балл по каждому тесту)
+- Исправлены синтаксические ошибки в server/actions/curator.ts
+- Добавлен UI-компонент Textarea
+
+Проверки:
+
+- `npx tsc --noEmit` — прошёл успешно
+- `npx vitest run` — 93 passed, 20 test files
+
+Риски:
+
+- Instructor analytics "По тестам" загружает все попытки тестов; при большом количестве может быть медленно (можно добавить пагинацию позднее)
+- Настройки профиля используют статические placeholder-данные (name/email), т.к. не подключены к серверу для сохранения
+
+Next steps:
+
+- Подключить mutation actions для сохранения профиля и смены пароля
+- Добавить Redis-backed rate limiting
+- Production deployment validation
 
 Автор/agent: Codex
 Тип изменения: infra / security / learning / verification
