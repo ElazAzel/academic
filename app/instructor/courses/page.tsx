@@ -37,9 +37,9 @@ export default async function InstructorCoursesPage() {
   <AppShell role="instructor">
    <PageHeader title="Мои курсы" description="Управление статусами (черновик, опубликован, архив) и контентом."/>
    <div className="space-y-6 mt-6">
-    <Link href="/admin/courses">
-     <Button><Plus className="h-4 w-4 mr-2"/>Создать курс</Button>
-    </Link>
+     <Link href="/instructor/courses/new">
+      <Button><Plus className="h-4 w-4 mr-2"/>Создать курс</Button>
+     </Link>
     {courses.length > 0 ? (
      <CourseManageGrid courses={courses}/>
     ) : (

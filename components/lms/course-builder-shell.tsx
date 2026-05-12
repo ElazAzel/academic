@@ -85,7 +85,7 @@ export function CourseBuilderShell({ detail: initial }: { detail: CourseBuilderD
       {/* Top bar */}
       <div className="flex items-center justify-between border-b px-6 py-3">
         <div className="flex items-center gap-3">
-          <Link href={`/instructor/courses/${detail.id}/edit`}>
+          <Link href="/instructor/courses">
             <Button size="sm" variant="ghost">
               <ArrowLeft className="h-4 w-4" />
             </Button>

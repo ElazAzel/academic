@@ -25,12 +25,18 @@ export async function logAudit(input: {
   });
 }
 
-export async function listAuditLogs() {
-  return prisma.auditLog.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    include: {
-      actor: { select: { id: true, email: true, name: true } }
-    }
-  });
+export async function listAuditLogs(page = 1, limit = 25) {
+  const skip = (page - 1) * limit;
+  const [logs, total] = await Promise.all([
+    prisma.auditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: {
+        actor: { select: { id: true, email: true, name: true } }
+      }
+    }),
+    prisma.auditLog.count()
+  ]);
+  return { logs, total, page, limit, pages: Math.ceil(total / limit) };
 }
