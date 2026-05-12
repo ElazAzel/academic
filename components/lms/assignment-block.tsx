@@ -6,6 +6,7 @@ import { Send, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { sanitizeHtml } from "@/lib/sanitize";
 import type { StudentAssignmentDetail } from "@/types/domain";
 
 export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentDetail }) {
@@ -113,7 +114,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
       {/* Instructions */}
       <div
         className="rounded-xl bg-muted/30 p-4 text-sm leading-relaxed text-muted-foreground [&_h1]:text-base [&_h1]:font-semibold [&_h1]:text-foreground [&_h2]:font-semibold [&_h2]:text-foreground [&_p]:my-2"
-        dangerouslySetInnerHTML={{ __html: assignment.instructions }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(assignment.instructions) }}
       />
 
       {/* Submission info */}
