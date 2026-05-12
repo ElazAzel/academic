@@ -43,7 +43,7 @@ export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
         const course = await readApiData<CreatedCourse>(response);
         onSuccess?.();
         if (course?.id) {
-          router.push(`/instructor/courses/${course.id}/edit`);
+          router.push(`/instructor/courses/${course.id}/builder`);
         } else {
           router.refresh();
         }

@@ -66,7 +66,7 @@ export function ModuleEditForm({ module }: ModuleEditFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex items-center justify-between mb-6">
-        <Link href={`/instructor/courses/${module.courseId}/curriculum`}>
+        <Link href={`/instructor/courses/${module.courseId}/builder`}>
           <Button type="button" size="sm" variant="secondary">
             <ArrowLeft className="h-4 w-4 mr-2" />
             К учебному плану

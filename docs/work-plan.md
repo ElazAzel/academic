@@ -1,7 +1,7 @@
 # Work Plan — AI Strategic Academy LMS
 
 **Date:** 2026-05-13
-**Status:** PR-1, PR-2, PR-3, and PR-4 completed; PR-5-6 queued
+**Status:** PR-1, PR-2, PR-3, PR-4, and PR-5 completed; PR-6 queued
 
 ---
 

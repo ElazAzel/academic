@@ -135,7 +135,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
   return (
     <form onSubmit={handleSubmit}>
       <div className="flex items-center justify-between mb-6">
-        <Link href={`/instructor/courses/${lesson.module.course.id}/curriculum`}>
+        <Link href={`/instructor/courses/${lesson.module.course.id}/builder`}>
           <Button type="button" size="sm" variant="secondary">
             <ArrowLeft className="h-4 w-4 mr-2" />
             К учебному плану
