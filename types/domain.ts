@@ -56,6 +56,7 @@ export interface CourseSummary {
   status: CourseStatus;
   traversalMode: "sequential" | "open";
   modulesCount: number;
+  blocksCount?: number;
   lessonsCount: number;
   avgProgress?: number;
   instructors: UserSummary[];
@@ -64,7 +65,29 @@ export interface CourseSummary {
 export interface CourseDetail extends CourseSummary {
   goal?: string | null;
   completionThreshold: number;
-  modules: ModuleSummary[];
+  modules: ModuleDetail[];
+  blocksCount?: number;
+}
+
+// ── Блоки ──────────────────────────────────────────────────────────
+export interface BlockSummary {
+  id: string;
+  moduleId: string;
+  order: number;
+  title: string;
+  description?: string | null;
+  lessonsCount: number;
+  status: CourseStatus;
+}
+
+export interface BlockDetail extends BlockSummary {
+  lessons: LessonSummary[];
+}
+
+export interface BlockLearningDetail extends BlockSummary {
+  progressPercent: number;
+  progressStatus: ProgressStatus;
+  lessons: LessonLearningSummary[];
 }
 
 // ── Модули ──────────────────────────────────────────────────────────
@@ -73,12 +96,14 @@ export interface ModuleSummary {
   order: number;
   title: string;
   description?: string | null;
+  blocksCount?: number;
   lessonsCount: number;
   recommendedDays: number;
   status: CourseStatus;
 }
 
 export interface ModuleDetail extends ModuleSummary {
+  blocks?: BlockDetail[];
   lessons: LessonSummary[];
 }
 
@@ -86,6 +111,7 @@ export interface ModuleLearningDetail extends ModuleSummary {
   progressPercent: number;
   progressStatus: ProgressStatus;
   deadlineDate?: string | null;
+  blocks?: BlockLearningDetail[];
   lessons: LessonLearningSummary[];
 }
 
@@ -99,6 +125,8 @@ export interface LessonSummary {
   type: LessonType;
   durationMinutes: number;
   isRequired: boolean;
+  blockId?: string | null;
+  blockTitle?: string;
   progressStatus?: ProgressStatus;
   progressPercent?: number;
 }
@@ -192,8 +220,25 @@ export interface StudentProgress {
   percent: number;
   status: ProgressStatus;
   currentModuleTitle?: string;
+  currentBlockTitle?: string;
   currentLessonTitle?: string;
   nextLessonId?: string;
+}
+
+export interface StudentAnalyticsDetail {
+  id: string;
+  name: string;
+  email: string;
+  courseTitle: string;
+  cohortName?: string;
+  coursePercent: number;
+  moduleTitle?: string;
+  blockTitle?: string;
+  lessonTitle?: string;
+  lastLoginAt?: string | null;
+  avgLessonMinutes: number;
+  progressStatus: string;
+  riskCount: number;
 }
 
 export interface ContinueLearning {

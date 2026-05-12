@@ -9,8 +9,14 @@ async function buildProgressSheet(wb: ExcelJS.Workbook, rows: ProgressRow[]) {
     { header: "Слушатель", key: "studentName", width: 28 },
     { header: "Email", key: "email", width: 32 },
     { header: "Курс", key: "course", width: 38 },
-    { header: "Поток", key: "cohort", width: 28 },
+    { header: "Поток", key: "cohort", width: 24 },
     { header: "Прогресс %", key: "progressPercent", width: 14 },
+    { header: "Модуль", key: "currentModule", width: 24 },
+    { header: "Блок", key: "currentBlock", width: 24 },
+    { header: "Урок", key: "currentLesson", width: 24 },
+    { header: "Последний вход", key: "lastLoginAt", width: 16 },
+    { header: "Ср. минут/урок", key: "avgLessonMinutes", width: 16 },
+    { header: "Риски", key: "riskCount", width: 10 },
   ];
 
   const headerRow = ws.getRow(1);
@@ -39,7 +45,8 @@ async function buildProgressSheet(wb: ExcelJS.Workbook, rows: ProgressRow[]) {
     rowNum++;
 
     for (const r of courseRows) {
-      const dataRow = ws.addRow([r.studentName, r.email, r.course, r.cohort, r.progressPercent]);
+      const lastLogin = r.lastLoginAt ? new Date(r.lastLoginAt).toLocaleDateString("ru-RU") : "";
+      const dataRow = ws.addRow([r.studentName, r.email, r.course, r.cohort, r.progressPercent, r.currentModule ?? "", r.currentBlock ?? "", r.currentLesson ?? "", lastLogin, r.avgLessonMinutes ?? 0, r.riskCount ?? 0]);
       const pct = dataRow.getCell(5);
       pct.numFmt = "0%";
       pct.value = r.progressPercent / 100;

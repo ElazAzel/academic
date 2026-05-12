@@ -5,13 +5,16 @@ import { generateProgressCsv, generateRiskCsv, generateCertificateCsv } from "@/
 const mockEnrollmentFindMany = vi.hoisted(() => vi.fn());
 const mockRiskFlagFindMany = vi.hoisted(() => vi.fn());
 const mockCertificateFindMany = vi.hoisted(() => vi.fn());
+const mockLessonProgressFindMany = vi.hoisted(() => vi.fn());
+const mockRiskFlagGroupBy = vi.hoisted(() => vi.fn());
 const mockAuditCreate = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
     enrollment: { findMany: mockEnrollmentFindMany },
-    riskFlag: { findMany: mockRiskFlagFindMany },
+    riskFlag: { findMany: mockRiskFlagFindMany, groupBy: mockRiskFlagGroupBy },
     certificate: { findMany: mockCertificateFindMany },
+    lessonProgress: { findMany: mockLessonProgressFindMany },
     auditLog: { create: mockAuditCreate },
   }),
 }));
@@ -122,19 +125,21 @@ describe("fetchProgressData", () => {
     mockEnrollmentFindMany.mockResolvedValue([
       {
         userId: "u1",
-        user: { name: "Alice", email: "alice@test.com" },
+        user: { name: "Alice", email: "alice@test.com", lastLoginAt: new Date("2026-05-01") },
         course: { id: "c1", title: "AI 101" },
         cohort: { name: "Cohort A" },
         courseProgress: [{ percent: 75 }],
       },
       {
         userId: "u2",
-        user: { name: null, email: "bob@test.com" },
+        user: { name: null, email: "bob@test.com", lastLoginAt: null },
         course: { id: "c2", title: "ML 201" },
         cohort: null,
         courseProgress: [],
       },
     ]);
+    mockLessonProgressFindMany.mockResolvedValue([]);
+    mockRiskFlagGroupBy.mockResolvedValue([]);
 
     const rows = await fetchProgressData();
     expect(rows).toHaveLength(2);
@@ -154,6 +159,8 @@ describe("fetchProgressData", () => {
 
   it("filters by studentIds when provided", async () => {
     mockEnrollmentFindMany.mockResolvedValue([]);
+    mockLessonProgressFindMany.mockResolvedValue([]);
+    mockRiskFlagGroupBy.mockResolvedValue([]);
     await fetchProgressData(["u1"]);
     expect(mockEnrollmentFindMany).toHaveBeenCalledWith(
       expect.objectContaining({

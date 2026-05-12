@@ -4,6 +4,12 @@ export interface ProgressRow {
   course: string;
   cohort: string;
   progressPercent: number;
+  currentModule?: string;
+  currentBlock?: string;
+  currentLesson?: string;
+  lastLoginAt?: string | null;
+  avgLessonMinutes?: number;
+  riskCount?: number;
 }
 
 export interface RiskRow {

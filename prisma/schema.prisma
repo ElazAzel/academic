@@ -119,6 +119,7 @@ model User {
   courseInstructors     CourseInstructor[]
   enrollments           Enrollment[]
   lessonProgress        LessonProgress[]
+  blockProgress         BlockProgress[]
   moduleProgress        ModuleProgress[]
   courseProgress        CourseProgress[]
   quizAttempts          QuizAttempt[]
@@ -323,6 +324,7 @@ model Module {
   updatedAt       DateTime     @updatedAt @map("updated_at")
 
   course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  blocks   Block[]
   lessons  Lesson[]
   progress ModuleProgress[]
   deadlines CohortDeadline[]
@@ -331,9 +333,49 @@ model Module {
   @@map("modules")
 }
 
+model Block {
+  id              String       @id @default(cuid())
+  moduleId        String       @map("module_id")
+  order           Int
+  title           String
+  description     String?      @db.Text
+  status          CourseStatus @default(DRAFT)
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  lessons  Lesson[]
+  progress BlockProgress[]
+
+  @@unique([moduleId, order])
+  @@map("blocks")
+}
+
+model BlockProgress {
+  id           String         @id @default(cuid())
+  userId       String         @map("user_id")
+  blockId      String         @map("block_id")
+  enrollmentId String?        @map("enrollment_id")
+  status       ProgressStatus @default(NOT_STARTED)
+  percent      Int            @default(0)
+  completedAt  DateTime?      @map("completed_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  block      Block       @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  enrollment Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, blockId])
+  @@index([userId])
+  @@index([blockId])
+  @@index([enrollmentId])
+  @@map("block_progress")
+}
+
 model Lesson {
   id              String     @id @default(cuid())
   moduleId        String     @map("module_id")
+  blockId         String?    @map("block_id")
   order           Int
   type            LessonType @default(MIXED)
   title           String
@@ -346,6 +388,7 @@ model Lesson {
   updatedAt       DateTime   @updatedAt @map("updated_at")
 
   module      Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  block       Block?  @relation(fields: [blockId], references: [id])
   media       LessonMedia[]
   quizzes     Quiz[]
   assignments Assignment[]
@@ -425,6 +468,7 @@ model Enrollment {
   course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   cohort         Cohort?          @relation(fields: [cohortId], references: [id], onDelete: SetNull)
   lessonProgress LessonProgress[]
+  blockProgress  BlockProgress[]
   moduleProgress ModuleProgress[]
   courseProgress CourseProgress[]
   certificates   Certificate[]

@@ -1,14 +1,31 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
+import { StudentAnalyticsTable } from "@/components/lms/student-analytics-table";
 import { BarChart, DonutChart } from "@/components/lms/bar-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import type { DashboardMetric } from "@/types/domain";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
+import { getAdminStudentAnalytics } from "@/server/actions/dashboard";
 
 export const dynamic = "force-dynamic";
+
+async function StudentAnalyticsTab() {
+  const students = await getAdminStudentAnalytics();
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground mr-1">Скачать отчёт:</span>
+        <a href="/api/v1/reports?type=progress&format=csv" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">CSV</a>
+        <a href="/api/v1/reports?type=progress&format=xlsx" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">Excel</a>
+        <a href="/api/v1/reports?type=progress&format=pdf" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">PDF</a>
+      </div>
+      <StudentAnalyticsTable students={students} />
+    </div>
+  );
+}
 
 export default async function AdminAnalyticsPage() {
   await requireRolePage(["admin"]);
@@ -187,6 +204,10 @@ export default async function AdminAnalyticsPage() {
                 </div>
               </div>
             ),
+          },
+          {
+            label: "По слушателям",
+            content: <StudentAnalyticsTab />,
           },
         ]}/>
       </div>
