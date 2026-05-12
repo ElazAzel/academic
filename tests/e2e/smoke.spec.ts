@@ -28,9 +28,10 @@ test.describe("public pages", () => {
     await expect(page.getByRole("heading")).toBeVisible();
   });
 
-  test("register redirects to login", async ({ page }) => {
+  test("register page shows registration closed", async ({ page }) => {
     await page.goto("/register");
-    await expect(page.getByRole("heading", { name: "Вход в академию" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Регистрация закрыта" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Перейти ко входу" })).toBeVisible();
   });
 });
 
