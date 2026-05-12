@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function StudentCertificatesPage() {
  const user = await requireRolePage(["student"]);
- const certificates = await listCertificates(user.id);
+ const certificates = await listCertificates({ userId: user.id });
 
  return (
   <AppShell role="student">

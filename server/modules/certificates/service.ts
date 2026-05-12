@@ -80,9 +80,15 @@ export async function revokeCertificate(certificateId: string, actorId: string) 
   return updated;
 }
 
-export async function listCertificates(userId?: string) {
+export async function listCertificates(filter?: { userId?: string; userIds?: string[] }) {
+  let where: Record<string, unknown> | undefined;
+  if (filter?.userId) {
+    where = { userId: filter.userId };
+  } else if (filter?.userIds) {
+    where = { userId: { in: filter.userIds } };
+  }
   return prisma.certificate.findMany({
-    where: userId ? { userId } : undefined,
+    where,
     include: {
       user: { select: { id: true, name: true, email: true } },
       course: { select: { id: true, title: true } }

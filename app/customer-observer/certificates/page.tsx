@@ -5,12 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { listCertificates } from "@/server/modules/certificates/service";
+import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 
 export const dynamic = "force-dynamic";
 
 export default async function CustomerObserverCertificatesPage() {
- await requireRolePage(["customer_observer"]);
- const certificates = await listCertificates();
+ const user = await requireRolePage(["customer_observer"]);
+ const scopedIds = await getScopedStudentIdsForObserver(user.id);
+ const certificates = await listCertificates(scopedIds ? { userIds: scopedIds } : undefined);
 
  return (
   <AppShell role="customer_observer">

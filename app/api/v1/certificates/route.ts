@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const user = await requireUser();
     const canSeeAll = user.roles.includes("admin") || user.roles.includes("customer_observer");
-    return ok(await listCertificates(canSeeAll ? undefined : user.id));
+    return ok(await listCertificates(canSeeAll ? undefined : { userId: user.id }));
   } catch (error) {
     return errorResponse(error);
   }
