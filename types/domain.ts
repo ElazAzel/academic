@@ -149,6 +149,20 @@ export interface LessonDetail extends LessonSummary {
   assignments: AssignmentSummary[];
 }
 
+// ── Блоки контента урока (PR 3) ─────────────────────────────────────
+export type ContentBlockType = "video" | "text" | "file" | "quiz" | "assignment" | "rating" | "curator_question" | "completion";
+
+export interface ContentBlock {
+  type: ContentBlockType;
+  data: Record<string, unknown>;
+}
+
+export interface StudentLessonPlayerDetail {
+  lesson: StudentLessonLearningDetail;
+  blocks: ContentBlock[];
+  courseTree: ModulePlayerDetail[];
+}
+
 // ── Плеер курса (PR 2) ──────────────────────────────────────────────
 export type CompletionCta = "start" | "continue" | "repeat" | "locked";
 

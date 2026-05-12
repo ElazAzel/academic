@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
-import { StudentLessonView } from "@/components/lms/student-lesson-view";
+import { LessonPlayerShell } from "@/components/lms/lesson-player-shell";
 import { ApiError } from "@/lib/http";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getLessonForStudent } from "@/server/modules/learning/service";
+import { getStudentLessonPlayerDetail } from "@/server/modules/learning/service";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +11,9 @@ export default async function StudentLessonPage({ params }: { params: Promise<{ 
   const user = await requireRolePage(["student"]);
   const { lessonId } = await params;
 
-  let lesson;
+  let detail;
   try {
-    lesson = await getLessonForStudent(user.id, lessonId);
+    detail = await getStudentLessonPlayerDetail(user.id, lessonId);
   } catch (error) {
     if (error instanceof ApiError && error.code === "not_found") {
       notFound();
@@ -26,7 +26,7 @@ export default async function StudentLessonPage({ params }: { params: Promise<{ 
 
   return (
     <AppShell role="student">
-      <StudentLessonView lesson={lesson} />
+      <LessonPlayerShell detail={detail} />
     </AppShell>
   );
 }
