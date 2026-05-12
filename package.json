@@ -17,6 +17,7 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "users:provision": "tsx scripts/provision-users.ts",
+    "users:create": "tsx scripts/create-users.ts",
     "verify": "npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
