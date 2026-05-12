@@ -7,12 +7,12 @@ import { notFound } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export default async function CourseBuilderPage({ params }: { params: Promise<{ courseId: string }> }) {
-  await requireRolePage(["instructor", "admin"]);
+  const user = await requireRolePage(["instructor", "admin"]);
   const { courseId } = await params;
 
   let detail;
   try {
-    detail = await getCourseForBuilder(courseId, "");
+    detail = await getCourseForBuilder(courseId, user.id);
   } catch {
     notFound();
   }
