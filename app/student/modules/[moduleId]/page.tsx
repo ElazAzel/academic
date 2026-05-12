@@ -74,7 +74,7 @@ export default async function StudentModulePage({ params }: { params: Promise<{ 
   <AppShell role="student">
    <Breadcrumbs items={[
     { href: "/student/my-courses", label: "Мои курсы" },
-    { href: `/student/courses/${learningModule.id}`, label: learningModule.courseTitle ?? "" },
+    { href: `/student/courses/${learningModule.courseId}`, label: learningModule.courseTitle ?? "" },
     { label: learningModule.title },
    ].filter(Boolean)} />
 

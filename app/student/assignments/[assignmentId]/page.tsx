@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
@@ -18,12 +18,15 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
  let assignment;
  try {
   assignment = await getAssignmentForStudent(user.id, assignmentId);
- } catch (error) {
-  if (error instanceof ApiError && error.code === "not_found") {
-   notFound();
+  } catch (error) {
+   if (error instanceof ApiError && error.code === "not_found") {
+    notFound();
+   }
+   if (error instanceof ApiError && error.code === "forbidden") {
+    redirect("/403");
+   }
+   throw error;
   }
-  throw error;
- }
 
  return (
   <AppShell role="student">
