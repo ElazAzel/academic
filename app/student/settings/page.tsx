@@ -7,13 +7,22 @@ import { Tabs } from "@/components/ui/tabs";
 import { Avatar } from "@/components/ui/avatar";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCurrentUser } from "@/lib/auth/session";
-import { updateProfileSettingsAction, updatePasswordAction } from "@/server/actions/settings";
+import { updateProfileSettingsAction, updatePasswordAction, getNotificationPreferencesAction, updateNotificationPreferencesAction } from "@/server/actions/settings";
 
 export const dynamic = "force-dynamic";
 
+const NOTIFICATION_CHANNELS = [
+  { key: "curator_reply", label: "Ответы куратора", desc: "Получать уведомления об ответах на вопросы" },
+  { key: "module_deadline", label: "Дедлайны модулей", desc: "Напоминания за 3 дня до дедлайна" },
+  { key: "new_lesson", label: "Новые уроки", desc: "Уведомления о добавленных уроках" },
+  { key: "assignment_graded", label: "Оценки заданий", desc: "Уведомления при оценке заданий" },
+  { key: "email_digest", label: "Email-дайджест", desc: "Еженедельная сводка прогресса" },
+];
+
 export default async function StudentSettingsPage() {
- await requireRolePage(["student"]);
- const user = await getCurrentUser();
+  await requireRolePage(["student"]);
+  const user = await getCurrentUser();
+  const prefs = await getNotificationPreferencesAction();
 
  return (
   <AppShell role="student">
@@ -54,38 +63,41 @@ export default async function StudentSettingsPage() {
       </form>
      ),
     },
-    {
-     label: "Уведомления",
-     content: (
-      <Card className="rounded-2xl">
-       <CardHeader>
-        <CardTitle className="text-base">Настройки уведомлений</CardTitle>
-        <CardDescription>Выберите, какие уведомления вы хотите получать.</CardDescription>
-       </CardHeader>
-       <CardContent className="space-y-4">
-        {[
-         { label: "Ответы куратора", desc: "Получать уведомления об ответах на вопросы", checked: true },
-         { label: "Дедлайны модулей", desc: "Напоминания за 3 дня до дедлайна", checked: true },
-         { label: "Новые уроки", desc: "Уведомления о добавленных уроках", checked: false },
-         { label: "Оценки заданий", desc: "Уведомления при оценке заданий", checked: true },
-         { label: "Email-дайджест", desc: "Еженедельная сводка прогресса", checked: false },
-        ].map((n) => (
-         <div key={n.label} className="flex items-center justify-between rounded-xl border p-4">
-          <div>
-           <p className="text-sm font-medium">{n.label}</p>
-           <p className="text-xs text-muted-foreground">{n.desc}</p>
+{
+      label: "Уведомления",
+      content: (
+       <form action={updateNotificationPreferencesAction}>
+        <Card className="rounded-2xl">
+         <CardHeader>
+          <CardTitle className="text-base">Настройки уведомлений</CardTitle>
+          <CardDescription>Выберите, какие уведомления вы хотите получать.</CardDescription>
+         </CardHeader>
+         <CardContent className="space-y-4">
+          {NOTIFICATION_CHANNELS.map((n) => (
+           <div key={n.key} className="flex items-center justify-between rounded-xl border p-4">
+            <div>
+             <p className="text-sm font-medium">{n.label}</p>
+             <p className="text-xs text-muted-foreground">{n.desc}</p>
+            </div>
+            <label className="relative inline-flex cursor-pointer items-center">
+             <input 
+               type="checkbox" 
+               name={`notification_${n.key}`} 
+               defaultChecked={prefs[n.key] !== false} 
+               value="true"
+               className="peer sr-only"/>
+             <div className="h-6 w-11 rounded-full bg-muted peer-checked:bg-primary transition-colors after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-5"/>
+            </label>
+           </div>
+          ))}
+          <div className="flex justify-end">
+           <Button type="submit">Сохранить</Button>
           </div>
-          <label className="relative inline-flex cursor-pointer items-center">
-           <input type="checkbox" defaultChecked={n.checked} className="peer sr-only"/>
-           <div className="h-6 w-11 rounded-full bg-muted peer-checked:bg-primary transition-colors after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-5"/>
-          </label>
-         </div>
-        ))}
-        <p className="text-xs text-muted-foreground">Управление подписками будет доступно после добавления модели предпочтений.</p>
-       </CardContent>
-      </Card>
-     ),
-    },
+         </CardContent>
+        </Card>
+       </form>
+      ),
+     },
     {
      label: "Безопасность",
      content: (
