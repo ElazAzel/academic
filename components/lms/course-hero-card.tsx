@@ -59,13 +59,23 @@ export function CourseHeroCard({ detail }: { detail: StudentCoursePlayerDetail }
               <p className="text-xs font-medium text-muted-foreground">Куратор</p>
               <p className="text-sm font-medium">{curator.name}</p>
               {curator.unansweredCount > 0 && (
-                <Link
-                  href={`/student/courses/${course.id}?questions=open`}
-                  className="flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-700"
-                >
+                <p className="flex items-center gap-1.5 text-xs text-amber-600">
                   <HelpCircle className="h-3.5 w-3.5" />
                   {curator.unansweredCount} неотвеченных вопросов
-                </Link>
+                </p>
+              )}
+              {detail.nextLessonId ? (
+                <Button asChild size="sm" variant="ghost" className="w-full">
+                  <Link href={`/student/lessons/${detail.nextLessonId}`}>
+                    <HelpCircle className="h-4 w-4" />
+                    Задать вопрос
+                  </Link>
+                </Button>
+              ) : (
+                <Button size="sm" variant="ghost" className="w-full" disabled>
+                  <HelpCircle className="h-4 w-4" />
+                  Задать вопрос
+                </Button>
               )}
             </div>
           )}

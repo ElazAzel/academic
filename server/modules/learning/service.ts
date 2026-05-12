@@ -364,7 +364,7 @@ export async function getStudentCoursePlayerDetail(userId: string, courseId: str
     where: { userId_courseId: { userId, courseId } },
     include: coursePlayerInclude(userId)
   });
-  if (!enrollment) {
+  if (!enrollment || enrollment.status === "CANCELLED") {
     throw new ApiError("forbidden", "Нет доступа к этому курсу", 403);
   }
 

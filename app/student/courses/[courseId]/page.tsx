@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowRight, BookOpen, PauseCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Breadcrumbs } from "@/components/lms/breadcrumbs";
-import { CourseHeroCard } from "@/components/lms/course-hero-card";
+import { CourseSidebar } from "@/components/lms/course-sidebar";
 import { ModuleAccordion } from "@/components/lms/module-accordion";
 import { EmptyState } from "@/components/lms/empty-state";
 import { Button } from "@/components/ui/button";
@@ -80,10 +80,8 @@ export default async function StudentCoursePage({ params }: { params: Promise<{ 
       ) : (
         /* Two-column layout */
         <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-          {/* Left: Course hero card */}
-          <aside>
-            <CourseHeroCard detail={detail} />
-          </aside>
+          {/* Left: Course sidebar */}
+          <CourseSidebar detail={detail} />
 
           {/* Right: Module accordion */}
           <main>
