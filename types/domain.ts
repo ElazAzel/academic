@@ -56,6 +56,7 @@ export interface CourseSummary {
   status: CourseStatus;
   traversalMode: "sequential" | "open";
   modulesCount: number;
+  blocksCount?: number;
   lessonsCount: number;
   avgProgress?: number;
   instructors: UserSummary[];
@@ -64,7 +65,29 @@ export interface CourseSummary {
 export interface CourseDetail extends CourseSummary {
   goal?: string | null;
   completionThreshold: number;
-  modules: ModuleSummary[];
+  modules: ModuleDetail[];
+  blocksCount?: number;
+}
+
+// ── Блоки ──────────────────────────────────────────────────────────
+export interface BlockSummary {
+  id: string;
+  moduleId: string;
+  order: number;
+  title: string;
+  description?: string | null;
+  lessonsCount: number;
+  status: CourseStatus;
+}
+
+export interface BlockDetail extends BlockSummary {
+  lessons: LessonSummary[];
+}
+
+export interface BlockLearningDetail extends BlockSummary {
+  progressPercent: number;
+  progressStatus: ProgressStatus;
+  lessons: LessonLearningSummary[];
 }
 
 // ── Модули ──────────────────────────────────────────────────────────
@@ -73,12 +96,14 @@ export interface ModuleSummary {
   order: number;
   title: string;
   description?: string | null;
+  blocksCount?: number;
   lessonsCount: number;
   recommendedDays: number;
   status: CourseStatus;
 }
 
 export interface ModuleDetail extends ModuleSummary {
+  blocks?: BlockDetail[];
   lessons: LessonSummary[];
 }
 
@@ -86,6 +111,7 @@ export interface ModuleLearningDetail extends ModuleSummary {
   progressPercent: number;
   progressStatus: ProgressStatus;
   deadlineDate?: string | null;
+  blocks?: BlockLearningDetail[];
   lessons: LessonLearningSummary[];
 }
 
@@ -99,6 +125,8 @@ export interface LessonSummary {
   type: LessonType;
   durationMinutes: number;
   isRequired: boolean;
+  blockId?: string | null;
+  blockTitle?: string;
   progressStatus?: ProgressStatus;
   progressPercent?: number;
 }
@@ -119,6 +147,43 @@ export interface LessonDetail extends LessonSummary {
   media: LessonMediaItem[];
   quizzes: QuizSummary[];
   assignments: AssignmentSummary[];
+}
+
+// ── Плеер курса (PR 2) ──────────────────────────────────────────────
+export type CompletionCta = "start" | "continue" | "repeat" | "locked";
+
+export interface LessonPlayerCard {
+  id: string;
+  order: number;
+  title: string;
+  type: LessonType;
+  durationMinutes: number;
+  isRequired: boolean;
+  status: ProgressStatus;
+  lockReason?: string;
+  hasQuiz: boolean;
+  hasAssignment: boolean;
+  completionCta: CompletionCta;
+}
+
+export interface ModulePlayerDetail {
+  id: string;
+  order: number;
+  title: string;
+  progressPercent: number;
+  lessons: LessonPlayerCard[];
+  deadline?: { date: string; overdue: boolean };
+}
+
+export interface StudentCoursePlayerDetail {
+  course: CourseSummary;
+  enrollment: EnrollmentStatus;
+  progress: { completed: number; total: number; percent: number };
+  modules: ModulePlayerDetail[];
+  nextLessonId?: string;
+  curator?: { name: string; unansweredCount: number };
+  certificateEligible: boolean;
+  completionThreshold: number;
 }
 
 export interface StudentCourseLearningDetail extends CourseSummary {
@@ -192,8 +257,25 @@ export interface StudentProgress {
   percent: number;
   status: ProgressStatus;
   currentModuleTitle?: string;
+  currentBlockTitle?: string;
   currentLessonTitle?: string;
   nextLessonId?: string;
+}
+
+export interface StudentAnalyticsDetail {
+  id: string;
+  name: string;
+  email: string;
+  courseTitle: string;
+  cohortName?: string;
+  coursePercent: number;
+  moduleTitle?: string;
+  blockTitle?: string;
+  lessonTitle?: string;
+  lastLoginAt?: string | null;
+  avgLessonMinutes: number;
+  progressStatus: string;
+  riskCount: number;
 }
 
 export interface ContinueLearning {

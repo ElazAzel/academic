@@ -87,6 +87,43 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
       }
     });
 
+    // Block-level progress (if lesson belongs to a block)
+    let blockProgress = null;
+    if (lesson.blockId) {
+      const block = await tx.block.findUnique({
+        where: { id: lesson.blockId },
+        include: { lessons: true }
+      });
+      if (block) {
+        const blockLessons = getCompletionBasis(block.lessons);
+        const completedBlockLessons = await tx.lessonProgress.count({
+          where: {
+            userId,
+            lessonId: { in: blockLessons.map((item) => item.id) },
+            status: ProgressStatus.COMPLETED
+          }
+        });
+        const blockPercent = blockLessons.length === 0 ? 0 : Math.round((completedBlockLessons / blockLessons.length) * 100);
+        blockProgress = await tx.blockProgress.upsert({
+          where: { userId_blockId: { userId, blockId: lesson.blockId } },
+          update: {
+            percent: blockPercent,
+            status: blockPercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
+            completedAt: blockPercent >= 100 ? new Date() : undefined,
+            enrollmentId: enrollment?.id
+          },
+          create: {
+            userId,
+            blockId: lesson.blockId,
+            enrollmentId: enrollment?.id,
+            percent: blockPercent,
+            status: blockPercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
+            completedAt: blockPercent >= 100 ? new Date() : undefined
+          }
+        });
+      }
+    }
+
     const moduleLessons = getCompletionBasis(lesson.module.lessons);
     const completedModuleLessons = await tx.lessonProgress.count({
       where: {
@@ -141,7 +178,7 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
       }
     });
 
-    return { lessonProgress, moduleProgress, courseProgress, modulePercent, coursePercent };
+    return { lessonProgress, blockProgress, moduleProgress, courseProgress, modulePercent, coursePercent };
   });
 
   await logAudit({ actorId: userId, action: "progress.lesson_marked", entity: "lesson", entityId: lessonId, metadata: { percent } });

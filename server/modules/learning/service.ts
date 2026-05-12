@@ -5,11 +5,15 @@ import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
 import type {
   AssignmentSummary,
+  CompletionCta,
   ContinueLearning,
   LessonLearningSummary,
+  LessonPlayerCard,
   LessonQuestionSummary,
   ModuleLearningDetail,
+  ModulePlayerDetail,
   StudentCourseLearningDetail,
+  StudentCoursePlayerDetail,
   StudentLessonLearningDetail,
   StudentModuleLearningDetail,
   StudentProgress,
@@ -43,6 +47,33 @@ const courseLearningInclude = (userId: string) => ({
 }) satisfies Prisma.EnrollmentInclude;
 
 type CourseEnrollment = Prisma.EnrollmentGetPayload<{ include: ReturnType<typeof courseLearningInclude> }>;
+
+const coursePlayerInclude = (userId: string) => ({
+  cohort: { include: { deadlines: true } },
+  courseProgress: { where: { userId } },
+  course: {
+    include: {
+      instructors: { include: { user: { select: { id: true, name: true, email: true, image: true } } } },
+      modules: {
+        orderBy: { order: "asc" as const },
+        include: {
+          progress: { where: { userId } },
+          deadlines: true,
+          lessons: {
+            orderBy: { order: "asc" as const },
+            include: {
+              progress: { where: { userId } },
+              quizzes: { select: { id: true } },
+              assignments: { select: { id: true } }
+            }
+          }
+        }
+      }
+    }
+  }
+}) satisfies Prisma.EnrollmentInclude;
+
+type CoursePlayerEnrollment = Prisma.EnrollmentGetPayload<{ include: ReturnType<typeof coursePlayerInclude> }>;
 
 const lessonDetailInclude = (userId: string) => ({
   module: { include: { course: true } },
@@ -218,6 +249,142 @@ export async function getCourseForStudent(userId: string, courseId: string): Pro
     throw new ApiError("forbidden", "Нет доступа к этому курсу", 403);
   }
   return buildCourseLearningDetail(enrollment);
+}
+
+function toCompletionCta(status: ProgressStatus, locked: boolean): CompletionCta {
+  if (locked) return "locked";
+  if (status === "COMPLETED") return "repeat";
+  if (status === "IN_PROGRESS") return "continue";
+  return "start";
+}
+
+function buildCoursePlayerDetail(enrollment: CoursePlayerEnrollment): StudentCoursePlayerDetail {
+  const course = enrollment.course;
+  const courseProgress = enrollment.courseProgress[0];
+  const accessByLessonId = new Map<string, { locked: boolean; lockReason: string | null; status: ProgressStatus; progressPercent: number }>();
+
+  let previousRequiredLessonOpen = false;
+  const orderedLessons = course.modules.flatMap((m) =>
+    m.lessons.map((l) => ({ ...l, moduleOrder: m.order, moduleTitle: m.title }))
+  );
+
+  for (const lesson of orderedLessons) {
+    const storedStatus = lesson.progress[0]?.status ?? ProgressStatus.NOT_STARTED;
+    const locked = course.traversalMode === "sequential" && previousRequiredLessonOpen;
+    const status: ProgressStatus = locked ? ProgressStatus.BLOCKED : storedStatus;
+
+    accessByLessonId.set(lesson.id, {
+      locked,
+      lockReason: locked ? "Сначала завершите предыдущие обязательные уроки." : null,
+      status,
+      progressPercent: locked ? 0 : lesson.progress[0]?.percent ?? 0
+    });
+
+    if (lesson.isRequired && storedStatus !== ProgressStatus.COMPLETED) {
+      previousRequiredLessonOpen = true;
+    }
+  }
+
+  const modules: ModulePlayerDetail[] = course.modules.map((module) => {
+    const moduleProgress = module.progress[0];
+    const lessons: LessonPlayerCard[] = module.lessons.map((lesson) => {
+      const access = accessByLessonId.get(lesson.id)!;
+      return {
+        id: lesson.id,
+        order: lesson.order,
+        title: lesson.title,
+        type: lesson.type,
+        durationMinutes: lesson.durationMinutes,
+        isRequired: lesson.isRequired,
+        status: access.status,
+        lockReason: access.lockReason ?? undefined,
+        hasQuiz: lesson.quizzes.length > 0,
+        hasAssignment: lesson.assignments.length > 0,
+        completionCta: toCompletionCta(access.status, access.locked)
+      };
+    });
+
+    const completedLessons = lessons.filter((l) => l.status === "COMPLETED").length;
+    const computedPercent = lessons.length === 0 ? 0 : Math.round((completedLessons / lessons.length) * 100);
+    const modulePercent = moduleProgress?.percent ?? computedPercent;
+
+    const deadline = enrollment.cohortId
+      ? module.deadlines.find((item) => item.cohortId === enrollment.cohortId)
+      : null;
+
+    return {
+      id: module.id,
+      order: module.order,
+      title: module.title,
+      progressPercent: modulePercent,
+      lessons,
+      deadline: deadline
+        ? { date: deadline.dueAt.toISOString(), overdue: deadline.dueAt < new Date() }
+        : undefined
+    };
+  });
+
+  const allLessons = modules.flatMap((m) => m.lessons);
+  const completed = allLessons.filter((l) => l.status === "COMPLETED").length;
+  const total = allLessons.length;
+  const percent = courseProgress?.percent ?? 0;
+  const nextLesson = allLessons.find((l) => l.status !== "COMPLETED" && l.completionCta !== "locked");
+
+  return {
+    course: {
+      id: course.id,
+      slug: course.slug,
+      title: course.title,
+      description: course.description,
+      coverUrl: course.coverUrl,
+      durationHours: course.durationHours,
+      status: course.status,
+      traversalMode: course.traversalMode === "open" ? "open" : "sequential",
+      modulesCount: modules.length,
+      lessonsCount: total,
+      instructors: course.instructors.map((entry) => ({
+        id: entry.user.id,
+        name: entry.user.name ?? entry.user.email,
+        email: entry.user.email,
+        image: entry.user.image
+      }))
+    },
+    enrollment: enrollment.status,
+    progress: { completed, total, percent },
+    modules,
+    nextLessonId: nextLesson?.id,
+    curator: undefined,
+    certificateEligible: percent >= course.completionThreshold,
+    completionThreshold: course.completionThreshold
+  };
+}
+
+export async function getStudentCoursePlayerDetail(userId: string, courseId: string): Promise<StudentCoursePlayerDetail> {
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { userId_courseId: { userId, courseId } },
+    include: coursePlayerInclude(userId)
+  });
+  if (!enrollment) {
+    throw new ApiError("forbidden", "Нет доступа к этому курсу", 403);
+  }
+
+  const detail = buildCoursePlayerDetail(enrollment);
+
+  // Fetch curator info
+  if (enrollment.cohortId) {
+    const assignment = await prisma.curatorAssignment.findUnique({
+      where: { cohortId_studentId: { cohortId: enrollment.cohortId, studentId: userId } },
+      include: { curator: { select: { id: true, name: true } } }
+    });
+    if (assignment?.active && assignment.curator) {
+      const unansweredCount = await prisma.lessonQuestion.count({
+        where: { studentId: userId, status: "open" }
+      });
+      detail.curator = { name: assignment.curator.name ?? "Куратор", unansweredCount };
+    }
+  }
+
+  return detail;
 }
 
 export async function getModuleForStudent(userId: string, moduleId: string): Promise<StudentModuleLearningDetail> {

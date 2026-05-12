@@ -1,0 +1,66 @@
+{
+  "version": "7.8",
+  "steps": [
+    {
+      "tag": "CreateTable",
+      "model": "Block",
+      "table": "blocks",
+      "columns": [
+        { "name": "id", "type": "TEXT", "isRequired": true, "default": { "name": "cuid" } },
+        { "name": "module_id", "type": "TEXT", "isRequired": true, "relationName": "BlockToModule" },
+        { "name": "order", "type": "Int32", "isRequired": true },
+        { "name": "title", "type": "TEXT", "isRequired": true },
+        { "name": "description", "type": "TEXT", "isRequired": false },
+        { "name": "status", "type": "TEXT", "isRequired": true, "default": "DRAFT" },
+        { "name": "created_at", "type": "DateTime", "isRequired": true, "default": { "name": "now" } },
+        { "name": "updated_at", "type": "DateTime", "isRequired": true, "default": { "name": "now" } }
+      ],
+      "primaryKey": { "columns": ["id"] },
+      "uniqueConstraints": [
+        { "name": "blocks_module_id_order_key", "columns": ["module_id", "order"] }
+      ],
+      "foreignKeys": [
+        { "columns": ["module_id"], "refTable": "modules", "refColumns": ["id"], "onDelete": "Cascade" }
+      ]
+    },
+    {
+      "tag": "CreateTable",
+      "model": "BlockProgress",
+      "table": "block_progress",
+      "columns": [
+        { "name": "id", "type": "TEXT", "isRequired": true, "default": { "name": "cuid" } },
+        { "name": "user_id", "type": "TEXT", "isRequired": true, "relationName": "BlockProgressToUser" },
+        { "name": "block_id", "type": "TEXT", "isRequired": true, "relationName": "BlockProgressToBlock" },
+        { "name": "enrollment_id", "type": "TEXT", "isRequired": false, "relationName": "BlockProgressToEnrollment" },
+        { "name": "status", "type": "TEXT", "isRequired": true, "default": "NOT_STARTED" },
+        { "name": "percent", "type": "Int32", "isRequired": true, "default": 0 },
+        { "name": "completed_at", "type": "DateTime", "isRequired": false },
+        { "name": "updated_at", "type": "DateTime", "isRequired": true, "default": { "name": "now" } }
+      ],
+      "primaryKey": { "columns": ["id"] },
+      "uniqueConstraints": [
+        { "name": "block_progress_user_id_block_id_key", "columns": ["user_id", "block_id"] }
+      ],
+      "foreignKeys": [
+        { "columns": ["user_id"], "refTable": "users", "refColumns": ["id"], "onDelete": "Cascade" },
+        { "columns": ["block_id"], "refTable": "blocks", "refColumns": ["id"], "onDelete": "Cascade" },
+        { "columns": ["enrollment_id"], "refTable": "enrollments", "refColumns": ["id"], "onDelete": "SetNull" }
+      ]
+    },
+    {
+      "tag": "AlterTable",
+      "model": "Lesson",
+      "table": "lessons",
+      "changes": [
+        {
+          "type": "AddColumn",
+          "column": { "name": "block_id", "type": "TEXT", "isRequired": false, "relationName": "LessonToBlock" }
+        },
+        {
+          "type": "AddForeignKey",
+          "foreignKey": { "columns": ["block_id"], "refTable": "blocks", "refColumns": ["id"], "onDelete": "SetNull" }
+        }
+      ]
+    }
+  ]
+}

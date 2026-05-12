@@ -37,9 +37,12 @@ export function generateProgressCsv(rows: ProgressRow[]): string {
       lines.push(`  • ${cohort}: ${c.total} слуш. | Средний: ${c.total > 0 ? Math.round(c.avg / c.total) : 0}%`);
     }
     lines.push(``);
-    lines.push(`Слушатель,Email,Поток,Прогресс,%`);
+    lines.push(`Слушатель,Email,Поток,Прогресс%,Модуль,Блок,Урок,Последний вход,Ср.минут/урок,Риски`);
     for (const r of courseRows) {
-      lines.push(`${esc(r.studentName)},${esc(r.email)},${esc(r.cohort)},${r.progressPercent}`);
+      const lastLogin = r.lastLoginAt ? new Date(r.lastLoginAt).toLocaleDateString("ru-RU") : "";
+      const avgMin = r.avgLessonMinutes ?? 0;
+      const risks = r.riskCount ?? 0;
+      lines.push(`${esc(r.studentName)},${esc(r.email)},${esc(r.cohort)},${r.progressPercent},${esc(r.currentModule ?? "")},${esc(r.currentBlock ?? "")},${esc(r.currentLesson ?? "")},${esc(lastLogin)},${avgMin},${risks}`);
     }
     lines.push(``);
   }

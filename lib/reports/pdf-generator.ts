@@ -109,6 +109,9 @@ export async function generateProgressPdf(rows: ProgressRow[]): Promise<Buffer> 
         { text: "Email", style: "tableHeader" },
         { text: "Поток", style: "tableHeader" },
         { text: "Прогресс", style: "tableHeader" },
+        { text: "Модуль", style: "tableHeader" },
+        { text: "Блок", style: "tableHeader" },
+        { text: "Урок", style: "tableHeader" },
       ],
     ];
 
@@ -119,13 +122,16 @@ export async function generateProgressPdf(rows: ProgressRow[]): Promise<Buffer> 
         { text: r.email, style: "tableCell" },
         { text: r.cohort, style: "tableCell" },
         { text: `${r.progressPercent}%`, style: "tableCell", color: pctColor, bold: true, alignment: "center" },
+        { text: r.currentModule ?? "—", style: "tableCell" },
+        { text: r.currentBlock ?? "—", style: "tableCell" },
+        { text: r.currentLesson ?? "—", style: "tableCell" },
       ]);
     }
 
     content.push({
       table: {
         headerRows: 1,
-        widths: ["auto", "auto", "auto", "auto"],
+        widths: ["auto", "auto", "auto", "auto", "auto", "auto", "auto"],
         body: tableBody,
       },
       layout: {

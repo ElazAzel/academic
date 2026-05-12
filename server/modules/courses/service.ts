@@ -185,6 +185,7 @@ export async function createLesson(moduleId: string, input: {
   content: Record<string, unknown>;
   videoUrl?: string | null;
   durationMinutes: number;
+  blockId?: string | null;
 }, actorId: string) {
   const courseModule = await prisma.module.findUnique({ where: { id: moduleId } });
   if (!courseModule) {
@@ -194,6 +195,7 @@ export async function createLesson(moduleId: string, input: {
   const lesson = await prisma.lesson.create({
     data: {
       moduleId,
+      blockId: input.blockId ?? null,
       title: input.title,
       summary: input.summary,
       order: input.order,
@@ -216,6 +218,7 @@ export async function updateLesson(lessonId: string, input: {
   videoUrl?: string | null;
   durationMinutes?: number;
   isRequired?: boolean;
+  blockId?: string | null;
 }, actorId: string) {
   const existing = await prisma.lesson.findUnique({
     where: { id: lessonId },
@@ -267,12 +270,80 @@ export async function getLesson(lessonId: string) {
 export async function getModule(moduleId: string) {
   const courseModule = await prisma.module.findUnique({
     where: { id: moduleId },
-    include: { course: true, lessons: { orderBy: { order: "asc" } } }
+    include: {
+      course: true,
+      blocks: { orderBy: { order: "asc" }, include: { lessons: { orderBy: { order: "asc" } } } },
+      lessons: { orderBy: { order: "asc" } }
+    }
   });
   if (!courseModule) {
     throw new ApiError("not_found", "Модуль не найден", 404);
   }
   return courseModule;
+}
+
+// ── Block CRUD ───────────────────────────────────────────────────────
+
+export async function createBlock(moduleId: string, input: {
+  title: string;
+  description?: string;
+  order: number;
+}, actorId: string) {
+  const courseModule = await prisma.module.findUnique({ where: { id: moduleId }, select: { courseId: true } });
+  if (!courseModule) throw new ApiError("not_found", "Модуль не найден", 404);
+  await assertInstructorOfCourse(actorId, courseModule.courseId);
+  const block = await prisma.block.create({
+    data: { moduleId, title: input.title, description: input.description, order: input.order }
+  });
+  await logAudit({ actorId, action: "block.created", entity: "block", entityId: block.id });
+  return block;
+}
+
+export async function updateBlock(blockId: string, input: {
+  title?: string;
+  description?: string;
+  order?: number;
+  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+}, actorId: string) {
+  const block = await prisma.block.findUnique({
+    where: { id: blockId },
+    include: { module: { select: { courseId: true } } }
+  });
+  if (!block) throw new ApiError("not_found", "Блок не найден", 404);
+  await assertInstructorOfCourse(actorId, block.module.courseId);
+  const updated = await prisma.block.update({
+    where: { id: blockId },
+    data: {
+      ...input,
+      status: input.status ? CourseStatus[input.status] : undefined
+    }
+  });
+  await logAudit({ actorId, action: "block.updated", entity: "block", entityId: blockId, metadata: input });
+  return updated;
+}
+
+export async function deleteBlock(blockId: string, actorId: string) {
+  const block = await prisma.block.findUnique({
+    where: { id: blockId },
+    include: { module: { select: { courseId: true } } }
+  });
+  if (!block) throw new ApiError("not_found", "Блок не найден", 404);
+  await assertInstructorOfCourse(actorId, block.module.courseId);
+  const deleted = await prisma.block.delete({ where: { id: blockId } });
+  await logAudit({ actorId, action: "block.deleted", entity: "block", entityId: blockId });
+  return deleted;
+}
+
+export async function getBlock(blockId: string) {
+  const block = await prisma.block.findUnique({
+    where: { id: blockId },
+    include: {
+      module: { include: { course: true } },
+      lessons: { orderBy: { order: "asc" } }
+    }
+  });
+  if (!block) throw new ApiError("not_found", "Блок не найден", 404);
+  return block;
 }
 
 export async function listEnrollments() {
