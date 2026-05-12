@@ -6,7 +6,7 @@ import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { CardContent } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { StudentQuizDetail } from "@/types/domain";
 
@@ -27,9 +27,11 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
     setAnswers((prev) => ({ ...prev, [questionId]: option }));
   }, []);
 
+  const questionsCount = quiz.questions.length;
+
   const handleSubmit = useCallback(async () => {
     if (submitting) return;
-    if (Object.keys(answers).length < quiz.questions.length) {
+    if (Object.keys(answers).length < questionsCount) {
       if (!confirm("Вы ответили не на все вопросы. Всё равно отправить?")) return;
     }
     setSubmitting(true);
@@ -53,7 +55,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
     } finally {
       setSubmitting(false);
     }
-  }, [quiz.id, answers, submitting, router]);
+  }, [quiz.id, answers, submitting, router, questionsCount]);
 
   // ── Idle / before start ────────────────────────────────────────────
   if (phase === "idle") {
@@ -217,7 +219,6 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
               <div className="space-y-1">
                 {q.options.map((option) => {
                   const isSelected = selected === option;
-                  const isCorrect = false; // We don't have the correct answer in the client
                   return (
                     <div
                       key={option}

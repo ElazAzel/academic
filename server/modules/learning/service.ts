@@ -391,7 +391,8 @@ export async function getStudentCoursePlayerDetail(userId: string, courseId: str
 
 function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
   if (content && Array.isArray(content.blocks)) {
-    return (content.blocks as Array<{ type: string; data?: Record<string, unknown> }>).map((block) => ({
+    return (content.blocks as Array<{ id?: string; type: string; data?: Record<string, unknown> }>).map((block) => ({
+      id: block.id ?? crypto.randomUUID(),
       type: (["video", "text", "file", "quiz", "assignment", "rating", "curator_question", "completion"].includes(block.type)
         ? block.type
         : "text") as ContentBlock["type"],
@@ -403,7 +404,7 @@ function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
     ? (content as { text: unknown }).text
     : null;
   if (typeof text === "string") {
-    return [{ type: "text", data: { html: text } }];
+    return [{ id: crypto.randomUUID(), type: "text", data: { html: text } }];
   }
   return [];
 }

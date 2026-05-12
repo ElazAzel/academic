@@ -153,8 +153,49 @@ export interface LessonDetail extends LessonSummary {
 export type ContentBlockType = "video" | "text" | "file" | "quiz" | "assignment" | "rating" | "curator_question" | "completion";
 
 export interface ContentBlock {
+  id: string;
   type: ContentBlockType;
   data: Record<string, unknown>;
+}
+
+// ── Course Builder (PR 5) ──────────────────────────────────────────
+export interface BuilderLessonDetail {
+  id: string;
+  order: number;
+  title: string;
+  type: LessonType;
+  summary?: string | null;
+  durationMinutes: number;
+  isRequired: boolean;
+  blockId?: string | null;
+  content: Record<string, unknown>;
+  videoUrl?: string | null;
+  quizzes: QuizSummary[];
+  assignments: AssignmentSummary[];
+}
+
+export interface BuilderModuleDetail {
+  id: string;
+  order: number;
+  title: string;
+  description?: string | null;
+  recommendedDays: number;
+  status: CourseStatus;
+  lessons: BuilderLessonDetail[];
+}
+
+export interface CourseBuilderDetail {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  goal?: string | null;
+  coverUrl?: string | null;
+  durationHours: number;
+  status: CourseStatus;
+  traversalMode: "sequential" | "open";
+  completionThreshold: number;
+  modules: BuilderModuleDetail[];
 }
 
 export interface StudentLessonPlayerDetail {
