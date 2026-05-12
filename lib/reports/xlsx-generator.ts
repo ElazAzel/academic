@@ -2,15 +2,6 @@ import ExcelJS from "exceljs";
 import type { ProgressRow, RiskRow, CertificateRow } from "./types";
 import { groupByCourse } from "./data";
 
-function addSummaryRow(ws: ExcelJS.Worksheet, label: string, value: string | number, level: number = 0) {
-  const row = ws.addRow([label, value]);
-  if (level === 0) {
-    row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A5F" } };
-    row.getCell(1).font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
-    row.getCell(2).font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
-  }
-}
-
 async function buildProgressSheet(wb: ExcelJS.Workbook, rows: ProgressRow[]) {
   const ws = wb.addWorksheet("Прогресс");
 
