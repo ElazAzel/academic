@@ -5,14 +5,20 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json({ error: "Not available in production" }, { status: 404 });
   }
 
-  const token = process.env.SEED_ADMIN_TOKEN;
-  if (!token || token.length < 16) {
+  const expectedToken = process.env.SEED_ADMIN_TOKEN;
+  if (!expectedToken || expectedToken.length < 16) {
     return NextResponse.json({ error: "Set SEED_ADMIN_TOKEN env var to use this endpoint" }, { status: 401 });
+  }
+
+  const authHeader = request.headers.get("authorization") ?? "";
+  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!bearerToken || bearerToken !== expectedToken) {
+    return NextResponse.json({ error: "Invalid or missing bearer token" }, { status: 401 });
   }
 
   try {
@@ -28,6 +34,14 @@ export async function GET() {
           name,
           passwordHash,
           emailVerified: new Date(),
+          consentLogs: {
+            create: {
+              type: "personal_data_processing",
+              status: "ACCEPTED",
+              version: "2026-05-07",
+              acceptedAt: new Date()
+            }
+          }
         }
       });
 
@@ -194,7 +208,6 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       message: "Все аккаунты и ДЕМО КУРС успешно созданы!",
-      credentials: { password: seedPassword },
       course: courseSlug
     });
   } catch (err) {

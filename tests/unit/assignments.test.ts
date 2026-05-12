@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockFindUnique = vi.hoisted(() => vi.fn());
 const mockEnrollmentFindUnique = vi.hoisted(() => vi.fn());
@@ -6,13 +6,20 @@ const mockCount = vi.hoisted(() => vi.fn());
 const mockCreate = vi.hoisted(() => vi.fn());
 const mockUpdate = vi.hoisted(() => vi.fn());
 const mockAuditCreate = vi.hoisted(() => vi.fn());
+const mockSubmissionFindUnique = vi.hoisted(() => vi.fn());
+const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockCourseInstructorFindUnique = vi.hoisted(() => vi.fn());
+const mockCuratorAssignmentFindFirst = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
     assignment: { findUnique: mockFindUnique },
     enrollment: { findUnique: mockEnrollmentFindUnique },
-    assignmentSubmission: { count: mockCount, create: mockCreate, update: mockUpdate },
+    assignmentSubmission: { count: mockCount, create: mockCreate, update: mockUpdate, findUnique: mockSubmissionFindUnique },
     auditLog: { create: mockAuditCreate },
+    user: { findUnique: mockUserFindUnique },
+    courseInstructor: { findUnique: mockCourseInstructorFindUnique },
+    curatorAssignment: { findFirst: mockCuratorAssignmentFindFirst },
   }),
 }));
 
@@ -75,6 +82,21 @@ describe("submitAssignment", () => {
 });
 
 describe("reviewSubmission", () => {
+  beforeEach(() => {
+    mockSubmissionFindUnique.mockResolvedValue({
+      id: "sub1",
+      userId: "student1",
+      assignment: {
+        courseId: "c1",
+        lesson: { module: { courseId: "c1" } }
+      }
+    });
+    mockUserFindUnique.mockResolvedValue({
+      id: "r1",
+      roles: [{ role: { key: "admin" } }]
+    });
+  });
+
   it("sets ACCEPTED status when accepted is true", async () => {
     mockUpdate.mockResolvedValue({
       id: "sub1",
@@ -115,5 +137,18 @@ describe("reviewSubmission", () => {
 
     const result = await reviewSubmission({ submissionId: "sub1", reviewerId: "r1", accepted: true });
     expect(result.status).toBe("ACCEPTED");
+  });
+
+  it("rejects review from unauthorized user", async () => {
+    mockUserFindUnique.mockResolvedValue({
+      id: "r2",
+      roles: [{ role: { key: "student" } }]
+    });
+    mockCourseInstructorFindUnique.mockResolvedValue(null);
+    mockCuratorAssignmentFindFirst.mockResolvedValue(null);
+
+    await expect(
+      reviewSubmission({ submissionId: "sub1", reviewerId: "r2", accepted: true })
+    ).rejects.toMatchObject({ code: "forbidden", status: 403 });
   });
 });
