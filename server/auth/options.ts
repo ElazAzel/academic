@@ -93,18 +93,30 @@ export const authOptions: AuthOptions = {
       if (account?.provider === "google" || account?.provider === "github") {
         const email = profile?.email?.toLowerCase().trim();
         if (!email) return false;
-        const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
-        if (!user) return false;
+        const user = await prisma.user.findUnique({
+          where: { email },
+          select: { id: true, status: true }
+        });
+        if (!user || user.status !== "active") return false;
       }
       return true;
     },
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.roles = user.roles;
-        token.email = user.email;
-        token.name = user.name;
-        token.picture = user.image;
+        const userId = user.id ?? token.sub;
+        if (userId) {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { roles: { include: { role: true } } }
+          });
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.roles = dbUser.roles.map((r) => r.role.key);
+            token.email = dbUser.email;
+            token.name = dbUser.name;
+            token.picture = dbUser.image;
+          }
+        }
       }
       return token;
     },
