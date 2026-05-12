@@ -87,12 +87,11 @@ async function main() {
     }
   }
 
-  const admin = await upsertUser("admin@academy.local", "Администратор Академии", "admin");
-  const instructor1 = await upsertUser("instructor1@academy.local", "Алия Нурланова", "instructor");
-  const instructor2 = await upsertUser("instructor2@academy.local", "Иван Петров", "instructor");
-  const curator = await upsertUser("curator@academy.local", "Куратор Мадина", "curator");
-  const superCurator = await upsertUser("supercurator@academy.local", "Супер-куратор Тимур", "super_curator");
-  const observer = await upsertUser("observer@academy.local", "Заказчик-наблюдатель", "customer_observer");
+  const admin = await upsertUser("admin@academy.local", "Администратор", "admin");
+  const instructor1 = await upsertUser("instructor1@academy.local", "Преподаватель", "instructor");
+  const curator = await upsertUser("curator@academy.local", "Куратор", "curator");
+  const superCurator = await upsertUser("supercurator@academy.local", "Супер-куратор", "super_curator");
+  const observer = await upsertUser("observer@academy.local", "Заказчик / Наблюдатель", "customer_observer");
 
   const students = [];
   for (let index = 1; index <= 10; index += 1) {
@@ -140,11 +139,6 @@ async function main() {
       where: { courseId_userId: { courseId: course.id, userId: instructor1.id } },
       update: {},
       create: { courseId: course.id, userId: instructor1.id }
-    });
-    await prisma.courseInstructor.upsert({
-      where: { courseId_userId: { courseId: course.id, userId: instructor2.id } },
-      update: {},
-      create: { courseId: course.id, userId: instructor2.id }
     });
 
     for (let moduleOrder = 1; moduleOrder <= 2; moduleOrder += 1) {
