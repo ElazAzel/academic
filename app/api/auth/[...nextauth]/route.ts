@@ -4,11 +4,15 @@ import { checkRateLimit } from "@/lib/security/rate-limit";
 
 const handler = NextAuth(authOptions);
 
-export async function GET(request: Request, context: any) {
+interface RouteContext {
+  params: Promise<Record<string, string | string[]>>;
+}
+
+export async function GET(request: Request, context: RouteContext) {
   return handler(request, context);
 }
 
-export async function POST(request: Request, context: any) {
+export async function POST(request: Request, context: RouteContext) {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     request.headers.get("x-real-ip") ??

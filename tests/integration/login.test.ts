@@ -21,7 +21,7 @@ describe("credentials login POST", () => {
       headers: { "x-forwarded-for": "127.0.0.1" },
     });
 
-    const response = await POST(request, { params: { nextauth: ["signin"] } });
+    const response = await POST(request, { params: Promise.resolve({ nextauth: ["signin"] }) });
     expect(response.status).toBe(200);
   });
 
@@ -35,7 +35,7 @@ describe("credentials login POST", () => {
       headers: { "x-forwarded-for": "10.0.0.1" },
     });
 
-    const response = await POST(request, { params: { nextauth: ["signin"] } });
+    const response = await POST(request, { params: Promise.resolve({ nextauth: ["signin"] }) });
     expect(response.status).toBe(429);
 
     const payload = await response.json();
@@ -51,7 +51,7 @@ describe("credentials login POST", () => {
       method: "POST",
     });
 
-    await POST(request, { params: { nextauth: ["signin"] } });
+    await POST(request, { params: Promise.resolve({ nextauth: ["signin"] }) });
     expect(spy).toHaveBeenCalledWith("login:ip:unknown");
   });
 });
