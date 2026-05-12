@@ -82,6 +82,12 @@ export default async function AdminAnalyticsPage() {
           />
          </CardContent>
         </Card>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-xs text-muted-foreground mr-1">Скачать отчёт:</span>
+          <a href="/api/v1/reports?type=progress&format=csv" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">CSV</a>
+          <a href="/api/v1/reports?type=progress&format=xlsx" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">Excel</a>
+          <a href="/api/v1/reports?type=progress&format=pdf" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">PDF</a>
+        </div>
         <div className="space-y-4">
          <Card>
           <CardHeader className="pb-2">

@@ -415,6 +415,35 @@ export async function getSuperCuratorQuestions(status: "open" | "answered" = "op
   }, []);
 }
 
+export async function getForwardedQuestions() {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  return safeQuery(async () => {
+    const questions = await prisma.lessonQuestion.findMany({
+      where: { status: "forwarded" },
+      orderBy: { createdAt: "desc" },
+      include: {
+        student: { select: { name: true, email: true } },
+        curator: { select: { name: true, email: true } },
+        lesson: { include: { module: { include: { course: true } } } },
+      },
+    });
+
+    return questions.map((q) => ({
+      id: q.id,
+      text: q.text,
+      studentName: q.student.name ?? q.student.email,
+      curatorName: q.curator?.name ?? q.curator?.email ?? "Неизвестно",
+      courseTitle: q.lesson.module.course.title,
+      moduleTitle: q.lesson.module.title,
+      lessonTitle: q.lesson.title,
+      status: q.status as "forwarded",
+      createdAt: q.createdAt.toISOString(),
+    }));
+  }, []);
+}
+
 // ── Супер-куратор ───────────────────────────────────────────────────
 
 export async function getSuperCuratorDashboard() {

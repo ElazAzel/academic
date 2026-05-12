@@ -36,7 +36,7 @@ export async function answerQuestionAction(questionId: string, answer: string) {
 
   const question = await prisma.lessonQuestion.findUnique({
     where: { id: questionId },
-    select: { studentId: true }
+    select: { studentId: true, lessonId: true }
   });
   if (question?.studentId) {
     await createNotification({
@@ -46,6 +46,9 @@ export async function answerQuestionAction(questionId: string, answer: string) {
     });
   }
 
+  if (question?.lessonId) {
+    revalidatePath("/student/lessons/" + question.lessonId);
+  }
   revalidatePath("/curator");
   revalidatePath("/curator/questions");
   return { success: true };
@@ -101,7 +104,16 @@ export async function reviewSubmissionAction(submissionId: string, input: {
 
 export async function forwardQuestionAction(questionId: string) {
   const actor = await requireRole(["curator", "super_curator", "admin"]);
-  
+
+  const question = await prisma.lessonQuestion.findUnique({
+    where: { id: questionId },
+    include: { student: { select: { name: true } } }
+  });
+
+  if (!question) {
+    throw new Error("Вопрос не найден");
+  }
+
   await prisma.lessonQuestion.update({
     where: { id: questionId },
     data: {
@@ -116,20 +128,44 @@ export async function forwardQuestionAction(questionId: string) {
     entityId: questionId
   });
 
+  if (question?.lessonId) {
+    revalidatePath("/student/lessons/" + question.lessonId);
+  }
   revalidatePath("/curator");
   revalidatePath("/curator/questions");
+  // Notify student and original curator
+  if (question?.studentId) {
+    createNotification({
+      userId: question.studentId,
+      event: "question_forwarded",
+      data: { lessonId: question.lessonId }
+    }).catch((e) => console.error("Failed to notify student:", e));
+  }
+  if (question?.curatorId) {
+    createNotification({
+      userId: question.curatorId,
+      event: "question_forwarded",
+      data: { lessonId: question.lessonId, studentName: question.student?.name }
+    }).catch((e) => console.error("Failed to notify curator:", e));
+  }
+
   revalidatePath("/instructor");
   return { success: true };
 }
 
-export async function answerForwardedQuestionAction(questionId: string, answer: string) {
+export async function answerForwardedQuestionAction(formData: FormData) {
+  const questionId = formData.get("questionId") as string;
+  const answer = formData.get("answer") as string;
   const actor = await requireRole(["instructor", "admin"]);
 
-  if (!answer.trim()) {
+  if (!answer?.trim()) {
     throw new Error("Ответ не может быть пустым");
   }
 
-  const question = await prisma.lessonQuestion.findUnique({ where: { id: questionId } });
+  const question = await prisma.lessonQuestion.findUnique({
+    where: { id: questionId },
+    include: { student: { select: { name: true, email: true } } }
+  });
   if (!question || question.status !== "forwarded") {
     throw new Error("Вопрос не найден или не был переадресован");
   }
@@ -139,8 +175,7 @@ export async function answerForwardedQuestionAction(questionId: string, answer: 
     data: {
       answer,
       status: "answered",
-      answeredAt: new Date(),
-      curatorId: actor.id
+      answeredAt: new Date()
     }
   });
 
@@ -152,9 +187,24 @@ export async function answerForwardedQuestionAction(questionId: string, answer: 
     metadata: { answer }
   });
 
+  // Notify student and original curator
+  if (question?.studentId) {
+    createNotification({
+      userId: question.studentId,
+      event: "question_answered",
+      data: { lessonId: question.lessonId }
+    }).catch((e) => console.error("Failed to notify student:", e));
+  }
+  if (question?.curatorId) {
+    createNotification({
+      userId: question.curatorId,
+      event: "question_answered",
+      data: { lessonId: question.lessonId, studentName: question.student?.name }
+    }).catch((e) => console.error("Failed to notify curator:", e));
+  }
+
   revalidatePath("/instructor");
   revalidatePath("/instructor/questions");
   revalidatePath("/curator");
-  return { success: true };
 }
 

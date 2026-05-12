@@ -36,7 +36,9 @@ export type NotificationEvent =
   | "question_answered"
   | "live_session_soon"
   | "certificate_available"
-  | "curator_assigned";
+  | "curator_assigned"
+  | "question_received"
+  | "question_forwarded";
 
 const templates: Record<NotificationEvent, { title: string; body: string }> = {
   access_granted: { title: "Доступ выдан", body: "Вам открыт доступ к учебной программе." },
@@ -48,7 +50,9 @@ const templates: Record<NotificationEvent, { title: string; body: string }> = {
   question_answered: { title: "Куратор ответил", body: "Ответ доступен в уроке." },
   live_session_soon: { title: "Скоро трансляция", body: "Не пропустите занятие." },
   certificate_available: { title: "Сертификат доступен", body: "Сертификат можно скачать в кабинете." },
-  curator_assigned: { title: "Куратор назначен", body: "Теперь у вас есть ответственный куратор." }
+  curator_assigned: { title: "Куратор назначен", body: "Теперь у вас есть ответственный куратор." },
+  question_received: { title: "Новый вопрос", body: "Слушатель задал вопрос по уроку." },
+  question_forwarded: { title: "Вопрос переадресован", body: "Ваш вопрос передан инструктору." }
 };
 
 export function renderNotificationTemplate(event: NotificationEvent, overrides?: Partial<{ title: string; body: string }>) {

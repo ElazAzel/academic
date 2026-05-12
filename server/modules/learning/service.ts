@@ -2,6 +2,7 @@ import { EnrollmentStatus, Prisma, ProgressStatus } from "@prisma/client";
 import { ApiError } from "@/lib/http";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
+import { createNotification } from "@/server/modules/notifications/service";
 import type {
   AssignmentSummary,
   ContinueLearning,
@@ -345,6 +346,14 @@ export async function askCuratorQuestion(userId: string, lessonId: string, text:
       text: text.trim()
     }
   });
+
+  if (curatorAssignment?.active) {
+    createNotification({
+      userId: curatorAssignment.curatorId,
+      event: "question_received",
+      data: { studentId: userId, lessonId, questionId: question.id }
+    }).catch((e) => console.error("Failed to notify curator:", e));
+  }
 
   await logAudit({
     actorId: userId,

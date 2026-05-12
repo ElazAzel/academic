@@ -39,8 +39,9 @@ export async function GET(request: Request) {
     const isSuperCurator = user.roles.includes("super_curator");
     const isCurator = user.roles.includes("curator");
     const isObserver = user.roles.includes("customer_observer");
+    const isInstructor = user.roles.includes("instructor");
 
-    if (!isAdmin && !isSuperCurator && !isCurator && !isObserver) {
+    if (!isAdmin && !isSuperCurator && !isCurator && !isObserver && !isInstructor) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -53,6 +54,19 @@ export async function GET(request: Request) {
     }
 
     const getScopedStudentIds = async () => {
+      if (isInstructor) {
+        const courses = await prisma.course.findMany({
+          where: { instructors: { some: { userId: user.id } } },
+          select: { id: true },
+        });
+        const courseIds = courses.map((c) => c.id);
+        if (courseIds.length === 0) return [];
+        const enrollments = await prisma.enrollment.findMany({
+          where: { courseId: { in: courseIds }, status: "ACTIVE" },
+          select: { userId: true },
+        });
+        return [...new Set(enrollments.map((e) => e.userId))];
+      }
       if (!isSuperCurator || isAdmin) return undefined;
       const assignments = await prisma.curatorAssignment.findMany({
         where: { superCuratorId: user.id, active: true },

@@ -43,7 +43,7 @@ export default async function StudentCertificatesPage() {
         <TableCell className="text-right">
          <div className="flex gap-1 justify-end">
           <Button size="sm" variant="secondary" asChild>
-           <Link href={`/api/certificates/${cert.id}/pdf`} target="_blank">
+           <Link href={`/api/v1/certificates/${cert.id}/pdf`} target="_blank">
             <Download className="h-3.5 w-3.5 mr-1"/> PDF
            </Link>
           </Button>
