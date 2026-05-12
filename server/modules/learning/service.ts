@@ -391,7 +391,8 @@ export async function getStudentCoursePlayerDetail(userId: string, courseId: str
 
 function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
   if (content && Array.isArray(content.blocks)) {
-    return (content.blocks as Array<{ type: string; data?: Record<string, unknown> }>).map((block) => ({
+    return (content.blocks as Array<{ id?: string; type: string; data?: Record<string, unknown> }>).map((block) => ({
+      id: block.id ?? crypto.randomUUID(),
       type: (["video", "text", "file", "quiz", "assignment", "rating", "curator_question", "completion"].includes(block.type)
         ? block.type
         : "text") as ContentBlock["type"],
@@ -403,7 +404,7 @@ function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
     ? (content as { text: unknown }).text
     : null;
   if (typeof text === "string") {
-    return [{ type: "text", data: { html: text } }];
+    return [{ id: crypto.randomUUID(), type: "text", data: { html: text } }];
   }
   return [];
 }
@@ -413,7 +414,14 @@ export async function getStudentLessonPlayerDetail(userId: string, lessonId: str
   const course = await getStudentCoursePlayerDetail(userId, lesson.courseId);
   const blocks = parseContentBlocks(lesson.content);
 
-  return { lesson, blocks, courseTree: course.modules };
+  const quizDetails = await Promise.all(
+    lesson.quizzes.map((q) => getQuizForStudent(userId, q.id))
+  );
+  const assignmentDetails = await Promise.all(
+    lesson.assignments.map((a) => getAssignmentForStudent(userId, a.id))
+  );
+
+  return { lesson, blocks, courseTree: course.modules, quizDetails, assignmentDetails };
 }
 
 export async function getModuleForStudent(userId: string, moduleId: string): Promise<StudentModuleLearningDetail> {

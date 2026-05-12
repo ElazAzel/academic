@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CheckCircle2, FileText, Menu } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Menu } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { Progress } from "@/components/ui/progress";
 import { VideoBlock } from "@/components/lms/video-block";
 import { TextBlock } from "@/components/lms/text-block";
 import { FileBlock } from "@/components/lms/file-block";
+import { QuizBlock } from "@/components/lms/quiz-block";
+import { AssignmentBlock } from "@/components/lms/assignment-block";
 import { LessonRating } from "@/components/lms/lesson-rating";
 import { AskCuratorQuestion } from "@/components/lms/ask-curator-question";
 import { LessonNavigation } from "@/components/lms/lesson-navigation";
@@ -19,7 +21,7 @@ import type { StudentLessonPlayerDetail } from "@/types/domain";
 
 export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetail }) {
   const router = useRouter();
-  const { lesson, blocks, courseTree } = detail;
+  const { lesson, blocks, courseTree, quizDetails, assignmentDetails } = detail;
   const [progressPercent, setProgressPercent] = useState(lesson.progressPercent);
   const [savingProgress, setSavingProgress] = useState(false);
   const isCompleted = progressPercent >= 100;
@@ -181,51 +183,23 @@ export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetai
             </div>
           )}
 
-          {/* Quizzes (still link to separate pages — PR 4 will embed) */}
-          {lesson.quizzes.length > 0 && (
-            <div className="rounded-2xl border bg-card">
-              <div className="px-5 py-4 font-semibold text-sm border-b">Тесты ({lesson.quizzes.length})</div>
-              <div className="p-2 space-y-1">
-                {lesson.quizzes.map((quiz) => (
-                  <div key={quiz.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <FileText className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{quiz.title}</p>
-                      <p className="text-xs text-muted-foreground">{quiz.questionsCount} вопр. · порог {quiz.passThreshold}%</p>
-                    </div>
-                    <Button asChild size="sm">
-                      <Link href={`/student/quizzes/${quiz.id}`}>Пройти</Link>
-                    </Button>
-                  </div>
-                ))}
-              </div>
+          {/* Embedded quizzes */}
+          {quizDetails.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold">Тесты ({quizDetails.length})</h3>
+              {quizDetails.map((q) => (
+                <QuizBlock key={q.id} quiz={q} />
+              ))}
             </div>
           )}
 
-          {/* Assignments (still link to separate pages — PR 4 will embed) */}
-          {lesson.assignments.length > 0 && (
-            <div className="rounded-2xl border bg-card">
-              <div className="px-5 py-4 font-semibold text-sm border-b">Задания ({lesson.assignments.length})</div>
-              <div className="p-2 space-y-1">
-                {lesson.assignments.map((a) => (
-                  <div key={a.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{a.title}</p>
-                      <div className="flex flex-wrap gap-1.5 mt-0.5">
-                        {a.deadline && <Badge className="text-[10px]">Дедлайн: {a.deadline.slice(0, 10)}</Badge>}
-                        <Badge className={a.submissionStatus ? "bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]" : "bg-amber-50 text-amber-700 border-amber-200 text-[10px]"}>
-                          {a.submissionStatus ?? "Не отправлено"}
-                        </Badge>
-                      </div>
-                    </div>
-                    <Button asChild size="sm">
-                      <Link href={`/student/assignments/${a.id}`}>Открыть</Link>
-                    </Button>
-                  </div>
-                ))}
-              </div>
+          {/* Embedded assignments */}
+          {assignmentDetails.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold">Задания ({assignmentDetails.length})</h3>
+              {assignmentDetails.map((a) => (
+                <AssignmentBlock key={a.id} assignment={a} />
+              ))}
             </div>
           )}
 
