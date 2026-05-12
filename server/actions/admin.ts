@@ -88,6 +88,50 @@ export async function assignCuratorAction(input: { studentId: string; curatorId:
   }
 }
 
+export async function pauseEnrollmentAction(enrollmentId: string) {
+  const actor = await requireRole(["admin"]);
+  const enrollment = await prisma.enrollment.findUnique({ where: { id: enrollmentId } });
+  if (!enrollment) throw new Error("Запись не найдена");
+  if (enrollment.status !== "ACTIVE") throw new Error("Можно приостановить только активное зачисление");
+
+  await prisma.enrollment.update({
+    where: { id: enrollmentId },
+    data: { status: "PAUSED" }
+  });
+
+  await logAudit({
+    actorId: actor.id,
+    action: "enrollment.paused",
+    entity: "enrollment",
+    entityId: enrollmentId
+  });
+
+  revalidatePath("/admin/enrollments");
+  return { success: true };
+}
+
+export async function resumeEnrollmentAction(enrollmentId: string) {
+  const actor = await requireRole(["admin"]);
+  const enrollment = await prisma.enrollment.findUnique({ where: { id: enrollmentId } });
+  if (!enrollment) throw new Error("Запись не найдена");
+  if (enrollment.status !== "PAUSED") throw new Error("Можно возобновить только приостановленное зачисление");
+
+  await prisma.enrollment.update({
+    where: { id: enrollmentId },
+    data: { status: "ACTIVE" }
+  });
+
+  await logAudit({
+    actorId: actor.id,
+    action: "enrollment.resumed",
+    entity: "enrollment",
+    entityId: enrollmentId
+  });
+
+  revalidatePath("/admin/enrollments");
+  return { success: true };
+}
+
 export async function deleteEnrollmentAction(enrollmentId: string) {
   try {
     const actor = await requireRole(["admin"]);

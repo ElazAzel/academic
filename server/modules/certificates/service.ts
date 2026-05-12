@@ -52,6 +52,34 @@ export async function issueCertificate(input: { userId: string; courseId: string
   return certificate;
 }
 
+export async function revokeCertificate(certificateId: string, actorId: string) {
+  const certificate = await prisma.certificate.findUnique({
+    where: { id: certificateId },
+    select: { id: true, revokedAt: true }
+  });
+  if (!certificate) {
+    throw new ApiError("not_found", "Сертификат не найден", 404);
+  }
+  if (certificate.revokedAt) {
+    throw new ApiError("bad_request", "Сертификат уже отозван", 400);
+  }
+
+  const updated = await prisma.certificate.update({
+    where: { id: certificateId },
+    data: { revokedAt: new Date() }
+  });
+
+  await logAudit({
+    actorId,
+    action: "certificate.revoked",
+    entity: "certificate",
+    entityId: certificate.id,
+    metadata: { revokedAt: updated.revokedAt }
+  });
+
+  return updated;
+}
+
 export async function listCertificates(userId?: string) {
   return prisma.certificate.findMany({
     where: userId ? { userId } : undefined,

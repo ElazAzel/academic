@@ -7,6 +7,22 @@ import { logAudit } from "@/server/modules/audit/service";
 
 const prisma = getPrisma();
 
+async function assertInstructorOfCourse(actorId: string, courseId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: actorId },
+    include: { roles: { include: { role: { select: { key: true } } } } }
+  });
+  if (!user) throw new Error("Пользователь не найден");
+  const roleKeys = user.roles.map((r) => r.role.key);
+  if (roleKeys.includes("admin")) return;
+  const instructor = await prisma.courseInstructor.findUnique({
+    where: { courseId_userId: { courseId, userId: actorId } }
+  });
+  if (!instructor) {
+    throw new ApiError("forbidden", "Вы не являетесь преподавателем этого курса", 403);
+  }
+}
+
 export async function listCourses(status?: CourseStatus, instructorId?: string) {
   return prisma.course.findMany({
     where: {
@@ -117,6 +133,7 @@ export async function createModule(courseId: string, input: {
   recommendedDays: number;
 }, actorId: string) {
   await getCourse(courseId);
+  await assertInstructorOfCourse(actorId, courseId);
   const courseModule = await prisma.module.create({
     data: {
       courseId,
@@ -137,6 +154,9 @@ export async function updateModule(moduleId: string, input: {
   recommendedDays?: number;
   status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
 }, actorId: string) {
+  const mod = await prisma.module.findUnique({ where: { id: moduleId }, select: { courseId: true } });
+  if (!mod) throw new ApiError("not_found", "Модуль не найден", 404);
+  await assertInstructorOfCourse(actorId, mod.courseId);
   const courseModule = await prisma.module.update({
     where: { id: moduleId },
     data: {
@@ -149,6 +169,9 @@ export async function updateModule(moduleId: string, input: {
 }
 
 export async function deleteModule(moduleId: string, actorId: string) {
+  const mod = await prisma.module.findUnique({ where: { id: moduleId }, select: { courseId: true } });
+  if (!mod) throw new ApiError("not_found", "Модуль не найден", 404);
+  await assertInstructorOfCourse(actorId, mod.courseId);
   const courseModule = await prisma.module.delete({ where: { id: moduleId } });
   await logAudit({ actorId, action: "module.deleted", entity: "module", entityId: moduleId });
   return courseModule;
@@ -167,6 +190,7 @@ export async function createLesson(moduleId: string, input: {
   if (!courseModule) {
     throw new ApiError("not_found", "Модуль не найден", 404);
   }
+  await assertInstructorOfCourse(actorId, courseModule.courseId);
   const lesson = await prisma.lesson.create({
     data: {
       moduleId,
@@ -193,7 +217,13 @@ export async function updateLesson(lessonId: string, input: {
   durationMinutes?: number;
   isRequired?: boolean;
 }, actorId: string) {
-  const lesson = await prisma.lesson.update({
+  const existing = await prisma.lesson.findUnique({
+    where: { id: lessonId },
+    include: { module: true }
+  });
+  if (!existing) throw new ApiError("not_found", "Урок не найден", 404);
+  await assertInstructorOfCourse(actorId, existing.module.courseId);
+  const updated = await prisma.lesson.update({
     where: { id: lessonId },
     data: {
       ...input,
@@ -201,14 +231,20 @@ export async function updateLesson(lessonId: string, input: {
       content: input.content ? toJsonValue(input.content) : undefined
     }
   });
-  await logAudit({ actorId, action: "lesson.updated", entity: "lesson", entityId: lesson.id, metadata: input });
-  return lesson;
+  await logAudit({ actorId, action: "lesson.updated", entity: "lesson", entityId: lessonId, metadata: input });
+  return updated;
 }
 
 export async function deleteLesson(lessonId: string, actorId: string) {
-  const lesson = await prisma.lesson.delete({ where: { id: lessonId } });
+  const existing = await prisma.lesson.findUnique({
+    where: { id: lessonId },
+    include: { module: true }
+  });
+  if (!existing) throw new ApiError("not_found", "Урок не найден", 404);
+  await assertInstructorOfCourse(actorId, existing.module.courseId);
+  const deleted = await prisma.lesson.delete({ where: { id: lessonId } });
   await logAudit({ actorId, action: "lesson.deleted", entity: "lesson", entityId: lessonId });
-  return lesson;
+  return deleted;
 }
 
 export async function getLesson(lessonId: string) {

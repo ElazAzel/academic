@@ -20,7 +20,6 @@ export async function updateProfileSettingsAction(formData: FormData) {
     });
 
     revalidatePath("/", "layout");
-    return { success: true };
   } catch (err) {
     throw err instanceof Error ? err : new Error("Failed to update profile");
   }
@@ -56,8 +55,6 @@ export async function updatePasswordAction(formData: FormData) {
       where: { id: dbUser.id },
       data: { passwordHash: newHash }
     });
-
-    return { success: true };
   } catch (err) {
     throw err instanceof Error ? err : new Error("Failed to update password");
   }

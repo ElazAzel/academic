@@ -6,6 +6,22 @@ import { logAudit } from "@/server/modules/audit/service";
 
 const prisma = getPrisma();
 
+async function assertCuratorStudentAccess(actor: { id: string; roles: string[] }, studentId: string) {
+  if (actor.roles.includes("admin")) return;
+  const assignment = await prisma.curatorAssignment.findFirst({
+    where: {
+      studentId,
+      active: true,
+      ...(actor.roles.includes("super_curator")
+        ? { superCuratorId: actor.id }
+        : { curatorId: actor.id }),
+    },
+  });
+  if (!assignment) {
+    throw new Error("Доступ запрещен: студент не закреплен за вами");
+  }
+}
+
 export async function generateReportAction(projectId: string, type: string) {
   const actor = await requireRole(["admin", "instructor", "super_curator", "customer_observer"]);
 
@@ -32,6 +48,8 @@ export async function generateReportAction(projectId: string, type: string) {
 export async function createRiskFlagAction(userId: string, type: string, courseId?: string, cohortId?: string) {
   const actor = await requireRole(["admin", "super_curator", "curator"]);
 
+  await assertCuratorStudentAccess(actor, userId);
+
   const flag = await prisma.riskFlag.create({
     data: {
       userId,
@@ -57,7 +75,17 @@ export async function createRiskFlagAction(userId: string, type: string, courseI
 export async function resolveRiskFlagAction(flagId: string) {
   const actor = await requireRole(["admin", "super_curator", "curator"]);
 
-  const flag = await prisma.riskFlag.update({
+  const riskFlag = await prisma.riskFlag.findUnique({
+    where: { id: flagId },
+    select: { id: true, userId: true }
+  });
+  if (!riskFlag) {
+    throw new Error("Флаг риска не найден");
+  }
+
+  await assertCuratorStudentAccess(actor, riskFlag.userId);
+
+  const updated = await prisma.riskFlag.update({
     where: { id: flagId },
     data: {
       status: "resolved",
@@ -69,8 +97,8 @@ export async function resolveRiskFlagAction(flagId: string) {
     actorId: actor.id,
     action: "risk_flag.resolved",
     entity: "risk_flag",
-    entityId: flag.id
+    entityId: riskFlag.id
   });
 
-  return flag;
+  return updated;
 }
