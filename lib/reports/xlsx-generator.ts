@@ -31,7 +31,7 @@ async function buildProgressSheet(wb: ExcelJS.Workbook, rows: ProgressRow[]) {
 
     const total = courseRows.length;
     const completed = courseRows.filter((r) => r.progressPercent >= 100).length;
-    const avg = Math.round(courseRows.reduce((s, r) => s + r.progressPercent, 0) / total);
+    const avg = total > 0 ? Math.round(courseRows.reduce((s, r) => s + r.progressPercent, 0) / total) : 0;
 
     const sr = ws.addRow([`Слушателей: ${total} | Завершили: ${completed} | Средний: ${avg}%`, "", "", "", ""]);
     sr.getCell(1).font = { italic: true, size: 10, color: { argb: "FF666666" } };
@@ -72,7 +72,8 @@ async function buildProgressSheet(wb: ExcelJS.Workbook, rows: ProgressRow[]) {
 
   summaryWs.addRow(["Всего записей", rows.length]);
   summaryWs.addRow(["Завершили курс", rows.filter((r) => r.progressPercent >= 100).length]);
-  summaryWs.addRow(["Средний прогресс", `${Math.round(rows.reduce((s, r) => s + r.progressPercent, 0) / rows.length)}%`]);
+  const totalRows = rows.length;
+  summaryWs.addRow(["Средний прогресс", totalRows > 0 ? `${Math.round(rows.reduce((s, r) => s + r.progressPercent, 0) / totalRows)}%` : "0%"]);
 
   // Bar charts for each course using data bars
   for (const [course, courseRows] of grouped) {

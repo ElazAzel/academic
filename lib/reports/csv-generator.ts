@@ -20,7 +20,7 @@ export function generateProgressCsv(rows: ProgressRow[]): string {
   for (const [course, courseRows] of grouped) {
     const total = courseRows.length;
     const completed = courseRows.filter((r) => r.progressPercent >= 100).length;
-    const avg = Math.round(courseRows.reduce((s, r) => s + r.progressPercent, 0) / total);
+    const avg = total > 0 ? Math.round(courseRows.reduce((s, r) => s + r.progressPercent, 0) / total) : 0;
     const cohortSummary = new Map<string, { total: number; avg: number }>();
     for (const r of courseRows) {
       const c = cohortSummary.get(r.cohort) ?? { total: 0, avg: 0 };
@@ -34,7 +34,7 @@ export function generateProgressCsv(rows: ProgressRow[]): string {
     lines.push(`Всего: ${total} | Завершили: ${completed} | Средний прогресс: ${avg}%`);
     lines.push(`Потоки:`);
     for (const [cohort, c] of cohortSummary) {
-      lines.push(`  • ${cohort}: ${c.total} слуш. | Средний: ${Math.round(c.avg / c.total)}%`);
+      lines.push(`  • ${cohort}: ${c.total} слуш. | Средний: ${c.total > 0 ? Math.round(c.avg / c.total) : 0}%`);
     }
     lines.push(``);
     lines.push(`Слушатель,Email,Поток,Прогресс,%`);
@@ -47,7 +47,7 @@ export function generateProgressCsv(rows: ProgressRow[]): string {
   // Общая сводка
   const allTotal = rows.length;
   const allCompleted = rows.filter((r) => r.progressPercent >= 100).length;
-  const allAvg = Math.round(rows.reduce((s, r) => s + r.progressPercent, 0) / allTotal);
+  const allAvg = allTotal > 0 ? Math.round(rows.reduce((s, r) => s + r.progressPercent, 0) / allTotal) : 0;
   lines.push(`═══════════════════════════════════════════════`);
   lines.push(`ОБЩАЯ СВОДКА`);
   lines.push(`Всего записей: ${allTotal}`);
