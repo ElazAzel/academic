@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
+import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 import { Tabs } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -10,7 +11,7 @@ import { Download } from "lucide-react";
 import { getCustomerObserverDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
-import { getObserverMetrics, MOCK_COHORTS, MOCK_CERTIFICATES } from "@/lib/mock-data";
+import { listCertificates } from "@/server/modules/certificates/service";
 
 export const dynamic = "force-dynamic";
 
@@ -19,9 +20,21 @@ export default async function CustomerObserverDashboardPage() {
  const data = await getCustomerObserverDashboard();
  const demoMode = isDemoModeEnabled();
 
- const metrics = data?.metrics ?? getObserverMetrics();
- const cohorts = demoMode ? MOCK_COHORTS : [];
- const certificates = demoMode ? MOCK_CERTIFICATES : [];
+ if (!data && !demoMode) {
+  return (
+   <AppShell role="customer_observer">
+    <PageHeader title="Дашборд проекта" description="Прогресс, посещаемость, сертификаты и отчёты."/>
+    <DashboardUnavailable/>
+   </AppShell>
+  );
+ }
+
+ const metrics = data?.metrics ?? [];
+ const cohortsDemo = demoMode ? [
+  { id: "1", name: "Весенний поток 2026", studentsCount: 120 },
+  { id: "2", name: "Осенний поток 2026", studentsCount: 85 },
+ ] : [];
+ const certificates = demoMode ? await listCertificates() : [];
 
  return (
   <AppShell role="customer_observer">
@@ -33,7 +46,7 @@ export default async function CustomerObserverDashboardPage() {
       <CardTitle className="text-base">Прогресс по потокам</CardTitle>
      </CardHeader>
      <CardContent className="space-y-4">
-      {cohorts.length > 0 ? cohorts.map((c) => (
+      {cohortsDemo.length > 0 ? cohortsDemo.map((c) => (
        <div key={c.id} className="space-y-1.5">
         <div className="flex items-center justify-between text-sm">
          <span>{c.name}</span>
@@ -58,14 +71,14 @@ export default async function CustomerObserverDashboardPage() {
          </TableRow>
         </TableHeader>
         <TableBody>
-         {certificates.map((cert) => (
+         {certificates.length > 0 ? certificates.map((cert) => (
           <TableRow key={cert.id}>
            <TableCell><code className="rounded bg-muted px-2 py-0.5 text-xs">{cert.number}</code></TableCell>
-           <TableCell className="text-sm">{cert.studentName}</TableCell>
-           <TableCell className="text-sm text-muted-foreground">{cert.courseTitle}</TableCell>
+           <TableCell className="text-sm">{cert.user.name ?? cert.user.email}</TableCell>
+           <TableCell className="text-sm text-muted-foreground">{cert.course.title}</TableCell>
            <TableCell className="text-xs text-muted-foreground">{new Date(cert.issuedAt).toLocaleDateString("ru-RU")}</TableCell>
           </TableRow>
-         ))}
+         )) : <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-4">Сертификаты пока не выданы.</TableCell></TableRow>}
         </TableBody>
        </Table>
       ),

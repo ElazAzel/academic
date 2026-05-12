@@ -4,10 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { MOCK_CERTIFICATES } from "@/lib/mock-data";
+import { listCertificates } from "@/server/modules/certificates/service";
+
+export const dynamic = "force-dynamic";
 
 export default async function CustomerObserverCertificatesPage() {
  await requireRolePage(["customer_observer"]);
+ const certificates = await listCertificates();
 
  return (
   <AppShell role="customer_observer">
@@ -17,30 +20,34 @@ export default async function CustomerObserverCertificatesPage() {
   />
    <Card className="mt-6">
     <CardContent className="py-4">
-     <Table>
-      <TableHeader>
-       <TableRow>
-        <TableHead>Номер</TableHead>
-        <TableHead>Слушатель</TableHead>
-        <TableHead>Курс</TableHead>
-        <TableHead>Дата</TableHead>
-       </TableRow>
-      </TableHeader>
-      <TableBody>
-       {MOCK_CERTIFICATES.map((certificate) => (
-        <TableRow key={certificate.id}>
-         <TableCell>
-          <Badge>{certificate.number}</Badge>
-         </TableCell>
-         <TableCell className="text-sm">{certificate.studentName}</TableCell>
-         <TableCell className="text-sm text-muted-foreground">{certificate.courseTitle}</TableCell>
-         <TableCell className="text-xs text-muted-foreground">
-          {new Date(certificate.issuedAt).toLocaleDateString("ru-RU")}
-         </TableCell>
+     {certificates.length > 0 ? (
+      <Table>
+       <TableHeader>
+        <TableRow>
+         <TableHead>Номер</TableHead>
+         <TableHead>Слушатель</TableHead>
+         <TableHead>Курс</TableHead>
+         <TableHead>Дата</TableHead>
         </TableRow>
-       ))}
-      </TableBody>
-     </Table>
+       </TableHeader>
+       <TableBody>
+        {certificates.map((certificate) => (
+         <TableRow key={certificate.id}>
+          <TableCell>
+           <Badge>{certificate.number}</Badge>
+          </TableCell>
+          <TableCell className="text-sm">{certificate.user.name ?? certificate.user.email}</TableCell>
+          <TableCell className="text-sm text-muted-foreground">{certificate.course.title}</TableCell>
+          <TableCell className="text-xs text-muted-foreground">
+           {new Date(certificate.issuedAt).toLocaleDateString("ru-RU")}
+          </TableCell>
+         </TableRow>
+        ))}
+       </TableBody>
+      </Table>
+     ) : (
+      <p className="py-10 text-center text-sm text-muted-foreground">Сертификаты пока не выданы.</p>
+     )}
     </CardContent>
    </Card>
   </AppShell>

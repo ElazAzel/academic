@@ -29,8 +29,8 @@ function LessonRow({ lesson }: { lesson: LessonLearningSummary }) {
      <BookOpen className="h-4 w-4 text-muted-foreground"/>
     </span>
     <div className="flex-1 min-w-0">
-     <p className="truncate font-medium">{lesson.title}</p>
-     <p className="text-xs text-muted-foreground">{lesson.durationMinutes} мин.</p>
+      <p className="truncate font-medium">{lesson.title}</p>
+      <p className="text-xs text-muted-foreground">{lesson.lockReason ?? `${lesson.durationMinutes} мин.`}</p>
     </div>
     {statusIcon}
    </div>

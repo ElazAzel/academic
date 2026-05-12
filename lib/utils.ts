@@ -14,5 +14,5 @@ export function slugify(value: string) {
 }
 
 export function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
+  return Number.isNaN(value) ? min : Math.min(Math.max(value, min), max);
 }
