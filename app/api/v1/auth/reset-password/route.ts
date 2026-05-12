@@ -8,9 +8,20 @@ const schema = z.object({
   password: z.string().min(10).max(128)
 });
 
+function getClientIp(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp;
+  return "unknown";
+}
+
 export async function POST(request: Request) {
   try {
-    const rl = await checkRateLimit("reset-password");
+    const ip = getClientIp(request);
+    const rl = await checkRateLimit(`reset-password:${ip}`);
     if (!rl.allowed) {
       return errorResponse(new ApiError("too_many_requests", "Слишком много запросов. Попробуйте позже.", 429));
     }
