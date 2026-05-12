@@ -7,8 +7,18 @@ async function loginAs(page: Page, email: string, password: string = SEED_PASSWO
   await page.getByLabel("Логин / Email").fill(email);
   await page.getByLabel("Пароль").fill(password);
   await page.getByRole("button", { name: "Войти" }).click();
-  // Wait for navigation away from login
-  await page.waitForURL((url: URL) => !url.pathname.includes("/login"), { timeout: 10_000 });
+
+  // The login form uses client-side navigation (router.replace) after a fetch to /api/auth/callback.
+  // Wait for the URL to change away from /login, but also watch for the error alert.
+  const result = await Promise.race([
+    page.waitForURL((url: URL) => !url.pathname.includes("/login"), { timeout: 15_000 }).then(() => "success"),
+    page.locator('[role="alert"]').waitFor({ timeout: 15_000 }).then(() => "error"),
+  ]);
+
+  if (result === "error") {
+    const errorText = await page.locator('[role="alert"]').textContent().catch(() => "unknown");
+    throw new Error(`Login failed for ${email}: ${errorText}. Ensure DB is seeded (npm run users:create).`);
+  }
 }
 
 const ROLE_USERS = [
