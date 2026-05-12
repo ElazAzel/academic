@@ -14,11 +14,14 @@ export function LoginScreen({ oauthProviders }: { oauthProviders: OAuthProviderF
           </span>
           AI Strategic Academy
         </div>
-        <div className="relative z-10 max-w-md">
-          <h1 className="text-4xl font-bold leading-tight">Закрытая LMS<br />для AI-стратегии</h1>
-          <p className="mt-4 text-lg text-white/70">
-            Потоки, кураторы, отчётность и сертификация — всё в одной платформе.
-          </p>
+        <div className="relative z-10 flex items-center justify-center">
+          <div className="relative h-72 w-72">
+            <div className="animate-float-slow absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl" />
+            <div className="animate-float absolute left-8 top-6 h-20 w-20 rounded-2xl bg-white/5 blur-lg" />
+            <div className="animate-float-delayed absolute bottom-12 right-6 h-16 w-16 rounded-full bg-white/8 blur-xl" />
+            <div className="animate-pulse-glow absolute bottom-20 left-10 h-10 w-10 rounded-full bg-white/10 blur-md" />
+            <div className="animate-float absolute right-12 top-16 h-8 w-8 rounded-lg bg-white/5 blur-md" style={{ animationDelay: "-2s" }} />
+          </div>
         </div>
         <div className="relative z-10 text-sm text-white/50">
           &copy; {new Date().getFullYear()} AI Strategic Academy
