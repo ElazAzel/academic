@@ -6,6 +6,7 @@ import { createNotification } from "@/server/modules/notifications/service";
 import type {
   AssignmentSummary,
   CompletionCta,
+  ContentBlock,
   ContinueLearning,
   LessonLearningSummary,
   LessonPlayerCard,
@@ -15,6 +16,7 @@ import type {
   StudentCourseLearningDetail,
   StudentCoursePlayerDetail,
   StudentLessonLearningDetail,
+  StudentLessonPlayerDetail,
   StudentModuleLearningDetail,
   StudentProgress,
   StudentQuizDetail,
@@ -385,6 +387,33 @@ export async function getStudentCoursePlayerDetail(userId: string, courseId: str
   }
 
   return detail;
+}
+
+function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
+  if (content && Array.isArray(content.blocks)) {
+    return (content.blocks as Array<{ type: string; data?: Record<string, unknown> }>).map((block) => ({
+      type: (["video", "text", "file", "quiz", "assignment", "rating", "curator_question", "completion"].includes(block.type)
+        ? block.type
+        : "text") as ContentBlock["type"],
+      data: block.data ?? {}
+    }));
+  }
+  // Legacy format: single text block
+  const text = content && typeof content === "object" && "text" in content
+    ? (content as { text: unknown }).text
+    : null;
+  if (typeof text === "string") {
+    return [{ type: "text", data: { html: text } }];
+  }
+  return [];
+}
+
+export async function getStudentLessonPlayerDetail(userId: string, lessonId: string): Promise<StudentLessonPlayerDetail> {
+  const lesson = await getLessonForStudent(userId, lessonId);
+  const course = await getStudentCoursePlayerDetail(userId, lesson.courseId);
+  const blocks = parseContentBlocks(lesson.content);
+
+  return { lesson, blocks, courseTree: course.modules };
 }
 
 export async function getModuleForStudent(userId: string, moduleId: string): Promise<StudentModuleLearningDetail> {
