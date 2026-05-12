@@ -420,8 +420,12 @@ export async function getForwardedQuestions() {
   if (!user) return [];
 
   return safeQuery(async () => {
+    const courseFilter = user.roles.includes("admin")
+      ? {}
+      : { lesson: { module: { course: { instructors: { some: { userId: user.id } } } } } };
+
     const questions = await prisma.lessonQuestion.findMany({
-      where: { status: "forwarded" },
+      where: { status: "forwarded", ...courseFilter },
       orderBy: { createdAt: "desc" },
       include: {
         student: { select: { name: true, email: true } },

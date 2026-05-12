@@ -9,12 +9,38 @@ import { markLessonProgress } from "@/server/modules/progress/service";
 
 const prisma = getPrisma();
 
+async function assertCuratorStudentAccess(actor: { id: string; roles: string[] }, studentId: string) {
+  if (actor.roles.includes("admin")) return;
+  const assignment = await prisma.curatorAssignment.findFirst({
+    where: {
+      studentId,
+      active: true,
+      ...(actor.roles.includes("super_curator")
+        ? { superCuratorId: actor.id }
+        : { curatorId: actor.id }),
+    },
+  });
+  if (!assignment) {
+    throw new Error("Доступ запрещен: студент не закреплен за вами");
+  }
+}
+
 export async function answerQuestionAction(questionId: string, answer: string) {
   const actor = await requireRole(["curator", "super_curator", "admin"]);
   
   if (!answer.trim()) {
     throw new Error("Ответ не может быть пустым");
   }
+
+  const question = await prisma.lessonQuestion.findUnique({
+    where: { id: questionId },
+    select: { studentId: true, lessonId: true }
+  });
+  if (!question) {
+    throw new Error("Вопрос не найден");
+  }
+
+  await assertCuratorStudentAccess(actor, question.studentId);
 
   await prisma.lessonQuestion.update({
     where: { id: questionId },
@@ -34,10 +60,6 @@ export async function answerQuestionAction(questionId: string, answer: string) {
     metadata: { answer }
   });
 
-  const question = await prisma.lessonQuestion.findUnique({
-    where: { id: questionId },
-    select: { studentId: true, lessonId: true }
-  });
   if (question?.studentId) {
     await createNotification({
       userId: question.studentId,
@@ -60,6 +82,16 @@ export async function reviewSubmissionAction(submissionId: string, input: {
   feedback?: string;
 }) {
   const actor = await requireRole(["curator", "super_curator", "admin"]);
+
+  const submission = await prisma.assignmentSubmission.findUnique({
+    where: { id: submissionId },
+    select: { userId: true, assignment: { select: { lessonId: true } } }
+  });
+  if (!submission) {
+    throw new Error("Запись не найдена");
+  }
+
+  await assertCuratorStudentAccess(actor, submission.userId);
 
   const updated = await prisma.assignmentSubmission.update({
     where: { id: submissionId },
@@ -98,7 +130,7 @@ export async function reviewSubmissionAction(submissionId: string, input: {
 
   revalidatePath("/curator");
   revalidatePath("/curator/submissions");
-  revalidatePath("/student/assignments"); // Чтобы студент увидел обновление
+  revalidatePath("/student/assignments");
   return { success: true };
 }
 
@@ -113,6 +145,8 @@ export async function forwardQuestionAction(questionId: string) {
   if (!question) {
     throw new Error("Вопрос не найден");
   }
+
+  await assertCuratorStudentAccess(actor, question.studentId);
 
   await prisma.lessonQuestion.update({
     where: { id: questionId },
@@ -164,10 +198,22 @@ export async function answerForwardedQuestionAction(formData: FormData) {
 
   const question = await prisma.lessonQuestion.findUnique({
     where: { id: questionId },
-    include: { student: { select: { name: true, email: true } } }
+    include: {
+      student: { select: { name: true, email: true } },
+      lesson: { include: { module: { include: { course: { include: { instructors: { select: { userId: true } } } } } } } }
+    }
   });
   if (!question || question.status !== "forwarded") {
     throw new Error("Вопрос не найден или не был переадресован");
+  }
+
+  if (!actor.roles.includes("admin")) {
+    const isInstructor = question.lesson.module.course.instructors.some(
+      (i) => i.userId === actor.id
+    );
+    if (!isInstructor) {
+      throw new Error("Доступ запрещен: вопрос относится к курсу, который вы не ведете");
+    }
   }
 
   await prisma.lessonQuestion.update({
