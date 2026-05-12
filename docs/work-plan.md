@@ -1,7 +1,7 @@
 # Work Plan — AI Strategic Academy LMS
 
 **Date:** 2026-05-13
-**Status:** PR-7, PR-8 complete (PR-1 through PR-8)
+**Status:** PR-7, PR-8, PR-9 complete (PR-1 through PR-9)
 
 ---
 
@@ -29,6 +29,7 @@
 | PR-6 | P2 | E2E Tests | Playwright smoke tests for roles, scope boundaries, student happy path | `tests/e2e/*.spec.ts` | All 6 roles login smoke; scope boundary tests; happy path green |
 | PR-7 | P1 | Observer Scope Wiring | Wire ObserverProject/ObserverCohort scope into reports, dashboards, certificates | `server/modules/observer/scope.ts`, `app/api/v1/reports`, `server/actions/dashboard.ts` | Observers see only scoped data; unrestricted observers see all; 101 tests pass |
 | PR-8 | P2 | Notification Preferences | Wire NotificationPreference model to all 5 settings pages | `server/modules/notifications/preferences.ts`, `server/actions/settings.ts`, settings pages | All settings pages save/load notification prefs; lint/typecheck/test/build pass |
+| PR-9 | P2 | Lesson Rating API | POST `/api/v1/lessons/[id]/rating` endpoint, wire to existing component | `app/api/v1/lessons/[lessonId]/rating/route.ts`, `components/lms/lesson-rating.tsx` | Rating component now works; POST creates/updates LessonRating; lint/typecheck/test/build pass |
 
 ---
 
