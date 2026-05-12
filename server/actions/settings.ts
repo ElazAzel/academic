@@ -5,6 +5,7 @@ import { getPrisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { revalidatePath } from "next/cache";
 import { getUserNotificationPreferences, setNotificationPreferences, type NotificationChannel } from "@/server/modules/notifications/preferences";
+import { getAllAppSettings, setAppSettings, type AppSettings } from "@/server/modules/admin/settings";
 
 const prisma = getPrisma();
 
@@ -87,5 +88,40 @@ export async function updateNotificationPreferencesAction(formData: FormData) {
     revalidatePath("/*", "layout");
   } catch (err) {
     throw err instanceof Error ? err : new Error("Failed to update notification preferences");
+  }
+}
+
+export async function getAppSettingsAction() {
+  try {
+    await requireUser("users:read");
+    return await getAllAppSettings();
+  } catch (err) {
+    throw err instanceof Error ? err : new Error("Failed to get app settings");
+  }
+}
+
+export async function updateAppSettingsAction(formData: FormData) {
+  try {
+    await requireUser("users:read");
+    const settings: Partial<AppSettings> = {};
+
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith("setting_")) {
+        const settingKey = key.replace("setting_", "");
+        const strValue = String(value);
+        if (strValue === "true" || strValue === "false") {
+          settings[settingKey] = strValue === "true";
+        } else if (!isNaN(Number(strValue))) {
+          settings[settingKey] = Number(strValue);
+        } else {
+          settings[settingKey] = strValue;
+        }
+      }
+    }
+
+    await setAppSettings(settings);
+    revalidatePath("/admin/settings", "layout");
+  } catch (err) {
+    throw err instanceof Error ? err : new Error("Failed to update app settings");
   }
 }

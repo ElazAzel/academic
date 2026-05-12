@@ -15,12 +15,19 @@ export async function GET(_request: Request, context: Context) {
 
     const certificate = await prisma.certificate.findUnique({
       where: { id: certificateId },
-      select: { userId: true }
+      select: { userId: true, courseId: true }
     });
     if (!certificate) {
       throw new ApiError("not_found", "Сертификат не найден", 404);
     }
-    if (certificate.userId !== user.id && !user.roles.includes("admin")) {
+
+    const isOwner = certificate.userId === user.id;
+    const isAdmin = user.roles.includes("admin");
+    const isInstructor = await prisma.courseInstructor.findFirst({
+      where: { courseId: certificate.courseId, userId: user.id },
+    });
+
+    if (!isOwner && !isAdmin && !isInstructor) {
       throw new ApiError("forbidden", "Нет доступа к сертификату", 403);
     }
 
