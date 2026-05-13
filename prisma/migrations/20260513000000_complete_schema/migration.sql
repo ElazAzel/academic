@@ -2,53 +2,9 @@
 -- Creates all tables missing from previous migrations using CREATE TABLE IF NOT EXISTS
 -- Safe to run on both fresh and existing databases
 
--- ── New tables from PR-2 ────────────────────────────────────────────
+-- NOTE: Tables are ordered by dependency — a table must exist before it is referenced.
 
-CREATE TABLE IF NOT EXISTS observer_projects (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(user_id, project_id)
-);
-
-CREATE TABLE IF NOT EXISTS observer_cohorts (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  cohort_id TEXT NOT NULL REFERENCES cohorts(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(user_id, cohort_id)
-);
-
-CREATE TABLE IF NOT EXISTS notification_preferences (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  channel TEXT NOT NULL DEFAULT 'in_app',
-  course_id TEXT REFERENCES courses(id) ON DELETE SET NULL,
-  enabled BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(user_id, channel, course_id)
-);
-
-CREATE TABLE IF NOT EXISTS lesson_ratings (
-  id TEXT PRIMARY KEY,
-  lesson_id TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  score INTEGER NOT NULL DEFAULT 0,
-  comment TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(lesson_id, user_id)
-);
-
-CREATE INDEX IF NOT EXISTS lesson_ratings_lesson_id_idx ON lesson_ratings(lesson_id);
-CREATE INDEX IF NOT EXISTS lesson_ratings_user_id_idx ON lesson_ratings(user_id);
-CREATE INDEX IF NOT EXISTS notification_preferences_user_id_idx ON notification_preferences(user_id);
-CREATE INDEX IF NOT EXISTS observer_projects_user_id_idx ON observer_projects(user_id);
-CREATE INDEX IF NOT EXISTS observer_cohorts_user_id_idx ON observer_cohorts(user_id);
-
--- ── Existing schema tables (safe to skip if already present) ─────────
+-- ── Parent / dependency-free tables first ────────────────────────────
 
 CREATE TABLE IF NOT EXISTS clients (
   id TEXT PRIMARY KEY,
@@ -70,6 +26,28 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS cohorts (
+  id TEXT PRIMARY KEY,
+  course_id TEXT REFERENCES courses(id) ON DELETE SET NULL,
+  project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  starts_at TIMESTAMPTZ,
+  ends_at TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS cohort_deadlines (
+  id TEXT PRIMARY KEY,
+  cohort_id TEXT NOT NULL REFERENCES cohorts(id) ON DELETE CASCADE,
+  module_id TEXT NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
+  due_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ── Tables that depend on users, courses, lessons, cohorts ───────────
+
 CREATE TABLE IF NOT EXISTS course_instructors (
   course_id TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -86,16 +64,15 @@ CREATE TABLE IF NOT EXISTS lesson_media (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS cohorts (
+CREATE TABLE IF NOT EXISTS enrollments (
   id TEXT PRIMARY KEY,
-  course_id TEXT REFERENCES courses(id) ON DELETE SET NULL,
-  project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
-  name TEXT NOT NULL,
-  starts_at TIMESTAMPTZ,
-  ends_at TIMESTAMPTZ,
-  status TEXT NOT NULL DEFAULT 'active',
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  course_id TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  cohort_id TEXT REFERENCES cohorts(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'ACTIVE',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, course_id)
 );
 
 CREATE TABLE IF NOT EXISTS cohort_deadlines (
@@ -360,6 +337,58 @@ CREATE TABLE IF NOT EXISTS import_jobs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ── PR-2 tables (observer, notification, rating) ────────────────────
+
+CREATE TABLE IF NOT EXISTS observer_projects (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, project_id)
+);
+
+CREATE TABLE IF NOT EXISTS observer_cohorts (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  cohort_id TEXT NOT NULL REFERENCES cohorts(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, cohort_id)
+);
+
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  channel TEXT NOT NULL DEFAULT 'in_app',
+  course_id TEXT REFERENCES courses(id) ON DELETE SET NULL,
+  enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, channel, course_id)
+);
+
+CREATE TABLE IF NOT EXISTS lesson_ratings (
+  id TEXT PRIMARY KEY,
+  lesson_id TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  score INTEGER NOT NULL DEFAULT 0,
+  comment TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(lesson_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS lesson_ratings_lesson_id_idx ON lesson_ratings(lesson_id);
+CREATE INDEX IF NOT EXISTS lesson_ratings_user_id_idx ON lesson_ratings(user_id);
+CREATE INDEX IF NOT EXISTS notification_preferences_user_id_idx ON notification_preferences(user_id);
+CREATE INDEX IF NOT EXISTS observer_projects_user_id_idx ON observer_projects(user_id);
+CREATE INDEX IF NOT EXISTS observer_cohorts_user_id_idx ON observer_cohorts(user_id);
+
+-- ── Remaining indexes ───────────────────────────────────────────────
+
+CREATE INDEX IF NOT EXISTS lesson_progress_enrollment_id_idx ON lesson_progress(enrollment_id);
+CREATE INDEX IF NOT EXISTS module_progress_enrollment_id_idx ON module_progress(enrollment_id);
+CREATE INDEX IF NOT EXISTS course_progress_enrollment_id_idx ON course_progress(enrollment_id);
 
 -- ── Enum-alter safety (noop if already matching) ────────────────────
 -- Note: PostgreSQL enums require special handling; these alters only apply
