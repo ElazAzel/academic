@@ -1,4 +1,5 @@
 import { getPrisma } from "@/lib/prisma";
+import { toJsonValue } from "@/lib/json";
 
 const prisma = getPrisma();
 
@@ -36,8 +37,8 @@ export async function getAllAppSettings(): Promise<AppSettings> {
 export async function setAppSetting(key: string, value: string | number | boolean | null): Promise<void> {
   await prisma.appSetting.upsert({
     where: { key },
-    update: { value },
-    create: { key, value },
+    update: { value: toJsonValue(value) },
+    create: { key, value: toJsonValue(value) },
   });
 }
 
@@ -46,8 +47,8 @@ export async function setAppSettings(settings: Partial<AppSettings>): Promise<vo
     Object.entries(settings).map(([key, value]) =>
       prisma.appSetting.upsert({
         where: { key },
-        update: { value },
-        create: { key, value },
+        update: { value: toJsonValue(value) },
+        create: { key, value: toJsonValue(value) },
       })
     )
   );
