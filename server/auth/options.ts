@@ -7,6 +7,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import type { RoleKey } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
+import { isActiveUserStatus } from "@/lib/auth/user-status";
 import { env } from "@/lib/env";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { getEnabledOAuthProviders } from "@/server/auth/provider-flags";
@@ -34,7 +35,7 @@ const providers: NonNullable<AuthOptions["providers"]> = [
         where: { email },
         include: { roles: { include: { role: true } } }
       });
-      if (!user?.passwordHash || user.status !== "ACTIVE") {
+      if (!user?.passwordHash || !isActiveUserStatus(user.status)) {
         return null;
       }
       const valid = await verifyPassword(user.passwordHash, password);
@@ -97,7 +98,7 @@ export const authOptions: AuthOptions = {
           where: { email },
           select: { id: true, status: true }
         });
-        if (!user || user.status !== "ACTIVE") return false;
+        if (!user || !isActiveUserStatus(user.status)) return false;
       }
       return true;
     },

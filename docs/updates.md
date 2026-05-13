@@ -2,6 +2,40 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-13 — Credentials login accepts lowercase active status
+
+Автор/agent: Codex
+Тип изменения: bugfix / auth
+
+Файлы/модули:
+
+- `server/auth/options.ts` — credentials and OAuth sign-in now use normalized active-status check instead of strict `"ACTIVE"`.
+- `lib/auth/user-status.ts` — added shared `isActiveUserStatus()` helper.
+- `tests/unit/user-status.test.ts` — added coverage for `active`, `ACTIVE`, inactive and missing statuses.
+- `tests/unit/auth-options.test.ts` — added regression coverage for credentials login with Prisma default `status = "active"`.
+
+Summary:
+
+- Fixed production credentials login returning `401 Unauthorized` for valid issued users when database rows use the Prisma default `status = "active"`.
+- Kept compatibility with uppercase `"ACTIVE"` rows so existing data does not need an immediate migration.
+
+Проверки:
+
+- `npm run lint` — passed
+- `npx vitest run tests/unit/auth-options.test.ts tests/unit/user-status.test.ts tests/integration/login.test.ts` — passed
+- `npm run test` — 104 passed, 23 test files
+- `npm run typecheck` — passed
+
+Риски:
+
+- Production still returns 401 if the target user was not provisioned/seeded or has no password hash.
+- The Vercel deployment must be rebuilt before the deployed URL reflects this fix.
+
+Next steps:
+
+- Redeploy Vercel after merging/pushing this change.
+- If login still fails after redeploy, verify production DB contains the expected user and a non-empty `password_hash`.
+
 ## 2026-05-12 — 8-PR stabilization: build fix, seed/auth, notifications, progress, assignment/quiz access, student UX, reports scoping
 
 Автор/agent: big-pickle
