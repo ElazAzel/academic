@@ -1,7 +1,7 @@
 # Work Plan — AI Strategic Academy LMS
 
 **Date:** 2026-05-13
-**Status:** PR-7..PR-11 complete (PR-1 through PR-11)
+**Status:** PR-1 through PR-12 complete
 
 ---
 
@@ -32,6 +32,7 @@
 | PR-9 | P2 | Lesson Rating API | POST `/api/v1/lessons/[id]/rating` endpoint, wire to existing component | `app/api/v1/lessons/[lessonId]/rating/route.ts`, `components/lms/lesson-rating.tsx` | Rating component now works; POST creates/updates LessonRating; lint/typecheck/test/build pass |
 | PR-10 | P2 | Upload Hardening | Content-type allowlist, max file size validation | `app/api/v1/media/uploads/route.ts` | Allowlist: jpeg, png, gif, webp, pdf, mp4, webm, mpeg, zip (100MB max); lint/typecheck/test/build pass |
 | PR-11 | P2 | Certificate PDF Access Check | Add instructor access validation | `app/api/v1/certificates/[certificateId]/pdf/route.ts` | Now checks owner/instructor/admin; lint/typecheck/test/build pass |
+| PR-12 | P2 | Admin Settings Wiring | Wire AppSetting to feature flags, SMTP, certificates tabs | `server/modules/admin/settings.ts`, `app/admin/settings/page.tsx` | All admin tabs save/load settings; lint/typecheck/test/build pass |
 
 ---
 
