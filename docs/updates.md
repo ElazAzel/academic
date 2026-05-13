@@ -2,6 +2,40 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-13 — Credentials login and CI e2e login stabilization
+
+Автор/agent: Codex
+Тип изменения: bugfix / auth / e2e
+
+Файлы/модули:
+
+- `server/auth/options.ts` — credentials and OAuth sign-in now use normalized active-status check instead of strict `"ACTIVE"`.
+- `lib/auth/user-status.ts` — added shared `isActiveUserStatus()` helper.
+- `tests/unit/user-status.test.ts` — added coverage for `active`, `ACTIVE`, inactive and missing statuses.
+- `tests/unit/auth-options.test.ts` — added regression coverage for credentials login with Prisma default `status = "active"`.
+- `components/auth/login-form.tsx` — submit button now stays disabled until client hydration, preventing native GET form submission during e2e.
+- `tests/e2e/roles.spec.ts` — role login helper waits for hydrated auth form and uses `127.0.0.1` consistently.
+- `.github/workflows/ci.yml` — e2e job now runs `db:push` and `db:seed` before Playwright.
+- `next.config.ts` — added `allowedDevOrigins` for `127.0.0.1` to avoid Next dev-server HMR origin warnings in Playwright.
+
+Summary:
+
+- Fixed credentials login returning `401 Unauthorized` for valid issued users when database rows use the Prisma default `status = "active"`.
+- Kept compatibility with uppercase `"ACTIVE"` rows so existing data does not need an immediate migration.
+- Fixed CI e2e bootstrap so demo-role login tests have schema + seed data before Playwright starts.
+- Reduced e2e login flakiness caused by clicking the form before React hydration.
+
+Проверки:
+
+- `npm run verify` — passed (`eslint --max-warnings=0`, `tsc --noEmit`, Vitest 23 files / 104 tests, `next build`).
+- `npm run test:e2e` — local rerun no longer hits the native GET form-submit timeout, but still cannot pass against the current `.env` because it points at remote Supabase seed data; I did not run `db:push`/`db:seed` against that remote database. CI e2e now prepares its own localhost Postgres with `db:push` + `db:seed` before Playwright.
+
+Риски:
+
+- Production still returns 401 if the target user was not provisioned/seeded or has no password hash.
+- The Vercel deployment must be rebuilt before the deployed URL reflects this fix.
+- Replace the incomplete initial migration with a full generated migration before relying on `prisma migrate deploy` for fresh environments.
+
 ## 2026-05-12 — 8-PR stabilization: build fix, seed/auth, notifications, progress, assignment/quiz access, student UX, reports scoping
 
 Автор/agent: big-pickle

@@ -1,7 +1,7 @@
 import { expect, test, type Page, request } from "@playwright/test";
 
 const SEED_PASSWORD = "Password123!";
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://127.0.0.1:3000";
 
 test.beforeAll(async () => {
   const ctx = await request.newContext();
@@ -15,6 +15,7 @@ test.beforeAll(async () => {
 
 async function loginAs(page: Page, email: string, password: string = SEED_PASSWORD) {
   await page.goto("/login", { waitUntil: "load" });
+  await expect(page.locator('form[data-auth-ready="true"]')).toBeVisible();
   await page.getByLabel("Логин / Email").fill(email);
   await page.getByLabel("Пароль").fill(password);
   await page.getByRole("button", { name: "Войти" }).click();

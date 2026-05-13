@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
@@ -11,11 +11,16 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const hasOAuth = oauthProviders.google || oauthProviders.github;
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending) {
+    if (pending || !hydrated) {
       return;
     }
 
@@ -47,7 +52,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
   }
 
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
+    <form className="space-y-4" onSubmit={onSubmit} data-auth-ready={hydrated ? "true" : "false"}>
       <label className="block text-sm font-medium">
         Логин / Email
         <Input className="mt-2" name="email" type="email" required autoComplete="email" onChange={() => setError("")} />
@@ -57,7 +62,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
         <Input className="mt-2" name="password" type="password" required autoComplete="current-password" onChange={() => setError("")} />
       </label>
       {error ? <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}
-      <Button className="w-full" type="submit" disabled={pending}>
+      <Button className="w-full" type="submit" disabled={pending || !hydrated}>
         {pending ? "Входим..." : "Войти"}
       </Button>
       {hasOAuth ? (
