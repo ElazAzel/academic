@@ -13,7 +13,6 @@ import { updateProfileSettingsAction, updatePasswordAction, getAppSettingsAction
 const FEATURE_FLAGS = [
   { key: "FEATURE_PUSH_NOTIFICATIONS", label: "Push-уведомления" },
   { key: "FEATURE_GRAPHQL", label: "GraphQL API" },
-  { key: "FEATURE_TELEGRAM_NOTIFICATIONS", label: "Telegram-уведомления" },
 ];
 
 export default async function AdminSettingsPage() {

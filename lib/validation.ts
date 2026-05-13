@@ -66,6 +66,14 @@ export const certificateIssueSchema = z.object({
   courseId: z.string().min(1)
 });
 
+export const profileSchema = z.object({
+  name: z.string().trim().min(1).max(160).optional(),
+  phone: z.string().trim().max(30).optional(),
+  organization: z.string().trim().max(200).optional(),
+  company: z.string().trim().max(200).optional(),
+  position: z.string().trim().max(200).optional(),
+});
+
 export const checkoutSchema = z.object({
   courseId: z.string().min(1),
   priceCents: z.number().int().positive(),

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { CourseStatus, LessonType } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
@@ -23,8 +24,9 @@ export async function assertInstructorOfCourse(actorId: string, courseId: string
   }
 }
 
-export async function listCourses(status?: CourseStatus, instructorId?: string) {
+export const listCourses = cache(async (status?: CourseStatus, instructorId?: string) => {
   return prisma.course.findMany({
+    take: 50,
     where: {
       ...(status ? { status } : {}),
       ...(instructorId ? { instructors: { some: { userId: instructorId } } } : {})
@@ -38,23 +40,61 @@ export async function listCourses(status?: CourseStatus, instructorId?: string) 
       instructors: { include: { user: { select: { id: true, name: true, email: true } } } }
     }
   });
-}
+});
 
-export async function getCourse(courseId: string) {
+export const getCourse = cache(async (courseId: string) => {
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      goal: true,
+      coverUrl: true,
+      durationHours: true,
+      status: true,
+      traversalMode: true,
+      completionThreshold: true,
+      publishedAt: true,
+      archivedAt: true,
+      createdAt: true,
+      updatedAt: true,
       modules: {
         orderBy: { order: "asc" },
-        include: {
+        select: {
+          id: true,
+          order: true,
+          title: true,
+          description: true,
+          recommendedDays: true,
+          status: true,
           lessons: {
             orderBy: { order: "asc" },
-            include: { quizzes: true, assignments: true }
+            select: {
+              id: true,
+              order: true,
+              title: true,
+              type: true,
+              summary: true,
+              durationMinutes: true,
+              isRequired: true,
+              quizzes: true,
+              assignments: true
+            }
           },
           deadlines: true
         }
       },
-      cohorts: true,
+      cohorts: {
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          startsAt: true,
+          endsAt: true
+        }
+      },
       instructors: { include: { user: { select: { id: true, name: true, email: true } } } }
     }
   });
@@ -62,7 +102,7 @@ export async function getCourse(courseId: string) {
     throw new ApiError("not_found", "Курс не найден", 404);
   }
   return course;
-}
+});
 
 export async function createCourse(input: {
   title: string;

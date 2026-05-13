@@ -108,6 +108,10 @@ model User {
   passwordHash    String?   @map("password_hash")
   emailVerified   DateTime? @map("email_verified")
   locale          String    @default("ru")
+  phone           String?
+  organization    String?
+  company         String?
+  position        String?
   // TODO: migrate to UserAccountStatus enum in dedicated PR
   status          String    @default("active")
   lastLoginAt     DateTime? @map("last_login_at")
@@ -303,6 +307,7 @@ model Course {
 
   @@index([createdAt])
   @@index([status])
+  @@index([status, createdAt])
   @@map("courses")
 }
 
@@ -315,6 +320,7 @@ model CourseInstructor {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([courseId, userId])
+  @@index([userId])
   @@map("course_instructors")
 }
 

@@ -6,19 +6,33 @@ import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { revalidatePath } from "next/cache";
 import { getUserNotificationPreferences, setNotificationPreferences, type NotificationChannel } from "@/server/modules/notifications/preferences";
 import { getAllAppSettings, setAppSettings, type AppSettings } from "@/server/modules/admin/settings";
+import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
+
+import { profileSchema } from "@/lib/validation";
 
 export async function updateProfileSettingsAction(formData: FormData) {
   try {
     const user = await requireUser();
-    const name = formData.get("name") as string;
+    const raw = Object.fromEntries(formData.entries());
+    const data = profileSchema.parse(raw);
 
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        name: name || undefined
+        name: data.name ?? undefined,
+        phone: data.phone ?? null,
+        organization: data.organization ?? null,
+        company: data.company ?? null,
+        position: data.position ?? null,
       }
+    });
+
+    await createNotification({
+      userId: user.id,
+      event: "profile_updated",
+      channel: "email",
     });
 
     revalidatePath("/", "layout");
@@ -56,6 +70,12 @@ export async function updatePasswordAction(formData: FormData) {
     await prisma.user.update({
       where: { id: dbUser.id },
       data: { passwordHash: newHash }
+    });
+
+    await createNotification({
+      userId: userSession.id,
+      event: "password_changed",
+      channel: "email",
     });
   } catch (err) {
     throw err instanceof Error ? err : new Error("Failed to update password");

@@ -50,6 +50,11 @@ export function NotificationsDropdown() {
     if (open) fetchNotifications();
   }, [open, fetchNotifications]);
 
+  useEffect(() => {
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
   async function markAllRead() {
     try {
       await fetch("/api/v1/notifications", {

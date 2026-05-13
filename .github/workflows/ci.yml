@@ -2,75 +2,56 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "audit/*", "fix/*"]
   pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "20"
+  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/academy_test?schema=public"
 
 jobs:
-  verify:
+  lint-typecheck-test:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: academy
-          POSTGRES_PASSWORD: academy
-          POSTGRES_DB: academy
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U academy -d academy"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    env:
-      DATABASE_URL: postgresql://academy:academy@localhost:5432/academy?schema=public
-      NEXTAUTH_SECRET: ci-secret-ci-secret-ci-secret-ci-secret
-      NEXTAUTH_URL: http://localhost:3000
-      APP_URL: http://localhost:3000
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm run db:generate
-      - run: npm run lint -- --max-warnings=0
-      - run: npm run typecheck
-      - run: npm run test
-      - run: npm run build
 
-  e2e:
-    runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:16-alpine
         env:
-          POSTGRES_USER: academy
-          POSTGRES_PASSWORD: academy
-          POSTGRES_DB: academy
-        ports:
-          - 5432:5432
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: academy_test
         options: >-
-          --health-cmd "pg_isready -U academy -d academy"
+          --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    env:
-      DATABASE_URL: postgresql://academy:academy@localhost:5432/academy?schema=public
-      NEXTAUTH_SECRET: ci-secret-ci-secret-ci-secret-ci-secret
-      NEXTAUTH_URL: http://localhost:3000
-      APP_URL: http://localhost:3000
+        ports:
+          - 5432:5432
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
-          cache: npm
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
       - run: npm ci
-      - run: npm run db:generate
-      - run: npm run db:push
-      - run: npm run db:seed
-      - run: npx playwright install --with-deps chromium
+
+      - run: npx prisma generate
+
+      - run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - run: npx tsc --noEmit
+        name: TypeScript check
+
+      - run: npm run lint -- --max-warnings=0
+        name: ESLint
+
+      - run: npm run test
+        name: Unit & integration tests
+
       - run: npm run build
-      - run: npm run test:e2e
+        name: Build

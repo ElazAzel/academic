@@ -39,9 +39,11 @@ const envSchema = z.object({
   S3_SECRET_KEY: z.string().default("minio123"),
   S3_FORCE_PATH_STYLE: z.coerce.boolean().default(true),
 
-  // Feature flags
+  // Push notifications (Firebase)
   FEATURE_PUSH_NOTIFICATIONS: z.coerce.boolean().default(false),
-  FEATURE_TELEGRAM_NOTIFICATIONS: z.coerce.boolean().default(false),
+  FIREBASE_CLIENT_EMAIL: z.string().optional(),
+  FIREBASE_PRIVATE_KEY: z.string().optional(),
+  FIREBASE_PROJECT_ID: z.string().optional(),
 
   // Monitoring
   SENTRY_DSN: z.string().optional(),

@@ -38,7 +38,9 @@ export type NotificationEvent =
   | "certificate_available"
   | "curator_assigned"
   | "question_received"
-  | "question_forwarded";
+  | "question_forwarded"
+  | "password_changed"
+  | "profile_updated";
 
 const templates: Record<NotificationEvent, { title: string; body: string }> = {
   access_granted: { title: "Доступ выдан", body: "Вам открыт доступ к учебной программе." },
@@ -52,7 +54,9 @@ const templates: Record<NotificationEvent, { title: string; body: string }> = {
   certificate_available: { title: "Сертификат доступен", body: "Сертификат можно скачать в кабинете." },
   curator_assigned: { title: "Куратор назначен", body: "Теперь у вас есть ответственный куратор." },
   question_received: { title: "Новый вопрос", body: "Слушатель задал вопрос по уроку." },
-  question_forwarded: { title: "Вопрос переадресован", body: "Ваш вопрос передан инструктору." }
+  question_forwarded: { title: "Вопрос переадресован", body: "Ваш вопрос передан инструктору." },
+  password_changed: { title: "Пароль изменён", body: "Пароль от вашей учётной записи успешно изменён." },
+  profile_updated: { title: "Профиль обновлён", body: "Данные вашего профиля успешно обновлены." }
 };
 
 export function renderNotificationTemplate(event: NotificationEvent, overrides?: Partial<{ title: string; body: string }>) {
@@ -103,5 +107,12 @@ export async function listNotifications(userId: string) {
     where: { userId },
     orderBy: { createdAt: "desc" },
     take: 100
+  });
+}
+
+export async function markAllNotificationsAsRead(userId: string) {
+  return prisma.notification.updateMany({
+    where: { userId, readAt: null },
+    data: { readAt: new Date(), status: "READ" }
   });
 }

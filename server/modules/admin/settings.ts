@@ -10,7 +10,6 @@ export interface AppSettings {
 const DEFAULT_SETTINGS: AppSettings = {
   FEATURE_PUSH_NOTIFICATIONS: false,
   FEATURE_GRAPHQL: false,
-  FEATURE_TELEGRAM_NOTIFICATIONS: false,
   SMTP_HOST: "localhost",
   SMTP_PORT: "1025",
   SMTP_FROM: "AI Strategic Academy <noreply@example.com>",

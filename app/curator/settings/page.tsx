@@ -7,6 +7,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { Avatar } from "@/components/ui/avatar";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getProfile } from "@/server/modules/auth/service";
 import { updateProfileSettingsAction, updatePasswordAction, getNotificationPreferencesAction, updateNotificationPreferencesAction } from "@/server/actions/settings";
 
 const NOTIFICATION_CHANNELS = [
@@ -20,6 +21,7 @@ const NOTIFICATION_CHANNELS = [
 export default async function CuratorSettingsPage() {
   await requireRolePage(["curator", "super_curator"]);
   const user = await getCurrentUser();
+  const profile = user ? await getProfile(user.id) : null;
   const prefs = await getNotificationPreferencesAction();
 
   return (
@@ -36,29 +38,29 @@ export default async function CuratorSettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <Avatar name={user?.name ?? ""} className="h-16 w-16 text-lg"/>
+                    <Avatar name={profile?.name ?? ""} className="h-16 w-16 text-lg"/>
                     <div>
-                      <p className="font-medium">{user?.name ?? "Куратор"}</p>
-                      <p className="text-sm text-muted-foreground">{user?.email}</p>
+                      <p className="font-medium">{profile?.name ?? "Куратор"}</p>
+                      <p className="text-sm text-muted-foreground">{profile?.email}</p>
                     </div>
                   </div>
                   <Separator/>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="text-sm font-medium">Имя</label>
-                      <input name="name" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={user?.name ?? ""}/>
+                      <input name="name" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={profile?.name ?? ""}/>
                     </div>
                     <div>
                       <label className="text-sm font-medium">Email</label>
-                      <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={user?.email} disabled/>
+                      <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={profile?.email} disabled/>
                     </div>
                     <div>
                       <label className="text-sm font-medium">Телефон</label>
-                      <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="+7 (___) ___-__-__"/>
+                      <input name="phone" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={profile?.phone ?? ""} placeholder="+7 (___) ___-__-__"/>
                     </div>
                     <div>
                       <label className="text-sm font-medium">Организация</label>
-                      <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Название организации"/>
+                      <input name="organization" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={profile?.organization ?? ""} placeholder="Название организации"/>
                     </div>
                   </div>
                   <div className="flex justify-end">
