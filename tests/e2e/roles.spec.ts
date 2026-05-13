@@ -8,14 +8,22 @@ async function loginAs(page: Page, email: string, password: string = SEED_PASSWO
   await page.getByLabel("Пароль").fill(password);
   await page.getByRole("button", { name: "Войти" }).click();
 
-  // The login form uses client-side navigation (router.replace) after a fetch to /api/auth/callback.
-  // Wait for the URL to change away from /login, but also watch for the error alert.
-  const result = await Promise.race([
-    page.waitForURL((url: URL) => !url.pathname.includes("/login"), { timeout: 15_000 }).then(() => "success"),
-    page.locator('[role="alert"]').waitFor({ timeout: 15_000 }).then(() => "error"),
-  ]);
+  // Wait for successful navigation OR an error alert, with explicit error handling
+  const navigationPromise = page.waitForURL((url: URL) => !url.pathname.includes("/login"), { timeout: 15_000 });
+  const errorPromise = page.locator('[role="alert"]').waitFor({ timeout: 15_000 });
 
-  if (result === "error") {
+  try {
+    await Promise.race([
+      navigationPromise.then(() => "success"),
+      errorPromise.then(() => "error"),
+    ]);
+  } catch {
+    throw new Error(`Login timeout for ${email}: Navigation didn't complete and no error alert appeared within 15s. Check if the app is running and the DB is seeded.`);
+  }
+
+  // Check if an error alert is currently visible
+  const isErrorVisible = await page.locator('[role="alert"]').isVisible().catch(() => false);
+  if (isErrorVisible) {
     const errorText = await page.locator('[role="alert"]').textContent().catch(() => "unknown");
     throw new Error(`Login failed for ${email}: ${errorText}. Ensure DB is seeded (npm run users:create).`);
   }
