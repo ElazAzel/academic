@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
+import { UserAccountStatus } from "@prisma/client";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getAssignableRolesForActor, listUsers, countUsers } from "@/server/modules/users/service";
 import { ROLE_LABELS, type RoleKey } from "@/types/domain";
@@ -70,8 +71,8 @@ export default async function AdminUsersPage(props: { searchParams?: Promise<{ p
              </div>
             </TableCell>
             <TableCell>
-             <Badge className={user.status === "active" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}>
-              {user.status === "active" ? "Активен" : "Заблокирован"}
+             <Badge className={user.status === UserAccountStatus.ACTIVE ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}>
+               {user.status === UserAccountStatus.ACTIVE ? "Активен" : "Заблокирован"}
              </Badge>
             </TableCell>
             <TableCell className="text-xs text-muted-foreground">{user.lastLoginAt?.toISOString().slice(0, 10) ?? "не входил"}</TableCell>

@@ -53,5 +53,19 @@ jobs:
       - run: npm run test
         name: Unit & integration tests
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e
+        name: E2E tests
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+          NEXTAUTH_SECRET: ci-test-secret-32chars-minimum-length!!
+          APP_URL: http://127.0.0.1:3000
+          GOOGLE_CLIENT_ID: ""
+          GOOGLE_CLIENT_SECRET: ""
+          GITHUB_CLIENT_ID: ""
+          GITHUB_CLIENT_SECRET: ""
+
       - run: npm run build
         name: Build

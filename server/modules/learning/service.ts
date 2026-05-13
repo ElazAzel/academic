@@ -1,4 +1,4 @@
-import { EnrollmentStatus, Prisma, ProgressStatus } from "@prisma/client";
+import { EnrollmentStatus, Prisma, ProgressStatus, QuestionStatus } from "@prisma/client";
 import { ApiError } from "@/lib/http";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
@@ -380,7 +380,7 @@ export async function getStudentCoursePlayerDetail(userId: string, courseId: str
     });
     if (assignment?.active && assignment.curator) {
       const unansweredCount = await prisma.lessonQuestion.count({
-        where: { studentId: userId, status: "open" }
+        where: { studentId: userId, status: QuestionStatus.OPEN }
       });
       detail.curator = { name: assignment.curator.name ?? "Куратор", unansweredCount };
     }
@@ -523,7 +523,7 @@ export async function getLessonForStudent(userId: string, lessonId: string): Pro
     myQuestions: lesson.questions.map<LessonQuestionSummary>((question) => ({
       id: question.id,
       text: question.text,
-      status: question.status === "answered" ? "answered" : "open",
+      status: question.status === QuestionStatus.ANSWERED ? "answered" : "open",
       createdAt: question.createdAt.toISOString(),
       answer: question.answer,
       answeredAt: question.answeredAt?.toISOString() ?? null

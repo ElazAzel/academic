@@ -11,8 +11,8 @@ export default async function SuperCuratorQuestionsPage() {
  await requireRolePage(["super_curator"]);
 
  const [open, answered] = await Promise.all([
-  getSuperCuratorQuestions("open"),
-  getSuperCuratorQuestions("answered"),
+   getSuperCuratorQuestions("OPEN"),
+   getSuperCuratorQuestions("ANSWERED"),
  ]);
 
  return (

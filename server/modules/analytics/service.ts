@@ -1,3 +1,4 @@
+import { UserAccountStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 
 const prisma = getPrisma();
@@ -13,7 +14,7 @@ export async function getAdminOverview() {
     activeInviteLinks,
     inviteActivationStats
   ] = await Promise.all([
-    prisma.user.count({ where: { status: "active" } }),
+    prisma.user.count({ where: { status: UserAccountStatus.ACTIVE } }),
     prisma.course.count(),
     prisma.enrollment.count(),
     prisma.courseProgress.count({ where: { status: "COMPLETED" } }),

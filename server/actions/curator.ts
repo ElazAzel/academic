@@ -46,7 +46,7 @@ export async function answerQuestionAction(questionId: string, answer: string) {
     where: { id: questionId },
     data: {
       answer,
-      status: "answered",
+      status: "ANSWERED",
       answeredAt: new Date(),
       curatorId: actor.id
     }
@@ -151,7 +151,7 @@ export async function forwardQuestionAction(questionId: string) {
   await prisma.lessonQuestion.update({
     where: { id: questionId },
     data: {
-      status: "forwarded"
+      status: "FORWARDED"
     }
   });
 
@@ -203,7 +203,7 @@ export async function answerForwardedQuestionAction(formData: FormData) {
       lesson: { include: { module: { include: { course: { include: { instructors: { select: { userId: true } } } } } } } }
     }
   });
-  if (!question || question.status !== "forwarded") {
+  if (!question || question.status !== "FORWARDED") {
     throw new Error("Вопрос не найден или не был переадресован");
   }
 
@@ -220,7 +220,7 @@ export async function answerForwardedQuestionAction(formData: FormData) {
     where: { id: questionId },
     data: {
       answer,
-      status: "answered",
+      status: "ANSWERED",
       answeredAt: new Date()
     }
   });

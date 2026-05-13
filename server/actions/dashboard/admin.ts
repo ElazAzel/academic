@@ -1,0 +1,126 @@
+"use server";
+
+import { safeQuery, getStudentAnalyticsDetail } from "./shared";
+import { prisma } from "@/lib/prisma";
+import { requireRole } from "@/lib/auth/page-guards";
+import type {
+  CourseSummary,
+  CohortSummary,
+  InviteLinkSummary,
+  CertificateSummary,
+  DashboardMetric,
+  StudentAnalyticsDetail,
+} from "@/types/domain";
+
+export async function getAdminDashboard() {
+  await requireRole(["admin"]);
+  return safeQuery(async () => {
+    const [
+      coursesCount,
+      cohortsCount,
+      usersCount,
+      certsCount,
+      courses,
+      cohorts,
+      invites,
+      certificates
+    ] = await Promise.all([
+      prisma.course.count(),
+      prisma.cohort.count(),
+      prisma.user.count(),
+      prisma.certificate.count(),
+      prisma.course.findMany({
+        orderBy: { createdAt: "desc" },
+        include: {
+          modules: { include: { _count: { select: { lessons: true } } } },
+          instructors: { include: { user: { select: { id: true, name: true, email: true } } } },
+          _count: { select: { modules: true } },
+        },
+      }),
+      prisma.cohort.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { course: { select: { title: true } }, _count: { select: { enrollments: true } } },
+      }),
+      prisma.inviteLink.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { course: { select: { title: true } }, cohort: { select: { name: true } } },
+      }),
+      prisma.certificate.findMany({
+        orderBy: { issuedAt: "desc" },
+        take: 20,
+        include: { user: { select: { name: true } }, course: { select: { title: true } } },
+      }),
+    ]);
+
+    const formattedCourses: CourseSummary[] = courses.map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      title: c.title,
+      description: c.description,
+      coverUrl: c.coverUrl,
+      durationHours: c.durationHours,
+      status: c.status as CourseSummary["status"],
+      traversalMode: c.traversalMode as "sequential" | "open",
+      modulesCount: c._count.modules,
+      blocksCount: 0,
+      lessonsCount: c.modules.reduce((sum, m) => sum + m._count.lessons, 0),
+      instructors: c.instructors.map((ci) => ({
+        id: ci.user.id,
+        name: ci.user.name ?? "",
+        email: ci.user.email,
+      })),
+    }));
+
+    const formattedCohorts: CohortSummary[] = cohorts.map((c) => ({
+      id: c.id,
+      name: c.name,
+      courseTitle: c.course?.title ?? "",
+      startsAt: c.startsAt?.toISOString().slice(0, 10) ?? null,
+      endsAt: c.endsAt?.toISOString().slice(0, 10) ?? null,
+      status: c.status,
+      studentsCount: c._count.enrollments,
+    }));
+
+    const formattedInvites: InviteLinkSummary[] = invites.map((i) => ({
+      id: i.id,
+      token: i.token,
+      courseTitle: i.course?.title,
+      cohortName: i.cohort?.name,
+      maxActivations: i.maxActivations,
+      activationCount: i.activationCount,
+      expiresAt: i.expiresAt?.toISOString().slice(0, 10) ?? null,
+      status: i.status,
+    }));
+
+    const formattedCerts: CertificateSummary[] = certificates.map((c) => ({
+      id: c.id,
+      number: c.number,
+      courseTitle: c.course.title,
+      studentName: c.user.name ?? "",
+      issuedAt: c.issuedAt.toISOString(),
+      verificationUrl: c.verificationUrl,
+    }));
+
+    const metrics: DashboardMetric[] = [
+      { label: "Курсы", value: coursesCount, tone: "primary" },
+      { label: "Потоки", value: cohortsCount, tone: "info" },
+      { label: "Пользователи", value: usersCount, tone: "success" },
+      { label: "Сертификаты", value: certsCount, tone: "warning" },
+    ];
+
+    return { metrics, courses: formattedCourses, cohorts: formattedCohorts, invites: formattedInvites, certificates: formattedCerts };
+  }, null);
+}
+
+export async function getAdminStudentAnalytics(): Promise<StudentAnalyticsDetail[]> {
+  await requireRole(["admin"]);
+
+  return safeQuery(async () => {
+    const enrollments = await prisma.enrollment.findMany({
+      where: { status: "ACTIVE" },
+      select: { userId: true },
+    });
+    const studentIds = [...new Set(enrollments.map((e) => e.userId))];
+    return getStudentAnalyticsDetail(studentIds);
+  }, []);
+}

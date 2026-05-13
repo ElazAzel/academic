@@ -82,7 +82,8 @@ export async function getCourseForStudent(courseId: string): Promise<CourseDetai
       })),
       modules,
     };
-  } catch {
+  } catch (err) {
+    console.error("getCourseForStudent error:", err);
     return null;
   }
 }
@@ -144,7 +145,8 @@ export async function getLessonForStudent(lessonId: string): Promise<LessonDetai
         maxAttempts: a.maxAttempts,
       })),
     };
-  } catch {
+  } catch (err) {
+    console.error("getLessonForStudent error:", err);
     return null;
   }
 }
@@ -171,7 +173,7 @@ export async function askCuratorQuestion(lessonId: string, text: string) {
       studentId: user.id,
       curatorId: curatorAssignment?.curatorId ?? null,
       text,
-      status: "open",
+      status: "OPEN",
     },
   });
 

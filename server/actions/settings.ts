@@ -113,7 +113,7 @@ export async function updateNotificationPreferencesAction(formData: FormData) {
 
 export async function getAppSettingsAction() {
   try {
-    await requireUser("users:read");
+    await requireUser("settings:manage");
     return await getAllAppSettings();
   } catch (err) {
     throw err instanceof Error ? err : new Error("Failed to get app settings");
@@ -122,7 +122,7 @@ export async function getAppSettingsAction() {
 
 export async function updateAppSettingsAction(formData: FormData) {
   try {
-    await requireUser("users:read");
+    await requireUser("settings:manage");
     const settings: Partial<AppSettings> = {};
 
     for (const [key, value] of formData.entries()) {

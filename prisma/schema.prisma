@@ -112,8 +112,7 @@ model User {
   organization    String?
   company         String?
   position        String?
-  // TODO: migrate to UserAccountStatus enum in dedicated PR
-  status          String    @default("active")
+  status          UserAccountStatus @default(ACTIVE)
   lastLoginAt     DateTime? @map("last_login_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
@@ -681,8 +680,7 @@ model LessonQuestion {
   curatorId   String?  @map("curator_id")
   text        String   @db.Text
   answer      String?  @db.Text
-  // TODO: migrate to QuestionStatus enum in dedicated PR
-  status      String   @default("open")
+  status      QuestionStatus @default(OPEN)
   attachments Json     @default("[]")
   createdAt   DateTime @default(now()) @map("created_at")
   answeredAt  DateTime? @map("answered_at")

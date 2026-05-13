@@ -1,3 +1,5 @@
-export function isActiveUserStatus(status: string | null | undefined) {
-  return status?.trim().toLowerCase() === "active";
+import { UserAccountStatus } from "@prisma/client";
+
+export function isActiveUserStatus(status: UserAccountStatus | null | undefined) {
+  return status === UserAccountStatus.ACTIVE;
 }

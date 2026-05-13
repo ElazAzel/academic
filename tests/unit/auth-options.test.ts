@@ -1,4 +1,4 @@
-import type { RoleKey } from "@prisma/client";
+import { UserAccountStatus, type RoleKey } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
@@ -73,7 +73,7 @@ describe("credentials provider authorization", () => {
       name: "Admin",
       image: null,
       passwordHash: "hashed-password",
-      status: "active",
+      status: UserAccountStatus.ACTIVE,
       roles: [{ role: { key: "admin" satisfies RoleKey } }],
     });
     mockUserUpdate.mockResolvedValue({});

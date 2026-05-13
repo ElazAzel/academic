@@ -6,6 +6,7 @@ import { BarChart, DonutChart } from "@/components/lms/bar-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import type { DashboardMetric } from "@/types/domain";
+import { UserAccountStatus } from "@prisma/client";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { getAdminStudentAnalytics } from "@/server/actions/dashboard";
@@ -42,7 +43,7 @@ export default async function AdminAnalyticsPage() {
     recentUsers,
     roleGroups,
   ] = await Promise.all([
-    prisma.user.count({ where: { status: "active" } }),
+    prisma.user.count({ where: { status: UserAccountStatus.ACTIVE } }),
     prisma.courseProgress.aggregate({ _avg: { percent: true } }),
     prisma.courseProgress.count({ where: { status: "COMPLETED" } }),
     prisma.certificate.count(),
@@ -77,8 +78,8 @@ export default async function AdminAnalyticsPage() {
   }) : [];
   const roleMap = new Map(roles.map((r) => [r.id, r]));
 
-  const activeFromStatus = usersByStatus.find((u) => u.status === "active")?._count._all ?? 0;
-  const inactiveFromStatus = usersByStatus.find((u) => u.status === "inactive")?._count._all ?? 0;
+  const activeFromStatus = usersByStatus.find((u) => u.status === UserAccountStatus.ACTIVE)?._count._all ?? 0;
+  const inactiveFromStatus = usersByStatus.find((u) => u.status === UserAccountStatus.INACTIVE)?._count._all ?? 0;
 
   const metrics: DashboardMetric[] = [
     { label: "Активных пользователей", value: activeUsersCount, tone: "primary" },
@@ -195,7 +196,7 @@ export default async function AdminAnalyticsPage() {
                         recentUsers.map((u) => (
                           <div key={u.email} className="flex items-center justify-between text-xs">
                             <span className="truncate max-w-[120px]">{u.name ?? u.email}</span>
-                            <span className={u.status === "active" ? "text-green-600" : "text-red-600"}>{u.status}</span>
+                            <span className={u.status === UserAccountStatus.ACTIVE ? "text-green-600" : "text-red-600"}>{u.status === UserAccountStatus.ACTIVE ? "Активен" : u.status === UserAccountStatus.INACTIVE ? "Неактивен" : u.status === UserAccountStatus.BLOCKED ? "Заблокирован" : "Удален"}</span>
                           </div>
                         ))
                       )}
