@@ -2,7 +2,7 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
-## 2026-05-13 — Credentials login accepts lowercase active status
+## 2026-05-13 — Credentials login and CI e2e login stabilization
 
 Автор/agent: Codex
 Тип изменения: bugfix / auth
@@ -13,11 +13,17 @@
 - `lib/auth/user-status.ts` — added shared `isActiveUserStatus()` helper.
 - `tests/unit/user-status.test.ts` — added coverage for `active`, `ACTIVE`, inactive and missing statuses.
 - `tests/unit/auth-options.test.ts` — added regression coverage for credentials login with Prisma default `status = "active"`.
+- `components/auth/login-form.tsx` — submit button now stays disabled until client hydration, preventing native GET form submission during e2e.
+- `tests/e2e/roles.spec.ts` — role login helper waits for hydrated auth form and uses `127.0.0.1` consistently.
+- `.github/workflows/ci.yml` — e2e job now runs `db:push` and `db:seed` before Playwright.
+- `next.config.ts` — added `allowedDevOrigins` for `127.0.0.1` to avoid Next dev-server HMR origin warnings in Playwright.
 
 Summary:
 
 - Fixed production credentials login returning `401 Unauthorized` for valid issued users when database rows use the Prisma default `status = "active"`.
 - Kept compatibility with uppercase `"ACTIVE"` rows so existing data does not need an immediate migration.
+- Fixed CI e2e bootstrap so demo-role login tests have schema + seed data before Playwright starts.
+- Reduced e2e login flakiness caused by clicking the form before React hydration.
 
 Проверки:
 
@@ -30,11 +36,13 @@ Summary:
 
 - Production still returns 401 if the target user was not provisioned/seeded or has no password hash.
 - The Vercel deployment must be rebuilt before the deployed URL reflects this fix.
+- Local Playwright was not run against `.env` to avoid mutating a non-CI database with `db:push/db:seed`.
 
 Next steps:
 
 - Redeploy Vercel after merging/pushing this change.
 - If login still fails after redeploy, verify production DB contains the expected user and a non-empty `password_hash`.
+- Replace the incomplete initial migration with a full generated migration before relying on `prisma migrate deploy` for fresh environments.
 
 ## 2026-05-12 — 8-PR stabilization: build fix, seed/auth, notifications, progress, assignment/quiz access, student UX, reports scoping
 
