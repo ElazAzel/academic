@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/academy_test?schema=public"
 
 jobs:
@@ -44,6 +44,11 @@ jobs:
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
+      - run: npm run db:seed
+        name: Seed database
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
       - run: npx tsc --noEmit
         name: TypeScript check
 
@@ -61,11 +66,8 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
           NEXTAUTH_SECRET: ci-test-secret-32chars-minimum-length!!
+          NEXTAUTH_URL: http://127.0.0.1:3000
           APP_URL: http://127.0.0.1:3000
-          GOOGLE_CLIENT_ID: ""
-          GOOGLE_CLIENT_SECRET: ""
-          GITHUB_CLIENT_ID: ""
-          GITHUB_CLIENT_SECRET: ""
 
       - run: npm run build
         name: Build

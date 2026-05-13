@@ -88,6 +88,6 @@
     "config": "prisma.config.ts"
   },
   "engines": {
-    "node": ">=24 <25"
+    "node": ">=20 <23"
   }
 }
