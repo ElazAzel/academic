@@ -5,6 +5,7 @@
 ## 2026-05-13 — Credentials login and CI e2e login stabilization
 
 Автор/agent: Codex
+Тип изменения: bugfix / auth
 Тип изменения: bugfix / auth / e2e
 
 Файлы/модули:
@@ -20,6 +21,7 @@
 
 Summary:
 
+- Fixed production credentials login returning `401 Unauthorized` for valid issued users when database rows use the Prisma default `status = "active"`.
 - Fixed credentials login returning `401 Unauthorized` for valid issued users when database rows use the Prisma default `status = "active"`.
 - Kept compatibility with uppercase `"ACTIVE"` rows so existing data does not need an immediate migration.
 - Fixed CI e2e bootstrap so demo-role login tests have schema + seed data before Playwright starts.
@@ -27,6 +29,10 @@ Summary:
 
 Проверки:
 
+- `npm run lint` — passed
+- `npx vitest run tests/unit/auth-options.test.ts tests/unit/user-status.test.ts tests/integration/login.test.ts` — passed
+- `npm run test` — 104 passed, 23 test files
+- `npm run typecheck` — passed
 - `npm run verify` — passed (`eslint --max-warnings=0`, `tsc --noEmit`, Vitest 23 files / 104 tests, `next build`).
 - `npm run test:e2e` — local rerun no longer hits the native GET form-submit timeout, but still cannot pass against the current `.env` because it points at remote Supabase seed data; I did not run `db:push`/`db:seed` against that remote database. CI e2e now prepares its own localhost Postgres with `db:push` + `db:seed` before Playwright.
 
@@ -34,6 +40,12 @@ Summary:
 
 - Production still returns 401 if the target user was not provisioned/seeded or has no password hash.
 - The Vercel deployment must be rebuilt before the deployed URL reflects this fix.
+- Local Playwright was not run against `.env` to avoid mutating a non-CI database with `db:push/db:seed`.
+
+Next steps:
+
+- Redeploy Vercel after merging/pushing this change.
+- If login still fails after redeploy, verify production DB contains the expected user and a non-empty `password_hash`.
 - Replace the incomplete initial migration with a full generated migration before relying on `prisma migrate deploy` for fresh environments.
 
 ## 2026-05-12 — 8-PR stabilization: build fix, seed/auth, notifications, progress, assignment/quiz access, student UX, reports scoping
