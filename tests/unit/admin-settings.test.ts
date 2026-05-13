@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const mockAppSettingFindUnique = vi.hoisted(() => vi.fn());
 const mockAppSettingFindMany = vi.hoisted(() => vi.fn());

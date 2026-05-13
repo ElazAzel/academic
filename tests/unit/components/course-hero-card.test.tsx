@@ -5,7 +5,7 @@ import { CourseHeroCard } from "@/components/lms/course-hero-card";
 import type { StudentCoursePlayerDetail } from "@/types/domain";
 
 vi.mock("next/link", () => ({
-  default: ({ children, ...props }: any) => <a {...props}>{children}</a>,
+  default: ({ children, ...props }: Record<string, unknown>) => <a {...props as Record<string, string>}>{children}</a>,
 }));
 
 function makeDetail(overrides?: Partial<StudentCoursePlayerDetail>): StudentCoursePlayerDetail {
