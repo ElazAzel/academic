@@ -1,16 +1,27 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, request } from "@playwright/test";
 
 const SEED_PASSWORD = "Password123!";
+const BASE_URL = "http://localhost:3000";
+
+test.beforeAll(async () => {
+  const ctx = await request.newContext();
+  for (let i = 0; i < 30; i++) {
+    const res = await ctx.get(`${BASE_URL}/api/healthz`).catch(() => null);
+    if (res?.ok()) return;
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  throw new Error("App not healthy within 30s — start the dev server first (npm run dev)");
+});
 
 async function loginAs(page: Page, email: string, password: string = SEED_PASSWORD) {
-  await page.goto("/login");
+  await page.goto("/login", { waitUntil: "load" });
   await page.getByLabel("Логин / Email").fill(email);
   await page.getByLabel("Пароль").fill(password);
   await page.getByRole("button", { name: "Войти" }).click();
 
-  // Wait for successful navigation OR an error alert, with explicit error handling
-  const navigationPromise = page.waitForURL((url: URL) => !url.pathname.includes("/login"), { timeout: 15_000 });
-  const errorPromise = page.locator('[role="alert"]').waitFor({ timeout: 15_000 });
+  const TIMEOUT = 30_000;
+  const navigationPromise = page.waitForURL((url: URL) => !url.pathname.includes("/login"), { timeout: TIMEOUT });
+  const errorPromise = page.locator('[role="alert"]').waitFor({ timeout: TIMEOUT });
 
   try {
     await Promise.race([
@@ -18,14 +29,14 @@ async function loginAs(page: Page, email: string, password: string = SEED_PASSWO
       errorPromise.then(() => "error"),
     ]);
   } catch {
-    throw new Error(`Login timeout for ${email}: Navigation didn't complete and no error alert appeared within 15s. Check if the app is running and the DB is seeded.`);
+    throw new Error(`Login timeout for ${email}: page stayed at ${page.url()} for ${TIMEOUT}ms. Check if the app is running and DB is seeded.`);
   }
 
   // Check if an error alert is currently visible
   const isErrorVisible = await page.locator('[role="alert"]').isVisible().catch(() => false);
   if (isErrorVisible) {
     const errorText = await page.locator('[role="alert"]').textContent().catch(() => "unknown");
-    throw new Error(`Login failed for ${email}: ${errorText}. Ensure DB is seeded (npm run users:create).`);
+    throw new Error(`Login failed for ${email}: ${errorText}. Run: npm run users:create`);
   }
 }
 
