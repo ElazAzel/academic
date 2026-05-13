@@ -6,6 +6,7 @@ describe("user status normalization", () => {
     expect(isActiveUserStatus("active")).toBe(true);
     expect(isActiveUserStatus("ACTIVE")).toBe(true);
     expect(isActiveUserStatus("Active")).toBe(true);
+    expect(isActiveUserStatus(" active ")).toBe(true);
   });
 
   it("rejects inactive or missing statuses", () => {

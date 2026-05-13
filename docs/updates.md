@@ -6,6 +6,7 @@
 
 Автор/agent: Codex
 Тип изменения: bugfix / auth
+Тип изменения: bugfix / auth / e2e
 
 Файлы/модули:
 
@@ -21,6 +22,7 @@
 Summary:
 
 - Fixed production credentials login returning `401 Unauthorized` for valid issued users when database rows use the Prisma default `status = "active"`.
+- Fixed credentials login returning `401 Unauthorized` for valid issued users when database rows use the Prisma default `status = "active"`.
 - Kept compatibility with uppercase `"ACTIVE"` rows so existing data does not need an immediate migration.
 - Fixed CI e2e bootstrap so demo-role login tests have schema + seed data before Playwright starts.
 - Reduced e2e login flakiness caused by clicking the form before React hydration.
@@ -31,6 +33,8 @@ Summary:
 - `npx vitest run tests/unit/auth-options.test.ts tests/unit/user-status.test.ts tests/integration/login.test.ts` — passed
 - `npm run test` — 104 passed, 23 test files
 - `npm run typecheck` — passed
+- `npm run verify` — passed (`eslint --max-warnings=0`, `tsc --noEmit`, Vitest 23 files / 104 tests, `next build`).
+- `npm run test:e2e` — local rerun no longer hits the native GET form-submit timeout, but still cannot pass against the current `.env` because it points at remote Supabase seed data; I did not run `db:push`/`db:seed` against that remote database. CI e2e now prepares its own localhost Postgres with `db:push` + `db:seed` before Playwright.
 
 Риски:
 
