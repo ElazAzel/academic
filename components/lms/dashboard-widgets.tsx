@@ -11,7 +11,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar } from "@/components/ui/avatar";
 import { Stagger, CardHover, FadeIn } from "@/components/lms/animations";
 import { AnswerQuestionModal, ReviewSubmissionModal } from "./curator-modals";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type {
   ContinueLearning,
   CourseSummary,
@@ -193,7 +192,7 @@ export function CourseManageGrid({ courses }: { courses: CourseSummary[] }) {
           </CardHover>
         </FadeIn>
       ))}
-    </div>
+    </Stagger>
   );
 }
 
