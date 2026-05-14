@@ -421,7 +421,17 @@ export async function getStudentLessonPlayerDetail(userId: string, lessonId: str
     lesson.assignments.map((a) => getAssignmentForStudent(userId, a.id))
   );
 
-  return { lesson, blocks, courseTree: course.modules, quizDetails, assignmentDetails };
+  // Get curator info for chat
+  const assignment = await prisma.curatorAssignment.findFirst({
+    where: { studentId: userId, active: true },
+    include: { curator: { select: { id: true, name: true } } },
+  });
+
+  return {
+    lesson, blocks, courseTree: course.modules, quizDetails, assignmentDetails,
+    curatorId: assignment?.curator.id,
+    curatorName: assignment?.curator.name ?? undefined,
+  };
 }
 
 export async function getModuleForStudent(userId: string, moduleId: string): Promise<StudentModuleLearningDetail> {

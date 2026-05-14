@@ -204,6 +204,8 @@ export interface StudentLessonPlayerDetail {
   courseTree: ModulePlayerDetail[];
   quizDetails: StudentQuizDetail[];
   assignmentDetails: StudentAssignmentDetail[];
+  curatorId?: string;
+  curatorName?: string;
 }
 
 // ── Плеер курса (PR 2) ──────────────────────────────────────────────
