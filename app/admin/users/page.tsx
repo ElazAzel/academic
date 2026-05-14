@@ -13,6 +13,7 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getAssignableRolesForActor, listUsers, countUsers } from "@/server/modules/users/service";
 import { ROLE_LABELS, type RoleKey } from "@/types/domain";
 import { UserManagementToolbar } from "@/components/admin/user-management-toolbar";
+import { EditUserDialog, DeleteUserButton } from "@/components/admin/edit-user-dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,7 @@ export default async function AdminUsersPage(props: { searchParams?: Promise<{ p
           <TableHead>Статус</TableHead>
           <TableHead>Последний вход</TableHead>
           <TableHead>Назначение ролей</TableHead>
+          <TableHead className="text-right">Действия</TableHead>
          </TableRow>
         </TableHeader>
         <TableBody>
@@ -77,8 +79,14 @@ export default async function AdminUsersPage(props: { searchParams?: Promise<{ p
             </TableCell>
             <TableCell className="text-xs text-muted-foreground">{user.lastLoginAt?.toISOString().slice(0, 10) ?? "не входил"}</TableCell>
             <TableCell>
-             <UserRoleEditor userId={user.id} initialRoles={roles} assignableRoles={assignableRoles}/>
-            </TableCell>
+              <UserRoleEditor userId={user.id} initialRoles={roles} assignableRoles={assignableRoles}/>
+             </TableCell>
+             <TableCell className="text-right">
+              <div className="flex items-center justify-end gap-1">
+               <EditUserDialog user={{ id: user.id, name: user.name, email: user.email, status: user.status }} />
+               <DeleteUserButton userId={user.id} />
+              </div>
+             </TableCell>
            </TableRow>
           );
          })}
