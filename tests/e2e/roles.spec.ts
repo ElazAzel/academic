@@ -19,18 +19,31 @@ async function loginAs(page: Page, email: string, password: string = "Password12
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', password);
 
-  // We explicitly click the login button to simulate a real user interaction
-  await page.click('button[type="submit"]');
+  const loginForm = page.locator("form[data-auth-ready]");
+  const submitButton = loginForm.locator('button[type="submit"]');
+  await expect(loginForm).toHaveAttribute("data-auth-ready", "true");
+  await expect(submitButton).toBeEnabled();
 
-  // We wait for either a success redirect OR an error alert
-  // If the redirect doesn't happen, the timeout will trigger
-  await page.waitForTimeout(1000); // Give small time for error to appear if validation failed immediately
-  const isErrorVisible = await page.locator('[role="alert"]').isVisible().catch(() => false);
-  const isCurrentUrlLogin = page.url().includes("/login");
-  if (isErrorVisible && isCurrentUrlLogin) {
-    const errorText = await page.locator('[role="alert"]').textContent().catch(() => "unknown");
-    throw new Error(`Login failed for ${email}: ${errorText}. Run: npm run users:create`);
+  // We explicitly click the login button to simulate a real user interaction
+  await submitButton.click();
+
+  const deadline = Date.now() + 15_000;
+  while (Date.now() < deadline) {
+    const currentPath = new URL(page.url()).pathname;
+    if (currentPath !== "/login") {
+      return;
+    }
+
+    const errorText = ((await loginForm.locator('[role="alert"]').textContent().catch(() => null)) ?? "").trim();
+    if (errorText) {
+      throw new Error(`Login failed for ${email}: ${errorText}. Run: npm run users:create`);
+    }
+
+    await page.waitForTimeout(100);
   }
+
+  const buttonText = (await submitButton.textContent().catch(() => null)) ?? "unknown";
+  throw new Error(`Login did not complete for ${email}; still on ${page.url()} with submit text: ${buttonText}`);
 }
 
 const ROLE_USERS = [
