@@ -8,7 +8,7 @@ import { getStudentAnalyticsDetail } from "@/server/actions/dashboard/shared";
 const prisma = getPrisma();
 
 export async function getCuratorEnhancedStudents() {
-  const user = await requireRole(["curator", "super_curator", "admin"]);
+  await requireRole(["curator", "super_curator", "admin"]);
   const actor = await getCurrentUser();
   if (!actor) return [];
 
@@ -71,7 +71,7 @@ export async function getCuratorEnhancedStudents() {
 }
 
 export async function getCuratorEnhancedRisks() {
-  const user = await requireRole(["curator", "super_curator", "admin"]);
+  await requireRole(["curator", "super_curator", "admin"]);
   const actor = await getCurrentUser();
   if (!actor) return [];
 
@@ -150,7 +150,7 @@ export async function getCuratorEnhancedRisks() {
 }
 
 export async function getCuratorReportData() {
-  const user = await requireRole(["curator", "super_curator", "admin"]);
+  await requireRole(["curator", "super_curator", "admin"]);
   const actor = await getCurrentUser();
   if (!actor) return null;
 

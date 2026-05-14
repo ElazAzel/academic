@@ -3,8 +3,8 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
-import { BarChart, DonutChart } from "@/components/lms/bar-chart";
-import { Download, Users, AlertTriangle, FileSpreadsheet, FileText, TrendingUp, Clock } from "lucide-react";
+import { BarChart } from "@/components/lms/bar-chart";
+import { Download, FileSpreadsheet, FileText, TrendingUp, Users, AlertTriangle, Clock } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getSuperCuratorReportData } from "@/server/actions/super-curator";
 

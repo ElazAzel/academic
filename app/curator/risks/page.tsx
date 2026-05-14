@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart } from "@/components/lms/bar-chart";
-import { Tabs } from "@/components/ui/tabs";
 import { AlertTriangle, UserX, Clock } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorEnhancedRisks } from "@/server/actions/curator-enhanced";

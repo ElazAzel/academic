@@ -1,8 +1,8 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, DonutChart } from "@/components/lms/bar-chart";
-import { Download, Users, AlertTriangle, FileSpreadsheet, FileText, TrendingUp } from "lucide-react";
+import { BarChart } from "@/components/lms/bar-chart";
+import { Download, FileSpreadsheet, FileText } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorReportData } from "@/server/actions/curator-enhanced";
 
