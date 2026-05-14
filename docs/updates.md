@@ -2,6 +2,26 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-13 — Playwright login alert isolation
+
+Автор/agent: Codex
+Тип изменения: bugfix / e2e / hydration
+
+Файлы/модули:
+
+- `tests/e2e/roles.spec.ts` — `loginAs()` now waits only for login-form alerts instead of any `[role="alert"]` on the page.
+- `app/layout.tsx` — added `suppressHydrationWarning` to the root `<html>` element for `next-themes` class/style hydration differences.
+
+Summary:
+
+- Fixed CI Playwright role-login failures where the Next.js/React dev overlay hydration alert was mistaken for a credentials error.
+- Reduced noisy hydration mismatch output from `next-themes` during e2e runs.
+
+Проверки:
+
+- `npm run verify` — passed (`eslint --max-warnings=0`, `tsc --noEmit`, Vitest 40 files / 217 tests, `next build`).
+- Local `npm run test:e2e` was not run because the current local `.env` points at a non-CI database.
+
 ## 2026-05-13 — Credentials login and CI e2e login stabilization
 
 Автор/agent: Codex
