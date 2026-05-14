@@ -34,7 +34,7 @@ async function loginAs(page: Page, email: string, password: string = SEED_PASSWO
   }
 
   // Check if an error alert is currently visible
-  await page.waitForTimeout(500); // Give small time for error to appear if validation failed immediately
+  await page.waitForTimeout(1000); // Give small time for error to appear if validation failed immediately
   const isErrorVisible = await page.locator('[role="alert"]').isVisible().catch(() => false);
   const isCurrentUrlLogin = page.url().includes("/login");
   if (isErrorVisible && isCurrentUrlLogin) {
