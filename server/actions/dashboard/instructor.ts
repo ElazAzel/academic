@@ -210,3 +210,40 @@ export async function getForwardedQuestions() {
     }));
   }, []);
 }
+
+export async function getInstructorStudents() {
+  await requireRole(["instructor", "admin"]);
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  return safeQuery(async () => {
+    const courses = await prisma.course.findMany({
+      where: { instructors: { some: { userId: user.id } } },
+      select: { id: true, title: true },
+    });
+    const courseIds = courses.map((c) => c.id);
+    if (courseIds.length === 0) return [];
+
+    const enrollments = await prisma.enrollment.findMany({
+      where: { courseId: { in: courseIds } },
+      include: {
+        user: { select: { id: true, name: true, email: true, lastLoginAt: true } },
+        course: { select: { title: true } },
+        cohort: { select: { name: true } },
+        courseProgress: { select: { percent: true, status: true } },
+      },
+      orderBy: [{ courseId: "asc" }, { user: { name: "asc" } }],
+    });
+
+    return enrollments.map((e) => ({
+      id: e.user.id,
+      name: e.user.name ?? e.user.email,
+      email: e.user.email,
+      courseTitle: e.course.title,
+      cohortName: e.cohort?.name ?? null,
+      progress: e.courseProgress[0]?.percent ?? 0,
+      progressStatus: e.courseProgress[0]?.status ?? "NOT_STARTED",
+      lastLoginAt: e.user.lastLoginAt?.toISOString() ?? null,
+    }));
+  }, []);
+}
