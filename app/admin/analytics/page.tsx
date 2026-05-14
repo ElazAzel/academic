@@ -10,6 +10,8 @@ import { UserAccountStatus } from "@prisma/client";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { getAdminStudentAnalytics } from "@/server/actions/dashboard";
+import { getActivityAnalytics } from "@/server/actions/activity-analytics";
+import { ActivityFilters } from "@/components/admin/activity-filters";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +30,79 @@ async function StudentAnalyticsTab() {
   );
 }
 
-export default async function AdminAnalyticsPage() {
+async function ActivityTab(props: { searchParams?: Promise<{ days?: string; cohortId?: string; courseId?: string }> }) {
+  const sp = await props.searchParams;
+  const days = Math.min(Math.max(parseInt(sp?.days ?? "30", 10) || 30, 7), 180);
+  const cohortId = sp?.cohortId || undefined;
+  const courseId = sp?.courseId || undefined;
+  const activity = await getActivityAnalytics(days, cohortId, courseId);
+
+  return (
+    <div className="space-y-6">
+      <ActivityFilters
+        days={days}
+        cohortId={cohortId ?? null}
+        courseId={courseId ?? null}
+        cohorts={activity.filters.cohorts}
+        courses={activity.filters.courses}
+      />
+
+      <div className="grid gap-4 grid-cols-4">
+        <Card className="rounded-2xl">
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold">{activity.totals.totalLogins}</p>
+            <p className="text-xs text-muted-foreground">Входов за {days} дн.</p>
+          </CardContent>
+        </Card>
+        <Card className="rounded-2xl">
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold">{activity.totals.avgDailyLogins}</p>
+            <p className="text-xs text-muted-foreground">В среднем в день</p>
+          </CardContent>
+        </Card>
+        <Card className="rounded-2xl">
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold">{activity.totals.totalEnrollments}</p>
+            <p className="text-xs text-muted-foreground">Новых зачислений</p>
+          </CardContent>
+        </Card>
+        <Card className="rounded-2xl">
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold">{activity.daily.logins.filter((v) => v > 0).length}</p>
+            <p className="text-xs text-muted-foreground">Активных дней</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-base">Ежедневные входы ({days} дней)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BarChart items={activity.daily.labels.map((label, i) => ({
+            label,
+            value: activity.daily.logins[i],
+            color: activity.daily.logins[i] > activity.totals.avgDailyLogins ? "#16a34a" : "#ca8a04",
+          }))} />
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-base">Еженедельные зачисления</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BarChart items={activity.weekly.labels.map((label, i) => ({
+            label,
+            value: activity.weekly.enrollments[i],
+          }))} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default async function AdminAnalyticsPage(props: { searchParams?: Promise<{ days?: string; cohortId?: string; courseId?: string }> }) {
   await requireRolePage(["admin"]);
   const prisma = getPrisma();
 
@@ -209,6 +283,10 @@ export default async function AdminAnalyticsPage() {
           {
             label: "По слушателям",
             content: <StudentAnalyticsTab />,
+          },
+          {
+            label: "Активность",
+            content: <ActivityTab searchParams={props.searchParams} />,
           },
         ]}/>
       </div>

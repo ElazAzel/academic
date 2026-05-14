@@ -23,7 +23,7 @@ const EXT: Record<ReportFormat, string> = {
   pdf: ".pdf",
 };
 
-function respond(content: string | Buffer, format: ReportFormat, filename: string) {
+function respond(content: string | Buffer | Uint8Array, format: ReportFormat, filename: string) {
   const body = typeof content === "string" ? content : new Uint8Array(content);
   return new NextResponse(body, {
     headers: {
