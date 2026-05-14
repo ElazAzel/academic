@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { NavLinks } from "@/components/layout/nav-links";
 import { NAV_BY_ROLE } from "@/components/layout/navigation";
+import { PageTransition } from "@/components/lms/animations";
 import { cn } from "@/lib/utils";
 import type { RoleKey } from "@/types/domain";
 import { ROLE_LABELS } from "@/types/domain";
@@ -38,7 +39,9 @@ export function AppShell({
               <NavLinks links={links} />
             </nav>
           </aside>
-          <main className={cn("min-w-0", className)}>{children}</main>
+          <main className={cn("min-w-0", className)}>
+            <PageTransition>{children}</PageTransition>
+          </main>
         </div>
       </div>
     </div>
