@@ -145,6 +145,8 @@ model User {
   activityLogs          ActivityLog[]
   observerProjects      ObserverProject[]
   observerCohorts       ObserverCohort[]
+  sentMessages          Message[] @relation("SentMessages")
+  receivedMessages      Message[] @relation("ReceivedMessages")
   notificationPreferences NotificationPreference[]
   lessonRatings         LessonRating[]
 
@@ -352,11 +354,13 @@ model Block {
   title           String
   description     String?      @db.Text
   status          CourseStatus @default(DRAFT)
+  recommendedDays Int          @default(7) @map("recommended_days")
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
 
   module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   lessons  Lesson[]
+  deadlines BlockCohortDeadline[]
   progress BlockProgress[]
 
   @@unique([moduleId, order])
@@ -407,6 +411,7 @@ model Lesson {
   progress    LessonProgress[]
   questions   LessonQuestion[]
   ratings     LessonRating[]
+  messages    Message[]
 
   @@unique([moduleId, order])
   @@map("lessons")
@@ -447,6 +452,7 @@ model Cohort {
   riskFlags RiskFlag[]
   inviteLinks InviteLink[]
   observerCohorts ObserverCohort[]
+  blockDeadlines BlockCohortDeadline[]
 
   @@index([createdAt])
   @@index([status])
@@ -465,6 +471,20 @@ model CohortDeadline {
 
   @@unique([cohortId, moduleId])
   @@map("cohort_deadlines")
+}
+
+model BlockCohortDeadline {
+  id        String   @id @default(cuid())
+  cohortId  String   @map("cohort_id")
+  blockId   String   @map("block_id")
+  dueAt     DateTime @map("due_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  block  Block  @relation(fields: [blockId], references: [id], onDelete: Cascade)
+
+  @@unique([cohortId, blockId])
+  @@map("block_cohort_deadlines")
 }
 
 model Enrollment {
@@ -958,6 +978,28 @@ model LessonRating {
 
   @@unique([lessonId, userId])
   @@map("lesson_ratings")
+}
+
+model Message {
+  id            String    @id @default(cuid())
+  senderId      String    @map("sender_id")
+  receiverId    String?   @map("receiver_id")
+  text          String?   @db.Text
+  attachmentUrl String?   @map("attachment_url")
+  attachmentType String?  @map("attachment_type")
+  lessonId      String?   @map("lesson_id")
+  readAt        DateTime? @map("read_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  sender   User    @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User?   @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: SetNull)
+  lesson   Lesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([lessonId])
+  @@index([createdAt])
+  @@map("messages")
 }
 
 model GlossaryEntry {
