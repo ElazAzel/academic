@@ -329,6 +329,7 @@ export async function updateUserAction(formData: FormData) {
     const actor = await requireRole(["admin"]);
     const userId = formData.get("id") as string;
     const name = formData.get("name") as string;
+    const realName = formData.get("realName") as string;
     const status = formData.get("status") as string;
 
     if (!userId) throw new Error("ID пользователя обязателен");
@@ -337,6 +338,7 @@ export async function updateUserAction(formData: FormData) {
       where: { id: userId },
       data: {
         ...(name ? { name } : {}),
+        ...(realName ? { organization: realName } : {}),
         ...(status ? { status: status as UserAccountStatus } : {}),
       },
     });
@@ -346,7 +348,7 @@ export async function updateUserAction(formData: FormData) {
       action: "user.updated",
       entity: "user",
       entityId: userId,
-      metadata: { name, status },
+      metadata: { name, realName, status },
     });
 
     revalidatePath("/admin/users");

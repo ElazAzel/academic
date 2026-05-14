@@ -37,6 +37,7 @@ export async function listUsers(input: { roleKeys?: RoleKey[]; take?: number; sk
       id: true,
       email: true,
       name: true,
+      organization: true,
       status: true,
       lastLoginAt: true,
       roles: { include: { role: true } }
