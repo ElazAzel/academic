@@ -30,6 +30,21 @@ export function gradeObjectiveQuiz(
       expected = question.options[correct.index];
     }
 
+    // If correctAnswer.value is an ID (like "a") and options are [{id,label},...],
+    // resolve the ID to the matching label so it can be compared against the student's answer
+    if (typeof expected === "string" && Array.isArray(question.options) && question.options.length > 0) {
+      const firstOpt = question.options[0];
+      if (typeof firstOpt === "object" && firstOpt !== null && "id" in firstOpt) {
+        const matched = (question.options as Array<{ id?: string; label?: string }>).find((o) => o.id === expected);
+        if (matched) expected = matched.label ?? matched.id;
+      } else if (typeof expected === "string" && expected.length <= 3 && Array.isArray(question.options)) {
+        const idx = parseInt(expected, 10);
+        if (!isNaN(idx) && idx >= 0 && idx < question.options.length) {
+          expected = question.options[idx];
+        }
+      }
+    }
+
     const actual = answers[question.id];
     const match = JSON.stringify(normalizeAnswer(expected)) === JSON.stringify(normalizeAnswer(actual));
     return sum + (match ? question.points : 0);
