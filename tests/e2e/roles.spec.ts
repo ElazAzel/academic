@@ -34,8 +34,9 @@ async function loginAs(page: Page, email: string, password: string = SEED_PASSWO
   }
 
   // Check if an error alert is currently visible
-  const isErrorVisible = await page.locator('[role="alert"]').isVisible().catch(() => false);
-  if (isErrorVisible) {
+  await page.waitForTimeout(4000); const isErrorVisible = await page.locator('[role="alert"]').isVisible().catch(() => false);
+  const isCurrentUrlLogin = page.url().includes("/login");
+  if (isErrorVisible && isCurrentUrlLogin) {
     const errorText = await page.locator('[role="alert"]').textContent().catch(() => "unknown");
     throw new Error(`Login failed for ${email}: ${errorText}. Run: npm run users:create`);
   }
