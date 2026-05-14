@@ -64,12 +64,14 @@ export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
   ],
   super_curator: [
     { href: "/super-curator", label: "Дашборд", icon: "LayoutDashboard" },
+    { href: "/super-curator/cohorts", label: "Потоки", icon: "Users2" },
     { href: "/super-curator/curators", label: "Кураторы", icon: "UserCheck" },
+    { href: "/super-curator/distribution", label: "Распределение", icon: "Users" },
+    { href: "/super-curator/users", label: "Роли", icon: "ShieldCheck" },
     { href: "/super-curator/questions", label: "Вопросы", icon: "MessageCircle" },
-    { href: "/super-curator/distribution", label: "Распределение", icon: "Users2" },
-    { href: "/super-curator/users", label: "Пользователи", icon: "Users" },
     { href: "/super-curator/risks", label: "Риски потоков", icon: "AlertTriangle" },
     { href: "/super-curator/reports", label: "Отчеты", icon: "BarChart3" },
+    { href: "/super-curator/analytics", label: "Аналитика", icon: "BarChart3" },
     { href: "/super-curator/settings", label: "Настройки", icon: "Settings" },
   ],
   instructor: [
