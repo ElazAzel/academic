@@ -96,7 +96,10 @@ export async function GET(request: Request) {
       const filename = `${type}_report${EXT[format]}`;
 
       if (format === "xlsx") return respond(await generateProgressXlsx(rows), format, filename);
-      if (format === "pdf") return respond(await generateProgressPdf(rows), format, filename);
+      if (format === "pdf") {
+        try { return respond(await generateProgressPdf(rows), format, filename); }
+        catch { return respond(generateProgressCsv(rows), "csv", filename.replace(/\.pdf$/, ".csv")); }
+      }
       return respond(generateProgressCsv(rows), format, filename);
     }
 
@@ -105,7 +108,10 @@ export async function GET(request: Request) {
       const filename = `${type}_report${EXT[format]}`;
 
       if (format === "xlsx") return respond(await generateRiskXlsx(rows), format, filename);
-      if (format === "pdf") return respond(await generateRiskPdf(rows), format, filename);
+      if (format === "pdf") {
+        try { return respond(await generateRiskPdf(rows), format, filename); }
+        catch { return respond(generateRiskCsv(rows), "csv", filename.replace(/\.pdf$/, ".csv")); }
+      }
       return respond(generateRiskCsv(rows), format, filename);
     }
 

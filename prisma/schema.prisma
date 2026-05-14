@@ -959,3 +959,14 @@ model LessonRating {
   @@unique([lessonId, userId])
   @@map("lesson_ratings")
 }
+
+model GlossaryEntry {
+  id        String   @id @default(cuid())
+  question  String   @db.Text
+  answer    String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([question])
+  @@map("glossary_entries")
+}
