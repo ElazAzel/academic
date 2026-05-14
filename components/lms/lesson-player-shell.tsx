@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { ArrowLeft, ArrowRight, CheckCircle2, Menu } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -17,11 +18,13 @@ import { LessonRating } from "@/components/lms/lesson-rating";
 import { AskCuratorQuestion } from "@/components/lms/ask-curator-question";
 import { LessonNavigation } from "@/components/lms/lesson-navigation";
 import { CourseContentsDrawer } from "@/components/lms/course-contents-drawer";
+import { ChatPanel } from "@/components/lms/chat-panel";
 import type { StudentLessonPlayerDetail } from "@/types/domain";
 
 export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetail }) {
   const router = useRouter();
-  const { lesson, blocks, courseTree, quizDetails, assignmentDetails } = detail;
+  const { data: session } = useSession();
+  const { lesson, blocks, courseTree, quizDetails, assignmentDetails, curatorId, curatorName } = detail;
   const [progressPercent, setProgressPercent] = useState(lesson.progressPercent);
   const [savingProgress, setSavingProgress] = useState(false);
   const isCompleted = progressPercent >= 100;
@@ -208,6 +211,14 @@ export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetai
 
           {/* Ask curator question */}
           <AskCuratorQuestion lessonId={lesson.id} initialQuestions={lesson.myQuestions} />
+
+          {/* Chat with curator */}
+          {session?.user?.id && curatorId && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold">Чат с куратором {curatorName ? `(${curatorName})` : ""}</h3>
+              <ChatPanel studentId={session.user.id} curatorId={curatorId} lessonId={lesson.id} />
+            </div>
+          )}
 
           {/* Navigation */}
           <LessonNavigation prevLesson={lesson.prevLesson} nextLesson={lesson.nextLesson} />
