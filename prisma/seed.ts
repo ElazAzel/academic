@@ -162,17 +162,36 @@ async function main() {
       });
 
       for (let lessonOrder = 1; lessonOrder <= 2; lessonOrder += 1) {
+        const isVideo = lessonOrder === 1;
         const lesson = await prisma.lesson.upsert({
           where: { moduleId_order: { moduleId: courseModule.id, order: lessonOrder } },
-          update: {},
+          update: {
+            content: isVideo
+              ? {
+                  blocks: [
+                    { type: "video", data: { videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", title: `Видео-урок ${lessonOrder}`, duration: 25 } },
+                    { type: "text", data: { html: "<p>Материал урока на русском языке.</p><p>В этом уроке мы рассмотрим ключевые концепции и их практическое применение в реальных проектах.</p>" } },
+                  ],
+                }
+              : { blocks: [{ type: "paragraph", text: "Материал урока на русском языке." }] },
+            videoUrl: isVideo ? "https://www.youtube.com/watch?v=dQw4w9WgXcQ" : null,
+          },
           create: {
             moduleId: courseModule.id,
             order: lessonOrder,
             title: `Урок ${lessonOrder}`,
             summary: "Ключевые идеи и практическое применение.",
-            type: lessonOrder === 2 ? LessonType.QUIZ : LessonType.VIDEO,
-            content: { blocks: [{ type: "paragraph", text: "Материал урока на русском языке." }] },
-            durationMinutes: 25
+            type: isVideo ? LessonType.VIDEO : LessonType.QUIZ,
+            content: isVideo
+              ? {
+                  blocks: [
+                    { type: "video", data: { videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", title: `Видео-урок ${lessonOrder}`, duration: 25 } },
+                    { type: "text", data: { html: "<p>Материал урока на русском языке.</p><p>В этом уроке мы рассмотрим ключевые концепции и их практическое применение в реальных проектах.</p>" } },
+                  ],
+                }
+              : { blocks: [{ type: "paragraph", text: "Материал урока на русском языке." }] },
+            durationMinutes: 25,
+            videoUrl: isVideo ? "https://www.youtube.com/watch?v=dQw4w9WgXcQ" : null,
           }
         });
 
