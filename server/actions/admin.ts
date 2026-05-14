@@ -5,7 +5,7 @@ import { requireRole } from "@/lib/auth/page-guards";
 import { enrollStudent as enrollStudentService } from "@/server/modules/courses/service";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
-import { RoleKey } from "@prisma/client";
+import { RoleKey, UserAccountStatus } from "@prisma/client";
 
 const prisma = getPrisma();
 
@@ -316,6 +316,64 @@ export async function createUserAction(formData: FormData) {
 
     const { createUser } = await import("@/server/modules/users/service");
     await createUser(actor, { email, name, roleKeys });
+
+    revalidatePath("/admin/users");
+    return { success: true };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+  }
+}
+
+export async function updateUserAction(formData: FormData) {
+  try {
+    const actor = await requireRole(["admin"]);
+    const userId = formData.get("id") as string;
+    const name = formData.get("name") as string;
+    const status = formData.get("status") as string;
+
+    if (!userId) throw new Error("ID пользователя обязателен");
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(name ? { name } : {}),
+        ...(status ? { status: status as UserAccountStatus } : {}),
+      },
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "user.updated",
+      entity: "user",
+      entityId: userId,
+      metadata: { name, status },
+    });
+
+    revalidatePath("/admin/users");
+    return { success: true };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+  }
+}
+
+export async function deleteUserAction(userId: string) {
+  try {
+    const actor = await requireRole(["admin"]);
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("Пользователь не найден");
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { status: UserAccountStatus.DELETED },
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "user.deleted",
+      entity: "user",
+      entityId: userId,
+    });
 
     revalidatePath("/admin/users");
     return { success: true };
