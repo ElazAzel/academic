@@ -84,7 +84,7 @@ async function buildProgressSheet(wb: ExcelJS.Workbook, rows: ProgressRow[]) {
 
   // Bar charts for each course using data bars
   for (const [course, courseRows] of grouped) {
-    const chartWs = wb.addWorksheet(`Диаграмма: ${course.slice(0, 25)}`);
+    const chartWs = wb.addWorksheet(`Диаграмма: ${course}`.replace(/[\[\]\:*?\/]/g, "").slice(0, 31));
     chartWs.columns = [
       { header: "Слушатель", key: "name", width: 25 },
       { header: "Прогресс %", key: "progress", width: 15 },

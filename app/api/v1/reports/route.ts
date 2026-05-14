@@ -95,7 +95,10 @@ export async function GET(request: Request) {
       const rows = await fetchProgressData(scopedIds);
       const filename = `${type}_report${EXT[format]}`;
 
-      if (format === "xlsx") return respond(await generateProgressXlsx(rows), format, filename);
+      if (format === "xlsx") {
+        try { return respond(await generateProgressXlsx(rows), format, filename); }
+        catch { return respond(generateProgressCsv(rows), "csv", filename.replace(/\.xlsx$/, ".csv")); }
+      }
       if (format === "pdf") {
         try { return respond(await generateProgressPdf(rows), format, filename); }
         catch { return respond(generateProgressCsv(rows), "csv", filename.replace(/\.pdf$/, ".csv")); }
@@ -107,7 +110,10 @@ export async function GET(request: Request) {
       const rows = await fetchRiskData(scopedIds);
       const filename = `${type}_report${EXT[format]}`;
 
-      if (format === "xlsx") return respond(await generateRiskXlsx(rows), format, filename);
+      if (format === "xlsx") {
+        try { return respond(await generateRiskXlsx(rows), format, filename); }
+        catch { return respond(generateRiskCsv(rows), "csv", filename.replace(/\.xlsx$/, ".csv")); }
+      }
       if (format === "pdf") {
         try { return respond(await generateRiskPdf(rows), format, filename); }
         catch { return respond(generateRiskCsv(rows), "csv", filename.replace(/\.pdf$/, ".csv")); }
@@ -119,7 +125,10 @@ export async function GET(request: Request) {
       const rows = await fetchCertificateData();
       const filename = `certificates_report${EXT[format]}`;
 
-      if (format === "xlsx") return respond(await generateCertificateXlsx(rows), format, filename);
+      if (format === "xlsx") {
+        try { return respond(await generateCertificateXlsx(rows), format, filename); }
+        catch { return respond(generateCertificateCsv(rows), "csv", filename.replace(/\.xlsx$/, ".csv")); }
+      }
       return respond(generateCertificateCsv(rows), format, filename);
     }
 
