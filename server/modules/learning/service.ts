@@ -607,7 +607,9 @@ export async function getQuizForStudent(userId: string, quizId: string): Promise
       id: q.id,
       type: q.type,
       text: q.prompt,
-      options: Array.isArray(q.options) ? (q.options as string[]) : []
+      options: Array.isArray(q.options)
+        ? (q.options as Array<{ id?: string; label?: string }>).map((o) => o.label ?? o.id ?? String(o))
+        : []
     }))
   };
 }

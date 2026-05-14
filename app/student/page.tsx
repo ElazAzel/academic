@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { ContinueLearningCard, CourseProgressGrid, MetricGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
@@ -31,10 +32,15 @@ export default async function StudentDashboardPage() {
    </AppShell>
   );
  }
+
+ // Redirect to course if student has only one active course
+ const coursesProgress = data?.coursesProgress ?? [];
+ if (!demoMode && coursesProgress.length === 1 && coursesProgress[0]) {
+   redirect(`/student/courses/${coursesProgress[0].courseId}`);
+ }
  
  const metrics = data?.metrics ?? [];
  const continueLearning = data?.continueLearning ?? null;
- const coursesProgress = data?.coursesProgress ?? [];
  const questions = data?.questions ?? [];
  const answeredQuestions = questions.filter((q) => q.status === "answered");
 
@@ -48,20 +54,6 @@ export default async function StudentDashboardPage() {
 
     {continueLearning ? (
      <ContinueLearningCard data={continueLearning}/>
-    ) : coursesProgress.length > 0 ? (
-     <Card className="border-primary/20 bg-gradient-to-br from-primary/[0.03] to-transparent">
-      <CardContent className="flex items-center justify-between py-5">
-       <div>
-        <p className="text-sm font-medium">Добро пожаловать!</p>
-        <p className="text-xs text-muted-foreground mt-0.5">Выберите курс для начала обучения.</p>
-       </div>
-       <Button asChild size="sm">
-        <Link href="/student/my-courses">
-         К курсам <ArrowRight className="h-4 w-4" />
-        </Link>
-       </Button>
-      </CardContent>
-     </Card>
     ) : null}
 
     {metrics.length > 0 && (
