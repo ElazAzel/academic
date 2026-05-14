@@ -1,29 +1,35 @@
 import { getPrisma } from "@/lib/prisma";
 import { toJsonValue } from "@/lib/json";
-import nodemailer from "nodemailer";
+import { env } from "@/lib/env";
 
 const prisma = getPrisma();
 
-import { env } from "@/lib/env";
+let nodemailerTransporter: { sendMail: (opts: Record<string, unknown>) => Promise<unknown> } | null = null;
 
-const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: env.SMTP_PORT,
-  secure: env.SMTP_PORT === 465,
-  auth: env.SMTP_USER ? {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASSWORD ?? "",
-  } : undefined,
-});
+async function getMailer() {
+  if (!env.FEATURE_EMAIL_NOTIFICATIONS) return null;
+  if (nodemailerTransporter) return nodemailerTransporter;
+  try {
+    const nodemailer = await import("nodemailer");
+    nodemailerTransporter = nodemailer.default.createTransport({
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      secure: env.SMTP_PORT === 465,
+      auth: env.SMTP_USER ? {
+        user: env.SMTP_USER,
+        pass: env.SMTP_PASSWORD ?? "",
+      } : undefined,
+    });
+    return nodemailerTransporter;
+  } catch {
+    return null;
+  }
+}
 
 export async function sendEmail(to: string, subject: string, text: string, html?: string) {
-  return transporter.sendMail({
-    from: env.EMAIL_FROM,
-    to,
-    subject,
-    text,
-    html: html || text,
-  });
+  const mailer = await getMailer();
+  if (!mailer) return;
+  return mailer.sendMail({ from: env.EMAIL_FROM, to, subject, text, html: html || text });
 }
 
 export type NotificationEvent =
