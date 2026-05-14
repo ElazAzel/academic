@@ -1,7 +1,8 @@
-import { PrismaClient, type RoleKey } from "@prisma/client";
+import { type RoleKey } from "@prisma/client";
+import { getPrisma } from "../lib/prisma";
 import { hashPassword } from "../lib/auth/password";
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 const SEED_PASSWORD = "Password123!";
 
