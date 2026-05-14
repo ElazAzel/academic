@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MobileNav } from "@/components/layout/mobile-nav";
-import { NAV_BY_ROLE, ICON_MAP } from "@/components/layout/navigation";
+import { NavLinks } from "@/components/layout/nav-links";
+import { NAV_BY_ROLE } from "@/components/layout/navigation";
 import { cn } from "@/lib/utils";
 import type { RoleKey } from "@/types/domain";
 import { ROLE_LABELS } from "@/types/domain";
@@ -35,25 +35,7 @@ export function AppShell({
               className="sticky top-24 space-y-1 rounded-2xl border bg-white/80 p-3 shadow-sm backdrop-blur-xl dark:bg-gray-950/80 dark:border-gray-800"
               aria-label={`Кабинет: ${roleLabel}`}
             >
-              {links.map((item) => {
-                const Icon = ICON_MAP[item.icon];
-                return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  prefetch={false}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  {Icon && <Icon className="h-4 w-4 shrink-0" />}
-                  <span className="flex-1">{item.label}</span>
-                  {item.badge != null && item.badge > 0 ? (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-white">
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </Link>
-                );
-              })}
+              <NavLinks links={links} />
             </nav>
           </aside>
           <main className={cn("min-w-0", className)}>{children}</main>
