@@ -1,4 +1,5 @@
 import { RoleKey } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import type { AppSessionUser } from "@/lib/auth/session";
 import { ApiError } from "@/lib/http";
 import { getPrisma } from "@/lib/prisma";
@@ -24,12 +25,26 @@ export function getAssignableRolesForActor(actorRoles: RoleKey[]) {
   return [];
 }
 
-export async function listUsers(input: { roleKeys?: RoleKey[]; take?: number; skip?: number } = {}) {
+export async function listUsers(input: {
+  roleKeys?: RoleKey[]; take?: number; skip?: number;
+  search?: string; status?: string;
+} = {}) {
   const take = Math.min(input.take ?? 100, 500);
+  const where: Record<string, unknown> = {};
+  if (input.roleKeys?.length) {
+    where.roles = { some: { role: { key: { in: input.roleKeys } } } };
+  }
+  if (input.search) {
+    where.OR = [
+      { name: { contains: input.search, mode: "insensitive" } },
+      { email: { contains: input.search, mode: "insensitive" } },
+    ];
+  }
+  if (input.status) {
+    where.status = input.status;
+  }
   return prisma.user.findMany({
-    where: input.roleKeys?.length
-      ? { roles: { some: { role: { key: { in: input.roleKeys } } } } }
-      : undefined,
+    where: where as Prisma.UserWhereInput,
     orderBy: { createdAt: "desc" },
     skip: input.skip ?? 0,
     take,
@@ -45,12 +60,23 @@ export async function listUsers(input: { roleKeys?: RoleKey[]; take?: number; sk
   });
 }
 
-export async function countUsers(input: { roleKeys?: RoleKey[] } = {}) {
-  return prisma.user.count({
-    where: input.roleKeys?.length
-      ? { roles: { some: { role: { key: { in: input.roleKeys } } } } }
-      : undefined
-  });
+export async function countUsers(input: {
+  roleKeys?: RoleKey[]; search?: string; status?: string;
+} = {}) {
+  const where: Record<string, unknown> = {};
+  if (input.roleKeys?.length) {
+    where.roles = { some: { role: { key: { in: input.roleKeys } } } };
+  }
+  if (input.search) {
+    where.OR = [
+      { name: { contains: input.search, mode: "insensitive" } },
+      { email: { contains: input.search, mode: "insensitive" } },
+    ];
+  }
+  if (input.status) {
+    where.status = input.status;
+  }
+  return prisma.user.count({ where: where as Prisma.UserWhereInput });
 }
 
 export async function setUserRoles(actor: AppSessionUser, userId: string, roleKeys: RoleKey[]) {
