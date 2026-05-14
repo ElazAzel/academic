@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { GraduationCap, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ICON_MAP } from "@/components/layout/navigation";
+import { cn } from "@/lib/utils";
 import type { NavItem } from "@/components/layout/navigation";
 import type { RoleKey } from "@/types/domain";
 import { ROLE_LABELS } from "@/types/domain";
@@ -15,6 +17,8 @@ export function MobileNav({
   links: NavItem[];
   role: RoleKey;
 }) {
+  const pathname = usePathname();
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -40,11 +44,17 @@ export function MobileNav({
         <nav className="flex-1 space-y-1 px-3" aria-label="Мобильная навигация">
           {links.map((item) => {
             const Icon = ICON_MAP[item.icon];
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+                isActive
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
             >
               {Icon && <Icon className="h-4 w-4 shrink-0" />}
               <span className="flex-1">{item.label}</span>
