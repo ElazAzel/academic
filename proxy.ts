@@ -7,7 +7,7 @@ import {
   getDefaultRolePath,
 } from "@/lib/auth/middleware-guards";
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (isPublicRoute(pathname)) {
