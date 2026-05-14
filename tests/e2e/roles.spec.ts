@@ -15,34 +15,30 @@ test.beforeAll(async () => {
 
 async function loginAs(page: Page, email: string, password: string = SEED_PASSWORD) {
   await page.goto("/login", { waitUntil: "load" });
-  const loginForm = page.locator('form[data-auth-ready="true"]');
-  await expect(loginForm).toBeVisible();
+  await expect(page.locator('form[data-auth-ready="true"]')).toBeVisible();
   await page.getByLabel("Логин / Email").fill(email);
   await page.getByLabel("Пароль").fill(password);
   await page.getByRole("button", { name: "Войти" }).click();
 
   const TIMEOUT = 30_000;
   const navigationPromise = page.waitForURL((url: URL) => !url.pathname.includes("/login"), { timeout: TIMEOUT });
-  const formError = loginForm.locator('[role="alert"]');
-  const errorPromise = formError.waitFor({ timeout: TIMEOUT });
-  let result: "success" | "error";
+  const errorPromise = page.locator('[role="alert"]').waitFor({ timeout: TIMEOUT });
 
   try {
-    result = await Promise.race([
-      navigationPromise.then(() => "success" as const),
-      errorPromise.then(() => "error" as const),
+    await Promise.race([
+      navigationPromise.then(() => "success"),
+      errorPromise.then(() => "error"),
     ]);
   } catch {
     throw new Error(`Login timeout for ${email}: page stayed at ${page.url()} for ${TIMEOUT}ms. Check if the app is running and DB is seeded.`);
   }
 
   // Check if an error alert is currently visible
-  await page.waitForTimeout(4000); const isErrorVisible = await page.locator('[role="alert"]').isVisible().catch(() => false);
+  await page.waitForTimeout(500); // Give small time for error to appear if validation failed immediately
+  const isErrorVisible = await page.locator('[role="alert"]').isVisible().catch(() => false);
   const isCurrentUrlLogin = page.url().includes("/login");
   if (isErrorVisible && isCurrentUrlLogin) {
     const errorText = await page.locator('[role="alert"]').textContent().catch(() => "unknown");
-  if (result === "error") {
-    const errorText = await formError.textContent().catch(() => "unknown");
     throw new Error(`Login failed for ${email}: ${errorText}. Run: npm run users:create`);
   }
 }
