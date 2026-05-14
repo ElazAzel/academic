@@ -1,0 +1,12 @@
+{
+  "name": "AI Strategic Academy",
+  "short_name": "AI Academy",
+  "description": "Закрытая LMS академии для AI-стратегии",
+  "start_url": "/login",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1E3A5F",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" }
+  ]
+}

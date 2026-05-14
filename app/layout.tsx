@@ -6,9 +6,9 @@ export const metadata: Metadata = {
   title: "AI Strategic Academy",
   description: "Закрытая LMS академии для AI-стратегии, потоков, кураторов и отчётности.",
   metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
-  icons: {
-    icon: "/favicon.ico",
-  }
+  icons: { icon: "/favicon.ico" },
+  manifest: "/manifest.json",
+  other: { "theme-color": "#1E3A5F" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
