@@ -1,11 +1,9 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
-import { Clock, MessageSquare, CheckCircle, Activity } from "lucide-react";
 import { notFound } from "next/navigation";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorActivity } from "@/server/actions/super-curator";

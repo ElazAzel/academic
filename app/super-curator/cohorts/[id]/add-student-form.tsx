@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { UserPlus } from "lucide-react";
-import { getPrisma } from "@/lib/prisma";
 import { addStudentToCohortAction } from "@/server/actions/super-curator";
 import { toast } from "sonner";
 

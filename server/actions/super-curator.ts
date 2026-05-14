@@ -11,7 +11,7 @@ const prisma = getPrisma();
 // ─── Cohort CRUD ────────────────────────────────────────────────────
 
 export async function getSuperCuratorCohorts() {
-  const actor = await requireRole(["super_curator", "admin"]);
+  await requireRole(["super_curator", "admin"]);
   const user = await getCurrentUser();
   if (!user) return [];
 
@@ -246,7 +246,7 @@ export async function removeStudentFromCohortAction(enrollmentId: string) {
 // ─── Curator management ─────────────────────────────────────────────
 
 export async function getSuperCuratorCurators() {
-  const actor = await requireRole(["super_curator", "admin"]);
+  await requireRole(["super_curator", "admin"]);
   const user = await getCurrentUser();
   if (!user) return [];
 
