@@ -12,7 +12,7 @@ import { toast } from "sonner";
 export function EditUserDialog({
   user,
 }: {
-  user: { id: string; name: string | null; email: string; status: string };
+  user: { id: string; name: string | null; email: string; status: string; realName?: string | null };
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -48,8 +48,14 @@ export function EditUserDialog({
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Имя</label>
-            <Input name="name" defaultValue={user.name ?? ""} placeholder="Имя Фамилия" />
+            <label className="text-sm font-medium">Отображаемое имя</label>
+            <p className="text-[10px] text-muted-foreground mb-1">Видит пользователь, куратор, супер-куратор и преподаватель</p>
+            <Input name="name" defaultValue={user.name ?? ""} placeholder="Например: Слушатель №1" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Реальное имя</label>
+            <p className="text-[10px] text-muted-foreground mb-1">Видит только админ. Используется в сертификате</p>
+            <Input name="realName" defaultValue={user.realName ?? ""} placeholder="Иван Петров" />
           </div>
           <div>
             <label className="text-sm font-medium">Email</label>

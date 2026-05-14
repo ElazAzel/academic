@@ -90,7 +90,7 @@ export async function listCertificates(filter?: { userId?: string; userIds?: str
   return prisma.certificate.findMany({
     where,
     include: {
-      user: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, organization: true } },
       course: { select: { id: true, title: true } }
     },
     orderBy: { issuedAt: "desc" }
@@ -101,7 +101,7 @@ export async function verifyCertificateByCode(verificationCode: string) {
   const certificate = await prisma.certificate.findUnique({
     where: { verificationCode },
     include: {
-      user: { select: { name: true } },
+      user: { select: { name: true, organization: true } },
       course: { select: { title: true, durationHours: true } }
     }
   });
@@ -115,7 +115,7 @@ export async function verifyCertificateByCode(verificationCode: string) {
     number: certificate.number,
     verificationCode: certificate.verificationCode,
     verificationUrl: certificate.verificationUrl,
-    studentName: certificate.user.name ?? "Слушатель академии",
+    studentName: certificate.user.organization ?? certificate.user.name ?? "Слушатель академии",
     courseTitle: certificate.course.title,
     durationHours: certificate.course.durationHours,
     issuedAt: certificate.issuedAt,
@@ -179,7 +179,7 @@ export async function generateCertificatePdf(certificateId: string) {
   const presentedWidth = italic.widthOfTextAtSize(textPresentedTo, 14);
   page.drawText(textPresentedTo, { x: (pageWidth - presentedWidth) / 2, y: 420, size: 14, font: italic, color: rgb(0.3, 0.3, 0.3) });
 
-  const studentName = certificate.user.name ?? certificate.user.email;
+  const studentName = certificate.user.organization ?? certificate.user.name ?? certificate.user.email;
   const nameWidth = bold.widthOfTextAtSize(studentName, 42);
   page.drawText(studentName, { x: (pageWidth - nameWidth) / 2, y: 360, size: 42, font: bold, color: rgb(0.12, 0.23, 0.47) });
 

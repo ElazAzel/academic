@@ -44,6 +44,7 @@ export default async function AdminUsersPage(props: { searchParams?: Promise<{ p
         <TableHeader>
          <TableRow>
           <TableHead>Пользователь</TableHead>
+          <TableHead>Реальное имя</TableHead>
           <TableHead>Текущие роли</TableHead>
           <TableHead>Статус</TableHead>
           <TableHead>Последний вход</TableHead>
@@ -63,13 +64,16 @@ export default async function AdminUsersPage(props: { searchParams?: Promise<{ p
                <p className="text-sm font-medium">{user.name ?? user.email}</p>
                <p className="text-xs text-muted-foreground">{user.email}</p>
               </div>
-             </div>
-            </TableCell>
-            <TableCell>
-             <div className="flex flex-wrap gap-1">
-              {roles.map((role) => (
-               <Badge key={role} className="border-primary/20 bg-primary/5 text-primary text-[10px]">{ROLE_LABELS[role]}</Badge>
-              ))}
+              </div>
+             </TableCell>
+             <TableCell className="text-sm text-muted-foreground">
+              {"organization" in user && user.organization ? user.organization : "—"}
+             </TableCell>
+             <TableCell>
+              <div className="flex flex-wrap gap-1">
+               {roles.map((role) => (
+                <Badge key={role} className="border-primary/20 bg-primary/5 text-primary text-[10px]">{ROLE_LABELS[role]}</Badge>
+               ))}
              </div>
             </TableCell>
             <TableCell>
@@ -83,7 +87,7 @@ export default async function AdminUsersPage(props: { searchParams?: Promise<{ p
              </TableCell>
              <TableCell className="text-right">
               <div className="flex items-center justify-end gap-1">
-               <EditUserDialog user={{ id: user.id, name: user.name, email: user.email, status: user.status }} />
+               <EditUserDialog user={{ id: user.id, name: user.name, email: user.email, status: user.status, realName: ("organization" in user ? (user.organization as string | null) : null) }} />
                <DeleteUserButton userId={user.id} />
               </div>
              </TableCell>
