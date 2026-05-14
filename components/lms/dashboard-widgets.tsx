@@ -4,10 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CheckCircle2, FileText, MessageCircle, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar } from "@/components/ui/avatar";
+import { Stagger, CardHover, FadeIn } from "@/components/lms/animations";
 import { AnswerQuestionModal, ReviewSubmissionModal } from "./curator-modals";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type {
@@ -33,23 +35,27 @@ const TONE_CLASSES: Record<DashboardMetric["tone"], string> = {
 
 export function MetricGrid({ metrics }: { metrics: DashboardMetric[] }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {metrics.map((m, i) => (
-        <Card key={m.label} className="animate-slide-up rounded-2xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5" style={{ animationDelay: `${i * 50}ms` }}>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs">{m.label}</CardDescription>
-            <CardTitle className={`text-3xl font-semibold ${TONE_CLASSES[m.tone]}`}>
-              {m.value}
-            </CardTitle>
-          </CardHeader>
-          {m.change && (
-            <CardContent>
-              <p className="text-xs text-muted-foreground">{m.change}</p>
-            </CardContent>
-          )}
-        </Card>
+    <Stagger className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {metrics.map((m) => (
+        <FadeIn key={m.label}>
+          <CardHover>
+            <Card className="rounded-2xl">
+              <CardHeader className="pb-2">
+                <CardDescription className="text-xs">{m.label}</CardDescription>
+                <CardTitle className={`text-3xl font-semibold ${TONE_CLASSES[m.tone]}`}>
+                  {m.value}
+                </CardTitle>
+              </CardHeader>
+              {m.change && (
+                <CardContent>
+                  <p className="text-xs text-muted-foreground">{m.change}</p>
+                </CardContent>
+              )}
+            </Card>
+          </CardHover>
+        </FadeIn>
       ))}
-    </div>
+    </Stagger>
   );
 }
 
@@ -143,45 +149,49 @@ export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) 
 // ── Сетка курсов (для инструктора/админа) ───────────────────────────
 export function CourseManageGrid({ courses }: { courses: CourseSummary[] }) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <Stagger className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {courses.map((c) => (
-        <Card key={c.id} className="rounded-2xl transition-shadow hover:shadow-panel">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <Badge
-                className={
-                  c.status === "PUBLISHED"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : c.status === "DRAFT"
-                    ? "border-amber-200 bg-amber-50 text-amber-700"
-                    : "border-gray-200 bg-gray-50 text-gray-600"
-                }
-              >
-                {c.status === "PUBLISHED" ? "Опубликован" : c.status === "DRAFT" ? "Черновик" : "Архив"}
-              </Badge>
-            </div>
-            <CardTitle className="text-base">{c.title}</CardTitle>
-            <CardDescription>{c.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4 text-xs text-muted-foreground">
-              <span>{c.modulesCount} модулей</span>
-              <span>{c.lessonsCount} уроков</span>
-              <span>{c.durationHours} ч.</span>
-            </div>
-            {c.instructors.length > 0 && (
-              <div className="mt-3 flex items-center gap-2">
-                <Avatar name={c.instructors[0].name} className="h-6 w-6 text-[10px]" />
-                <span className="text-xs text-muted-foreground">{c.instructors[0].name}</span>
-              </div>
-            )}
-            <div className="mt-4 pt-4 border-t">
-              <Button asChild variant="secondary" size="sm" className="w-full">
-                <Link href={`/instructor/courses/${c.id}/builder`}>Управление курсом</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <FadeIn key={c.id}>
+          <CardHover>
+            <Card className="rounded-2xl">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <Badge
+                    className={
+                      c.status === "PUBLISHED"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : c.status === "DRAFT"
+                        ? "border-amber-200 bg-amber-50 text-amber-700"
+                        : "border-gray-200 bg-gray-50 text-gray-600"
+                    }
+                  >
+                    {c.status === "PUBLISHED" ? "Опубликован" : c.status === "DRAFT" ? "Черновик" : "Архив"}
+                  </Badge>
+                </div>
+                <CardTitle className="text-base">{c.title}</CardTitle>
+                <CardDescription>{c.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4 text-xs text-muted-foreground">
+                  <span>{c.modulesCount} модулей</span>
+                  <span>{c.lessonsCount} уроков</span>
+                  <span>{c.durationHours} ч.</span>
+                </div>
+                {c.instructors.length > 0 && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <Avatar name={c.instructors[0].name} className="h-6 w-6 text-[10px]" />
+                    <span className="text-xs text-muted-foreground">{c.instructors[0].name}</span>
+                  </div>
+                )}
+                <div className="mt-4 pt-4 border-t">
+                  <Button asChild variant="secondary" size="sm" className="w-full">
+                    <Link href={`/instructor/courses/${c.id}/builder`}>Управление курсом</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </CardHover>
+        </FadeIn>
       ))}
     </div>
   );
