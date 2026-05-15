@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json({ error: "Not available in production" }, { status: 404 });
   }
@@ -15,6 +15,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Set SEED_ADMIN_TOKEN env var to use this endpoint" }, { status: 401 });
   }
 
+  // Only accept POST — mutate operations must not be GET
+  if (request.method !== "POST") {
+    return NextResponse.json({ error: "Use POST method" }, { status: 405 });
+  }
+
   const authHeader = request.headers.get("authorization") ?? "";
   const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
   if (!bearerToken || bearerToken !== expectedToken) {
@@ -22,7 +27,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    const seedPassword = "Password123!";
+    const seedPassword = process.env.SEED_DEFAULT_PASSWORD ?? "Password123!";
+    if (seedPassword === "Password123!" && process.env.NODE_ENV !== "development") {
+      return NextResponse.json({ error: "Change SEED_DEFAULT_PASSWORD from default in non-dev environments" }, { status: 403 });
+    }
     const passwordHash = await hashPassword(seedPassword);
 
     async function upsertUser(email: string, name: string, roleKey: RoleKey) {

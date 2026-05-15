@@ -13,7 +13,6 @@ const ALLOWED_TAGS = [
 const ALLOWED_ATTR = [
   "href", "title", "target", "rel",
   "src", "alt", "width", "height",
-  "class", "style"
 ];
 
 export function sanitizeHtml(dirty: string): string {
