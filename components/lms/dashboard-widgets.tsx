@@ -61,6 +61,7 @@ export function MetricGrid({ metrics }: { metrics: DashboardMetric[] }) {
 // ── Продолжить обучение ─────────────────────────────────────────────
 export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
   return (
+    <FadeIn>
     <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.03] to-transparent transition-shadow hover:shadow-panel">
       <CardHeader>
         <Badge className="w-fit border-emerald-200 bg-emerald-50 text-emerald-700">
@@ -100,15 +101,18 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
         </div>
       </CardContent>
     </Card>
+    </FadeIn>
   );
 }
 
 // ── Сетка курсов с прогрессом ───────────────────────────────────────
 export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <Stagger className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {courses.map((c) => (
-        <Card key={c.courseId} className="rounded-2xl transition-shadow hover:shadow-panel">
+        <FadeIn key={c.courseId}>
+        <CardHover>
+        <Card className="rounded-2xl">
           <CardHeader>
             <div className="flex items-center justify-between">
               <Badge
@@ -140,8 +144,10 @@ export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) 
             <p className="text-sm text-muted-foreground">{c.percent}% завершено</p>
           </CardContent>
         </Card>
+        </CardHover>
+        </FadeIn>
       ))}
-    </div>
+    </Stagger>
   );
 }
 
@@ -211,9 +217,11 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
     );
   }
   return (
-    <div className="space-y-3">
+    <Stagger className="space-y-3">
       {questions.map((q) => (
-        <Card key={q.id} className="transition-shadow hover:shadow-sm">
+        <FadeIn key={q.id}>
+        <CardHover>
+        <Card className="transition-shadow rounded-2xl">
           <CardContent className="flex items-start gap-4 py-4">
             <Avatar name={q.studentName} />
             <div className="min-w-0 flex-1">
@@ -241,6 +249,8 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
             )}
           </CardContent>
         </Card>
+        </CardHover>
+        </FadeIn>
       ))}
       {selectedQuestion && (
         <AnswerQuestionModal 
@@ -248,7 +258,7 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
           onClose={() => setSelectedQuestion(null)} 
         />
       )}
-    </div>
+    </Stagger>
   );
 }
 
@@ -342,9 +352,11 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
     low: "border-gray-200 bg-gray-50 text-gray-600",
   };
   return (
-    <div className="space-y-3">
+    <Stagger className="space-y-3">
       {risks.map((r) => (
-        <Card key={r.id} className="transition-shadow hover:shadow-sm">
+        <FadeIn key={r.id}>
+        <CardHover>
+        <Card className="transition-shadow rounded-2xl">
           <CardContent className="flex items-center gap-4 py-4">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
               <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden />
@@ -364,8 +376,10 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
             <Button size="sm" variant="secondary">Подробнее</Button>
           </CardContent>
         </Card>
+        </CardHover>
+        </FadeIn>
       ))}
-    </div>
+    </Stagger>
   );
 }
 

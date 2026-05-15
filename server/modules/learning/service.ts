@@ -226,6 +226,7 @@ export async function getContinueLearning(userId: string): Promise<ContinueLearn
       continue;
     }
     const courseModule = course.modules.find((item) => item.id === nextLesson.moduleId);
+    const deadlineDate = courseModule?.deadlineDate ?? null;
     return {
       courseId: course.id,
       courseTitle: course.title,
@@ -234,7 +235,10 @@ export async function getContinueLearning(userId: string): Promise<ContinueLearn
       lessonTitle: nextLesson.title,
       coursePercent: course.coursePercent,
       modulePercent: courseModule?.progressPercent ?? 0,
-      deadlineDate: courseModule?.deadlineDate ?? null
+      deadlineDate,
+      deadlineDaysLeft: deadlineDate
+        ? Math.round((new Date(deadlineDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+        : null,
     };
   }
   return null;

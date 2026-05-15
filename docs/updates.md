@@ -2,6 +2,22 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-15 — Fix: deadlineDaysLeft, complete Framer Motion animations, review last 9 commits
+
+Автор/agent: opencode
+Тип изменения: bugfix / animations / refactor
+
+1. **deadlineDaysLeft**: Исправлен серверный метод `getContinueLearning` — теперь возвращает `deadlineDaysLeft` (разница в днях между дедлайном и текущей датой). Ранее поле было в типе `ContinueLearning`, но не заполнялось сервером. Виджет `ContinueLearningCard` корректно отображает дедлайн.
+2. **Framer Motion animations**: Завершена интеграция анимаций на платформу. Добавлены `Stagger`, `FadeIn`, `CardHover` во все виджеты дашборда:
+   - `CourseProgressGrid` — карточки курсов обёрнуты в `FadeIn` + `CardHover`
+   - `ContinueLearningCard` — обёрнут в `FadeIn`
+   - `QuestionsQueue` — каждый вопрос обёрнут в `FadeIn` + `CardHover`
+   - `RisksList` — каждый риск обёрнут в `FadeIn` + `CardHover`
+   - `MetricGrid`, `CourseManageGrid` — уже были анимированы ранее
+   - `PageTransition` в `AppShell` оборачивает контент всех страниц
+3. **Review last 9 commits**: Проверены все изменения (animations, PWA, CSP, env, notification service, layout). Ошибок не найдено. CSP расширен для `localhost:*` и `127.0.0.1:*`. Notification service lazy-loads nodemailer.
+4. **TypeScript**: 0 errors. **Tests**: 217 passed, 40/40 test files.
+
 ## 2026-05-15 — Fix chat/questions merge, manifest.json, MinIO, auto-issue certificates
 
 Автор/agent: opencode
