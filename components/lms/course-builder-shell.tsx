@@ -182,6 +182,7 @@ export function CourseBuilderShell({ detail: initial }: { detail: CourseBuilderD
           {selected.type === "lesson" && selectedLesson && (
             <LessonEditor
               lesson={selectedLesson}
+              courseId={detail.id}
               onChange={(updates) => {
                 setDetail((d) => ({
                   ...d,

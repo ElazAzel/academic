@@ -3,16 +3,22 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LessonBlockEditor } from "@/components/lms/lesson-block-editor";
+import { QuizCreator } from "@/components/lms/quiz-creator";
+import { AssignmentCreator } from "@/components/lms/assignment-creator";
 import type { BuilderLessonDetail } from "@/types/domain";
 
 export function LessonEditor({
   lesson,
   onChange,
+  courseId,
 }: {
   lesson: BuilderLessonDetail;
   onChange: (updates: Partial<BuilderLessonDetail>) => void;
+  courseId?: string;
 }) {
   const [showBlockEditor, setShowBlockEditor] = useState(true);
+  const [showQuizCreator, setShowQuizCreator] = useState(false);
+  const [showAssignmentCreator, setShowAssignmentCreator] = useState(false);
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -79,6 +85,34 @@ export function LessonEditor({
           placeholder="https://youtube.com/embed/..."
         />
       </div>
+
+      {/* Quiz / Assignment toolbar */}
+      <div className="flex flex-wrap gap-2 border-t pt-4">
+        {lesson.quizzes.length > 0 && (
+          <div className="w-full mb-2">
+            <p className="text-xs text-muted-foreground mb-1">Тесты в уроке: {lesson.quizzes.map((q) => q.title).join(", ")}</p>
+          </div>
+        )}
+        <Button size="sm" variant="secondary" onClick={() => setShowQuizCreator(!showQuizCreator)}>
+          {showQuizCreator ? "Закрыть" : "Добавить тест"}
+        </Button>
+        {lesson.assignments.length > 0 && (
+          <div className="w-full mb-2">
+            <p className="text-xs text-muted-foreground mb-1">Задания в уроке: {lesson.assignments.map((a) => a.title).join(", ")}</p>
+          </div>
+        )}
+        <Button size="sm" variant="secondary" onClick={() => setShowAssignmentCreator(!showAssignmentCreator)}>
+          {showAssignmentCreator ? "Закрыть" : "Добавить задание"}
+        </Button>
+      </div>
+
+      {showQuizCreator && courseId && (
+        <QuizCreator lessonId={lesson.id} courseId={courseId} onCreated={() => setShowQuizCreator(false)} />
+      )}
+
+      {showAssignmentCreator && courseId && (
+        <AssignmentCreator lessonId={lesson.id} courseId={courseId} onCreated={() => setShowAssignmentCreator(false)} />
+      )}
 
       {/* Block editor */}
       <div className="border-t pt-6">
