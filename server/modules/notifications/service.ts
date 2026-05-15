@@ -46,7 +46,11 @@ export type NotificationEvent =
   | "question_received"
   | "question_forwarded"
   | "password_changed"
-  | "profile_updated";
+  | "profile_updated"
+  | "popup"
+  | "new_message"
+  | "block_completed"
+  | "module_completed";
 
 const templates: Record<NotificationEvent, { title: string; body: string }> = {
   access_granted: { title: "Доступ выдан", body: "Вам открыт доступ к учебной программе." },
@@ -62,7 +66,11 @@ const templates: Record<NotificationEvent, { title: string; body: string }> = {
   question_received: { title: "Новый вопрос", body: "Слушатель задал вопрос по уроку." },
   question_forwarded: { title: "Вопрос переадресован", body: "Ваш вопрос передан инструктору." },
   password_changed: { title: "Пароль изменён", body: "Пароль от вашей учётной записи успешно изменён." },
-  profile_updated: { title: "Профиль обновлён", body: "Данные вашего профиля успешно обновлены." }
+  profile_updated: { title: "Профиль обновлён", body: "Данные вашего профиля успешно обновлены." },
+  popup: { title: "Важное сообщение", body: "У вас новое сообщение от администрации." },
+  new_message: { title: "Новое сообщение", body: "У вас новое сообщение в чате." },
+  block_completed: { title: "Блок пройден", body: "Вы завершили блок обучения." },
+  module_completed: { title: "Модуль пройден", body: "Поздравляем с завершением модуля!" }
 };
 
 export function renderNotificationTemplate(event: NotificationEvent, overrides?: Partial<{ title: string; body: string }>) {
@@ -71,13 +79,16 @@ export function renderNotificationTemplate(event: NotificationEvent, overrides?:
 
 export async function createNotification(input: {
   userId: string;
-  event: NotificationEvent;
+  event: string;
   channel?: string;
   title?: string;
   body?: string;
   data?: Record<string, unknown>;
+  refType?: string;
+  refId?: string;
 }) {
-  const rendered = renderNotificationTemplate(input.event, { title: input.title, body: input.body });
+  const eventKey = Object.keys(templates).includes(input.event) ? input.event as NotificationEvent : "profile_updated";
+  const rendered = renderNotificationTemplate(eventKey, { title: input.title, body: input.body });
 
   const notification = await prisma.notification.create({
     data: {
@@ -87,7 +98,9 @@ export async function createNotification(input: {
       title: rendered.title,
       body: rendered.body,
       status: "SENT",
-      data: toJsonValue(input.data ?? {})
+      data: toJsonValue(input.data ?? {}),
+      refType: input.refType ?? null,
+      refId: input.refId ?? null,
     }
   });
 
@@ -112,7 +125,20 @@ export async function listNotifications(userId: string) {
   return prisma.notification.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
-    take: 100
+    take: 100,
+  });
+}
+
+export async function getNotificationById(id: string, userId: string) {
+  return prisma.notification.findFirst({
+    where: { id, userId },
+  });
+}
+
+export async function markNotificationAsRead(id: string, userId: string) {
+  return prisma.notification.updateMany({
+    where: { id, userId, readAt: null },
+    data: { readAt: new Date(), status: "READ" },
   });
 }
 

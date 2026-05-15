@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Bell, CheckCheck, ChevronRight } from "lucide-react";
+import { Bell, CheckCheck, ChevronRight, ExternalLink, MessageCircle, Box, Layers, Info } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -18,9 +18,37 @@ interface NotificationItem {
   title: string;
   body: string;
   type: string;
+  refType: string | null;
+  refId: string | null;
   data: Record<string, unknown>;
   readAt: string | null;
   createdAt: string;
+}
+
+function getNotificationIcon(type: string, refType: string | null) {
+  if (refType === "popup") return Info;
+  if (type === "new_message" || refType === "message") return MessageCircle;
+  if (type === "block_completed") return Box;
+  if (type === "module_completed") return Layers;
+  return Bell;
+}
+
+function getNotificationAction(n: NotificationItem): { link: string; label: string } {
+  const link = n.data?.link as string;
+
+  if (n.refType === "popup") {
+    return { link: "/notifications", label: "Посмотреть" };
+  }
+  if (n.refType === "message" || n.type === "new_message") {
+    return { link: link || "/student/chat", label: "Перейти в чат" };
+  }
+  if (n.type === "block_completed") {
+    return { link: link || "#", label: "Продолжить обучение" };
+  }
+  if (n.type === "module_completed") {
+    return { link: link || "#", label: "Перейти к модулю" };
+  }
+  return { link: link || "/notifications", label: "Подробнее" };
 }
 
 export function NotificationsDropdown() {
@@ -68,6 +96,17 @@ export function NotificationsDropdown() {
     }
   }
 
+  function handleClick(n: NotificationItem) {
+    const { link } = getNotificationAction(n);
+    router.push(link);
+  }
+
+  function handleMore(e: React.MouseEvent, n: NotificationItem) {
+    e.stopPropagation();
+    const { link } = getNotificationAction(n);
+    router.push(link);
+  }
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
@@ -110,19 +149,30 @@ export function NotificationsDropdown() {
               Нет уведомлений
             </div>
           ) : (
-            notifications.slice(0, 10).map((n) => (
-              <DropdownMenuItem
-                key={n.id}
-                className={cn("flex-col items-start gap-0.5", !n.readAt && "bg-primary/[0.03]")}
-                onClick={() => router.push(n.data?.link as string ?? "#")}
-              >
-                <div className="flex w-full items-center justify-between">
-                  <span className={cn("text-sm", !n.readAt && "font-semibold")}>{n.title}</span>
-                  <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
-                </div>
-                <span className="line-clamp-1 text-xs text-muted-foreground">{n.body}</span>
-              </DropdownMenuItem>
-            ))
+            notifications.slice(0, 10).map((n) => {
+              const Icon = getNotificationIcon(n.type, n.refType);
+              const { label } = getNotificationAction(n);
+              return (
+                <DropdownMenuItem
+                  key={n.id}
+                  className={cn("flex-col items-start gap-1 py-3", !n.readAt && "bg-primary/[0.03]")}
+                  onClick={() => handleClick(n)}
+                >
+                  <div className="flex w-full items-center gap-2">
+                    <Icon className={cn("h-4 w-4 shrink-0", !n.readAt ? "text-primary" : "text-muted-foreground")} />
+                    <span className={cn("flex-1 text-sm", !n.readAt && "font-semibold")}>{n.title}</span>
+                  </div>
+                  <span className="line-clamp-2 pl-6 text-xs text-muted-foreground">{n.body}</span>
+                  <button
+                    onClick={(e) => handleMore(e, n)}
+                    className="ml-6 mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    {label}
+                  </button>
+                </DropdownMenuItem>
+              );
+            })
           )}
         </div>
       </DropdownMenuContent>

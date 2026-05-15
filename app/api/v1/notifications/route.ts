@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { errorResponse, ok, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
-import { listNotifications, markAllNotificationsAsRead } from "@/server/modules/notifications/service";
+import { listNotifications, markAllNotificationsAsRead, markNotificationAsRead } from "@/server/modules/notifications/service";
 
 export async function GET() {
   try {
@@ -22,6 +22,8 @@ export async function PATCH(request: Request) {
 
     if (body.action === "markAllRead") {
       await markAllNotificationsAsRead(user.id);
+    } else if (body.action === "markRead" && body.id) {
+      await markNotificationAsRead(body.id, user.id);
     }
 
     return ok(await listNotifications(user.id));

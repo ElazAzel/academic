@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Search, FolderOpen } from "lucide-react";
-import { createGlossaryEntryAction, updateGlossaryEntryAction, deleteGlossaryEntryAction, DIRECTIONS, getDirectionLabel } from "@/server/actions/glossary";
+import { createGlossaryEntryAction, updateGlossaryEntryAction, deleteGlossaryEntryAction } from "@/server/actions/glossary";
+import { DIRECTIONS, getDirectionLabel } from "@/lib/glossary/labels";
 import { toast } from "sonner";
 
 type Entry = { id: string; question: string; answer: string; category: string; direction: string };
