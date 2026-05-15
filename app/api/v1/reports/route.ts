@@ -23,14 +23,18 @@ const EXT: Record<ReportFormat, string> = {
   pdf: ".pdf",
 };
 
-function respond(content: string | Buffer | Uint8Array, format: ReportFormat, filename: string) {
+function respond(content: string | Buffer | Uint8Array | ArrayBuffer, format: ReportFormat, filename: string) {
+  const headers: Record<string, string> = {
+    "Content-Type": MIME[format],
+    "Content-Disposition": `attachment; filename="${filename}"`,
+  };
+  if (format === "pdf") {
+    headers["Content-Type"] = "application/pdf";
+    const buf = content instanceof ArrayBuffer ? new Uint8Array(content) : typeof content === "string" ? new TextEncoder().encode(content) : new Uint8Array(content);
+    return new NextResponse(buf, { headers });
+  }
   const body = typeof content === "string" ? content : new Uint8Array(content);
-  return new NextResponse(body, {
-    headers: {
-      "Content-Type": MIME[format],
-      "Content-Disposition": `attachment; filename="${filename}"`,
-    },
-  });
+  return new NextResponse(body, { headers });
 }
 
 export async function GET(request: Request) {
