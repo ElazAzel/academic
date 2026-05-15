@@ -15,5 +15,6 @@ test-results/
 Thumbs.db
 storage/
 tmp/
+.tmp/
 var/
 scratch/
