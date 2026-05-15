@@ -21,7 +21,7 @@ export function ListToolbar({
       <div className="relative flex-1 min-w-[200px] max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <input
-          className="h-10 w-full rounded-xl border bg-white pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 dark:bg-gray-950"
+          className="h-10 w-full rounded-xl border bg-card pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           placeholder={searchPlaceholder}
           onChange={(e) => onSearch?.(e.target.value)}
         />
@@ -29,7 +29,7 @@ export function ListToolbar({
       {filters && filters.length > 0 && (
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="inline-flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm transition hover:bg-muted dark:bg-gray-950"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border bg-card px-3 text-sm transition hover:bg-muted"
         >
           <Filter className="h-4 w-4" />
           Фильтры
@@ -38,7 +38,7 @@ export function ListToolbar({
       {onExport && (
         <button
           onClick={onExport}
-          className="inline-flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm transition hover:bg-muted dark:bg-gray-950"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border bg-card px-3 text-sm transition hover:bg-muted"
         >
           <Download className="h-4 w-4" />
           Экспорт

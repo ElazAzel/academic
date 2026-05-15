@@ -55,7 +55,7 @@ export function Tabs({
             className={cn(
               "flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all",
               active === i
-                ? "bg-white text-foreground shadow-sm"
+                ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >

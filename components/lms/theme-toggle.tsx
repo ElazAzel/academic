@@ -2,7 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { Moon, Sun, Monitor } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 type ThemeMode = "light" | "dark" | "system";
@@ -28,6 +28,7 @@ export function ThemeToggle() {
   useEffect(() => setMounted(true), []);
 
   const currentTheme = (theme as ThemeMode) ?? "system";
+  const shouldReduce = useReducedMotion();
 
   const cycleTheme = () => {
     const idx = THEME_CYCLE.indexOf(currentTheme);
@@ -59,10 +60,10 @@ export function ThemeToggle() {
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={currentTheme}
-          initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
+          initial={shouldReduce ? { opacity: 1 } : { opacity: 0, rotate: -90, scale: 0.5 }}
           animate={{ opacity: 1, rotate: 0, scale: 1 }}
-          exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-          transition={{ duration: 0.2, ease: "easeInOut" }}
+          exit={shouldReduce ? { opacity: 1 } : { opacity: 0, rotate: 90, scale: 0.5 }}
+          transition={shouldReduce ? { duration: 0 } : { duration: 0.2, ease: "easeInOut" }}
           className="flex items-center justify-center"
         >
           <Icon className="h-4 w-4" />

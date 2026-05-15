@@ -210,7 +210,7 @@ export function NotificationsList() {
                       {label}
                     </button>
                   </div>
-                  <span className="shrink-0 text-[11px] text-muted-foreground whitespace-nowrap">
+                  <span className="shrink-0 text-[11px] text-muted-foreground truncate max-w-[100px] sm:max-w-none">
                     {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: ru })}
                   </span>
                   <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />

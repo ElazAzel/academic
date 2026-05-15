@@ -95,7 +95,7 @@ export function AssignmentEditForm({ assignment }: AssignmentEditFormProps) {
               name="instructions"
               defaultValue={assignment.instructions}
               required
-              className="w-full min-h-[300px] rounded-2xl border bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              className="w-full min-h-[300px] rounded-2xl border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
             />
           </div>
 

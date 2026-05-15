@@ -49,11 +49,11 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
   if (submitted && assignment.submission) {
     const sub = assignment.submission;
     const statusLabel: Record<string, { label: string; cls: string }> = {
-      SUBMITTED: { label: "Отправлено", cls: "border-sky-200 bg-sky-50 text-sky-700" },
-      IN_REVIEW: { label: "На проверке", cls: "border-amber-200 bg-amber-50 text-amber-700" },
-      ACCEPTED: { label: "Зачтено", cls: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-      REJECTED: { label: "Отклонено", cls: "border-rose-200 bg-rose-50 text-rose-700" },
-      NEEDS_REVISION: { label: "На доработку", cls: "border-amber-200 bg-amber-50 text-amber-700" },
+      SUBMITTED: { label: "Отправлено", cls: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300" },
+      IN_REVIEW: { label: "На проверке", cls: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
+      ACCEPTED: { label: "Зачтено", cls: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" },
+      REJECTED: { label: "Отклонено", cls: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300" },
+      NEEDS_REVISION: { label: "На доработку", cls: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
     };
     const sb = statusLabel[sub.status] ?? statusLabel.SUBMITTED;
 
@@ -125,7 +125,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
 
       {/* Answer textarea */}
       <textarea
-        className="min-h-[120px] w-full resize-none rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 dark:bg-gray-950"
+        className="min-h-[120px] w-full resize-none rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
         placeholder="Ваш ответ..."
         value={answerText}
         onChange={(e) => setAnswerText(e.target.value)}
@@ -134,7 +134,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
       {/* File URL input (placeholder — actual file upload TBD) */}
       <div className="flex items-center gap-2">
         <input
-          className="flex-1 rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 dark:bg-gray-950"
+          className="flex-1 rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           placeholder="Ссылка на файл (необязательно)"
           value={fileUrl}
           onChange={(e) => setFileUrl(e.target.value)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const fadeIn: Variants = {
@@ -19,12 +19,13 @@ const scaleIn: Variants = {
 };
 
 export function FadeIn({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
       variants={fadeIn}
-      initial="hidden"
+      initial={shouldReduce ? "visible" : "hidden"}
       animate="visible"
-      transition={{ delay }}
+      transition={shouldReduce ? { duration: 0 } : { delay }}
       className={className}
     >
       {children}
@@ -33,12 +34,13 @@ export function FadeIn({ children, className, delay = 0 }: { children: React.Rea
 }
 
 export function SlideUp({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
       variants={slideUp}
-      initial="hidden"
+      initial={shouldReduce ? "visible" : "hidden"}
       animate="visible"
-      transition={{ delay }}
+      transition={shouldReduce ? { duration: 0 } : { delay }}
       className={className}
     >
       {children}
@@ -47,12 +49,13 @@ export function SlideUp({ children, className, delay = 0 }: { children: React.Re
 }
 
 export function ScaleIn({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
       variants={scaleIn}
-      initial="hidden"
+      initial={shouldReduce ? "visible" : "hidden"}
       animate="visible"
-      transition={{ delay }}
+      transition={shouldReduce ? { duration: 0 } : { delay }}
       className={className}
     >
       {children}
@@ -69,11 +72,12 @@ export function Stagger({
   className?: string;
   staggerDelay?: number;
 }) {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
-      initial="hidden"
+      initial={shouldReduce ? "visible" : "hidden"}
       animate="visible"
-      variants={{ visible: { transition: { staggerChildren: staggerDelay } } }}
+      variants={shouldReduce ? undefined : { visible: { transition: { staggerChildren: staggerDelay } } }}
       className={className}
     >
       {children}
@@ -82,9 +86,10 @@ export function Stagger({
 }
 
 export function CardHover({ children, className }: { children: React.ReactNode; className?: string }) {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
-      whileHover={{ y: -3, boxShadow: "0 8px 30px rgba(0,0,0,0.08)" }}
+      whileHover={shouldReduce ? undefined : { y: -3, boxShadow: "0 8px 30px rgba(0,0,0,0.08)" }}
       transition={{ duration: 0.2 }}
       className={cn("transition-colors", className)}
     >
@@ -94,11 +99,12 @@ export function CardHover({ children, className }: { children: React.ReactNode; 
 }
 
 export function PageTransition({ children, className }: { children: React.ReactNode; className?: string }) {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      transition={shouldReduce ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
       className={className}
     >
       {children}

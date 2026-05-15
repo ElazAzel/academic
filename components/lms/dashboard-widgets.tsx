@@ -36,10 +36,10 @@ import { RISK_LABELS } from "@/types/domain";
 // ── Метрики ─────────────────────────────────────────────────────────
 const TONE_CLASSES: Record<DashboardMetric["tone"], string> = {
   primary: "text-primary",
-  success: "text-emerald-600",
-  warning: "text-amber-600",
-  danger: "text-rose-600",
-  info: "text-sky-600",
+  success: "text-emerald-600 dark:text-emerald-400",
+  warning: "text-amber-600 dark:text-amber-400",
+  danger: "text-destructive",
+  info: "text-sky-600 dark:text-sky-400",
 };
 
 export function MetricGrid({ metrics }: { metrics: DashboardMetric[] }) {
@@ -74,7 +74,7 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
     <FadeIn>
     <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.03] to-transparent transition-shadow hover:shadow-panel">
       <CardHeader>
-        <Badge className="w-fit border-emerald-200 bg-emerald-50 text-emerald-700">
+        <Badge className="w-fit border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
           Следующее действие
         </Badge>
         <CardTitle className="text-xl">Продолжить: {data.courseTitle}</CardTitle>
@@ -128,10 +128,10 @@ export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) 
               <Badge
                 className={
                   c.status === "COMPLETED"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
                     : c.status === "IN_PROGRESS"
-                    ? "border-sky-200 bg-sky-50 text-sky-700"
-                    : "border-gray-200 bg-gray-50 text-gray-600"
+                    ? "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300"
+                    : "border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-400"
                 }
               >
                 {c.status === "COMPLETED" ? "Завершён" : c.status === "IN_PROGRESS" ? "В процессе" : "Не начат"}
@@ -174,10 +174,10 @@ export function CourseManageGrid({ courses }: { courses: CourseSummary[] }) {
                   <Badge
                     className={
                       c.status === "PUBLISHED"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
                         : c.status === "DRAFT"
-                        ? "border-amber-200 bg-amber-50 text-amber-700"
-                        : "border-gray-200 bg-gray-50 text-gray-600"
+                        ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+                        : "border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-400"
                     }
                   >
                     {c.status === "PUBLISHED" ? "Опубликован" : c.status === "DRAFT" ? "Черновик" : "Архив"}
@@ -240,10 +240,10 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
                 <Badge
                   className={
                     q.status === "open"
-                      ? "border-amber-200 bg-amber-50 text-amber-700"
+                      ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
                       : q.status === "answered"
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                      : "border-sky-200 bg-sky-50 text-sky-700"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                      : "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300"
                   }
                 >
                   {q.status === "open" ? "Ожидает ответа" : q.status === "answered" ? "Отвечен" : "Передан"}
@@ -335,11 +335,11 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
 
 function SubmissionBadge({ status }: { status: SubmissionForReview["status"] }) {
   const MAP: Record<string, { label: string; cls: string }> = {
-    SUBMITTED: { label: "Отправлено", cls: "border-sky-200 bg-sky-50 text-sky-700" },
-    IN_REVIEW: { label: "На проверке", cls: "border-amber-200 bg-amber-50 text-amber-700" },
-    ACCEPTED: { label: "Зачтено", cls: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-    REJECTED: { label: "Отклонено", cls: "border-rose-200 bg-rose-50 text-rose-700" },
-    NEEDS_REVISION: { label: "На доработку", cls: "border-amber-200 bg-amber-50 text-amber-700" },
+    SUBMITTED: { label: "Отправлено", cls: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300" },
+    IN_REVIEW: { label: "На проверке", cls: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
+    ACCEPTED: { label: "Зачтено", cls: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" },
+    REJECTED: { label: "Отклонено", cls: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300" },
+    NEEDS_REVISION: { label: "На доработку", cls: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
   };
   const m = MAP[status] ?? { label: status, cls: "" };
   return <Badge className={m.cls}>{m.label}</Badge>;
@@ -358,10 +358,10 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
     );
   }
   const SEVERITY_CLS: Record<string, string> = {
-    critical: "border-rose-300 bg-rose-50 text-rose-700",
-    high: "border-amber-300 bg-amber-50 text-amber-700",
-    medium: "border-yellow-200 bg-yellow-50 text-yellow-700",
-    low: "border-gray-200 bg-gray-50 text-gray-600",
+    critical: "border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300",
+    high: "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+    medium: "border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-300",
+    low: "border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-400",
   };
   return (
     <Stagger className="space-y-3">
@@ -421,12 +421,12 @@ export function CuratorLoadTable({ curators }: { curators: CuratorLoad[] }) {
             </TableCell>
             <TableCell className="text-center text-sm">{c.studentsCount}</TableCell>
             <TableCell className="text-center">
-              <Badge className={c.openQuestions > 3 ? "border-rose-200 bg-rose-50 text-rose-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}>
+              <Badge className={c.openQuestions > 3 ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300" : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"}>
                 {c.openQuestions}
               </Badge>
             </TableCell>
             <TableCell className="text-center">
-              <Badge className={c.pendingReviews > 5 ? "border-amber-200 bg-amber-50 text-amber-700" : ""}>
+              <Badge className={c.pendingReviews > 5 ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" : ""}>
                 {c.pendingReviews}
               </Badge>
             </TableCell>
@@ -436,7 +436,7 @@ export function CuratorLoadTable({ curators }: { curators: CuratorLoad[] }) {
               </span>
             </TableCell>
             <TableCell className="text-center">
-              <Badge className={c.riskStudents > 3 ? "border-rose-200 bg-rose-50 text-rose-700" : ""}>
+              <Badge className={c.riskStudents > 3 ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300" : ""}>
                 {c.riskStudents}
               </Badge>
             </TableCell>
