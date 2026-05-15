@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { useState } from "react";
 import { Toaster } from "sonner";
 import { CommandPalette } from "@/components/lms/command-palette";
+import { PopupModal } from "@/components/lms/popup-modal";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -16,6 +17,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <Toaster position="top-right" richColors closeButton
             toastOptions={{ duration: 5000 }} />
           <CommandPalette />
+          <PopupModal />
         </ThemeProvider>
       </QueryClientProvider>
     </SessionProvider>

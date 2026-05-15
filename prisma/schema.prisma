@@ -162,6 +162,8 @@ model User {
   notificationPreferences    NotificationPreference[]
   lessonRatings              LessonRating[]
   activityLogs               ActivityLog[]
+  createdPopups              AdminPopup[]
+  popupViews                 PopupView[]
 
   @@map("users")
 }
@@ -773,6 +775,8 @@ model Notification {
   body      String             @db.Text
   status    NotificationStatus @default(QUEUED)
   data      Json               @default("{}")
+  refType   String?            @map("ref_type")
+  refId     String?            @map("ref_id")
   readAt    DateTime?          @map("read_at")
   createdAt DateTime           @default(now()) @map("created_at")
 
@@ -782,7 +786,46 @@ model Notification {
   @@index([status])
   @@index([createdAt])
   @@index([userId, status, createdAt])
+  @@index([userId, createdAt])
+  @@index([userId, status])
+  @@index([refType, refId])
   @@map("notifications")
+}
+
+// ── Admin Popups ──────────────────────────────────────────────────────
+model AdminPopup {
+  id          String   @id @default(cuid())
+  title       String
+  message     String   @db.Text
+  imageUrl    String?  @map("image_url")
+  linkUrl     String?  @map("link_url")
+  linkText    String?  @map("link_text")
+  targetRoles     String   @default("[]")  @map("target_roles") // JSON array of RoleKey
+  targetCohortIds String   @default("[]")  @map("target_cohort_ids") // JSON array of cohort IDs (only for student role)
+  isActive    Boolean  @default(true)  @map("is_active")
+  createdById String   @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  createdBy User   @relation(fields: [createdById], references: [id])
+  views     PopupView[]
+
+  @@index([isActive, createdAt])
+  @@map("admin_popups")
+}
+
+model PopupView {
+  id        String   @id @default(cuid())
+  popupId   String   @map("popup_id")
+  userId    String   @map("user_id")
+  viewedAt  DateTime @default(now()) @map("viewed_at")
+
+  popup AdminPopup @relation(fields: [popupId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([popupId, userId])
+  @@index([userId])
+  @@map("popup_views")
 }
 
 model AuditLog {

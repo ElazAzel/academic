@@ -5,6 +5,7 @@ import { clamp } from "@/lib/utils";
 import { env } from "@/lib/env";
 import { logAudit } from "@/server/modules/audit/service";
 import { issueCertificate } from "@/server/modules/certificates/service";
+import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
@@ -184,6 +185,38 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
   });
 
   await logAudit({ actorId: userId, action: "progress.lesson_marked", entity: "lesson", entityId: lessonId, metadata: { percent } });
+
+  // Send notification when block is completed
+  if (lesson.blockId && result.blockProgress?.status === ProgressStatus.COMPLETED) {
+    const block = await prisma.block.findUnique({ where: { id: lesson.blockId }, select: { title: true } });
+    createNotification({
+      userId,
+      event: "block_completed",
+      title: "Блок пройден",
+      body: `Вы завершили блок «${block?.title ?? ""}»`,
+      data: {
+        refType: "block",
+        refId: lesson.blockId,
+        link: `/student/courses/${course.id}`,
+      },
+    }).catch((e) => console.error("Failed to send block completion notification:", e));
+  }
+
+  // Send notification when module is completed
+  if (result.moduleProgress?.status === ProgressStatus.COMPLETED) {
+    const module_ = await prisma.module.findUnique({ where: { id: lesson.moduleId }, select: { title: true } });
+    createNotification({
+      userId,
+      event: "module_completed",
+      title: "Модуль пройден",
+      body: `Поздравляем с завершением модуля «${module_?.title ?? ""}»!`,
+      data: {
+        refType: "module",
+        refId: lesson.moduleId,
+        link: `/student/courses/${course.id}`,
+      },
+    }).catch((e) => console.error("Failed to send module completion notification:", e));
+  }
 
   if (result.coursePercent >= env.CERTIFICATE_COMPLETION_THRESHOLD) {
     const existing = await prisma.certificate.findFirst({

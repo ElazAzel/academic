@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { buildStorageKey, createPresignedUploadUrl } from "@/lib/storage";
+import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
@@ -102,10 +103,33 @@ export async function sendMessageAction(formData: FormData) {
       receiverId: toUserId,
       text: text || null,
       attachmentUrl: attachmentUrl || null,
-      attachmentType: attachmentType || null,
-      lessonId: lessonId || null,
-    },
+    attachmentType: attachmentType || null,
+    lessonId: lessonId || null,
+  },
   });
+
+  // Create notification for receiver
+  if (toUserId && toUserId !== user.id) {
+    const messagePreview = text ? (text.length > 100 ? text.substring(0, 100) + "…" : text) : "Вложение";
+    const isCurator = user.roles.includes("curator") || user.roles.includes("super_curator") || user.roles.includes("admin");
+    const link = isCurator
+      ? `/curator/chat`
+      : `/student/chat`;
+
+    await createNotification({
+      userId: toUserId,
+      event: "new_message",
+      title: `Новое сообщение от ${user.name ?? "пользователя"}`,
+      body: messagePreview,
+      data: {
+        refType: "message",
+        refId: lessonId || "general",
+        link,
+        senderId: user.id,
+        senderName: user.name,
+      },
+    });
+  }
 
   revalidatePath("/curator/questions");
   revalidatePath("/student");
