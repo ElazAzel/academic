@@ -1,6 +1,7 @@
 import { getPrisma } from "@/lib/prisma";
 import { toJsonValue } from "@/lib/json";
 import { env } from "@/lib/env";
+import { getUserNotificationPreferences } from "@/server/modules/notifications/preferences";
 
 const prisma = getPrisma();
 
@@ -87,6 +88,16 @@ export async function createNotification(input: {
   refType?: string;
   refId?: string;
 }) {
+  // Проверяем настройки пользователя — если канал отключён, пропускаем
+  const preferences = await getUserNotificationPreferences(input.userId);
+  const prefKey = input.channel === "email" || input.channel === "email_and_in_app"
+    ? input.event
+    : input.channel ?? "in_app";
+
+  if (preferences[prefKey] === false) {
+    return null; // Пользователь отключил этот тип уведомлений
+  }
+
   const eventKey = Object.keys(templates).includes(input.event) ? input.event as NotificationEvent : "profile_updated";
   const rendered = renderNotificationTemplate(eventKey, { title: input.title, body: input.body });
 
@@ -110,11 +121,15 @@ export async function createNotification(input: {
     select: { email: true }
   });
 
-    if (user?.email && (input.channel === "email" || input.channel === "email_and_in_app")) {
-    try {
-      await sendEmail(user.email, rendered.title, rendered.body);
-    } catch (error) {
-      console.error(`Failed to send email notification to ${user.email}`, error);
+  // Проверяем email-подписку отдельно
+  if (user?.email && (input.channel === "email" || input.channel === "email_and_in_app")) {
+    const emailPrefKey = `email_${input.event}`;
+    if (preferences[emailPrefKey] !== false) {
+      try {
+        await sendEmail(user.email, rendered.title, rendered.body);
+      } catch (error) {
+        console.error(`Failed to send email notification to ${user.email}`, error);
+      }
     }
   }
 

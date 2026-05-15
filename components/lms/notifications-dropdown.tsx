@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface NotificationItem {
   id: string;
@@ -85,14 +86,20 @@ export function NotificationsDropdown() {
 
   async function markAllRead() {
     try {
-      await fetch("/api/v1/notifications", {
+      const res = await fetch("/api/v1/notifications", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "markAllRead" }),
       });
+      if (!res.ok) {
+        console.error("Failed to mark all as read:", await res.text());
+        return;
+      }
+      // Обновляем UI только после успешного ответа от сервера
       setNotifications((prev) => prev.map((n) => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
-    } catch {
-      // silent
+    } catch (err) {
+      console.error("Failed to mark all as read:", err);
+      toast.error("Не удалось отметить уведомления как прочитанные");
     }
   }
 

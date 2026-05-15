@@ -6,6 +6,7 @@ import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
 import { markLessonProgress } from "@/server/modules/progress/service";
+import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -21,7 +22,7 @@ async function assertCuratorStudentAccess(actor: { id: string; roles: string[] }
     },
   });
   if (!assignment) {
-    throw new Error("Доступ запрещен: студент не закреплен за вами");
+    throw new ApiError("forbidden", "Доступ запрещен: студент не закреплен за вами", 403);
   }
 }
 
@@ -29,7 +30,7 @@ export async function answerQuestionAction(questionId: string, answer: string) {
   const actor = await requireRole(["curator", "super_curator", "admin"]);
   
   if (!answer.trim()) {
-    throw new Error("Ответ не может быть пустым");
+    throw new ApiError("bad_request", "Ответ не может быть пустым", 400);
   }
 
   const question = await prisma.lessonQuestion.findUnique({
@@ -37,7 +38,7 @@ export async function answerQuestionAction(questionId: string, answer: string) {
     select: { studentId: true, lessonId: true }
   });
   if (!question) {
-    throw new Error("Вопрос не найден");
+    throw new ApiError("not_found", "Вопрос не найден", 404);
   }
 
   await assertCuratorStudentAccess(actor, question.studentId);
@@ -88,7 +89,7 @@ export async function reviewSubmissionAction(submissionId: string, input: {
     select: { userId: true, assignment: { select: { lessonId: true } } }
   });
   if (!submission) {
-    throw new Error("Запись не найдена");
+    throw new ApiError("not_found", "Запись не найдена", 404);
   }
 
   await assertCuratorStudentAccess(actor, submission.userId);
@@ -143,7 +144,7 @@ export async function forwardQuestionAction(questionId: string) {
   });
 
   if (!question) {
-    throw new Error("Вопрос не найден");
+    throw new ApiError("not_found", "Вопрос не найден", 404);
   }
 
   await assertCuratorStudentAccess(actor, question.studentId);
@@ -193,7 +194,7 @@ export async function answerForwardedQuestionAction(formData: FormData) {
   const actor = await requireRole(["instructor", "admin"]);
 
   if (!answer?.trim()) {
-    throw new Error("Ответ не может быть пустым");
+    throw new ApiError("bad_request", "Ответ не может быть пустым", 400);
   }
 
   const question = await prisma.lessonQuestion.findUnique({
@@ -204,7 +205,7 @@ export async function answerForwardedQuestionAction(formData: FormData) {
     }
   });
   if (!question || question.status !== "FORWARDED") {
-    throw new Error("Вопрос не найден или не был переадресован");
+    throw new ApiError("not_found", "Вопрос не найден или не был переадресован", 404);
   }
 
   if (!actor.roles.includes("admin")) {
@@ -212,7 +213,7 @@ export async function answerForwardedQuestionAction(formData: FormData) {
       (i) => i.userId === actor.id
     );
     if (!isInstructor) {
-      throw new Error("Доступ запрещен: вопрос относится к курсу, который вы не ведете");
+      throw new ApiError("forbidden", "Доступ запрещен: вопрос относится к курсу, который вы не ведете", 403);
     }
   }
 

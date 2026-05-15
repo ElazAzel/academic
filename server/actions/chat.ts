@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { buildStorageKey, createPresignedUploadUrl } from "@/lib/storage";
 import { createNotification } from "@/server/modules/notifications/service";
+import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -84,7 +85,7 @@ export async function sendMessageAction(formData: FormData) {
   const attachmentType = formData.get("attachmentType") as string;
   const receiverId = formData.get("receiverId") as string;
 
-  if (!text && !attachmentUrl) throw new Error("Текст или вложение обязательны");
+  if (!text && !attachmentUrl) throw new ApiError("bad_request", "Текст или вложение обязательны", 400);
 
   // Determine receiver: students ALWAYS send to their assigned curator (prevent IDOR)
   let toUserId = receiverId;
@@ -93,7 +94,7 @@ export async function sendMessageAction(formData: FormData) {
       where: { studentId: user.id, active: true },
       select: { curatorId: true },
     });
-    if (!assignment) throw new Error("У вас нет назначенного куратора");
+    if (!assignment) throw new ApiError("forbidden", "У вас нет назначенного куратора", 403);
     toUserId = assignment.curatorId;
   }
 

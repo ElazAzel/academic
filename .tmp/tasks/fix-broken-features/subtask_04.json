@@ -1,0 +1,22 @@
+{
+  "seq": 4,
+  "name": "Fix Chat Real-time (Supabase Realtime)",
+  "group": "B",
+  "module": "chat",
+  "description": "Replace refetchInterval: 15000 polling in chat-panel.tsx with Supabase Realtime subscription on messages table for the conversation. Add auto-reconnect logic. Keep polling as fallback. In server/actions/chat.ts, ensure messages broadcast via Supabase Realtime.",
+  "files": [
+    "components/lms/chat-panel.tsx",
+    "server/actions/chat.ts"
+  ],
+  "context_files": [
+    "AI.md",
+    "ai/roles/frontend-lms-ux.md",
+    "ai/roles/backend-next-prisma.md"
+  ],
+  "reference_files": [
+    "components/lms/ask-curator-question.tsx",
+    "lib/http.ts"
+  ],
+  "depends_on": [],
+  "parallel": true
+}

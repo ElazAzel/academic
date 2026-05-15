@@ -38,7 +38,9 @@ export function ChatPanel({
   const { data: messages = [] } = useQuery({
     queryKey,
     queryFn: () => getConversation(studentId, lessonId),
-    refetchInterval: 15_000, // авто-обновление каждые 15 с
+    refetchInterval: 5_000, // авто-обновление каждые 5 с (было 15)
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
   });
 
   useEffect(() => {
@@ -72,7 +74,10 @@ export function ChatPanel({
       return { previous };
     },
     onError: (_err, _formData, context) => {
-      // Откат при ошибке
+      // Откат при ошибке — удаляем оптимистичные сообщения
+      queryClient.setQueryData<ChatMessage[]>(queryKey, (old) =>
+        (old ?? []).filter((m) => !m.id.startsWith("optimistic-"))
+      );
       if (context?.previous) {
         queryClient.setQueryData(queryKey, context.previous);
       }
@@ -135,8 +140,26 @@ export function ChatPanel({
               )}
               <p className={`text-[10px] mt-1 ${m.isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                 {new Date(m.createdAt).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })}
-                {m.id.startsWith("optimistic-") && " · отправляется..."}
+                {m.id.startsWith("optimistic-") && sendMutation.isPending && " · отправляется..."}
+                {m.id.startsWith("optimistic-") && sendMutation.isError && (
+                  <span className="text-destructive"> · ошибка</span>
+                )}
               </p>
+              {m.id.startsWith("optimistic-") && sendMutation.isError && (
+                <button
+                  onClick={() => {
+                    // Повторная отправка последнего неудачного сообщения
+                    const formData = new FormData();
+                    formData.set("text", m.text ?? "");
+                    if (lessonId) formData.set("lessonId", lessonId);
+                    if (curatorId) formData.set("receiverId", curatorId);
+                    sendMutation.mutate(formData);
+                  }}
+                  className="mt-1 text-[10px] text-destructive hover:underline"
+                >
+                  Повторить
+                </button>
+              )}
             </div>
           </div>
         ))}

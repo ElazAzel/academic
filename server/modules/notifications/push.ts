@@ -11,56 +11,64 @@ interface PushPayload {
 
 let currentProvider: PushProvider = env.FEATURE_PUSH_NOTIFICATIONS ? "firebase" : "none";
 
-let firebaseApp: unknown = null;
-
-export function getPushProvider(): PushProvider {
-  return currentProvider;
-}
-
-export function setPushProvider(provider: PushProvider) {
-  currentProvider = provider;
-}
-
-function initFirebase(): boolean {
-  if (firebaseApp) return true;
-
-  const credentials = env.FIREBASE_CLIENT_EMAIL && env.FIREBASE_PRIVATE_KEY;
-  if (!credentials) {
-    console.warn("Firebase push: missing FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY env vars");
-    return false;
-  }
-
-  try {
-    // admin.initializeApp is optional — Firebase SDK will be integrated later
-    console.info("Firebase Admin SDK initialized");
-    firebaseApp = true;
-    return true;
-  } catch (error) {
-    console.error("Failed to initialize Firebase Admin SDK:", error);
-    return false;
-  }
-}
-
+/**
+ * Send push notification via Firebase Admin SDK.
+ *
+ * Реальная отправка Firebase работает только если:
+ * 1. FEATURE_PUSH_NOTIFICATIONS=true
+ * 2. FIREBASE_CLIENT_EMAIL и FIREBASE_PRIVATE_KEY заданы
+ * 3. Firebase Admin SDK установлен и инициализирован
+ *
+ * Если push не настроен, функция возвращает false без ошибки.
+ */
 export async function sendPushNotification(payload: PushPayload): Promise<boolean> {
   if (currentProvider === "none") {
     return false;
   }
 
   if (currentProvider === "firebase") {
-    if (!initFirebase()) return false;
-
     try {
-      // Firebase Admin SDK messaging integration
-      // const message: admin.messaging.Message = {
-      //   token: payload.token,
-      //   notification: { title: payload.title, body: payload.body },
-      //   data: payload.data,
-      // };
-      // await admin.messaging().send(message);
-      console.info("Push sent (firebase):", payload.title);
+      // Динамический импорт для опциональной зависимости
+      // Используем Function() для обхода статического анализа TypeScript
+      const adminMod: unknown = await new Function('return import("firebase-admin")')().catch(() => null);
+      if (!adminMod) {
+        console.warn("[Push] firebase-admin package not installed. Install with: npm install firebase-admin");
+        currentProvider = "none";
+        return false;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const admin = adminMod as any;
+
+      if (!admin.apps || !admin.apps.length) {
+        const clientEmail = env.FIREBASE_CLIENT_EMAIL;
+        const privateKey = env.FIREBASE_PRIVATE_KEY;
+        const projectId = env.FIREBASE_PROJECT_ID;
+
+        if (!clientEmail || !privateKey || !projectId) {
+          console.warn("[Push] Firebase не настроен: отсутствуют FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY или FIREBASE_PROJECT_ID");
+          currentProvider = "none";
+          return false;
+        }
+
+        admin.initializeApp({
+          credential: admin.credential.cert({
+            clientEmail,
+            privateKey,
+            projectId,
+          }),
+        });
+      }
+
+      await admin.messaging().send({
+        token: payload.token,
+        notification: { title: payload.title, body: payload.body },
+        data: payload.data,
+      });
       return true;
     } catch (error) {
-      console.error("Firebase push failed:", error);
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("[Push] Firebase send failed:", message);
       return false;
     }
   }

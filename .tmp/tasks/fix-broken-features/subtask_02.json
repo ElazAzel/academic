@@ -1,0 +1,20 @@
+{
+  "seq": 2,
+  "name": "Fix createNotification to respect preferences",
+  "group": "A",
+  "module": "notifications",
+  "description": "In createNotification(), call getUserNotificationPreferences(userId) before creating notification. Check if the event type is enabled in user preferences. If disabled, skip notification creation. Also check email preferences before sending email.",
+  "files": [
+    "server/modules/notifications/service.ts"
+  ],
+  "context_files": [
+    "AI.md",
+    "ai/roles/backend-next-prisma.md"
+  ],
+  "reference_files": [
+    "server/modules/notifications/preferences.ts",
+    "server/modules/notifications/push.ts"
+  ],
+  "depends_on": [],
+  "parallel": true
+}

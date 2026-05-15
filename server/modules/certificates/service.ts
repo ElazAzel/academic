@@ -1,4 +1,5 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFFont } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import QRCode from "qrcode";
 import fs from "fs";
 import path from "path";
@@ -123,6 +124,50 @@ export async function verifyCertificateByCode(verificationCode: string) {
   };
 }
 
+/**
+ * Загружает кириллический TTF-шрифт для PDF.
+ * Пытается загрузить кастомный шрифт из public/assets/fonts/.
+ * Если шрифт не найден — возвращает стандартный Helvetica (без кириллицы).
+ */
+async function loadCyrillicFonts(pdf: PDFDocument): Promise<{
+  regular: PDFFont;
+  bold: PDFFont;
+  italic: PDFFont;
+}> {
+  const fontsDir = path.join(process.cwd(), "public/assets/fonts");
+  const regularPath = path.join(fontsDir, "NotoSans-Regular.ttf");
+  const boldPath = path.join(fontsDir, "NotoSans-Bold.ttf");
+  const italicPath = path.join(fontsDir, "NotoSans-Italic.ttf");
+
+  // Пробуем загрузить кириллические шрифты
+  try {
+    if (fs.existsSync(regularPath) && fs.existsSync(boldPath)) {
+      pdf.registerFontkit(fontkit);
+      const regular = await pdf.embedFont(fs.readFileSync(regularPath));
+      const bold = await pdf.embedFont(fs.readFileSync(boldPath));
+      const italic = fs.existsSync(italicPath)
+        ? await pdf.embedFont(fs.readFileSync(italicPath))
+        : regular;
+      console.info("[Certificate] Cyrillic fonts loaded from", fontsDir);
+      return { regular, bold, italic };
+    }
+  } catch (e) {
+    console.warn("[Certificate] Failed to load custom fonts, using Helvetica fallback:", e);
+  }
+
+  // Fallback на Helvetica (без поддержки кириллицы)
+  console.warn(
+    "[Certificate] Cyrillic fonts not found in",
+    fontsDir,
+    "— Russian text may not render correctly. " +
+    "Place NotoSans-Regular.ttf and NotoSans-Bold.ttf in public/assets/fonts/"
+  );
+  const regular = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
+  return { regular, bold, italic };
+}
+
 export async function generateCertificatePdf(certificateId: string) {
   const certificate = await prisma.certificate.findUnique({
     where: { id: certificateId },
@@ -136,9 +181,10 @@ export async function generateCertificatePdf(certificateId: string) {
   const pageWidth = 842;
   const pageHeight = 595;
   const page = pdf.addPage([pageWidth, pageHeight]);
-  const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
+
+  // Загружаем шрифты (с кириллицей, если доступны)
+  const { regular: font, bold, italic } = await loadCyrillicFonts(pdf);
+
   const qrPng = await QRCode.toDataURL(certificate.verificationUrl);
   const qrImage = await pdf.embedPng(qrPng);
 
@@ -166,16 +212,16 @@ export async function generateCertificatePdf(certificateId: string) {
     borderColor: rgb(0.85, 0.73, 0.35), borderWidth: 1,
   });
 
-  // Typography and Layout
+  // Typography and Layout — все тексты на русском
   const textTitle = "AI Strategic Academy";
   const titleWidth = bold.widthOfTextAtSize(textTitle, 36);
   page.drawText(textTitle, { x: (pageWidth - titleWidth) / 2, y: 500, size: 36, font: bold, color: rgb(0.12, 0.23, 0.47) });
 
-  const textSubtitle = "CERTIFICATE OF COMPLETION";
+  const textSubtitle = "СВИДЕТЕЛЬСТВО О ЗАВЕРШЕНИИ";
   const subtitleWidth = font.widthOfTextAtSize(textSubtitle, 16);
   page.drawText(textSubtitle, { x: (pageWidth - subtitleWidth) / 2, y: 460, size: 16, font, color: rgb(0.4, 0.4, 0.4) });
 
-  const textPresentedTo = "This is proudly presented to";
+  const textPresentedTo = "Настоящее свидетельство вручается";
   const presentedWidth = italic.widthOfTextAtSize(textPresentedTo, 14);
   page.drawText(textPresentedTo, { x: (pageWidth - presentedWidth) / 2, y: 420, size: 14, font: italic, color: rgb(0.3, 0.3, 0.3) });
 
@@ -183,7 +229,7 @@ export async function generateCertificatePdf(certificateId: string) {
   const nameWidth = bold.widthOfTextAtSize(studentName, 42);
   page.drawText(studentName, { x: (pageWidth - nameWidth) / 2, y: 360, size: 42, font: bold, color: rgb(0.12, 0.23, 0.47) });
 
-  const textFor = "for successfully completing the course";
+  const textFor = "за успешное прохождение курса";
   const forWidth = font.widthOfTextAtSize(textFor, 14);
   page.drawText(textFor, { x: (pageWidth - forWidth) / 2, y: 320, size: 14, font, color: rgb(0.3, 0.3, 0.3) });
 
@@ -204,7 +250,7 @@ export async function generateCertificatePdf(certificateId: string) {
   }
 
   page.drawLine({ start: { x: 120, y: 120 }, end: { x: 300, y: 120 }, thickness: 1, color: rgb(0.5, 0.5, 0.5) });
-  page.drawText("Authorized Signature", { x: 160, y: 100, size: 12, font, color: rgb(0.3, 0.3, 0.3) });
+  page.drawText("Уполномоченное лицо", { x: 160, y: 100, size: 12, font, color: rgb(0.3, 0.3, 0.3) });
 
   try {
     const sealPath = path.join(assetsDir, "seal.png");
@@ -219,10 +265,10 @@ export async function generateCertificatePdf(certificateId: string) {
 
   // QR Code and Details
   page.drawImage(qrImage, { x: 620, y: 120, width: 100, height: 100 });
-  page.drawText("Verify online", { x: 635, y: 100, size: 10, font, color: rgb(0.3, 0.3, 0.3) });
+  page.drawText("Проверить онлайн", { x: 620, y: 100, size: 10, font, color: rgb(0.3, 0.3, 0.3) });
 
-  page.drawText(`Certificate ID: ${certificate.number}`, { x: 60, y: 60, size: 10, font, color: rgb(0.5, 0.5, 0.5) });
-  page.drawText(`Issued: ${certificate.issuedAt.toISOString().slice(0, 10)}`, { x: 60, y: 45, size: 10, font, color: rgb(0.5, 0.5, 0.5) });
+  page.drawText(`Номер: ${certificate.number}`, { x: 60, y: 60, size: 10, font, color: rgb(0.5, 0.5, 0.5) });
+  page.drawText(`Дата выдачи: ${certificate.issuedAt.toISOString().slice(0, 10)}`, { x: 60, y: 45, size: 10, font, color: rgb(0.5, 0.5, 0.5) });
 
   return pdf.save();
 }

@@ -1,0 +1,20 @@
+{
+  "seq": 10,
+  "name": "Fix NotificationDropdown Error Handling",
+  "group": "G",
+  "module": "notifications",
+  "description": "markAllRead function silently catches errors (catch { // silent }). Remove optimistic update that sets readAt on all notifications before API responds. Only update on successful API response. If API fails, show toast error notification. Same for fetchNotifications — show error state, not silent fail.",
+  "files": [
+    "components/lms/notifications-dropdown.tsx"
+  ],
+  "context_files": [
+    "AI.md",
+    "ai/roles/frontend-lms-ux.md"
+  ],
+  "reference_files": [
+    "components/lms/notifications-list.tsx",
+    "server/modules/notifications/service.ts"
+  ],
+  "depends_on": [],
+  "parallel": true
+}

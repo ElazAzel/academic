@@ -6,6 +6,7 @@ import { enrollStudent as enrollStudentService } from "@/server/modules/courses/
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
 import { RoleKey, UserAccountStatus } from "@prisma/client";
+import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -19,11 +20,11 @@ export async function enrollStudentAction(formData: FormData) {
     const curatorId = formData.get("curatorId") as string || undefined;
 
     if (!userId || !courseId) {
-      throw new Error("Не указан студент или курс");
+      throw new ApiError("bad_request", "Не указан студент или курс", 400);
     }
 
     if (curatorId && !cohortId) {
-      throw new Error("Для назначения куратора необходимо выбрать поток (когорту)");
+      throw new ApiError("bad_request", "Для назначения куратора необходимо выбрать поток (когорту)", 400);
     }
 
     await enrollStudentService({ userId, courseId, cohortId }, actor.id);
@@ -49,7 +50,7 @@ export async function enrollStudentAction(formData: FormData) {
     revalidatePath("/admin/enrollments");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
   }
 }
 
@@ -91,8 +92,8 @@ export async function assignCuratorAction(input: { studentId: string; curatorId:
 export async function pauseEnrollmentAction(enrollmentId: string) {
   const actor = await requireRole(["admin"]);
   const enrollment = await prisma.enrollment.findUnique({ where: { id: enrollmentId } });
-  if (!enrollment) throw new Error("Запись не найдена");
-  if (enrollment.status !== "ACTIVE") throw new Error("Можно приостановить только активное зачисление");
+  if (!enrollment) throw new ApiError("not_found", "Запись не найдена", 404);
+  if (enrollment.status !== "ACTIVE") throw new ApiError("bad_request", "Можно приостановить только активное зачисление", 400);
 
   await prisma.enrollment.update({
     where: { id: enrollmentId },
@@ -113,8 +114,8 @@ export async function pauseEnrollmentAction(enrollmentId: string) {
 export async function resumeEnrollmentAction(enrollmentId: string) {
   const actor = await requireRole(["admin"]);
   const enrollment = await prisma.enrollment.findUnique({ where: { id: enrollmentId } });
-  if (!enrollment) throw new Error("Запись не найдена");
-  if (enrollment.status !== "PAUSED") throw new Error("Можно возобновить только приостановленное зачисление");
+  if (!enrollment) throw new ApiError("not_found", "Запись не найдена", 404);
+  if (enrollment.status !== "PAUSED") throw new ApiError("bad_request", "Можно возобновить только приостановленное зачисление", 400);
 
   await prisma.enrollment.update({
     where: { id: enrollmentId },
@@ -164,7 +165,7 @@ export async function deleteEnrollmentAction(enrollmentId: string) {
     revalidatePath("/admin/enrollments");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
   }
 }
 
@@ -177,7 +178,7 @@ export async function assignCuratorFromSupervisorAction(formData: FormData) {
     const cohortId = formData.get("cohortId") as string;
 
     if (!studentId || !curatorId || !cohortId) {
-      throw new Error("Студент, куратор и поток обязательны");
+      throw new ApiError("bad_request", "Студент, куратор и поток обязательны", 400);
     }
 
     await prisma.curatorAssignment.upsert({
@@ -198,7 +199,7 @@ export async function assignCuratorFromSupervisorAction(formData: FormData) {
     revalidatePath("/super-curator");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
   }
 }
 
@@ -211,7 +212,7 @@ export async function createCohortAction(formData: FormData) {
     const endsAt = formData.get("endsAt") as string || undefined;
 
     if (!name || !courseId) {
-      throw new Error("Название и курс обязательны");
+      throw new ApiError("bad_request", "Название и курс обязательны", 400);
     }
 
     await prisma.cohort.create({
@@ -235,7 +236,7 @@ export async function createCohortAction(formData: FormData) {
     revalidatePath("/admin/cohorts");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
   }
 }
 
@@ -250,7 +251,7 @@ export async function updateCohortAction(formData: FormData) {
     const status = formData.get("status") as string;
 
     if (!id || !name) {
-      throw new Error("ID и название обязательны");
+      throw new ApiError("bad_request", "ID и название обязательны", 400);
     }
 
     await prisma.cohort.update({
@@ -275,7 +276,7 @@ export async function updateCohortAction(formData: FormData) {
     revalidatePath("/admin/cohorts");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
   }
 }
 
@@ -298,7 +299,7 @@ export async function deleteCohortAction(id: string) {
     revalidatePath("/admin/cohorts");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
   }
 }
 
@@ -311,7 +312,7 @@ export async function createUserAction(formData: FormData) {
     const roleKeys = formData.getAll("roles") as RoleKey[];
 
     if (!email) {
-      throw new Error("Email обязателен");
+      throw new ApiError("bad_request", "Email обязателен", 400);
     }
 
     const { createUser } = await import("@/server/modules/users/service");
@@ -320,7 +321,7 @@ export async function createUserAction(formData: FormData) {
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
   }
 }
 
@@ -332,7 +333,7 @@ export async function updateUserAction(formData: FormData) {
     const realName = formData.get("realName") as string;
     const status = formData.get("status") as string;
 
-    if (!userId) throw new Error("ID пользователя обязателен");
+    if (!userId) throw new ApiError("bad_request", "ID пользователя обязателен", 400);
 
     await prisma.user.update({
       where: { id: userId },
@@ -354,7 +355,7 @@ export async function updateUserAction(formData: FormData) {
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
   }
 }
 
@@ -363,7 +364,7 @@ export async function deleteUserAction(userId: string) {
     const actor = await requireRole(["admin"]);
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new Error("Пользователь не найден");
+    if (!user) throw new ApiError("not_found", "Пользователь не найден", 404);
 
     await prisma.user.update({
       where: { id: userId },
@@ -380,7 +381,7 @@ export async function deleteUserAction(userId: string) {
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
   }
 }
 

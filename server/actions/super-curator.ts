@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/page-guards";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
+import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -50,7 +51,7 @@ export async function createCohortAction(formData: FormData) {
   const startsAt = (formData.get("startsAt") as string) || undefined;
   const endsAt = (formData.get("endsAt") as string) || undefined;
 
-  if (!name || !courseId) throw new Error("Название и курс обязательны");
+  if (!name || !courseId) throw new ApiError("bad_request", "Название и курс обязательны", 400);
 
   await prisma.cohort.create({
     data: {
@@ -82,7 +83,7 @@ export async function updateCohortAction(formData: FormData) {
   const endsAt = (formData.get("endsAt") as string) || undefined;
   const status = formData.get("status") as string;
 
-  if (!id || !name) throw new Error("ID и название обязательны");
+  if (!id || !name) throw new ApiError("bad_request", "ID и название обязательны", 400);
 
   await prisma.cohort.update({
     where: { id },
@@ -194,10 +195,10 @@ export async function addStudentToCohortAction(formData: FormData) {
   const email = formData.get("email") as string;
   const courseId = formData.get("courseId") as string;
 
-  if (!cohortId || !email || !courseId) throw new Error("Все поля обязательны");
+  if (!cohortId || !email || !courseId) throw new ApiError("bad_request", "Все поля обязательны", 400);
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error("Пользователь с таким email не найден");
+  if (!user) throw new ApiError("not_found", "Пользователь с таким email не найден", 404);
   const studentId = user.id;
 
   const existing = await prisma.enrollment.findUnique({
@@ -326,12 +327,12 @@ export async function addCuratorAction(formData: FormData) {
   const email = formData.get("email") as string;
   const name = formData.get("name") as string;
 
-  if (!email) throw new Error("Email обязателен");
+  if (!email) throw new ApiError("bad_request", "Email обязателен", 400);
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     const role = await prisma.role.findUnique({ where: { key: "curator" } });
-    if (!role) throw new Error("Роль куратора не найдена");
+    if (!role) throw new ApiError("not_found", "Роль куратора не найдена", 404);
     const hasRole = await prisma.userRole.findUnique({
       where: { userId_roleId: { userId: existingUser.id, roleId: role.id } },
     });
@@ -352,7 +353,7 @@ export async function removeCuratorAction(curatorId: string) {
   const actor = await requireRole(["super_curator", "admin"]);
 
   const role = await prisma.role.findUnique({ where: { key: "curator" } });
-  if (!role) throw new Error("Роль куратора не найдена");
+  if (!role) throw new ApiError("not_found", "Роль куратора не найдена", 404);
 
   await prisma.userRole.deleteMany({
     where: { userId: curatorId, roleId: role.id },
