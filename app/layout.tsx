@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/icon.svg",
   },
-  manifest: "/api/v1/manifest",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     title: "AI Academy",
