@@ -2,6 +2,7 @@ import { z } from "zod";
 import { errorResponse, ok, created, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { assertPermission } from "@/lib/auth/rbac";
+import type { RoleKey } from "@/types/domain";
 import {
   createPopup,
   listPopups,
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
         imageUrl: body.imageUrl,
         linkUrl: body.linkUrl,
         linkText: body.linkText,
-        targetRoles: body.targetRoles as any,
+        targetRoles: body.targetRoles as RoleKey[],
         targetCohortIds: body.targetCohortIds,
         isActive: body.isActive,
       },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Paperclip, Loader2, Download, Smile } from "lucide-react";
@@ -32,7 +32,7 @@ export function ChatPanel({
   studentId: string;
 }) {
   const queryClient = useQueryClient();
-  const queryKey = ["chat", studentId, lessonId];
+  const queryKey = useMemo(() => ["chat", studentId, lessonId], [studentId, lessonId]);
   const [text, setText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -71,7 +71,7 @@ export function ChatPanel({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [studentId, lessonId, queryClient]);
+  }, [studentId, lessonId, queryClient, queryKey]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

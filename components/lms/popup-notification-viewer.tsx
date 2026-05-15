@@ -53,6 +53,7 @@ export function PopupNotificationViewer({
           {/* Image */}
           {popup.imageUrl && (
             <div className="px-6 pb-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={popup.imageUrl}
                 alt={popup.title}

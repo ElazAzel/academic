@@ -34,7 +34,6 @@ async function buildProgressSheet(wb: ExcelJS.Workbook, rows: ProgressRow[]) {
     ch.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE8F0FE" } };
     ws.mergeCells(`A${rowNum}:E${rowNum}`);
     // rowNum уже указывает на строку, добавленную addRow выше
-    const headerRowNum = rowNum;
     rowNum++;
 
     const total = courseRows.length;

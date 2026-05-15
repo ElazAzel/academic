@@ -1,5 +1,5 @@
 import { getPrisma } from "@/lib/prisma";
-import { dequeuePendingEvents, markSent, markFailed } from "@/server/modules/outbox/service";
+import { dequeuePendingEvents, markFailed } from "@/server/modules/outbox/service";
 import { fetchProgressData, fetchRiskData, fetchCertificateData } from "@/lib/reports/data";
 import { generateProgressCsv, generateRiskCsv, generateCertificateCsv } from "@/lib/reports/csv-generator";
 import { generateProgressXlsx, generateRiskXlsx, generateCertificateXlsx } from "@/lib/reports/xlsx-generator";
