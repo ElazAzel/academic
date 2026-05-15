@@ -274,7 +274,6 @@ export interface StudentLessonLearningDetail extends LessonDetail {
   courseId: string;
   prevLesson: { id: string; title: string } | null;
   nextLesson: { id: string; title: string; locked: boolean } | null;
-  myQuestions: LessonQuestionSummary[];
 }
 
 export interface StudentModuleLearningDetail extends ModuleLearningDetail {

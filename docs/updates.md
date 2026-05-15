@@ -2,6 +2,17 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-15 — Fix chat/questions merge, manifest.json, MinIO, auto-issue certificates
+
+Автор/agent: opencode
+Тип изменения: bugfix / chat / certificates / manifest
+
+1. **Unified chat and questions**: Удалён компонент `AskCuratorQuestion` из `lesson-player-shell.tsx` (и из `student-lesson-view.tsx`). Единый интерфейс связи студента с куратором — `ChatPanel` (модель `Message`). Удалён `LessonQuestion` include из `lessonDetailInclude`. Убран `myQuestions` из типа `StudentLessonLearningDetail`.
+2. **Manifest.json Syntax Error**: Убрано свойство `manifest` из экспорта `metadata`, чтобы Next.js не генерировал route handler, конфликтующий со статическим `public/manifest.json`. Файл сервится напрямую.
+3. **Minio not running**: Диагностика — MinIO отключён на localhost:9000. Решение: запустить `docker compose up minio -d`.
+4. **Auto-issue certificates**: В `markLessonProgress` добавлена авто-выдача сертификата при достижении `CERTIFICATE_COMPLETION_THRESHOLD` (по умолчанию 85%). Проверяется отсутствие существующего сертификата. Ошибки выдачи логируются, не блокируют прогресс.
+5. **Tests**: Исправлен мок `prisma.certificate.findFirst` в `progress-service.test.ts`. Только 217 тестов проходят.
+
 ## 2026-05-13 — Credentials login and CI e2e login stabilization
 
 Автор/agent: Codex

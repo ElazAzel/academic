@@ -10,7 +10,6 @@ import type {
   ContinueLearning,
   LessonLearningSummary,
   LessonPlayerCard,
-  LessonQuestionSummary,
   ModuleLearningDetail,
   ModulePlayerDetail,
   StudentCourseLearningDetail,
@@ -82,7 +81,6 @@ const lessonDetailInclude = (userId: string) => ({
   media: true,
   quizzes: { include: { questions: { select: { id: true } } } },
   assignments: { include: { submissions: { where: { userId }, orderBy: { submittedAt: "desc" as const }, take: 1 } } },
-  questions: { where: { studentId: userId }, orderBy: { createdAt: "desc" as const } }
 }) satisfies Prisma.LessonInclude;
 
 function asRecord(value: Prisma.JsonValue): Record<string, unknown> {
@@ -530,14 +528,6 @@ export async function getLessonForStudent(userId: string, lessonId: string): Pro
     courseId: course.id,
     prevLesson: prevLesson ? { id: prevLesson.id, title: prevLesson.title } : null,
     nextLesson: nextLesson ? { id: nextLesson.id, title: nextLesson.title, locked: nextLesson.locked } : null,
-    myQuestions: lesson.questions.map<LessonQuestionSummary>((question) => ({
-      id: question.id,
-      text: question.text,
-      status: question.status === QuestionStatus.ANSWERED ? "answered" : "open",
-      createdAt: question.createdAt.toISOString(),
-      answer: question.answer,
-      answeredAt: question.answeredAt?.toISOString() ?? null
-    }))
   };
 }
 

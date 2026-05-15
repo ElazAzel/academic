@@ -2,7 +2,9 @@ import { EnrollmentStatus, ProgressStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { clamp } from "@/lib/utils";
+import { env } from "@/lib/env";
 import { logAudit } from "@/server/modules/audit/service";
+import { issueCertificate } from "@/server/modules/certificates/service";
 
 const prisma = getPrisma();
 
@@ -182,6 +184,18 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
   });
 
   await logAudit({ actorId: userId, action: "progress.lesson_marked", entity: "lesson", entityId: lessonId, metadata: { percent } });
+
+  if (result.coursePercent >= env.CERTIFICATE_COMPLETION_THRESHOLD) {
+    const existing = await prisma.certificate.findFirst({
+      where: { userId, courseId: course.id }
+    });
+    if (!existing) {
+      issueCertificate({ userId, courseId: course.id }, userId).catch(
+        (e) => console.error("Failed to auto-issue certificate:", e)
+      );
+    }
+  }
+
   return result;
 }
 
