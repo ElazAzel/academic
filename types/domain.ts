@@ -467,18 +467,6 @@ export interface CertificateSummary {
   verificationUrl: string;
 }
 
-// ── Инвайты ─────────────────────────────────────────────────────────
-export interface InviteLinkSummary {
-  id: string;
-  token: string;
-  courseTitle?: string;
-  cohortName?: string;
-  maxActivations: number;
-  activationCount: number;
-  expiresAt?: string | null;
-  status: string;
-}
-
 // ── Метрики дашборда ────────────────────────────────────────────────
 export interface DashboardMetric {
   label: string;

@@ -7,7 +7,6 @@ import {
   FileText,
   HelpCircle,
   LayoutDashboard,
-  Link2,
   MessageCircle,
   Settings,
   ShieldCheck,
@@ -40,7 +39,6 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   Users2,
   BarChart3,
   HelpCircle,
-  Link2,
 };
 
 export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
@@ -85,10 +83,7 @@ export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
   admin: [
     { href: "/admin", label: "Дашборд", icon: "LayoutDashboard" },
     { href: "/admin/courses", label: "Курсы", icon: "BookOpen" },
-    { href: "/admin/users", label: "Пользователи", icon: "Users" },
-    { href: "/admin/cohorts", label: "Потоки", icon: "Users2" },
-    { href: "/admin/enrollments", label: "Зачисления", icon: "UserCheck" },
-    { href: "/admin/invites", label: "Инвайты", icon: "Link2" },
+    { href: "/admin/management", label: "Управление", icon: "Users" },
     { href: "/admin/analytics", label: "Аналитика", icon: "BarChart3" },
     { href: "/admin/reports", label: "Отчёты", icon: "BarChart3" },
     { href: "/admin/audit", label: "Аудит", icon: "FileText" },

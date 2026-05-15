@@ -6,8 +6,6 @@ const mockEnrollmentCount = vi.hoisted(() => vi.fn());
 const mockCourseProgressCount = vi.hoisted(() => vi.fn());
 const mockQuizAttemptFindMany = vi.hoisted(() => vi.fn());
 const mockCertificateCount = vi.hoisted(() => vi.fn());
-const mockInviteLinkCount = vi.hoisted(() => vi.fn());
-const mockInviteLinkAggregate = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
@@ -17,7 +15,6 @@ vi.mock("@/lib/prisma", () => ({
     courseProgress: { count: mockCourseProgressCount },
     quizAttempt: { findMany: mockQuizAttemptFindMany },
     certificate: { count: mockCertificateCount },
-    inviteLink: { count: mockInviteLinkCount, aggregate: mockInviteLinkAggregate },
   }),
 }));
 
@@ -34,8 +31,6 @@ describe("getAdminOverview", () => {
       { score: 60, passed: false },
     ]);
     mockCertificateCount.mockResolvedValue(8);
-    mockInviteLinkCount.mockResolvedValue(3);
-    mockInviteLinkAggregate.mockResolvedValue({ _sum: { activationCount: 15 } });
 
     const result = await getAdminOverview();
     expect(result).toMatchObject({
@@ -48,8 +43,6 @@ describe("getAdminOverview", () => {
       revenueCents: 0,
       currency: "rub",
       certificates: 8,
-      activeInviteLinks: 3,
-      inviteActivations: 15,
     });
   });
 
@@ -60,8 +53,6 @@ describe("getAdminOverview", () => {
     mockCourseProgressCount.mockResolvedValue(0);
     mockQuizAttemptFindMany.mockResolvedValue([]);
     mockCertificateCount.mockResolvedValue(0);
-    mockInviteLinkCount.mockResolvedValue(0);
-    mockInviteLinkAggregate.mockResolvedValue({ _sum: { activationCount: null } });
 
     const result = await getAdminOverview();
     expect(result).toMatchObject({
@@ -72,8 +63,6 @@ describe("getAdminOverview", () => {
       averageQuizScore: 0,
       passedQuizAttempts: 0,
       certificates: 0,
-      activeInviteLinks: 0,
-      inviteActivations: 0,
     });
   });
 
@@ -84,8 +73,6 @@ describe("getAdminOverview", () => {
     mockCourseProgressCount.mockResolvedValue(4);
     mockQuizAttemptFindMany.mockResolvedValue([{ score: 90, passed: true }]);
     mockCertificateCount.mockResolvedValue(2);
-    mockInviteLinkCount.mockResolvedValue(1);
-    mockInviteLinkAggregate.mockResolvedValue({ _sum: { activationCount: 5 } });
 
     const result = await getAdminOverview();
     expect(result).toHaveProperty("activeUsers");
@@ -97,8 +84,6 @@ describe("getAdminOverview", () => {
     expect(result).toHaveProperty("revenueCents");
     expect(result).toHaveProperty("currency");
     expect(result).toHaveProperty("certificates");
-    expect(result).toHaveProperty("activeInviteLinks");
-    expect(result).toHaveProperty("inviteActivations");
     expect(typeof result.revenueCents).toBe("number");
     expect(result.currency).toBe("rub");
   });

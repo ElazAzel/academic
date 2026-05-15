@@ -21,7 +21,7 @@ export default async function SuperCuratorDistributionPage() {
   where: {
    roles: { some: { role: { key: "student" } } },
    AND: {
-    studentAssignments: { none: { active: true } }
+    curatorAssignments: { none: { active: true } }
    }
   },
   select: {
@@ -38,11 +38,11 @@ export default async function SuperCuratorDistributionPage() {
  const assignedStudents = await prisma.user.findMany({
   where: {
    roles: { some: { role: { key: "student" } } },
-   studentAssignments: { some: { active: true } },
-  },
-  select: {
-   id: true, name: true, email: true,
-   studentAssignments: {
+    curatorAssignments: { some: { active: true } },
+   },
+   select: {
+    id: true, name: true, email: true,
+    curatorAssignments: {
     where: { active: true },
     select: { cohortId: true, curatorId: true, curator: { select: { id: true, name: true, email: true } }, cohort: { select: { id: true, name: true } } },
    },
@@ -119,7 +119,7 @@ export default async function SuperCuratorDistributionPage() {
       {assignedStudents.length === 0 ? (
        <p className="text-sm text-muted-foreground py-4 text-center">Нет слушателей с назначенными кураторами.</p>
       ) : assignedStudents.map((s) => {
-       const assignment = s.studentAssignments[0];
+       const assignment = s.curatorAssignments[0];
        return (
         <div key={s.id} className="flex items-center gap-4 rounded-xl border p-4 transition-shadow hover:shadow-sm">
          <div className="flex-1 min-w-0">

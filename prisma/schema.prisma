@@ -145,27 +145,24 @@ model User {
   reviewedSubmissions   AssignmentSubmission[] @relation("SubmissionReviewer")
   certificates          Certificate[]
 
-  notifications         Notification[]
-  auditLogs             AuditLog[] @relation("AuditActor")
-  consentLogs           ConsentLog[]
-  createdInvites        InviteLink[] @relation("InviteCreator")
-  importJobs            ImportJob[] @relation("ImportCreator")
-  curatorAssignments    CuratorAssignment[] @relation("CuratorAssignments")
-  studentAssignments    CuratorAssignment[] @relation("StudentCuratorAssignments")
-  superCuratorLinks     CuratorAssignment[] @relation("SuperCuratorAssignments")
-  studentQuestions      LessonQuestion[] @relation("StudentQuestions")
-  curatorQuestions      LessonQuestion[] @relation("CuratorQuestions")
-  riskFlags             RiskFlag[]
-  activityLogs          ActivityLog[]
-  observerProjects      ObserverProject[]
-  observerCohorts       ObserverCohort[]
-  sentMessages          Message[] @relation("SentMessages")
-  receivedMessages      Message[] @relation("ReceivedMessages")
-  notificationPreferences NotificationPreference[]
-  lessonRatings         LessonRating[]
+  notifications              Notification[]
+  auditLogs                  AuditLog[] @relation("AuditActor")
+  consentLogs                ConsentLog[]
+  sentMessages               Message[] @relation("SentMessages")
+  receivedMessages           Message[] @relation("ReceivedMessages")
+  studentQuestions           LessonQuestion[] @relation("StudentQuestions")
+  curatorQuestions           LessonQuestion[] @relation("CuratorQuestions")
+  curatorAssignments         CuratorAssignment[] @relation("StudentCuratorAssignments")
+  curatorAssignmentsAsCurator CuratorAssignment[] @relation("CuratorAssignments")
+  superCuratorAssignments    CuratorAssignment[] @relation("SuperCuratorAssignments")
+  riskFlags                  RiskFlag[]
+  importJobsCreated          ImportJob[] @relation("ImportCreator")
+  observerProjects           ObserverProject[]
+  observerCohorts            ObserverCohort[]
+  notificationPreferences    NotificationPreference[]
+  lessonRatings              LessonRating[]
+  activityLogs               ActivityLog[]
 
-  @@index([createdAt])
-  @@index([status])
   @@map("users")
 }
 
@@ -282,7 +279,6 @@ model Project {
   client      Client?      @relation(fields: [clientId], references: [id])
   cohorts     Cohort[]
   reports     Report[]
-  inviteLinks InviteLink[]
   observerProjects ObserverProject[]
 
   @@map("projects")
@@ -316,7 +312,6 @@ model Course {
   certificateTemplates CertificateTemplate[]
 
   reports        Report[]
-  inviteLinks    InviteLink[]
   riskFlags      RiskFlag[]
   notificationPreferences NotificationPreference[]
 
@@ -461,12 +456,11 @@ model Cohort {
   course      Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
   project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   deadlines   CohortDeadline[]
+  blockDeadlines BlockCohortDeadline[]
   enrollments Enrollment[]
   curatorAssignments CuratorAssignment[]
   riskFlags RiskFlag[]
-  inviteLinks InviteLink[]
   observerCohorts ObserverCohort[]
-  blockDeadlines BlockCohortDeadline[]
 
   @@index([createdAt])
   @@index([status])
@@ -749,6 +743,7 @@ model Certificate {
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   course     Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
   enrollment Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+  templateId String?     @map("template_id")
 
   @@index([issuedAt])
   @@map("certificates")
@@ -835,29 +830,6 @@ model AppSetting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("app_settings")
-}
-
-model InviteLink {
-  id             String   @id @default(cuid())
-  courseId       String?  @map("course_id")
-  cohortId       String?  @map("cohort_id")
-  projectId      String?  @map("project_id")
-  token          String   @unique
-  allowedEmails  Json     @default("[]") @map("allowed_emails")
-  maxActivations Int      @default(1) @map("max_activations")
-  activationCount Int     @default(0) @map("activation_count")
-  expiresAt      DateTime? @map("expires_at")
-  status         String   @default("active")
-  createdById    String?  @map("created_by_id")
-  createdAt      DateTime @default(now()) @map("created_at")
-
-  course    Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  cohort    Cohort?  @relation(fields: [cohortId], references: [id], onDelete: Cascade)
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdBy User?    @relation("InviteCreator", fields: [createdById], references: [id])
-
-  @@index([createdAt])
-  @@map("invite_links")
 }
 
 model CuratorAssignment {
@@ -1028,10 +1000,12 @@ model GlossaryEntry {
   question  String   @db.Text
   answer    String   @db.Text
   category  String   @default("Общее")
+  direction String   @default("general") @map("direction")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([question])
   @@index([category])
+  @@index([direction])
   @@map("glossary_entries")
 }
