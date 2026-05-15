@@ -9,6 +9,7 @@ export async function GET() {
     const popup = await getLatestUnviewedPopup(user.id);
     return ok(popup);
   } catch (error) {
+    console.error("[popups/active] Error:", error);
     return errorResponse(error);
   }
 }
