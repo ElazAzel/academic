@@ -7,7 +7,7 @@ const prisma = getPrisma();
 // GET /api/v1/cohorts — list all active cohorts (for popup targeting)
 export async function GET() {
   try {
-    const user = await requireUser();
+    await requireUser();
     // Any authenticated user can list cohorts for selection purposes
     const cohorts = await prisma.cohort.findMany({
       where: {

@@ -2,7 +2,6 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { NotificationsList } from "@/components/lms/notifications-list";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getCurrentUser } from "@/lib/auth/session";
 import type { RoleKey } from "@/types/domain";
 
 export const dynamic = "force-dynamic";

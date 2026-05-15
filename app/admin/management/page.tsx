@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
-import { Plus, UserPlus, Users2, GraduationCap } from "lucide-react";
+import { UserPlus, Users2, GraduationCap } from "lucide-react";
 import Link from "next/link";
 
 const prisma = getPrisma();

@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, Bell, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface PopupData {
   id: string;
@@ -85,6 +84,7 @@ export function PopupModal() {
           {/* Image */}
           {popup.imageUrl && (
             <div className="px-6 pb-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={popup.imageUrl}
                 alt={popup.title}

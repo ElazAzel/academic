@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { writeOutboxEvent } from "@/server/modules/outbox/service";
-import { errorResponse, parseJson, ApiError } from "@/lib/http";
+import { errorResponse, parseJson } from "@/lib/http";
 import { z } from "zod";
 
 const createJobSchema = z.object({

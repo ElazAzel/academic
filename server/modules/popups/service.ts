@@ -1,5 +1,4 @@
 import { getPrisma } from "@/lib/prisma";
-import { toJsonValue } from "@/lib/json";
 import { ApiError } from "@/lib/http";
 import { createNotification } from "@/server/modules/notifications/service";
 import type { RoleKey } from "@/types/domain";
@@ -85,7 +84,7 @@ export async function createPopup(input: CreatePopupInput, createdById: string) 
     for (const user of targetUsers) {
       await createNotification({
         userId: user.id,
-        event: "popup" as any,
+        event: "popup",
         title: input.title,
         body: input.message.length > 200 ? input.message.substring(0, 200) + "…" : input.message,
         data: {

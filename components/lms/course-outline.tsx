@@ -22,14 +22,14 @@ const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   MIXED: FileText,
 };
 
-const LESSON_TYPE_OPTIONS = [
-  { value: "MIXED", label: "Смешанный" },
-  { value: "VIDEO", label: "Видео" },
-  { value: "TEXT", label: "Текст" },
-  { value: "DOCUMENT", label: "Документ" },
-  { value: "QUIZ", label: "Тест" },
-  { value: "ASSIGNMENT", label: "Задание" },
-];
+// const LESSON_TYPE_OPTIONS = [ // kept for future use
+//   { value: "MIXED", label: "Смешанный" },
+//   { value: "VIDEO", label: "Видео" },
+//   { value: "TEXT", label: "Текст" },
+//   { value: "DOCUMENT", label: "Документ" },
+//   { value: "QUIZ", label: "Тест" },
+//   { value: "ASSIGNMENT", label: "Задание" },
+// ];
 
 export function CourseOutline({
   modules,

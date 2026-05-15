@@ -7,7 +7,7 @@ const prisma = getPrisma();
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireUser();
+    await requireUser();
     const jobId = request.nextUrl.searchParams.get("jobId");
 
     if (!jobId) {
