@@ -18,7 +18,7 @@ export async function proxy(req: NextRequest) {
       });
       if (token?.roles) {
         const roles = token.roles as string[];
-        const homePath = getDefaultRolePath(roles);
+        const homePath = getDefaultRolePath(roles as string[]);
         if (homePath !== "/403") {
           return NextResponse.redirect(new URL(homePath, req.url));
         }

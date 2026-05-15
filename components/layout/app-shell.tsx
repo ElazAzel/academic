@@ -23,15 +23,15 @@ export function AppShell({
     <div className="min-h-screen">
       <SiteHeader />
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6">
-        <div className="flex items-center gap-3 lg:hidden mb-4">
+        <div className="flex items-center gap-3 md:hidden mb-4">
           <MobileNav links={links} role={role} />
           <div>
             <h2 className="text-sm font-medium">{roleLabel}</h2>
             <p className="text-xs text-muted-foreground">Навигация по разделу</p>
           </div>
         </div>
-        <div className="lg:grid lg:grid-cols-[260px_1fr] lg:gap-6">
-          <aside className="hidden lg:block">
+        <div className="md:grid md:grid-cols-[260px_1fr] md:gap-6">
+          <aside className="hidden md:block">
             <nav
               className="sticky top-24 space-y-1 rounded-2xl border bg-white/80 p-3 shadow-sm backdrop-blur-xl dark:bg-gray-950/80 dark:border-gray-800"
               aria-label={`Кабинет: ${roleLabel}`}
@@ -39,7 +39,7 @@ export function AppShell({
               <NavLinks links={links} />
             </nav>
           </aside>
-          <main className={cn("min-w-0", className)}>
+          <main id="main-content" className={cn("min-w-0", className)}>
             <PageTransition>{children}</PageTransition>
           </main>
         </div>

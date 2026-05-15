@@ -61,6 +61,7 @@ export default async function SuperCuratorReportsPage() {
       </div>
 
       <Tabs
+        paramName="tab"
         tabs={[
           {
             label: "Прогресс по потокам",

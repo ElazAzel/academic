@@ -27,6 +27,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ru" suppressHydrationWarning data-scroll-behavior="smooth">
       <body>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-white focus:text-primary focus:rounded-xl focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          Перейти к содержимому
+        </a>
         <Providers>{children}</Providers>
         <PWARegister />
       </body>

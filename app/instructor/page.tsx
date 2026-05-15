@@ -36,7 +36,7 @@ export default async function InstructorDashboardPage() {
    <PageHeader title="Дашборд преподавателя" description="Ваши курсы, модули, уроки и аналитика."/>
    <div className="space-y-6">
     <MetricGrid metrics={metrics}/>
-    <Tabs tabs={[
+    <Tabs paramName="tab" tabs={[
      { label: "Мои курсы", content: <CourseManageGrid courses={myCourses}/> },
      {
       label: "Аналитика",

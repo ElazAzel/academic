@@ -27,7 +27,9 @@ export function NavLinks({ links }: { links: NavItem[] }) {
         setCounts(json.data ?? {});
         setCountsLoaded(true);
       }
-    } catch { /* silent */ }
+    } catch (err) {
+      console.error("[NavLinks] Failed to fetch counts:", err);
+    }
   }, []);
 
   useEffect(() => {

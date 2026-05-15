@@ -16,11 +16,13 @@ export async function getConversation(studentId: string, lessonId?: string) {
   // Prevent IDOR: students can only see their own conversations
   const targetUserId = isStudent ? user.id : studentId;
 
+  const lessonFilter = lessonId ? { lessonId } : {};
+
   const messages = await prisma.message.findMany({
     where: {
       OR: [
-        { senderId: targetUserId, receiverId: isStudent ? user.id : undefined, ...(lessonId ? { lessonId } : {}) },
-        { senderId: isStudent ? user.id : undefined, receiverId: targetUserId, ...(lessonId ? { lessonId } : {}) },
+        { senderId: targetUserId, ...lessonFilter },
+        { receiverId: targetUserId, ...lessonFilter },
       ],
     },
     orderBy: { createdAt: "asc" },
@@ -109,28 +111,30 @@ export async function sendMessageAction(formData: FormData) {
   },
   });
 
-  // Create notification for receiver
-  if (toUserId && toUserId !== user.id) {
-    const messagePreview = text ? (text.length > 100 ? text.substring(0, 100) + "…" : text) : "Вложение";
-    const isCurator = user.roles.includes("curator") || user.roles.includes("super_curator") || user.roles.includes("admin");
-    const link = isCurator
-      ? `/curator/chat`
-      : `/student/chat`;
+    // Create notification for receiver
+    if (toUserId && toUserId !== user.id) {
+      const messagePreview = text ? (text.length > 100 ? text.substring(0, 100) + "…" : text) : "Вложение";
+      const isCurator = user.roles.includes("curator") || user.roles.includes("super_curator") || user.roles.includes("admin");
+      const link = isCurator
+        ? `/curator/chat`
+        : lessonId
+          ? `/student/lessons/${lessonId}`
+          : `/student`;
 
-    await createNotification({
-      userId: toUserId,
-      event: "new_message",
-      title: `Новое сообщение от ${user.name ?? "пользователя"}`,
-      body: messagePreview,
-      data: {
-        refType: "message",
-        refId: lessonId || "general",
-        link,
-        senderId: user.id,
-        senderName: user.name,
-      },
-    });
-  }
+      await createNotification({
+        userId: toUserId,
+        event: "new_message",
+        title: `Новое сообщение от ${user.name ?? "пользователя"}`,
+        body: messagePreview,
+        data: {
+          refType: "message",
+          refId: lessonId || "general",
+          link,
+          senderId: user.id,
+          senderName: user.name,
+        },
+      });
+    }
 
   revalidatePath("/curator/questions");
   revalidatePath("/student");

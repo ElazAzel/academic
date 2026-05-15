@@ -255,7 +255,7 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
               </p>
             </div>
             {q.status === "open" && (
-              <Button size="sm" variant="secondary" onClick={() => setSelectedQuestion(q)}>Ответить</Button>
+              <Button size="sm" variant="secondary" onClick={() => setSelectedQuestion(q)} aria-label="Ответить на вопрос">Ответить</Button>
             )}
           </CardContent>
         </Card>
@@ -316,7 +316,7 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
                 <SubmissionBadge status={s.status} />
               </TableCell>
               <TableCell className="text-right">
-                <Button size="sm" onClick={() => setSelectedSubmission(s)}>Проверить</Button>
+                <Button size="sm" onClick={() => setSelectedSubmission(s)} aria-label="Проверить задание">Проверить</Button>
               </TableCell>
             </TableRow>
           ))}
@@ -385,7 +385,7 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
                 {r.cohortName && ` · ${r.cohortName}`}
               </p>
             </div>
-            <Button size="sm" variant="secondary">Подробнее</Button>
+            <Button size="sm" variant="secondary" aria-label="Подробнее о риске">Подробнее</Button>
           </CardContent>
         </Card>
         </CardHover>

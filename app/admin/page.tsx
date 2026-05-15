@@ -42,6 +42,7 @@ export default async function AdminDashboardPage() {
     <MetricGrid metrics={metrics}/>
 
     <Tabs
+     paramName="tab"
      tabs={[
       {
        label: `Курсы (${courses.length})`,

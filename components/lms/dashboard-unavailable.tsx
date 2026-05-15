@@ -11,7 +11,7 @@ export function DashboardUnavailable() {
         <div>
           <h2 className="text-base font-semibold">Данные кабинета временно недоступны</h2>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-amber-900">
-            Проверьте подключение PostgreSQL, миграции и seed в окружении деплоя. В production фейковые данные отключены.
+            Данные кабинета временно недоступны. Пожалуйста, попробуйте обновить страницу позже или обратитесь к администратору.
           </p>
         </div>
       </CardContent>

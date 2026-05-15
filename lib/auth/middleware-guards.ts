@@ -1,22 +1,15 @@
-export const ROLE_HOME_PATH: Record<string, string> = {
+const ROLE_HOME_PATH: Record<string, string> = {
   admin: "/admin",
   super_curator: "/super-curator",
   curator: "/curator",
   instructor: "/instructor",
   customer_observer: "/customer-observer",
-  student: "/student"
+  student: "/student",
 };
 
-const ROLE_PRIORITY = [
-  "admin",
-  "super_curator",
-  "curator",
-  "instructor",
-  "customer_observer",
-  "student"
-] as const;
+const ROLE_PRIORITY = ["admin", "super_curator", "curator", "instructor", "customer_observer", "student"];
 
-export function getDefaultRolePath(roles: string[]) {
+export function getDefaultRolePath(roles: string[]): string {
   const primaryRole = ROLE_PRIORITY.find((role) => roles.includes(role));
   return primaryRole ? ROLE_HOME_PATH[primaryRole] : "/403";
 }
