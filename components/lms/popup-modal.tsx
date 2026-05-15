@@ -35,8 +35,8 @@ export function PopupModal() {
           setOpen(true);
         }
       }
-    } catch {
-      // silent
+    } catch (err) {
+      console.error("[PopupModal] Failed to fetch popup:", err);
     }
   }
 
@@ -50,8 +50,8 @@ export function PopupModal() {
         body: JSON.stringify({ popupId: popup.id }),
       });
       setOpen(false);
-    } catch {
-      // silent
+    } catch (err) {
+      console.error("[PopupModal] Failed to acknowledge popup:", err);
     } finally {
       setAcknowledging(false);
     }

@@ -51,9 +51,9 @@ function getNotificationAction(n: NotificationItem): { link: string; label: stri
     const linkUrl = (n.data?.linkUrl as string) || (n.data?.link as string) || `/notifications?id=${n.id}`;
     return { link: linkUrl, label: "Посмотреть сообщение" };
   }
-  // Для сообщений: используем data.link (урок чата) или общий чат
+  // Для сообщений: используем data.link (урок чата) или ссылку на дашборд
   if (n.refType === "message" || n.type === "new_message") {
-    const msgLink = (n.data?.link as string) || (n.refId && n.refId !== "general" ? `/student/lessons/${n.refId}` : "/student/chat");
+    const msgLink = (n.data?.link as string) || (n.refId && n.refId !== "general" ? `/student/lessons/${n.refId}` : "/student");
     return { link: msgLink, label: "Перейти в чат" };
   }
   // Для блока/модуля: используем data.link из progress/service.ts

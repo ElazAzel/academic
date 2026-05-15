@@ -17,8 +17,9 @@ export default async function StudentCertificatesPage() {
  return (
   <AppShell role="student">
    <PageHeader title="Мои сертификаты" description="Выданные сертификаты о прохождении курсов."/>
-   {certificates.length > 0 ? (
-    <Table className="mt-6">
+    {certificates.length > 0 ? (
+     <div className="overflow-x-auto mt-6">
+     <Table>
      <TableHeader>
       <TableRow>
        <TableHead>Номер</TableHead>
@@ -42,23 +43,24 @@ export default async function StudentCertificatesPage() {
         </TableCell>
         <TableCell className="text-right">
          <div className="flex gap-1 justify-end">
-          <Button size="sm" variant="secondary" asChild>
-           <Link href={`/api/v1/certificates/${cert.id}/pdf`} target="_blank">
-            <Download className="h-3.5 w-3.5 mr-1"/> PDF
-           </Link>
-          </Button>
-          <Button size="sm" variant="secondary" asChild>
-           <Link href={cert.verificationUrl} target="_blank">
-            <ExternalLink className="h-3.5 w-3.5 mr-1"/> Проверить
-           </Link>
-          </Button>
+           <Button size="sm" variant="secondary" asChild aria-label="Скачать сертификат в PDF">
+            <Link href={`/api/v1/certificates/${cert.id}/pdf`} target="_blank">
+             <Download className="h-3.5 w-3.5 mr-1"/> PDF
+            </Link>
+           </Button>
+           <Button size="sm" variant="secondary" asChild aria-label="Проверить сертификат онлайн">
+            <Link href={cert.verificationUrl} target="_blank">
+             <ExternalLink className="h-3.5 w-3.5 mr-1"/> Проверить
+            </Link>
+           </Button>
          </div>
         </TableCell>
        </TableRow>
       ))}
      </TableBody>
-    </Table>
-   ) : (
+      </Table>
+     </div>
+    ) : (
     <Card className="mt-6">
      <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
       <Award className="h-10 w-10 text-muted-foreground/40"/>

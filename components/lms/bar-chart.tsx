@@ -35,7 +35,16 @@ export function BarChart({
             <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
-                style={{ width: `${pct}%`, backgroundColor: item.color }}
+                style={{
+                  width: `${pct}%`,
+                  backgroundColor: item.color,
+                  backgroundImage:
+                    item.color === "#16a34a"
+                      ? "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.3) 2px, rgba(255,255,255,0.3) 4px)"
+                      : item.color === "#dc2626"
+                      ? "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.3) 2px, rgba(255,255,255,0.3) 4px)"
+                      : undefined,
+                }}
               />
             </div>
           </div>

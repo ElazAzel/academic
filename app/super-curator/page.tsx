@@ -41,6 +41,7 @@ export default async function SuperCuratorDashboardPage() {
     <MetricGrid metrics={metrics}/>
 
     <Tabs
+     paramName="tab"
      tabs={[
       {
        label: `Нагрузка кураторов (${curatorLoads.length})`,

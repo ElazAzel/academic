@@ -48,6 +48,7 @@ export default async function CuratorDashboardPage() {
     <MetricGrid metrics={metrics}/>
 
     <Tabs
+     paramName="tab"
      tabs={[
       {
        label: `Вопросы (${openQuestions.length})`,
