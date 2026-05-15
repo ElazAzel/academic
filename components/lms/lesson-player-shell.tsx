@@ -86,6 +86,7 @@ export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetai
               <button
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors"
                 title="Содержание курса"
+                aria-label="Содержание курса"
               >
                 <Menu className="h-4 w-4" />
               </button>

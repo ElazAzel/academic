@@ -288,6 +288,7 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
   }
   return (
     <>
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -321,6 +322,7 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
           ))}
         </TableBody>
       </Table>
+      </div>
       {selectedSubmission && (
         <ReviewSubmissionModal 
           submission={selectedSubmission} 
@@ -396,6 +398,7 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
 // ── Таблица кураторов ───────────────────────────────────────────────
 export function CuratorLoadTable({ curators }: { curators: CuratorLoad[] }) {
   return (
+    <div className="overflow-x-auto">
     <Table>
       <TableHeader>
         <TableRow>
@@ -441,5 +444,6 @@ export function CuratorLoadTable({ curators }: { curators: CuratorLoad[] }) {
         ))}
       </TableBody>
     </Table>
+    </div>
   );
 }

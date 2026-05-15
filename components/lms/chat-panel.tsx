@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Paperclip, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendMessageAction, getConversation, markAsRead, getUploadUrl } from "@/server/actions/chat";
 import { toast } from "sonner";
 
@@ -27,16 +28,18 @@ export function ChatPanel({
   curatorId?: string;
   studentId: string;
 }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const queryClient = useQueryClient();
+  const queryKey = ["chat", studentId, lessonId];
   const [text, setText] = useState("");
-  const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    getConversation(studentId, lessonId).then(setMessages);
-  }, [studentId, lessonId]);
+  const { data: messages = [] } = useQuery({
+    queryKey,
+    queryFn: () => getConversation(studentId, lessonId),
+    refetchInterval: 15_000, // авто-обновление каждые 15 с
+  });
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -47,24 +50,46 @@ export function ChatPanel({
     if (unreadIds.length > 0) markAsRead(unreadIds);
   }, [messages]);
 
-  async function handleSend(formData: FormData) {
+  const sendMutation = useMutation({
+    mutationFn: (formData: FormData) => sendMessageAction(formData),
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<ChatMessage[]>(queryKey);
+
+      // Оптимистичное добавление сообщения
+      const optimistic: ChatMessage = {
+        id: `optimistic-${Date.now()}`,
+        text: formData.get("text") as string,
+        attachmentUrl: formData.get("attachmentUrl") as string | null,
+        attachmentType: formData.get("attachmentType") as string | null,
+        senderId: "optimistic",
+        senderName: "Вы",
+        createdAt: new Date().toISOString(),
+        isMine: true,
+      };
+
+      queryClient.setQueryData<ChatMessage[]>(queryKey, (old) => [...(old ?? []), optimistic]);
+      return { previous };
+    },
+    onError: (_err, _formData, context) => {
+      // Откат при ошибке
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey, context.previous);
+      }
+      toast.error("Не удалось отправить сообщение");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
+  function handleSend(formData: FormData) {
     if (!text.trim()) return;
     formData.set("text", text);
     if (lessonId) formData.set("lessonId", lessonId);
     if (curatorId) formData.set("receiverId", curatorId);
-    setSending(true);
-    try {
-      const result = await sendMessageAction(formData);
-      if (result.success) {
-        setText("");
-        const updated = await getConversation(studentId, lessonId);
-        setMessages(updated);
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
-    } finally {
-      setSending(false);
-    }
+    setText("");
+    sendMutation.mutate(formData);
   }
 
   async function handleFileUpload(file: File) {
@@ -85,9 +110,7 @@ export function ChatPanel({
       formData.set("attachmentType", file.type);
       if (lessonId) formData.set("lessonId", lessonId);
       if (curatorId) formData.set("receiverId", curatorId);
-      await sendMessageAction(formData);
-      const updated = await getConversation(studentId, lessonId);
-      setMessages(updated);
+      sendMutation.mutate(formData);
     } catch {
       toast.error("Ошибка загрузки файла");
     } finally {
@@ -112,6 +135,7 @@ export function ChatPanel({
               )}
               <p className={`text-[10px] mt-1 ${m.isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                 {new Date(m.createdAt).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })}
+                {m.id.startsWith("optimistic-") && " · отправляется..."}
               </p>
             </div>
           </div>
@@ -127,7 +151,7 @@ export function ChatPanel({
             className="hidden"
             onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
           />
-          <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+          <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} aria-label="Прикрепить файл">
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
           </Button>
           <Input
@@ -137,8 +161,8 @@ export function ChatPanel({
             placeholder="Напишите сообщение..."
             className="flex-1"
           />
-          <Button type="submit" size="sm" disabled={sending || (!text.trim())}>
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          <Button type="submit" size="sm" disabled={sendMutation.isPending || (!text.trim())}>
+            {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
       </div>
