@@ -48,7 +48,7 @@ export async function getMyConversations() {
 
   const messages = await prisma.message.findMany({
     where: isStudent
-      ? { senderId: user.id }
+      ? { OR: [{ senderId: user.id }, { receiverId: user.id }] }
       : { OR: [{ senderId: user.id }, { receiverId: user.id }] },
     orderBy: { createdAt: "desc" },
     include: {

@@ -50,6 +50,10 @@ const envSchema = z.object({
   FIREBASE_PRIVATE_KEY: z.string().optional(),
   FIREBASE_PROJECT_ID: z.string().optional(),
 
+  // Supabase (Realtime)
+  NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
+
   // Monitoring
   SENTRY_DSN: z.string().optional(),
 });

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { PopupNotificationViewer } from "@/components/lms/popup-notification-viewer";
 
 interface NotificationItem {
   id: string;
@@ -45,32 +46,39 @@ function getNotificationIcon(type: string, refType: string | null) {
 }
 
 function getNotificationAction(n: NotificationItem): { link: string; label: string } {
-  const link = (n.data?.link as string) || "#";
-
+  // Для popup: используем data.linkUrl (внешняя ссылка) или data.link (страница)
   if (n.refType === "popup" || n.type === "popup") {
-    return { link: `/notifications?id=${n.id}`, label: "Посмотреть сообщение" };
+    const linkUrl = (n.data?.linkUrl as string) || (n.data?.link as string) || `/notifications?id=${n.id}`;
+    return { link: linkUrl, label: "Посмотреть сообщение" };
   }
+  // Для сообщений: используем data.link (урок чата) или общий чат
   if (n.refType === "message" || n.type === "new_message") {
-    return { link: link || "/student/chat", label: "Перейти в чат" };
+    const msgLink = (n.data?.link as string) || (n.refId && n.refId !== "general" ? `/student/lessons/${n.refId}` : "/student/chat");
+    return { link: msgLink, label: "Перейти в чат" };
   }
+  // Для блока/модуля: используем data.link из progress/service.ts
   if (n.type === "block_completed") {
-    return { link: link || "#", label: "Продолжить обучение" };
+    const blkLink = (n.data?.link as string) || "#";
+    return { link: blkLink, label: "Продолжить обучение" };
   }
   if (n.type === "module_completed") {
-    return { link: link || "#", label: "Перейти к модулю" };
+    const modLink = (n.data?.link as string) || "#";
+    return { link: modLink, label: "Перейти к модулю" };
   }
   if (n.type === "assignment_reviewed") {
-    return { link: link || "/student/assignments", label: "Посмотреть оценку" };
+    return { link: (n.data?.link as string) || "/student/assignments", label: "Посмотреть оценку" };
   }
   if (n.type === "question_answered") {
-    return { link: link || "#", label: "Посмотреть ответ" };
+    return { link: (n.data?.link as string) || "#", label: "Посмотреть ответ" };
   }
-  return { link, label: "Подробнее" };
+  const defaultLink = (n.data?.link as string) || "#";
+  return { link: defaultLink, label: "Подробнее" };
 }
 
 export function NotificationsList() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [popupView, setPopupView] = useState<{ n: NotificationItem } | null>(null);
 
   const { data: notifications = [], isLoading } = useQuery<NotificationItem[]>({
     queryKey: ["notifications"],
@@ -110,6 +118,14 @@ export function NotificationsList() {
   });
 
   const handleAction = (n: NotificationItem) => {
+    // Popup без внешней ссылки — показываем в диалоге
+    const isPopup = n.refType === "popup" || n.type === "popup";
+    const hasLinkUrl = n.data?.linkUrl;
+    if (isPopup && !hasLinkUrl) {
+      if (!n.readAt) markRead.mutate(n.id);
+      setPopupView({ n });
+      return;
+    }
     const { link } = getNotificationAction(n);
     if (!n.readAt) {
       markRead.mutate(n.id);
@@ -204,6 +220,19 @@ export function NotificationsList() {
           })}
         </div>
       )}
+      <PopupNotificationViewer
+        popup={popupView ? {
+          id: popupView.n.refId ?? popupView.n.id,
+          title: popupView.n.title ?? "Сообщение",
+          body: popupView.n.body ?? "",
+          imageUrl: popupView.n.data?.imageUrl as string | undefined | null,
+          linkUrl: popupView.n.data?.linkUrl as string | undefined | null,
+          linkText: popupView.n.data?.linkText as string | undefined | null,
+          notificationTitle: popupView.n.title,
+        } : null}
+        open={popupView !== null}
+        onClose={() => setPopupView(null)}
+      />
     </div>
   );
 }

@@ -106,3 +106,45 @@ export async function cacheDelete(key: string): Promise<void> {
     // non-critical
   }
 }
+
+// ── Synchronous in-memory cache for reports ───────────────────────────
+
+class MemoryCache {
+  private store = new Map<string, CacheEntry<unknown>>();
+  private defaultTTL: number;
+
+  constructor(defaultTTLMs = 5 * 60 * 1000) {
+    this.defaultTTL = defaultTTLMs;
+  }
+
+  get<T>(key: string): T | undefined {
+    const entry = this.store.get(key);
+    if (!entry) return undefined;
+    if (Date.now() > entry.expiresAt) {
+      this.store.delete(key);
+      return undefined;
+    }
+    return entry.value as T;
+  }
+
+  set<T>(key: string, data: T, ttlMs?: number): void {
+    this.store.set(key, {
+      value: data,
+      expiresAt: Date.now() + (ttlMs ?? this.defaultTTL),
+    });
+  }
+
+  delete(key: string): void {
+    this.store.delete(key);
+  }
+
+  clear(): void {
+    this.store.clear();
+  }
+
+  get size(): number {
+    return this.store.size;
+  }
+}
+
+export const reportCache = new MemoryCache(5 * 60 * 1000);
