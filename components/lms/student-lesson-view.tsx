@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, FileText, Send } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,8 +55,6 @@ function getContentBlocks(content: Record<string, unknown> | string | null | und
 
 export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDetail }) {
   const router = useRouter();
-  const [questionText, setQuestionText] = useState("");
-  const [sending, setSending] = useState(false);
   const [savingProgress, setSavingProgress] = useState(false);
   const [progressPercent, setProgressPercent] = useState(lesson.progressPercent);
   const contentBlocks = getContentBlocks(lesson.content);
@@ -83,30 +81,6 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
       setSavingProgress(false);
     }
   }, [lesson.id, router]);
-
-  const askQuestion = useCallback(async () => {
-    if (!questionText.trim()) return;
-    setSending(true);
-    try {
-      const res = await fetch(`/api/v1/lessons/${lesson.id}/questions`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text: questionText }),
-      });
-      if (res.ok) {
-        setQuestionText("");
-        toast.success("Вопрос отправлен куратору");
-        router.refresh();
-      } else {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error?.message || "Не удалось отправить вопрос");
-      }
-    } catch {
-      toast.error("Ошибка сети");
-    } finally {
-      setSending(false);
-    }
-  }, [questionText, lesson.id, router]);
 
   return (
     <>
@@ -261,47 +235,7 @@ export function StudentLessonView({ lesson }: { lesson: StudentLessonLearningDet
 
         {/* Support */}
         <CollapsibleSection title="Поддержка" defaultOpen={false}>
-          <Card className="border-primary/10 bg-primary/5 mb-4">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-primary">Задать вопрос куратору</CardTitle>
-              <CardDescription className="text-xs">Опишите вашу проблему по материалам урока.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <textarea
-                className="min-h-[80px] w-full resize-none rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 dark:bg-gray-950"
-                placeholder="Ваш вопрос..."
-                value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-              />
-              <div className="flex justify-end">
-                <Button onClick={askQuestion} disabled={sending || !questionText.trim()} size="sm">
-                  <Send className="h-4 w-4 mr-1" />
-                  {sending ? "Отправка..." : "Отправить"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {lesson.myQuestions.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground">История вопросов</p>
-              {lesson.myQuestions.map((q) => (
-                <div key={q.id} className="rounded-xl border p-3">
-                  <div className="mb-1 flex items-center justify-between">
-                    <Badge className={q.status === "open" ? "bg-amber-50 text-amber-700 border-amber-200 text-[10px]" : "bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]"}>
-                      {q.status === "open" ? "Ожидает ответа" : "Отвечен"}
-                    </Badge>
-                  </div>
-                  <p className="text-sm">{q.text}</p>
-                  {q.answer && (
-                    <div className="mt-2 rounded-lg bg-emerald-50/50 border border-emerald-100 p-3">
-                      <p className="text-xs text-emerald-900">{q.answer}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <p className="text-sm text-muted-foreground">Для связи с куратором используйте чат в уроке.</p>
         </CollapsibleSection>
 
         {/* Navigation */}

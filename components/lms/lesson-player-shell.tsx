@@ -15,7 +15,6 @@ import { FileBlock } from "@/components/lms/file-block";
 import { QuizBlock } from "@/components/lms/quiz-block";
 import { AssignmentBlock } from "@/components/lms/assignment-block";
 import { LessonRating } from "@/components/lms/lesson-rating";
-import { AskCuratorQuestion } from "@/components/lms/ask-curator-question";
 import { LessonNavigation } from "@/components/lms/lesson-navigation";
 import { CourseContentsDrawer } from "@/components/lms/course-contents-drawer";
 import { ChatPanel } from "@/components/lms/chat-panel";
@@ -208,9 +207,6 @@ export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetai
 
           {/* Rating */}
           <LessonRating lessonId={lesson.id} />
-
-          {/* Ask curator question */}
-          <AskCuratorQuestion lessonId={lesson.id} initialQuestions={lesson.myQuestions} />
 
           {/* Chat with curator */}
           {session?.user?.id && curatorId && (
