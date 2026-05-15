@@ -2,6 +2,44 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-15 — UI: Mobile-app adaptive theme, bottom nav, PWA enhancement
+
+Автор/agent: opencode
+Тип изменения: feature / design / pwa
+
+1. **Mobile-first adaptive UI**: Реализована смена парадигмы между мобильным устройством и ПК:
+   - Mobile (<768px): нижняя панель навигации (bottom tab bar) с иконками и активным индикатором (spring-анимация), скрытый десктопный сайдбар, компактный хедер (h-14)
+   - Desktop (>=768px): боковая панель навигации (260px, sticky, glass-эффект), полноценный хедер (h-16) с навигационными ссылками, hover-эффекты на карточках
+   - Bottom nav показывает первые 4-5 пунктов для каждой роли (admin, student, curator, super_curator, instructor, customer_observer)
+   - Боковая панель на десктопе содержит полный список ссылок с бейджами
+
+2. **Тёмная/светлая тема**: 
+   - Переключатель темы `ThemeToggle` теперь циклически переключает 3 режима: light → dark → system
+   - Анимация переключения через Framer Motion (rotate + scale)
+   - `theme-color` meta tags динамически меняются в зависимости от темы (light: #F8FAFC, dark: #0F172A)
+
+3. **Safe area & viewport**: 
+   - `env(safe-area-inset-*)` для notched-устройств
+   - `viewport-fit=cover` для Full-screen PWA
+   - Нижняя навигация корректно обрабатывает safe-area-bottom
+   - CSS-переменная `--nav-height: 64px`
+
+4. **PWA улучшения**:
+   - Обновлён `manifest.json`: maskable icons, shortcuts, orientation, scope, categories
+   - Service Worker v2: стратегия network-first для навигации, cache-first для статики, offline fallback
+   - Добавлена offline-страница `/offline` с кнопкой "Попробовать снова"
+   - Push-уведомления: вибрация, action buttons (Открыть/Закрыть)
+   - `PWARegister`: обработка `appinstalled` события с toast-уведомлением
+
+5. **UI компоненты**:
+   - `Button`: `min-h-[44px]` на мобильных (touch target), `active:scale-[0.97]` нажатие
+   - `Card`: `md:hover:shadow-card-hover` на десктопе, адаптивные отступы (p-4 md:p-5)
+   - `PageHeader`: меньшие отступы на мобильных
+
+6. **Удалён/заменён**: `components/layout/mobile-nav.tsx` → `components/layout/mobile-bottom-nav.tsx`
+
+7. **TypeScript**: 0 errors.
+
 ## 2026-05-15 — Fix: deadlineDaysLeft, complete Framer Motion animations, review last 9 commits
 
 Автор/agent: opencode

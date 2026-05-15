@@ -1,4 +1,6 @@
-const CACHE_NAME = "ai-academy-v1";
+const CACHE_NAME = "ai-academy-v2";
+const STATIC_CACHE = "ai-academy-static-v2";
+const OFFLINE_URL = "/offline";
 
 const STATIC_ASSETS = [
   "/icon.svg",
@@ -6,54 +8,170 @@ const STATIC_ASSETS = [
   "/favicon.ico",
 ];
 
+// ── Install ──────────────────────────────────────────────────────────
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    (async () => {
+      const cache = await caches.open(STATIC_CACHE);
+      await cache.addAll(STATIC_ASSETS);
+      // Pre-cache offline fallback
+      try {
+        const offlineResponse = await fetch(OFFLINE_URL);
+        if (offlineResponse.ok) {
+          await cache.put(OFFLINE_URL, offlineResponse);
+        }
+      } catch {
+        // Offline page not available yet, skip
+      }
+    })()
   );
   self.skipWaiting();
 });
 
+// ── Activate ─────────────────────────────────────────────────────────
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
-    })
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((k) => k !== CACHE_NAME && k !== STATIC_CACHE)
+          .map((k) => caches.delete(k))
+      );
+      await self.clients.claim();
+    })()
   );
-  self.clients.claim();
 });
 
+// ── Fetch: Network-first with offline fallback ─────────────────────
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request).then((response) => {
-        if (response.ok && response.type === "basic") {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+  const { request } = event;
+
+  // Only handle GET requests
+  if (request.method !== "GET") return;
+
+  // For navigation requests: network-first, fallback to cache, then offline page
+  if (request.mode === "navigate") {
+    event.respondWith(
+      (async () => {
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse.ok && networkResponse.type === "basic") {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(request, networkResponse.clone());
+          }
+          return networkResponse;
+        } catch {
+          const cachedResponse = await caches.match(request);
+          if (cachedResponse) return cachedResponse;
+          // Return offline page
+          const offlineResponse = await caches.match(OFFLINE_URL);
+          if (offlineResponse) return offlineResponse;
+          return new Response("Вы офлайн. Пожалуйста, проверьте подключение к интернету.", {
+            status: 503,
+            statusText: "Service Unavailable",
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
+          });
         }
-        return response;
-      }).catch(() => cached);
-      return cached ?? fetchPromise;
-    })
+      })()
+    );
+    return;
+  }
+
+  // For static assets: cache-first
+  if (
+    request.url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|webp|avif)$/) ||
+    request.url.includes("/_next/static")
+  ) {
+    event.respondWith(
+      (async () => {
+        const cachedResponse = await caches.match(request);
+        if (cachedResponse) return cachedResponse;
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse.ok && networkResponse.type === "basic") {
+            const cache = await caches.open(STATIC_CACHE);
+            cache.put(request, networkResponse.clone());
+          }
+          return networkResponse;
+        } catch {
+          return new Response("", { status: 408, statusText: "Request Timeout" });
+        }
+      })()
+    );
+    return;
+  }
+
+  // For API requests: network-only, no cache
+  if (request.url.includes("/api/")) {
+    event.respondWith(
+      fetch(request).catch(() => {
+        return new Response(
+          JSON.stringify({ error: "Вы офлайн. Невозможно выполнить запрос." }),
+          {
+            status: 503,
+            headers: { "Content-Type": "application/json; charset=utf-8" },
+          }
+        );
+      })
+    );
+    return;
+  }
+
+  // Default: network-first
+  event.respondWith(
+    (async () => {
+      try {
+        return await fetch(request);
+      } catch {
+        const cachedResponse = await caches.match(request);
+        return cachedResponse ?? new Response("Offline", { status: 503 });
+      }
+    })()
   );
 });
 
+// ── Push notifications ──────────────────────────────────────────────
 self.addEventListener("push", (event) => {
-  const data = event.data?.json() ?? { title: "AI Strategic Academy", body: "Новое уведомление" };
+  const data = event.data?.json() ?? {
+    title: "AI Strategic Academy",
+    body: "Новое уведомление",
+  };
+
+  const options = {
+    body: data.body,
+    icon: "/icon.svg",
+    badge: "/icon.svg",
+    vibrate: [100, 50, 100],
+    data: { url: data.url ?? "/" },
+    actions: [
+      { action: "open", title: "Открыть" },
+      { action: "close", title: "Закрыть" },
+    ],
+  };
+
   event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: "/icon.svg",
-      badge: "/icon.svg",
-      data: { url: data.url ?? "/" },
-    })
+    self.registration.showNotification(data.title, options)
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+
+  if (event.action === "close") return;
+
   const url = event.notification.data?.url ?? "/";
-  event.waitUntil(clients.openWindow(url));
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      // If already open, focus it
+      for (const client of windowClients) {
+        if (client.url === url && "focus" in client) {
+          return client.focus();
+        }
+      }
+      // Otherwise open new window
+      return clients.openWindow(url);
+    })
+  );
 });

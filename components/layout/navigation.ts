@@ -24,6 +24,12 @@ export interface NavItem {
   badge?: number;
 }
 
+export interface BottomNavItem {
+  href: string;
+  label: string;
+  icon: string;
+}
+
 export const ICON_MAP: Record<string, LucideIcon> = {
   LayoutDashboard,
   BookOpen,
@@ -98,6 +104,53 @@ export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
   ],
   customer_observer: [
     { href: "/customer-observer", label: "Дашборд проекта", icon: "LayoutDashboard" },
+    { href: "/customer-observer/reports", label: "Отчеты", icon: "BarChart3" },
+    { href: "/customer-observer/certificates", label: "Сертификаты", icon: "ShieldCheck" },
+    { href: "/customer-observer/settings", label: "Настройки", icon: "Settings" },
+  ],
+};
+
+/**
+ * Bottom navigation config for mobile app-like experience.
+ * Shows the top 4-5 most important items per role.
+ */
+export const BOTTOM_NAV_BY_ROLE: Record<RoleKey, BottomNavItem[]> = {
+  student: [
+    { href: "/student", label: "Главная", icon: "LayoutDashboard" },
+    { href: "/student/my-courses", label: "Курсы", icon: "BookOpen" },
+    { href: "/student/certificates", label: "Сертификаты", icon: "ShieldCheck" },
+    { href: "/student/notifications", label: "Уведомления", icon: "Bell" },
+  ],
+  curator: [
+    { href: "/curator", label: "Дашборд", icon: "LayoutDashboard" },
+    { href: "/curator/students", label: "Слушатели", icon: "Users" },
+    { href: "/curator/chat", label: "Чат", icon: "MessageCircle" },
+    { href: "/curator/assignments", label: "Проверка", icon: "ClipboardCheck" },
+    { href: "/curator/notifications", label: "Уведомления", icon: "Bell" },
+  ],
+  super_curator: [
+    { href: "/super-curator", label: "Дашборд", icon: "LayoutDashboard" },
+    { href: "/super-curator/cohorts", label: "Потоки", icon: "Users2" },
+    { href: "/super-curator/curators", label: "Кураторы", icon: "UserCheck" },
+    { href: "/super-curator/questions", label: "Вопросы", icon: "MessageCircle" },
+    { href: "/super-curator/notifications", label: "Уведомления", icon: "Bell" },
+  ],
+  instructor: [
+    { href: "/instructor", label: "Дашборд", icon: "LayoutDashboard" },
+    { href: "/instructor/courses", label: "Курсы", icon: "BookOpen" },
+    { href: "/instructor/students", label: "Слушатели", icon: "Users" },
+    { href: "/instructor/questions", label: "Вопросы", icon: "HelpCircle" },
+    { href: "/instructor/notifications", label: "Уведомления", icon: "Bell" },
+  ],
+  admin: [
+    { href: "/admin", label: "Дашборд", icon: "LayoutDashboard" },
+    { href: "/admin/courses", label: "Курсы", icon: "BookOpen" },
+    { href: "/admin/management", label: "Управление", icon: "Users" },
+    { href: "/admin/analytics", label: "Аналитика", icon: "BarChart3" },
+    { href: "/admin/notifications", label: "Уведомления", icon: "Bell" },
+  ],
+  customer_observer: [
+    { href: "/customer-observer", label: "Дашборд", icon: "LayoutDashboard" },
     { href: "/customer-observer/reports", label: "Отчеты", icon: "BarChart3" },
     { href: "/customer-observer/certificates", label: "Сертификаты", icon: "ShieldCheck" },
     { href: "/customer-observer/settings", label: "Настройки", icon: "Settings" },

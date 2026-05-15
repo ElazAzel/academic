@@ -29,17 +29,19 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-white/80 backdrop-blur-xl dark:bg-gray-950/80 dark:border-gray-800">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <GraduationCap className="h-5 w-5" aria-hidden />
+    <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-xl">
+      <div className="mx-auto flex h-14 md:h-16 max-w-7xl items-center justify-between px-3 md:px-6">
+        {/* Logo — compact on mobile */}
+        <Link href="/" className="flex items-center gap-2 font-semibold shrink-0">
+          <span className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <GraduationCap className="h-4 w-4 md:h-5 md:w-5" aria-hidden />
           </span>
-          <span>AI Strategic Academy</span>
+          <span className="hidden sm:inline text-sm md:text-base">AI Strategic Academy</span>
         </Link>
-        
+
+        {/* Desktop nav links — hidden on mobile (bottom nav handles it) */}
         {user && (
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Основная навигация">
+          <nav className="hidden md:flex items-center gap-1" aria-label="Основная навигация">
             {(() => {
               const { links } = getHeaderLinks(user.roles);
               return links.map((item) => (
@@ -51,7 +53,8 @@ export async function SiteHeader() {
           </nav>
         )}
 
-        <div className="flex items-center gap-1">
+        {/* Right actions */}
+        <div className="flex items-center gap-1 md:gap-2">
           <ThemeToggle />
           {user ? (
             <>
@@ -61,8 +64,8 @@ export async function SiteHeader() {
           ) : (
             <Button asChild size="sm">
               <Link href="/login">
-                <LogIn className="h-4 w-4 mr-2" aria-hidden />
-                Войти
+                <LogIn className="h-4 w-4 mr-1.5" aria-hidden />
+                <span className="hidden sm:inline">Войти</span>
               </Link>
             </Button>
           )}
