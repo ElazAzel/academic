@@ -6,7 +6,6 @@ import { requireRole } from "@/lib/auth/page-guards";
 import type {
   CourseSummary,
   CohortSummary,
-  InviteLinkSummary,
   CertificateSummary,
   DashboardMetric,
   StudentAnalyticsDetail,
@@ -22,7 +21,6 @@ export async function getAdminDashboard() {
       certsCount,
       courses,
       cohorts,
-      invites,
       certificates
     ] = await Promise.all([
       prisma.course.count(),
@@ -40,10 +38,6 @@ export async function getAdminDashboard() {
       prisma.cohort.findMany({
         orderBy: { createdAt: "desc" },
         include: { course: { select: { title: true } }, _count: { select: { enrollments: true } } },
-      }),
-      prisma.inviteLink.findMany({
-        orderBy: { createdAt: "desc" },
-        include: { course: { select: { title: true } }, cohort: { select: { name: true } } },
       }),
       prisma.certificate.findMany({
         orderBy: { issuedAt: "desc" },
@@ -81,17 +75,6 @@ export async function getAdminDashboard() {
       studentsCount: c._count.enrollments,
     }));
 
-    const formattedInvites: InviteLinkSummary[] = invites.map((i) => ({
-      id: i.id,
-      token: i.token,
-      courseTitle: i.course?.title,
-      cohortName: i.cohort?.name,
-      maxActivations: i.maxActivations,
-      activationCount: i.activationCount,
-      expiresAt: i.expiresAt?.toISOString().slice(0, 10) ?? null,
-      status: i.status,
-    }));
-
     const formattedCerts: CertificateSummary[] = certificates.map((c) => ({
       id: c.id,
       number: c.number,
@@ -108,7 +91,7 @@ export async function getAdminDashboard() {
       { label: "Сертификаты", value: certsCount, tone: "warning" },
     ];
 
-    return { metrics, courses: formattedCourses, cohorts: formattedCohorts, invites: formattedInvites, certificates: formattedCerts };
+    return { metrics, courses: formattedCourses, cohorts: formattedCohorts, certificates: formattedCerts };
   }, null);
 }
 

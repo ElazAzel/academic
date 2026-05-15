@@ -17,7 +17,7 @@ export async function getGlossaryEntries(search?: string) {
         ],
       }
     : {};
-  return prisma.glossaryEntry.findMany({ where, orderBy: [{ category: "asc" }, { updatedAt: "desc" }] });
+  return prisma.glossaryEntry.findMany({ where, orderBy: [{ direction: "asc" }, { category: "asc" }, { updatedAt: "desc" }] });
 }
 
 export async function getGlossaryCategories() {
@@ -30,21 +30,48 @@ export async function getGlossaryCategories() {
   return entries.map((e) => e.category);
 }
 
+export async function getGlossaryDirections() {
+  await requireRole(["curator", "super_curator", "admin"]);
+  const entries = await prisma.glossaryEntry.findMany({
+    select: { direction: true },
+    distinct: ["direction"],
+    orderBy: { direction: "asc" },
+  });
+  return entries.map((e) => e.direction);
+}
+
+const DIRECTION_LABELS: Record<string, string> = {
+  general: "Общие",
+  platform: "По функционалу платформы",
+  learning_material: "По материалу обучения",
+};
+
+export function getDirectionLabel(direction: string): string {
+  return DIRECTION_LABELS[direction] || direction;
+}
+
+export const DIRECTIONS = [
+  { value: "general", label: "Общие" },
+  { value: "platform", label: "По функционалу платформы" },
+  { value: "learning_material", label: "По материалу обучения" },
+];
+
 export async function createGlossaryEntryAction(formData: FormData) {
   const actor = await requireRole(["admin", "super_curator"]);
   const question = formData.get("question") as string;
   const answer = formData.get("answer") as string;
   const category = (formData.get("category") as string) || "Общее";
+  const direction = (formData.get("direction") as string) || "general";
 
   if (!question || !answer) throw new Error("Вопрос и ответ обязательны");
 
-  await prisma.glossaryEntry.create({ data: { question, answer, category } });
+  await prisma.glossaryEntry.create({ data: { question, answer, category, direction } });
 
   await logAudit({
     actorId: actor.id,
     action: "glossary.created",
     entity: "glossary_entry",
-    metadata: { question, category },
+    metadata: { question, category, direction },
   });
 
   revalidatePath("/curator/glossary");
@@ -57,10 +84,11 @@ export async function updateGlossaryEntryAction(formData: FormData) {
   const question = formData.get("question") as string;
   const answer = formData.get("answer") as string;
   const category = (formData.get("category") as string) || "Общее";
+  const direction = (formData.get("direction") as string) || "general";
 
   if (!id || !question || !answer) throw new Error("Все поля обязательны");
 
-  await prisma.glossaryEntry.update({ where: { id }, data: { question, answer, category } });
+  await prisma.glossaryEntry.update({ where: { id }, data: { question, answer, category, direction } });
 
   revalidatePath("/curator/glossary");
   return { success: true };

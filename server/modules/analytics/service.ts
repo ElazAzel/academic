@@ -11,8 +11,6 @@ export async function getAdminOverview() {
     completions,
     quizAttempts,
     certificates,
-    activeInviteLinks,
-    inviteActivationStats
   ] = await Promise.all([
     prisma.user.count({ where: { status: UserAccountStatus.ACTIVE } }),
     prisma.course.count(),
@@ -20,8 +18,6 @@ export async function getAdminOverview() {
     prisma.courseProgress.count({ where: { status: "COMPLETED" } }),
     prisma.quizAttempt.findMany({ select: { score: true, passed: true } }),
     prisma.certificate.count(),
-    prisma.inviteLink.count({ where: { status: "active" } }),
-    prisma.inviteLink.aggregate({ _sum: { activationCount: true } })
   ]);
 
   const completionRate = enrollments === 0 ? 0 : Math.round((completions / enrollments) * 100);
@@ -40,7 +36,5 @@ export async function getAdminOverview() {
     revenueCents: 0,
     currency: "rub",
     certificates,
-    activeInviteLinks,
-    inviteActivations: inviteActivationStats._sum.activationCount ?? 0
   };
 }
