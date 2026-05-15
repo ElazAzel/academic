@@ -33,26 +33,36 @@ export function getPrisma() {
     const connectionString =
       process.env.storage_POSTGRES_PRISMA_URL ??
       process.env.DATABASE_URL ??
-      "postgresql://academy:academy-local-only@localhost:5432/academy?schema=public";
+      (process.env.NODE_ENV === "production"
+        ? undefined
+        : "postgresql://academy:academy-local-only@localhost:5432/academy?schema=public");
+
+    if (!connectionString) {
+      throw new Error(
+        "DATABASE_URL is not set. Set DATABASE_URL or storage_POSTGRES_PRISMA_URL in your environment."
+      );
+    }
 
     const isLocal = connectionString.includes("localhost") || connectionString.includes("127.0.0.1");
+    const isServerless = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
 
-    const pool = new Pool({ 
+    // Vercel serverless: each runtime instance handles one request → max 1 connection.
+    // Traditional server: small pool to handle concurrent requests within one instance.
+    const pool = new Pool({
       connectionString: normalizePostgresConnectionString(connectionString),
       ssl: isLocal ? false : { rejectUnauthorized: false },
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      max: isServerless ? 1 : 10,
+      idleTimeoutMillis: isServerless ? 0 : 30000,
+      connectionTimeoutMillis: isServerless ? 10000 : 5000,
     });
 
     const adapter = new PrismaPg(pool);
     globalForPrisma.prisma = new PrismaClient({
       adapter,
-      log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"]
+      log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
     });
   }
   return globalForPrisma.prisma;
 }
 
 export const prisma = getPrisma();
-
