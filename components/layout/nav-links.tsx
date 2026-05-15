@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 import type { NavItem } from "@/components/layout/navigation";
 
 const BADGE_MAP: Record<string, string> = {
-  "Уведомления": "notifications",
-  "Чат": "messages",
-  "Вопросы": "openQuestions",
-  "Проверка": "pendingReviews",
+  "Bell": "notifications",
+  "MessageCircle": "messages",
+  "HelpCircle": "openQuestions",
+  "ClipboardCheck": "pendingReviews",
 };
 
 export function NavLinks({ links }: { links: NavItem[] }) {
@@ -41,7 +41,7 @@ export function NavLinks({ links }: { links: NavItem[] }) {
       {links.map((item) => {
         const Icon = ICON_MAP[item.icon];
         const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-        const badgeKey = BADGE_MAP[item.label];
+        const badgeKey = BADGE_MAP[item.icon];
         const badgeCount = badgeKey ? (counts[badgeKey] ?? 0) : 0;
         const showBadge = badgeCount > 0;
         return (

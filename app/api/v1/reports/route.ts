@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { errorResponse } from "@/lib/http";
+import { reportCache } from "@/lib/cache";
 import { fetchProgressData, fetchRiskData, fetchCertificateData } from "@/lib/reports/data";
 import { generateProgressCsv, generateRiskCsv, generateCertificateCsv } from "@/lib/reports/csv-generator";
 import { generateProgressXlsx, generateRiskXlsx, generateCertificateXlsx } from "@/lib/reports/xlsx-generator";
@@ -96,44 +97,97 @@ export async function GET(request: Request) {
     const scopedIds = await getScopedStudentIds();
 
     if (type === "progress" || type === "curator_progress") {
+      const cacheKey = `report:${type}:${format}:${user.id}`;
+      const cached = reportCache.get<{ content: string | Uint8Array; format: ReportFormat; filename: string }>(cacheKey);
+      if (cached) return respond(cached.content, cached.format, cached.filename);
+
       const rows = await fetchProgressData(scopedIds);
       const filename = `${type}_report${EXT[format]}`;
 
       if (format === "xlsx") {
-        try { return respond(await generateProgressXlsx(rows), format, filename); }
-        catch { return respond(generateProgressCsv(rows), "csv", filename.replace(/\.xlsx$/, ".csv")); }
+        try {
+          const content = await generateProgressXlsx(rows);
+          reportCache.set(cacheKey, { content, format, filename });
+          return respond(content, format, filename);
+        } catch {
+          const fallbackContent = generateProgressCsv(rows);
+          reportCache.set(cacheKey, { content: fallbackContent, format: "csv", filename: filename.replace(/\.xlsx$/, ".csv") });
+          return respond(fallbackContent, "csv", filename.replace(/\.xlsx$/, ".csv"));
+        }
       }
       if (format === "pdf") {
-        try { return respond(await generateProgressPdf(rows), format, filename); }
-        catch { return respond(generateProgressCsv(rows), "csv", filename.replace(/\.pdf$/, ".csv")); }
+        try {
+          const content = await generateProgressPdf(rows);
+          reportCache.set(cacheKey, { content, format, filename });
+          return respond(content, format, filename);
+        } catch {
+          const fallbackContent = generateProgressCsv(rows);
+          reportCache.set(cacheKey, { content: fallbackContent, format: "csv", filename: filename.replace(/\.pdf$/, ".csv") });
+          return respond(fallbackContent, "csv", filename.replace(/\.pdf$/, ".csv"));
+        }
       }
-      return respond(generateProgressCsv(rows), format, filename);
+      const content = generateProgressCsv(rows);
+      reportCache.set(cacheKey, { content, format, filename });
+      return respond(content, format, filename);
     }
 
     if (type === "risk" || type === "curator_risk") {
+      const cacheKey = `report:${type}:${format}:${user.id}`;
+      const cached = reportCache.get<{ content: string | Uint8Array; format: ReportFormat; filename: string }>(cacheKey);
+      if (cached) return respond(cached.content, cached.format, cached.filename);
+
       const rows = await fetchRiskData(scopedIds);
       const filename = `${type}_report${EXT[format]}`;
 
       if (format === "xlsx") {
-        try { return respond(await generateRiskXlsx(rows), format, filename); }
-        catch { return respond(generateRiskCsv(rows), "csv", filename.replace(/\.xlsx$/, ".csv")); }
+        try {
+          const content = await generateRiskXlsx(rows);
+          reportCache.set(cacheKey, { content, format, filename });
+          return respond(content, format, filename);
+        } catch {
+          const fallbackContent = generateRiskCsv(rows);
+          reportCache.set(cacheKey, { content: fallbackContent, format: "csv", filename: filename.replace(/\.xlsx$/, ".csv") });
+          return respond(fallbackContent, "csv", filename.replace(/\.xlsx$/, ".csv"));
+        }
       }
       if (format === "pdf") {
-        try { return respond(await generateRiskPdf(rows), format, filename); }
-        catch { return respond(generateRiskCsv(rows), "csv", filename.replace(/\.pdf$/, ".csv")); }
+        try {
+          const content = await generateRiskPdf(rows);
+          reportCache.set(cacheKey, { content, format, filename });
+          return respond(content, format, filename);
+        } catch {
+          const fallbackContent = generateRiskCsv(rows);
+          reportCache.set(cacheKey, { content: fallbackContent, format: "csv", filename: filename.replace(/\.pdf$/, ".csv") });
+          return respond(fallbackContent, "csv", filename.replace(/\.pdf$/, ".csv"));
+        }
       }
-      return respond(generateRiskCsv(rows), format, filename);
+      const content = generateRiskCsv(rows);
+      reportCache.set(cacheKey, { content, format, filename });
+      return respond(content, format, filename);
     }
 
     if (type === "certificates") {
+      const cacheKey = `report:${type}:${format}`;
+      const cached = reportCache.get<{ content: string | Uint8Array; format: ReportFormat; filename: string }>(cacheKey);
+      if (cached) return respond(cached.content, cached.format, cached.filename);
+
       const rows = await fetchCertificateData();
       const filename = `certificates_report${EXT[format]}`;
 
       if (format === "xlsx") {
-        try { return respond(await generateCertificateXlsx(rows), format, filename); }
-        catch { return respond(generateCertificateCsv(rows), "csv", filename.replace(/\.xlsx$/, ".csv")); }
+        try {
+          const content = await generateCertificateXlsx(rows);
+          reportCache.set(cacheKey, { content, format, filename });
+          return respond(content, format, filename);
+        } catch {
+          const fallbackContent = generateCertificateCsv(rows);
+          reportCache.set(cacheKey, { content: fallbackContent, format: "csv", filename: filename.replace(/\.xlsx$/, ".csv") });
+          return respond(fallbackContent, "csv", filename.replace(/\.xlsx$/, ".csv"));
+        }
       }
-      return respond(generateCertificateCsv(rows), format, filename);
+      const content = generateCertificateCsv(rows);
+      reportCache.set(cacheKey, { content, format, filename });
+      return respond(content, format, filename);
     }
 
     if (!type) {

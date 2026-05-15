@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Send, Paperclip, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendMessageAction, getConversation, markAsRead, getUploadUrl } from "@/server/actions/chat";
+import { getSupabaseClient } from "@/lib/supabase-client";
 import { toast } from "sonner";
 
 interface ChatMessage {
@@ -38,10 +39,35 @@ export function ChatPanel({
   const { data: messages = [] } = useQuery({
     queryKey,
     queryFn: () => getConversation(studentId, lessonId),
-    refetchInterval: 5_000, // авто-обновление каждые 5 с (было 15)
+    refetchInterval: 30_000,
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
   });
+
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel("chat-messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `sender_id=eq.${studentId},receiver_id=eq.${studentId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [studentId, lessonId, queryClient]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

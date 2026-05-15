@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { PopupNotificationViewer } from "@/components/lms/popup-notification-viewer";
 
 interface NotificationItem {
   id: string;
@@ -35,21 +36,22 @@ function getNotificationIcon(type: string, refType: string | null) {
 }
 
 function getNotificationAction(n: NotificationItem): { link: string; label: string } {
-  const link = n.data?.link as string;
-
+  // Для popup: используем data.linkUrl (внешняя ссылка) или data.link (страница)
   if (n.refType === "popup") {
-    return { link: "/notifications", label: "Посмотреть" };
+    return { link: (n.data?.linkUrl as string) || (n.data?.link as string) || "/notifications", label: "Посмотреть" };
   }
+  // Для сообщений: используем data.link (урок чата) или общий чат
   if (n.refType === "message" || n.type === "new_message") {
-    return { link: link || "/student/chat", label: "Перейти в чат" };
+    const msgLink = (n.data?.link as string) || (n.refId && n.refId !== "general" ? `/student/lessons/${n.refId}` : "/student/chat");
+    return { link: msgLink, label: "Перейти в чат" };
   }
   if (n.type === "block_completed") {
-    return { link: link || "#", label: "Продолжить обучение" };
+    return { link: (n.data?.link as string) || "#", label: "Продолжить обучение" };
   }
   if (n.type === "module_completed") {
-    return { link: link || "#", label: "Перейти к модулю" };
+    return { link: (n.data?.link as string) || "#", label: "Перейти к модулю" };
   }
-  return { link: link || "/notifications", label: "Подробнее" };
+  return { link: (n.data?.link as string) || "/notifications", label: "Подробнее" };
 }
 
 export function NotificationsDropdown() {
@@ -57,6 +59,7 @@ export function NotificationsDropdown() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [popupView, setPopupView] = useState<{ n: NotificationItem } | null>(null);
 
   const unreadCount = notifications.filter((n) => !n.readAt).length;
 
@@ -104,6 +107,14 @@ export function NotificationsDropdown() {
   }
 
   function handleClick(n: NotificationItem) {
+    // Popup без внешней ссылки — показываем в диалоге
+    const isPopup = n.refType === "popup" || n.type === "popup";
+    const hasLinkUrl = n.data?.linkUrl;
+    if (isPopup && !hasLinkUrl) {
+      setOpen(false);
+      setPopupView({ n });
+      return;
+    }
     const { link } = getNotificationAction(n);
     router.push(link);
   }
@@ -183,6 +194,19 @@ export function NotificationsDropdown() {
           )}
         </div>
       </DropdownMenuContent>
+      <PopupNotificationViewer
+        popup={popupView ? {
+          id: popupView.n.refId ?? popupView.n.id,
+          title: popupView.n.title ?? "Сообщение",
+          body: popupView.n.body ?? "",
+          imageUrl: popupView.n.data?.imageUrl as string | undefined | null,
+          linkUrl: popupView.n.data?.linkUrl as string | undefined | null,
+          linkText: popupView.n.data?.linkText as string | undefined | null,
+          notificationTitle: popupView.n.title,
+        } : null}
+        open={popupView !== null}
+        onClose={() => setPopupView(null)}
+      />
     </DropdownMenu>
   );
 }
