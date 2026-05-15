@@ -4,15 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
 import { BarChart } from "@/components/lms/bar-chart";
-import { Download, FileSpreadsheet, FileText, TrendingUp, Users, AlertTriangle, Clock } from "lucide-react";
+import { DownloadReports } from "@/components/lms/download-reports";
+import { TrendingUp, Users, AlertTriangle, Clock } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getSuperCuratorReportData } from "@/server/actions/super-curator";
-
-const FORMATS = [
-  { id: "csv" as const, label: "CSV", icon: FileText },
-  { id: "xlsx" as const, label: "Excel", icon: FileSpreadsheet },
-  { id: "pdf" as const, label: "PDF", icon: FileText },
-];
 
 export const dynamic = "force-dynamic";
 
@@ -127,30 +122,9 @@ export default async function SuperCuratorReportsPage() {
                 </Card>
 
                 {/* Download */}
-                <Card className="rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="text-base">Экспорт</CardTitle>
-                    <CardDescription>Скачать отчёт по прогрессу</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {FORMATS.map((fmt) => {
-                        const FmtIcon = fmt.icon;
-                        return (
-                          <a
-                            key={fmt.id}
-                            href={`/api/v1/reports?type=progress&format=${fmt.id}`}
-                            className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-primary/5 hover:border-primary/30"
-                          >
-                            <FmtIcon className="h-4 w-4" />
-                            {fmt.label}
-                            <Download className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
-                          </a>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
+                <DownloadReports reports={[
+                  { id: "progress", title: "Экспорт прогресса", desc: "Скачать отчёт по прогрессу", icon: TrendingUp },
+                ]} />
               </div>
             ),
           },
@@ -175,30 +149,9 @@ export default async function SuperCuratorReportsPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="text-base">Экспорт</CardTitle>
-                    <CardDescription>Скачать отчёт по рискам</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {FORMATS.map((fmt) => {
-                        const FmtIcon = fmt.icon;
-                        return (
-                          <a
-                            key={fmt.id}
-                            href={`/api/v1/reports?type=risk&format=${fmt.id}`}
-                            className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-primary/5 hover:border-primary/30"
-                          >
-                            <FmtIcon className="h-4 w-4" />
-                            {fmt.label}
-                            <Download className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
-                          </a>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
+                <DownloadReports reports={[
+                  { id: "risk", title: "Экспорт рисков", desc: "Скачать отчёт по рискам", icon: AlertTriangle },
+                ]} />
               </div>
             ),
           },

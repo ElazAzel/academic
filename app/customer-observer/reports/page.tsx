@@ -1,16 +1,11 @@
-import { Download, FileSpreadsheet, FileText, TrendingUp, Users, Award } from "lucide-react";
+import { TrendingUp, Users, Award } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/lms/bar-chart";
+import { DownloadReports } from "@/components/lms/download-reports";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCustomerObserverDashboard } from "@/server/actions/dashboard";
-
-const FORMATS = [
-  { id: "csv" as const, label: "CSV", icon: FileText },
-  { id: "xlsx" as const, label: "Excel", icon: FileSpreadsheet },
-  { id: "pdf" as const, label: "PDF", icon: FileText },
-];
 
 export const dynamic = "force-dynamic";
 
@@ -76,38 +71,12 @@ export default async function CustomerObserverReportsPage() {
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[
-          { id: "progress", title: "Прогресс по потокам", desc: "Зачисления и прогресс", icon: Users },
-          { id: "risk", title: "Риски слушателей", desc: "Неактивные и отстающие", icon: TrendingUp },
-          { id: "certificates", title: "Сертификаты", desc: "Все выпущенные", icon: Award, noPdf: true },
-        ].map((r) => {
-          const Icon = r.icon;
-          const formats = FORMATS.filter((f) => !(r.noPdf && f.id === "pdf"));
-          return (
-            <Card key={r.id} className="rounded-2xl transition-all hover:shadow-lg">
-              <CardHeader>
-                <Icon className="h-5 w-5 text-primary mb-1" />
-                <CardTitle className="text-base">{r.title}</CardTitle>
-                <CardDescription>{r.desc}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {formats.map((fmt) => {
-                    const FmtIcon = fmt.icon;
-                    return (
-                      <a key={fmt.id} href={`/api/v1/reports?type=${r.id}&format=${fmt.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">
-                        <FmtIcon className="h-3.5 w-3.5" />{fmt.label}<Download className="h-3 w-3 ml-0.5 text-muted-foreground" />
-                      </a>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {/* Download reports */}
+      <DownloadReports reports={[
+        { id: "progress", title: "Прогресс по потокам", desc: "Зачисления и прогресс", icon: Users },
+        { id: "risk", title: "Риски слушателей", desc: "Неактивные и отстающие", icon: TrendingUp },
+        { id: "certificates", title: "Сертификаты", desc: "Все выпущенные", icon: Award },
+      ]} />
     </AppShell>
   );
 }
