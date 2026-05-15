@@ -7,7 +7,6 @@ import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, FileText } from "luci
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import type { StudentLessonLearningDetail } from "@/types/domain";
