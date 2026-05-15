@@ -1,0 +1,25 @@
+{
+  "seq": 3,
+  "name": "Create Notification Preferences UI",
+  "group": "A",
+  "module": "notifications",
+  "description": "Create a shared notification preferences form component and settings pages for student and curator roles. Form reads preferences from getUserNotificationPreferences() API, provides toggle switches for each channel (curator_reply, module_deadline, new_lesson, etc.), and saves via setNotificationPreference() API. Add links from main settings pages.",
+  "files": [
+    "app/student/settings/notifications/page.tsx",
+    "app/curator/settings/notifications/page.tsx",
+    "components/lms/notification-preferences-form.tsx"
+  ],
+  "context_files": [
+    "AI.md",
+    "ai/roles/frontend-lms-ux.md",
+    "ai/roles/backend-next-prisma.md"
+  ],
+  "reference_files": [
+    "server/modules/notifications/service.ts",
+    "server/modules/notifications/preferences.ts",
+    "components/lms/notifications-list.tsx",
+    "components/lms/notifications-dropdown.tsx"
+  ],
+  "depends_on": [2],
+  "parallel": false
+}

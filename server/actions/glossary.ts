@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
+import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -49,7 +50,7 @@ export async function createGlossaryEntryAction(formData: FormData) {
   const category = (formData.get("category") as string) || "Общее";
   const direction = (formData.get("direction") as string) || "general";
 
-  if (!question || !answer) throw new Error("Вопрос и ответ обязательны");
+  if (!question || !answer) throw new ApiError("bad_request", "Вопрос и ответ обязательны", 400);
 
   await prisma.glossaryEntry.create({ data: { question, answer, category, direction } });
 
@@ -72,7 +73,7 @@ export async function updateGlossaryEntryAction(formData: FormData) {
   const category = (formData.get("category") as string) || "Общее";
   const direction = (formData.get("direction") as string) || "general";
 
-  if (!id || !question || !answer) throw new Error("Все поля обязательны");
+  if (!id || !question || !answer) throw new ApiError("bad_request", "Все поля обязательны", 400);
 
   await prisma.glossaryEntry.update({ where: { id }, data: { question, answer, category, direction } });
 

@@ -28,11 +28,13 @@ async function buildProgressSheet(wb: ExcelJS.Workbook, rows: ProgressRow[]) {
   let rowNum = 2;
 
   for (const [course, courseRows] of grouped) {
-    // Course header
+    // Course header — используем актуальный rowNum для mergeCells
     const ch = ws.addRow([`КУРС: ${course}`, "", "", "", ""]);
     ch.getCell(1).font = { bold: true, size: 11, color: { argb: "FF1E3A5F" } };
     ch.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE8F0FE" } };
     ws.mergeCells(`A${rowNum}:E${rowNum}`);
+    // rowNum уже указывает на строку, добавленную addRow выше
+    const headerRowNum = rowNum;
     rowNum++;
 
     const total = courseRows.length;
@@ -41,7 +43,9 @@ async function buildProgressSheet(wb: ExcelJS.Workbook, rows: ProgressRow[]) {
 
     const sr = ws.addRow([`Слушателей: ${total} | Завершили: ${completed} | Средний: ${avg}%`, "", "", "", ""]);
     sr.getCell(1).font = { italic: true, size: 10, color: { argb: "FF666666" } };
-    ws.mergeCells(`A${rowNum}:E${rowNum}`);
+    // rowNum теперь указывает на строку-сводку
+    const summaryRowNum = rowNum;
+    ws.mergeCells(`A${summaryRowNum}:E${summaryRowNum}`);
     rowNum++;
 
     for (const r of courseRows) {

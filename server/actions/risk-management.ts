@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { logAudit } from "@/server/modules/audit/service";
+import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -93,7 +94,7 @@ export async function createRiskAction(formData: FormData) {
   const courseId = formData.get("courseId") as string;
   const cohortId = formData.get("cohortId") as string;
 
-  if (!userId || !type) throw new Error("Студент и тип риска обязательны");
+  if (!userId || !type) throw new ApiError("bad_request", "Студент и тип риска обязательны", 400);
 
   await prisma.riskFlag.create({ data: { userId, type, severity, courseId: courseId || undefined, cohortId: cohortId || undefined } });
 

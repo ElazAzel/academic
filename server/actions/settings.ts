@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { getUserNotificationPreferences, setNotificationPreferences, type NotificationChannel } from "@/server/modules/notifications/preferences";
 import { getAllAppSettings, setAppSettings, type AppSettings } from "@/server/modules/admin/settings";
 import { createNotification } from "@/server/modules/notifications/service";
+import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -37,7 +38,7 @@ export async function updateProfileSettingsAction(formData: FormData) {
 
     revalidatePath("/", "layout");
   } catch (err) {
-    throw err instanceof Error ? err : new Error("Failed to update profile");
+    throw err instanceof Error ? err : new ApiError("internal_error", "Failed to update profile", 500);
   }
 }
 
@@ -49,21 +50,21 @@ export async function updatePasswordAction(formData: FormData) {
     const confirmPassword = formData.get("confirmPassword") as string;
 
     if (newPassword !== confirmPassword) {
-      throw new Error("Новые пароли не совпадают");
+      throw new ApiError("bad_request", "Новые пароли не совпадают", 400);
     }
 
     if (newPassword.length < 10) {
-      throw new Error("Пароль должен быть минимум 10 символов");
+      throw new ApiError("bad_request", "Пароль должен быть минимум 10 символов", 400);
     }
 
     const dbUser = await prisma.user.findUnique({ where: { id: userSession.id } });
     if (!dbUser || !dbUser.passwordHash) {
-      throw new Error("Учетная запись не найдена");
+      throw new ApiError("not_found", "Учетная запись не найдена", 404);
     }
 
     const isValid = await verifyPassword(dbUser.passwordHash, currentPassword);
     if (!isValid) {
-      throw new Error("Неверный текущий пароль");
+      throw new ApiError("bad_request", "Неверный текущий пароль", 400);
     }
 
     const newHash = await hashPassword(newPassword);
@@ -78,7 +79,7 @@ export async function updatePasswordAction(formData: FormData) {
       channel: "email",
     });
   } catch (err) {
-    throw err instanceof Error ? err : new Error("Failed to update password");
+    throw err instanceof Error ? err : new ApiError("internal_error", "Failed to update password", 500);
   }
 }
 
@@ -87,7 +88,7 @@ export async function getNotificationPreferencesAction() {
     const user = await requireUser();
     return await getUserNotificationPreferences(user.id);
   } catch (err) {
-    throw err instanceof Error ? err : new Error("Failed to get notification preferences");
+    throw err instanceof Error ? err : new ApiError("internal_error", "Failed to get notification preferences", 500);
   }
 }
 
@@ -107,7 +108,7 @@ export async function updateNotificationPreferencesAction(formData: FormData) {
     await setNotificationPreferences(user.id, preferences);
     revalidatePath("/*", "layout");
   } catch (err) {
-    throw err instanceof Error ? err : new Error("Failed to update notification preferences");
+    throw err instanceof Error ? err : new ApiError("internal_error", "Failed to update notification preferences", 500);
   }
 }
 
@@ -116,7 +117,7 @@ export async function getAppSettingsAction() {
     await requireUser("settings:manage");
     return await getAllAppSettings();
   } catch (err) {
-    throw err instanceof Error ? err : new Error("Failed to get app settings");
+    throw err instanceof Error ? err : new ApiError("internal_error", "Failed to get app settings", 500);
   }
 }
 
@@ -142,6 +143,6 @@ export async function updateAppSettingsAction(formData: FormData) {
     await setAppSettings(settings);
     revalidatePath("/admin/settings", "layout");
   } catch (err) {
-    throw err instanceof Error ? err : new Error("Failed to update app settings");
+    throw err instanceof Error ? err : new ApiError("internal_error", "Failed to update app settings", 500);
   }
 }

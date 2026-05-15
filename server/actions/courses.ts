@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
 import type { CourseDetail, ModuleDetail, LessonDetail, LessonSummary } from "@/types/domain";
+import { ApiError } from "@/lib/http";
 
 export async function getCourseForStudent(courseId: string): Promise<CourseDetail | null> {
   await requireRole(["student", "curator", "super_curator", "instructor", "admin", "customer_observer"]);
@@ -154,14 +155,14 @@ export async function getLessonForStudent(lessonId: string): Promise<LessonDetai
 export async function askCuratorQuestion(lessonId: string, text: string) {
   await requireRole(["student"]);
   const user = await getCurrentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) throw new ApiError("unauthorized", "Unauthorized", 401);
 
   // Найти куратора для этого слушателя
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
     include: { module: { include: { course: { include: { cohorts: true } } } } },
   });
-  if (!lesson) throw new Error("Lesson not found");
+  if (!lesson) throw new ApiError("not_found", "Lesson not found", 404);
 
   const curatorAssignment = await prisma.curatorAssignment.findFirst({
     where: { studentId: user.id, active: true },

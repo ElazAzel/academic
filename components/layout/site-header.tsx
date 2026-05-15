@@ -5,6 +5,25 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { UserAccountNav } from "@/components/layout/user-account-nav";
 import { ThemeToggle } from "@/components/lms/theme-toggle";
 import { NotificationsDropdown } from "@/components/lms/notifications-dropdown";
+import { NAV_BY_ROLE } from "@/components/layout/navigation";
+import type { RoleKey } from "@/types/domain";
+
+const HEADER_LINKS_COUNT: Record<string, number> = {
+  student: 3,
+  curator: 3,
+  super_curator: 3,
+  instructor: 3,
+  admin: 3,
+  customer_observer: 3,
+};
+
+function getHeaderLinks(roles: string[]) {
+  const rolePriority: RoleKey[] = ["admin", "super_curator", "curator", "instructor", "customer_observer", "student"];
+  const primaryRole = rolePriority.find((r) => roles.includes(r)) ?? "student";
+  const links = NAV_BY_ROLE[primaryRole];
+  const count = HEADER_LINKS_COUNT[primaryRole] ?? 3;
+  return { links: links.slice(0, count), primaryRole };
+}
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
@@ -19,9 +38,18 @@ export async function SiteHeader() {
           <span>AI Strategic Academy</span>
         </Link>
         
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Основная навигация">
-          {/* Menu links have been removed per user request */}
-        </nav>
+        {user && (
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Основная навигация">
+            {(() => {
+              const { links } = getHeaderLinks(user.roles);
+              return links.map((item) => (
+                <Button key={item.href} asChild variant="ghost" size="sm">
+                  <Link href={item.href}>{item.label}</Link>
+                </Button>
+              ));
+            })()}
+          </nav>
+        )}
 
         <div className="flex items-center gap-1">
           <ThemeToggle />

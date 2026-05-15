@@ -1,0 +1,23 @@
+{
+  "seq": 7,
+  "name": "Connect Real Badge Counts to Navigation",
+  "group": "D",
+  "module": "layout",
+  "description": "Create server action or API to get unread counts per role: unread notifications, unread messages (for curators), open questions (for curators). Update NavLinks to accept dynamic badge counts. Show unread notification badge on notification nav items, unread message badge on chat nav items, open questions count.",
+  "files": [
+    "components/layout/navigation.ts",
+    "components/layout/nav-links.tsx",
+    "components/layout/site-header.tsx"
+  ],
+  "context_files": [
+    "AI.md",
+    "ai/roles/frontend-lms-ux.md",
+    "ai/roles/backend-next-prisma.md"
+  ],
+  "reference_files": [
+    "server/actions/chat.ts",
+    "server/modules/notifications/service.ts"
+  ],
+  "depends_on": [6],
+  "parallel": false
+}

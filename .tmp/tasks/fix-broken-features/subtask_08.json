@@ -1,0 +1,20 @@
+{
+  "seq": 8,
+  "name": "Fix Server Actions - Error → ApiError",
+  "group": "E",
+  "module": "api",
+  "description": "Search all throw new Error() in server/actions/ directory. Replace with appropriate throw new ApiError(code, message, status). Use proper HTTP codes: 400 for bad request, 401 for unauthorized, 403 for forbidden, 404 for not found. Import ApiError from @/lib/http.",
+  "files": [
+    "server/actions/chat.ts",
+    "server/actions/courses.ts"
+  ],
+  "context_files": [
+    "AI.md",
+    "ai/roles/backend-next-prisma.md"
+  ],
+  "reference_files": [
+    "lib/http.ts"
+  ],
+  "depends_on": [],
+  "parallel": true
+}
