@@ -25,8 +25,8 @@ const CTA_LABELS: Record<string, string> = {
 };
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  COMPLETED: { label: "Завершён", cls: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  IN_PROGRESS: { label: "В процессе", cls: "border-sky-200 bg-sky-50 text-sky-700" },
+  COMPLETED: { label: "Завершён", cls: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" },
+  IN_PROGRESS: { label: "В процессе", cls: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300" },
   BLOCKED: { label: "Заблокирован", cls: "border-gray-200 bg-gray-50 text-gray-500" },
   NOT_STARTED: { label: "Не начат", cls: "border-gray-200 bg-gray-50 text-gray-500" },
 };
@@ -60,7 +60,7 @@ export function LessonCard({ lesson }: { lesson: LessonCardType }) {
         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
           <span>{lesson.durationMinutes} мин.</span>
           {lesson.isRequired && <Badge className="border-primary/20 bg-primary/5 text-primary text-[10px]">Обязательный</Badge>}
-          {lesson.hasQuiz && <Badge className="border-amber-200 bg-amber-50 text-amber-700 text-[10px]">Тест</Badge>}
+          {lesson.hasQuiz && <Badge className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300 text-[10px]">Тест</Badge>}
           {lesson.hasAssignment && <Badge className="border-violet-200 bg-violet-50 text-violet-700 text-[10px]">Задание</Badge>}
         </div>
         {isLocked && lesson.lockReason && (

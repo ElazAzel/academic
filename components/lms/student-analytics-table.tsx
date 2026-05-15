@@ -88,7 +88,7 @@ export function StudentAnalyticsTable({ students }: { students: StudentAnalytics
                 </TableCell>
                 <TableCell>
                   {s.riskCount > 0 ? (
-                    <Badge className="border-rose-200 bg-rose-50 text-rose-700 text-xs">{s.riskCount}</Badge>
+                    <Badge className="border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300 text-xs">{s.riskCount}</Badge>
                   ) : (
                     <span className="text-xs text-muted-foreground">0</span>
                   )}

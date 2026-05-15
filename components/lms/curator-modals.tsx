@@ -44,7 +44,7 @@ export function AnswerQuestionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-card rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="p-6 border-b">
           <h3 className="text-lg font-bold">Ответ на вопрос</h3>
           <p className="text-sm text-muted-foreground">Слушатель: {question.studentName}</p>
@@ -56,7 +56,7 @@ export function AnswerQuestionModal({
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase text-muted-foreground">Ваш ответ</label>
             <textarea
-              className="w-full min-h-[150px] rounded-2xl border bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              className="w-full min-h-[150px] rounded-2xl border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
               placeholder="Введите ответ студенту..."
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
@@ -104,7 +104,7 @@ export function ReviewSubmissionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-card rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="p-6 border-b flex justify-between items-center">
           <div>
             <h3 className="text-lg font-bold">Проверка задания</h3>
@@ -135,7 +135,7 @@ export function ReviewSubmissionModal({
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase text-muted-foreground">Комментарий (feedback)</label>
             <textarea
-              className="w-full min-h-[100px] rounded-2xl border bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              className="w-full min-h-[100px] rounded-2xl border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
               placeholder="Напишите замечания или похвалу..."
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}

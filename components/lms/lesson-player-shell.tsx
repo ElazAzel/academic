@@ -145,9 +145,9 @@ export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetai
         {/* Title */}
         <div>
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <Badge className="border-sky-200 bg-sky-50 text-sky-700">Урок {lesson.order}</Badge>
+            <Badge className="border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300">Урок {lesson.order}</Badge>
             <Badge className="border-primary/20 bg-primary/5 text-primary">{lesson.durationMinutes} мин.</Badge>
-            {isCompleted && <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">Завершён</Badge>}
+            {isCompleted && <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">Завершён</Badge>}
           </div>
           <h1 className="text-xl font-semibold sm:text-2xl">{lesson.title}</h1>
           {lesson.summary && <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{lesson.summary}</p>}

@@ -113,7 +113,7 @@ export function QuizCreator({
       {/* Questions */}
       <div className="space-y-3">
         {questions.map((q, qi) => (
-          <div key={qi} className="rounded-xl border bg-white p-3 space-y-2">
+          <div key={qi} className="rounded-xl border bg-card p-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium">Вопрос {qi + 1}</span>
               {questions.length > 1 && (

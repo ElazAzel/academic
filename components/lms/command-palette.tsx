@@ -61,7 +61,7 @@ export function CommandPalette() {
         <DialogOverlay />
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] pointer-events-none">
           <div
-            className="pointer-events-auto w-full max-w-xl rounded-2xl border bg-white shadow-2xl dark:bg-gray-950 dark:border-gray-800 overflow-hidden"
+            className="pointer-events-auto w-full max-w-xl rounded-2xl border bg-card shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 border-b px-4 py-3 dark:border-gray-800">

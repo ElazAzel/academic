@@ -131,7 +131,7 @@ export function CourseBuilderShell({ detail: initial }: { detail: CourseBuilderD
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase text-muted-foreground">Название курса</label>
                 <input
-                  className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                   value={detail.title}
                   onChange={(e) => { setDetail((d) => ({ ...d, title: e.target.value })); setDirty(true); }}
                 />
@@ -139,7 +139,7 @@ export function CourseBuilderShell({ detail: initial }: { detail: CourseBuilderD
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
                 <textarea
-                  className="w-full min-h-[120px] rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full min-h-[120px] rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                   value={detail.description}
                   onChange={(e) => { setDetail((d) => ({ ...d, description: e.target.value })); setDirty(true); }}
                 />
@@ -148,7 +148,7 @@ export function CourseBuilderShell({ detail: initial }: { detail: CourseBuilderD
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase text-muted-foreground">Цель</label>
                   <input
-                    className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                     value={detail.goal ?? ""}
                     onChange={(e) => { setDetail((d) => ({ ...d, goal: e.target.value })); setDirty(true); }}
                   />
@@ -157,7 +157,7 @@ export function CourseBuilderShell({ detail: initial }: { detail: CourseBuilderD
                   <label className="text-xs font-semibold uppercase text-muted-foreground">Длительность (часов)</label>
                   <input
                     type="number"
-                    className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                     value={detail.durationHours}
                     onChange={(e) => { setDetail((d) => ({ ...d, durationHours: Number(e.target.value) })); setDirty(true); }}
                   />

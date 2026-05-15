@@ -91,8 +91,8 @@ export function ModuleAccordion({
                   className={cn(
                     "shrink-0 text-[10px]",
                     mod.deadline.overdue
-                      ? "border-rose-200 bg-rose-50 text-rose-700"
-                      : "border-amber-200 bg-amber-50 text-amber-700"
+                      ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300"
+                      : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
                   )}
                 >
                   {mod.deadline.overdue ? "Просрочен" : `до ${mod.deadline.date.slice(0, 10)}`}

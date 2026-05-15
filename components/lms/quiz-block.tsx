@@ -66,7 +66,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
             <p className="text-sm font-semibold">{quiz.title}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{quiz.questionsCount} вопросов · порог {quiz.passThreshold}% · {quiz.maxAttempts} попытки</p>
           </div>
-          <Badge className="border-amber-200 bg-amber-50 text-amber-700">Тест</Badge>
+          <Badge className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300">Тест</Badge>
         </div>
         <Button onClick={() => setPhase("active")} size="sm">
           Начать тест
@@ -181,8 +181,8 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
           <Badge
             className={
               result?.passed
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700 mt-2"
-                : "border-rose-200 bg-rose-50 text-rose-700 mt-2"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 mt-2"
+                : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300 mt-2"
             }
           >
             {result?.passed ? "Пройден" : "Не пройден"}

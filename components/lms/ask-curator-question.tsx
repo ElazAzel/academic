@@ -52,7 +52,7 @@ export function AskCuratorQuestion({
       <p className="text-xs text-muted-foreground">Опишите вашу проблему по материалам урока.</p>
       <div className="space-y-3">
         <textarea
-          className="min-h-[80px] w-full resize-none rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 dark:bg-gray-950"
+          className="min-h-[80px] w-full resize-none rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           placeholder="Ваш вопрос..."
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -74,8 +74,8 @@ export function AskCuratorQuestion({
                 <Badge
                   className={
                     q.status === "open"
-                      ? "border-amber-200 bg-amber-50 text-amber-700 text-[10px]"
-                      : "border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px]"
+                      ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300 text-[10px]"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 text-[10px]"
                   }
                 >
                   {q.status === "open" ? "Ожидает ответа" : "Отвечен"}

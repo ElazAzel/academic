@@ -103,7 +103,7 @@ export function LessonBlockEditor({
               <span className="text-xs font-medium text-muted-foreground uppercase">{BLOCK_LABELS[block.type]}</span>
               <div className="flex-1" />
               <select
-                className="h-7 rounded-lg border bg-white px-2 text-xs"
+                className="h-7 rounded-lg border bg-background px-2 text-xs"
                 value={block.type}
                 onChange={() => updateBlockData(block.id, {})}
               >

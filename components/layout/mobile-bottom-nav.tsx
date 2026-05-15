@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ICON_MAP, BOTTOM_NAV_BY_ROLE } from "@/components/layout/navigation";
 import { cn } from "@/lib/utils";
 import type { RoleKey } from "@/types/domain";
 
 export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
   const pathname = usePathname();
+  const shouldReduce = useReducedMotion();
   const items = BOTTOM_NAV_BY_ROLE[role] ?? BOTTOM_NAV_BY_ROLE.student;
 
   // Get unread counts from sidebar if available (NavLinks fetches them)
@@ -43,9 +44,9 @@ export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
               )}
               {isActive && (
                 <motion.span
-                  layoutId="bottom-nav-indicator"
+                  layoutId={shouldReduce ? undefined : "bottom-nav-indicator"}
                   className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  transition={shouldReduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 35 }}
                 />
               )}
             </div>

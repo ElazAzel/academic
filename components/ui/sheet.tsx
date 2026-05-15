@@ -24,7 +24,7 @@ export function SheetContent({
       />
       <DialogPrimitive.Content
         className={cn(
-          "fixed top-0 z-50 flex h-full w-full max-w-xs flex-col bg-white shadow-xl duration-200 dark:bg-gray-950",
+          "fixed top-0 z-50 flex h-full w-full max-w-xs flex-col bg-card shadow-xl duration-200",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           side === "left"
             ? "left-0 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left"

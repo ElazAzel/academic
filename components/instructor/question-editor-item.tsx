@@ -75,7 +75,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
       </div>
 
       {isExpanded && (
-        <div className="p-4 border-t bg-white space-y-4">
+        <div className="p-4 border-t bg-card space-y-4">
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase text-muted-foreground">Текст вопроса</label>
             <textarea
@@ -89,7 +89,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase text-muted-foreground">Тип</label>
               <select
-                className="w-full h-10 rounded-xl border bg-white px-3 text-sm"
+                className="w-full h-10 rounded-xl border bg-background px-3 text-sm"
                 value={data.type}
                 onChange={(e) => setData({ ...data, type: e.target.value, options: (e.target.value === "SHORT_ANSWER" ? [] : options) })}
               >

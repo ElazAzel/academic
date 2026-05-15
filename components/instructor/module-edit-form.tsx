@@ -90,7 +90,7 @@ export function ModuleEditForm({ module }: ModuleEditFormProps) {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase text-muted-foreground">Статус</label>
-              <select name="status" defaultValue={module.status} className="w-full h-10 rounded-xl border bg-white px-3 text-sm">
+              <select name="status" defaultValue={module.status} className="w-full h-10 rounded-xl border bg-background px-3 text-sm">
                 <option value="DRAFT">Черновик</option>
                 <option value="PUBLISHED">Опубликован</option>
                 <option value="ARCHIVED">Архив</option>
@@ -103,7 +103,7 @@ export function ModuleEditForm({ module }: ModuleEditFormProps) {
             <textarea
               name="description"
               defaultValue={module.description || ""}
-              className="w-full min-h-[100px] rounded-2xl border bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              className="w-full min-h-[100px] rounded-2xl border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
             />
           </div>
 
