@@ -16,9 +16,18 @@ import { QuizBlock } from "@/components/lms/quiz-block";
 import { AssignmentBlock } from "@/components/lms/assignment-block";
 import { LessonRating } from "@/components/lms/lesson-rating";
 import { LessonNavigation } from "@/components/lms/lesson-navigation";
-import { CourseContentsDrawer } from "@/components/lms/course-contents-drawer";
-import { ChatPanel } from "@/components/lms/chat-panel";
+import dynamic from "next/dynamic";
 import type { StudentLessonPlayerDetail } from "@/types/domain";
+
+const CourseContentsDrawer = dynamic(
+  () => import("@/components/lms/course-contents-drawer").then((m) => ({ default: m.CourseContentsDrawer })),
+  { ssr: false },
+);
+
+const ChatPanel = dynamic(
+  () => import("@/components/lms/chat-panel").then((m) => ({ default: m.ChatPanel })),
+  { ssr: false },
+);
 
 export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetail }) {
   const router = useRouter();

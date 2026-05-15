@@ -412,27 +412,41 @@ function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
 }
 
 export async function getStudentLessonPlayerDetail(userId: string, lessonId: string): Promise<StudentLessonPlayerDetail> {
-  const lesson = await getLessonForStudent(userId, lessonId);
-  const course = await getStudentCoursePlayerDetail(userId, lesson.courseId);
+  // 1. Быстро получаем courseId из урока (minimal query)
+  const lessonMeta = await prisma.lesson.findUnique({
+    where: { id: lessonId },
+    select: { id: true, module: { select: { courseId: true } } },
+  });
+  if (!lessonMeta) {
+    throw new ApiError("not_found", "Урок не найден", 404);
+  }
+  const courseId = lessonMeta.module.courseId;
+
+  // 2. Запускаем все независимые запросы параллельно
+  const [lesson, courseDetail, curatorAssignment] = await Promise.all([
+    getLessonForStudent(userId, lessonId),
+    getStudentCoursePlayerDetail(userId, courseId),
+    prisma.curatorAssignment.findFirst({
+      where: { studentId: userId, active: true },
+      include: { curator: { select: { id: true, name: true } } },
+    }),
+  ]);
+
   const blocks = parseContentBlocks(lesson.content);
 
-  const quizDetails = await Promise.all(
-    lesson.quizzes.map((q) => getQuizForStudent(userId, q.id))
-  );
-  const assignmentDetails = await Promise.all(
-    lesson.assignments.map((a) => getAssignmentForStudent(userId, a.id))
-  );
-
-  // Get curator info for chat
-  const assignment = await prisma.curatorAssignment.findFirst({
-    where: { studentId: userId, active: true },
-    include: { curator: { select: { id: true, name: true } } },
-  });
+  const [quizDetails, assignmentDetails] = await Promise.all([
+    Promise.all(lesson.quizzes.map((q) => getQuizForStudent(userId, q.id))),
+    Promise.all(lesson.assignments.map((a) => getAssignmentForStudent(userId, a.id))),
+  ]);
 
   return {
-    lesson, blocks, courseTree: course.modules, quizDetails, assignmentDetails,
-    curatorId: assignment?.curator.id,
-    curatorName: assignment?.curator.name ?? undefined,
+    lesson,
+    blocks,
+    courseTree: courseDetail.modules,
+    quizDetails,
+    assignmentDetails,
+    curatorId: curatorAssignment?.curator.id,
+    curatorName: curatorAssignment?.curator.name ?? undefined,
   };
 }
 

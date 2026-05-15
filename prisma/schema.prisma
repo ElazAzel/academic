@@ -508,6 +508,7 @@ model Enrollment {
   certificates   Certificate[]
 
   @@unique([userId, courseId])
+  @@index([userId, status])
   @@map("enrollments")
 }
 
@@ -625,6 +626,7 @@ model QuizAttempt {
 
   @@index([quizId])
   @@index([userId])
+  @@index([quizId, userId])
   @@index([submittedAt])
   @@index([passed])
   @@map("quiz_attempts")
@@ -770,6 +772,7 @@ model Notification {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@index([userId, status, createdAt])
   @@map("notifications")
 }
 
@@ -789,6 +792,7 @@ model AuditLog {
   @@index([actorId])
   @@index([entity])
   @@index([action])
+  @@index([entity, action, createdAt])
   @@index([createdAt])
   @@map("audit_logs")
 }
@@ -857,6 +861,8 @@ model CuratorAssignment {
   superCurator User?  @relation("SuperCuratorAssignments", fields: [superCuratorId], references: [id])
 
   @@unique([cohortId, studentId])
+  @@index([curatorId, active])
+  @@index([studentId, active])
   @@map("curator_assignments")
 }
 
@@ -998,6 +1004,7 @@ model Message {
   @@index([senderId])
   @@index([receiverId])
   @@index([lessonId])
+  @@index([senderId, receiverId])
   @@index([createdAt])
   @@map("messages")
 }

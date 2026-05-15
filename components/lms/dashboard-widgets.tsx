@@ -10,7 +10,17 @@ import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar } from "@/components/ui/avatar";
 import { Stagger, CardHover, FadeIn } from "@/components/lms/animations";
-import { AnswerQuestionModal, ReviewSubmissionModal } from "./curator-modals";
+import dynamic from "next/dynamic";
+
+const AnswerQuestionModal = dynamic(
+  () => import("./curator-modals").then((m) => ({ default: m.AnswerQuestionModal })),
+  { ssr: false },
+);
+
+const ReviewSubmissionModal = dynamic(
+  () => import("./curator-modals").then((m) => ({ default: m.ReviewSubmissionModal })),
+  { ssr: false },
+);
 import type {
   ContinueLearning,
   CourseSummary,

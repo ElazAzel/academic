@@ -24,6 +24,10 @@ const envSchema = z.object({
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
   REDIS_URL: z.string().optional(),
 
+  // Vercel KV / Upstash Redis (for caching & rate limiting)
+  KV_URL: z.string().optional(),
+  KV_REST_API_TOKEN: z.string().optional(),
+
   // SMTP / transactional email
   SMTP_HOST: z.string().default("localhost"),
   SMTP_PORT: z.coerce.number().int().positive().default(1025),
