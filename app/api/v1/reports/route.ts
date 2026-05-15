@@ -6,7 +6,7 @@ import { reportCache } from "@/lib/cache";
 import { fetchProgressData, fetchRiskData, fetchCertificateData } from "@/lib/reports/data";
 import { generateProgressCsv, generateRiskCsv, generateCertificateCsv } from "@/lib/reports/csv-generator";
 import { generateProgressXlsx, generateRiskXlsx, generateCertificateXlsx } from "@/lib/reports/xlsx-generator";
-import { generateProgressPdf, generateRiskPdf } from "@/lib/reports/pdf-generator";
+import { generateProgressPdf, generateRiskPdf, generateCertificatePdf } from "@/lib/reports/pdf-generator";
 import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 import type { ReportFormat } from "@/lib/reports/types";
 
@@ -196,6 +196,20 @@ export async function GET(request: Request) {
           const fallbackContent = generateCertificateCsv(rows);
           reportCache.set(cacheKey, { content: fallbackContent, format: "csv", filename: filename.replace(/\.xlsx$/, ".csv") });
           const response = respond(fallbackContent, "csv", filename.replace(/\.xlsx$/, ".csv"));
+          response.headers.set("X-Fallback-Reason", `${format} generation failed, CSV provided instead`);
+          return response;
+        }
+      }
+      if (format === "pdf") {
+        try {
+          const content = await generateCertificatePdf(rows);
+          reportCache.set(cacheKey, { content, format, filename });
+          return respond(content, format, filename);
+        } catch (err) {
+          console.warn(`[Reports] ${format} generation failed, falling back to CSV:`, err);
+          const fallbackContent = generateCertificateCsv(rows);
+          reportCache.set(cacheKey, { content: fallbackContent, format: "csv", filename: filename.replace(/\.pdf$/, ".csv") });
+          const response = respond(fallbackContent, "csv", filename.replace(/\.pdf$/, ".csv"));
           response.headers.set("X-Fallback-Reason", `${format} generation failed, CSV provided instead`);
           return response;
         }

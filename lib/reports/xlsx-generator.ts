@@ -2,120 +2,183 @@ import ExcelJS from "exceljs";
 import type { ProgressRow, RiskRow, CertificateRow } from "./types";
 import { groupByCourse } from "./data";
 
-async function buildProgressSheet(wb: ExcelJS.Workbook, rows: ProgressRow[]) {
+// ── Shared helpers ───────────────────────────────────────────────────
+
+const HEADER_FILL: ExcelJS.Fill = {
+  type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A5F" },
+};
+const HEADER_FONT = { bold: true, color: { argb: "FFFFFFFF" }, size: 11, name: "Calibri" };
+const BORDER: Partial<ExcelJS.Borders> = {
+  bottom: { style: "thin", color: { argb: "FFD0D5DD" } },
+};
+const BORDER_ALL: Partial<ExcelJS.Borders> = {
+  top: { style: "thin", color: { argb: "FFD0D5DD" } },
+  bottom: { style: "thin", color: { argb: "FFD0D5DD" } },
+  left: { style: "thin", color: { argb: "FFD0D5DD" } },
+  right: { style: "thin", color: { argb: "FFD0D5DD" } },
+};
+
+function styleHeader(ws: ExcelJS.Worksheet) {
+  const row = ws.getRow(1);
+  row.font = HEADER_FONT;
+  row.fill = HEADER_FILL;
+  row.alignment = { horizontal: "center", vertical: "middle" };
+  row.height = 22;
+  row.eachCell((cell) => { cell.border = BORDER_ALL; });
+}
+
+function styleDataCell(cell: ExcelJS.Cell) {
+  cell.border = BORDER;
+  cell.alignment = { vertical: "middle", wrapText: false };
+}
+
+function applyAutoFilter(ws: ExcelJS.Worksheet, colCount: number) {
+  ws.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: 1, column: colCount },
+  };
+}
+
+function freezeHeader(ws: ExcelJS.Worksheet) {
+  ws.views = [{ state: "frozen", ySplit: 1 }];
+}
+
+// ── Colors for severity ──────────────────────────────────────────────
+
+const SEVERITY_FILLS: Record<string, ExcelJS.Fill> = {
+  critical: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEE2E2" } },
+  high: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEF3C7" } },
+  medium: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEF9C3" } },
+  low: { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F4F6" } },
+};
+
+// ── Progress report ──────────────────────────────────────────────────
+
+export async function generateProgressXlsx(rows: ProgressRow[]): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "AI Strategic Academy";
+  wb.created = new Date();
+  wb.modified = new Date();
+
   const ws = wb.addWorksheet("Прогресс");
 
   ws.columns = [
     { header: "Слушатель", key: "studentName", width: 28 },
     { header: "Email", key: "email", width: 32 },
     { header: "Курс", key: "course", width: 38 },
-    { header: "Поток", key: "cohort", width: 24 },
+    { header: "Поток", key: "cohort", width: 22 },
     { header: "Прогресс %", key: "progressPercent", width: 14 },
     { header: "Модуль", key: "currentModule", width: 24 },
-    { header: "Блок", key: "currentBlock", width: 24 },
+    { header: "Блок", key: "currentBlock", width: 22 },
     { header: "Урок", key: "currentLesson", width: 24 },
     { header: "Последний вход", key: "lastLoginAt", width: 16 },
-    { header: "Ср. минут/урок", key: "avgLessonMinutes", width: 16 },
+    { header: "Ср. мин/урок", key: "avgLessonMinutes", width: 14 },
     { header: "Риски", key: "riskCount", width: 10 },
   ];
 
-  const headerRow = ws.getRow(1);
-  headerRow.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
-  headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A5F" } };
-  headerRow.alignment = { horizontal: "center" };
+  styleHeader(ws);
+  applyAutoFilter(ws, 11);
+  freezeHeader(ws);
 
-  const grouped = groupByCourse(rows);
-  let rowNum = 2;
+  // Data (already ordered by course → cohort → name from fetchProgressData)
+  for (const r of rows) {
+    const lastLogin = r.lastLoginAt
+      ? new Date(r.lastLoginAt).toLocaleDateString("ru-RU")
+      : "";
+    const row = ws.addRow([
+      r.studentName, r.email, r.course, r.cohort,
+      r.progressPercent,
+      r.currentModule ?? "", r.currentBlock ?? "", r.currentLesson ?? "",
+      lastLogin, r.avgLessonMinutes ?? 0, r.riskCount ?? 0,
+    ]);
 
-  for (const [course, courseRows] of grouped) {
-    // Course header — используем актуальный rowNum для mergeCells
-    const ch = ws.addRow([`КУРС: ${course}`, "", "", "", ""]);
-    ch.getCell(1).font = { bold: true, size: 11, color: { argb: "FF1E3A5F" } };
-    ch.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE8F0FE" } };
-    ws.mergeCells(`A${rowNum}:E${rowNum}`);
-    // rowNum уже указывает на строку, добавленную addRow выше
-    rowNum++;
+    // Progress cell as percentage
+    const pctCell = row.getCell(5);
+    pctCell.numFmt = "0%";
+    pctCell.value = r.progressPercent / 100;
+    pctCell.alignment = { horizontal: "center" };
+    styleDataCell(pctCell);
 
-    const total = courseRows.length;
-    const completed = courseRows.filter((r) => r.progressPercent >= 100).length;
-    const avg = total > 0 ? Math.round(courseRows.reduce((s, r) => s + r.progressPercent, 0) / total) : 0;
-
-    const sr = ws.addRow([`Слушателей: ${total} | Завершили: ${completed} | Средний: ${avg}%`, "", "", "", ""]);
-    sr.getCell(1).font = { italic: true, size: 10, color: { argb: "FF666666" } };
-    // rowNum теперь указывает на строку-сводку
-    const summaryRowNum = rowNum;
-    ws.mergeCells(`A${summaryRowNum}:E${summaryRowNum}`);
-    rowNum++;
-
-    for (const r of courseRows) {
-      const lastLogin = r.lastLoginAt ? new Date(r.lastLoginAt).toLocaleDateString("ru-RU") : "";
-      const dataRow = ws.addRow([r.studentName, r.email, r.course, r.cohort, r.progressPercent, r.currentModule ?? "", r.currentBlock ?? "", r.currentLesson ?? "", lastLogin, r.avgLessonMinutes ?? 0, r.riskCount ?? 0]);
-      const pct = dataRow.getCell(5);
-      pct.numFmt = "0%";
-      pct.value = r.progressPercent / 100;
-      pct.alignment = { horizontal: "center" };
-
-      if (r.progressPercent >= 100) {
-        dataRow.eachCell((cell) => {
-          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCFCE7" } };
-        });
-      } else if (r.progressPercent === 0) {
-        dataRow.eachCell((cell) => {
-          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEE2E2" } };
-        });
-      }
-      rowNum++;
+    // Color by completion
+    let rowFill: ExcelJS.Fill | undefined;
+    if (r.progressPercent >= 100) {
+      rowFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCFCE7" } };
+    } else if (r.progressPercent === 0) {
+      rowFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEE2E2" } };
     }
 
-    rowNum++; // empty row between courses
+    row.eachCell((cell, colNum) => {
+      if (colNum !== 5) {
+        if (rowFill) cell.fill = rowFill;
+        styleDataCell(cell);
+      }
+      cell.border = BORDER;
+    });
   }
 
-  // Summary sheet
-  const summaryWs = wb.addWorksheet("Сводка");
-  summaryWs.columns = [
+  // ── Summary sheet ──────────────────────────────────────────────────
+  const ss = wb.addWorksheet("Сводка");
+  ss.columns = [
     { header: "Показатель", key: "metric", width: 40 },
     { header: "Значение", key: "value", width: 20 },
   ];
-  const summaryHeader = summaryWs.getRow(1);
-  summaryHeader.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
-  summaryHeader.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A5F" } };
+  styleHeader(ss);
 
-  summaryWs.addRow(["Всего записей", rows.length]);
-  summaryWs.addRow(["Завершили курс", rows.filter((r) => r.progressPercent >= 100).length]);
-  const totalRows = rows.length;
-  summaryWs.addRow(["Средний прогресс", totalRows > 0 ? `${Math.round(rows.reduce((s, r) => s + r.progressPercent, 0) / totalRows)}%` : "0%"]);
+  const total = rows.length;
+  const completed = rows.filter((r) => r.progressPercent >= 100).length;
+  const inProgress = rows.filter((r) => r.progressPercent > 0 && r.progressPercent < 100).length;
+  const notStarted = rows.filter((r) => r.progressPercent === 0).length;
+  const avg = total > 0 ? Math.round(rows.reduce((s, r) => s + r.progressPercent, 0) / total) : 0;
 
-  // Bar charts for each course using data bars
+  const summaryData = [
+    ["Всего записей", total],
+    ["Завершили курс", completed],
+    ["В процессе", inProgress],
+    ["Не начали", notStarted],
+    ["Средний прогресс", `${avg}%`],
+    ["Количество курсов", new Set(rows.map((r) => r.course)).size],
+    ["Количество потоков", new Set(rows.map((r) => r.cohort)).size],
+    ["Всего рисков", rows.reduce((s, r) => s + (r.riskCount ?? 0), 0)],
+  ];
+
+  for (const [metric, value] of summaryData) {
+    const row = ss.addRow([metric, value]);
+    row.eachCell((cell) => {
+      cell.font = { name: "Calibri", size: 11 };
+      cell.border = BORDER;
+      cell.alignment = { vertical: "middle" };
+    });
+  }
+
+  // ── Per-course sheets ──────────────────────────────────────────────
+  const grouped = groupByCourse(rows);
   for (const [course, courseRows] of grouped) {
-    const chartWs = wb.addWorksheet(`Диаграмма: ${course}`.replace(/[\[\]\:*?\/]/g, "").slice(0, 31));
-    chartWs.columns = [
+    const sheetName = course.replace(/[\[\]\:*?\/]/g, "").slice(0, 31);
+    const cws = wb.addWorksheet(sheetName);
+    cws.columns = [
       { header: "Слушатель", key: "name", width: 25 },
-      { header: "Прогресс %", key: "progress", width: 15 },
+      { header: "Email", key: "email", width: 30 },
+      { header: "Прогресс %", key: "progress", width: 14 },
+      { header: "Риски", key: "risks", width: 10 },
     ];
-    chartWs.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    chartWs.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A5F" } };
+    styleHeader(cws);
 
     for (const r of courseRows) {
-      chartWs.addRow([r.studentName, r.progressPercent]);
+      cws.addRow([r.studentName, r.email, r.progressPercent, r.riskCount ?? 0]);
     }
   }
-}
-
-export async function generateProgressXlsx(rows: ProgressRow[]): Promise<Buffer> {
-  const wb = new ExcelJS.Workbook();
-  wb.creator = "AI Strategic Academy";
-  wb.created = new Date();
-
-  await buildProgressSheet(wb, rows);
 
   const buf = await wb.xlsx.writeBuffer();
   return Buffer.from(buf);
 }
 
+// ── Risk report ──────────────────────────────────────────────────────
+
 export async function generateRiskXlsx(rows: RiskRow[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "AI Strategic Academy";
   wb.created = new Date();
+  wb.modified = new Date();
 
   const ws = wb.addWorksheet("Риски");
 
@@ -123,67 +186,108 @@ export async function generateRiskXlsx(rows: RiskRow[]): Promise<Buffer> {
     { header: "Слушатель", key: "studentName", width: 28 },
     { header: "Email", key: "email", width: 32 },
     { header: "Курс", key: "course", width: 38 },
-    { header: "Тип риска", key: "type", width: 20 },
+    { header: "Тип риска", key: "type", width: 22 },
     { header: "Уровень", key: "severity", width: 14 },
     { header: "Статус", key: "status", width: 14 },
   ];
 
-  const hdr = ws.getRow(1);
-  hdr.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
-  hdr.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A5F" } };
-
-  const severityColors: Record<string, string> = {
-    critical: "FFFEE2E2",
-    high: "FFFEF3C7",
-    medium: "FFFEF9C3",
-    low: "FFF3F4F6",
-  };
+  styleHeader(ws);
+  applyAutoFilter(ws, 6);
+  freezeHeader(ws);
 
   for (const r of rows) {
     const row = ws.addRow([r.studentName, r.email, r.course, r.type, r.severity, r.status]);
-    const color = severityColors[r.severity] ?? "FFFFFFFF";
+    const fill = SEVERITY_FILLS[r.severity];
     row.eachCell((cell) => {
-      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: color } };
+      if (fill) cell.fill = fill;
+      cell.border = BORDER;
+      cell.alignment = { vertical: "middle" };
+      cell.font = { name: "Calibri", size: 11 };
     });
   }
 
   // Summary sheet
-  const summaryWs = wb.addWorksheet("Сводка");
-  summaryWs.columns = [{ header: "Показатель", width: 40 }, { header: "Значение", width: 20 }];
-  const sh = summaryWs.getRow(1);
-  sh.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
-  sh.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A5F" } };
-  summaryWs.addRow(["Всего рисков", rows.length]);
-  summaryWs.addRow(["Критических", rows.filter((r) => r.severity === "critical").length]);
-  summaryWs.addRow(["Высоких", rows.filter((r) => r.severity === "high").length]);
-  summaryWs.addRow(["Средних", rows.filter((r) => r.severity === "medium").length]);
-  summaryWs.addRow(["Низких", rows.filter((r) => r.severity === "low").length]);
+  const ss = wb.addWorksheet("Сводка");
+  ss.columns = [
+    { header: "Показатель", key: "metric", width: 40 },
+    { header: "Значение", key: "value", width: 20 },
+  ];
+  styleHeader(ss);
+
+  const bySeverity = (sev: string) => rows.filter((r) => r.severity === sev);
+  const summaryData = [
+    ["Всего рисков", rows.length],
+    ["Критических", bySeverity("critical").length],
+    ["Высоких", bySeverity("high").length],
+    ["Средних", bySeverity("medium").length],
+    ["Низких", bySeverity("low").length],
+    ["Открытых", rows.filter((r) => r.status === "open").length],
+    ["Закрытых", rows.filter((r) => r.status !== "open").length],
+  ];
+
+  for (const [metric, value] of summaryData) {
+    const row = ss.addRow([metric, value]);
+    row.eachCell((cell) => {
+      cell.font = { name: "Calibri", size: 11 };
+      cell.border = BORDER;
+    });
+  }
 
   const buf = await wb.xlsx.writeBuffer();
   return Buffer.from(buf);
 }
 
+// ── Certificate report ───────────────────────────────────────────────
+
 export async function generateCertificateXlsx(rows: CertificateRow[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "AI Strategic Academy";
   wb.created = new Date();
+  wb.modified = new Date();
 
   const ws = wb.addWorksheet("Сертификаты");
 
   ws.columns = [
-    { header: "Номер", key: "number", width: 20 },
+    { header: "Номер", key: "number", width: 22 },
     { header: "Слушатель", key: "studentName", width: 28 },
     { header: "Email", key: "email", width: 32 },
     { header: "Курс", key: "course", width: 38 },
     { header: "Дата выдачи", key: "issuedAt", width: 16 },
   ];
 
-  const hdr = ws.getRow(1);
-  hdr.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
-  hdr.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A5F" } };
+  styleHeader(ws);
+  applyAutoFilter(ws, 5);
+  freezeHeader(ws);
 
   for (const r of rows) {
-    ws.addRow([r.number, r.studentName, r.email, r.course, r.issuedAt]);
+    const row = ws.addRow([r.number, r.studentName, r.email, r.course, r.issuedAt]);
+    row.eachCell((cell) => {
+      cell.border = BORDER;
+      cell.alignment = { vertical: "middle" };
+      cell.font = { name: "Calibri", size: 11 };
+    });
+  }
+
+  // Summary sheet
+  const ss = wb.addWorksheet("Сводка");
+  ss.columns = [
+    { header: "Показатель", key: "metric", width: 40 },
+    { header: "Значение", key: "value", width: 20 },
+  ];
+  styleHeader(ss);
+
+  const uniqueCourses = new Set(rows.map((r) => r.course)).size;
+  const summaryData = [
+    ["Всего сертификатов", rows.length],
+    ["По курсам", uniqueCourses],
+  ];
+
+  for (const [metric, value] of summaryData) {
+    const row = ss.addRow([metric, value]);
+    row.eachCell((cell) => {
+      cell.font = { name: "Calibri", size: 11 };
+      cell.border = BORDER;
+    });
   }
 
   const buf = await wb.xlsx.writeBuffer();

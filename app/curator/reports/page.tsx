@@ -2,15 +2,10 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/lms/bar-chart";
-import { Download, FileSpreadsheet, FileText } from "lucide-react";
+import { DownloadReports } from "@/components/lms/download-reports";
+import { TrendingUp, AlertTriangle } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorReportData } from "@/server/actions/curator-enhanced";
-
-const FORMATS = [
-  { id: "csv" as const, label: "CSV", icon: FileText },
-  { id: "xlsx" as const, label: "Excel", icon: FileSpreadsheet },
-  { id: "pdf" as const, label: "PDF", icon: FileText },
-];
 
 export const dynamic = "force-dynamic";
 
@@ -103,42 +98,10 @@ export default async function CuratorReportsPage() {
           )}
 
           {/* Download */}
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-base">Экспорт</CardTitle>
-              <CardDescription>Скачать отчёты в CSV, Excel или PDF</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm font-medium mb-2">Прогресс слушателей</p>
-                <div className="flex flex-wrap gap-2">
-                  {FORMATS.map((fmt) => {
-                    const FmtIcon = fmt.icon;
-                    return (
-                      <a key={fmt.id} href={`/api/v1/reports?type=curator_progress&format=${fmt.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">
-                        <FmtIcon className="h-4 w-4" />{fmt.label}<Download className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-2">Риски слушателей</p>
-                <div className="flex flex-wrap gap-2">
-                  {FORMATS.map((fmt) => {
-                    const FmtIcon = fmt.icon;
-                    return (
-                      <a key={fmt.id} href={`/api/v1/reports?type=curator_risk&format=${fmt.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">
-                        <FmtIcon className="h-4 w-4" />{fmt.label}<Download className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <DownloadReports reports={[
+            { id: "curator_progress", title: "Прогресс слушателей", desc: "Успеваемость ваших слушателей", icon: TrendingUp },
+            { id: "curator_risk", title: "Риски слушателей", desc: "Кто требует внимания", icon: AlertTriangle },
+          ]} />
         </div>
       ) : (
         <div className="rounded-2xl border bg-card p-10 text-center text-muted-foreground">
