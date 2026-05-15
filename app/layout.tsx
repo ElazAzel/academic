@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { PWARegister } from "@/components/lms/pwa-register";
+import { Heartbeat } from "@/components/lms/heartbeat";
 
 export const metadata: Metadata = {
   title: "AI Strategic Academy",
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </a>
         <Providers>{children}</Providers>
         <PWARegister />
+        <Heartbeat />
       </body>
     </html>
   );

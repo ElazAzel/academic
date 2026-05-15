@@ -1,6 +1,8 @@
-const CACHE_NAME = "ai-academy-v2";
-const STATIC_CACHE = "ai-academy-static-v2";
+const CACHE_NAME = "ai-academy-v3";
+const STATIC_CACHE = "ai-academy-static-v3";
 const OFFLINE_URL = "/offline";
+const BUILD_VERSION_URL = "/api/v1/build-version";
+const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 const STATIC_ASSETS = [
   "/icon.svg",
@@ -8,13 +10,14 @@ const STATIC_ASSETS = [
   "/favicon.ico",
 ];
 
+let currentBuildVersion = 0;
+
 // ── Install ──────────────────────────────────────────────────────────
 self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(STATIC_CACHE);
       await cache.addAll(STATIC_ASSETS);
-      // Pre-cache offline fallback
       try {
         const offlineResponse = await fetch(OFFLINE_URL);
         if (offlineResponse.ok) {
@@ -28,7 +31,39 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// ── Activate ─────────────────────────────────────────────────────────
+// ── Check build version periodically ─────────────────────────────────
+async function checkBuildVersion() {
+  try {
+    const response = await fetch(BUILD_VERSION_URL, { cache: "no-store" });
+    if (!response.ok) return;
+    const data = await response.json();
+    const serverVersion = data.version ?? 0;
+
+    if (currentBuildVersion === 0) {
+      currentBuildVersion = serverVersion;
+      return;
+    }
+
+    if (serverVersion > currentBuildVersion) {
+      console.log("[SW] Build version changed:", currentBuildVersion, "→", serverVersion);
+      currentBuildVersion = serverVersion;
+
+      // Invalidate all caches
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+
+      // Notify all clients to reload
+      const clients = await self.clients.matchAll();
+      clients.forEach((client) => {
+        client.postMessage({ type: "BUILD_UPDATED", version: serverVersion });
+      });
+    }
+  } catch {
+    // Silently fail — will retry on next interval
+  }
+}
+
+// Check version on activate
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
@@ -39,6 +74,9 @@ self.addEventListener("activate", (event) => {
           .map((k) => caches.delete(k))
       );
       await self.clients.claim();
+      // Start version check
+      checkBuildVersion();
+      setInterval(checkBuildVersion, VERSION_CHECK_INTERVAL);
     })()
   );
 });
@@ -64,7 +102,6 @@ self.addEventListener("fetch", (event) => {
         } catch {
           const cachedResponse = await caches.match(request);
           if (cachedResponse) return cachedResponse;
-          // Return offline page
           const offlineResponse = await caches.match(OFFLINE_URL);
           if (offlineResponse) return offlineResponse;
           return new Response("Вы офлайн. Пожалуйста, проверьте подключение к интернету.", {
@@ -164,14 +201,19 @@ self.addEventListener("notificationclick", (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
-      // If already open, focus it
       for (const client of windowClients) {
         if (client.url === url && "focus" in client) {
           return client.focus();
         }
       }
-      // Otherwise open new window
       return clients.openWindow(url);
     })
   );
+});
+
+// ── Message from client ─────────────────────────────────────────────
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "CHECK_VERSION") {
+    checkBuildVersion();
+  }
 });

@@ -6,14 +6,15 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChatPanel } from "@/components/lms/chat-panel";
-import { MessageCircle, Search } from "lucide-react";
+import { BookOpen, MessageCircle, Search } from "lucide-react";
+import type { ConversationInfo } from "@/server/actions/chat";
 
 export function CuratorChatList({
   conversations,
 }: {
-  conversations: { partnerId: string; partnerName: string; lastMessage: string; lastDate: string; unread: number }[];
+  conversations: ConversationInfo[];
 }) {
-  const [selectedPartner, setSelectedPartner] = useState<{ id: string; name: string } | null>(null);
+  const [selectedPartner, setSelectedPartner] = useState<{ id: string; name: string; lessonId?: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const filtered = conversations.filter((c) =>
     c.partnerName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -42,11 +43,11 @@ export function CuratorChatList({
           {filtered.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">Ничего не найдено</p>
           ) : (
-            filtered.map((c) => (
+              filtered.map((c) => (
               <Card
                 key={c.partnerId}
                 className="rounded-2xl cursor-pointer transition-all hover:shadow-md"
-                onClick={() => setSelectedPartner({ id: c.partnerId, name: c.partnerName })}
+                onClick={() => setSelectedPartner({ id: c.partnerId, name: c.partnerName, lessonId: c.lessonId })}
               >
                 <CardContent className="flex items-center gap-3 p-4">
                   <Avatar name={c.partnerName} className="h-10 w-10" />
@@ -56,9 +57,17 @@ export function CuratorChatList({
                       {c.unread > 0 && <Badge className="bg-primary text-primary-foreground">{c.unread}</Badge>}
                     </div>
                     <p className="text-xs text-muted-foreground truncate mt-0.5">{c.lastMessage}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {new Date(c.lastDate).toLocaleDateString("ru")}
-                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(c.lastDate).toLocaleDateString("ru")}
+                      </p>
+                      {c.lessonTitle && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/70 truncate">
+                          <BookOpen className="h-3 w-3 shrink-0" />
+                          {c.lessonTitle}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -72,7 +81,14 @@ export function CuratorChatList({
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Чат: {selectedPartner.name}</DialogTitle>
+              {selectedPartner.lessonId && (
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <BookOpen className="h-3 w-3" />
+                  Контекст: {selectedPartner.lessonId}
+                </p>
+              )}
             </DialogHeader>
+            {/* Показываем ВСЮ историю переписки (без lessonId), контекст урока — только для справки */}
             <ChatPanel studentId={selectedPartner.id} />
           </DialogContent>
         </Dialog>

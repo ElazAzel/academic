@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   SMTP_PORT: "1025",
   SMTP_FROM: "AI Strategic Academy <noreply@example.com>",
   CERTIFICATE_COMPLETION_THRESHOLD: 85,
+  BUILD_VERSION: 1,
 };
 
 export async function getAppSetting<T>(key: string, defaultValue: T): Promise<T> {

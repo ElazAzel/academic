@@ -51,7 +51,8 @@ export type NotificationEvent =
   | "popup"
   | "new_message"
   | "block_completed"
-  | "module_completed";
+  | "module_completed"
+  | "curator_response_reminder";
 
 const templates: Record<NotificationEvent, { title: string; body: string }> = {
   access_granted: { title: "Доступ выдан", body: "Вам открыт доступ к учебной программе." },
@@ -71,7 +72,8 @@ const templates: Record<NotificationEvent, { title: string; body: string }> = {
   popup: { title: "Важное сообщение", body: "У вас новое сообщение от администрации." },
   new_message: { title: "Новое сообщение", body: "У вас новое сообщение в чате." },
   block_completed: { title: "Блок пройден", body: "Вы завершили блок обучения." },
-  module_completed: { title: "Модуль пройден", body: "Поздравляем с завершением модуля!" }
+  module_completed: { title: "Модуль пройден", body: "Поздравляем с завершением модуля!" },
+  curator_response_reminder: { title: "Напоминание: ожидает ответа", body: "Слушатель ждёт вашего ответа уже более 2 часов." },
 };
 
 export function renderNotificationTemplate(event: NotificationEvent, overrides?: Partial<{ title: string; body: string }>) {
