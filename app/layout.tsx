@@ -14,18 +14,34 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "AI Academy",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
+    startupImage: [],
   },
   other: {
-    "theme-color": "#1E3A5F",
+    "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-status-bar-style": "default",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-touch-fullscreen": "yes",
+    "theme-color": "#1E3A5F",
+    "theme-color-media-dark": "#0F172A",
+    "msapplication-TileColor": "#1E3A5F",
+    "msapplication-config": "none",
   },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ru" suppressHydrationWarning data-scroll-behavior="smooth">
+      <head>
+        {/* Viewport for proper mobile rendering */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        />
+        {/* PWA theme-color with media query for dark mode */}
+        <meta name="theme-color" content="#F8FAFC" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)" />
+      </head>
       <body>
         <a
           href="#main-content"
@@ -39,4 +55,3 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
-

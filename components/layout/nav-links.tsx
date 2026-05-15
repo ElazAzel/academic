@@ -17,7 +17,6 @@ const BADGE_MAP: Record<string, string> = {
 export function NavLinks({ links }: { links: NavItem[] }) {
   const pathname = usePathname();
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [countsLoaded, setCountsLoaded] = useState(false);
 
   const fetchCounts = useCallback(async () => {
     try {
@@ -25,7 +24,6 @@ export function NavLinks({ links }: { links: NavItem[] }) {
       if (res.ok) {
         const json = await res.json();
         setCounts(json.data ?? {});
-        setCountsLoaded(true);
       }
     } catch (err) {
       console.error("[NavLinks] Failed to fetch counts:", err);
