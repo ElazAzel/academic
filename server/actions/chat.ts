@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { buildStorageKey, createPresignedUploadUrl } from "@/lib/storage";
 import { createNotification } from "@/server/modules/notifications/service";
+import { maskChatName, deriveDisplayName } from "@/lib/auth/mask-name";
 import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
@@ -37,34 +38,47 @@ export async function getConversation(studentId: string, lessonId?: string) {
     attachmentUrl: m.attachmentUrl,
     attachmentType: m.attachmentType,
     senderId: m.senderId,
-    senderName: m.sender.name ?? "",
+    senderName: maskChatName(m.sender.name, m.senderId, user.roles as import("@/types/domain").RoleKey[], user.id),
     createdAt: m.createdAt.toISOString(),
     readAt: m.readAt?.toISOString() ?? null,
     isMine: m.senderId === user.id,
   }));
 }
 
+export interface ConversationInfo {
+  partnerId: string;
+  partnerName: string;
+  lastMessage: string;
+  lastDate: string;
+  unread: number;
+  /** Урок, с которого начат диалог (если есть) */
+  lessonId?: string;
+  lessonTitle?: string;
+}
+
 export async function getMyConversations() {
   const user = await requireRole(["student", "curator", "super_curator", "admin"]);
-  const isStudent = user.roles.includes("student");
 
   const messages = await prisma.message.findMany({
-    where: isStudent
-      ? { OR: [{ senderId: user.id }, { receiverId: user.id }] }
-      : { OR: [{ senderId: user.id }, { receiverId: user.id }] },
+    where: {
+      OR: [{ senderId: user.id }, { receiverId: user.id }],
+    },
     orderBy: { createdAt: "desc" },
     include: {
       sender: { select: { id: true, name: true } },
       receiver: { select: { id: true, name: true } },
+      lesson: { select: { id: true, title: true } },
     },
-    take: 100,
+    take: 200,
   });
 
-  // Group by conversation partner
-  const convMap = new Map<string, { partnerId: string; partnerName: string; lastMessage: string; lastDate: string; unread: number }>();
+  // Group by conversation partner, collecting lesson info from each message
+  const convMap = new Map<string, ConversationInfo>();
   for (const m of messages) {
     const partnerId = m.senderId === user.id ? (m.receiverId ?? "") : m.senderId;
-    const partnerName = m.senderId === user.id ? (m.receiver?.name ?? "Куратор") : (m.sender.name ?? "Слушатель");
+    const rawName = m.senderId === user.id ? (m.receiver?.name ?? "Куратор") : (m.sender.name ?? "Слушатель");
+    const partnerName = maskChatName(rawName, partnerId, user.roles as import("@/types/domain").RoleKey[], user.id);
+
     if (!convMap.has(partnerId)) {
       convMap.set(partnerId, {
         partnerId,
@@ -72,7 +86,21 @@ export async function getMyConversations() {
         lastMessage: m.text ?? "(вложение)",
         lastDate: m.createdAt.toISOString(),
         unread: m.readAt === null && m.senderId !== user.id ? 1 : 0,
+        lessonId: m.lessonId ?? undefined,
+        lessonTitle: m.lesson?.title ?? undefined,
       });
+    } else {
+      // Update unread counter
+      const existing = convMap.get(partnerId)!;
+      if (m.readAt === null && m.senderId !== user.id) {
+        existing.unread += 1;
+      }
+      // Keep the lesson info from the FIRST (most recent) message as the primary context
+      // But if the first message has no lesson and a later one does, update
+      if (!existing.lessonId && m.lessonId) {
+        existing.lessonId = m.lessonId;
+        existing.lessonTitle = m.lesson?.title ?? undefined;
+      }
     }
   }
 
@@ -115,23 +143,28 @@ export async function sendMessageAction(formData: FormData) {
     if (toUserId && toUserId !== user.id) {
       const messagePreview = text ? (text.length > 100 ? text.substring(0, 100) + "…" : text) : "Вложение";
       const isCurator = user.roles.includes("curator") || user.roles.includes("super_curator") || user.roles.includes("admin");
+      // Link must be relative to the RECEIVER's role, not the sender's:
+      // - If curator sends → receiver is student → link to student's lesson
+      // - If student sends → receiver is curator → link to curator's chat
       const link = isCurator
-        ? `/curator/chat`
-        : lessonId
-          ? `/student/lessons/${lessonId}`
-          : `/student`;
+        ? (lessonId
+            ? `/student/lessons/${lessonId}`
+            : `/student`)
+        : `/curator/chat`;
+
+      const displaySenderName = deriveDisplayName(user.name, user.id);
 
       await createNotification({
         userId: toUserId,
         event: "new_message",
-        title: `Новое сообщение от ${user.name ?? "пользователя"}`,
+        title: `Новое сообщение от ${displaySenderName}`,
         body: messagePreview,
         data: {
           refType: "message",
           refId: lessonId || "general",
           link,
           senderId: user.id,
-          senderName: user.name,
+          senderName: displaySenderName,
         },
       });
     }

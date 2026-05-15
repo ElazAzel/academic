@@ -112,6 +112,18 @@ export async function updateNotificationPreferencesAction(formData: FormData) {
   }
 }
 
+export async function incrementBuildVersionAction() {
+  try {
+    await requireUser("settings:manage");
+    const current = await getAllAppSettings();
+    const nextVersion = ((current.BUILD_VERSION as number) ?? 0) + 1;
+    await setAppSettings({ BUILD_VERSION: nextVersion });
+    revalidatePath("/admin/settings", "layout");
+  } catch (err) {
+    throw err instanceof Error ? err : new ApiError("internal_error", "Failed to increment build version", 500);
+  }
+}
+
 export async function getAppSettingsAction() {
   try {
     await requireUser("settings:manage");

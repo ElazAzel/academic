@@ -455,6 +455,14 @@ export interface CuratorLoad {
   pendingReviews: number;
   avgResponseHours: number;
   riskStudents: number;
+  /** Количество отвеченных вопросов (всего) */
+  questionsAnswered: number;
+  /** Количество отправленных сообщений (всего) */
+  messagesSent: number;
+  /** Был ли онлайн за последние 5 минут */
+  isOnline: boolean;
+  /** Последний раз заходил */
+  lastSeenAt: string | null;
 }
 
 // ── Сертификаты ─────────────────────────────────────────────────────

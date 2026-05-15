@@ -40,9 +40,10 @@ function getNotificationAction(n: NotificationItem): { link: string; label: stri
   if (n.refType === "popup") {
     return { link: (n.data?.linkUrl as string) || (n.data?.link as string) || "/notifications", label: "Посмотреть" };
   }
-  // Для сообщений: используем data.link (урок чата) или ссылку на дашборд
+  // Для сообщений: data.link устанавливается сервером с учётом роли получателя
+  // (куратор → /curator/chat, студент → /student/lessons/:id)
   if (n.refType === "message" || n.type === "new_message") {
-    const msgLink = (n.data?.link as string) || (n.refId && n.refId !== "general" ? `/student/lessons/${n.refId}` : "/student");
+    const msgLink = (n.data?.link as string) || "/notifications";
     return { link: msgLink, label: "Перейти в чат" };
   }
   if (n.type === "block_completed") {

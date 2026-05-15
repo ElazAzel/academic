@@ -40,6 +40,96 @@
 
 7. **TypeScript**: 0 errors.
 
+## 2026-05-15 — Fix: chat notification routing for curators/instructors
+
+Автор/agent: opencode
+Тип изменения: bugfix
+
+1. **`server/actions/chat.ts` — инвертирована логика ссылки в уведомлении**:
+   - Было (bug): при отправке сообщения куратором ссылка вела на `/curator/chat` (т.е. куратору же), при отправке студентом — на `/student/lessons/:id` (студенту же)
+   - Стало: ссылка определяется **ролью получателя**, а не отправителя. Куратору → `/curator/chat`, студенту → `/student/lessons/:lessonId`
+   - `getMyConversations` теперь включает `lessonId` и `lessonTitle` — контекст урока, из которого пришло сообщение
+
+2. **`components/lms/notifications-dropdown.tsx` — исправлен fallback**:
+   - Убран хардкод `/student/lessons/:refId` в fallback-ссылке
+   - Теперь используется `data.link` из уведомления (корректно устанавливается сервером)
+   - Fallback: `/notifications` (безопасно для любой роли)
+
+3. **`app/curator/chat/chat-list.tsx` — добавлен контекст урока**:
+   - В карточке диалога показывается название урока, с которого начат чат (иконка BookOpen + название)
+   - `ChatPanel` в диалоге открывается с `lessonId` из первого сообщения диалога
+   - Куратор видит, из какого урока пришёл вопрос/сообщение
+
+4. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings.**
+
+## 2026-05-15 — Feat: curator reminder, super-curator leaderboard, admin cache-bust, chat history
+
+Автор/agent: opencode
+Тип изменения: feature
+
+1. **Полная история чата для куратора**:
+   - При открытии диалога в `/curator/chat` `ChatPanel` больше не фильтрует по `lessonId`
+   - Показываются ВСЕ сообщения между куратором и слушателем
+   - Контекст урока отображается как справочная информация (иконка 📖)
+
+2. **Напоминание о неотвеченных сообщениях (2 часа)**:
+   - Создан `server/actions/chat-reminder.ts` — проверяет диалоги, где последнее сообщение от студента, и куратор не ответил > 2 часов
+   - Дедупликация: повторное напоминание не ранее чем через 4 часа
+   - Добавлен тип уведомления `curator_response_reminder` в `NotificationEvent`
+   - Проверка вызывается при заходе на страницу `/curator/chat`
+
+3. **Лидерборд кураторов для супер-куратора**:
+   - Создан компонент `components/lms/curator-leaderboard.tsx` с сортировкой по: отвечено вопросов, скорость ответа, сообщений, слушателей, открытых вопросов
+   - Топ-3 с медалями (🥇🥈🥉), индикатор онлайн/офлайн
+   - Расширен тип `CuratorLoad`: `questionsAnswered`, `messagesSent`, `isOnline`, `lastSeenAt`
+   - Heartbeat API (`POST /api/v1/heartbeat`) обновляет `lastLoginAt` каждые 5 минут
+   - `Heartbeat` компонент встроен в корневой layout
+
+4. **Кнопка сброса кэша для админа**:
+   - В `/admin/settings` добавлена вкладка "Кэш" с текущей версией сборки
+   - `incrementBuildVersionAction` увеличивает `BUILD_VERSION` в `app_settings`
+   - API `GET /api/v1/build-version` для SW
+   - Service Worker v3 проверяет версию каждые 5 минут, при изменении сбрасывает все кэши и показывает toast "Платформа обновлена" с кнопкой "Обновить"
+   - Прогресс обучения и история чатов не затрагиваются (cache-only статика)
+
+5. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings.**
+
+## 2026-05-15 — Feat: PWA install prompt, user name security
+
+Автор/agent: opencode
+Тип изменения: feature / security
+
+1. **PWA установка — баннер + инструкция**:
+   - Создан `components/lms/pwa-install-prompt.tsx` — баннер установки с кнопкой
+   - iOS: модальное окно с 4-шаговой инструкцией (через Share → На экран «Домой»)
+   - Android: перехват `beforeinstallprompt`, нативная установка
+   - Авто-скрытие если приложение уже установлено
+   - Анимация появления/скрытия через Framer Motion
+   - Интегрирован в `Providers`
+
+2. **Безопасность имён пользователей**:
+   - Создан `lib/auth/mask-name.ts` — функция маскировки реальных имён
+   - `maskName(realName, viewerRoles, viewerId, ownerId)`:
+     - Админ видит реальные имена
+     - Своё имя — показывается полностью
+     - Для чужих — только имя (без фамилии)
+   - `deriveDisplayName(realName)` — берёт только первое слово
+   - `maskChatName(senderName, senderId, viewerRoles, viewerId)` — для чата
+
+3. **Chat — имена маскируются**:
+   - `getConversation()`: `senderName` теперь проходит через `maskChatName`
+   - `getMyConversations()`: `partnerName` маскируется для не-админов
+   - Уведомления о новых сообщениях: имя отправителя маскировано
+
+4. **Сертификаты — исключение**: реальное имя используется (не маскируется)
+
+5. **Созданные файлы**:
+   - `components/lms/pwa-install-prompt.tsx` — PWA баннер + iOS инструкция
+   - `lib/auth/mask-name.ts` — маскировка имён
+   - `app/api/v1/heartbeat/route.ts` (добавлен ранее)
+
+6. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings.**
+
 ## 2026-05-15 — Fix: deadlineDaysLeft, complete Framer Motion animations, review last 9 commits
 
 Автор/agent: opencode

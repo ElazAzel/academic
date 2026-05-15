@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Toaster } from "sonner";
 import { CommandPalette } from "@/components/lms/command-palette";
 import { PopupModal } from "@/components/lms/popup-modal";
+import { PWAInstallPrompt } from "@/components/lms/pwa-install-prompt";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -18,6 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             toastOptions={{ duration: 5000 }} />
           <CommandPalette />
           <PopupModal />
+          <PWAInstallPrompt />
         </ThemeProvider>
       </QueryClientProvider>
     </SessionProvider>

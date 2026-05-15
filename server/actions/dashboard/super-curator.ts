@@ -20,16 +20,20 @@ export async function getSuperCuratorDashboard() {
     const curatorAssignments = await prisma.curatorAssignment.findMany({
       where: { superCuratorId: user.id, active: true },
       include: {
-        curator: { select: { id: true, name: true, email: true } },
+        curator: { select: { id: true, name: true, email: true, lastLoginAt: true } },
         cohort: { select: { id: true, name: true, courseId: true, course: { select: { title: true } } } },
       },
     });
 
-    const curatorMap = new Map<string, { name: string; studentIds: Set<string> }>();
+    const curatorMap = new Map<string, { name: string; lastLoginAt: Date | null; studentIds: Set<string> }>();
     for (const ca of curatorAssignments) {
       const key = ca.curatorId;
       if (!curatorMap.has(key)) {
-        curatorMap.set(key, { name: ca.curator.name ?? ca.curator.email, studentIds: new Set() });
+        curatorMap.set(key, {
+          name: ca.curator.name ?? ca.curator.email,
+          lastLoginAt: ca.curator.lastLoginAt,
+          studentIds: new Set(),
+        });
       }
       curatorMap.get(key)!.studentIds.add(ca.studentId);
     }
@@ -37,15 +41,25 @@ export async function getSuperCuratorDashboard() {
     const curatorIds = Array.from(curatorMap.keys());
     const allStudentIds = Array.from(new Set(Array.from(curatorMap.values()).flatMap(d => Array.from(d.studentIds))));
 
+    const now = new Date();
+    const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
+
     const [
       openQuestionsGrouped,
+      answeredQuestionsGrouped,
       pendingReviewsGrouped,
       riskStudentsGrouped,
       answeredQuestions,
+      messageCounts,
     ] = await Promise.all([
       prisma.lessonQuestion.groupBy({
         by: ["curatorId"],
         where: { curatorId: { in: curatorIds }, status: "OPEN" },
+        _count: { _all: true },
+      }),
+      prisma.lessonQuestion.groupBy({
+        by: ["curatorId"],
+        where: { curatorId: { in: curatorIds }, status: "ANSWERED" },
         _count: { _all: true },
       }),
       prisma.assignmentSubmission.groupBy({
@@ -62,17 +76,25 @@ export async function getSuperCuratorDashboard() {
         where: { curatorId: { in: curatorIds }, status: "ANSWERED", answeredAt: { not: null } },
         select: { curatorId: true, createdAt: true, answeredAt: true },
       }),
+      prisma.message.groupBy({
+        by: ["senderId"],
+        where: { senderId: { in: curatorIds } },
+        _count: { _all: true },
+      }),
     ]);
 
     const openQuestionsMap = new Map(openQuestionsGrouped.map((g) => [g.curatorId, g._count._all]));
+    const answeredQuestionsCountMap = new Map(answeredQuestionsGrouped.map((g) => [g.curatorId, g._count._all]));
     const pendingReviewsMap = new Map(pendingReviewsGrouped.map((g) => [g.userId, g._count._all]));
     const riskStudentsMap = new Map(riskStudentsGrouped.map((g) => [g.userId, g._count._all]));
+    const messageCountMap = new Map(messageCounts.map((g) => [g.senderId, g._count._all]));
 
     const curatorLoads: CuratorLoad[] = [];
     for (const [curatorId, data] of curatorMap) {
       const studentIds = Array.from(data.studentIds);
 
       const openQuestions = openQuestionsMap.get(curatorId) ?? 0;
+      const questionsAnswered = answeredQuestionsCountMap.get(curatorId) ?? 0;
 
       let pendingReviews = 0;
       let riskStudents = 0;
@@ -92,6 +114,8 @@ export async function getSuperCuratorDashboard() {
         avgResponseHours = Math.round(totalHours / curatorAnsweredQuestions.length * 10) / 10;
       }
 
+      const isOnline = data.lastLoginAt ? data.lastLoginAt > fiveMinAgo : false;
+
       curatorLoads.push({
         curatorId,
         curatorName: data.name,
@@ -100,8 +124,18 @@ export async function getSuperCuratorDashboard() {
         pendingReviews,
         avgResponseHours,
         riskStudents,
+        questionsAnswered,
+        messagesSent: messageCountMap.get(curatorId) ?? 0,
+        isOnline,
+        lastSeenAt: data.lastLoginAt?.toISOString() ?? null,
       });
     }
+
+    // Сортируем: сначала онлайн, потом по кол-ву отвеченных вопросов (лидерборд)
+    curatorLoads.sort((a, b) => {
+      if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
+      return b.questionsAnswered - a.questionsAnswered;
+    });
 
     const cohortIds = [...new Set(curatorAssignments.map((ca) => ca.cohortId))];
     const cohorts = await prisma.cohort.findMany({
@@ -119,10 +153,12 @@ export async function getSuperCuratorDashboard() {
     }));
 
     const totalStudents = curatorLoads.reduce((s, c) => s + c.studentsCount, 0);
+    const totalAnswered = curatorLoads.reduce((s, c) => s + c.questionsAnswered, 0);
     const metrics: DashboardMetric[] = [
       { label: "Кураторов", value: curatorLoads.length, tone: "primary" },
       { label: "Всего слушателей", value: totalStudents, tone: "info" },
       { label: "Потоков", value: formattedCohorts.length, tone: "info" },
+      { label: "Всего отвечено", value: totalAnswered, tone: "success" },
       { label: "Кураторы с перегрузкой", value: curatorLoads.filter((c) => c.studentsCount > 15).length, tone: "warning" },
     ];
 

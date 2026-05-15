@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs } from "@/components/ui/tabs";
 import { Avatar } from "@/components/ui/avatar";
-import { Flag, Mail, Shield } from "lucide-react";
+import { Flag, Mail, RefreshCw, Shield } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCurrentUser } from "@/lib/auth/session";
-import { updateProfileSettingsAction, updatePasswordAction, getAppSettingsAction, updateAppSettingsAction } from "@/server/actions/settings";
+import { updateProfileSettingsAction, updatePasswordAction, getAppSettingsAction, updateAppSettingsAction, incrementBuildVersionAction } from "@/server/actions/settings";
 
 const FEATURE_FLAGS = [
   { key: "FEATURE_PUSH_NOTIFICATIONS", label: "Push-уведомления" },
@@ -167,7 +167,7 @@ export default async function AdminSettingsPage() {
        </form>
       ),
      },
-{
+    {
       label: "Сертификаты",
       content: (
        <form action={updateAppSettingsAction}>
@@ -193,7 +193,40 @@ export default async function AdminSettingsPage() {
        </form>
       ),
      },
-   ]}/>
+    {
+      label: "Кэш",
+      content: (
+       <Card className="rounded-2xl">
+        <CardHeader>
+         <div className="flex items-center gap-2">
+          <RefreshCw className="h-5 w-5 text-primary"/>
+          <CardTitle className="text-base">Сброс кэша</CardTitle>
+         </div>
+         <CardDescription>
+           При сбросе кэша все пользователи получат обновлённые стили и код.
+           Прогресс обучения и история чатов не затрагиваются.
+         </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+         <div className="rounded-xl border bg-muted/50 px-4 py-3">
+          <p className="text-sm">
+           Текущая версия сборки: <strong className="font-semibold">{appSettings.BUILD_VERSION as number ?? 1}</strong>
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+           При нажатии версия увеличится, и сервис-воркер обновит кэш у всех пользователей.
+          </p>
+         </div>
+         <form action={incrementBuildVersionAction}>
+          <Button type="submit" variant="danger">
+           <RefreshCw className="h-4 w-4" />
+           Сбросить кэш и обновить версию
+          </Button>
+         </form>
+        </CardContent>
+       </Card>
+      ),
+     },
+    ]}/>
   </AppShell>
  );
 }
