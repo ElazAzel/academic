@@ -11,11 +11,14 @@ export async function getConversation(studentId: string, lessonId?: string) {
   const user = await requireRole(["curator", "super_curator", "admin", "student"]);
   const isStudent = user.roles.includes("student");
 
+  // Prevent IDOR: students can only see their own conversations
+  const targetUserId = isStudent ? user.id : studentId;
+
   const messages = await prisma.message.findMany({
     where: {
       OR: [
-        { senderId: studentId, receiverId: isStudent ? user.id : undefined, ...(lessonId ? { lessonId } : {}) },
-        { senderId: isStudent ? user.id : undefined, receiverId: studentId, ...(lessonId ? { lessonId } : {}) },
+        { senderId: targetUserId, receiverId: isStudent ? user.id : undefined, ...(lessonId ? { lessonId } : {}) },
+        { senderId: isStudent ? user.id : undefined, receiverId: targetUserId, ...(lessonId ? { lessonId } : {}) },
       ],
     },
     orderBy: { createdAt: "asc" },
@@ -82,9 +85,9 @@ export async function sendMessageAction(formData: FormData) {
 
   if (!text && !attachmentUrl) throw new Error("Текст или вложение обязательны");
 
-  // Determine receiver: students send to their curator, others are explicit
+  // Determine receiver: students ALWAYS send to their assigned curator (prevent IDOR)
   let toUserId = receiverId;
-  if (user.roles.includes("student") && !toUserId) {
+  if (user.roles.includes("student")) {
     const assignment = await prisma.curatorAssignment.findFirst({
       where: { studentId: user.id, active: true },
       select: { curatorId: true },
