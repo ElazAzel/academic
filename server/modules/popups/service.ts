@@ -136,13 +136,13 @@ export async function getActivePopupsForUser(userId: string): Promise<PopupWithS
   // Filter by target roles + cohort restrictions
   const filteredPopups = popups.filter((p) => {
     try {
-      const roles: string[] = JSON.parse(p.targetRoles);
+      const roles: string[] = JSON.parse(p.targetRoles || "[]");
       if (roles.length === 0) return false;
       if (!roles.some((r) => userRoleKeys.includes(r as RoleKey))) return false;
 
       // If popup targets students AND has cohort restrictions, check cohort membership
       if (roles.includes("student")) {
-        const cohortIds: string[] = JSON.parse(p.targetCohortIds);
+        const cohortIds: string[] = JSON.parse(p.targetCohortIds || "[]");
         if (cohortIds.length > 0) {
           // User must be enrolled in one of the target cohorts
           return cohortIds.some((cid) => userCohortIds.includes(cid));
