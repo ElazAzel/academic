@@ -3,6 +3,7 @@ import { toJsonValue } from "@/lib/json";
 import { env } from "@/lib/env";
 import { getUserNotificationPreferences } from "@/server/modules/notifications/preferences";
 import { sendPushNotification } from "@/server/modules/notifications/push";
+import { NOTIFICATION_CHANNELS } from "@/lib/constants";
 
 const prisma = getPrisma();
 
@@ -93,9 +94,9 @@ export async function createNotification(input: {
 }) {
   // Проверяем настройки пользователя — если канал отключён, пропускаем
   const preferences = await getUserNotificationPreferences(input.userId);
-  const prefKey = input.channel === "email" || input.channel === "email_and_in_app"
+  const prefKey = input.channel === NOTIFICATION_CHANNELS.EMAIL || input.channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP
     ? input.event
-    : input.channel ?? "in_app";
+    : input.channel ?? NOTIFICATION_CHANNELS.IN_APP;
 
   if (preferences[prefKey] === false) {
     return null; // Пользователь отключил этот тип уведомлений
@@ -108,7 +109,7 @@ export async function createNotification(input: {
     data: {
       userId: input.userId,
       type: input.event,
-      channel: input.channel ?? "in_app",
+      channel: input.channel ?? NOTIFICATION_CHANNELS.IN_APP,
       title: rendered.title,
       body: rendered.body,
       status: "SENT",

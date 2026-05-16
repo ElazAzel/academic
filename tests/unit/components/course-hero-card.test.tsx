@@ -78,6 +78,6 @@ describe("CourseHeroCard", () => {
   it("shows paused badge when enrollment is PAUSED", () => {
     const detail = makeDetail({ enrollment: "PAUSED" });
     render(<CourseHeroCard detail={detail} />);
-    expect(screen.getByText("Обучение приостановлено")).toBeInTheDocument();
+    expect(screen.getByText("Приостановлено")).toBeInTheDocument();
   });
 });

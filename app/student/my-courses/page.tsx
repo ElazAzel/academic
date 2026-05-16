@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
+import { EmptyState } from "@/components/lms/empty-state";
 import { CourseProgressGrid } from "@/components/lms/dashboard-widgets";
-import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getStudentCourseCards } from "@/server/modules/learning/service";
@@ -18,13 +18,11 @@ export default async function StudentMyCoursesPage() {
    {courses.length > 0 ? (
     <CourseProgressGrid courses={courses}/>
    ) : (
-    <Card>
-     <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-      <BookOpen className="h-10 w-10 text-muted-foreground/40"/>
-      <p className="text-muted-foreground">У вас пока нет назначенных курсов.</p>
-      <p className="text-xs text-muted-foreground">Обратитесь к администратору академии для получения доступа.</p>
-     </CardContent>
-    </Card>
+    <EmptyState
+     icon={BookOpen}
+     title="У вас пока нет назначенных курсов"
+     description="Обратитесь к администратору академии для получения доступа."
+    />
    )}
   </AppShell>
  );
