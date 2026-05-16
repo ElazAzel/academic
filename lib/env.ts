@@ -56,6 +56,9 @@ const envSchema = z.object({
 
   // Monitoring
   SENTRY_DSN: z.string().optional(),
+
+  // Cron / Scheduled Jobs
+  CRON_SECRET: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

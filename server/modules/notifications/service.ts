@@ -2,6 +2,7 @@ import { getPrisma } from "@/lib/prisma";
 import { toJsonValue } from "@/lib/json";
 import { env } from "@/lib/env";
 import { getUserNotificationPreferences } from "@/server/modules/notifications/preferences";
+import { sendPushNotification } from "@/server/modules/notifications/push";
 
 const prisma = getPrisma();
 
@@ -132,6 +133,26 @@ export async function createNotification(input: {
       } catch (error) {
         console.error(`Failed to send email notification to ${user.email}`, error);
       }
+    }
+  }
+
+  // Push notification (Firebase/Telegram)
+  if (env.FEATURE_PUSH_NOTIFICATIONS && input.channel !== "email") {
+    // Get user's push tokens
+    try {
+      const subscriptions = await prisma.pushSubscription.findMany({
+        where: { userId: input.userId, active: true },
+      });
+      for (const sub of subscriptions) {
+        sendPushNotification({
+          token: sub.endpoint,
+          title: rendered.title,
+          body: rendered.body,
+          data: input.data as Record<string, string>,
+        }).catch(() => { /* silent */ });
+      }
+    } catch (error) {
+      console.error("[Push] Failed to send push notification:", error);
     }
   }
 
