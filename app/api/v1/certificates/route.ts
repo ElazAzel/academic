@@ -2,12 +2,19 @@ import { created, errorResponse, ok, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { certificateIssueSchema } from "@/lib/validation";
 import { issueCertificate, listCertificates } from "@/server/modules/certificates/service";
+import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 
 export async function GET() {
   try {
     const user = await requireUser();
-    const canSeeAll = user.roles.includes("admin") || user.roles.includes("customer_observer");
-    return ok(await listCertificates(canSeeAll ? undefined : { userId: user.id }));
+    if (user.roles.includes("admin")) {
+      return ok(await listCertificates());
+    }
+    if (user.roles.includes("customer_observer")) {
+      const scopedStudentIds = await getScopedStudentIdsForObserver(user.id);
+      return ok(await listCertificates({ userIds: scopedStudentIds ?? [] }));
+    }
+    return ok(await listCertificates({ userId: user.id }));
   } catch (error) {
     return errorResponse(error);
   }

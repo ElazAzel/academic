@@ -24,12 +24,12 @@ describe("getObserverScope", () => {
     mockEnrollmentFindMany.mockReset();
   });
 
-  it("returns isUnrestricted when no links exist", async () => {
+  it("returns an empty restricted scope when no links exist", async () => {
     mockObserverProjectFindMany.mockResolvedValue([]);
     mockObserverCohortFindMany.mockResolvedValue([]);
 
     const scope = await getObserverScope("observer-1");
-    expect(scope).toEqual({ isUnrestricted: true, projectIds: [], cohortIds: [] });
+    expect(scope).toEqual({ isUnrestricted: false, projectIds: [], cohortIds: [] });
   });
 
   it("resolves cohort scope from ObserverProject links", async () => {
@@ -70,12 +70,12 @@ describe("getScopedStudentIdsForObserver", () => {
     mockEnrollmentFindMany.mockReset();
   });
 
-  it("returns undefined when scope is unrestricted", async () => {
+  it("returns empty array when no observer links exist", async () => {
     mockObserverProjectFindMany.mockResolvedValue([]);
     mockObserverCohortFindMany.mockResolvedValue([]);
 
     const ids = await getScopedStudentIdsForObserver("observer-1");
-    expect(ids).toBeUndefined();
+    expect(ids).toEqual([]);
   });
 
   it("returns empty array when restricted but no cohorts resolve", async () => {

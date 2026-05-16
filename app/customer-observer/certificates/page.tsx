@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function CustomerObserverCertificatesPage() {
  const user = await requireRolePage(["customer_observer"]);
  const scopedIds = await getScopedStudentIdsForObserver(user.id);
- const certificates = await listCertificates(scopedIds ? { userIds: scopedIds } : undefined);
+ const certificates = await listCertificates({ userIds: scopedIds ?? [] });
 
  return (
   <AppShell role="customer_observer">

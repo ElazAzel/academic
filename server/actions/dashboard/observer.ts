@@ -13,13 +13,13 @@ export async function getCustomerObserverDashboard() {
     const scope = await getObserverScope(user.id);
     const scopedStudentIds = await getScopedStudentIdsForObserver(user.id);
 
-    const cohortFilter = scope.isUnrestricted ? {} : { id: { in: scope.cohortIds } };
-    const projectFilter = scope.isUnrestricted ? {} : { id: { in: scope.projectIds } };
-    const certFilter = scopedStudentIds === undefined ? {} : { userId: { in: scopedStudentIds } };
-    const progressFilter = scopedStudentIds === undefined ? {} : { userId: { in: scopedStudentIds } };
+    const cohortFilter = { id: { in: scope.cohortIds } };
+    const projectFilter = { id: { in: scope.projectIds } };
+    const certFilter = { userId: { in: scopedStudentIds ?? [] } };
+    const progressFilter = { userId: { in: scopedStudentIds ?? [] } };
 
     const [projects, cohorts, certCount, progressAgg] = await Promise.all([
-      scope.isUnrestricted ? prisma.project.count() : prisma.project.count({ where: projectFilter }),
+      prisma.project.count({ where: projectFilter }),
       prisma.cohort.findMany({
         where: cohortFilter,
         include: {

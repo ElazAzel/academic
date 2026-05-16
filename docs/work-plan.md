@@ -1,7 +1,26 @@
 # Work Plan — AI Strategic Academy LMS
 
-**Date:** 2026-05-13
-**Status:** PR-1 through PR-12 complete
+**Date:** 2026-05-16
+**Status:** Legacy stabilization PR-1 through PR-12 complete; 90-day modernization execution started
+
+---
+
+## 90-Day Modernization Execution
+
+| PR | Priority | Title | Status | Acceptance Criteria |
+|---|---|---|---|---|
+| M-PR-01 | P0 | Production Scope & Privacy Gate | green | Customer observer has no global certificate/report/dashboard fallback; admin keeps global access; student sees own data |
+| M-PR-02 | P0 | Release Verification Gate | green | `npm run verify:release` and `docs/release-verification.md` cover lint, typecheck, tests, build, Prisma validate/generate, Playwright role smoke |
+| M-PR-03 | P1 | Documentation Reconciliation | pending | `full-project-audit`, `work-plan`, `update-log` match current code and open risks |
+| M-PR-04 | P1 | Student Learning Flow Polish | pending | Main learning flow stays inside course/lesson context |
+| M-PR-05 | P1 | Curator Operations v1 | pending | Curator sees next actions across assigned students, questions, assignments, risks, and chat |
+| M-PR-06 | P1 | Super Curator Operations v1 | pending | Super curator manages workload and distribution within scope |
+| M-PR-07 | P2 | Course Builder Modernization | pending | Course can be built and published from unified builder |
+| M-PR-08 | P2 | Reports & Analytics v1 | pending | Role-scoped reports support progress, risks, assignments, certificates, workload |
+| M-PR-09 | P2 | Notification & Audit Completion | pending | Core events create expected in-app notifications and audit records |
+| M-PR-10 | P3 | Schema Cleanup Window | pending | String statuses migrated to enums with backup/downtime runbook |
+| M-PR-11 | P3 | Performance & Scale Pass | pending | Heavy dashboards/reports/chats have bounded queries and indexes |
+| M-PR-12 | P3 | Production Readiness Release | pending | Release candidate has full verification and rollback plan |
 
 ---
 
@@ -27,7 +46,7 @@
 | PR-4 | P1 | UI/UX Polish | Fix broken links, wire settings, add pagination | `app/instructor/courses/page.tsx`, settings pages, `app/admin/audit/page.tsx` | All instructor buttons functional; settings save works; audit paginated |
 | PR-5 | P2 | Navigation Cleanup | Redirects from old routes to builder, sidebar update | `app/instructor/courses/[id]/curriculum`, `components/layout/navigation.ts` | Old routes redirect; sidebar points to builder; no 404s |
 | PR-6 | P2 | E2E Tests | Playwright smoke tests for roles, scope boundaries, student happy path | `tests/e2e/*.spec.ts` | All 6 roles login smoke; scope boundary tests; happy path green |
-| PR-7 | P1 | Observer Scope Wiring | Wire ObserverProject/ObserverCohort scope into reports, dashboards, certificates | `server/modules/observer/scope.ts`, `app/api/v1/reports`, `server/actions/dashboard.ts` | Observers see only scoped data; unrestricted observers see all; 101 tests pass |
+| PR-7 | P1 | Observer Scope Wiring | Wire ObserverProject/ObserverCohort scope into reports, dashboards, certificates | `server/modules/observer/scope.ts`, `app/api/v1/reports`, `server/actions/dashboard.ts` | Observers see only explicitly scoped data; observers without scope see no private data |
 | PR-8 | P2 | Notification Preferences | Wire NotificationPreference model to all 5 settings pages | `server/modules/notifications/preferences.ts`, `server/actions/settings.ts`, settings pages | All settings pages save/load notification prefs; lint/typecheck/test/build pass |
 | PR-9 | P2 | Lesson Rating API | POST `/api/v1/lessons/[id]/rating` endpoint, wire to existing component | `app/api/v1/lessons/[lessonId]/rating/route.ts`, `components/lms/lesson-rating.tsx` | Rating component now works; POST creates/updates LessonRating; lint/typecheck/test/build pass |
 | PR-10 | P2 | Upload Hardening | Content-type allowlist, max file size validation | `app/api/v1/media/uploads/route.ts` | Allowlist: jpeg, png, gif, webp, pdf, mp4, webm, mpeg, zip (100MB max); lint/typecheck/test/build pass |

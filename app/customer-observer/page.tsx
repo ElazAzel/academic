@@ -31,7 +31,7 @@ export default async function CustomerObserverDashboardPage() {
  const metrics = data?.metrics ?? [];
  const cohorts = data?.cohorts ?? [];
  const scopedIds = await getScopedStudentIdsForObserver(user.id);
- const certificates = await listCertificates(scopedIds ? { userIds: scopedIds } : undefined);
+ const certificates = await listCertificates({ userIds: scopedIds ?? [] });
 
  return (
   <AppShell role="customer_observer">
