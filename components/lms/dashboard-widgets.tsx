@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CheckCircle2, FileText, MessageCircle, AlertTriangle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { StatusBadge } from "@/components/lms/status-badge";
+import type { BadgeStatus } from "@/components/lms/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar } from "@/components/ui/avatar";
 import { Stagger, CardHover, FadeIn } from "@/components/lms/animations";
@@ -74,9 +75,7 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
     <FadeIn>
     <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.03] to-transparent transition-shadow hover:shadow-panel">
       <CardHeader>
-        <Badge className="w-fit border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-          Следующее действие
-        </Badge>
+        <StatusBadge status="ACTIVE" label="Следующее действие" className="w-fit" />
         <CardTitle className="text-xl">Продолжить: {data.courseTitle}</CardTitle>
         <CardDescription>
           {data.moduleTitle} · {data.lessonTitle}
@@ -125,17 +124,7 @@ export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) 
         <Card className="rounded-2xl">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <Badge
-                className={
-                  c.status === "COMPLETED"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
-                    : c.status === "IN_PROGRESS"
-                    ? "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300"
-                    : "border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-400"
-                }
-              >
-                {c.status === "COMPLETED" ? "Завершён" : c.status === "IN_PROGRESS" ? "В процессе" : "Не начат"}
-              </Badge>
+              <StatusBadge status={c.status as BadgeStatus} />
               <BookOpen className="h-4 w-4 text-muted-foreground" aria-hidden />
             </div>
             <CardTitle className="text-base">{c.courseTitle}</CardTitle>
@@ -171,17 +160,7 @@ export function CourseManageGrid({ courses }: { courses: CourseSummary[] }) {
             <Card className="rounded-2xl">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <Badge
-                    className={
-                      c.status === "PUBLISHED"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
-                        : c.status === "DRAFT"
-                        ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
-                        : "border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-400"
-                    }
-                  >
-                    {c.status === "PUBLISHED" ? "Опубликован" : c.status === "DRAFT" ? "Черновик" : "Архив"}
-                  </Badge>
+              <StatusBadge status={c.status as BadgeStatus} />
                 </div>
                 <CardTitle className="text-base">{c.title}</CardTitle>
                 <CardDescription>{c.description}</CardDescription>
@@ -237,17 +216,7 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{q.studentName}</span>
-                <Badge
-                  className={
-                    q.status === "open"
-                      ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
-                      : q.status === "answered"
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
-                      : "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300"
-                  }
-                >
-                  {q.status === "open" ? "Ожидает ответа" : q.status === "answered" ? "Отвечен" : "Передан"}
-                </Badge>
+              <StatusBadge status={q.status as BadgeStatus} />
               </div>
               <p className="mt-1 text-sm">{q.text}</p>
               <p className="mt-1 text-xs text-muted-foreground">
@@ -334,15 +303,7 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
 }
 
 function SubmissionBadge({ status }: { status: SubmissionForReview["status"] }) {
-  const MAP: Record<string, { label: string; cls: string }> = {
-    SUBMITTED: { label: "Отправлено", cls: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300" },
-    IN_REVIEW: { label: "На проверке", cls: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
-    ACCEPTED: { label: "Зачтено", cls: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" },
-    REJECTED: { label: "Отклонено", cls: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300" },
-    NEEDS_REVISION: { label: "На доработку", cls: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
-  };
-  const m = MAP[status] ?? { label: status, cls: "" };
-  return <Badge className={m.cls}>{m.label}</Badge>;
+  return <StatusBadge status={status as BadgeStatus} />;
 }
 
 // ── Список рисков ───────────────────────────────────────────────────
@@ -357,12 +318,6 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
       </Card>
     );
   }
-  const SEVERITY_CLS: Record<string, string> = {
-    critical: "border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300",
-    high: "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
-    medium: "border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-300",
-    low: "border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-400",
-  };
   return (
     <Stagger className="space-y-3">
       {risks.map((r) => (
@@ -376,9 +331,7 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{r.studentName}</span>
-                <Badge className={SEVERITY_CLS[r.severity] ?? ""}>
-                  {r.severity === "critical" ? "Критический" : r.severity === "high" ? "Высокий" : r.severity === "medium" ? "Средний" : "Низкий"}
-                </Badge>
+                <StatusBadge status={r.severity as BadgeStatus} />
               </div>
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {RISK_LABELS[r.type]} · {r.courseTitle}
@@ -421,14 +374,10 @@ export function CuratorLoadTable({ curators }: { curators: CuratorLoad[] }) {
             </TableCell>
             <TableCell className="text-center text-sm">{c.studentsCount}</TableCell>
             <TableCell className="text-center">
-              <Badge className={c.openQuestions > 3 ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300" : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"}>
-                {c.openQuestions}
-              </Badge>
+              <StatusBadge status={c.openQuestions > 3 ? "critical" : "ACTIVE"} label={String(c.openQuestions)} />
             </TableCell>
             <TableCell className="text-center">
-              <Badge className={c.pendingReviews > 5 ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" : ""}>
-                {c.pendingReviews}
-              </Badge>
+              <StatusBadge status={c.pendingReviews > 5 ? "high" : "ACTIVE"} label={String(c.pendingReviews)} />
             </TableCell>
             <TableCell className="text-center text-sm">
               <span className={c.avgResponseHours > 4 ? "text-rose-600 font-medium" : "text-emerald-600"}>
@@ -436,9 +385,7 @@ export function CuratorLoadTable({ curators }: { curators: CuratorLoad[] }) {
               </span>
             </TableCell>
             <TableCell className="text-center">
-              <Badge className={c.riskStudents > 3 ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300" : ""}>
-                {c.riskStudents}
-              </Badge>
+              <StatusBadge status={c.riskStudents > 3 ? "critical" : "ACTIVE"} label={String(c.riskStudents)} />
             </TableCell>
           </TableRow>
         ))}

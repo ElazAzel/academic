@@ -7,6 +7,7 @@ import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
 import { markLessonProgress } from "@/server/modules/progress/service";
 import { ApiError } from "@/lib/http";
+import { NOTIFICATION_CHANNELS } from "@/lib/constants";
 
 const prisma = getPrisma();
 
@@ -65,7 +66,7 @@ export async function answerQuestionAction(questionId: string, answer: string) {
     await createNotification({
       userId: question.studentId,
       event: "question_answered",
-      channel: "in_app"
+      channel: NOTIFICATION_CHANNELS.IN_APP,
     });
   }
 
@@ -117,7 +118,7 @@ export async function reviewSubmissionAction(submissionId: string, input: {
   await createNotification({
     userId: updated.userId,
     event: "assignment_reviewed",
-    channel: "in_app",
+    channel: NOTIFICATION_CHANNELS.IN_APP,
     data: { status: input.status, score: input.score }
   });
 

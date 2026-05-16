@@ -1,47 +1,39 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { ContinueLearningCard, CourseProgressGrid, MetricGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
 import { EmptyState } from "@/components/lms/empty-state";
+import { StatusBadge } from "@/components/lms/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Clock, MessageCircle } from "lucide-react";
 import { getStudentDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { cn } from "@/lib/utils";
-import { isDemoModeEnabled } from "@/lib/demo-mode";
-import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 
 export const dynamic = "force-dynamic";
 
 export default async function StudentDashboardPage() {
  await requireRolePage(["student"]);
  const data = await getStudentDashboard();
- const demoMode = isDemoModeEnabled();
 
- if (!data && !demoMode) {
+ if (!data) {
   return (
    <AppShell role="student">
     <PageHeader
-     title="Дашборд слушателя"
-     description="Ваш прогресс, курсы, задания и уведомления."
+     title="Моё обучение"
+     description="Продолжайте с того места, где остановились."
    />
-    <DashboardUnavailable/>
+    <div className="space-y-6">
+     <EmptyState icon={Clock} title="Не удалось загрузить данные" description="Попробуйте обновить страницу позже." />
+    </div>
    </AppShell>
   );
  }
-
- // Redirect to course if student has only one active course
- const coursesProgress = data?.coursesProgress ?? [];
- if (!demoMode && coursesProgress.length === 1 && coursesProgress[0]) {
-   redirect(`/student/courses/${coursesProgress[0].courseId}`);
- }
  
- const metrics = data?.metrics ?? [];
- const continueLearning = data?.continueLearning ?? null;
- const questions = data?.questions ?? [];
+ const coursesProgress = data.coursesProgress ?? [];
+ const metrics = data.metrics ?? [];
+ const continueLearning = data.continueLearning ?? null;
+ const questions = data.questions ?? [];
  const answeredQuestions = questions.filter((q) => q.status === "answered");
 
  return (
@@ -81,33 +73,17 @@ export default async function StudentDashboardPage() {
        <Clock className="h-4 w-4 text-muted-foreground" />
        Ближайшие дедлайны
       </h2>
-      {data?.deadlines && data.deadlines.length > 0 ? (
+      {data.deadlines && data.deadlines.length > 0 ? (
        <div className="space-y-2">
         {data.deadlines.slice(0, 4).map((d) => {
-         const daysLeft = d.daysLeft;
-         const isOverdue = d.isOverdue;
          return (
           <Card key={d.moduleId} className="transition-shadow hover:shadow-sm">
            <CardContent className="flex items-center gap-3 py-3">
-            <span className={cn(
-             "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-             isOverdue ? "bg-red-100" : daysLeft <= 3 ? "bg-amber-100" : "bg-sky-100"
-            )}>
-             <Clock className={cn(
-              "h-4 w-4",
-              isOverdue ? "text-red-600" : daysLeft <= 3 ? "text-amber-600" : "text-sky-600"
-             )} />
-            </span>
             <div className="flex-1 min-w-0">
              <p className="text-sm font-medium truncate">{d.moduleTitle}</p>
              <p className="text-xs text-muted-foreground truncate">{d.courseTitle}</p>
             </div>
-            <Badge className={cn(
-             "shrink-0 border-none",
-             isOverdue ? "bg-red-50 text-red-700" : daysLeft <= 3 ? "bg-amber-50 text-amber-700" : "bg-sky-50 text-sky-700"
-            )}>
-             {isOverdue ? "Просрочено" : `${daysLeft} дн.`}
-            </Badge>
+            <StatusBadge status={d.isOverdue ? "overdue" : "upcoming"} label={d.isOverdue ? "Просрочено" : `${d.daysLeft} дн.`} className="shrink-0" />
            </CardContent>
           </Card>
          );

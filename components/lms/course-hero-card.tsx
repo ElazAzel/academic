@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Award, HelpCircle, Image as ImageIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/lms/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { StudentCoursePlayerDetail } from "@/types/domain";
@@ -82,9 +82,7 @@ export function CourseHeroCard({ detail }: { detail: StudentCoursePlayerDetail }
 
           {/* Enrollment status */}
           {isPaused && (
-            <Badge className="w-full justify-center border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300 text-xs">
-              Обучение приостановлено
-            </Badge>
+            <StatusBadge status="PAUSED" className="w-full justify-center text-xs" />
           )}
         </CardContent>
       </Card>

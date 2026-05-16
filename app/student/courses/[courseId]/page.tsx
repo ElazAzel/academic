@@ -42,11 +42,11 @@ export default async function StudentCoursePage({ params }: { params: Promise<{ 
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link
-            href="/student"
+            href="/student/my-courses"
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowRight className="h-4 w-4 rotate-180" />
-            Назад
+            Назад к курсам
           </Link>
         </div>
         {nextLessonId && !isPaused && (

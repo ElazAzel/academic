@@ -1,6 +1,9 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
+import { StatusBadge } from "@/components/lms/status-badge";
+import { EmptyState } from "@/components/lms/empty-state";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileText } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 
@@ -28,9 +31,7 @@ export default async function StudentQuizzesPage() {
        <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
          <CardTitle className="text-base">{attempt.quiz.title}</CardTitle>
-         <span className={`text-xs font-medium px-2 py-1 rounded-full ${attempt.passed ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
-          {attempt.passed ? "Сдан" : "Не сдан"}
-         </span>
+         <StatusBadge status={attempt.passed ? "passed" : "failed"} />
         </div>
         <CardDescription>{attempt.quiz.course?.title} {attempt.quiz.lesson ? `· ${attempt.quiz.lesson.title}` : ""}</CardDescription>
        </CardHeader>
@@ -40,11 +41,7 @@ export default async function StudentQuizzesPage() {
       </Card>
      ))
     ) : (
-     <Card className="rounded-2xl">
-      <CardContent className="py-10 text-center text-muted-foreground">
-       Вы еще не проходили тестов.
-      </CardContent>
-     </Card>
+     <EmptyState icon={FileText} title="Вы ещё не проходили тестов" description="После прохождения теста в рамках урока он появится в этом списке." />
     )}
    </div>
   </AppShell>

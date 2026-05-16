@@ -2,10 +2,9 @@
 
 import { useState, useCallback } from "react";
 import { ChevronDown, ChevronRight, EyeOff, Eye } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { StatusBadge } from "@/components/lms/status-badge";
 import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
 import { LessonCard } from "@/components/lms/lesson-card";
 import type { ModulePlayerDetail } from "@/types/domain";
 
@@ -87,16 +86,11 @@ export function ModuleAccordion({
                 </div>
               </div>
               {mod.deadline && (
-                <Badge
-                  className={cn(
-                    "shrink-0 text-[10px]",
-                    mod.deadline.overdue
-                      ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300"
-                      : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
-                  )}
-                >
-                  {mod.deadline.overdue ? "Просрочен" : `до ${mod.deadline.date.slice(0, 10)}`}
-                </Badge>
+                <StatusBadge
+                  status={mod.deadline.overdue ? "overdue" : "upcoming"}
+                  label={mod.deadline.overdue ? "Просрочен" : `до ${mod.deadline.date.slice(0, 10)}`}
+                  className="shrink-0 text-[10px]"
+                />
               )}
             </button>
 

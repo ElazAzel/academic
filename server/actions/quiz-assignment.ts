@@ -3,6 +3,7 @@
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
+import { QUIZ, ASSIGNMENT, INSTRUCTOR_ROUTES } from "@/lib/constants";
 import { redirect } from "next/navigation";
 
 const prisma = getPrisma();
@@ -13,8 +14,8 @@ export async function createQuizAction() {
   const quiz = await prisma.quiz.create({
     data: {
       title: "Новый тест",
-      passThreshold: 80,
-      maxAttempts: 3,
+      passThreshold: QUIZ.DEFAULT_PASS_THRESHOLD,
+      maxAttempts: QUIZ.DEFAULT_MAX_ATTEMPTS,
     },
   });
 
@@ -25,7 +26,7 @@ export async function createQuizAction() {
     entityId: quiz.id,
   });
 
-  redirect(`/instructor/quizzes/${quiz.id}/edit`);
+  redirect(INSTRUCTOR_ROUTES.quizEdit(quiz.id));
 }
 
 export async function createAssignmentAction() {
@@ -35,8 +36,8 @@ export async function createAssignmentAction() {
     data: {
       title: "Новое задание",
       instructions: "",
-      maxScore: 100,
-      maxAttempts: 3,
+      maxScore: ASSIGNMENT.DEFAULT_MAX_SCORE,
+      maxAttempts: ASSIGNMENT.DEFAULT_MAX_ATTEMPTS,
     },
   });
 
@@ -47,5 +48,5 @@ export async function createAssignmentAction() {
     entityId: assignment.id,
   });
 
-  redirect(`/instructor/assignments/${assignment.id}/edit`);
+  redirect(INSTRUCTOR_ROUTES.assignmentEdit(assignment.id));
 }
