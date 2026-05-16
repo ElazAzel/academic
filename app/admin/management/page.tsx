@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/lms/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
@@ -134,17 +135,13 @@ export default async function AdminManagementPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={u.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}>
-                        {u.status === "ACTIVE" ? "Активен" : u.status}
-                      </Badge>
+                      <StatusBadge status={u.status === "ACTIVE" ? "ACTIVE" : "BLOCKED"} label={u.status === "ACTIVE" ? "Активен" : u.status} />
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-0.5">
                         {u.enrollments.length > 0 ? u.enrollments.map((e) => (
                           <div key={e.id} className="flex items-center gap-1 text-xs">
-                            <Badge className={`text-[10px] ${e.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700" : e.status === "COMPLETED" ? "bg-sky-100 text-sky-700" : "bg-gray-100 text-gray-600"}`}>
-                              {e.status === "ACTIVE" ? "Активен" : e.status === "COMPLETED" ? "Завершён" : e.status}
-                            </Badge>
+                            <StatusBadge status={e.status === "COMPLETED" ? "COMPLETED" : e.status === "ACTIVE" ? "ACTIVE" : "BLOCKED"} label={e.status === "ACTIVE" ? "Активен" : e.status === "COMPLETED" ? "Завершён" : e.status} />
                             <span className="truncate max-w-[150px]">{e.course.title}</span>
                           </div>
                         )) : <span className="text-xs text-muted-foreground">Нет зачислений</span>}

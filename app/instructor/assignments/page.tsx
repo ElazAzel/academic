@@ -1,7 +1,8 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
+import { EmptyState } from "@/components/lms/empty-state";
+import { StatusBadge } from "@/components/lms/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
@@ -48,20 +49,18 @@ export default async function InstructorAssignmentsPage() {
            {a.course?.title} {a.lesson ? `· ${a.lesson.title}` : ""} · макс. {a.maxAttempts} попытки · макс. балл {a.maxScore}
           </p>
          </div>
-         {a._count.submissions > 0 && (
-          <Badge className="border-amber-200 bg-amber-50 text-amber-700">
-           {a._count.submissions} на проверку
-          </Badge>
-         )}
+          {a._count.submissions > 0 && (
+           <StatusBadge status="IN_REVIEW" label={`${a._count.submissions} на проверку`} />
+          )}
          <Button size="sm" variant="secondary" asChild>
           <Link href={`/instructor/assignments/${a.id}/edit`}>Редактировать</Link>
          </Button>
         </CardContent>
        </Card>
       ))
-     ) : (
-      <div className="text-center text-muted-foreground py-10 border rounded-2xl">У вас пока нет заданий.</div>
-     )}
+      ) : (
+       <EmptyState icon={FileText} title="Заданий пока нет" description="Создайте первое задание для вашего курса." />
+      )}
     </div>
    </div>
   </AppShell>

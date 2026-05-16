@@ -102,7 +102,7 @@ export const UPLOAD = {
   MAX_FILE_SIZE_MB: 20,
   /** Максимальный размер файла в байтах */
   get MAX_FILE_SIZE_BYTES(): number { return this.MAX_FILE_SIZE_MB * 1024 * 1024; },
-  /** Допустимые MIME-типы */
+  /** Допустимые MIME-типы (синхронизировано с upload route) */
   ALLOWED_MIME_TYPES: [
     "image/jpeg",
     "image/png",
@@ -111,7 +111,8 @@ export const UPLOAD = {
     "application/pdf",
     "video/mp4",
     "video/webm",
-    "video/mpeg",
+    "audio/mpeg",
+    "audio/webm",
     "application/zip",
   ] as readonly string[],
 } as const;

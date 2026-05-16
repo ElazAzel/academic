@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/lms/status-badge";
 import { ArrowLeft, Users, Calendar } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
@@ -79,9 +79,7 @@ export default async function EditCohortPage({ params }: { params: Promise<{ coh
          {cohort.startsAt ? cohort.startsAt.toISOString().slice(0, 10) : "Нет даты"}
          {cohort.endsAt ? ` — ${cohort.endsAt.toISOString().slice(0, 10)}` : ""}
         </p>
-        <Badge className={cohort.status === "active" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-gray-200 bg-gray-50 text-gray-600"}>
-         {cohort.status === "active" ? "Активен" : "Архив"}
-        </Badge>
+        <StatusBadge status={cohort.status === "active" ? "ACTIVE" : "ARCHIVED"} label={cohort.status === "active" ? "Активен" : "Архив"} />
        </div>
       </div>
      </CardContent>

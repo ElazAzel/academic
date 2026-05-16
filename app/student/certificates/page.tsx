@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/lms/empty-state";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Award, Download, ExternalLink } from "lucide-react";
@@ -61,12 +61,13 @@ export default async function StudentCertificatesPage() {
       </Table>
      </div>
     ) : (
-    <Card className="mt-6">
-     <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-      <Award className="h-10 w-10 text-muted-foreground/40"/>
-      <p className="text-muted-foreground">Сертификатов пока нет. Завершите курс, чтобы получить сертификат.</p>
-     </CardContent>
-    </Card>
+    <div className="mt-6">
+     <EmptyState
+      icon={Award}
+      title="Сертификатов пока нет"
+      description="Завершите курс, чтобы получить сертификат."
+     />
+    </div>
    )}
   </AppShell>
  );

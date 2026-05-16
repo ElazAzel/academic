@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
+import { EmptyState } from "@/components/lms/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText } from "lucide-react";
@@ -53,9 +54,9 @@ export default async function InstructorQuizzesPage() {
         </CardContent>
        </Card>
       ))
-     ) : (
-      <div className="text-center text-muted-foreground py-10 border rounded-2xl">У вас пока нет тестов.</div>
-     )}
+      ) : (
+       <EmptyState icon={FileText} title="Тестов пока нет" description="Создайте первый тест для вашего курса." />
+      )}
     </div>
    </div>
   </AppShell>

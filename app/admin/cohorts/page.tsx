@@ -3,7 +3,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/lms/status-badge";
 import { Plus, Users, Calendar } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
@@ -44,9 +44,7 @@ export default async function AdminCohortsPage() {
      <Card key={c.id} className="transition-all duration-200 hover:shadow-lg">
       <CardHeader className="pb-3">
        <div className="flex items-center justify-between mb-2">
-        <Badge className={c.status === "active" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-gray-200 bg-gray-50 text-gray-600"}>
-         {c.status === "active" ? "Активен" : "Архив"}
-        </Badge>
+        <StatusBadge status={c.status === "active" ? "ACTIVE" : "ARCHIVED"} label={c.status === "active" ? "Активен" : "Архив"} />
         <span className="text-[10px] text-muted-foreground">{c.course?.title}</span>
        </div>
        <CardTitle className="text-base">{c.name}</CardTitle>

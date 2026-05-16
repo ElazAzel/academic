@@ -151,7 +151,7 @@ export const answerForwardedQuestionSchema = z.object({
 });
 
 /** Converts null/undefined to empty string for Zod formData validation */
-function fromFormData(schema?: z.ZodString) {
+export function fromFormData(schema?: z.ZodString) {
   return z.preprocess((val) => (val == null ? "" : val), schema ?? z.string());
 }
 

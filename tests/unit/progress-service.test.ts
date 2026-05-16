@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { getCompletionBasis } from "@/server/modules/progress/service";
 
 const mockLessonFindUnique = vi.hoisted(() => vi.fn());
 const mockEnrollmentFindUnique = vi.hoisted(() => vi.fn());
@@ -121,5 +122,42 @@ describe("markLessonProgress", () => {
     mockEnrollmentFindUnique.mockResolvedValue({ id: "e1", status: "INACTIVE" });
 
     await expect(markLessonProgress("u1", "l1", 50)).rejects.toMatchObject({ code: "forbidden", status: 403 });
+  });
+});
+
+describe("getCompletionBasis", () => {
+  it("returns only required lessons when some are required", () => {
+    const lessons = [
+      { id: "l1", isRequired: true },
+      { id: "l2", isRequired: false },
+      { id: "l3", isRequired: true },
+    ];
+    const result = getCompletionBasis(lessons);
+    expect(result).toHaveLength(2);
+    expect(result.every((l) => l.isRequired)).toBe(true);
+  });
+
+  it("returns all lessons when none are required", () => {
+    const lessons = [
+      { id: "l1", isRequired: false },
+      { id: "l2", isRequired: false },
+    ];
+    const result = getCompletionBasis(lessons);
+    expect(result).toHaveLength(2);
+  });
+
+  it("returns empty array when input is empty", () => {
+    const result = getCompletionBasis([]);
+    expect(result).toHaveLength(0);
+  });
+
+  it("handles null isRequired values", () => {
+    const lessons = [
+      { id: "l1", isRequired: null },
+      { id: "l2", isRequired: true },
+    ];
+    const result = getCompletionBasis(lessons);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("l2");
   });
 });
