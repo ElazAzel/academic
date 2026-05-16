@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/server/auth/options";
 
 const prisma = getPrisma();
 
@@ -10,7 +11,7 @@ const prisma = getPrisma();
  */
 export async function POST() {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       // Silently succeed for unauthenticated users (heartbeat runs globally)
       return NextResponse.json({ ok: true });

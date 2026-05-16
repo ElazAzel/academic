@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Paperclip, Loader2, Download, Smile } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { sendMessageAction, getConversation, markAsRead, getUploadUrl } from "@/server/actions/chat";
+import { sendMessageAction, getConversation, markAsRead, getUploadUrlForFile } from "@/server/actions/chat";
 import { getSupabaseClient } from "@/lib/supabase-client";
 import { toast } from "sonner";
 
@@ -52,24 +52,42 @@ export function ChatPanel({
     const supabase = getSupabaseClient();
     if (!supabase) return;
 
-    const channel = supabase
-      .channel("chat-messages")
+    const channelKey = `${studentId}-${lessonId ?? "all"}`;
+    const invalidateChat = () => {
+      queryClient.invalidateQueries({ queryKey });
+    };
+
+    const incomingChannel = supabase
+      .channel(`chat-messages-in-${channelKey}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "messages",
-          filter: `sender_id=eq.${studentId},receiver_id=eq.${studentId}`,
+          filter: `receiver_id=eq.${studentId}`,
         },
-        () => {
-          queryClient.invalidateQueries({ queryKey });
-        }
+        invalidateChat
+      )
+      .subscribe();
+
+    const outgoingChannel = supabase
+      .channel(`chat-messages-out-${channelKey}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `sender_id=eq.${studentId}`,
+        },
+        invalidateChat
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(incomingChannel);
+      supabase.removeChannel(outgoingChannel);
     };
   }, [studentId, lessonId, queryClient, queryKey]);
 
@@ -185,8 +203,11 @@ export function ChatPanel({
     }
     setUploading(true);
     try {
-      const { url, publicUrl } = await getUploadUrl();
-      await fetch(url, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+      const { url, publicUrl } = await getUploadUrlForFile(file.name, file.type);
+      const uploadResponse = await fetch(url, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+      if (!uploadResponse.ok) {
+        throw new Error("Upload failed");
+      }
       const formData = new FormData();
       formData.set("attachmentUrl", publicUrl);
       formData.set("attachmentType", file.type);
@@ -239,6 +260,8 @@ export function ChatPanel({
             <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.isMine ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
               {m.text && <p className="text-sm">{m.text}</p>}
               {m.attachmentUrl && m.attachmentType?.includes("image") ? (
+                <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={m.attachmentUrl}
                   alt="Вложение"
@@ -247,6 +270,7 @@ export function ChatPanel({
                     (e.target as HTMLImageElement).style.display = "none";
                   }}
                 />
+                </>
               ) : m.attachmentUrl ? (
                 <a href={m.attachmentUrl} target="_blank" rel="noreferrer" className={`block mt-1 text-xs underline ${m.isMine ? "text-primary-foreground/80" : "text-primary"}`}>
                   📎 {m.attachmentType?.includes("pdf") ? "PDF"
@@ -300,7 +324,7 @@ export function ChatPanel({
           <input
             type="file"
             ref={fileInputRef}
-            accept="image/png,image/jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+            accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
             className="hidden"
             onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
           />

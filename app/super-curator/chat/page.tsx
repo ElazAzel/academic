@@ -4,7 +4,6 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle } from "lucide-react";
-import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -109,10 +108,9 @@ export default async function SuperCuratorChatPage() {
 
             <div className="space-y-2">
               {chats.map((chat) => (
-                <Link
+                <div
                   key={`${chat.curatorId}-${chat.studentId}`}
-                  href={`/curator/chat?studentId=${chat.studentId}`}
-                  className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors border border-transparent hover:border-border"
+                  className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-background/40"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{chat.studentName}</p>
@@ -137,7 +135,7 @@ export default async function SuperCuratorChatPage() {
                       </Badge>
                     )}
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </div>

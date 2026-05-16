@@ -7,6 +7,9 @@ const mockModuleFindUnique = vi.hoisted(() => vi.fn());
 const mockLessonProgressCount = vi.hoisted(() => vi.fn());
 const mockAuditLogCreate = vi.hoisted(() => vi.fn());
 const mockCertificateFindFirst = vi.hoisted(() => vi.fn());
+const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
+const mockNotificationCreate = vi.hoisted(() => vi.fn());
+const mockNotificationUserFindUnique = vi.hoisted(() => vi.fn());
 const mockTxLessonProgressUpsert = vi.hoisted(() => vi.fn());
 const mockTxBlockFindUnique = vi.hoisted(() => vi.fn());
 const mockTxLessonProgressCount = vi.hoisted(() => vi.fn());
@@ -36,6 +39,9 @@ vi.mock("@/lib/prisma", () => ({
     module: { findUnique: mockModuleFindUnique },
     lessonProgress: { count: mockLessonProgressCount },
     certificate: { findFirst: mockCertificateFindFirst },
+    notificationPreference: { findMany: mockNotificationPreferenceFindMany },
+    notification: { create: mockNotificationCreate },
+    user: { findUnique: mockNotificationUserFindUnique },
     auditLog: { create: mockAuditLogCreate },
     $transaction: mock$transaction,
   }),
@@ -84,7 +90,10 @@ describe("markLessonProgress", () => {
       percent: 100,
       status: "COMPLETED",
     });
-    mockCertificateFindFirst.mockResolvedValue(null);
+    mockCertificateFindFirst.mockResolvedValue({ id: "cert1" });
+    mockNotificationPreferenceFindMany.mockResolvedValue([]);
+    mockNotificationCreate.mockResolvedValue({ id: "n1" });
+    mockNotificationUserFindUnique.mockResolvedValue({ email: "student@example.com" });
     mockModuleFindUnique.mockResolvedValue({ title: "Module 1" });
 
     const result = await markLessonProgress("u1", "l1", 100);
