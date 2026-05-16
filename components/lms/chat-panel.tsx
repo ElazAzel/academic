@@ -43,6 +43,7 @@ export function ChatPanel({
   const [uploading, setUploading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isSendingRef = useRef(false);
 
@@ -98,7 +99,10 @@ export function ChatPanel({
   }, [studentId, lessonId, queryClient, queryKey]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = chatContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -260,7 +264,7 @@ export function ChatPanel({
           </Button>
         )}
       </div>
-      <div className="flex-1 space-y-3 overflow-auto px-4 pb-3 max-h-[400px] min-h-[200px]">
+      <div ref={chatContainerRef} className="flex-1 space-y-3 overflow-auto px-4 pb-3 max-h-[400px] min-h-[200px]">
         {messages.length === 0 && (
           <p className="text-center text-sm text-muted-foreground py-8">Начните диалог с куратором</p>
         )}

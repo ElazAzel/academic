@@ -23,6 +23,7 @@ export function SheetContent({
         )}
       />
       <DialogPrimitive.Content
+        aria-describedby={undefined}
         className={cn(
           "fixed top-0 z-50 flex h-full w-full max-w-xs flex-col bg-card shadow-xl duration-200",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -33,6 +34,7 @@ export function SheetContent({
         )}
         {...props}
       >
+        <DialogPrimitive.Title className="sr-only">Панель</DialogPrimitive.Title>
         {children}
         <DialogPrimitive.Close className="absolute right-4 top-4 rounded-xl p-1 text-muted-foreground hover:text-foreground">
           <X className="h-4 w-4" />
