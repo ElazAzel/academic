@@ -24,24 +24,31 @@ const EXT: Record<ReportFormat, string> = {
   pdf: ".pdf",
 };
 
+function toUint8(content: string | Buffer | Uint8Array | ArrayBuffer): Uint8Array {
+  if (content instanceof Uint8Array) return content;
+  if (content instanceof ArrayBuffer) return new Uint8Array(content);
+  if (typeof content === "string") return new TextEncoder().encode(content);
+  return new Uint8Array((content as Buffer).buffer, (content as Buffer).byteOffset, (content as Buffer).byteLength);
+}
+
 function respond(content: string | Buffer | Uint8Array | ArrayBuffer, format: ReportFormat, filename: string) {
   const isBinary = format === "pdf" || format === "xlsx";
 
-  let body: BodyInit;
-  if (typeof content === "string") {
-    body = content;
-  } else if (isBinary) {
+  if (isBinary) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    body = new Blob([content as any], { type: MIME[format] });
-  } else if (Buffer.isBuffer(content)) {
-    body = content.toString();
-  } else if (content instanceof Uint8Array) {
-    body = new TextDecoder().decode(content);
-  } else {
-    body = new TextDecoder().decode(new Uint8Array(content));
+    const body: any = toUint8(content);
+    return new Response(body, {
+      status: 200,
+      headers: {
+        "Content-Type": MIME[format],
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Length": String(body.byteLength),
+      },
+    });
   }
 
-  return new NextResponse(body, {
+  const str = typeof content === "string" ? content : new TextDecoder().decode(toUint8(content));
+  return new NextResponse(str, {
     headers: {
       "Content-Type": MIME[format],
       "Content-Disposition": `attachment; filename="${filename}"`,

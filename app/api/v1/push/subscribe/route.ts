@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { errorResponse, parseJson } from "@/lib/http";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 import { z } from "zod";
 
 const prisma = getPrisma();
@@ -17,6 +18,11 @@ const subscriptionSchema = z.object({
 export async function POST(request: Request) {
   try {
     const user = await requireUser();
+    const rl = await checkRateLimit(`push-subscribe:${user.id}`);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Слишком много запросов" }, { status: 429 });
+    }
+
     const input = await parseJson(request, subscriptionSchema);
 
     // Upsert: one subscription per endpoint per user

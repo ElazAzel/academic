@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
+import { ReportDesigner } from "@/components/lms/report-designer";
 import { Users, AlertTriangle, Award, TrendingUp } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
@@ -78,7 +79,12 @@ export default async function AdminReportsPage() {
         </CardContent>
       </Card>
 
-      {/* Download reports */}
+      {/* Report designer */}
+      <div className="mb-6">
+        <ReportDesigner />
+      </div>
+
+      {/* Quick download */}
       <DownloadReports reports={[
         { id: "progress", title: "Прогресс по курсам", desc: "Все зачисления и прогресс слушателей", icon: Users },
         { id: "risk", title: "Риски слушателей", desc: "Неактивные, просроченные, отстающие", icon: AlertTriangle },

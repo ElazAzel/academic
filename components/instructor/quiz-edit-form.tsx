@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, ArrowLeft, Plus } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Plus, GripVertical, Eye, EyeOff, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 import { QuestionEditorItem } from "./question-editor-item";
 import { readApiData } from "@/lib/api-client";
@@ -26,6 +27,9 @@ export function QuizEditForm({ quiz }: QuizEditFormProps) {
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(true);
   const [questions, setQuestions] = useState(quiz.questions);
+  const [preview, setPreview] = useState(false);
+  const [previewAnswers, setPreviewAnswers] = useState<Record<string, string>>({});
+  const dragItem = useRef<number | null>(null);
   const router = useRouter();
 
   async function handleQuestionUpdate(questionId: string, data: Partial<Parameters<typeof QuestionEditorItem>[0]["question"]>) {
@@ -87,8 +91,24 @@ export function QuizEditForm({ quiz }: QuizEditFormProps) {
     }
   }
 
+  // Drag & drop handlers
+  const handleDragStart = (index: number) => { dragItem.current = index; };
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); };
+  const handleDrop = (index: number) => {
+    const from = dragItem.current;
+    if (from === null || from === index) return;
+    setQuestions((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(index, 0, moved);
+      return next;
+    });
+    dragItem.current = null;
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Top bar */}
       <div className="flex items-center justify-between">
         <Link href="/instructor/quizzes">
           <Button type="button" size="sm" variant="secondary">
@@ -96,8 +116,18 @@ export function QuizEditForm({ quiz }: QuizEditFormProps) {
             Назад к списку
           </Button>
         </Link>
-        <div className="flex items-center gap-4">
-          <span className={success ? "text-emerald-600 text-sm font-medium" : "text-rose-600 text-sm font-medium"}>{message}</span>
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => { setPreview(!preview); setPreviewAnswers({}); }}
+            className="gap-2"
+          >
+            {preview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {preview ? "Закрыть предпросмотр" : "Предпросмотр"}
+          </Button>
+          <span className={cn("text-sm font-medium", success ? "text-emerald-600" : "text-rose-600")}>{message}</span>
           <Button type="submit" disabled={pending}>
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {pending ? "Сохраняем..." : "Сохранить настройки"}
@@ -105,62 +135,164 @@ export function QuizEditForm({ quiz }: QuizEditFormProps) {
         </div>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="rounded-3xl border-2">
-            <CardHeader>
-              <CardTitle className="text-lg">Вопросы теста ({questions.length})</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {questions.map((q) => (
-                <QuestionEditorItem 
-                  key={q.id} 
-                  question={q} 
-                  onUpdate={handleQuestionUpdate} 
-                  onDelete={handleQuestionDelete} 
-                />
-              ))}
-              <Button variant="ghost" type="button" className="w-full border-2 border-dashed rounded-2xl h-14 text-muted-foreground hover:text-primary hover:border-primary/50" onClick={async () => {
-                const res = await fetch(`/api/v1/quizzes/${quiz.id}/questions`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ prompt: "Новый вопрос", type: "SINGLE_CHOICE", points: 1 })
-                });
-                if (res.ok) {
-                  const newQ = await readApiData<QuizEditFormProps["quiz"]["questions"][number]>(res);
-                  setQuestions([...questions, newQ]);
-                  router.refresh();
-                }
-              }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Добавить вопрос
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+      {preview ? (
+        // ── Preview mode ──────────────────────────────────────────
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-lg">Предпросмотр: {quiz.title}</CardTitle>
+            <p className="text-sm text-muted-foreground">{questions.length} вопросов · порог {quiz.passThreshold}%</p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {questions.map((q, i) => {
+              const options = Array.isArray(q.options) ? q.options as string[] : [];
+              return (
+                <div key={q.id} className="space-y-3">
+                  <p className="text-sm font-medium">{i + 1}. {q.prompt}</p>
+                  <div className="space-y-2">
+                    {options.map((opt) => (
+                      <label
+                        key={opt}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-all",
+                          previewAnswers[q.id] === opt
+                            ? "border-primary bg-primary/5 ring-1 ring-primary"
+                            : "hover:bg-muted"
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name={`preview-${q.id}`}
+                          className="h-4 w-4 text-primary"
+                          checked={previewAnswers[q.id] === opt}
+                          onChange={() => setPreviewAnswers((a) => ({ ...a, [q.id]: opt }))}
+                        />
+                        <span className="text-sm">{opt}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      ) : (
+        // ── Edit mode ─────────────────────────────────────────────
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="rounded-3xl border-2">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Вопросы теста ({questions.length})</CardTitle>
+                <span className="text-xs text-muted-foreground">Перетащите за ≡ чтобы изменить порядок</span>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {questions.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Вопросов пока нет. Нажмите «Добавить вопрос» ниже.
+                  </div>
+                ) : (
+                  questions.map((q, i) => (
+                    <div
+                      key={q.id}
+                      draggable
+                      onDragStart={() => handleDragStart(i)}
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop(i)}
+                      className="relative"
+                    >
+                      <div className="absolute -left-2 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 opacity-0 hover:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (i > 0) {
+                              setQuestions((prev) => {
+                                const next = [...prev];
+                                [next[i - 1], next[i]] = [next[i], next[i - 1]];
+                                return next;
+                              });
+                            }
+                          }}
+                          className="p-0.5 text-muted-foreground hover:text-foreground"
+                          disabled={i === 0}
+                        >
+                          <ChevronUp className="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (i < questions.length - 1) {
+                              setQuestions((prev) => {
+                                const next = [...prev];
+                                [next[i], next[i + 1]] = [next[i + 1], next[i]];
+                                return next;
+                              });
+                            }
+                          }}
+                          className="p-0.5 text-muted-foreground hover:text-foreground"
+                          disabled={i === questions.length - 1}
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground cursor-grab" />
+                        <span className="text-xs font-medium text-muted-foreground">Вопрос {i + 1}</span>
+                      </div>
+                      <QuestionEditorItem
+                        question={q}
+                        onUpdate={handleQuestionUpdate}
+                        onDelete={handleQuestionDelete}
+                      />
+                    </div>
+                  ))
+                )}
+                <Button
+                  variant="ghost"
+                  type="button"
+                  className="w-full border-2 border-dashed rounded-2xl h-14 text-muted-foreground hover:text-primary hover:border-primary/50 mt-4"
+                  onClick={async () => {
+                    const res = await fetch(`/api/v1/quizzes/${quiz.id}/questions`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ prompt: "Новый вопрос", type: "SINGLE_CHOICE", points: 1 })
+                    });
+                    if (res.ok) {
+                      const newQ = await readApiData<QuizEditFormProps["quiz"]["questions"][number]>(res);
+                      setQuestions([...questions, newQ]);
+                      router.refresh();
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Добавить вопрос
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
 
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="rounded-3xl border-2 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">Настройки</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-muted-foreground">Название теста</label>
-                <Input name="title" defaultValue={quiz.title} required />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-muted-foreground">Порог прохождения (%)</label>
-                <Input name="passThreshold" type="number" min={0} max={100} defaultValue={quiz.passThreshold} />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-muted-foreground">Макс. попыток</label>
-                <Input name="maxAttempts" type="number" min={1} defaultValue={quiz.maxAttempts} />
-              </div>
-            </CardContent>
-          </Card>
+          {/* Settings sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+            <Card className="rounded-3xl border-2 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">Настройки</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Название теста</label>
+                  <Input name="title" defaultValue={quiz.title} required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Порог прохождения (%)</label>
+                  <Input name="passThreshold" type="number" min={0} max={100} defaultValue={quiz.passThreshold} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-muted-foreground">Макс. попыток</label>
+                  <Input name="maxAttempts" type="number" min={1} defaultValue={quiz.maxAttempts} />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      )}
     </form>
   );
 }
