@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { AUTH_ROUTES } from "@/lib/constants";
 
 export default function ForgotPasswordPage() {
   return (
@@ -13,7 +14,7 @@ export default function ForgotPasswordPage() {
         <CardContent className="space-y-4">
           <ForgotPasswordForm />
           <div className="text-center text-sm text-muted-foreground">
-            <Link href="/login" className="inline-flex items-center gap-1 text-primary hover:underline">
+            <Link href={AUTH_ROUTES.LOGIN} className="inline-flex items-center gap-1 text-primary hover:underline">
               <ArrowLeft className="h-3 w-3" />
               Вернуться ко входу
             </Link>

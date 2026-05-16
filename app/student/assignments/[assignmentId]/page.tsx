@@ -8,6 +8,7 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getAssignmentForStudent } from "@/server/modules/learning/service";
 import { AssignmentView } from "./assignment-view";
 import { ApiError } from "@/lib/http";
+import { FORBIDDEN_ROUTE } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +23,9 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
    if (error instanceof ApiError && error.code === "not_found") {
     notFound();
    }
-   if (error instanceof ApiError && error.code === "forbidden") {
-    redirect("/403");
-   }
+    if (error instanceof ApiError && error.code === "forbidden") {
+     redirect(FORBIDDEN_ROUTE);
+    }
    throw error;
   }
 

@@ -8,6 +8,7 @@ import type { RoleKey } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import { isActiveUserStatus } from "@/lib/auth/user-status";
+import { AUTH_ROUTES } from "@/lib/constants";
 import { env } from "@/lib/env";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { getEnabledOAuthProviders } from "@/server/auth/provider-flags";
@@ -86,7 +87,7 @@ export const authOptions: AuthOptions = {
     strategy: "jwt"
   },
   pages: {
-    signIn: "/login"
+    signIn: AUTH_ROUTES.LOGIN
   },
   providers,
   callbacks: {

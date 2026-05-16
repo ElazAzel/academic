@@ -1,4 +1,5 @@
 import type { RoleKey } from "@prisma/client";
+import { FORBIDDEN_ROUTE } from "@/lib/constants";
 
 export const ROLE_HOME_PATH: Record<RoleKey, string> = {
   admin: "/admin",
@@ -20,5 +21,5 @@ const ROLE_PRIORITY: RoleKey[] = [
 
 export function getDefaultRolePath(roles: RoleKey[]) {
   const primaryRole = ROLE_PRIORITY.find((role) => roles.includes(role));
-  return primaryRole ? ROLE_HOME_PATH[primaryRole] : "/403";
+  return primaryRole ? ROLE_HOME_PATH[primaryRole] : FORBIDDEN_ROUTE;
 }

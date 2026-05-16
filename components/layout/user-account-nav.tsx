@@ -14,13 +14,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ROLE_HOME_PATH } from "@/lib/auth/role-redirect";
 import { ROLE_LABELS } from "@/types/domain";
+import { AUTH_ROUTES, FORBIDDEN_ROUTE } from "@/lib/constants";
 import type { AppSessionUser, RoleKey } from "@/types/domain";
 
 export function UserAccountNav({ user }: { user: AppSessionUser }) {
   const primaryRole = (["admin", "super_curator", "curator", "instructor", "customer_observer", "student"] as RoleKey[]).find((r) =>
     user.roles.includes(r)
   );
-  const homePath = primaryRole ? ROLE_HOME_PATH[primaryRole] : "/403";
+  const homePath = primaryRole ? ROLE_HOME_PATH[primaryRole] : FORBIDDEN_ROUTE;
   const roleLabel = primaryRole ? ROLE_LABELS[primaryRole] : "";
 
   return (
@@ -58,7 +59,7 @@ export function UserAccountNav({ user }: { user: AppSessionUser }) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
+        <DropdownMenuItem onClick={() => signOut({ callbackUrl: AUTH_ROUTES.LOGIN })}>
           <LogOut className="h-4 w-4" />
           Выйти
         </DropdownMenuItem>

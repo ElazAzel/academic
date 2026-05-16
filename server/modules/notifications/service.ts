@@ -126,7 +126,7 @@ export async function createNotification(input: {
   });
 
   // Проверяем email-подписку отдельно
-  if (user?.email && (input.channel === "email" || input.channel === "email_and_in_app")) {
+  if (user?.email && (input.channel === NOTIFICATION_CHANNELS.EMAIL || input.channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP)) {
     const emailPrefKey = `email_${input.event}`;
     if (preferences[emailPrefKey] !== false) {
       try {
@@ -138,7 +138,7 @@ export async function createNotification(input: {
   }
 
   // Push notification (Firebase/Telegram)
-  if (env.FEATURE_PUSH_NOTIFICATIONS && input.channel !== "email") {
+  if (env.FEATURE_PUSH_NOTIFICATIONS && input.channel !== NOTIFICATION_CHANNELS.EMAIL) {
     // Get user's push tokens
     try {
       const subscriptions = await prisma.pushSubscription.findMany({

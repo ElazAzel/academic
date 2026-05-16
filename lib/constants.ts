@@ -61,6 +61,30 @@ export const CURATOR_ROUTES = {
 
 export const FORBIDDEN_ROUTE = "/403";
 
+// ── Аутентификация ─────────────────────────────────────────────────────
+
+export const AUTH_ROUTES = {
+  LOGIN: "/login",
+  REGISTER: "/register",
+  FORGOT_PASSWORD: "/forgot-password",
+  RESET_PASSWORD: "/reset-password",
+  VERIFY_EMAIL: "/verify-email",
+} as const;
+
+export const SUPER_CURATOR_ROUTES = {
+  dashboard: "/super-curator",
+  cohorts: "/super-curator/cohorts",
+  curators: "/super-curator/curators",
+  distribution: "/super-curator/distribution",
+  users: "/super-curator/users",
+  questions: "/super-curator/questions",
+  notifications: "/super-curator/notifications",
+  risks: "/super-curator/risks",
+  reports: "/super-curator/reports",
+  analytics: "/super-curator/analytics",
+  settings: "/super-curator/settings",
+} as const;
+
 // ── Уведомления ───────────────────────────────────────────────────────
 
 export const NOTIFICATION_CHANNELS = {
@@ -71,6 +95,21 @@ export const NOTIFICATION_CHANNELS = {
 } as const;
 
 export const NOTIFICATION_PAGE_SIZE = 100;
+
+// ── Пагинация ──────────────────────────────────────────────────────────
+
+export const PAGE_SIZE = {
+  USERS_LIST: 200,
+  ENROLLMENTS_LIST: 200,
+  AUDIT_LIST: 50,
+  RISK_LIST: 200,
+  CHAT_LIST: 200,
+  SEARCH_LIST: 10,
+  ADMIN_ANALYTICS: 10,
+  COURSES_LIST: 50,
+  SUPER_CURATOR_LIST: 50,
+  SUPER_CURATOR_BULK: 500,
+} as const;
 
 // ── Прогресс ──────────────────────────────────────────────────────────
 
