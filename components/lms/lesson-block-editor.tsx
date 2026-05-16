@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { ContentBlock, ContentBlockType } from "@/types/domain";
 
+/** Block editor uses generic data shape for mutable editing */
 interface BlockItem {
   id: string;
   type: ContentBlockType;
@@ -120,7 +121,7 @@ export function LessonBlockEditor({
   const saveBlocks = useCallback(async () => {
     setSavingBlocks(true);
     try {
-      const payload: ContentBlock[] = blocks.map((b) => ({ id: b.id, type: b.type, data: b.data }));
+      const payload = blocks.map((b) => ({ id: b.id, type: b.type, data: b.data })) as ContentBlock[];
       const res = await fetch(`/api/v1/lessons/${lessonId}/blocks`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },

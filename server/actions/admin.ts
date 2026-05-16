@@ -7,21 +7,24 @@ import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
 import { RoleKey, UserAccountStatus } from "@prisma/client";
 import { ApiError } from "@/lib/http";
+import { enrollStudentSchema, assignCuratorSchema } from "@/lib/validation";
 
 const prisma = getPrisma();
 
 export async function enrollStudentAction(formData: FormData) {
   try {
     const actor = await requireRole(["admin"]);
-    
-    const userId = formData.get("userId") as string;
-    const courseId = formData.get("courseId") as string;
-    const cohortId = formData.get("cohortId") as string || undefined;
-    const curatorId = formData.get("curatorId") as string || undefined;
 
-    if (!userId || !courseId) {
-      throw new ApiError("bad_request", "Не указан студент или курс", 400);
+    const parsed = enrollStudentSchema.safeParse({
+      userId: formData.get("userId"),
+      courseId: formData.get("courseId"),
+      cohortId: formData.get("cohortId") || undefined,
+      curatorId: formData.get("curatorId") || undefined,
+    });
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные формы", 400);
     }
+    const { userId, courseId, cohortId, curatorId } = parsed.data;
 
     if (curatorId && !cohortId) {
       throw new ApiError("bad_request", "Для назначения куратора необходимо выбрать поток (когорту)", 400);
@@ -57,6 +60,10 @@ export async function enrollStudentAction(formData: FormData) {
 export async function assignCuratorAction(input: { studentId: string; curatorId: string; cohortId: string }) {
   try {
     const actor = await requireRole(["admin"]);
+    const parsed = assignCuratorSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные", 400);
+    }
 
     await prisma.curatorAssignment.upsert({
       where: { 

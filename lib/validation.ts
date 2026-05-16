@@ -92,12 +92,78 @@ export const courseBuilderSettingsSchema = z.object({
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional()
 });
 
-export const contentBlockSchema = z.object({
-  id: z.string().min(1),
-  type: z.enum(["video", "text", "file", "quiz", "assignment", "rating", "curator_question", "completion"]),
-  data: z.record(z.unknown())
+// Discriminated union schemas for each block type
+export const videoBlockDataSchema = z.object({
+  videoUrl: z.string().default(""),
+  title: z.string().optional(),
+  duration: z.number().optional(),
 });
+
+export const textBlockDataSchema = z.object({
+  html: z.string().default(""),
+});
+
+export const fileBlockDataSchema = z.object({
+  url: z.string().default(""),
+  filename: z.string().optional(),
+  fileType: z.string().optional(),
+});
+
+export const quizBlockDataSchema = z.object({
+  quizId: z.string().default(""),
+});
+
+export const assignmentBlockDataSchema = z.object({
+  assignmentId: z.string().default(""),
+});
+
+export const ratingBlockDataSchema = z.object({
+  lessonId: z.string().default(""),
+});
+
+export const curatorQuestionBlockDataSchema = z.object({
+  lessonId: z.string().default(""),
+});
+
+export const completionBlockDataSchema = z.object({
+  label: z.string().optional(),
+});
+
+export const contentBlockSchema = z.discriminatedUnion("type", [
+  z.object({ id: z.string().min(1), type: z.literal("video"), data: videoBlockDataSchema }),
+  z.object({ id: z.string().min(1), type: z.literal("text"), data: textBlockDataSchema }),
+  z.object({ id: z.string().min(1), type: z.literal("file"), data: fileBlockDataSchema }),
+  z.object({ id: z.string().min(1), type: z.literal("quiz"), data: quizBlockDataSchema }),
+  z.object({ id: z.string().min(1), type: z.literal("assignment"), data: assignmentBlockDataSchema }),
+  z.object({ id: z.string().min(1), type: z.literal("rating"), data: ratingBlockDataSchema }),
+  z.object({ id: z.string().min(1), type: z.literal("curator_question"), data: curatorQuestionBlockDataSchema }),
+  z.object({ id: z.string().min(1), type: z.literal("completion"), data: completionBlockDataSchema }),
+]);
 
 export const lessonBlocksSchema = z.object({
   blocks: z.array(contentBlockSchema).min(0).max(50)
+});
+
+// ── FormData validation schemas (explicit parse of form fields) ──────
+export const answerForwardedQuestionSchema = z.object({
+  questionId: fromFormData(z.string().min(1, "ID вопроса обязателен")),
+  answer: fromFormData(z.string().trim().min(1, "Ответ не может быть пустым").max(10000, "Ответ слишком длинный")),
+});
+
+/** Converts null/undefined to empty string for Zod formData validation */
+function fromFormData(schema?: z.ZodString) {
+  return z.preprocess((val) => (val == null ? "" : val), schema ?? z.string());
+}
+
+export const enrollStudentSchema = z.object({
+  userId: fromFormData(z.string().min(1, "ID студента обязателен")),
+  courseId: fromFormData(z.string().min(1, "ID курса обязателен")),
+  cohortId: z.preprocess((val) => (val == null || val === "" ? undefined : val), z.string().optional()),
+  curatorId: z.preprocess((val) => (val == null || val === "" ? undefined : val), z.string().optional()),
+});
+
+export const assignCuratorSchema = z.object({
+  studentId: fromFormData(z.string().min(1, "ID студента обязателен")),
+  curatorId: fromFormData(z.string().min(1, "ID куратора обязателен")),
+  cohortId: fromFormData(z.string().min(1, "ID потока обязателен")),
 });

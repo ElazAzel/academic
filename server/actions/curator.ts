@@ -8,6 +8,7 @@ import { createNotification } from "@/server/modules/notifications/service";
 import { markLessonProgress } from "@/server/modules/progress/service";
 import { ApiError } from "@/lib/http";
 import { NOTIFICATION_CHANNELS } from "@/lib/constants";
+import { answerForwardedQuestionSchema } from "@/lib/validation";
 
 const prisma = getPrisma();
 
@@ -190,13 +191,16 @@ export async function forwardQuestionAction(questionId: string) {
 }
 
 export async function answerForwardedQuestionAction(formData: FormData) {
-  const questionId = formData.get("questionId") as string;
-  const answer = formData.get("answer") as string;
   const actor = await requireRole(["instructor", "admin"]);
 
-  if (!answer?.trim()) {
-    throw new ApiError("bad_request", "Ответ не может быть пустым", 400);
+  const parsed = answerForwardedQuestionSchema.safeParse({
+    questionId: formData.get("questionId"),
+    answer: formData.get("answer"),
+  });
+  if (!parsed.success) {
+    throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные формы", 400);
   }
+  const { questionId, answer } = parsed.data;
 
   const question = await prisma.lessonQuestion.findUnique({
     where: { id: questionId },

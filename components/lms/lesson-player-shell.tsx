@@ -165,11 +165,11 @@ export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetai
             blocks.map((block, i) => {
               switch (block.type) {
                 case "video":
-                  return <VideoBlock key={i} url={(block.data.videoUrl as string) || legacyVideoUrl || ""} title={block.data.title as string} duration={block.data.duration as number} />;
+                  return <VideoBlock key={i} url={block.data.videoUrl || legacyVideoUrl || ""} title={block.data.title} duration={block.data.duration} />;
                 case "text":
-                  return <TextBlock key={i} html={(block.data.html as string) || ""} />;
+                  return <TextBlock key={i} html={block.data.html} />;
                 case "file":
-                  return <FileBlock key={i} url={(block.data.url as string) || ""} filename={block.data.filename as string} fileType={block.data.fileType as string} />;
+                  return <FileBlock key={i} url={block.data.url} filename={block.data.filename} fileType={block.data.fileType} />;
                 default:
                   return null;
               }

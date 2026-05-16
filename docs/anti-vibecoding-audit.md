@@ -331,8 +331,8 @@ type: (["video", "text", "file" /*...*/].includes(block.type) ? block.type : "te
 | 4 | 🏷️ Naming cleanup: safeQuery→withFallback, split mixed concerns | 🟡 Low | 1h | ~8 files | ✅ Done |
 | 5 | 🧹 Server action cleanup: deduplicate, remove Prisma from pages | 🟡 Medium | 3h | ~12 files | ✅ Done |
 | 6 | 🎯 Student lesson flow: consolidate content, embed quiz/assignment | 🟡 Medium | 4h | ~8 files | ❌ Pending |
-| 7 | 🔒 TypeScript & validation: discriminated unions, Zod for formData | 🟡 Medium | 3h | ~10 files | ❌ Pending |
-| 8 | 🧪 Security & tests: access finalize, integration tests | 🟡 Medium | 3h | ~10 files | ❌ Pending |
+| 7 | 🔒 TypeScript & validation: discriminated unions, Zod for formData | 🟡 Medium | 3h | ~10 files | ✅ Done |
+| 8 | 🧪 Security & tests: access finalize, integration tests | 🟡 Medium | 3h | ~10 files | 🟡 Partial — see update-log |
 
 ### PR Dependencies
 
