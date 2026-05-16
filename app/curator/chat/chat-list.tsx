@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChatPanel } from "@/components/lms/chat-panel";
 import { BookOpen, MessageCircle, Search } from "lucide-react";
 import type { ConversationInfo } from "@/server/actions/chat";
@@ -14,7 +14,7 @@ export function CuratorChatList({
 }: {
   conversations: ConversationInfo[];
 }) {
-  const [selectedPartner, setSelectedPartner] = useState<{ id: string; name: string; lessonId?: string } | null>(null);
+  const [selectedPartner, setSelectedPartner] = useState<{ id: string; name: string; lessonId?: string; lessonTitle?: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const filtered = conversations.filter((c) =>
     c.partnerName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -47,7 +47,7 @@ export function CuratorChatList({
               <Card
                 key={c.partnerId}
                 className="rounded-2xl cursor-pointer transition-all hover:shadow-md"
-                onClick={() => setSelectedPartner({ id: c.partnerId, name: c.partnerName, lessonId: c.lessonId })}
+                onClick={() => setSelectedPartner({ id: c.partnerId, name: c.partnerName, lessonId: c.lessonId, lessonTitle: c.lessonTitle })}
               >
                 <CardContent className="flex items-center gap-3 p-4">
                   <Avatar name={c.partnerName} className="h-10 w-10" />
@@ -81,6 +81,9 @@ export function CuratorChatList({
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Чат: {selectedPartner.name}</DialogTitle>
+              <DialogDescription className="sr-only">
+                Диалог куратора со слушателем. Сообщения сохраняют контекст урока, если слушатель писал из урока.
+              </DialogDescription>
               {selectedPartner.lessonId && (
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                   <BookOpen className="h-3 w-3" />
@@ -89,7 +92,7 @@ export function CuratorChatList({
               )}
             </DialogHeader>
             {/* Показываем ВСЮ историю переписки (без lessonId), контекст урока — только для справки */}
-            <ChatPanel studentId={selectedPartner.id} />
+            <ChatPanel studentId={selectedPartner.id} replyLessonId={selectedPartner.lessonId} />
           </DialogContent>
         </Dialog>
       )}

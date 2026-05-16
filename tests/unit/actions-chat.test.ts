@@ -67,6 +67,31 @@ describe("chat actions", () => {
     expect(mockMessageFindMany).not.toHaveBeenCalled();
   });
 
+  it("returns lesson context for conversation messages", async () => {
+    mockMessageFindMany.mockResolvedValue([
+      {
+        id: "m1",
+        text: "Question from lesson",
+        attachmentUrl: null,
+        attachmentType: null,
+        lessonId: "lesson1",
+        lesson: { id: "lesson1", title: "Prompt engineering" },
+        senderId: "student1",
+        sender: { id: "student1", name: "Student" },
+        createdAt: new Date("2026-05-16T08:00:00.000Z"),
+        readAt: null,
+      },
+    ]);
+
+    await expect(getConversation("student1")).resolves.toEqual([
+      expect.objectContaining({
+        id: "m1",
+        lessonId: "lesson1",
+        lessonTitle: "Prompt engineering",
+      }),
+    ]);
+  });
+
   it("allows a curator to send a message only to an assigned student", async () => {
     const formData = new FormData();
     formData.set("receiverId", "student1");
