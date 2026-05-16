@@ -3,6 +3,7 @@ import { getCompletionBasis } from "@/server/modules/progress/service";
 
 const mockLessonFindUnique = vi.hoisted(() => vi.fn());
 const mockEnrollmentFindUnique = vi.hoisted(() => vi.fn());
+const mockModuleFindUnique = vi.hoisted(() => vi.fn());
 const mockLessonProgressCount = vi.hoisted(() => vi.fn());
 const mockAuditLogCreate = vi.hoisted(() => vi.fn());
 const mockCertificateFindFirst = vi.hoisted(() => vi.fn());
@@ -32,6 +33,7 @@ vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
     lesson: { findUnique: mockLessonFindUnique },
     enrollment: { findUnique: mockEnrollmentFindUnique },
+    module: { findUnique: mockModuleFindUnique },
     lessonProgress: { count: mockLessonProgressCount },
     certificate: { findFirst: mockCertificateFindFirst },
     auditLog: { create: mockAuditLogCreate },
@@ -83,6 +85,7 @@ describe("markLessonProgress", () => {
       status: "COMPLETED",
     });
     mockCertificateFindFirst.mockResolvedValue(null);
+    mockModuleFindUnique.mockResolvedValue({ title: "Module 1" });
 
     const result = await markLessonProgress("u1", "l1", 100);
     expect(result.lessonProgress.percent).toBe(100);

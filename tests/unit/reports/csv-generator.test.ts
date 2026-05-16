@@ -41,7 +41,7 @@ describe("generateProgressCsv", () => {
     const lines = csv.split("\n");
     const headerLine = lines.find((l) => l.startsWith("Слушатель,Email,"));
     expect(headerLine).toBeDefined();
-    expect(headerLine).toContain("Слушатель,Email,Поток,Прогресс%");
+    expect(headerLine).toContain("Слушатель,Email,Поток,Прогресс %");
 
     const dataLines = lines.filter((l) => l.startsWith("Alice,") || l.startsWith("Bob,"));
     expect(dataLines.length).toBeGreaterThan(0);
@@ -50,7 +50,7 @@ describe("generateProgressCsv", () => {
   it("contains per-course and overall summary sections", () => {
     const csv = generateProgressCsv(rows);
     expect(csv).toContain("КУРС: AI 101");
-    expect(csv).toContain("ОБЩАЯ СВОДКА");
+    expect(csv).toContain("=== СВОДКА ===");
     expect(csv).toContain("Всего записей: 2");
     expect(csv).toContain("Завершили курс: 1");
   });
@@ -97,9 +97,9 @@ describe("generateRiskCsv", () => {
 
   it("includes severity levels in output", () => {
     const csv = generateRiskCsv(rows);
-    expect(csv).toContain("Критических рисков: 1");
-    expect(csv).toContain("Высоких рисков: 1");
-    expect(csv).toContain("Всего рисков: 3");
+    expect(csv).toContain("Критических,1");
+    expect(csv).toContain("Высоких,1");
+    expect(csv).toContain("Всего рисков,3");
   });
 
   it("has correct header columns", () => {
@@ -139,12 +139,12 @@ describe("generateCertificateCsv", () => {
 
   it("includes total count", () => {
     const csv = generateCertificateCsv(rows);
-    expect(csv).toContain("Всего выдано: 2");
+    expect(csv).toContain("Всего сертификатов,2");
   });
 
   it("handles empty rows", () => {
     const csv = generateCertificateCsv([]);
-    expect(csv).toContain("Всего выдано: 0");
+    expect(csv).toContain("Всего сертификатов,0");
   });
 });
 
