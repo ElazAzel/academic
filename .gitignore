@@ -18,3 +18,5 @@ tmp/
 .tmp/
 var/
 scratch/
+
+test-*.pdf

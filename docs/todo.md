@@ -17,12 +17,13 @@
 - [done] Quiz submission resolves courseId from lesson, errors on progress sync no longer swallowed.
 - [done] Student lesson view: YouTube URL normalization, toast error handling for questions.
 - [done] Reports API scoped per-role (admin, curator, super_curator, instructor, customer_observer).
-- Add production S3 bucket configuration and test presigned upload flow.
-- Wire push provider with Firebase Admin SDK or Telegram bot when credentials are available.
-- Add production backup jobs and restore runbooks under `infra/backup/`.
-- Add real PDF styling/signature assets for certificates in `public/assets/certificates/`.
-
-## Pages still on stubs (none — all 62 role sub-pages implemented)
+- [done] S3 production config documented (`infra/s3-config.md`).
+- [done] Push provider wired (firebase-admin installed, subscribe API, PWA subscribe, send in service).
+- [done] Backup/restore runbook + autobackup script (`infra/backup/`).
+- [done] Certificate production assets created (`public/assets/certificates/` with SVG border, seal, signature).
+- [done] Rate limiting expanded to quiz attempts and push subscribe.
+- [done] Forgot password flow: no email, creates admin notification instead.
+- [done] OWASP/WCAG security review (`docs/security-review.md`).
 
 ## Learning Features
 

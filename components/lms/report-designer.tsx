@@ -1,0 +1,247 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { Download, FileText, FileSpreadsheet, Table2, Settings2, X, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+// ── Types ──────────────────────────────────────────────────────────
+
+type ReportTypeId = "progress" | "risk" | "certificates";
+type FormatId = "csv" | "xlsx" | "pdf";
+
+interface ColumnDef {
+  key: string;
+  label: string;
+  defaultOn: boolean;
+}
+
+interface ReportTypeDef {
+  id: ReportTypeId;
+  title: string;
+  desc: string;
+  columns: ColumnDef[];
+}
+
+const REPORT_TYPES: ReportTypeDef[] = [
+  {
+    id: "progress",
+    title: "Прогресс слушателей",
+    desc: "Зачисления, прогресс, модули, уроки",
+    columns: [
+      { key: "studentName", label: "Слушатель", defaultOn: true },
+      { key: "email", label: "Email", defaultOn: true },
+      { key: "course", label: "Курс", defaultOn: true },
+      { key: "cohort", label: "Поток", defaultOn: true },
+      { key: "progressPercent", label: "Прогресс %", defaultOn: true },
+      { key: "currentModule", label: "Модуль", defaultOn: true },
+      { key: "currentBlock", label: "Блок", defaultOn: true },
+      { key: "currentLesson", label: "Урок", defaultOn: true },
+      { key: "lastLoginAt", label: "Последний вход", defaultOn: false },
+      { key: "avgLessonMinutes", label: "Ср. мин/урок", defaultOn: false },
+      { key: "riskCount", label: "Риски", defaultOn: true },
+    ],
+  },
+  {
+    id: "risk",
+    title: "Риски слушателей",
+    desc: "Неактивные, просроченные, отстающие",
+    columns: [
+      { key: "studentName", label: "Слушатель", defaultOn: true },
+      { key: "email", label: "Email", defaultOn: true },
+      { key: "course", label: "Курс", defaultOn: true },
+      { key: "type", label: "Тип риска", defaultOn: true },
+      { key: "severity", label: "Уровень", defaultOn: true },
+      { key: "status", label: "Статус", defaultOn: true },
+    ],
+  },
+  {
+    id: "certificates",
+    title: "Сертификаты",
+    desc: "Все выпущенные сертификаты",
+    columns: [
+      { key: "number", label: "Номер", defaultOn: true },
+      { key: "studentName", label: "Слушатель", defaultOn: true },
+      { key: "email", label: "Email", defaultOn: true },
+      { key: "course", label: "Курс", defaultOn: true },
+      { key: "issuedAt", label: "Дата выдачи", defaultOn: true },
+    ],
+  },
+];
+
+const FORMATS: { id: FormatId; label: string; icon: typeof FileText }[] = [
+  { id: "csv", label: "CSV", icon: FileText },
+  { id: "xlsx", label: "Excel", icon: FileSpreadsheet },
+  { id: "pdf", label: "PDF", icon: FileText },
+];
+
+// ── Component ──────────────────────────────────────────────────────
+
+export function ReportDesigner({ defaultType = "progress" }: { defaultType?: ReportTypeDef["id"] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [reportType, setReportType] = useState<ReportTypeDef["id"]>(defaultType);
+  const [format, setFormat] = useState<FormatId>("xlsx");
+  const [selectedColumns, setSelectedColumns] = useState<Set<string>>(new Set());
+  const [generating, setGenerating] = useState(false);
+
+  const currentType = REPORT_TYPES.find((t) => t.id === reportType) ?? REPORT_TYPES[0];
+
+  const openDesigner = useCallback(() => {
+    setSelectedColumns(new Set(currentType.columns.filter((c) => c.defaultOn).map((c) => c.key)));
+    setIsOpen(true);
+  }, [currentType]);
+
+  const toggleColumn = useCallback((key: string) => {
+    setSelectedColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedColumns(new Set(currentType.columns.map((c) => c.key)));
+  }, [currentType]);
+
+  const deselectAll = useCallback(() => {
+    setSelectedColumns(new Set<string>());
+  }, []);
+
+  const downloadUrl = `/api/v1/reports?type=${reportType}&format=${format}&fields=${Array.from(selectedColumns).join(",")}`;
+
+  if (!isOpen) {
+    return (
+      <Button variant="secondary" onClick={openDesigner} className="gap-2">
+        <Settings2 className="h-4 w-4" />
+        Настроить отчёт
+      </Button>
+    );
+  }
+
+  return (
+    <Card className="rounded-2xl border-primary/20">
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Table2 className="h-4 w-4 text-primary" />
+            Конструктор отчётов
+          </CardTitle>
+          <CardDescription>Выберите тип, колонки и формат</CardDescription>
+        </div>
+        <button
+          onClick={() => setIsOpen(false)}
+          className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* 1. Report type */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold uppercase text-muted-foreground">Тип отчёта</label>
+          <div className="flex flex-wrap gap-2">
+            {REPORT_TYPES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => {
+                  setReportType(t.id);
+                  setSelectedColumns(new Set(t.columns.filter((c) => c.defaultOn).map((c) => c.key)));
+                }}
+                className={cn(
+                  "rounded-xl border px-4 py-2 text-sm font-medium transition-all text-left",
+                  reportType === t.id
+                    ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
+                    : "border-border hover:border-primary/30 hover:bg-muted/50"
+                )}
+              >
+                <p>{t.title}</p>
+                <p className="text-[10px] text-muted-foreground font-normal mt-0.5">{t.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 2. Columns */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold uppercase text-muted-foreground">Колонки ({selectedColumns.size})</label>
+            <div className="flex gap-2 text-xs">
+              <button onClick={selectAll} className="text-primary hover:underline">Все</button>
+              <button onClick={deselectAll} className="text-muted-foreground hover:underline">Сбросить</button>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {currentType.columns.map((col) => {
+              const isSelected = selectedColumns.has(col.key);
+              return (
+                <button
+                  key={col.key}
+                  onClick={() => toggleColumn(col.key)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-all",
+                    isSelected
+                      ? "border-primary/40 bg-primary/5 text-primary"
+                      : "border-border text-muted-foreground hover:border-muted-foreground/30"
+                  )}
+                >
+                  {isSelected ? <Check className="h-3 w-3" /> : null}
+                  {col.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 3. Format */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold uppercase text-muted-foreground">Формат</label>
+          <div className="flex gap-2">
+            {FORMATS.map((f) => {
+              const FmtIcon = f.icon;
+              const isPdfUnsupported = reportType === "certificates";
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => setFormat(f.id)}
+                  disabled={f.id === "pdf" && isPdfUnsupported}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all",
+                    format === f.id
+                      ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
+                      : "border-border hover:border-primary/30 hover:bg-muted/50",
+                    f.id === "pdf" && isPdfUnsupported && "opacity-40 cursor-not-allowed"
+                  )}
+                >
+                  <FmtIcon className="h-4 w-4" />
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 4. Download */}
+        <div className="flex items-center justify-between pt-2 border-t">
+          <p className="text-xs text-muted-foreground">
+            {selectedColumns.size} колонок · формат {format.toUpperCase()}
+          </p>
+          <a
+            href={downloadUrl}
+            download
+            onClick={() => {
+              setGenerating(true);
+              setTimeout(() => setGenerating(false), 3000);
+            }}
+          >
+            <Button disabled={selectedColumns.size === 0 || generating}>
+              <Download className="h-4 w-4 mr-2" />
+              {generating ? "Генерация..." : "Скачать"}
+            </Button>
+          </a>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

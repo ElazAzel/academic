@@ -10,6 +10,7 @@ import { CourseOutline } from "@/components/lms/course-outline";
 import { CourseSettingsPanel } from "@/components/lms/course-settings-panel";
 import { ModuleEditor } from "@/components/lms/module-editor";
 import { LessonEditor } from "@/components/lms/lesson-editor";
+import { useBeforeUnload } from "@/components/lms/use-before-unload";
 import type { CourseBuilderDetail, BuilderModuleDetail, BuilderLessonDetail } from "@/types/domain";
 
 type SelectedNode =
@@ -25,7 +26,7 @@ export function CourseBuilderShell({ detail: initial }: { detail: CourseBuilderD
   const [dirty, setDirty] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(true);
 
-  const handleSave = useCallback(async () => {
+  useBeforeUnload(dirty);  const handleSave = useCallback(async () => {
     setSaving(true);
     try {
       const res = await fetch(`/api/v1/courses/${detail.id}/builder`, {
