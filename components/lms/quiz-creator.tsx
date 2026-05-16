@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { QUIZ } from "@/lib/constants";
 
 interface QuestionForm {
   type: string;
@@ -26,8 +27,8 @@ export function QuizCreator({
 }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
-  const [passThreshold, setPassThreshold] = useState(80);
-  const [maxAttempts, setMaxAttempts] = useState(3);
+  const [passThreshold, setPassThreshold] = useState<number>(QUIZ.DEFAULT_PASS_THRESHOLD);
+  const [maxAttempts, setMaxAttempts] = useState<number>(QUIZ.DEFAULT_MAX_ATTEMPTS);
   const [questions, setQuestions] = useState<QuestionForm[]>([
     { type: "single", prompt: "", options: ["", ""], correctAnswer: "0", points: 1 },
   ]);

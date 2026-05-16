@@ -6,12 +6,13 @@ import {
   getRouteRoles,
   getDefaultRolePath,
 } from "@/lib/auth/middleware-guards";
+import { AUTH_ROUTES, FORBIDDEN_ROUTE } from "@/lib/constants";
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (isPublicRoute(pathname)) {
-    if (pathname === "/login") {
+    if (pathname === AUTH_ROUTES.LOGIN) {
       const token = await getToken({
         req,
         secret: process.env.NEXTAUTH_SECRET,
@@ -19,7 +20,7 @@ export async function proxy(req: NextRequest) {
       if (token?.roles) {
         const roles = token.roles as string[];
         const homePath = getDefaultRolePath(roles as string[]);
-        if (homePath !== "/403") {
+        if (homePath !== FORBIDDEN_ROUTE) {
           return NextResponse.redirect(new URL(homePath, req.url));
         }
       }
@@ -33,7 +34,7 @@ export async function proxy(req: NextRequest) {
   });
 
   if (!token) {
-    const loginUrl = new URL("/login", req.url);
+    const loginUrl = new URL(AUTH_ROUTES.LOGIN, req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -42,7 +43,7 @@ export async function proxy(req: NextRequest) {
   const allowedRoles = getRouteRoles(pathname);
 
   if (allowedRoles && !allowedRoles.some((r) => roles.includes(r))) {
-    return NextResponse.redirect(new URL("/403", req.url));
+    return NextResponse.redirect(new URL(FORBIDDEN_ROUTE, req.url));
   }
 
   return NextResponse.next();

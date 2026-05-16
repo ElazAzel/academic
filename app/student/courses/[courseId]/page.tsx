@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/http";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getStudentCoursePlayerDetail } from "@/server/modules/learning/service";
+import { FORBIDDEN_ROUTE } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export default async function StudentCoursePage({ params }: { params: Promise<{ 
     detail = await getStudentCoursePlayerDetail(user.id, courseId);
   } catch (error) {
     if (error instanceof ApiError && error.code === "not_found") notFound();
-    if (error instanceof ApiError && error.code === "forbidden") redirect("/403");
+    if (error instanceof ApiError && error.code === "forbidden") redirect(FORBIDDEN_ROUTE);
     throw error;
   }
 

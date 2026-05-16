@@ -1,6 +1,7 @@
 import { GraduationCap, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { RetryButton } from "./retry-button";
+import { AUTH_ROUTES } from "@/lib/constants";
 
 export const metadata = {
   title: "Нет подключения — AI Strategic Academy",
@@ -30,7 +31,7 @@ export default function OfflinePage() {
         <RetryButton />
 
         <Link
-          href="/login"
+          href={AUTH_ROUTES.LOGIN}
           className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition"
         >
           Вернуться на страницу входа

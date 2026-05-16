@@ -4,6 +4,7 @@ import { LessonPlayerShell } from "@/components/lms/lesson-player-shell";
 import { ApiError } from "@/lib/http";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getStudentLessonPlayerDetail } from "@/server/modules/learning/service";
+import { FORBIDDEN_ROUTE } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function StudentLessonPage({ params }: { params: Promise<{ 
       notFound();
     }
     if (error instanceof ApiError && error.code === "forbidden") {
-      redirect("/403");
+      redirect(FORBIDDEN_ROUTE);
     }
     throw error;
   }

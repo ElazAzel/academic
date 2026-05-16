@@ -2,6 +2,7 @@ import { EnrollmentStatus, ProgressStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { clamp } from "@/lib/utils";
+import { TRAVERSAL_MODES } from "@/lib/constants";
 import { env } from "@/lib/env";
 import { logAudit } from "@/server/modules/audit/service";
 import { issueCertificate } from "@/server/modules/certificates/service";
@@ -42,7 +43,7 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
     throw new ApiError("forbidden", "Нет доступа к этому уроку", 403);
   }
 
-  if (lesson.module.course.traversalMode === "sequential") {
+  if (lesson.module.course.traversalMode === TRAVERSAL_MODES.SEQUENTIAL) {
     const orderedLessons = lesson.module.course.modules
       .flatMap((module) => module.lessons.map((item) => ({ ...item, moduleOrder: module.order })))
       .sort((left, right) => left.moduleOrder - right.moduleOrder || left.order - right.order);

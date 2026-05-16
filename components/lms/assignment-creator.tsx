@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { ASSIGNMENT } from "@/lib/constants";
 
 export function AssignmentCreator({
   lessonId,
@@ -19,8 +20,8 @@ export function AssignmentCreator({
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [instructions, setInstructions] = useState("");
-  const [maxAttempts, setMaxAttempts] = useState(3);
-  const [maxScore, setMaxScore] = useState(100);
+  const [maxAttempts, setMaxAttempts] = useState<number>(ASSIGNMENT.DEFAULT_MAX_ATTEMPTS);
+  const [maxScore, setMaxScore] = useState<number>(ASSIGNMENT.DEFAULT_MAX_SCORE);
   const [saving, setSaving] = useState(false);
 
   const save = async () => {

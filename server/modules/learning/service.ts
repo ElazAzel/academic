@@ -1,6 +1,7 @@
 import { EnrollmentStatus, Prisma, ProgressStatus, QuestionStatus } from "@prisma/client";
 import { ApiError } from "@/lib/http";
 import { getPrisma } from "@/lib/prisma";
+import { TRAVERSAL_MODES } from "@/lib/constants";
 import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
 import type {
@@ -106,7 +107,7 @@ function buildLessonAccessMap(enrollment: CourseEnrollment) {
   for (const lesson of orderedLessons) {
     const progress = getLessonProgress(lesson);
     const storedStatus = progress?.status ?? ProgressStatus.NOT_STARTED;
-    const locked = enrollment.course.traversalMode === "sequential" && previousRequiredLessonOpen;
+    const locked = enrollment.course.traversalMode === TRAVERSAL_MODES.SEQUENTIAL && previousRequiredLessonOpen;
     const progressStatus = locked ? ProgressStatus.BLOCKED : storedStatus;
 
     accessByLessonId.set(lesson.id, {
@@ -173,7 +174,7 @@ function buildCourseLearningDetail(enrollment: CourseEnrollment): StudentCourseL
     coverUrl: course.coverUrl,
     durationHours: course.durationHours,
     status: course.status,
-    traversalMode: course.traversalMode === "open" ? "open" : "sequential",
+    traversalMode: course.traversalMode === TRAVERSAL_MODES.OPEN ? TRAVERSAL_MODES.OPEN : TRAVERSAL_MODES.SEQUENTIAL,
     modulesCount: modules.length,
     lessonsCount: allLessons.length,
     instructors: course.instructors.map((entry) => ({
@@ -274,7 +275,7 @@ function buildCoursePlayerDetail(enrollment: CoursePlayerEnrollment): StudentCou
 
   for (const lesson of orderedLessons) {
     const storedStatus = lesson.progress[0]?.status ?? ProgressStatus.NOT_STARTED;
-    const locked = course.traversalMode === "sequential" && previousRequiredLessonOpen;
+    const locked = course.traversalMode === TRAVERSAL_MODES.SEQUENTIAL && previousRequiredLessonOpen;
     const status: ProgressStatus = locked ? ProgressStatus.BLOCKED : storedStatus;
 
     accessByLessonId.set(lesson.id, {
@@ -343,7 +344,7 @@ function buildCoursePlayerDetail(enrollment: CoursePlayerEnrollment): StudentCou
       coverUrl: course.coverUrl,
       durationHours: course.durationHours,
       status: course.status,
-      traversalMode: course.traversalMode === "open" ? "open" : "sequential",
+      traversalMode: course.traversalMode === TRAVERSAL_MODES.OPEN ? TRAVERSAL_MODES.OPEN : TRAVERSAL_MODES.SEQUENTIAL,
       modulesCount: modules.length,
       lessonsCount: total,
       instructors: course.instructors.map((entry) => ({

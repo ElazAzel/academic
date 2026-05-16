@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { QUIZ } from "@/lib/constants";
 
 interface QuestionInput {
   type: string;
@@ -21,8 +22,8 @@ export function QuizBlockEditor({
   onChange: (data: Record<string, unknown>) => void;
 }) {
   const [title, setTitle] = useState(value?.title ?? "");
-  const [passThreshold, setPassThreshold] = useState(value?.passThreshold ?? 80);
-  const [maxAttempts, setMaxAttempts] = useState(value?.maxAttempts ?? 1);
+  const [passThreshold, setPassThreshold] = useState(value?.passThreshold ?? QUIZ.DEFAULT_PASS_THRESHOLD);
+  const [maxAttempts, setMaxAttempts] = useState(value?.maxAttempts ?? QUIZ.DEFAULT_MAX_ATTEMPTS);
   const [questions, setQuestions] = useState<QuestionInput[]>(value?.questions ?? []);
 
   const updateParent = (q: QuestionInput[], t: string, pt: number, ma: number) => {

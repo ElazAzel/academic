@@ -1,3 +1,5 @@
+import { AUTH_ROUTES, FORBIDDEN_ROUTE } from "@/lib/constants";
+
 const ROLE_HOME_PATH: Record<string, string> = {
   admin: "/admin",
   super_curator: "/super-curator",
@@ -11,16 +13,16 @@ const ROLE_PRIORITY = ["admin", "super_curator", "curator", "instructor", "custo
 
 export function getDefaultRolePath(roles: string[]): string {
   const primaryRole = ROLE_PRIORITY.find((role) => roles.includes(role));
-  return primaryRole ? ROLE_HOME_PATH[primaryRole] : "/403";
+  return primaryRole ? ROLE_HOME_PATH[primaryRole] : FORBIDDEN_ROUTE;
 }
 
 export const PUBLIC_ROUTES = new Set([
-  "/login",
-  "/register",
-  "/forgot-password",
-  "/reset-password",
-  "/verify-email",
-  "/403",
+  AUTH_ROUTES.LOGIN,
+  AUTH_ROUTES.REGISTER,
+  AUTH_ROUTES.FORGOT_PASSWORD,
+  AUTH_ROUTES.RESET_PASSWORD,
+  AUTH_ROUTES.VERIFY_EMAIL,
+  FORBIDDEN_ROUTE,
   "/privacy",
   "/terms",
   "/consent",

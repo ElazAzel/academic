@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/lms/theme-toggle";
 import { NotificationsDropdown } from "@/components/lms/notifications-dropdown";
 import { NAV_BY_ROLE } from "@/components/layout/navigation";
 import type { RoleKey } from "@/types/domain";
+import { AUTH_ROUTES } from "@/lib/constants";
 
 const HEADER_LINKS_COUNT: Record<string, number> = {
   student: 3,
@@ -63,7 +64,7 @@ export async function SiteHeader() {
             </>
           ) : (
             <Button asChild size="sm">
-              <Link href="/login">
+              <Link href={AUTH_ROUTES.LOGIN}>
                 <LogIn className="h-4 w-4 mr-1.5" aria-hidden />
                 <span className="hidden sm:inline">Войти</span>
               </Link>

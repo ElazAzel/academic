@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ASSIGNMENT } from "@/lib/constants";
 
 export function AssignmentBlockEditor({
   value,
@@ -11,8 +12,8 @@ export function AssignmentBlockEditor({
 }) {
   const [title, setTitle] = useState(value?.title ?? "");
   const [instructions, setInstructions] = useState(value?.instructions ?? "");
-  const [maxAttempts, setMaxAttempts] = useState(value?.maxAttempts ?? 3);
-  const [maxScore, setMaxScore] = useState(value?.maxScore ?? 100);
+  const [maxAttempts, setMaxAttempts] = useState(value?.maxAttempts ?? ASSIGNMENT.DEFAULT_MAX_ATTEMPTS);
+  const [maxScore, setMaxScore] = useState(value?.maxScore ?? ASSIGNMENT.DEFAULT_MAX_SCORE);
   const [deadline, setDeadline] = useState(value?.deadline ?? "");
 
   const updateParent = () => {

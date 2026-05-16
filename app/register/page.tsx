@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AUTH_ROUTES } from "@/lib/constants";
 
 export default function RegisterPage() {
   return (
@@ -17,7 +18,7 @@ export default function RegisterPage() {
             Если вы участник потока, используйте полученные credentials на странице входа.
           </p>
           <Button asChild className="w-full">
-            <Link href="/login">Перейти ко входу</Link>
+            <Link href={AUTH_ROUTES.LOGIN}>Перейти ко входу</Link>
           </Button>
         </CardContent>
       </Card>

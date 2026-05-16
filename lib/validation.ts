@@ -1,29 +1,30 @@
 import { RoleKey } from "@prisma/client";
 import { z } from "zod";
+import { ASSIGNMENT, COURSE, CURATOR_QUESTION, LESSON, MODULE, TRAVERSAL_MODES } from "@/lib/constants";
 
 export const courseSchema = z.object({
-  title: z.string().min(3).max(160),
+  title: z.string().min(COURSE.TITLE_MIN_LENGTH).max(COURSE.TITLE_MAX_LENGTH),
   description: z.string().min(10),
-  goal: z.string().max(500).optional(),
+  goal: z.string().max(COURSE.GOAL_MAX_LENGTH).optional(),
   coverUrl: z.string().url().optional(),
-  durationHours: z.number().int().min(0).max(1000).default(0),
-  traversalMode: z.enum(["sequential", "open"]).default("sequential")
+  durationHours: z.number().int().min(COURSE.MIN_DURATION_HOURS).max(COURSE.MAX_DURATION_HOURS).default(0),
+  traversalMode: z.enum([TRAVERSAL_MODES.SEQUENTIAL, TRAVERSAL_MODES.OPEN]).default(TRAVERSAL_MODES.SEQUENTIAL)
 });
 
 export const updateCourseSchema = courseSchema.partial().extend({
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
-  traversalMode: z.enum(["sequential", "open"]).optional(),
+  traversalMode: z.enum([TRAVERSAL_MODES.SEQUENTIAL, TRAVERSAL_MODES.OPEN]).optional(),
 });
 
 export const moduleSchema = z.object({
-  title: z.string().min(2).max(160),
+  title: z.string().min(MODULE.TITLE_MIN_LENGTH).max(MODULE.TITLE_MAX_LENGTH),
   description: z.string().optional(),
   order: z.number().int().positive(),
-  recommendedDays: z.number().int().positive().default(7)
+  recommendedDays: z.number().int().positive().default(MODULE.DEFAULT_RECOMMENDED_DAYS)
 });
 
 export const lessonSchema = z.object({
-  title: z.string().min(2).max(160),
+  title: z.string().min(LESSON.TITLE_MIN_LENGTH).max(LESSON.TITLE_MAX_LENGTH),
   summary: z.string().nullish(),
   order: z.number().int().positive(),
   type: z.enum(["VIDEO", "TEXT", "DOCUMENT", "VIDEO_DOCUMENT", "QUIZ", "ASSIGNMENT", "LIVE", "RECORDING", "MIXED"]).default("MIXED"),
@@ -44,7 +45,7 @@ export const quizAttemptSchema = z.object({
 });
 
 export const assignmentSubmissionSchema = z.object({
-  answerText: z.string().max(10_000).optional(),
+  answerText: z.string().max(ASSIGNMENT.MAX_ANSWER_LENGTH).optional(),
   fileUrl: z.string().url().optional()
 });
 
@@ -54,7 +55,7 @@ export const progressSchema = z.object({
 });
 
 export const lessonQuestionSchema = z.object({
-  text: z.string().trim().min(5).max(3000)
+  text: z.string().trim().min(CURATOR_QUESTION.TEXT_MIN_LENGTH).max(CURATOR_QUESTION.TEXT_MAX_LENGTH)
 });
 
 export const roleAssignmentSchema = z.object({
@@ -82,13 +83,13 @@ export const checkoutSchema = z.object({
 });
 
 export const courseBuilderSettingsSchema = z.object({
-  title: z.string().min(3).max(160).optional(),
+  title: z.string().min(COURSE.TITLE_MIN_LENGTH).max(COURSE.TITLE_MAX_LENGTH).optional(),
   description: z.string().optional(),
-  goal: z.string().max(500).nullish(),
+  goal: z.string().max(COURSE.GOAL_MAX_LENGTH).nullish(),
   coverUrl: z.string().url().nullish().or(z.literal("")),
-  durationHours: z.number().int().min(0).max(1000).optional(),
-  traversalMode: z.enum(["sequential", "open"]).optional(),
-  completionThreshold: z.number().int().min(0).max(100).optional(),
+  durationHours: z.number().int().min(COURSE.MIN_DURATION_HOURS).max(COURSE.MAX_DURATION_HOURS).optional(),
+  traversalMode: z.enum([TRAVERSAL_MODES.SEQUENTIAL, TRAVERSAL_MODES.OPEN]).optional(),
+  completionThreshold: z.number().int().min(COURSE.MIN_COMPLETION_THRESHOLD).max(COURSE.MAX_COMPLETION_THRESHOLD).optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional()
 });
 
@@ -141,13 +142,13 @@ export const contentBlockSchema = z.discriminatedUnion("type", [
 ]);
 
 export const lessonBlocksSchema = z.object({
-  blocks: z.array(contentBlockSchema).min(0).max(50)
+  blocks: z.array(contentBlockSchema).min(0).max(LESSON.CONTENT_BLOCKS_MAX_COUNT)
 });
 
 // ── FormData validation schemas (explicit parse of form fields) ──────
 export const answerForwardedQuestionSchema = z.object({
   questionId: fromFormData(z.string().min(1, "ID вопроса обязателен")),
-  answer: fromFormData(z.string().trim().min(1, "Ответ не может быть пустым").max(10000, "Ответ слишком длинный")),
+  answer: fromFormData(z.string().trim().min(1, "Ответ не может быть пустым").max(ASSIGNMENT.MAX_ANSWER_LENGTH, "Ответ слишком длинный")),
 });
 
 /** Converts null/undefined to empty string for Zod formData validation */
