@@ -65,19 +65,25 @@ export function NotificationsDropdown() {
   const unreadCount = notifications.filter((n) => !n.readAt).length;
 
   const fetchNotifications = useCallback(async () => {
-    setLoading(true);
     try {
       const res = await fetch("/api/v1/notifications");
-      if (res.ok) {
-        const json = await res.json();
-        setNotifications(json.data ?? []);
-      }
-    } catch (err) {
-      console.error("[NotificationsDropdown] Failed to fetch notifications:", err);
+      if (!res.ok) return;
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) return;
+      const json = await res.json();
+      setNotifications(json.data ?? []);
+    } catch {
+      // Silently ignore fetch errors
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // Fetch on mount so unread badge is visible immediately
+  useEffect(() => {
+    setLoading(true);
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   useEffect(() => {
     if (open) fetchNotifications();
