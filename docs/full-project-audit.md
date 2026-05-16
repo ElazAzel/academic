@@ -1,295 +1,165 @@
-# Полный аудит платформы — AI Strategic Academy LMS
+# Полный аудит платформы — AI Strategic Academy
 
-**Дата:** 2026-05-13 (обновление после PR-1 … PR-6)
-**Аудитор:** Code AI Agent
-**Область:** весь код — роли, страницы, бэкенд, API, безопасность, UX, тесты, схема, документация
-**Метод:** автоматическая инвентаризация (glob/grep/read) + проверка фактических ссылок file:line
+**Дата:** 2026-05-16
+**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-03
+**Область:** продуктовые сценарии, роли, маршруты, backend/API, доступ, безопасность, тесты, схема, документация
 
 ---
 
-## 1. Сводка для руководителя
+## 1. Executive Summary
 
-| Критерий | Статус |
+| Критерий | Текущее состояние |
 |---|---|
-| Build / Typecheck / Lint | ✅ 0 errors, 0 warnings |
-| Unit + integration тесты | ✅ 94 теста проходят (20 файлов) |
-| Production Build | ✅ 50 страниц генерируется |
-| E2E тесты | 🟡 Готовы (`tests/e2e/roles.spec.ts`), но требуют поднятой БД |
-| Database deployable | 🟡 Полная миграция готова, нужен запуск на чистой БД |
-| MVP-готовность | 🟢 Все P0/P1 закрыты |
-| Production-готовность | 🟡 Observer scope не подключён к API, enum миграция отложена |
+| Product scope | Закрытая академическая платформа, не marketplace и не публичный каталог |
+| Auth/access | Закрытый вход, self-registration отключён, role redirect работает |
+| Observer privacy | Green: observer видит только явно scoped project/cohort data; без scope приватные данные не возвращаются |
+| Certificates | Green: student видит свои, admin видит все, observer видит scoped, bulk download scoped, PDF owner/instructor/admin |
+| Notifications | Green базовый контракт: default `in_app`, email только при `email` / `email_and_in_app`; preferences service подключён |
+| Chat | Green для текущего MVP: участники scoped, куратор отвечает закреплённому слушателю, имена отображаются по роли |
+| Release gate | Green: `npm run verify:release` и `docs/release-verification.md` зафиксированы |
+| E2E | Yellow: Playwright smoke готов, но полный release-run требует подготовленную БД и demo seed |
+| Schema cleanup | Deferred: enum migration (`UserAccountStatus`, `QuestionStatus`) вынесена в M-PR-10 |
+| MVP UX | Green/yellow: M-PR-04 удерживает dashboard/course/lesson/quiz/assignment/question/rating в lesson context; остаётся расширить browser smoke |
 
-**Сравнение с предыдущим аудитом (до PR-1…PR-6):**
+**Итог:** старые P0/P1 по production privacy и базовым access-control закрыты. Текущий фокус больше не “починить утечки”, а довести production MVP: release verification, единый student learning flow, curator/super-curator operations, reports/analytics, notification/audit completion, затем schema/performance hardening.
 
-| Блокер | Было | Стало |
+---
+
+## 2. Закрытые Риски, Которые Больше Не Считать Открытыми
+
+| Ранее открытый риск | Текущий статус | Источник |
 |---|---|---|
-| `seed-temp` без авторизации | 🔴 P0 | ✅ Bearer + 401 в production |
-| OAuth не проверяет `status` | 🔴 P0 | ✅ Проверяет `status === "ACTIVE"` |
-| `reviewSubmission` без scope | 🔴 P0 | ✅ Admin/instructor/curator-of-student |
-| XSS через `lesson.content` | 🔴 P1 | ✅ DOMPurify в блоках |
-| Rate-limit на reset-password — глобальный | 🟡 P1 | ✅ Per-IP |
-| Дубликат CRUD courses/builder | 🟡 P1 | ✅ Re-export, –200 строк |
-| Zod-валидация на /builder, /blocks | 🟡 P1 | ✅ 24/27 mutation-роутов с Zod |
-| `listEnrollments` / `listAssignments` без scope | 🔴 P1 | ✅ Скоупированы по ролям |
-| `getStudentCoursePlayerDetail` пропускал INVITED/PAUSED | 🟡 P1 | ✅ Принимает только ACTIVE/COMPLETED |
-| Кнопка «Создать курс» → `/admin/courses` | 🟡 P2 | ✅ → `/instructor/courses/new` |
-| Кнопки «Создать тест/задание» — мёртвые | 🟡 P2 | ✅ Server actions |
-| Settings 5 ролей презентационные | 🟡 P2 | ✅ Профиль + пароль работают |
-| Аудит-логи без пагинации | 🟡 P2 | ✅ page/limit + UI |
-| `/edit`, `/curriculum` → deprecated | 🟡 P2 | ✅ Pure redirects |
-| 0 E2E тестов | 🟡 P2 | ✅ 13 E2E (6 smoke + 5 boundary + 2 happy path) |
-
-**Остающиеся открытые риски:**
-1. Observer scope не подключён к запросам отчётов и аналитики (P1).
-2. Notification preferences / Lesson rating — модели есть, сервисов нет (P2).
-3. Enum миграция (`UserAccountStatus`, `QuestionStatus`) отложена (P3).
-4. Email-уведомления о смене пароля / профиля — отсутствуют (P3).
-5. Файловые загрузки — нет content-type allowlist (P2).
+| Observer видел глобальные certificates/reports/dashboard | Закрыто | `server/modules/observer/scope.ts`, `app/api/v1/reports/route.ts`, `app/api/v1/certificates/*`, `server/actions/dashboard/observer.ts` |
+| Observer без scope получал global fallback | Закрыто: пустой scope возвращает пустые приватные наборы | `getObserverScope`, `getScopedStudentIdsForObserver` |
+| Bulk certificates раскрывал чужие ids | Закрыто: observer bulk фильтруется по scoped student ids | `app/api/v1/certificates/bulk/route.ts` |
+| Certificate PDF без полной проверки доступа | Закрыто: owner/admin/instructor-of-course | `app/api/v1/certificates/[certificateId]/pdf/route.ts` |
+| Certificate revoke отсутствовал | Закрыто: DELETE endpoint + audit + already-revoked guard | `app/api/v1/certificates/[certificateId]/route.ts`, `server/modules/certificates/service.ts` |
+| Enrollment pause/resume отсутствовали | Закрыто: server actions ACTIVE ↔ PAUSED с transition guards | `server/actions/admin.ts` |
+| NotificationPreference был только моделью | Закрыто: service/actions/API/settings pages подключены | `server/modules/notifications/preferences.ts`, `server/actions/settings.ts`, `app/api/v1/notification-preferences/route.ts` |
+| LessonRating был только UI-компонентом | Закрыто: POST rating route есть | `app/api/v1/lessons/[lessonId]/rating/route.ts` |
+| Upload MIME был не ограничен | Закрыто: allowlist + max size | `app/api/v1/media/uploads/route.ts`, `lib/constants.ts` |
+| Admin settings были декоративными | Закрыто: AppSetting service/actions/settings UI подключены | `server/modules/admin/settings.ts`, `server/actions/settings.ts`, `app/admin/settings/page.tsx` |
+| Chat показывал странные номера и ломал curator reply | Закрыто: role-based display names, scoped receiver, lesson context | `server/actions/chat.ts`, `app/curator/chat/chat-list.tsx` |
+| Service worker мог кешировать приватные кабинеты и отдавать `503` на navigation fallback | Закрыто в M-PR-03: приватные navigation pages больше не кешируются; offline fallback возвращает offline UI | `public/sw.js` |
 
 ---
 
-## 2. Инвентаризация кодовой базы
+## 3. Текущее Состояние По Ролям
 
-| Метрика | Значение |
-|---|---|
-| TypeScript исходники (`.ts/.tsx`) | **301 файлов** |
-| → `app/` | 144 |
-| → `components/` | 80 |
-| → `server/` | 29 |
-| → `lib/` | 22 |
-| → `scripts/` | 4 |
-| → `tests/` | 22 |
-| API-роуты (`app/api/**/route.ts`) | 46 |
-| Страницы (`app/**/page.tsx` без `api/`) | 76 |
-| Prisma-моделей | 45 |
-| Миграций | 3 (`20260507000000_init`, `20260512000000_add_block_model`, `20260513000000_complete_schema`) |
-| Скриптов в `scripts/` | 4 |
-| Тестов (unit + integration + e2e) | 22 файла |
-
----
-
-## 3. Безопасность — текущее состояние
-
-| Контроль | Расположение | Статус |
-|---|---|---|
-| `/api/seed-temp` Bearer-токен | `app/api/seed-temp/route.ts:13–22` | ✅ Требует `SEED_ADMIN_TOKEN`, заблокирован в production |
-| OAuth status check | `server/auth/options.ts:92–102` | ✅ Отклоняет `status !== "ACTIVE"` |
-| JWT loads roles from DB | `server/auth/options.ts:104–122` | ✅ `token.roles = dbUser.roles.map(...)` |
-| `reviewSubmission` scope | `server/modules/assignments/service.ts:89–140` | ✅ Admin → instructor of course → curator of student |
-| `reset-password` rate-limit | `app/api/v1/auth/reset-password/route.ts:23–24` | ✅ Per-IP (`reset-password:${ip}`) |
-| `sanitizeHtml` в `assignment-block.tsx` | `components/lms/assignment-block.tsx:9,117` | ✅ DOMPurify allowlist |
-| `sanitizeHtml` в `text-block.tsx` | `components/lms/text-block.tsx:1,4` | ✅ |
-| `lib/sanitize.ts` сервер-fallback | `lib/sanitize.ts:20–24` | ✅ Regex strip на сервере (DOMPurify — только в браузере) |
-| Zod-валидация mutation-роутов | 24/27 routes | ✅ Все продакшн-роуты валидируют |
-| `listEnrollments` scoped | `server/modules/courses/service.ts:349` | ✅ `(userId, roleKeys)` |
-| `listAssignments` scoped | `server/modules/assignments/service.ts:8` | ✅ `(userId, roleKeys)` |
-| `getStudentCoursePlayerDetail` enrollment | `server/modules/learning/service.ts:369` | ✅ Принимает только `ACTIVE`/`COMPLETED` |
-
-**Открытые риски P2:**
-
-| Риск | Причина | Где |
-|---|---|---|
-| Observer видит чужие отчёты | `ObserverProject`/`ObserverCohort` не использованы в `/api/v1/reports` | `app/api/v1/reports/route.ts`, `server/modules/reports/service.ts` |
-| Нет content-type allowlist на загрузках | `media/uploads` принимает любой `contentType` | `app/api/v1/media/uploads/route.ts` |
-| Сертификат PDF без access-check инструктора | Любой instructor может скачать любой PDF | `app/api/v1/certificates/[certificateId]/pdf/route.ts` |
-
----
-
-## 4. Бэкенд — сервисы и API
-
-### 4.1 Дедупликация
-- `server/modules/courses/service.ts` (400 строк) — каноничный CRUD: `assertInstructorOfCourse`, `createModule`, `updateModule`, `deleteModule`, `createLesson`, `updateLesson`, `deleteLesson`, `createBlock`, etc.
-- `server/modules/course-builder/service.ts` (235 строк) — re-exports из `courses/service` (line 11). Только builder-специфичные функции: `getCourseForBuilder`, `updateCourseSettings`, `reorderModules`, `reorderLessons`, `updateLessonBlocks`, `createQuizInline`, `createAssignmentInline`.
-
-**~200 строк дублирования удалено.**
-
-### 4.2 Zod-валидация (24/27 mutation routes)
-Все 15 экспортируемых схем в `lib/validation.ts`:
-1. `courseSchema`, 2. `updateCourseSchema`, 3. `moduleSchema`, 4. `lessonSchema`, 5. `enrollmentSchema`, 6. `quizAttemptSchema`, 7. `assignmentSubmissionSchema`, 8. `progressSchema`, 9. `lessonQuestionSchema`, 10. `roleAssignmentSchema`, 11. `certificateIssueSchema`, 12. `checkoutSchema`, 13. `courseBuilderSettingsSchema`, 14. `contentBlockSchema`, 15. `lessonBlocksSchema`.
-
-**Routes без Zod (3 шт.) — намеренно отключены:**
-- `auth/register` → 410 Gone
-- `payments/checkout` → 410 Gone
-- `webhooks/stripe` → 410 Gone
-- `graphql` → 501 Not Implemented
-
-### 4.3 Скоупинг запросов
-| Функция | Скоуп |
-|---|---|
-| `listCourses(status, instructorId)` | Подходит для admin/instructor; observer не учитывается |
-| `listEnrollments(userId, roleKeys)` | ✅ Admin → all, instructor → свои курсы, student → свои |
-| `listAssignments(userId, roleKeys)` | ✅ Admin → all, instructor → свои, student → enrolled |
-| `listAuditLogs(page, limit)` | Только admin, пагинация добавлена |
-| `getStudentCoursePlayerDetail` | ✅ Status enforcement |
-
----
-
-## 5. UI/UX — состояние страниц по ролям
-
-| Роль | Страниц | Settings профиль | Settings пароль | Settings нотификации | Дашборд | Статус |
-|---|---|---|---|---|---|---|
-| **Student** | 13 | ✅ форма | ✅ форма | 🟡 UI без сохранения | ✅ реальные данные | **Mature** |
-| **Instructor** | 16 | ✅ форма | ✅ форма | 🟡 UI без сохранения | ✅ | **Mature** (после PR-4) |
-| **Curator** | 8 | ✅ форма | ✅ форма | 🟡 UI без сохранения | ✅ | **Mature** |
-| **Super Curator** | 9 | ✅ форма | ✅ форма | 🟡 UI без сохранения | ✅ | **Mature** |
-| **Admin** | 16 | ✅ форма | ✅ форма | 🟡 platform-tabs UI | ✅ | **Mature** |
-| **Customer Observer** | 4 | ✅ форма | ✅ форма | 🟡 UI без сохранения | ✅ реальные данные | **Functional, нужен scope** |
-
-**Ключевые исправления PR-4:**
-- `app/instructor/courses/page.tsx:40` → `/instructor/courses/new`
-- `app/instructor/quizzes/page.tsx:33` → `<form action={createQuizAction}>`
-- `app/instructor/assignments/page.tsx:34` → `<form action={createAssignmentAction}>`
-- `app/admin/audit/page.tsx` — пагинация через `searchParams.page/limit`
-
-**Deprecated routes (PR-5):**
-| Маршрут | Текущее поведение |
-|---|---|
-| `/instructor/courses/[id]/edit` | `redirect("/builder")` |
-| `/instructor/courses/[id]/curriculum` | `redirect("/builder")` |
-| `/instructor/lessons/[id]/edit` | `redirect("/instructor/courses")` |
-| `/instructor/modules/[id]/edit` | `redirect("/instructor/courses")` |
-
----
-
-## 6. Покрытие тестами
-
-| Слой | Файлов | Тестов | Примечание |
+| Роль | Статус | Что работает | Что дальше |
 |---|---|---|---|
-| Unit | 14 | 94 | `assignments, certificates, http, notifications, password, progress, quiz, rbac, reports, risks, security, storage, utils, validation` |
-| Integration | 6 | n/a (Vitest объединяет) | `auth-register-disabled, courses, health, login, seed, stripe-webhook` |
-| E2E (Playwright) | 2 | 13 | `smoke.spec.ts` (6 public + role guards) + `roles.spec.ts` (6 smoke + 5 scope + 2 happy) |
-
-**E2E покрытие `tests/e2e/roles.spec.ts`:**
-- **Smoke (6):** admin, instructor, student, curator, super_curator, customer_observer — все 6 ролей залогиниваются и видят свой дашборд
-- **Scope boundary (5):** student→admin, student→instructor, curator→admin, instructor→admin, observer→student
-- **Happy path (2):** student my-courses + course page, student settings
-
-**Известная зависимость:** E2E требуют запущенной БД (Supabase или локальный PostgreSQL) и выполненного `npm run users:create`. `loginAs()` теперь даёт понятную ошибку, если пользователь не найден.
+| Admin | Green | users, roles, courses, cohorts, enrollments, invites, audit, settings, certificates issue/revoke | Reports/analytics v1 и release runbooks |
+| Instructor | Green/yellow | own courses, builder direction, quiz/assignment CRUD scoped, analytics, forwarded questions scoped | Unified builder modernization в M-PR-07 |
+| Student | Green/yellow | dashboard continue-learning, my courses, course/lesson access, embedded quiz/assignment/question/rating, certificates | Playwright happy path on prepared DB |
+| Curator | Yellow | assigned students, questions, assignment review, risks, scoped chat | Student card + operational queues в M-PR-05 |
+| Super Curator | Yellow | curator dashboard, distribution, questions, reports scope | workload/risk/reassignment operations в M-PR-06 |
+| Customer Observer | Green/yellow | scoped dashboard, reports, certificates, read-only constraints | Reports/analytics v1 с owner/export tests в M-PR-08 |
 
 ---
 
-## 7. Схема данных (Prisma)
+## 4. Security And Privacy Baseline
 
-**Все 45 моделей в `prisma/schema.prisma`.** Новые модели PR-2 присутствуют:
-
-| Модель | Расположение | Wired to service? | Используется в UI? |
-|---|---|---|---|
-| `ObserverProject` | L897–908 | ❌ Только `scripts/create-demo-course.ts` | ❌ |
-| `ObserverCohort` | L910–921 | ❌ | ❌ |
-| `NotificationPreference` | L925–939 | ❌ | ❌ |
-| `LessonRating` | L943–956 | ❌ (но `components/lms/lesson-rating.tsx` готов) | 🟡 UI компонент есть, нет API |
-
-**Это самый большой структурный долг.** Модели созданы в PR-2, но ни одна не подключена к API-слою. Observer всё ещё видит все данные.
-
-**Миграции:**
-- `20260507000000_init` — базовая схема
-- `20260512000000_add_block_model` — модель `Block` и `BlockProgress`
-- `20260513000000_complete_schema` — `CREATE TABLE IF NOT EXISTS` для ~30 отсутствующих таблиц (восстановление для существующих/чистых БД)
-
-**TODO в схеме:**
-- `prisma/schema.prisma:111` — миграция `User.status` → enum `UserAccountStatus` отложена (затрагивает 20+ файлов)
-- `prisma/schema.prisma:678` — `LessonQuestion.status` → enum `QuestionStatus` отложена
-
----
-
-## 8. Скрипты и сидинг
-
-| Скрипт | Назначение | npm-команда |
-|---|---|---|
-| `scripts/create-users.ts` | 15 фиксированных тестовых пользователей с паролем `Password123!` | `npm run users:create` |
-| `scripts/create-demo-course.ts` | Демо-курс «Цифровая грамотность и ИИ для государственных служащих»: 6 модулей, 17 уроков, 6 квизов, 6 заданий, slug `ai-digital-literacy-gov`, 48 часов, sequential, PUBLISHED. Зачисляет student1–10, связывает observer c demo-project | `npm run course:create-demo` |
-| `scripts/reset-all.ts` | Сбрасывает пароль всем пользователям и активирует их (для отладки) | manual |
-| `scripts/provision-users.ts` | Bulk-провижн до 4000 студентов + 50 кураторов с CSV-credentials | `npm run users:provision` |
-
----
-
-## 9. Известные проблемы и долги
-
-### 9.1 Код
-| Тип | Кол-во | Где |
-|---|---|---|
-| TODO в `.ts/.tsx` | 4 | `prisma/schema.prisma:111`, `prisma/schema.prisma:678`, `server/modules/notifications/push.ts:28,40` |
-| FIXME | 0 | — |
-| `@deprecated` | 0 | — |
-| `: any` / `as any` | 0 | — (production source is `any`-free) |
-| `console.log` в `app`/`server`/`lib` | 0 | — (логи только в скриптах CLI) |
-
-### 9.2 Структурные долги (по приоритету)
-
-**P1 — должно быть до production:**
-1. **Observer scope не подключён.** `app/api/v1/reports/route.ts` и `server/modules/reports/service.ts` не фильтруют по `ObserverProject`/`ObserverCohort`. Заказчик может видеть данные не своих проектов.
-2. **`/api/v1/me` обновление профиля через server action `updateProfileSettingsAction`.** Сейчас обновляется только `name`, нет валидации Zod на `name` (например, max length).
-
-**P2 — нужно для beta:**
-3. **`NotificationPreference` без сервиса.** UI настроек нотификаций есть на 6 страницах, но ни одна не сохраняет переключатели. Нужен `server/modules/notifications/preferences.ts`.
-4. **`LessonRating` без API.** Компонент `components/lms/lesson-rating.tsx` готов, но нет `/api/v1/lessons/[lessonId]/rating` POST-роута.
-5. **Content-type allowlist на загрузках.** `app/api/v1/media/uploads/route.ts` принимает любой MIME.
-6. **Сертификат PDF без проверки доступа.** `GET /api/v1/certificates/[id]/pdf` не проверяет, что вызывающий — владелец, инструктор курса или admin.
-7. **Admin Settings (Feature Flags, SMTP, Сертификаты)** — UI есть, сохранение не работает.
-
-**P3 — backlog:**
-8. **Enum migration** для `User.status` и `LessonQuestion.status` (затрагивает 20+ мест).
-9. **Email-уведомления** о смене пароля / профиля.
-10. **Real-time нотификации** (WebSocket/SSE).
-11. **Performance & caching** — отсутствует кэширование `listCourses` и `getCourseForBuilder`.
-
-### 9.3 Инфраструктура
-- **Supabase free-tier** периодически ставит проект на паузу — нужен fallback на локальный PostgreSQL для CI.
-- **Sentry auth-token** не настроен — source maps и releases не загружаются.
-
----
-
-## 10. Документация
-
-| Файл | Строк | Статус |
-|---|---|---|
-| `docs/full-project-audit.md` | **этот файл** | свежий |
-| `docs/work-plan.md` | 79 | актуален (6/6 PR закрыты) |
-| `docs/update-log.md` | 465 | актуален, 15 датированных записей |
-| `docs/specification.md` | 156 | соответствует MVP |
-| `docs/security.md` | 45 | можно расширить разделом про PR-1 фиксы |
-| `docs/ux-unified-course-builder.md` | 260 | актуален |
-| `docs/ux-student-course-player.md` | 455 | актуален |
-| `docs/route-map-unified-ux.md` | 187 | актуален после PR-5 |
-| `docs/QUICKSTART.md` | 83 | требует обновления: добавить `npm run users:create` и `npm run course:create-demo` |
-| `docs/student-interaction-audit*.md` | 385+425 | исторические — оставить как есть |
-
----
-
-## 11. Рекомендации (Next 30 days)
-
-### Спринт 1 (неделя 1) — закрытие P1
-- **PR-7: Observer Scope Wiring** — подключить `ObserverProject`/`ObserverCohort` к `listReports`, `getCustomerObserverDashboard`, `app/api/v1/reports`. Без этого нельзя выпускать в production для заказчиков.
-- **PR-8: Notification Preferences Service** — `server/modules/notifications/preferences.ts` + 6 routes для `/api/v1/me/notifications` + wiring переключателей на settings-страницах.
-
-### Спринт 2 (неделя 2) — closing P2
-- **PR-9: Lesson Rating** — POST `/api/v1/lessons/[id]/rating`, вызвать из `lesson-rating.tsx`.
-- **PR-10: Upload Hardening** — content-type allowlist, max-size, virus scan placeholder.
-- **PR-11: Certificate Access Check** — `GET /api/v1/certificates/[id]/pdf` должен проверять owner/instructor/admin.
-- **PR-12: Admin Settings Wiring** — `AppSetting` уже есть в схеме; написать сервис и подключить feature-flags + SMTP + certificate-threshold.
-
-### Спринт 3 (неделя 3) — UX и DX
-- **QUICKSTART.md обновить** — добавить `users:create`, `course:create-demo`.
-- **CI** — добавить шаг `npm run users:create && npm run course:create-demo && npx playwright test` в GitHub Actions.
-- **Sentry** — настроить `SENTRY_AUTH_TOKEN`.
-
-### Спринт 4 (неделя 4) — Backlog
-- **Enum migration** (UserAccountStatus, QuestionStatus).
-- **Performance**: caching, indexes, query analysis.
-- **Email notifications**: password change, profile update.
-
----
-
-## 12. Итоговый статус MVP
-
-| Готовность | Оценка |
+| Контроль | Статус |
 |---|---|
-| Безопасность | 🟢 95% (все P0/P1 закрыты, осталось 3 P2-риска) |
-| Бэкенд | 🟢 90% (дедуплицирован, валидирован, скоупирован) |
-| UI/UX | 🟢 90% (все 6 ролей работают, settings подключены) |
-| Тесты | 🟢 80% (94 unit + 13 E2E готовы) |
-| Схема | 🟡 75% (модели созданы, но 4 PR-2 модели не wired) |
-| Документация | 🟢 90% (актуальна, есть пробелы) |
-| **Итог MVP** | **🟢 87%** |
+| Unauthenticated role cabinets | Redirect to `/login` |
+| Forbidden role access | Redirect/error to `/403` or guarded route denial |
+| Student data ownership | Scoped by current user/enrollment |
+| Instructor course ownership | Enforced on course/module/lesson/quiz/assignment mutations |
+| Curator-student relationship | Enforced on answer/review/forward/risk/chat actions |
+| Super-curator operational scope | Enforced for reports/questions/distribution baseline; needs v1 UX hardening |
+| Customer observer read-only | Enforced by RBAC and no mutation UI |
+| Customer observer private data scope | Explicit project/cohort scope only; no scope means no private data |
+| Certificate public verify | Public verification by code without role cabinet access |
+| Default notification channel | `in_app` |
+| Email notification | Only explicit `email` or `email_and_in_app` |
+| Service worker privacy | Authenticated navigation pages are not stored for offline replay |
 
-**Готово к закрытому бета-запуску для 1 пилотной группы.** Для коммерческого запуска необходимы PR-7 (observer scope) и PR-8 (notification preferences).
+---
+
+## 5. Product/UX Baseline
+
+The product direction remains:
+
+```text
+Course → Module → Block → Lesson → Content / Test / Assignment / Question / Rating / Completion
+```
+
+Current state after M-PR-04:
+
+- Course, Module, Block, Lesson exist in product/schema direction.
+- Student dashboard and course pages are usable.
+- Standalone quiz/assignment pages exist and are allowed as aggregators.
+- Dashboard continue-learning uses the next available lesson from the learning service.
+- Lesson player renders attached quizzes/assignments even for legacy lessons without explicit content blocks.
+- Rating, curator question, and completion content blocks are preserved by parsing and rendered in lesson context.
+- Standalone quiz/assignment pages and aggregators now prefer returning to the originating lesson/course context.
+- Curator and super-curator screens exist, but need stronger “what should I do next?” operational density.
+
+M-PR-05 and M-PR-06 should focus on role workflow quality, not on new product categories.
+
+---
+
+## 6. Release Verification
+
+Required release gate:
+
+```bash
+npm run verify:release
+```
+
+The command covers:
+
+- `npm run lint -- --max-warnings=0`
+- `npm run typecheck`
+- `npm run test`
+- `npx prisma validate`
+- `npm run db:generate`
+- `npm run build`
+- `npm run test:e2e`
+
+Known limitation:
+
+- Full `verify:release` requires a prepared database with `npm run users:create` and `npm run course:create-demo`.
+- Local non-E2E verification can pass, but production release remains blocked until Playwright role smoke passes on prepared staging/production-like data.
+
+---
+
+## 7. Current Open Risks
+
+| Priority | Risk | Why It Matters | Planned Package |
+|---|---|---|---|
+| P1 | Curator operations lack a strong single student/action card | Curator should see next action without hunting across pages | M-PR-05 |
+| P1 | Super-curator workload/risk operations need safer v1 UX | Load distribution and escalation must be scoped and actionable | M-PR-06 |
+| P2 | Reports/analytics need owner/scope/export discipline | Reports must support management decisions without data leakage | M-PR-08 |
+| P2 | Notification/audit coverage is incomplete for all core events | Enrollment, curator assignment, assignment review, certificate events need consistent records | M-PR-09 |
+| P3 | Status strings still need enum cleanup | Schema cleanup should happen in a separate downtime window | M-PR-10 |
+| P3 | Heavy dashboards/reports/chats need bounded query review | Production scale requires pagination/indexes/no unbounded queries | M-PR-11 |
+| P3 | Final production runbooks and rollback need rehearsal | Release candidate needs clear deploy/migration/rollback instructions | M-PR-12 |
+
+---
+
+## 8. Documentation State
+
+| Document | Status |
+|---|---|
+| `docs/specification.md` | Product baseline |
+| `docs/platform-functional-overview.md` | Functional product truth, no stack details |
+| `docs/work-plan.md` | Current modernization execution map |
+| `docs/update-log.md` | Current change log and decision record |
+| `docs/release-verification.md` | Release gate runbook |
+| `docs/student-interaction-audit-results.md` | Historical audit snapshot; use with `update-log` for current status |
+| `docs/ux-student-course-player.md` | Student course player direction |
+| `docs/ux-unified-course-builder.md` | Builder modernization direction |
+| `docs/route-map-unified-ux.md` | Route direction and compatibility map |
+
+Rule going forward: if an old audit table says a risk is open but `docs/update-log.md` and code show it closed, treat the old table as historical and update this audit/work-plan first.
+
+---
+
+## 9. Recommended Next Step
+
+Continue with **M-PR-05: Curator Operations v1**:
+
+- build a curator-facing student card with progress, deadlines, questions, assignments, risks, latest lesson context, and quick chat;
+- strengthen pending questions, pending assignments, and active risks queues;
+- keep all views scoped to assigned students.

@@ -51,6 +51,8 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
   }
 
   const passed = attempt.score >= quiz.passThreshold;
+  const courseHref = quiz.courseId ? `/student/courses/${quiz.courseId}` : "/student/my-courses";
+  const lessonHref = quiz.lessonId ? `/student/lessons/${quiz.lessonId}` : courseHref;
   const answers = attempt.answers as Record<string, string>;
   const correctCount = quiz.questions.filter((q) => {
     const studentAnswer = answers[q.id];
@@ -63,9 +65,9 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
     <AppShell role="student">
       <div className="mb-4">
         <Button asChild size="sm" variant="secondary">
-          <Link href={`/student/lessons/${quiz.lessonId}`}>
+          <Link href={lessonHref}>
             <ArrowLeft className="h-4 w-4" />
-            Назад к уроку
+            К уроку
           </Link>
         </Button>
       </div>
@@ -127,7 +129,7 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
             <div className="flex flex-col gap-3 pt-4">
               {passed ? (
                 <Button asChild className="w-full h-12 rounded-xl">
-                  <Link href={`/student/courses/${quiz.courseId}`}>Продолжить обучение</Link>
+                  <Link href={lessonHref}>Вернуться к уроку</Link>
                 </Button>
               ) : (
                 <Button asChild className="w-full h-12 rounded-xl">

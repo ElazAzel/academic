@@ -3,8 +3,10 @@ import { PageHeader } from "@/components/lms/page-header";
 import { StatusBadge } from "@/components/lms/status-badge";
 import type { BadgeStatus } from "@/components/lms/status-badge";
 import { EmptyState } from "@/components/lms/empty-state";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import { ArrowRight, FileText } from "lucide-react";
+import Link from "next/link";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getStudentAssignmentSubmissionsAction } from "@/server/actions/student";
 
@@ -28,8 +30,16 @@ export default async function StudentAssignmentsPage() {
         </div>
         <CardDescription>{sub.assignment.course?.title} {sub.assignment.lesson ? `· ${sub.assignment.lesson.title}` : ""}</CardDescription>
        </CardHeader>
-       <CardContent className="text-sm space-y-2">
-        <p>Отправлено: {sub.submittedAt.toLocaleDateString("ru-RU")}</p>
+       <CardContent className="space-y-3 text-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+         <p>Отправлено: {sub.submittedAt.toLocaleDateString("ru-RU")}</p>
+         <Button asChild size="sm" variant="secondary" className="w-full sm:w-auto">
+          <Link href={sub.assignment.lesson?.id ? `/student/lessons/${sub.assignment.lesson.id}` : `/student/assignments/${sub.assignment.id}`}>
+           {sub.assignment.lesson?.id ? "Открыть урок" : "Открыть задание"}
+           <ArrowRight className="h-4 w-4" />
+          </Link>
+         </Button>
+        </div>
         {sub.score !== null && <p>Оценка: {sub.score} / {sub.assignment.maxScore}</p>}
         {sub.feedback && (
          <div className="mt-2 p-3 bg-muted rounded-xl">

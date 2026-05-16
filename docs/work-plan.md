@@ -11,8 +11,8 @@
 |---|---|---|---|---|
 | M-PR-01 | P0 | Production Scope & Privacy Gate | green | Customer observer has no global certificate/report/dashboard fallback; admin keeps global access; student sees own data |
 | M-PR-02 | P0 | Release Verification Gate | green | `npm run verify:release` and `docs/release-verification.md` cover lint, typecheck, tests, build, Prisma validate/generate, Playwright role smoke |
-| M-PR-03 | P1 | Documentation Reconciliation | pending | `full-project-audit`, `work-plan`, `update-log` match current code and open risks |
-| M-PR-04 | P1 | Student Learning Flow Polish | pending | Main learning flow stays inside course/lesson context |
+| M-PR-03 | P1 | Documentation Reconciliation | green | `full-project-audit`, `work-plan`, `update-log` match current code and open risks; stale P0/P1 items are marked closed or historical |
+| M-PR-04 | P1 | Student Learning Flow Polish | green | Dashboard continue-learning uses next available lesson; legacy lesson quizzes/assignments/rating/question blocks stay inside lesson context; aggregators link back to lesson |
 | M-PR-05 | P1 | Curator Operations v1 | pending | Curator sees next actions across assigned students, questions, assignments, risks, and chat |
 | M-PR-06 | P1 | Super Curator Operations v1 | pending | Super curator manages workload and distribution within scope |
 | M-PR-07 | P2 | Course Builder Modernization | pending | Course can be built and published from unified builder |
@@ -36,7 +36,9 @@
 
 ---
 
-## Roadmap by PR
+## Historical Stabilization Roadmap
+
+Legacy PR-1 through PR-12 are complete and kept here as implementation history. Current delivery should use the 90-Day Modernization Execution table above.
 
 | PR | Priority | Title | Scope | Key Files | Acceptance Criteria |
 |---|---|---|---|---|---|
@@ -55,7 +57,7 @@
 
 ---
 
-## 7-Day Stabilization Plan
+## Completed 7-Day Stabilization Plan
 
 | Day | Task |
 |---|---|
@@ -69,7 +71,9 @@
 
 ---
 
-## 30-Day MVP Plan
+## Superseded 30-Day MVP Plan
+
+This plan has been superseded by the 90-day modernization sequence. Its remaining themes are mapped into M-PR-04 through M-PR-12.
 
 | Week | Focus |
 |---|---|
@@ -98,7 +102,7 @@
 
 - ❌ Full UI redesign / cosmetic changes
 - ❌ New stack or framework
-- ❌ Forum, AI, PWA, gamification, chat
+- ❌ Forum, AI recommendations, gamification, or broad chat/forum expansion beyond scoped curator support
 - ❌ Schema migration for enum drift (too breaking for now)
 - ❌ Stripe billing reactivation
 - ❌ Advanced video hosting/subtitles

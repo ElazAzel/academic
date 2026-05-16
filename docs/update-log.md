@@ -30,6 +30,49 @@ Living-документ для фиксации всех изменений, р�
 
 # Current Baseline
 
+## 2026-05-16 — M-PR-04 Student Learning Flow Polish
+
+- Author: Codex
+- Scope: fourth implementation package from the 90-day modernization plan.
+- Fixed:
+  - Student dashboard continue-learning now uses the learning service next available lesson instead of depending on existing `LessonProgress` rows.
+  - Course cards now keep current module/lesson context through `getStudentCourseCards`.
+  - Lesson player now embeds legacy lesson-attached quizzes and assignments even when the lesson has no explicit quiz/assignment content block.
+  - `parseContentBlocks` now preserves `rating`, `curator_question`, and `completion` blocks instead of converting them to empty text blocks.
+  - Lesson block rating/question fallback uses the current lesson id if block data does not carry one.
+  - Standalone quiz/assignment pages and quiz result page now prefer returning to the lesson/course context.
+  - Quiz and assignment aggregators now expose an action back to the originating lesson when one exists.
+- Tests added/updated:
+  - `tests/unit/learning-service.test.ts`
+- Validation:
+  - `npm run lint -- --max-warnings=0` — green
+  - `npm run typecheck` — green
+  - `npm run test -- tests/unit/learning-service.test.ts` — green
+  - `npm run test` — green, 271 tests / 45 files
+  - `npm run build` — green
+  - Local Playwright smoke on `http://localhost:3000` — student login, my-courses, lesson page, quiz/assignment aggregators; no 5xx responses
+- Status: green
+
+## 2026-05-16 — M-PR-03 Documentation Reconciliation and certificate 503 fallback
+
+- Author: Codex
+- Scope: third implementation package from the 90-day modernization plan plus production/debug fix for certificate-page 503 reports.
+- Fixed:
+  - Rewrote `docs/full-project-audit.md` as the current audit baseline instead of a stale PR-1..PR-6 snapshot.
+  - Updated `docs/work-plan.md` so M-PR-03 is green and the old PR roadmap is explicitly historical.
+  - Removed stale open-risk language for already closed items: observer scope, notification preferences, certificate revoke, enrollment pause/resume, certificate PDF access, upload MIME allowlist, lesson rating API, admin settings wiring, and scoped chat.
+  - Updated `public/sw.js` from cache v3 to v4.
+  - Service worker no longer caches authenticated navigation pages such as `/student/certificates` or `/customer-observer/certificates`.
+  - Navigation fallback now shows offline UI instead of returning a 503 document for role pages when the network request fails.
+- Production check:
+  - Vercel logs for `/student/certificates`, `/customer-observer/certificates`, and `/api/v1/certificates` showed 200 responses on the current deployment during verification; no recent 503/500 entries were found.
+- Validation:
+  - `npm run lint -- --max-warnings=0` — green
+  - `npm run typecheck` — green
+  - `npm run test` — green, 270 tests / 45 files
+  - `npm run build` — green
+- Status: green
+
 ## 2026-05-16 — M-PR-01 Production Scope & Privacy Gate
 
 - Author: Codex
@@ -483,7 +526,7 @@ Living-документ для фиксации всех изменений, р�
   - 4 deprecated route — pure redirects
   - 13 E2E тестов (6 smoke + 5 scope + 2 happy path)
   - 0 `console.log`, 0 `any`, 0 FIXME, 0 `@deprecated`, 4 TODO (2 в схеме, 2 в notifications)
-- Открытые риски: Observer scope не wired (P1), NotificationPreference/LessonRating без сервисов (P2), enum миграция отложена (P3)
+- Historical note: these open risks were current on 2026-05-13 but are now superseded by later entries. Observer scope, NotificationPreference, LessonRating, certificate PDF access, uploads, admin settings, revoke, pause/resume, and chat scope are closed; enum migration remains deferred to M-PR-10.
 - Итоговая MVP-готовность: **87%** (готов к закрытой бете)
 - Status: green
 
@@ -849,7 +892,8 @@ Living-документ для фиксации всех изменений, р�
 | Certificate revoke | green | DELETE endpoint with audit + already-revoked guard |
 | Enrollment pause/resume | green | Server actions toggle ACTIVE↔PAUSED with transition guards |
 | Student settings profile/password | green | Forms wired to server actions for name update and password change |
-| Student settings notifications | red | Requires notification preferences model (schema change deferred) |
+| Student settings notifications | green | NotificationPreference service/actions/API and settings forms are wired |
+| Service worker privacy/offline fallback | green | Authenticated navigation pages are not cached; navigation fallback no longer returns a 503 document |
 | Code naming/duplication/typing | yellow | Anti-vibecoding audit: 15 code smells, 11 UI smells, 8-PR cleanup plan created |
 | UI consistency (badge classes) | yellow | Badge CSS duplicated across 10+ files; `StatusBadge` component needed |
 | Content block typing | yellow | `lesson.content` uses `Record<string, unknown>` — needs discriminated union |

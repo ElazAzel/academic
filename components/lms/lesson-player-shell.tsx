@@ -37,6 +37,20 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
   const [progressPercent, setProgressPercent] = useState(lesson.progressPercent);
   const [savingProgress, setSavingProgress] = useState(false);
   const isCompleted = progressPercent >= 100;
+  const renderedQuizIds = new Set(
+    blocks
+      .filter((block) => block.type === "quiz")
+      .map((block) => block.data.quizId)
+      .filter(Boolean)
+  );
+  const renderedAssignmentIds = new Set(
+    blocks
+      .filter((block) => block.type === "assignment")
+      .map((block) => block.data.assignmentId)
+      .filter(Boolean)
+  );
+  const lessonQuizzes = quizDetails.filter((quiz) => !renderedQuizIds.has(quiz.id));
+  const lessonAssignments = assignmentDetails.filter((assignment) => !renderedAssignmentIds.has(assignment.id));
 
   const markCompleted = useCallback(async () => {
     setSavingProgress(true);
@@ -193,12 +207,12 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
                   return assignment ? <AssignmentBlock key={block.id} assignment={assignment} /> : null;
                 }
                 case "rating":
-                  return <LessonRating key={block.id} lessonId={block.data.lessonId} />;
+                  return <LessonRating key={block.id} lessonId={block.data.lessonId || lesson.id} />;
                 case "curator_question":
                   return session?.user?.id && curatorId ? (
                     <div key={block.id} className="space-y-3">
                       <h3 className="text-sm font-semibold">Чат с куратором {curatorName ? `(${curatorName})` : ""}</h3>
-                      <ChatPanel studentId={session.user.id} curatorId={curatorId} lessonId={block.data.lessonId} />
+                      <ChatPanel studentId={session.user.id} curatorId={curatorId} lessonId={block.data.lessonId || lesson.id} />
                     </div>
                   ) : null;
                 case "completion":
@@ -218,6 +232,24 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
                 {lesson.summary || "Материалы урока пока не опубликованы."}
               </div>
             )
+          )}
+
+          {lessonQuizzes.length > 0 && (
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold">Тест урока</h3>
+              {lessonQuizzes.map((quiz) => (
+                <QuizBlock key={quiz.id} quiz={quiz} />
+              ))}
+            </section>
+          )}
+
+          {lessonAssignments.length > 0 && (
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold">Задание урока</h3>
+              {lessonAssignments.map((assignment) => (
+                <AssignmentBlock key={assignment.id} assignment={assignment} />
+              ))}
+            </section>
           )}
 
           {/* Materials section (legacy media files) */}

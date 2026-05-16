@@ -29,13 +29,16 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
    throw error;
   }
 
+ const courseHref = assignment.courseId ? `/student/courses/${assignment.courseId}` : "/student/my-courses";
+ const lessonHref = assignment.lessonId ? `/student/lessons/${assignment.lessonId}` : courseHref;
+
  return (
   <AppShell role="student">
    <div className="mb-4">
     <Button asChild size="sm" variant="secondary">
-     <Link href={`/student/lessons/${assignment.lessonId}`}>
+     <Link href={lessonHref}>
       <ArrowLeft className="h-4 w-4"/>
-      Назад к уроку
+      {assignment.lessonId ? "Назад к уроку" : "Назад к курсу"}
      </Link>
     </Button>
    </div>

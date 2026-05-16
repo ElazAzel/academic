@@ -416,6 +416,12 @@ function parseContentBlock(block: Record<string, unknown>, legacyFallback: strin
       return { id: (block.id as string) ?? crypto.randomUUID(), type: "quiz", data: { quizId: (data.quizId as string) ?? "" } };
     case "assignment":
       return { id: (block.id as string) ?? crypto.randomUUID(), type: "assignment", data: { assignmentId: (data.assignmentId as string) ?? "" } };
+    case "rating":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "rating", data: { lessonId: (data.lessonId as string) ?? "" } };
+    case "curator_question":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "curator_question", data: { lessonId: (data.lessonId as string) ?? "" } };
+    case "completion":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "completion", data: { label: data.label as string | undefined } };
     default:
       return { id: (block.id as string) ?? crypto.randomUUID(), type: "text", data: { html: "" } };
   }

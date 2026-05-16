@@ -4,10 +4,9 @@ import { withQueryFallback } from "./shared";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
+import { getContinueLearning, getStudentCourseCards } from "@/server/modules/learning/service";
 import type {
-  ContinueLearning,
   DashboardMetric,
-  StudentProgress,
   QuestionFromStudent,
   CohortDeadline,
 } from "@/types/domain";
@@ -18,7 +17,7 @@ export async function getStudentDashboard() {
   if (!user) return null;
 
   return withQueryFallback(async () => {
-    const [enrollments, lastProgress, questions, certificatesCount] = await Promise.all([
+    const [enrollments, coursesProgress, continueLearning, questions, certificatesCount] = await Promise.all([
       prisma.enrollment.findMany({
         where: { userId: user.id, status: "ACTIVE" },
         include: {
@@ -27,11 +26,8 @@ export async function getStudentDashboard() {
           cohort: { include: { deadlines: { include: { module: true } } } },
         },
       }),
-      prisma.lessonProgress.findFirst({
-        where: { userId: user.id, status: { in: ["IN_PROGRESS", "NOT_STARTED"] } },
-        orderBy: { updatedAt: "desc" },
-        include: { lesson: { include: { module: { include: { course: true } } } } },
-      }),
+      getStudentCourseCards(user.id),
+      getContinueLearning(user.id),
       prisma.lessonQuestion.findMany({
         where: { studentId: user.id },
         orderBy: { createdAt: "desc" },
@@ -42,41 +38,6 @@ export async function getStudentDashboard() {
       }),
       prisma.certificate.count({ where: { userId: user.id } })
     ]);
-
-    const coursesProgress: StudentProgress[] = enrollments.map((e) => {
-      const cp = e.courseProgress[0];
-      return {
-        courseId: e.course.id,
-        courseTitle: e.course.title,
-        percent: cp?.percent ?? 0,
-        status: (cp?.status as StudentProgress["status"]) ?? "NOT_STARTED",
-      };
-    });
-
-    let continueLearning: ContinueLearning | null = null;
-    if (lastProgress) {
-      const lesson = lastProgress.lesson;
-      const course = lesson.module.course;
-
-      const [cp, mp] = await Promise.all([
-        prisma.courseProgress.findUnique({
-          where: { userId_courseId: { userId: user.id, courseId: course.id } },
-        }),
-        prisma.moduleProgress.findUnique({
-          where: { userId_moduleId: { userId: user.id, moduleId: lesson.moduleId } },
-        })
-      ]);
-
-      continueLearning = {
-        courseId: course.id,
-        courseTitle: course.title,
-        moduleTitle: lesson.module.title,
-        lessonId: lesson.id,
-        lessonTitle: lesson.title,
-        coursePercent: cp?.percent ?? 0,
-        modulePercent: mp?.percent ?? 0,
-      };
-    }
 
     const formattedQuestions: QuestionFromStudent[] = questions.map((q) => ({
       id: q.id,
