@@ -3,24 +3,19 @@ import { getPrisma } from "@/lib/prisma";
 const prisma = getPrisma();
 
 export interface ObserverScope {
-  /** Observer has no project/cohort restrictions configured — sees all data. */
+  /** Reserved for an explicit future all-data observer mode. Default production behavior is scoped-only. */
   isUnrestricted: boolean;
-  /** Project IDs the observer is linked to (via ObserverProject). */
+  /** Project IDs the observer is linked to via ObserverProject. */
   projectIds: string[];
-  /** Cohort IDs the observer can view (direct ObserverCohort + cohorts of linked projects). */
+  /** Cohort IDs the observer can view through direct ObserverCohort links and linked projects. */
   cohortIds: string[];
 }
 
 /**
- * Resolve observer scope: which projects and cohorts they may view.
+ * Resolve which projects and cohorts a customer observer may view.
  *
- * Rules:
- *  - If the observer has neither `ObserverProject` nor `ObserverCohort` rows,
- *    they are treated as `isUnrestricted` (legacy behaviour for not-yet-onboarded
- *    accounts). This keeps existing demo data working while we roll out the model.
- *  - If they have one or more rows, scope is restricted to the union of:
- *      * cohorts directly linked via `ObserverCohort`
- *      * cohorts whose `projectId` matches an `ObserverProject` link
+ * Production privacy rule: no ObserverProject/ObserverCohort links means no
+ * private student, certificate, or report data is visible.
  */
 export async function getObserverScope(observerId: string): Promise<ObserverScope> {
   const [projectLinks, cohortLinks] = await Promise.all([
@@ -38,7 +33,7 @@ export async function getObserverScope(observerId: string): Promise<ObserverScop
   const directCohortIds = cohortLinks.map((c) => c.cohortId);
 
   if (projectIds.length === 0 && directCohortIds.length === 0) {
-    return { isUnrestricted: true, projectIds: [], cohortIds: [] };
+    return { isUnrestricted: false, projectIds: [], cohortIds: [] };
   }
 
   let projectCohortIds: string[] = [];
@@ -56,13 +51,11 @@ export async function getObserverScope(observerId: string): Promise<ObserverScop
 }
 
 /**
- * Return the list of student userIds an observer may see in reports/exports.
- * Returns `undefined` when scope is unrestricted (caller should treat as "all").
- * Returns `[]` when scope is restricted but resolves to no cohorts (no data visible).
+ * Return the student userIds an observer may see in reports/exports.
+ * Returns [] when no explicit scope is configured or scope resolves to no cohorts.
  */
 export async function getScopedStudentIdsForObserver(observerId: string): Promise<string[] | undefined> {
   const scope = await getObserverScope(observerId);
-  if (scope.isUnrestricted) return undefined;
   if (scope.cohortIds.length === 0) return [];
 
   const enrollments = await prisma.enrollment.findMany({

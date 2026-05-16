@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { errorResponse, ApiError, parseJson } from "@/lib/http";
 import { generateCertificatePdf } from "@/server/modules/certificates/service";
+import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 import archiver from "archiver";
 import { z } from "zod";
 
@@ -14,15 +15,21 @@ const bulkSchema = z.object({
 export async function POST(request: Request) {
   try {
     const user = await requireUser();
-    if (!user.roles.includes("admin") && !user.roles.includes("customer_observer")) {
+    const isAdmin = user.roles.includes("admin");
+    const isObserver = user.roles.includes("customer_observer");
+    if (!isAdmin && !isObserver) {
       throw new ApiError("forbidden", "Только администратор или заказчик может скачивать сертификаты массово", 403);
     }
 
     const body = await parseJson(request, bulkSchema);
     const { certificateIds } = body;
+    const scopedStudentIds = isObserver ? await getScopedStudentIdsForObserver(user.id) : undefined;
 
     const certs = await prisma.certificate.findMany({
-      where: { id: { in: certificateIds } },
+      where: {
+        id: { in: certificateIds },
+        ...(isObserver ? { userId: { in: scopedStudentIds ?? [] } } : {}),
+      },
       select: {
         id: true,
         number: true,

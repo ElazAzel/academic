@@ -19,7 +19,8 @@
     "users:provision": "tsx scripts/provision-users.ts",
     "users:create": "tsx scripts/create-users.ts",
     "course:create-demo": "tsx scripts/create-demo-course.ts",
-    "verify": "npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npm run build"
+    "verify": "npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npm run build",
+    "verify:release": "npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npx prisma validate && npm run db:generate && npm run build && npm run test:e2e"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1045.0",
