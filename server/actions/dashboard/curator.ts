@@ -1,6 +1,6 @@
 "use server";
 
-import { safeQuery, getStudentAnalyticsDetail } from "./shared";
+import { withQueryFallback, getStudentAnalyticsDetail } from "./shared";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
@@ -26,7 +26,7 @@ export async function getCuratorDashboard() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  return safeQuery(async () => {
+  return withQueryFallback(async () => {
     const assignments = await prisma.curatorAssignment.findMany({
       where: { curatorId: user.id, active: true },
       select: { studentId: true, cohort: { select: { id: true, name: true, courseId: true, course: { select: { title: true } } } } },
@@ -114,7 +114,7 @@ export async function getCuratorStudents() {
   const user = await getCurrentUser();
   if (!user) return [];
 
-  return safeQuery(async () => {
+  return withQueryFallback(async () => {
     const assignments = await prisma.curatorAssignment.findMany({
       where: { curatorId: user.id, active: true },
       include: {
@@ -154,7 +154,7 @@ export async function getCuratorQuestions(status: "OPEN" | "ANSWERED" = "OPEN") 
   const user = await getCurrentUser();
   if (!user) return [];
 
-  return safeQuery(async () => {
+  return withQueryFallback(async () => {
     const questions = await prisma.lessonQuestion.findMany({
       where: { curatorId: user.id, status },
       orderBy: { createdAt: "desc" },
@@ -184,7 +184,7 @@ export async function getCuratorStudentAnalytics(): Promise<StudentAnalyticsDeta
   const user = await getCurrentUser();
   if (!user) return [];
 
-  return safeQuery(async () => {
+  return withQueryFallback(async () => {
     const assignments = await prisma.curatorAssignment.findMany({
       where: { curatorId: user.id, active: true },
       select: { studentId: true },
