@@ -103,8 +103,12 @@ export function ChatPanel({
       queryClient.setQueryData<ChatMessage[]>(queryKey, (old) => [...(old ?? []), optimistic]);
       return { previous };
     },
-    onError: (_err, _formData, context) => {
+    onError: (err, formData, context) => {
       isSendingRef.current = false;
+      const failedText = formData.get("text") as string;
+      if (failedText && !failedText.startsWith("[Изображение]")) {
+        setText(failedText);
+      }
       queryClient.setQueryData<ChatMessage[]>(queryKey, (old) =>
         (old ?? []).filter((m) => !m.id.startsWith("optimistic-"))
       );
@@ -136,10 +140,12 @@ export function ChatPanel({
     setShowEmojiPicker(false);
   }
 
-  function handleSend(formData: FormData) {
+  function handleSend(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     if (isSendingRef.current) return;
     if (!text.trim()) return;
     isSendingRef.current = true;
+    const formData = new FormData();
     formData.set("text", text);
     if (lessonId) formData.set("lessonId", lessonId);
     if (curatorId) formData.set("receiverId", curatorId);
@@ -173,8 +179,8 @@ export function ChatPanel({
       toast.error("Файл слишком большой. Максимум 15MB");
       return;
     }
-    if (!["image/png", "image/jpeg", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"].includes(file.type)) {
-      toast.error("Формат не поддерживается. Разрешены: PNG, JPEG, PDF, DOC, DOCX, TXT");
+    if (!["image/png", "image/jpeg", "image/gif", "image/webp", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"].includes(file.type)) {
+      toast.error("Формат не поддерживается. Разрешены: PNG, JPEG, GIF, WebP, PDF, DOC, DOCX, TXT");
       return;
     }
     setUploading(true);
@@ -188,7 +194,26 @@ export function ChatPanel({
       if (curatorId) formData.set("receiverId", curatorId);
       sendMutation.mutate(formData);
     } catch {
-      toast.error("Ошибка загрузки файла");
+      // Fallback: для маленьких изображений используем base64
+      if (file.type.startsWith("image/") && file.size < 500 * 1024) {
+        try {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const formData = new FormData();
+            formData.set("text", `[Изображение]`);
+            formData.set("attachmentUrl", reader.result as string);
+            formData.set("attachmentType", file.type);
+            if (lessonId) formData.set("lessonId", lessonId);
+            if (curatorId) formData.set("receiverId", curatorId);
+            sendMutation.mutate(formData);
+          };
+          reader.readAsDataURL(file);
+          return;
+        } catch {
+          // ignore, fall through to error
+        }
+      }
+      toast.error("Ошибка загрузки файла. Хранилище недоступно.");
     } finally {
       setUploading(false);
     }
@@ -213,14 +238,22 @@ export function ChatPanel({
           <div key={m.id} className={`flex ${m.isMine ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.isMine ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
               {m.text && <p className="text-sm">{m.text}</p>}
-              {m.attachmentUrl && (
+              {m.attachmentUrl && m.attachmentType?.includes("image") ? (
+                <img
+                  src={m.attachmentUrl}
+                  alt="Вложение"
+                  className="mt-2 max-w-full rounded-lg border"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              ) : m.attachmentUrl ? (
                 <a href={m.attachmentUrl} target="_blank" rel="noreferrer" className={`block mt-1 text-xs underline ${m.isMine ? "text-primary-foreground/80" : "text-primary"}`}>
-                  📎 {m.attachmentType?.includes("image") ? "Изображение"
-                    : m.attachmentType?.includes("pdf") ? "PDF"
+                  📎 {m.attachmentType?.includes("pdf") ? "PDF"
                     : m.attachmentType?.includes("word") || m.attachmentType?.includes("document") ? "Документ"
                     : "Файл"}
                 </a>
-              )}
+              ) : null}
               <p className={`text-[10px] mt-1 ${m.isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                 {new Date(m.createdAt).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })}
                 {m.id.startsWith("optimistic-") && sendMutation.isPending && " · отправляется..."}
@@ -263,7 +296,7 @@ export function ChatPanel({
             ))}
           </div>
         )}
-        <form action={handleSend} className="flex items-center gap-2">
+        <form onSubmit={handleSend} className="flex items-center gap-2">
           <input
             type="file"
             ref={fileInputRef}
