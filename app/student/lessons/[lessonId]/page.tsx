@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/http";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getStudentLessonPlayerDetail } from "@/server/modules/learning/service";
 import { FORBIDDEN_ROUTE } from "@/lib/constants";
+import { logProtectedContentAccess } from "@/server/modules/security/content-protection-server";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +26,15 @@ export default async function StudentLessonPage({ params }: { params: Promise<{ 
     throw error;
   }
 
+  await logProtectedContentAccess({
+    userId: user.id,
+    lessonId,
+    courseId: detail.lesson.courseId,
+  });
+
   return (
     <AppShell role="student">
-      <LessonPlayerShell detail={detail} />
+      <LessonPlayerShell detail={detail} user={user} />
     </AppShell>
   );
 }

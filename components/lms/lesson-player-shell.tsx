@@ -16,6 +16,7 @@ import { QuizBlock } from "@/components/lms/quiz-block";
 import { AssignmentBlock } from "@/components/lms/assignment-block";
 import { LessonRating } from "@/components/lms/lesson-rating";
 import { LessonNavigation } from "@/components/lms/lesson-navigation";
+import { ProtectedContentShell } from "@/components/lms/security/protected-content-shell";
 import dynamic from "next/dynamic";
 import type { StudentLessonPlayerDetail } from "@/types/domain";
 
@@ -29,7 +30,7 @@ const ChatPanel = dynamic(
   { ssr: false },
 );
 
-export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetail }) {
+export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlayerDetail; user: { id: string; name?: string | null; email: string } }) {
   const router = useRouter();
   const { data: session } = useSession();
   const { lesson, blocks, courseTree, quizDetails, assignmentDetails, curatorId, curatorName } = detail;
@@ -59,12 +60,25 @@ export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetai
     }
   }, [lesson.id, router]);
 
+  const handleVideoProgress = useCallback((percent: number) => {
+    if (percent >= 100 && !isCompleted) {
+      markCompleted();
+    } else if (percent > progressPercent) {
+      setProgressPercent(percent);
+    }
+  }, [progressPercent, isCompleted, markCompleted]);
+
   // Determine if we have a videoUrl at the lesson level (legacy) or as a block
   const legacyVideoUrl = lesson.videoUrl;
   const hasContentBlocks = blocks.length > 0;
 
   return (
-    <>
+    <ProtectedContentShell
+      user={user}
+      courseId={lesson.courseId}
+      lessonId={lesson.id}
+      protectionLevel="standard"
+    >
       {/* Top bar */}
       <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 bg-background/80 backdrop-blur-md border-b">
         <div className="flex items-center justify-between gap-2">
@@ -157,19 +171,42 @@ export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetai
         <div className="space-y-6">
           {/* Legacy video (if no blocks) */}
           {!hasContentBlocks && legacyVideoUrl && (
-            <VideoBlock url={legacyVideoUrl} title={lesson.title} duration={lesson.durationMinutes} />
+            <VideoBlock videoUrl={legacyVideoUrl} title={lesson.title} duration={lesson.durationMinutes} onProgress={handleVideoProgress} />
           )}
 
           {/* Render blocks from content.blocks */}
           {hasContentBlocks ? (
-            blocks.map((block, i) => {
+            blocks.map((block) => {
               switch (block.type) {
                 case "video":
-                  return <VideoBlock key={i} url={block.data.videoUrl || legacyVideoUrl || ""} title={block.data.title} duration={block.data.duration} />;
+                  return <VideoBlock key={block.id} video={block.data.video} videoUrl={block.data.videoUrl || legacyVideoUrl || ""} title={block.data.title} onProgress={handleVideoProgress} />;
                 case "text":
-                  return <TextBlock key={i} html={block.data.html} />;
+                  return <TextBlock key={block.id} html={block.data.html} />;
                 case "file":
-                  return <FileBlock key={i} url={block.data.url} filename={block.data.filename} fileType={block.data.fileType} />;
+                  return <FileBlock key={block.id} url={block.data.url} filename={block.data.filename} fileType={block.data.fileType} lessonId={lesson.id} useSignedUrl />;
+                case "quiz": {
+                  const quiz = quizDetails.find((q) => q.id === block.data.quizId);
+                  return quiz ? <QuizBlock key={block.id} quiz={quiz} /> : null;
+                }
+                case "assignment": {
+                  const assignment = assignmentDetails.find((a) => a.id === block.data.assignmentId);
+                  return assignment ? <AssignmentBlock key={block.id} assignment={assignment} /> : null;
+                }
+                case "rating":
+                  return <LessonRating key={block.id} lessonId={block.data.lessonId} />;
+                case "curator_question":
+                  return session?.user?.id && curatorId ? (
+                    <div key={block.id} className="space-y-3">
+                      <h3 className="text-sm font-semibold">Чат с куратором {curatorName ? `(${curatorName})` : ""}</h3>
+                      <ChatPanel studentId={session.user.id} curatorId={curatorId} lessonId={block.data.lessonId} />
+                    </div>
+                  ) : null;
+                case "completion":
+                  return (
+                    <div key={block.id} className="rounded-2xl border bg-card p-6 text-center shadow-sm">
+                      <p className="text-sm text-muted-foreground">{block.data.label ?? "Урок завершён"}</p>
+                    </div>
+                  );
                 default:
                   return null;
               }
@@ -189,29 +226,9 @@ export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetai
               <h3 className="text-sm font-semibold">Материалы</h3>
               <div className="grid gap-2 sm:grid-cols-2">
                 {lesson.media.map((item) => (
-                  <FileBlock key={item.id} url={item.url} filename={item.filename ?? undefined} fileType={item.type} />
+                  <FileBlock key={item.id} url={item.url} filename={item.filename ?? undefined} fileType={item.type} lessonId={lesson.id} mediaId={item.id} useSignedUrl />
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* Embedded quizzes */}
-          {quizDetails.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Тесты ({quizDetails.length})</h3>
-              {quizDetails.map((q) => (
-                <QuizBlock key={q.id} quiz={q} />
-              ))}
-            </div>
-          )}
-
-          {/* Embedded assignments */}
-          {assignmentDetails.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Задания ({assignmentDetails.length})</h3>
-              {assignmentDetails.map((a) => (
-                <AssignmentBlock key={a.id} assignment={a} />
-              ))}
             </div>
           )}
 
@@ -230,6 +247,6 @@ export function LessonPlayerShell({ detail }: { detail: StudentLessonPlayerDetai
           <LessonNavigation prevLesson={lesson.prevLesson} nextLesson={lesson.nextLesson} />
         </div>
       </div>
-    </>
+    </ProtectedContentShell>
   );
 }

@@ -152,9 +152,25 @@ export interface LessonDetail extends LessonSummary {
 // ── Блоки контента урока (Discriminated Union) ──────────────────────
 export type ContentBlockType = "video" | "text" | "file" | "quiz" | "assignment" | "rating" | "curator_question" | "completion";
 
+export type VideoProvider = "youtube" | "bunny" | "mux" | "cloudflare" | "peertube";
+
+export interface LessonVideo {
+  provider: VideoProvider;
+  providerVideoId: string;
+  originalUrl?: string;
+  embedUrl?: string;
+  thumbnailUrl?: string;
+  durationSeconds?: number;
+  isPrivate: boolean;
+}
+
 export interface VideoBlockData {
-  videoUrl: string;
+  /** Новая структурированная информация о видео */
+  video?: LessonVideo;
+  /** @deprecated Используйте `video` */
+  videoUrl?: string;
   title?: string;
+  /** @deprecated Длительность в минутах (legacy) */
   duration?: number;
 }
 

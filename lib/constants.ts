@@ -216,6 +216,23 @@ export const DASHBOARD = {
   CURATOR_RISK_STUDENTS_THRESHOLD: 3,
 } as const;
 
+// ── Content Protection ──────────────────────────────────────────────
+
+export const CONTENT_PROTECTION = {
+  WATERMARK_POSITION_INTERVAL_MS: 15000,
+  WATERMARK_OPACITY_MIN: 0.12,
+  WATERMARK_OPACITY_MAX: 0.22,
+  WATERMARK_POSITIONS: ["top-left", "top-right", "center", "bottom-left", "bottom-right"] as const,
+  SIGNED_URL_TTL_STANDARD_SECONDS: 900,
+  SIGNED_URL_TTL_STRICT_SECONDS: 180,
+  SUSPICIOUS_REQUEST_THRESHOLD: 10,
+  SUSPICIOUS_REQUEST_WINDOW_MINUTES: 5,
+  SUSPICIOUS_USER_AGENT_THRESHOLD: 3,
+  SUSPICIOUS_USER_AGENT_WINDOW_MINUTES: 30,
+  SUSPICIOUS_FORBIDDEN_MEDIA_THRESHOLD: 3,
+  SUSPICIOUS_FORBIDDEN_MEDIA_WINDOW_MINUTES: 10,
+} as const;
+
 // ── Прогресс (required-only completion) ───────────────────────────────
 
 export function calculateProgressPercent(completedCount: number, totalCount: number): number {

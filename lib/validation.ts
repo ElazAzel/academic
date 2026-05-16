@@ -93,11 +93,22 @@ export const courseBuilderSettingsSchema = z.object({
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional()
 });
 
-// Discriminated union schemas for each block type
+// ── Video provider schemas ──────────────────────────────────────────
+export const lessonVideoSchema = z.object({
+  provider: z.enum(["youtube", "bunny", "mux", "cloudflare", "peertube"]),
+  providerVideoId: z.string().min(1, "ID видео обязателен"),
+  originalUrl: z.string().optional(),
+  embedUrl: z.string().optional(),
+  thumbnailUrl: z.string().optional(),
+  durationSeconds: z.number().optional(),
+  isPrivate: z.boolean(),
+});
+
 export const videoBlockDataSchema = z.object({
+  video: lessonVideoSchema.optional(),
+  /** @deprecated Используйте `video` */
   videoUrl: z.string().default(""),
   title: z.string().optional(),
-  duration: z.number().optional(),
 });
 
 export const textBlockDataSchema = z.object({

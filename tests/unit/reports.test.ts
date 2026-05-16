@@ -61,7 +61,7 @@ describe("generateProgressCsv", () => {
 
   it("contains overall summary", () => {
     const csv = generateProgressCsv(rows);
-    expect(csv).toContain("ОБЩАЯ СВОДКА");
+    expect(csv).toContain("=== СВОДКА ===");
     expect(csv).toContain("Всего записей: 2");
     expect(csv).toContain("Завершили курс: 1");
   });
@@ -86,13 +86,13 @@ describe("generateRiskCsv", () => {
 
   it("counts critical and high risks", () => {
     const csv = generateRiskCsv(rows);
-    expect(csv).toContain("Критических рисков: 1");
-    expect(csv).toContain("Высоких рисков: 1");
+    expect(csv).toContain("Критических,1");
+    expect(csv).toContain("Высоких,1");
   });
 
   it("handles empty rows", () => {
     const csv = generateRiskCsv([]);
-    expect(csv).toContain("Всего рисков: 0");
+    expect(csv).toContain("Всего рисков,0");
   });
 });
 
@@ -116,7 +116,7 @@ describe("generateCertificateCsv", () => {
 
   it("handles empty rows", () => {
     const csv = generateCertificateCsv([]);
-    expect(csv).toContain("Всего выдано: 0");
+    expect(csv).toContain("Всего сертификатов,0");
   });
 });
 

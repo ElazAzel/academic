@@ -10,6 +10,7 @@ import type {
   ContentBlock,
   ContinueLearning,
   LessonLearningSummary,
+  LessonVideo,
   LessonPlayerCard,
   ModuleLearningDetail,
   ModulePlayerDetail,
@@ -399,8 +400,14 @@ function parseContentBlock(block: Record<string, unknown>, legacyFallback: strin
   const data = block.data as Record<string, unknown> ?? {};
 
   switch (type) {
-    case "video":
+    case "video": {
+      const videoData = data.video as Record<string, unknown> | undefined;
+      const hasStructuredVideo = videoData && typeof videoData.provider === "string" && typeof videoData.providerVideoId === "string";
+      if (hasStructuredVideo) {
+        return { id: (block.id as string) ?? crypto.randomUUID(), type: "video", data: { video: videoData as unknown as LessonVideo, title: data.title as string } };
+      }
       return { id: (block.id as string) ?? crypto.randomUUID(), type: "video", data: { videoUrl: (data.videoUrl as string) ?? legacyFallback, title: data.title as string, duration: data.duration as number } };
+    }
     case "text":
       return { id: (block.id as string) ?? crypto.randomUUID(), type: "text", data: { html: (data.html as string) ?? "" } };
     case "file":
