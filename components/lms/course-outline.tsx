@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { GripVertical, Plus, ChevronRight, ChevronDown, FileText, Video, HelpCircle, CheckSquare, Trash2 } from "lucide-react";
+import { Plus, ChevronRight, ChevronDown, FileText, Video, HelpCircle, CheckSquare, Trash2, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { BuilderModuleDetail } from "@/types/domain";
+import type { BuilderModuleDetail, BuilderBlockDetail } from "@/types/domain";
 
 type SelectedNode =
   | { type: "course" }
   | { type: "module"; moduleId: string }
-  | { type: "lesson"; moduleId: string; lessonId: string };
+  | { type: "block"; moduleId: string; blockId: string }
+  | { type: "lesson"; moduleId: string; blockId?: string; lessonId: string };
 
 const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   VIDEO: Video,
@@ -21,15 +22,6 @@ const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   RECORDING: Video,
   MIXED: FileText,
 };
-
-// const LESSON_TYPE_OPTIONS = [ // kept for future use
-//   { value: "MIXED", label: "Смешанный" },
-//   { value: "VIDEO", label: "Видео" },
-//   { value: "TEXT", label: "Текст" },
-//   { value: "DOCUMENT", label: "Документ" },
-//   { value: "QUIZ", label: "Тест" },
-//   { value: "ASSIGNMENT", label: "Задание" },
-// ];
 
 export function CourseOutline({
   modules,
@@ -45,10 +37,10 @@ export function CourseOutline({
   onModulesChange: (modules: BuilderModuleDetail[]) => void;
 }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const [dragOverModuleId, setDragOverModuleId] = useState<string | null>(null);
-  const dragItem = useRef<{ type: "module"; index: number } | { type: "lesson"; moduleIndex: number; lessonIndex: number } | null>(null);
+  const dragItem = useRef<{ type: "module" | "block" | "lesson"; moduleIndex: number; blockIndex?: number; lessonIndex?: number } | null>(null);
+  void dragItem; // used for future drag-and-drop
 
-  const toggleModule = useCallback((id: string) => {
+  const toggleCollapse = useCallback((id: string) => {
     setCollapsed((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -56,6 +48,8 @@ export function CourseOutline({
       return next;
     });
   }, []);
+
+  // ── API helpers ────────────────────────────────────────────────
 
   const addModule = useCallback(async () => {
     const title = `Модуль ${modules.length + 1}`;
@@ -67,26 +61,73 @@ export function CourseOutline({
       });
       if (res.ok) {
         const data = await res.json();
-        const newModule: BuilderModuleDetail = { id: data.data?.id ?? data.id, order: modules.length, title, description: null, recommendedDays: 7, status: "DRAFT", lessons: [] };
+        const newModule: BuilderModuleDetail = {
+          id: data.data?.id ?? data.id, order: modules.length, title, description: null,
+          recommendedDays: 7, status: "DRAFT", blocks: [], lessons: [],
+        };
         onModulesChange([...modules, newModule]);
       }
     } catch {}
   }, [courseId, modules, onModulesChange]);
 
-  const addLesson = useCallback(async (moduleId: string, moduleIndex: number) => {
-    const title = `Урок ${modules[moduleIndex].lessons.length + 1}`;
-    const type = "MIXED";
+  const addBlock = useCallback(async (moduleId: string, moduleIndex: number) => {
+    const title = `Блок ${(modules[moduleIndex]?.blocks?.length ?? 0) + 1}`;
+    try {
+      const res = await fetch(`/api/v1/modules/${moduleId}/blocks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, order: modules[moduleIndex]?.blocks?.length ?? 0 }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const newBlock: BuilderBlockDetail = {
+          id: data.data?.id ?? data.id, order: modules[moduleIndex]?.blocks?.length ?? 0,
+          title, description: null, lessons: [],
+        };
+        const updated = [...modules];
+        updated[moduleIndex] = {
+          ...updated[moduleIndex],
+          blocks: [...(updated[moduleIndex].blocks ?? []), newBlock],
+        };
+        onModulesChange(updated);
+      }
+    } catch {}
+  }, [modules, onModulesChange]);
+
+  const addLesson = useCallback(async (moduleId: string, moduleIndex: number, blockId?: string) => {
+    const blocks = modules[moduleIndex]?.blocks ?? [];
+    const block = blockId ? blocks.find((b) => b.id === blockId) : null;
+    const lessonsInTarget = block ? block.lessons : (modules[moduleIndex]?.lessons ?? []);
+    const title = `Урок ${lessonsInTarget.length + 1}`;
     try {
       const res = await fetch(`/api/v1/modules/${moduleId}/lessons`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, type, order: modules[moduleIndex].lessons.length, durationMinutes: 30, isRequired: true }),
+        body: JSON.stringify({
+          title, type: "MIXED", order: lessonsInTarget.length,
+          durationMinutes: 30, isRequired: true, blockId: blockId ?? null,
+        }),
       });
       if (res.ok) {
         const data = await res.json();
-        const newLesson = { id: data.data?.id ?? data.id, order: modules[moduleIndex].lessons.length, title, type: type as BuilderModuleDetail["lessons"][number]["type"], summary: null, durationMinutes: 30, isRequired: true, content: {}, videoUrl: null, quizzes: [], assignments: [] };
+        const newLesson = {
+          id: data.data?.id ?? data.id, order: lessonsInTarget.length, title,
+          type: "MIXED" as const, summary: null, durationMinutes: 30, isRequired: true,
+          content: {}, videoUrl: null, quizzes: [], assignments: [], blockId: blockId ?? null,
+        };
         const updated = [...modules];
-        updated[moduleIndex] = { ...updated[moduleIndex], lessons: [...updated[moduleIndex].lessons, newLesson] };
+        if (blockId) {
+          const bi = blocks.findIndex((b) => b.id === blockId);
+          updated[moduleIndex] = {
+            ...updated[moduleIndex],
+            blocks: blocks.map((b, idx) => idx === bi ? { ...b, lessons: [...b.lessons, newLesson] } : b),
+          };
+        } else {
+          updated[moduleIndex] = {
+            ...updated[moduleIndex],
+            lessons: [...(updated[moduleIndex].lessons ?? []), newLesson],
+          };
+        }
         onModulesChange(updated);
       }
     } catch {}
@@ -94,60 +135,48 @@ export function CourseOutline({
 
   const deleteModule = useCallback(async (moduleId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!confirm("Удалить этот модуль со всеми блоками и уроками?")) return;
     try {
       await fetch(`/api/v1/modules/${moduleId}`, { method: "DELETE" });
       onModulesChange(modules.filter((m) => m.id !== moduleId));
     } catch {}
   }, [modules, onModulesChange]);
 
-  const deleteLesson = useCallback(async (lessonId: string, moduleIndex: number, e: React.MouseEvent) => {
+  const deleteBlock = useCallback(async (moduleIndex: number, blockId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!confirm("Удалить этот блок со всеми уроками?")) return;
     try {
-      await fetch(`/api/v1/lessons/${lessonId}`, { method: "DELETE" });
+      await fetch(`/api/v1/blocks/${blockId}`, { method: "DELETE" });
       const updated = [...modules];
-      updated[moduleIndex] = { ...updated[moduleIndex], lessons: updated[moduleIndex].lessons.filter((l) => l.id !== lessonId) };
+      updated[moduleIndex] = {
+        ...updated[moduleIndex],
+        blocks: (updated[moduleIndex].blocks ?? []).filter((b) => b.id !== blockId),
+      };
       onModulesChange(updated);
     } catch {}
   }, [modules, onModulesChange]);
 
-  // ── Module drag-n-drop ──────────────────────────────────────────
-  const handleModuleDragStart = (index: number) => { dragItem.current = { type: "module", index }; };
-  const handleModuleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    setDragOverModuleId(modules[index]?.id ?? null);
-  };
-  const handleModuleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOverModuleId(null);
-    const item = dragItem.current;
-    if (!item) return;
-    if (item.type === "module") {
-      const newModules = [...modules];
-      const [moved] = newModules.splice(item.index, 1);
-      const targetIndex = modules.findIndex((m) => m.id === dragOverModuleId);
-      if (targetIndex >= 0) {
-        newModules.splice(targetIndex, 0, moved);
-        onModulesChange(newModules);
+  const deleteLesson = useCallback(async (lessonId: string, moduleIndex: number, blockId: string | undefined, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await fetch(`/api/v1/lessons/${lessonId}`, { method: "DELETE" });
+      const updated = [...modules];
+      if (blockId) {
+        updated[moduleIndex] = {
+          ...updated[moduleIndex],
+          blocks: (updated[moduleIndex].blocks ?? []).map((b) =>
+            b.id === blockId ? { ...b, lessons: b.lessons.filter((l) => l.id !== lessonId) } : b
+          ),
+        };
+      } else {
+        updated[moduleIndex] = {
+          ...updated[moduleIndex],
+          lessons: updated[moduleIndex].lessons.filter((l) => l.id !== lessonId),
+        };
       }
-    }
-  };
-
-  // ── Lesson drag-n-drop ──────────────────────────────────────────
-  const handleLessonDragStart = (moduleIndex: number, lessonIndex: number) => {
-    dragItem.current = { type: "lesson", moduleIndex, lessonIndex };
-  };
-  const handleLessonDrop = (e: React.DragEvent, targetModuleIdx: number, targetLessonIdx: number) => {
-    e.preventDefault();
-    const item = dragItem.current;
-    if (!item || item.type !== "lesson") return;
-    const updated = [...modules];
-    const fromModule = updated[item.moduleIndex];
-    const toModule = updated[targetModuleIdx];
-    if (!fromModule || !toModule) return;
-    const [moved] = fromModule.lessons.splice(item.lessonIndex, 1);
-    toModule.lessons.splice(targetLessonIdx, 0, moved);
-    onModulesChange(updated);
-  };
+      onModulesChange(updated);
+    } catch {}
+  }, [modules, onModulesChange]);
 
   return (
     <div className="p-3 space-y-1">
@@ -163,27 +192,19 @@ export function CourseOutline({
 
       {/* Modules */}
       {modules.map((mod, mi) => (
-        <div
-          key={mod.id}
-          draggable
-          onDragStart={() => handleModuleDragStart(mi)}
-          onDragOver={(e) => handleModuleDragOver(e, mi)}
-          onDrop={handleModuleDrop}
-          onDragEnd={() => setDragOverModuleId(null)}
-          className={`rounded-lg transition-colors ${dragOverModuleId === mod.id ? "ring-2 ring-primary/30 bg-primary/5" : ""}`}
-        >
+        <div key={mod.id} className="ml-2">
+          {/* Module header */}
           <div
             className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm transition-colors ${
               selected.type === "module" && selected.moduleId === mod.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
             }`}
           >
-            <button onClick={() => toggleModule(mod.id)} className="p-0.5">
+            <button onClick={() => toggleCollapse(mod.id)} className="p-0.5">
               {collapsed.has(mod.id) ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
             </button>
-            <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground cursor-grab" />
             <button
               onClick={() => onSelect({ type: "module", moduleId: mod.id })}
-              className="flex-1 text-left truncate"
+              className="flex-1 text-left truncate font-medium"
             >
               {mod.title}
             </button>
@@ -192,24 +213,88 @@ export function CourseOutline({
             </button>
           </div>
 
-          {/* Lessons */}
           {!collapsed.has(mod.id) && (
-            <div className="ml-4 space-y-0.5">
-              {mod.lessons.map((lesson, li) => {
+            <div className="ml-3 space-y-0.5 border-l border-border/50 pl-2">
+              {/* Blocks */}
+              {(mod.blocks ?? []).map((block) => (
+                <div key={block.id}>
+                  <div
+                    className={`flex items-center gap-1 rounded-lg px-2 py-1 text-sm transition-colors ${
+                      selected.type === "block" && selected.blockId === block.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                    }`}
+                  >
+                    <button onClick={() => toggleCollapse(`block-${block.id}`)} className="p-0.5">
+                      {collapsed.has(`block-${block.id}`) ? <ChevronRight className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                    </button>
+                    <FolderOpen className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <button
+                      onClick={() => onSelect({ type: "block", moduleId: mod.id, blockId: block.id })}
+                      className="flex-1 text-left truncate text-xs"
+                    >
+                      {block.title}
+                    </button>
+                    <button onClick={(e) => deleteBlock(mi, block.id, e)} className="p-0.5 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" title="Удалить блок">
+                      <Trash2 className="h-2.5 w-2.5" />
+                    </button>
+                  </div>
+
+                  {!collapsed.has(`block-${block.id}`) && (
+                    <div className="ml-3 space-y-0.5">
+                      {block.lessons.map((lesson) => {
+                        const Icon = TYPE_ICONS[lesson.type] ?? FileText;
+                        return (
+                          <div
+                            key={lesson.id}
+                            className="flex items-center gap-1 rounded-lg px-2 py-0.5 transition-colors group"
+                          >
+                            <button
+                              onClick={() => onSelect({ type: "lesson", moduleId: mod.id, blockId: block.id, lessonId: lesson.id })}
+                              className={`flex items-center gap-1.5 flex-1 text-xs py-0.5 ${
+                                selected.type === "lesson" && selected.lessonId === lesson.id
+                                  ? "text-primary font-medium"
+                                  : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              <Icon className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{lesson.title}</span>
+                            </button>
+                            <button onClick={(e) => deleteLesson(lesson.id, mi, block.id, e)} className="p-0.5 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" title="Удалить урок">
+                              <Trash2 className="h-2.5 w-2.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                      <Button
+                        size="sm" variant="ghost"
+                        className="w-full justify-start text-[10px] text-muted-foreground h-6"
+                        onClick={() => addLesson(mod.id, mi, block.id)}
+                      >
+                        <Plus className="h-2.5 w-2.5 mr-1" />
+                        Урок в блок
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Add block button */}
+              <Button
+                size="sm" variant="ghost"
+                className="w-full justify-start text-[10px] text-muted-foreground h-6"
+                onClick={() => addBlock(mod.id, mi)}
+              >
+                <Plus className="h-2.5 w-2.5 mr-1" />
+                Блок
+              </Button>
+
+              {/* Lessons without block (root level) */}
+              {(mod.lessons ?? []).map((lesson) => {
                 const Icon = TYPE_ICONS[lesson.type] ?? FileText;
                 return (
-                  <div
-                    key={lesson.id}
-                    draggable
-                    onDragStart={() => handleLessonDragStart(mi, li)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => handleLessonDrop(e, mi, li)}
-                    className="flex items-center gap-1 rounded-lg px-2 py-1 transition-colors group"
-                  >
-                    <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 cursor-grab" />
+                  <div key={lesson.id} className="flex items-center gap-1 rounded-lg px-2 py-0.5 transition-colors group">
                     <button
                       onClick={() => onSelect({ type: "lesson", moduleId: mod.id, lessonId: lesson.id })}
-                      className={`flex items-center gap-2 flex-1 text-xs py-0.5 ${
+                      className={`flex items-center gap-1.5 flex-1 text-xs py-0.5 ${
                         selected.type === "lesson" && selected.lessonId === lesson.id
                           ? "text-primary font-medium"
                           : "text-muted-foreground hover:text-foreground"
@@ -218,20 +303,21 @@ export function CourseOutline({
                       <Icon className="h-3 w-3 shrink-0" />
                       <span className="truncate">{lesson.title}</span>
                     </button>
-                    <button onClick={(e) => deleteLesson(lesson.id, mi, e)} className="p-0.5 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" title="Удалить урок">
-                      <Trash2 className="h-3 w-3" />
+                    <button onClick={(e) => deleteLesson(lesson.id, mi, undefined, e)} className="p-0.5 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" title="Удалить урок">
+                      <Trash2 className="h-2.5 w-2.5" />
                     </button>
                   </div>
                 );
               })}
+
+              {/* Add root lesson button */}
               <Button
-                size="sm"
-                variant="ghost"
-                className="w-full justify-start text-xs text-muted-foreground mt-1"
+                size="sm" variant="ghost"
+                className="w-full justify-start text-[10px] text-muted-foreground h-6"
                 onClick={() => addLesson(mod.id, mi)}
               >
-                <Plus className="h-3 w-3 mr-1" />
-                Урок
+                <Plus className="h-2.5 w-2.5 mr-1" />
+                Урок (без блока)
               </Button>
             </div>
           )}

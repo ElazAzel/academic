@@ -5,6 +5,7 @@ import type { CourseBuilderDetail, BuilderModuleDetail, BuilderLessonDetail } fr
 type SelectedNode =
   | { type: "course" }
   | { type: "module"; moduleId: string }
+  | { type: "block"; moduleId: string; blockId: string }
   | { type: "lesson"; moduleId: string; lessonId: string };
 
 export function CourseSettingsPanel({

@@ -11,12 +11,13 @@ import { CourseSettingsPanel } from "@/components/lms/course-settings-panel";
 import { ModuleEditor } from "@/components/lms/module-editor";
 import { LessonEditor } from "@/components/lms/lesson-editor";
 import { useBeforeUnload } from "@/components/lms/use-before-unload";
-import type { CourseBuilderDetail, BuilderModuleDetail, BuilderLessonDetail } from "@/types/domain";
+import type { CourseBuilderDetail, BuilderModuleDetail, BuilderBlockDetail, BuilderLessonDetail } from "@/types/domain";
 
 type SelectedNode =
   | { type: "course" }
   | { type: "module"; moduleId: string }
-  | { type: "lesson"; moduleId: string; lessonId: string };
+  | { type: "block"; moduleId: string; blockId: string }
+  | { type: "lesson"; moduleId: string; lessonId: string; blockId?: string };
 
 export function CourseBuilderShell({ detail: initial }: { detail: CourseBuilderDetail }) {
   const router = useRouter();
@@ -71,14 +72,19 @@ export function CourseBuilderShell({ detail: initial }: { detail: CourseBuilderD
 
   const selectedModule: BuilderModuleDetail | undefined =
     selected.type === "module" ? detail.modules.find((m) => m.id === selected.moduleId)
-    : selected.type === "lesson" ? detail.modules.find((m) => m.id === selected.moduleId)
+    : selected.type === "block" || selected.type === "lesson" ? detail.modules.find((m) => m.id === selected.moduleId)
     : undefined;
+
+  const selectedBlock: BuilderBlockDetail | undefined =
+    selected.type === "block"
+      ? (selectedModule?.blocks ?? []).find((b) => b.id === selected.blockId)
+      : undefined;
 
   const selectedLesson: BuilderLessonDetail | undefined =
     selected.type === "lesson"
-      ? selectedModule && "lessons" in selectedModule
-        ? (selectedModule as BuilderModuleDetail).lessons.find((l) => l.id === selected.lessonId)
-        : undefined
+      ? selected.blockId
+        ? (selectedModule?.blocks ?? []).find((b) => b.id === selected.blockId)?.lessons.find((l) => l.id === selected.lessonId)
+        : selectedModule?.lessons.find((l) => l.id === selected.lessonId)
       : undefined;
 
   return (
@@ -178,6 +184,49 @@ export function CourseBuilderShell({ detail: initial }: { detail: CourseBuilderD
                 setDirty(true);
               }}
             />
+          )}
+
+          {/* Block editor */}
+          {selected.type === "block" && selectedBlock && (
+            <div className="space-y-6 max-w-2xl">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase text-muted-foreground">Название блока</label>
+                <input
+                  className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  value={selectedBlock.title}
+                  onChange={(e) => {
+                    const updated = detail.modules.map((m) =>
+                      m.id === selected.moduleId
+                        ? { ...m, blocks: m.blocks.map((b) => b.id === selectedBlock.id ? { ...b, title: e.target.value } : b) }
+                        : m
+                    );
+                    setDetail((d) => ({ ...d, modules: updated }));
+                    setDirty(true);
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
+                <textarea
+                  className="w-full min-h-[80px] rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  value={selectedBlock.description ?? ""}
+                  onChange={(e) => {
+                    const updated = detail.modules.map((m) =>
+                      m.id === selected.moduleId
+                        ? { ...m, blocks: m.blocks.map((b) => b.id === selectedBlock.id ? { ...b, description: e.target.value } : b) }
+                        : m
+                    );
+                    setDetail((d) => ({ ...d, modules: updated }));
+                    setDirty(true);
+                  }}
+                />
+              </div>
+              <div className="rounded-xl bg-muted/30 p-4">
+                <p className="text-xs text-muted-foreground">
+                  Уроков в блоке: {selectedBlock.lessons.length}
+                </p>
+              </div>
+            </div>
           )}
 
           {selected.type === "lesson" && selectedLesson && (

@@ -181,6 +181,15 @@ export interface BuilderModuleDetail {
   description?: string | null;
   recommendedDays: number;
   status: CourseStatus;
+  blocks: BuilderBlockDetail[];
+  lessons: BuilderLessonDetail[]; // kept for backward compat
+}
+
+export interface BuilderBlockDetail {
+  id: string;
+  order: number;
+  title: string;
+  description?: string | null;
   lessons: BuilderLessonDetail[];
 }
 
