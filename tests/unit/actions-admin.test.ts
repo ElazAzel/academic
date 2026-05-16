@@ -63,7 +63,7 @@ describe("enrollStudentAction", () => {
   it("throws without userId or courseId", async () => {
     const fd = new FormData();
     fd.set("userId", "u1");
-    await expect(enrollStudentAction(fd)).rejects.toThrow("Не указан студент или курс");
+    await expect(enrollStudentAction(fd)).rejects.toThrow("ID курса обязателен");
   });
 
   it("throws if curatorId without cohortId", async () => {

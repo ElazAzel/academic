@@ -391,15 +391,31 @@ export async function getStudentCoursePlayerDetail(userId: string, courseId: str
   return detail;
 }
 
+const VALID_BLOCK_TYPES = new Set(["video", "text", "file", "quiz", "assignment", "rating", "curator_question", "completion"]);
+
+function parseContentBlock(block: Record<string, unknown>, legacyFallback: string): ContentBlock {
+  const type = VALID_BLOCK_TYPES.has(block.type as string) ? (block.type as ContentBlock["type"]) : "text";
+  const data = block.data as Record<string, unknown> ?? {};
+
+  switch (type) {
+    case "video":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "video", data: { videoUrl: (data.videoUrl as string) ?? legacyFallback, title: data.title as string, duration: data.duration as number } };
+    case "text":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "text", data: { html: (data.html as string) ?? "" } };
+    case "file":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "file", data: { url: (data.url as string) ?? "", filename: data.filename as string, fileType: data.fileType as string } };
+    case "quiz":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "quiz", data: { quizId: (data.quizId as string) ?? "" } };
+    case "assignment":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "assignment", data: { assignmentId: (data.assignmentId as string) ?? "" } };
+    default:
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "text", data: { html: "" } };
+  }
+}
+
 function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
   if (content && Array.isArray(content.blocks)) {
-    return (content.blocks as Array<{ id?: string; type: string; data?: Record<string, unknown> }>).map((block) => ({
-      id: block.id ?? crypto.randomUUID(),
-      type: (["video", "text", "file", "quiz", "assignment", "rating", "curator_question", "completion"].includes(block.type)
-        ? block.type
-        : "text") as ContentBlock["type"],
-      data: block.data ?? {}
-    }));
+    return (content.blocks as Array<Record<string, unknown>>).map((block) => parseContentBlock(block, ""));
   }
   // Legacy format: single text block
   const text = content && typeof content === "object" && "text" in content

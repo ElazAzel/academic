@@ -149,14 +149,108 @@ export interface LessonDetail extends LessonSummary {
   assignments: AssignmentSummary[];
 }
 
-// ── Блоки контента урока (PR 3) ─────────────────────────────────────
+// ── Блоки контента урока (Discriminated Union) ──────────────────────
 export type ContentBlockType = "video" | "text" | "file" | "quiz" | "assignment" | "rating" | "curator_question" | "completion";
 
-export interface ContentBlock {
-  id: string;
-  type: ContentBlockType;
-  data: Record<string, unknown>;
+export interface VideoBlockData {
+  videoUrl: string;
+  title?: string;
+  duration?: number;
 }
+
+export interface TextBlockData {
+  html: string;
+}
+
+export interface FileBlockData {
+  url: string;
+  filename?: string;
+  fileType?: string;
+}
+
+export interface QuizBlockData {
+  quizId: string;
+}
+
+export interface AssignmentBlockData {
+  assignmentId: string;
+}
+
+export interface RatingBlockData {
+  lessonId: string;
+}
+
+export interface CuratorQuestionBlockData {
+  lessonId: string;
+}
+
+export interface CompletionBlockData {
+  label?: string;
+}
+
+export type ContentBlockData =
+  | VideoBlockData
+  | TextBlockData
+  | FileBlockData
+  | QuizBlockData
+  | AssignmentBlockData
+  | RatingBlockData
+  | CuratorQuestionBlockData
+  | CompletionBlockData;
+
+export interface ContentBlockBase {
+  id: string;
+}
+
+export interface VideoContentBlock extends ContentBlockBase {
+  type: "video";
+  data: VideoBlockData;
+}
+
+export interface TextContentBlock extends ContentBlockBase {
+  type: "text";
+  data: TextBlockData;
+}
+
+export interface FileContentBlock extends ContentBlockBase {
+  type: "file";
+  data: FileBlockData;
+}
+
+export interface QuizContentBlock extends ContentBlockBase {
+  type: "quiz";
+  data: QuizBlockData;
+}
+
+export interface AssignmentContentBlock extends ContentBlockBase {
+  type: "assignment";
+  data: AssignmentBlockData;
+}
+
+export interface RatingContentBlock extends ContentBlockBase {
+  type: "rating";
+  data: RatingBlockData;
+}
+
+export interface CuratorQuestionContentBlock extends ContentBlockBase {
+  type: "curator_question";
+  data: CuratorQuestionBlockData;
+}
+
+export interface CompletionContentBlock extends ContentBlockBase {
+  type: "completion";
+  data: CompletionBlockData;
+}
+
+export type ContentBlock =
+  | VideoContentBlock
+  | TextContentBlock
+  | FileContentBlock
+  | QuizContentBlock
+  | AssignmentContentBlock
+  | RatingContentBlock
+  | CuratorQuestionContentBlock
+  | CompletionContentBlock;
 
 // ── Course Builder (PR 5) ──────────────────────────────────────────
 export interface BuilderLessonDetail {
