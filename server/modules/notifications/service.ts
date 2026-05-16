@@ -2,7 +2,6 @@ import { getPrisma } from "@/lib/prisma";
 import { toJsonValue } from "@/lib/json";
 import { env } from "@/lib/env";
 import { getUserNotificationPreferences } from "@/server/modules/notifications/preferences";
-import { sendPushNotification } from "@/server/modules/notifications/push";
 import { NOTIFICATION_CHANNELS } from "@/lib/constants";
 
 const prisma = getPrisma();
@@ -137,21 +136,16 @@ export async function createNotification(input: {
     }
   }
 
-  // Push notification (Firebase/Telegram)
+  // Push notification (Web Push via VAPID)
   if (env.FEATURE_PUSH_NOTIFICATIONS && input.channel !== NOTIFICATION_CHANNELS.EMAIL) {
-    // Get user's push tokens
     try {
-      const subscriptions = await prisma.pushSubscription.findMany({
-        where: { userId: input.userId, active: true },
+      const { sendPushToUser } = await import("@/server/modules/notifications/push");
+      await sendPushToUser(input.userId, {
+        title: rendered.title,
+        body: rendered.body,
+        url: (input.data as Record<string, string>)?.url,
+        tag: `${input.event}-${notification.id}`,
       });
-      for (const sub of subscriptions) {
-        sendPushNotification({
-          token: sub.endpoint,
-          title: rendered.title,
-          body: rendered.body,
-          data: input.data as Record<string, string>,
-        }).catch(() => { /* silent */ });
-      }
     } catch (error) {
       console.error("[Push] Failed to send push notification:", error);
     }

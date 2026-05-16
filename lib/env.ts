@@ -46,6 +46,15 @@ const envSchema = z.object({
   // Feature flags
   FEATURE_EMAIL_NOTIFICATIONS: z.coerce.boolean().default(false),
   FEATURE_PUSH_NOTIFICATIONS: z.coerce.boolean().default(false),
+
+  // VAPID keys for Web Push notifications
+  // Generate with: npx web-push generate-vapid-keys
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_EMAIL: z.string().email().optional(),
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
+
+  // Firebase (legacy, kept for backwards compatibility)
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
   FIREBASE_PROJECT_ID: z.string().optional(),
