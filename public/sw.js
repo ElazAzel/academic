@@ -193,16 +193,28 @@ self.addEventListener("fetch", (event) => {
 
 // ── Push notifications ──────────────────────────────────────────────
 self.addEventListener("push", (event) => {
-  const data = event.data?.json() ?? {
-    title: "AI Strategic Academy",
-    body: "Новое уведомление",
-  };
+  let data;
+  try {
+    data = event.data?.json();
+  } catch {
+    data = null;
+  }
 
+  if (!data) {
+    data = {
+      title: "AI Strategic Academy",
+      body: event.data?.text() ?? "Новое уведомление",
+    };
+  }
+
+  const title = data.title || "AI Strategic Academy";
   const options = {
-    body: data.body,
+    body: data.body || "Новое уведомление",
     icon: "/icon.svg",
     badge: "/icon.svg",
     vibrate: [100, 50, 100],
+    tag: data.tag || "default",
+    renotify: true,
     data: { url: data.url ?? "/" },
     actions: [
       { action: "open", title: "Открыть" },
@@ -211,7 +223,7 @@ self.addEventListener("push", (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(title, options)
   );
 });
 
@@ -220,16 +232,27 @@ self.addEventListener("notificationclick", (event) => {
 
   if (event.action === "close") return;
 
-  const url = event.notification.data?.url ?? "/";
+  // Resolve URL — handle both relative and absolute
+  const notificationUrl = event.notification.data?.url ?? "/";
+  const urlToOpen = new URL(notificationUrl, self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      // Try to focus an existing window with the same origin
       for (const client of windowClients) {
-        if (client.url === url && "focus" in client) {
-          return client.focus();
+        try {
+          const clientOrigin = new URL(client.url).origin;
+          if (clientOrigin === self.location.origin && "focus" in client) {
+            // Navigate existing window to the target URL
+            client.postMessage({ type: "NAVIGATE", url: notificationUrl });
+            return client.focus();
+          }
+        } catch {
+          // Invalid URL, skip
         }
       }
-      return clients.openWindow(url);
+      // No existing window — open a new one
+      return clients.openWindow(urlToOpen);
     })
   );
 });

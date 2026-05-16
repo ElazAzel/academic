@@ -1,77 +1,137 @@
+import webpush from "web-push";
 import { env } from "@/lib/env";
+import { getPrisma } from "@/lib/prisma";
 
-export type PushProvider = "none" | "firebase";
+const prisma = getPrisma();
+
+export interface WebPushSubscription {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
 
 interface PushPayload {
-  token: string;
   title: string;
   body: string;
+  url?: string;
+  tag?: string;
   data?: Record<string, string>;
 }
 
-let currentProvider: PushProvider = env.FEATURE_PUSH_NOTIFICATIONS ? "firebase" : "none";
+let vapidConfigured = false;
 
-/**
- * Send push notification via Firebase Admin SDK.
- *
- * Реальная отправка Firebase работает только если:
- * 1. FEATURE_PUSH_NOTIFICATIONS=true
- * 2. FIREBASE_CLIENT_EMAIL и FIREBASE_PRIVATE_KEY заданы
- * 3. Firebase Admin SDK установлен и инициализирован
- *
- * Если push не настроен, функция возвращает false без ошибки.
- */
-export async function sendPushNotification(payload: PushPayload): Promise<boolean> {
-  if (currentProvider === "none") {
+function ensureVapidConfigured(): boolean {
+  if (vapidConfigured) return true;
+
+  const publicKey = env.VAPID_PUBLIC_KEY;
+  const privateKey = env.VAPID_PRIVATE_KEY;
+  const email = env.VAPID_EMAIL;
+
+  if (!publicKey || !privateKey) {
+    console.warn("[Push] VAPID keys not configured. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY env vars.");
+    console.warn("[Push] Generate keys with: npx web-push generate-vapid-keys");
     return false;
   }
 
-  if (currentProvider === "firebase") {
-    try {
-      // Динамический импорт для опциональной зависимости
-      // Используем Function() для обхода статического анализа TypeScript
-      const adminMod: unknown = await new Function('return import("firebase-admin")')().catch(() => null);
-      if (!adminMod) {
-        console.warn("[Push] firebase-admin package not installed. Install with: npm install firebase-admin");
-        currentProvider = "none";
-        return false;
-      }
+  webpush.setVapidDetails(
+    `mailto:${email || "admin@academy.local"}`,
+    publicKey,
+    privateKey,
+  );
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const admin = adminMod as any;
+  vapidConfigured = true;
+  return true;
+}
 
-      if (!admin.apps || !admin.apps.length) {
-        const clientEmail = env.FIREBASE_CLIENT_EMAIL;
-        const privateKey = env.FIREBASE_PRIVATE_KEY;
-        const projectId = env.FIREBASE_PROJECT_ID;
+/**
+ * Send a Web Push notification to a specific subscription.
+ *
+ * Uses the Web Push Protocol with VAPID authentication.
+ * Returns true if the push was sent successfully.
+ * Returns false and deactivates the subscription if it's expired (410 Gone).
+ */
+export async function sendPushToSubscription(
+  subscription: WebPushSubscription,
+  payload: PushPayload,
+): Promise<boolean> {
+  if (!env.FEATURE_PUSH_NOTIFICATIONS) return false;
+  if (!ensureVapidConfigured()) return false;
 
-        if (!clientEmail || !privateKey || !projectId) {
-          console.warn("[Push] Firebase не настроен: отсутствуют FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY или FIREBASE_PROJECT_ID");
-          currentProvider = "none";
-          return false;
-        }
+  const pushSubscription: webpush.PushSubscription = {
+    endpoint: subscription.endpoint,
+    keys: {
+      p256dh: subscription.p256dh,
+      auth: subscription.auth,
+    },
+  };
 
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            clientEmail,
-            privateKey,
-            projectId,
-          }),
+  const jsonPayload = JSON.stringify({
+    title: payload.title,
+    body: payload.body,
+    url: payload.url ?? "/",
+    tag: payload.tag,
+    ...payload.data,
+  });
+
+  try {
+    await webpush.sendNotification(pushSubscription, jsonPayload, {
+      TTL: 60 * 60, // 1 hour
+      urgency: "normal",
+    });
+    return true;
+  } catch (error) {
+    const statusCode = (error as { statusCode?: number }).statusCode;
+
+    if (statusCode === 410 || statusCode === 404) {
+      // Subscription expired or invalid — deactivate it
+      console.log(`[Push] Subscription expired (${statusCode}), deactivating: ${subscription.endpoint.slice(0, 60)}...`);
+      try {
+        await prisma.pushSubscription.updateMany({
+          where: { endpoint: subscription.endpoint },
+          data: { active: false },
         });
+      } catch {
+        // Ignore DB errors during cleanup
       }
-
-      await admin.messaging().send({
-        token: payload.token,
-        notification: { title: payload.title, body: payload.body },
-        data: payload.data,
-      });
-      return true;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error("[Push] Firebase send failed:", message);
       return false;
+    }
+
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[Push] Send failed:", message);
+    return false;
+  }
+}
+
+/**
+ * Send push notification to all active subscriptions for a user.
+ */
+export async function sendPushToUser(
+  userId: string,
+  payload: PushPayload,
+): Promise<number> {
+  if (!env.FEATURE_PUSH_NOTIFICATIONS) return 0;
+
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { userId, active: true },
+  });
+
+  if (subscriptions.length === 0) return 0;
+
+  let sent = 0;
+  const results = await Promise.allSettled(
+    subscriptions.map((sub) =>
+      sendPushToSubscription(
+        { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+        payload,
+      ),
+    ),
+  );
+
+  for (const result of results) {
+    if (result.status === "fulfilled" && result.value) {
+      sent++;
     }
   }
 
-  return false;
+  return sent;
 }
