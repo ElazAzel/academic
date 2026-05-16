@@ -72,6 +72,7 @@ export async function getConversation(studentId: string, lessonId?: string) {
     take: 100,
     include: {
       sender: { select: { id: true, name: true } },
+      lesson: { select: { id: true, title: true } },
     },
   });
 
@@ -82,6 +83,8 @@ export async function getConversation(studentId: string, lessonId?: string) {
     text: m.text,
     attachmentUrl: m.attachmentUrl,
     attachmentType: m.attachmentType,
+    lessonId: m.lessonId,
+    lessonTitle: m.lesson?.title ?? null,
     senderId: m.senderId,
     senderName: maskChatName(m.sender.name, m.senderId, roles, user.id),
     createdAt: m.createdAt.toISOString(),

@@ -16,6 +16,8 @@ interface ChatMessage {
   text: string | null;
   attachmentUrl: string | null;
   attachmentType: string | null;
+  lessonId: string | null;
+  lessonTitle: string | null;
   senderId: string;
   senderName: string;
   createdAt: string;
@@ -24,15 +26,19 @@ interface ChatMessage {
 
 export function ChatPanel({
   lessonId,
+  replyLessonId,
   curatorId,
   studentId,
 }: {
   lessonId?: string;
+  replyLessonId?: string;
   curatorId?: string;
   studentId: string;
 }) {
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => ["chat", studentId, lessonId], [studentId, lessonId]);
+  const messageLessonId = lessonId ?? replyLessonId;
+  const receiverId = curatorId ?? studentId;
   const [text, setText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -112,6 +118,8 @@ export function ChatPanel({
         text: formData.get("text") as string,
         attachmentUrl: formData.get("attachmentUrl") as string | null,
         attachmentType: formData.get("attachmentType") as string | null,
+        lessonId: (formData.get("lessonId") as string | null) ?? null,
+        lessonTitle: null,
         senderId: "optimistic",
         senderName: "Вы",
         createdAt: new Date().toISOString(),
@@ -166,8 +174,8 @@ export function ChatPanel({
 
     const formData = new FormData();
     formData.set("text", savedText);
-    if (lessonId) formData.set("lessonId", lessonId);
-    if (curatorId) formData.set("receiverId", curatorId);
+    if (messageLessonId) formData.set("lessonId", messageLessonId);
+    formData.set("receiverId", receiverId);
     sendMutation.mutate(formData);
   }
 
@@ -180,7 +188,8 @@ export function ChatPanel({
       ...messages.map((m) => {
         const time = new Date(m.createdAt).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" });
         const sender = m.isMine ? "Вы" : m.senderName || "Куратор";
-        return `[${time}] ${sender}: ${m.text ?? ""}`;
+        const context = m.lessonTitle ? ` (${m.lessonTitle})` : "";
+        return `[${time}]${context} ${sender}: ${m.text ?? ""}`;
       }),
     ];
     const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
@@ -211,8 +220,8 @@ export function ChatPanel({
       const formData = new FormData();
       formData.set("attachmentUrl", publicUrl);
       formData.set("attachmentType", file.type);
-      if (lessonId) formData.set("lessonId", lessonId);
-      if (curatorId) formData.set("receiverId", curatorId);
+      if (messageLessonId) formData.set("lessonId", messageLessonId);
+      formData.set("receiverId", receiverId);
       sendMutation.mutate(formData);
     } catch {
       // Fallback: для маленьких изображений используем base64
@@ -224,8 +233,8 @@ export function ChatPanel({
             formData.set("text", `[Изображение]`);
             formData.set("attachmentUrl", reader.result as string);
             formData.set("attachmentType", file.type);
-            if (lessonId) formData.set("lessonId", lessonId);
-            if (curatorId) formData.set("receiverId", curatorId);
+            if (messageLessonId) formData.set("lessonId", messageLessonId);
+            formData.set("receiverId", receiverId);
             sendMutation.mutate(formData);
           };
           reader.readAsDataURL(file);
@@ -278,6 +287,11 @@ export function ChatPanel({
                     : "Файл"}
                 </a>
               ) : null}
+              {m.lessonTitle && (
+                <p className={`mt-1 text-[10px] ${m.isMine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                  Контекст урока: {m.lessonTitle}
+                </p>
+              )}
               <p className={`text-[10px] mt-1 ${m.isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                 {new Date(m.createdAt).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })}
                 {m.id.startsWith("optimistic-") && sendMutation.isPending && " · отправляется..."}
@@ -291,8 +305,8 @@ export function ChatPanel({
                     // Повторная отправка последнего неудачного сообщения
                     const formData = new FormData();
                     formData.set("text", m.text ?? "");
-                    if (lessonId) formData.set("lessonId", lessonId);
-                    if (curatorId) formData.set("receiverId", curatorId);
+                    if (messageLessonId) formData.set("lessonId", messageLessonId);
+                    formData.set("receiverId", receiverId);
                     sendMutation.mutate(formData);
                   }}
                   className="mt-1 text-[10px] text-destructive hover:underline"
