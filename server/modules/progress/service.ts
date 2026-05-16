@@ -9,7 +9,7 @@ import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
-function getCompletionBasis<T extends { isRequired: boolean | null }>(lessons: T[]) {
+export function getCompletionBasis<T extends { isRequired: boolean | null }>(lessons: T[]) {
   const required = lessons.filter((l) => l.isRequired);
   return required.length > 0 ? required : lessons;
 }

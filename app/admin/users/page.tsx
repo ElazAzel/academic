@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { UserRoleEditor } from "@/components/admin/user-role-editor";
 import { PageHeader } from "@/components/lms/page-header";
 import { Avatar } from "@/components/ui/avatar";
+import { StatusBadge } from "@/components/lms/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -87,9 +88,10 @@ export default async function AdminUsersPage(props: {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={user.status === UserAccountStatus.ACTIVE ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}>
-                          {user.status === UserAccountStatus.ACTIVE ? "Активен" : user.status === UserAccountStatus.INACTIVE ? "Неактивен" : "Заблокирован"}
-                        </Badge>
+                        <StatusBadge
+                          status={user.status === UserAccountStatus.ACTIVE ? "ACTIVE" : "BLOCKED"}
+                          label={user.status === UserAccountStatus.ACTIVE ? "Активен" : user.status === UserAccountStatus.INACTIVE ? "Неактивен" : "Заблокирован"}
+                        />
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{user.lastLoginAt?.toISOString().slice(0, 10) ?? "—"}</TableCell>
                       <TableCell>

@@ -413,7 +413,7 @@ function parseContentBlock(block: Record<string, unknown>, legacyFallback: strin
   }
 }
 
-function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
+export function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
   if (content && Array.isArray(content.blocks)) {
     return (content.blocks as Array<Record<string, unknown>>).map((block) => parseContentBlock(block, ""));
   }

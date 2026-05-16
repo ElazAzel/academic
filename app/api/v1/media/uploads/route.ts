@@ -1,22 +1,12 @@
 import { errorResponse, ok, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { createPresignedUploadUrl, buildStorageKey } from "@/lib/storage";
+import { UPLOAD } from "@/lib/constants";
 import { z } from "zod";
 
-const ALLOWED_CONTENT_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-  "application/pdf",
-  "video/mp4",
-  "video/webm",
-  "audio/mpeg",
-  "audio/webm",
-  "application/zip",
-] as const;
+const ALLOWED_CONTENT_TYPES = UPLOAD.ALLOWED_MIME_TYPES;
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_FILE_SIZE = UPLOAD.MAX_FILE_SIZE_BYTES;
 
 const schema = z.object({
   filename: z.string().min(1).max(255),
