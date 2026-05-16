@@ -25,9 +25,21 @@ const EXT: Record<ReportFormat, string> = {
 };
 
 function respond(content: string | Buffer | Uint8Array | ArrayBuffer, format: ReportFormat, filename: string) {
-  const body = typeof content === "string"
-    ? content
-    : new Uint8Array(content instanceof ArrayBuffer ? content : content instanceof Uint8Array ? content : content);
+  const isBinary = format === "pdf" || format === "xlsx";
+
+  let body: BodyInit;
+  if (typeof content === "string") {
+    body = content;
+  } else if (isBinary) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    body = new Blob([content as any], { type: MIME[format] });
+  } else if (Buffer.isBuffer(content)) {
+    body = content.toString();
+  } else if (content instanceof Uint8Array) {
+    body = new TextDecoder().decode(content);
+  } else {
+    body = new TextDecoder().decode(new Uint8Array(content));
+  }
 
   return new NextResponse(body, {
     headers: {
