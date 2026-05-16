@@ -31,6 +31,23 @@ describe("parseContentBlocks", () => {
     }
   });
 
+  it("preserves interactive lesson blocks", () => {
+    const content = {
+      blocks: [
+        { id: "rating-1", type: "rating", data: { lessonId: "lesson-1" } },
+        { id: "question-1", type: "curator_question", data: { lessonId: "lesson-1" } },
+        { id: "done-1", type: "completion", data: { label: "Готово" } },
+      ],
+    };
+
+    const blocks = parseContentBlocks(content);
+
+    expect(blocks.map((block) => block.type)).toEqual(["rating", "curator_question", "completion"]);
+    expect(blocks[0]).toMatchObject({ id: "rating-1", data: { lessonId: "lesson-1" } });
+    expect(blocks[1]).toMatchObject({ id: "question-1", data: { lessonId: "lesson-1" } });
+    expect(blocks[2]).toMatchObject({ id: "done-1", data: { label: "Готово" } });
+  });
+
   it("returns empty array for empty content", () => {
     const blocks = parseContentBlocks({});
     expect(blocks).toHaveLength(0);

@@ -1,5 +1,5 @@
-const CACHE_NAME = "ai-academy-v3";
-const STATIC_CACHE = "ai-academy-static-v3";
+const CACHE_NAME = "ai-academy-v4";
+const STATIC_CACHE = "ai-academy-static-v4";
 const OFFLINE_URL = "/offline";
 const BUILD_VERSION_URL = "/api/v1/build-version";
 const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -81,6 +81,42 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+function offlineDocumentResponse() {
+  return new Response(
+    `<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Нет подключения — AI Strategic Academy</title>
+    <style>
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f8fafc; color: #0f172a; }
+      main { max-width: 420px; padding: 32px; text-align: center; }
+      h1 { margin: 0 0 12px; font-size: 24px; }
+      p { margin: 0 0 24px; color: #475569; line-height: 1.6; }
+      button { border: 0; border-radius: 8px; background: #0f172a; color: white; padding: 10px 16px; font: inherit; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Нет подключения</h1>
+      <p>Не удалось загрузить страницу. Проверьте соединение и попробуйте снова.</p>
+      <button onclick="location.reload()">Повторить</button>
+    </main>
+  </body>
+</html>`,
+    {
+      status: 200,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    }
+  );
+}
+
+async function getOfflinePage() {
+  const cachedOffline = await caches.match(OFFLINE_URL);
+  return cachedOffline ?? offlineDocumentResponse();
+}
+
 // ── Fetch: Network-first with offline fallback ─────────────────────
 self.addEventListener("fetch", (event) => {
   const { request } = event;
@@ -93,22 +129,9 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       (async () => {
         try {
-          const networkResponse = await fetch(request);
-          if (networkResponse.ok && networkResponse.type === "basic") {
-            const cache = await caches.open(CACHE_NAME);
-            cache.put(request, networkResponse.clone());
-          }
-          return networkResponse;
+          return await fetch(request);
         } catch {
-          const cachedResponse = await caches.match(request);
-          if (cachedResponse) return cachedResponse;
-          const offlineResponse = await caches.match(OFFLINE_URL);
-          if (offlineResponse) return offlineResponse;
-          return new Response("Вы офлайн. Пожалуйста, проверьте подключение к интернету.", {
-            status: 503,
-            statusText: "Service Unavailable",
-            headers: { "Content-Type": "text/plain; charset=utf-8" },
-          });
+          return getOfflinePage();
         }
       })()
     );

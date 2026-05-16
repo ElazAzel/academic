@@ -27,15 +27,18 @@ export default async function StudentQuizPage({ params }: { params: Promise<{ qu
      redirect(FORBIDDEN_ROUTE);
     }
    throw error;
-  }
+ }
+
+ const courseHref = quiz.courseId ? `/student/courses/${quiz.courseId}` : "/student/my-courses";
+ const lessonHref = quiz.lessonId ? `/student/lessons/${quiz.lessonId}` : courseHref;
 
  return (
   <AppShell role="student">
    <div className="mb-4">
     <Button asChild size="sm" variant="secondary">
-     <Link href={`/student/lessons/${quiz.lessonId}`}>
+     <Link href={lessonHref}>
       <ArrowLeft className="h-4 w-4"/>
-      Назад к уроку
+      {quiz.lessonId ? "Назад к уроку" : "Назад к курсу"}
      </Link>
     </Button>
    </div>

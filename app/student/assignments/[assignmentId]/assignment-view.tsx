@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, Loader2, RotateCcw, Send, Upload, File, X } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, RotateCcw, Send, Upload, File, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -104,6 +105,8 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
   }
 
   const submission = assignment.submission;
+  const courseHref = assignment.courseId ? `/student/courses/${assignment.courseId}` : "/student/my-courses";
+  const lessonHref = assignment.lessonId ? `/student/lessons/${assignment.lessonId}` : courseHref;
 
   return (
     <div className="space-y-6">
@@ -240,6 +243,12 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
             <p className="text-xs text-muted-foreground">
               Отправлено: {new Date(submission.submittedAt).toLocaleString("ru-RU")}
             </p>
+            <Button asChild size="sm" variant="secondary">
+              <Link href={lessonHref}>
+                <ArrowLeft className="h-4 w-4" />
+                {assignment.lessonId ? "Вернуться к уроку" : "Вернуться к курсу"}
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       ) : null}
