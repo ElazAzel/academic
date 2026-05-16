@@ -1,32 +1,21 @@
 import type { RoleKey } from "@/types/domain";
 
 /**
- * Преобразует ID пользователя (CUID) в консистентный номер.
- * Используется для генерации "Пользователь N" вместо реального имени.
+ * Converts a user id into a stable number for non-chat anonymized areas.
  */
 function userIdToNumber(id: string): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     const char = id.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
+    hash = hash & hash;
   }
-  // Приводим к положительному числу 1–99999
   return (Math.abs(hash) % 99999) + 1;
 }
 
 /**
- * Маскирует реальное имя пользователя.
- *
- * Правила:
- * - Админ всегда видит реальное имя
- * - Свой профиль — своё имя
- * - Для всех остальных: "Пользователь N" (N консистентно от ID)
- *
- * @param realName - Настоящее имя
- * @param viewerRoles - Роли смотрящего
- * @param viewerId - ID смотрящего (для проверки "свой/чужой")
- * @param ownerId - ID владельца имени
+ * General anonymization helper for places where real names should be hidden.
+ * Chat has separate role-aware display rules below.
  */
 export function maskName(
   realName: string | null | undefined,
@@ -34,17 +23,14 @@ export function maskName(
   viewerId?: string,
   ownerId?: string,
 ): string {
-  // Админ видит реальные имена
   if (viewerRoles.includes("admin")) {
     return realName ?? "Пользователь";
   }
 
-  // Свой профиль — своё имя
   if (viewerId && ownerId && viewerId === ownerId) {
     return realName ?? "Пользователь";
   }
 
-  // Для всех остальных — "Пользователь N"
   if (ownerId) {
     return `Пользователь ${userIdToNumber(ownerId)}`;
   }
@@ -52,36 +38,56 @@ export function maskName(
   return "Пользователь";
 }
 
+function cleanDisplayName(realName: string | null | undefined) {
+  const name = realName?.trim();
+  return name && name.length > 0 ? name : null;
+}
+
+function hasRole(roles: RoleKey[], role: RoleKey) {
+  return roles.includes(role);
+}
+
+function withRolePrefix(prefix: string, realName: string | null | undefined) {
+  const name = cleanDisplayName(realName);
+  if (!name) return prefix;
+  return name.toLowerCase().startsWith(prefix.toLowerCase()) ? name : `${prefix} ${name}`;
+}
+
+function formatChatDisplayName(realName: string | null | undefined, roles: RoleKey[]) {
+  if (hasRole(roles, "curator")) return withRolePrefix("Куратор", realName);
+  if (hasRole(roles, "super_curator")) return withRolePrefix("Супер-куратор", realName);
+  if (hasRole(roles, "instructor")) return withRolePrefix("Преподаватель", realName);
+  if (hasRole(roles, "admin")) return withRolePrefix("Администратор", realName);
+  if (hasRole(roles, "student")) return cleanDisplayName(realName) ?? "Слушатель";
+  return cleanDisplayName(realName) ?? "Пользователь";
+}
+
 /**
- * Имя для отображения в чате.
- * Для не-админов чужие имена → "Пользователь N".
+ * Role-aware chat display name.
+ *
+ * Rules:
+ * - own messages are shown as "Вы";
+ * - curator messages are shown as "Куратор <name>";
+ * - student messages use the academy-issued name, for example "Слушатель1";
+ * - no id-derived "Пользователь N" aliases are used in chat.
  */
 export function maskChatName(
   senderName: string | null | undefined,
   senderId: string,
   viewerRoles: RoleKey[],
   viewerId: string,
+  senderRoles: RoleKey[] = [],
 ): string {
-  // Админ видит реальные имена
-  if (viewerRoles.includes("admin")) {
-    return senderName ?? "Пользователь";
-  }
-
-  // Свои сообщения
   if (viewerId === senderId) {
     return "Вы";
   }
 
-  // Чужие сообщения — "Пользователь N"
-  return `Пользователь ${userIdToNumber(senderId)}`;
+  return formatChatDisplayName(senderName, senderRoles.length > 0 ? senderRoles : viewerRoles);
 }
 
 /**
- * Возвращает displayName для уведомлений (всегда маскирован для не-админов).
+ * Display name for chat notifications.
  */
-export function deriveDisplayName(realName: string | null | undefined, userId?: string): string {
-  if (userId) {
-    return `Пользователь ${userIdToNumber(userId)}`;
-  }
-  return "Пользователь";
+export function deriveDisplayName(realName: string | null | undefined, _userId?: string, roles: RoleKey[] = []): string {
+  return formatChatDisplayName(realName, roles);
 }

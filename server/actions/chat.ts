@@ -26,6 +26,10 @@ function isElevatedChatRole(roles: RoleKey[]) {
   return roles.includes("admin") || roles.includes("super_curator");
 }
 
+function getRoleKeys(user: { roles?: Array<{ role: { key: RoleKey } }> } | null | undefined): RoleKey[] {
+  return user?.roles?.map((entry) => entry.role.key) ?? [];
+}
+
 async function assertCanAccessStudentChat(user: { id: string; roles: RoleKey[] }, studentId: string) {
   if (!studentId) {
     throw new ApiError("bad_request", "Student id is required", 400);
@@ -71,7 +75,13 @@ export async function getConversation(studentId: string, lessonId?: string) {
     orderBy: { createdAt: "desc" },
     take: 100,
     include: {
-      sender: { select: { id: true, name: true } },
+      sender: {
+        select: {
+          id: true,
+          name: true,
+          roles: { select: { role: { select: { key: true } } } },
+        },
+      },
       lesson: { select: { id: true, title: true } },
     },
   });
@@ -86,7 +96,7 @@ export async function getConversation(studentId: string, lessonId?: string) {
     lessonId: m.lessonId,
     lessonTitle: m.lesson?.title ?? null,
     senderId: m.senderId,
-    senderName: maskChatName(m.sender.name, m.senderId, roles, user.id),
+    senderName: maskChatName(m.sender.name, m.senderId, roles, user.id, getRoleKeys(m.sender)),
     createdAt: m.createdAt.toISOString(),
     readAt: m.readAt?.toISOString() ?? null,
     isMine: m.senderId === user.id,
@@ -113,8 +123,20 @@ export async function getMyConversations() {
     },
     orderBy: { createdAt: "desc" },
     include: {
-      sender: { select: { id: true, name: true } },
-      receiver: { select: { id: true, name: true } },
+      sender: {
+        select: {
+          id: true,
+          name: true,
+          roles: { select: { role: { select: { key: true } } } },
+        },
+      },
+      receiver: {
+        select: {
+          id: true,
+          name: true,
+          roles: { select: { role: { select: { key: true } } } },
+        },
+      },
       lesson: { select: { id: true, title: true } },
     },
     take: 200,
@@ -128,7 +150,8 @@ export async function getMyConversations() {
     const rawName = m.senderId === user.id
       ? (m.receiver?.name ?? "Куратор")
       : (m.sender.name ?? "Слушатель");
-    const partnerName = maskChatName(rawName, partnerId, roles, user.id);
+    const partnerRoles = m.senderId === user.id ? getRoleKeys(m.receiver) : getRoleKeys(m.sender);
+    const partnerName = maskChatName(rawName, partnerId, roles, user.id, partnerRoles);
 
     if (!convMap.has(partnerId)) {
       convMap.set(partnerId, {
@@ -219,7 +242,7 @@ export async function sendMessageAction(formData: FormData) {
       ? (lessonId ? `/student/lessons/${lessonId}` : "/student")
       : "/curator/chat";
 
-    const displaySenderName = deriveDisplayName(user.name, user.id);
+    const displaySenderName = deriveDisplayName(user.name, user.id, roles);
 
     await createNotification({
       userId: toUserId,
