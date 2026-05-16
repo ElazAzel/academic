@@ -164,6 +164,7 @@ model User {
   activityLogs               ActivityLog[]
   createdPopups              AdminPopup[]
   popupViews                 PopupView[]
+  pushSubscriptions          PushSubscription[]
 
   @@map("users")
 }
@@ -1051,4 +1052,20 @@ model GlossaryEntry {
   @@index([category])
   @@index([direction])
   @@map("glossary_entries")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([endpoint])
+  @@map("push_subscriptions")
 }

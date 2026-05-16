@@ -35,6 +35,21 @@ export function CourseSettingsPanel({
           <label className="text-xs text-muted-foreground">Статус</label>
           <p className="text-sm font-medium">{detail.status === "DRAFT" ? "Черновик" : detail.status === "PUBLISHED" ? "Опубликован" : "Архив"}</p>
         </div>
+        <div className="space-y-2">
+          <label className="text-xs text-muted-foreground">Модулей</label>
+          <p className="text-sm font-medium">{detail.modules.length}</p>
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs text-muted-foreground">Всего уроков</label>
+          <p className="text-sm font-medium">{detail.modules.reduce((s, m) => s + m.lessons.length, 0)}</p>
+        </div>
+        {detail.coverUrl && (
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Обложка</label>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={detail.coverUrl} alt="" className="w-full rounded-lg object-cover h-24" />
+          </div>
+        )}
       </div>
     );
   }
@@ -55,6 +70,10 @@ export function CourseSettingsPanel({
           <label className="text-xs text-muted-foreground">Уроков</label>
           <p className="text-sm font-medium">{mod.lessons.length}</p>
         </div>
+        <div className="space-y-2">
+          <label className="text-xs text-muted-foreground">Описание</label>
+          <p className="text-sm text-muted-foreground">{mod.description ?? "—"}</p>
+        </div>
       </div>
     );
   }
@@ -65,7 +84,7 @@ export function CourseSettingsPanel({
         <h3 className="text-xs font-semibold uppercase text-muted-foreground">Настройки урока</h3>
         <div className="space-y-2">
           <label className="text-xs text-muted-foreground">Тип</label>
-          <p className="text-sm font-medium">{lesson.type}</p>
+          <p className="text-sm font-medium capitalize">{lesson.type === "MIXED" ? "Смешанный" : lesson.type}</p>
         </div>
         <div className="space-y-2">
           <label className="text-xs text-muted-foreground">Длительность</label>
@@ -75,14 +94,36 @@ export function CourseSettingsPanel({
           <label className="text-xs text-muted-foreground">Обязательный</label>
           <p className="text-sm font-medium">{lesson.isRequired ? "Да" : "Нет"}</p>
         </div>
+        {lesson.summary && (
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Описание</label>
+            <p className="text-sm text-muted-foreground">{lesson.summary}</p>
+          </div>
+        )}
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Тесты</label>
-          <p className="text-sm font-medium">{lesson.quizzes.length}</p>
+          <label className="text-xs text-muted-foreground">Тестов</label>
+          <p className="text-sm font-medium">{lesson.quizzes?.length ?? 0}</p>
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Задания</label>
-          <p className="text-sm font-medium">{lesson.assignments.length}</p>
+          <label className="text-xs text-muted-foreground">Заданий</label>
+          <p className="text-sm font-medium">{lesson.assignments?.length ?? 0}</p>
         </div>
+        {lesson.quizzes && lesson.quizzes.length > 0 && (
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Тесты</label>
+            {lesson.quizzes.map((q) => (
+              <p key={q.id} className="text-xs text-muted-foreground">• {q.title}</p>
+            ))}
+          </div>
+        )}
+        {lesson.assignments && lesson.assignments.length > 0 && (
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Задания</label>
+            {lesson.assignments.map((a) => (
+              <p key={a.id} className="text-xs text-muted-foreground">• {a.title}</p>
+            ))}
+          </div>
+        )}
       </div>
     );
   }

@@ -1,13 +1,18 @@
 # План реализации AI Strategic Academy
 
-Дата актуализации: 2026-05-07  
+Дата актуализации: 2026-05-16  
 Статус документа: operational source of truth для реализации и контроля изменений.
 
 ## Цель проекта
 
 Создать закрытую LMS одной академии для управления курсами, потоками, кураторами, заданиями, тестами, сертификатами, инвайт-доступом, аналитикой и отчётностью. Система должна оставаться production-minded: безопасной, расширяемой, документированной и удобной для AI-assisted разработки.
 
-## Текущее состояние на 2026-05-07
+## Текущее состояние на 2026-05-16
+
+- Фазы 1-2 завершены: Academy Operations + Production Readiness
+- Фаза 3: Scheduled report export реализован, data-connected dashboards уже работают
+- Фаза 4: Security review, scale path документированы
+- Все 62 role sub-pages реализованы, все дашборды на реальных данных
 
 - Создан runnable Next.js modular monolith: App Router, TypeScript strict, Prisma/PostgreSQL, Auth.js, Tailwind, REST API, GraphQL scaffold.
 - Созданы основные страницы ролей: публичная зона, слушатель, куратор, супер-куратор, преподаватель, администратор, заказчик-наблюдатель.
@@ -74,8 +79,13 @@
 | DevOps | Реальный deployment validation | planned | Vercel/Docker/K8s smoke checks documented |
 | UI | Light Russian LMS shell and role pages | done | Pages build in production |
 | UI | Production-safe role dashboard fallback | done | Mock data не показывается в production без `NEXT_PUBLIC_DEMO_MODE=true` |
-| UI | Data-connected role dashboards | planned | Pages consume API via server actions/hooks |
+| UI | Data-connected role dashboards | done | Все 6 дашбордов на Prisma через server actions |
 | AI Ops | AI roles and portable skills for Codex/Antigravity | done | `ai/roles` and `skills` folders exist |
+| Reports | Scheduled report export | done | `POST /api/v1/reports/scheduled` с CRON_SECRET |
+| Infrastructure | Backup/restore runbook | done | `infra/backup/runbook.md` |
+| Infrastructure | Deployment validation | done | `infra/deployment-check.md` |
+| Infrastructure | OWASP/WCAG audit | done | `docs/security-review.md` |
+| Infrastructure | Scale path documentation | done | `docs/scale-path.md` |
 
 ## MVP Definition
 

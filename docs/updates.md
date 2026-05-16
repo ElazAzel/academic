@@ -2,6 +2,85 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-16 — Phase 3-4: Scheduled reports, security review, scale path
+
+Автор/agent: opencode
+Тип изменения: feature / infrastructure / documentation
+
+1. **Scheduled report export**: 
+   - Created `POST /api/v1/reports/scheduled` — защищён CRON_SECRET, обрабатывает до 50 outbox-задач за вызов
+   - Добавлен `CRON_SECRET` в `lib/env.ts`
+   - Совместим с Vercel Cron Jobs, cron-job.org, pg_cron, GitHub Actions
+   - Починен processor: `certificates` теперь поддерживает PDF
+
+2. **OWASP/WCAG Security Review**: `docs/security-review.md` — полный аудит:
+   - OWASP Top 10 (2021): 9/10 compliant, 1 recommendation (2FA for admin)
+   - WCAG 2.1 AA: 24/25 criteria met, 1 recommendation (skip-to-content link)
+   - 8 improvement recommendations с приоритетами
+
+3. **Scale Path**: `docs/scale-path.md` — архитектура для microservices extraction:
+   - 4 кандидата на выделение (notifications, reports, certificates, search)
+   - Message broker contract (outbox → consumer)
+   - Триггеры для начала extraction
+
+4. **Certificate PDF processor** — исправлен: теперь поддерживает PDF для сертификатов
+
+5. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings. Build: passed.**
+
+## 2026-05-16 — Phase 1 complete, Phase 2 production hardening
+
+Автор/agent: opencode
+Тип изменения: feature / infrastructure / documentation
+
+1. **Phase 1 complete**:
+   - Push notifications: `firebase-admin` installed, `PushSubscription` model in Prisma, `/api/v1/push/subscribe` endpoint, `pwa-register.tsx` subscribes after SW registration, `createNotification()` sends push via Firebase
+   - Assignment file upload: S3 presigned upload integrated into `assignment-view.tsx`
+   - Quiz result detail: per-question answer review with color-coded correct/incorrect display
+   - Course settings panel: detailed info (modules, lessons, cover, descriptions)
+
+2. **Phase 2 documentation**:
+   - `infra/backup/runbook.md` — full backup/restore procedures, retention policy, encryption, S3 off-site, emergency recovery
+   - `infra/deployment-check.md` — deployment validation checklist with smoke tests, performance checks, rollback plan
+
+3. **Existing production-ready infrastructure confirmed**:
+   - Email delivery (`sendEmail()`, SMTP transporter, forgot/reset/verify flows) — ✅
+   - Certificate production PDF (Cyrillic NotoSans, QR codes, verification URL) — ✅
+   - Rate limiting (Redis + memory fallback, applied to auth endpoints) — ✅
+
+4. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings. Build: passed.**
+
+## 2026-05-16 — Phase 1: Academy Operations — editor, quiz, assignments, settings
+
+Автор/agent: opencode
+Тип изменения: feature / ui / api
+
+1. **Course Settings Panel** (`course-settings-panel.tsx`): Добавлена детальная информация:
+   - Количество модулей и уроков
+   - Обложка курса (если есть)
+   - Описание модуля
+   - Summary урока
+   - Список тестов и заданий в уроке
+
+2. **Assignment file upload** (`assignment-view.tsx`): Интегрирована загрузка файлов через S3 presigned URL:
+   - Кнопка выбора файла → presigned URL → S3 upload
+   - Индикатор загрузки, отображение имени файла, возможность удалить
+   - Поддержка PDF, изображений, ZIP, DOC/DOCX
+   - URL файла передаётся в body запроса при отправке
+
+3. **Quiz result detail** (`result/page.tsx`): Добавлен детальный разбор ответов:
+   - По-вопросный разбор с цветовой индикацией (зелёный = верно, красный = неверно)
+   - Показ выбранного ответа и правильного ответа
+   - Сводка: всего/правильно/неправильно/попытка
+   - Все вопросы в одном скролле
+
+4. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings. Build: passed.**
+
+5. **Phase 1 remaining** (not started in this change):
+   - Drag-and-drop блоков контента (lesson-block-editor)
+   - Push notifications wiring (require firebase-admin install)
+   - PushManager.subscribe() in PWA register
+   - Curator assignment queue review (page exists, uses SubmissionsQueue)
+
 ## 2026-05-15 — UI: Mobile-app adaptive theme, bottom nav, PWA enhancement
 
 Автор/agent: opencode

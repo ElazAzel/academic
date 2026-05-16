@@ -3,7 +3,7 @@ import { dequeuePendingEvents, markFailed } from "@/server/modules/outbox/servic
 import { fetchProgressData, fetchRiskData, fetchCertificateData } from "@/lib/reports/data";
 import { generateProgressCsv, generateRiskCsv, generateCertificateCsv } from "@/lib/reports/csv-generator";
 import { generateProgressXlsx, generateRiskXlsx, generateCertificateXlsx } from "@/lib/reports/xlsx-generator";
-import { generateProgressPdf, generateRiskPdf } from "@/lib/reports/pdf-generator";
+import { generateProgressPdf, generateRiskPdf, generateCertificatePdf } from "@/lib/reports/pdf-generator";
 import type { ReportFormat } from "@/lib/reports/types";
 
 const prisma = getPrisma();
@@ -24,9 +24,7 @@ const generators: Record<string, Record<ReportFormat, (rows: unknown[]) => Promi
   certificates: {
     csv: async (rows) => generateCertificateCsv(rows as never[]),
     xlsx: async (rows) => generateCertificateXlsx(rows as never[]),
-    pdf: async () => {
-      throw new Error("PDF not supported for certificates report");
-    },
+    pdf: async (rows) => generateCertificatePdf(rows as never[]),
   },
 };
 
