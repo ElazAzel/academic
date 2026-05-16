@@ -33,12 +33,13 @@ vi.mock("@/lib/prisma", () => ({
 
 const {
   getConversation,
+  getMyConversations,
   sendMessageAction,
   getUploadUrlForFile,
   markAsRead,
 } = await import("@/server/actions/chat");
 
-const curatorUser = { id: "cur1", email: "curator@test.com", name: "Curator", roles: ["curator"] };
+const curatorUser = { id: "cur1", email: "curator@test.com", name: "Мадина", roles: ["curator"] };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -77,7 +78,11 @@ describe("chat actions", () => {
         lessonId: "lesson1",
         lesson: { id: "lesson1", title: "Prompt engineering" },
         senderId: "student1",
-        sender: { id: "student1", name: "Student" },
+        sender: {
+          id: "student1",
+          name: "Слушатель1",
+          roles: [{ role: { key: "student" } }],
+        },
         createdAt: new Date("2026-05-16T08:00:00.000Z"),
         readAt: null,
       },
@@ -88,6 +93,70 @@ describe("chat actions", () => {
         id: "m1",
         lessonId: "lesson1",
         lessonTitle: "Prompt engineering",
+        senderName: "Слушатель1",
+      }),
+    ]);
+  });
+
+  it("shows curator name with role prefix to a student", async () => {
+    mockRequireRole.mockResolvedValue({
+      id: "student1",
+      email: "student@test.com",
+      name: "Слушатель1",
+      roles: ["student"],
+    });
+    mockMessageFindMany.mockResolvedValue([
+      {
+        id: "m1",
+        text: "Ответ по уроку",
+        attachmentUrl: null,
+        attachmentType: null,
+        lessonId: null,
+        lesson: null,
+        senderId: "cur1",
+        sender: {
+          id: "cur1",
+          name: "Мадина",
+          roles: [{ role: { key: "curator" } }],
+        },
+        createdAt: new Date("2026-05-16T08:00:00.000Z"),
+        readAt: null,
+      },
+    ]);
+
+    await expect(getConversation("student1")).resolves.toEqual([
+      expect.objectContaining({ senderName: "Куратор Мадина" }),
+    ]);
+  });
+
+  it("uses the issued student name in the curator conversation list", async () => {
+    mockMessageFindMany.mockResolvedValue([
+      {
+        id: "m1",
+        text: "Вопрос по уроку",
+        senderId: "student1",
+        receiverId: "cur1",
+        readAt: null,
+        createdAt: new Date("2026-05-16T08:00:00.000Z"),
+        lessonId: null,
+        lesson: null,
+        sender: {
+          id: "student1",
+          name: "Слушатель1",
+          roles: [{ role: { key: "student" } }],
+        },
+        receiver: {
+          id: "cur1",
+          name: "Мадина",
+          roles: [{ role: { key: "curator" } }],
+        },
+      },
+    ]);
+
+    await expect(getMyConversations()).resolves.toEqual([
+      expect.objectContaining({
+        partnerId: "student1",
+        partnerName: "Слушатель1",
       }),
     ]);
   });
@@ -113,6 +182,7 @@ describe("chat actions", () => {
     );
     expect(mockCreateNotification).toHaveBeenCalledWith(
       expect.objectContaining({
+        title: "Новое сообщение от Куратор Мадина",
         userId: "student1",
         data: expect.objectContaining({ link: "/student/lessons/lesson1" }),
       }),
