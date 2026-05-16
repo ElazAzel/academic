@@ -1,6 +1,6 @@
 "use server";
 
-import { safeQuery, getStudentAnalyticsDetail } from "./shared";
+import { withQueryFallback, getStudentAnalyticsDetail } from "./shared";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/page-guards";
 import type {
@@ -13,7 +13,7 @@ import type {
 
 export async function getAdminDashboard() {
   await requireRole(["admin"]);
-  return safeQuery(async () => {
+  return withQueryFallback(async () => {
     const [
       coursesCount,
       cohortsCount,
@@ -95,10 +95,60 @@ export async function getAdminDashboard() {
   }, null);
 }
 
+export async function getEnrollmentData(): Promise<{
+  students: { id: string; name: string | null; email: string }[];
+  courses: { id: string; title: string }[];
+  cohorts: { id: string; name: string; courseId: string }[];
+  curators: { id: string; name: string | null; email: string }[];
+}> {
+  await requireRole(["admin"]);
+
+  return withQueryFallback(async () => {
+    const [students, courses, cohorts, curators] = await Promise.all([
+      prisma.user.findMany({
+        where: { roles: { some: { role: { key: "student" } } } },
+        select: { id: true, name: true, email: true },
+        orderBy: { name: "asc" }
+      }),
+      prisma.course.findMany({
+        where: { status: "PUBLISHED" },
+        select: { id: true, title: true },
+        orderBy: { title: "asc" }
+      }),
+      prisma.cohort.findMany({
+        where: { status: "active" },
+        select: { id: true, name: true, courseId: true },
+        orderBy: { name: "asc" }
+      }),
+      prisma.user.findMany({
+        where: { roles: { some: { role: { key: { in: ["curator", "super_curator"] } } } } },
+        select: { id: true, name: true, email: true },
+        orderBy: { name: "asc" }
+      })
+    ]);
+
+    return {
+      students,
+      courses,
+      cohorts: cohorts.map(c => ({
+        id: c.id,
+        name: c.name,
+        courseId: c.courseId ?? ""
+      })),
+      curators
+    };
+  }, {
+    students: [] as { id: string; name: string | null; email: string }[],
+    courses: [] as { id: string; title: string }[],
+    cohorts: [] as { id: string; name: string; courseId: string }[],
+    curators: [] as { id: string; name: string | null; email: string }[]
+  });
+}
+
 export async function getAdminStudentAnalytics(): Promise<StudentAnalyticsDetail[]> {
   await requireRole(["admin"]);
 
-  return safeQuery(async () => {
+  return withQueryFallback(async () => {
     const enrollments = await prisma.enrollment.findMany({
       where: { status: "ACTIVE" },
       select: { userId: true },

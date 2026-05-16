@@ -1,6 +1,6 @@
 "use server";
 
-import { safeQuery } from "./shared";
+import { withQueryFallback } from "./shared";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
@@ -11,7 +11,7 @@ export async function getInstructorDashboard() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  return safeQuery(async () => {
+  return withQueryFallback(async () => {
     const courses = await prisma.course.findMany({
       where: { instructors: { some: { userId: user.id } } },
       orderBy: { createdAt: "desc" },
@@ -86,7 +86,7 @@ export async function getInstructorAnalytics() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  return safeQuery(async () => {
+  return withQueryFallback(async () => {
     const courses = await prisma.course.findMany({
       where: { instructors: { some: { userId: user.id } } },
       include: {
@@ -182,7 +182,7 @@ export async function getForwardedQuestions() {
   const user = await getCurrentUser();
   if (!user) return [];
 
-  return safeQuery(async () => {
+  return withQueryFallback(async () => {
     const courseFilter = user.roles.includes("admin")
       ? {}
       : { lesson: { module: { course: { instructors: { some: { userId: user.id } } } } } };
@@ -216,7 +216,7 @@ export async function getInstructorStudents() {
   const user = await getCurrentUser();
   if (!user) return [];
 
-  return safeQuery(async () => {
+  return withQueryFallback(async () => {
     const courses = await prisma.course.findMany({
       where: { instructors: { some: { userId: user.id } } },
       select: { id: true, title: true },

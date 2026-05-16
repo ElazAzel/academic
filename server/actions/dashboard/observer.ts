@@ -1,6 +1,6 @@
 "use server";
 
-import { safeQuery } from "./shared";
+import { withQueryFallback } from "./shared";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/page-guards";
 import type { DashboardMetric } from "@/types/domain";
@@ -9,7 +9,7 @@ export async function getCustomerObserverDashboard() {
   const user = await requireRole(["customer_observer"]);
   const { getObserverScope, getScopedStudentIdsForObserver } = await import("@/server/modules/observer/scope");
 
-  return safeQuery(async () => {
+  return withQueryFallback(async () => {
     const scope = await getObserverScope(user.id);
     const scopedStudentIds = await getScopedStudentIdsForObserver(user.id);
 

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { StudentAnalyticsDetail } from "@/types/domain";
 
-export async function safeQuery<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+export async function withQueryFallback<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await fn();
   } catch (err) {

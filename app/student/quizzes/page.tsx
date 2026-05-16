@@ -5,21 +5,13 @@ import { EmptyState } from "@/components/lms/empty-state";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getStudentQuizAttemptsAction } from "@/server/actions/student";
 
 export const dynamic = "force-dynamic";
 
 export default async function StudentQuizzesPage() {
- const user = await requireRolePage(["student"]);
- const prisma = getPrisma();
- 
- const attempts = await prisma.quizAttempt.findMany({
-  where: { userId: user.id },
-  include: {
-   quiz: { include: { course: true, lesson: true } }
-  },
-  orderBy: { startedAt: "desc" }
- });
+ await requireRolePage(["student"]);
+ const attempts = await getStudentQuizAttemptsAction();
 
  return (
   <AppShell role="student">

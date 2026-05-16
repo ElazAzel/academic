@@ -6,21 +6,13 @@ import { EmptyState } from "@/components/lms/empty-state";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getStudentAssignmentSubmissionsAction } from "@/server/actions/student";
 
 export const dynamic = "force-dynamic";
 
 export default async function StudentAssignmentsPage() {
- const user = await requireRolePage(["student"]);
- const prisma = getPrisma();
-
- const submissions = await prisma.assignmentSubmission.findMany({
-  where: { userId: user.id },
-  include: {
-   assignment: { include: { course: true, lesson: true } }
-  },
-  orderBy: { submittedAt: "desc" }
- });
+ await requireRolePage(["student"]);
+ const submissions = await getStudentAssignmentSubmissionsAction();
 
  return (
   <AppShell role="student">

@@ -328,8 +328,8 @@ type: (["video", "text", "file" /*...*/].includes(block.type) ? block.type : "te
 | 1 | 📄 Anti-vibecoding audit (docs only) | ✅ None | ~30 min | 3 docs | ✅ Done |
 | 2 | 🎨 Shared UI: StatusBadge, standardize empty/error/loading | 🟡 Low | 2h | ~15 files | ✅ Done |
 | 3 | 🔧 Constants: route maps, upload limits, status maps | 🟡 Low | 2h | ~20 files | 🟡 Partial (`lib/constants.ts` created, quiz defaults, notification channel constants, route partial) |
-| 4 | 🏷️ Naming cleanup: safeQuery→withFallback, split mixed concerns | 🟡 Low | 1h | ~8 files | ❌ Pending |
-| 5 | 🧹 Server action cleanup: deduplicate, remove Prisma from pages | 🟡 Medium | 3h | ~12 files | ❌ Pending |
+| 4 | 🏷️ Naming cleanup: safeQuery→withFallback, split mixed concerns | 🟡 Low | 1h | ~8 files | ✅ Done |
+| 5 | 🧹 Server action cleanup: deduplicate, remove Prisma from pages | 🟡 Medium | 3h | ~12 files | ✅ Done |
 | 6 | 🎯 Student lesson flow: consolidate content, embed quiz/assignment | 🟡 Medium | 4h | ~8 files | ❌ Pending |
 | 7 | 🔒 TypeScript & validation: discriminated unions, Zod for formData | 🟡 Medium | 3h | ~10 files | ❌ Pending |
 | 8 | 🧪 Security & tests: access finalize, integration tests | 🟡 Medium | 3h | ~10 files | ❌ Pending |
