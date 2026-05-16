@@ -3,12 +3,12 @@ import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { toJsonValue } from "@/lib/json";
 import { logAudit } from "@/server/modules/audit/service";
-import { assertInstructorOfCourse, createModule, updateModule, deleteModule, createLesson, updateLesson, deleteLesson } from "@/server/modules/courses/service";
-import type { CourseBuilderDetail, BuilderModuleDetail, BuilderLessonDetail, ContentBlock } from "@/types/domain";
+import { assertInstructorOfCourse, createModule, updateModule, deleteModule, createLesson, updateLesson, deleteLesson, createBlock, updateBlock, deleteBlock } from "@/server/modules/courses/service";
+import type { CourseBuilderDetail, BuilderModuleDetail, BuilderBlockDetail, BuilderLessonDetail, ContentBlock } from "@/types/domain";
 
 const prisma = getPrisma();
 
-export { assertInstructorOfCourse, createModule, updateModule, deleteModule, createLesson, updateLesson, deleteLesson };
+export { assertInstructorOfCourse, createModule, updateModule, deleteModule, createLesson, updateLesson, deleteLesson, createBlock, updateBlock, deleteBlock };
 
 function toBuilderDetail(course: Record<string, unknown>): CourseBuilderDetail {
   const c = course as {
@@ -38,6 +38,7 @@ function toBuilderModule(m: Record<string, unknown>): BuilderModuleDetail {
     id: string; order: number; title: string;
     description?: string | null; recommendedDays: number;
     status: string;
+    blocks: Array<Record<string, unknown>>;
     lessons: Array<Record<string, unknown>>;
   };
   return {
@@ -47,7 +48,23 @@ function toBuilderModule(m: Record<string, unknown>): BuilderModuleDetail {
     description: mod.description,
     recommendedDays: mod.recommendedDays,
     status: mod.status as BuilderModuleDetail["status"],
+    blocks: (mod.blocks ?? []).map(toBuilderBlock),
     lessons: (mod.lessons ?? []).map(toBuilderLesson),
+  };
+}
+
+function toBuilderBlock(b: Record<string, unknown>): BuilderBlockDetail {
+  const block = b as {
+    id: string; order: number; title: string;
+    description?: string | null;
+    lessons: Array<Record<string, unknown>>;
+  };
+  return {
+    id: block.id,
+    order: block.order,
+    title: block.title,
+    description: block.description,
+    lessons: (block.lessons ?? []).map(toBuilderLesson),
   };
 }
 
@@ -96,6 +113,15 @@ export async function getCourseForBuilder(courseId: string, actorId: string): Pr
       modules: {
         orderBy: { order: "asc" },
         include: {
+          blocks: {
+            orderBy: { order: "asc" },
+            include: {
+              lessons: {
+                orderBy: { order: "asc" },
+                include: { quizzes: { include: { questions: true } }, assignments: true },
+              },
+            },
+          },
           lessons: {
             orderBy: { order: "asc" },
             include: { quizzes: { include: { questions: true } }, assignments: true },
