@@ -46,15 +46,15 @@ export function LessonCard({ lesson }: { lesson: LessonCardType }) {
 
       {/* Content */}
       <div className="min-w-0 flex-1 space-y-1">
-        <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-medium">{lesson.order}. {lesson.title}</p>
-          <StatusBadge status={lesson.status as BadgeStatus} />
+        <div className="flex flex-wrap items-center gap-1.5">
+          <p className="text-sm font-medium line-clamp-1">{lesson.order}. {lesson.title}</p>
+          <StatusBadge status={lesson.status as BadgeStatus} className="shrink-0" />
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
           <span>{lesson.durationMinutes} мин.</span>
-          {lesson.isRequired && <StatusBadge status="ACTIVE" label="Обязательный" className="text-[10px]" />}
-          {lesson.hasQuiz && <StatusBadge status="IN_REVIEW" label="Тест" className="text-[10px]" />}
-          {lesson.hasAssignment && <StatusBadge status="forwarded" label="Задание" className="text-[10px]" />}
+          {lesson.isRequired && <StatusBadge status="ACTIVE" label="Обязательный" className="shrink-0 text-[10px]" />}
+          {lesson.hasQuiz && <StatusBadge status="IN_REVIEW" label="Тест" className="shrink-0 text-[10px]" />}
+          {lesson.hasAssignment && <StatusBadge status="forwarded" label="Задание" className="shrink-0 text-[10px]" />}
         </div>
         {isLocked && lesson.lockReason && (
           <p className="text-xs text-muted-foreground/60">{lesson.lockReason}</p>
