@@ -111,120 +111,64 @@ enum QuestionStatus {
   OPEN
   ANSWERED
   FORWARDED
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-}
-
-model OutboxEvent {
-  id        String   @id @default(cuid())
-  eventType String   @map("event_type")
-  payload   Json     @default("{}")
-  status    String   @default("pending")
-  createdAt DateTime @default(now()) @map("created_at")
-  sentAt    DateTime? @map("sent_at")
-  error     String?  @db.Text
-
-  @@index([status, createdAt])
-  @@map("outbox_events")
-}
-
-
-enum RoleKey {
-  admin
-  instructor
-  student
-  curator
-  super_curator
-  customer_observer
-}
-
-enum CourseStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
-}
-
-enum LessonType {
-  VIDEO
-  TEXT
-  DOCUMENT
-  VIDEO_DOCUMENT
-  QUIZ
-  ASSIGNMENT
-  LIVE
-  RECORDING
-  MIXED
-}
-
-enum ProgressStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  COMPLETED
-  BLOCKED
-}
-
-enum EnrollmentStatus {
-  INVITED
-  ACTIVE
-  PAUSED
-  COMPLETED
-  CANCELLED
-}
-
-enum QuestionType {
-  SINGLE_CHOICE
-  MULTIPLE_CHOICE
-  TRUE_FALSE
-  TEXT
-}
-
-enum SubmissionStatus {
-  DRAFT
-  SUBMITTED
-  IN_REVIEW
-  ACCEPTED
-  REJECTED
-  NEEDS_REVISION
-}
-
-
-
-enum NotificationStatus {
-  QUEUED
-  SENT
-  READ
-  FAILED
-}
-
-enum ConsentStatus {
-  ACCEPTED
-  REVOKED
-}
-
-enum ImportStatus {
-  PENDING
-  VALIDATED
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
-enum UserAccountStatus {
-  ACTIVE
-  INACTIVE
-  BLOCKED
-  DELETED
-}
-
-enum QuestionStatus {
-  OPEN
-  ANSWERED
-  FORWARDED
   CLOSED
+}
+
+// ── NextAuth.js models (PrismaAdapter) ──────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ── RBAC models ─────────────────────────────────────────────────────
+
+model Role {
+  id        String   @id @default(cuid())
+  key       RoleKey  @unique
+  label     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userRoles UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId String @map("user_id")
+  roleId String @map("role_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
 }
 
 model User {
@@ -281,13 +225,6 @@ model User {
   learningPathEnrollments    LearningPathEnrollment[]
 
   @@map("users")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-
-  @@id([roleId, permissionId])
-  @@map("role_permissions")
 }
 
 model Client {
@@ -349,6 +286,7 @@ model Course {
   reports        Report[]
   riskFlags      RiskFlag[]
   notificationPreferences NotificationPreference[]
+  learningPathCourses LearningPathCourse[]
 
   @@index([createdAt])
   @@index([status])
