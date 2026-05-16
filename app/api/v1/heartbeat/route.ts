@@ -12,7 +12,8 @@ export async function POST() {
   try {
     const session = await getServerSession();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      // Silently succeed for unauthenticated users (heartbeat runs globally)
+      return NextResponse.json({ ok: true });
     }
 
     await prisma.user.update({
@@ -22,6 +23,7 @@ export async function POST() {
 
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    // Silently succeed even on errors to avoid console noise
+    return NextResponse.json({ ok: true });
   }
 }

@@ -28,14 +28,16 @@ export function PopupModal() {
     try {
       const res = await fetch("/api/v1/popups/active");
       if (res.ok) {
+        const contentType = res.headers.get("content-type") ?? "";
+        if (!contentType.includes("application/json")) return;
         const json = await res.json();
         if (json.data) {
           setPopup(json.data);
           setOpen(true);
         }
       }
-    } catch (err) {
-      console.error("[PopupModal] Failed to fetch popup:", err);
+    } catch {
+      // Silently ignore popup fetch errors
     }
   }
 

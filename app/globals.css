@@ -94,6 +94,55 @@ body {
   }
 }
 
+/* ── Mobile overflow fixes ───────────────────────────────────────── */
+
+/* Prevent horizontal overflow on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Disable pinch-to-zoom on iOS (supplement viewport meta) */
+html {
+  touch-action: manipulation;
+}
+
+@media (max-width: 767px) {
+  /* Force all content to stay within viewport */
+  main, [role="main"], #main-content {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Prevent tables from breaking layout */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  /* Constrain cards and panels */
+  .glass-panel,
+  [class*="rounded-2xl"],
+  [class*="rounded-xl"] {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Prevent long text from overflowing */
+  p, span, h1, h2, h3, h4, h5, h6, a, li {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Fix input fields expanding beyond container */
+  input, textarea, select {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 /* ── Typography ──────────────────────────────────────────────────── */
 
 a {

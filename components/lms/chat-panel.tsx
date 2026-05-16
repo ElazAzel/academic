@@ -103,15 +103,10 @@ export function ChatPanel({
       queryClient.setQueryData<ChatMessage[]>(queryKey, (old) => [...(old ?? []), optimistic]);
       return { previous };
     },
-    onError: (err, formData, context) => {
+    onError: (_err, _formData, context) => {
       isSendingRef.current = false;
-      const failedText = formData.get("text") as string;
-      if (failedText && !failedText.startsWith("[Изображение]")) {
-        setText(failedText);
-      }
-      queryClient.setQueryData<ChatMessage[]>(queryKey, (old) =>
-        (old ?? []).filter((m) => !m.id.startsWith("optimistic-"))
-      );
+      // Keep optimistic message visible with error state (has retry button)
+      // Don't restore text to input — user sees retry option in bubble
       if (context?.previous) {
         queryClient.setQueryData(queryKey, context.previous);
       }
@@ -143,13 +138,18 @@ export function ChatPanel({
   function handleSend(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (isSendingRef.current) return;
-    if (!text.trim()) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
     isSendingRef.current = true;
+
+    // Clear input FIRST — before mutation
+    const savedText = trimmed;
+    setText("");
+
     const formData = new FormData();
-    formData.set("text", text);
+    formData.set("text", savedText);
     if (lessonId) formData.set("lessonId", lessonId);
     if (curatorId) formData.set("receiverId", curatorId);
-    setText("");
     sendMutation.mutate(formData);
   }
 

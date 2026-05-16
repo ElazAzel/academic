@@ -26,11 +26,15 @@ export async function getConversation(studentId: string, lessonId?: string) {
         { receiverId: targetUserId, ...lessonFilter },
       ],
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
+    take: 100,
     include: {
       sender: { select: { id: true, name: true } },
     },
   });
+
+  // Reverse to show oldest first in UI
+  messages.reverse();
 
   return messages.map((m) => ({
     id: m.id,
@@ -169,7 +173,7 @@ export async function sendMessageAction(formData: FormData) {
       });
     }
 
-  revalidatePath("/curator/questions");
+  revalidatePath("/curator/chat");
   revalidatePath("/student");
   return { success: true };
 }
