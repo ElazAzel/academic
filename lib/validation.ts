@@ -19,19 +19,20 @@ export const updateCourseSchema = courseSchema.partial().extend({
 export const moduleSchema = z.object({
   title: z.string().min(MODULE.TITLE_MIN_LENGTH).max(MODULE.TITLE_MAX_LENGTH),
   description: z.string().optional(),
-  order: z.number().int().positive(),
+  order: z.number().int().min(0),
   recommendedDays: z.number().int().positive().default(MODULE.DEFAULT_RECOMMENDED_DAYS)
 });
 
 export const lessonSchema = z.object({
   title: z.string().min(LESSON.TITLE_MIN_LENGTH).max(LESSON.TITLE_MAX_LENGTH),
   summary: z.string().nullish(),
-  order: z.number().int().positive(),
+  order: z.number().int().min(0),
   type: z.enum(["VIDEO", "TEXT", "DOCUMENT", "VIDEO_DOCUMENT", "QUIZ", "ASSIGNMENT", "LIVE", "RECORDING", "MIXED"]).default("MIXED"),
   content: z.record(z.unknown()).default({}),
   videoUrl: z.string().nullish().or(z.literal("")),
   durationMinutes: z.number().int().min(0).default(0),
-  isRequired: z.boolean().default(true)
+  isRequired: z.boolean().default(true),
+  blockId: z.string().nullish()
 });
 
 export const enrollmentSchema = z.object({
@@ -91,6 +92,52 @@ export const courseBuilderSettingsSchema = z.object({
   traversalMode: z.enum([TRAVERSAL_MODES.SEQUENTIAL, TRAVERSAL_MODES.OPEN]).optional(),
   completionThreshold: z.number().int().min(COURSE.MIN_COMPLETION_THRESHOLD).max(COURSE.MAX_COMPLETION_THRESHOLD).optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional()
+});
+
+const builderLessonSnapshotSchema = z.object({
+  id: z.string().min(1),
+  order: z.number().int().min(0),
+  title: z.string().min(LESSON.TITLE_MIN_LENGTH).max(LESSON.TITLE_MAX_LENGTH),
+  summary: z.string().nullish(),
+  type: z.enum(["VIDEO", "TEXT", "DOCUMENT", "VIDEO_DOCUMENT", "QUIZ", "ASSIGNMENT", "LIVE", "RECORDING", "MIXED"]),
+  videoUrl: z.string().nullish().or(z.literal("")),
+  durationMinutes: z.number().int().min(0),
+  isRequired: z.boolean(),
+  blockId: z.string().nullish(),
+});
+
+const builderBlockSnapshotSchema: z.ZodType<{
+  id: string;
+  order: number;
+  title: string;
+  description?: string | null;
+  lessons: z.infer<typeof builderLessonSnapshotSchema>[];
+}> = z.object({
+  id: z.string().min(1),
+  order: z.number().int().min(0),
+  title: z.string().min(1).max(200),
+  description: z.string().nullish(),
+  lessons: z.array(builderLessonSnapshotSchema),
+});
+
+const builderModuleSnapshotSchema = z.object({
+  id: z.string().min(1),
+  order: z.number().int().min(0),
+  title: z.string().min(MODULE.TITLE_MIN_LENGTH).max(MODULE.TITLE_MAX_LENGTH),
+  description: z.string().nullish(),
+  recommendedDays: z.number().int().positive(),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
+  blocks: z.array(builderBlockSnapshotSchema),
+  lessons: z.array(builderLessonSnapshotSchema),
+});
+
+export const courseBuilderSnapshotSchema = courseBuilderSettingsSchema.extend({
+  title: z.string().min(COURSE.TITLE_MIN_LENGTH).max(COURSE.TITLE_MAX_LENGTH),
+  description: z.string().min(10),
+  durationHours: z.number().int().min(COURSE.MIN_DURATION_HOURS).max(COURSE.MAX_DURATION_HOURS),
+  traversalMode: z.enum([TRAVERSAL_MODES.SEQUENTIAL, TRAVERSAL_MODES.OPEN]),
+  completionThreshold: z.number().int().min(COURSE.MIN_COMPLETION_THRESHOLD).max(COURSE.MAX_COMPLETION_THRESHOLD),
+  modules: z.array(builderModuleSnapshotSchema),
 });
 
 // ── Video provider schemas ──────────────────────────────────────────

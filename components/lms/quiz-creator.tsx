@@ -7,6 +7,7 @@ import { Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { QUIZ } from "@/lib/constants";
+import type { QuizSummary } from "@/types/domain";
 
 interface QuestionForm {
   type: string;
@@ -20,10 +21,12 @@ export function QuizCreator({
   lessonId,
   courseId,
   onCreated,
+  onCancel,
 }: {
   lessonId: string;
   courseId: string;
-  onCreated: () => void;
+  onCreated: (quiz: QuizSummary) => void;
+  onCancel?: () => void;
 }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -79,9 +82,17 @@ export function QuizCreator({
         }),
       });
       if (res.ok) {
+        const payload = await res.json();
+        const quiz = payload.data ?? payload;
         toast.success("Тест создан");
         router.refresh();
-        onCreated();
+        onCreated({
+          id: quiz.id,
+          title: quiz.title,
+          passThreshold: quiz.passThreshold,
+          maxAttempts: quiz.maxAttempts,
+          questionsCount: Array.isArray(quiz.questions) ? quiz.questions.length : 0,
+        });
       } else {
         const err = await res.json().catch(() => ({}));
         toast.error(err.error?.message || "Ошибка");
@@ -176,7 +187,7 @@ export function QuizCreator({
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button size="sm" variant="secondary" onClick={onCreated}>Отмена</Button>
+        <Button size="sm" variant="secondary" onClick={onCancel}>Отмена</Button>
         <Button size="sm" onClick={save} disabled={saving}>
           {saving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
           Сохранить тест

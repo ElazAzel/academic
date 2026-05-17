@@ -5,16 +5,20 @@ import { Button } from "@/components/ui/button";
 import { LessonBlockEditor } from "@/components/lms/lesson-block-editor";
 import { QuizCreator } from "@/components/lms/quiz-creator";
 import { AssignmentCreator } from "@/components/lms/assignment-creator";
-import type { BuilderLessonDetail } from "@/types/domain";
+import type { AssignmentSummary, BuilderLessonDetail, QuizSummary } from "@/types/domain";
 
 export function LessonEditor({
   lesson,
   onChange,
   courseId,
+  onQuizCreated,
+  onAssignmentCreated,
 }: {
   lesson: BuilderLessonDetail;
   onChange: (updates: Partial<BuilderLessonDetail>) => void;
   courseId?: string;
+  onQuizCreated?: (quiz: QuizSummary) => void;
+  onAssignmentCreated?: (assignment: AssignmentSummary) => void;
 }) {
   const [showBlockEditor, setShowBlockEditor] = useState(true);
   const [showQuizCreator, setShowQuizCreator] = useState(false);
@@ -107,11 +111,27 @@ export function LessonEditor({
       </div>
 
       {showQuizCreator && courseId && (
-        <QuizCreator lessonId={lesson.id} courseId={courseId} onCreated={() => setShowQuizCreator(false)} />
+        <QuizCreator
+          lessonId={lesson.id}
+          courseId={courseId}
+          onCreated={(quiz) => {
+            onQuizCreated?.(quiz);
+            setShowQuizCreator(false);
+          }}
+          onCancel={() => setShowQuizCreator(false)}
+        />
       )}
 
       {showAssignmentCreator && courseId && (
-        <AssignmentCreator lessonId={lesson.id} courseId={courseId} onCreated={() => setShowAssignmentCreator(false)} />
+        <AssignmentCreator
+          lessonId={lesson.id}
+          courseId={courseId}
+          onCreated={(assignment) => {
+            onAssignmentCreated?.(assignment);
+            setShowAssignmentCreator(false);
+          }}
+          onCancel={() => setShowAssignmentCreator(false)}
+        />
       )}
 
       {/* Block editor */}
@@ -126,6 +146,8 @@ export function LessonEditor({
           <LessonBlockEditor
             lessonId={lesson.id}
             content={lesson.content}
+            quizzes={lesson.quizzes}
+            assignments={lesson.assignments}
           />
         )}
       </div>

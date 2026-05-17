@@ -5,7 +5,7 @@ import { Plus, Trash2, GripVertical, Video, FileText, HelpCircle, CheckSquare, S
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import type { ContentBlock, ContentBlockType } from "@/types/domain";
+import type { AssignmentSummary, ContentBlock, ContentBlockType, QuizSummary } from "@/types/domain";
 
 /** Block editor uses generic data shape for mutable editing */
 interface BlockItem {
@@ -36,12 +36,27 @@ const BLOCK_ICONS: Record<ContentBlockType, React.ComponentType<{ className?: st
   completion: CheckCircle,
 };
 
+function defaultBlockData(type: ContentBlockType, lessonId: string): Record<string, unknown> {
+  if (type === "text") return { html: "" };
+  if (type === "video") return { videoUrl: "" };
+  if (type === "file") return { url: "", filename: "" };
+  if (type === "quiz") return { quizId: "" };
+  if (type === "assignment") return { assignmentId: "" };
+  if (type === "rating") return { lessonId };
+  if (type === "curator_question") return { lessonId };
+  return { label: "Завершить урок" };
+}
+
 export function LessonBlockEditor({
   lessonId,
   content,
+  quizzes = [],
+  assignments = [],
 }: {
   lessonId: string;
   content: Record<string, unknown>;
+  quizzes?: QuizSummary[];
+  assignments?: AssignmentSummary[];
 }) {
   const router = useRouter();
   const dragIndex = useRef<number | null>(null);
@@ -55,13 +70,13 @@ export function LessonBlockEditor({
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const addBlock = useCallback((type: ContentBlockType, index: number) => {
-    const newBlock: BlockItem = { id: crypto.randomUUID(), type, data: {} };
+    const newBlock: BlockItem = { id: crypto.randomUUID(), type, data: defaultBlockData(type, lessonId) };
     setBlocks((prev) => {
       const next = [...prev];
       next.splice(index + 1, 0, newBlock);
       return next;
     });
-  }, []);
+  }, [lessonId]);
 
   const removeBlock = useCallback((id: string) => {
     setBlocks((prev) => prev.filter((b) => b.id !== id));
@@ -70,6 +85,10 @@ export function LessonBlockEditor({
   const updateBlockData = useCallback((id: string, data: Record<string, unknown>) => {
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, data } : b)));
   }, []);
+
+  const updateBlockType = useCallback((id: string, type: ContentBlockType) => {
+    setBlocks((prev) => prev.map((block) => (block.id === id ? { ...block, type, data: defaultBlockData(type, lessonId) } : block)));
+  }, [lessonId]);
 
   // ── Drag & Drop handlers ──────────────────────────────────────────
   const handleDragStart = useCallback((index: number) => {
@@ -169,7 +188,7 @@ export function LessonBlockEditor({
               <select
                 className="h-7 rounded-lg border bg-background px-2 text-xs"
                 value={block.type}
-                onChange={() => updateBlockData(block.id, {})}
+                onChange={(event) => updateBlockType(block.id, event.target.value as ContentBlockType)}
               >
                 {Object.entries(BLOCK_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
@@ -200,32 +219,55 @@ export function LessonBlockEditor({
             )}
 
             {block.type === "file" && (
-              <input
-                className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="ID медиафайла"
-                value={(block.data.mediaId as string) ?? ""}
-                onChange={(e) => updateBlockData(block.id, { ...block.data, mediaId: e.target.value })}
-              />
+              <div className="grid gap-2 md:grid-cols-2">
+                <input
+                  className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder="URL файла"
+                  value={(block.data.url as string) ?? ""}
+                  onChange={(e) => updateBlockData(block.id, { ...block.data, url: e.target.value })}
+                />
+                <input
+                  className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder="Название файла"
+                  value={(block.data.filename as string) ?? ""}
+                  onChange={(e) => updateBlockData(block.id, { ...block.data, filename: e.target.value })}
+                />
+              </div>
             )}
 
             {block.type === "quiz" && (
-              <div className="text-xs text-muted-foreground">
-                {block.data.quizId ? (
-                  <span>ID теста: {block.data.quizId as string}</span>
-                ) : (
-                  <span>Тест будет создан при добавлении</span>
-                )}
-              </div>
+              <select
+                className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                value={(block.data.quizId as string) ?? ""}
+                onChange={(e) => updateBlockData(block.id, { ...block.data, quizId: e.target.value })}
+              >
+                <option value="">Выберите тест из урока</option>
+                {quizzes.map((quiz) => (
+                  <option key={quiz.id} value={quiz.id}>{quiz.title}</option>
+                ))}
+              </select>
             )}
 
             {block.type === "assignment" && (
-              <div className="text-xs text-muted-foreground">
-                {block.data.assignmentId ? (
-                  <span>ID задания: {block.data.assignmentId as string}</span>
-                ) : (
-                  <span>Задание будет создано при добавлении</span>
-                )}
-              </div>
+              <select
+                className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                value={(block.data.assignmentId as string) ?? ""}
+                onChange={(e) => updateBlockData(block.id, { ...block.data, assignmentId: e.target.value })}
+              >
+                <option value="">Выберите задание из урока</option>
+                {assignments.map((assignment) => (
+                  <option key={assignment.id} value={assignment.id}>{assignment.title}</option>
+                ))}
+              </select>
+            )}
+
+            {block.type === "completion" && (
+              <input
+                className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="Текст кнопки завершения"
+                value={(block.data.label as string) ?? ""}
+                onChange={(e) => updateBlockData(block.id, { ...block.data, label: e.target.value })}
+              />
             )}
 
             {/* Move buttons for keyboard accessibility */}
