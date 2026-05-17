@@ -92,7 +92,14 @@ export function CuratorChatList({
               )}
             </DialogHeader>
             {/* Показываем ВСЮ историю переписки (без lessonId), контекст урока — только для справки */}
-            <ChatPanel studentId={selectedPartner.id} replyLessonId={selectedPartner.lessonId} />
+            <ChatPanel
+              studentId={selectedPartner.id}
+              replyLessonId={selectedPartner.lessonId}
+              conversationTitle="Чат со слушателем"
+              emptyState="Напишите слушателю первое сообщение."
+              historyTitle={`Чат со слушателем: ${selectedPartner.name}`}
+              otherParticipantName="Слушатель"
+            />
           </DialogContent>
         </Dialog>
       )}

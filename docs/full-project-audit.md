@@ -1,7 +1,7 @@
 # Полный аудит платформы — AI Strategic Academy
 
-**Дата:** 2026-05-16
-**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-03
+**Дата:** 2026-05-17
+**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-05
 **Область:** продуктовые сценарии, роли, маршруты, backend/API, доступ, безопасность, тесты, схема, документация
 
 ---
@@ -51,7 +51,7 @@
 | Admin | Green | users, roles, courses, cohorts, enrollments, invites, audit, settings, certificates issue/revoke | Reports/analytics v1 и release runbooks |
 | Instructor | Green/yellow | own courses, builder direction, quiz/assignment CRUD scoped, analytics, forwarded questions scoped | Unified builder modernization в M-PR-07 |
 | Student | Green/yellow | dashboard continue-learning, my courses, course/lesson access, embedded quiz/assignment/question/rating, certificates | Playwright happy path on prepared DB |
-| Curator | Yellow | assigned students, questions, assignment review, risks, scoped chat | Student card + operational queues в M-PR-05 |
+| Curator | Green/yellow | assigned students, questions, assignment review, risks, scoped chat, operational student cards with next actions | Browser smoke on prepared curator data; deeper operations continue through M-PR-06/M-PR-08 |
 | Super Curator | Yellow | curator dashboard, distribution, questions, reports scope | workload/risk/reassignment operations в M-PR-06 |
 | Customer Observer | Green/yellow | scoped dashboard, reports, certificates, read-only constraints | Reports/analytics v1 с owner/export tests в M-PR-08 |
 
@@ -93,7 +93,7 @@ Current state after M-PR-04:
 - Lesson player renders attached quizzes/assignments even for legacy lessons without explicit content blocks.
 - Rating, curator question, and completion content blocks are preserved by parsing and rendered in lesson context.
 - Standalone quiz/assignment pages and aggregators now prefer returning to the originating lesson/course context.
-- Curator and super-curator screens exist, but need stronger “what should I do next?” operational density.
+- Curator screens now expose next-action student cards with progress, deadlines, questions, assignments, risks, latest lesson context, and quick chat.
 
 M-PR-05 and M-PR-06 should focus on role workflow quality, not on new product categories.
 
@@ -128,7 +128,6 @@ Known limitation:
 
 | Priority | Risk | Why It Matters | Planned Package |
 |---|---|---|---|
-| P1 | Curator operations lack a strong single student/action card | Curator should see next action without hunting across pages | M-PR-05 |
 | P1 | Super-curator workload/risk operations need safer v1 UX | Load distribution and escalation must be scoped and actionable | M-PR-06 |
 | P2 | Reports/analytics need owner/scope/export discipline | Reports must support management decisions without data leakage | M-PR-08 |
 | P2 | Notification/audit coverage is incomplete for all core events | Enrollment, curator assignment, assignment review, certificate events need consistent records | M-PR-09 |
@@ -158,8 +157,8 @@ Rule going forward: if an old audit table says a risk is open but `docs/update-l
 
 ## 9. Recommended Next Step
 
-Continue with **M-PR-05: Curator Operations v1**:
+Continue with **M-PR-06: Super Curator Operations v1**:
 
-- build a curator-facing student card with progress, deadlines, questions, assignments, risks, latest lesson context, and quick chat;
-- strengthen pending questions, pending assignments, and active risks queues;
-- keep all views scoped to assigned students.
+- expose workload, risk, question, and reassignment actions by curator/cohort;
+- keep reassignment/escalation actions scoped by super-curator responsibility;
+- reuse the M-PR-05 operational pattern so every row answers “what should I do next?”.
