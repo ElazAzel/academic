@@ -1,31 +1,80 @@
+"use client";
+
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
 import { LoginForm } from "@/components/auth/login-form";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
+import { motion } from "framer-motion";
 
 export function LoginScreen({ oauthProviders }: { oauthProviders: OAuthProviderFlags }) {
   return (
     <main className="relative flex min-h-screen">
       {/* Brand panel */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-indigo-900 p-12 text-white lg:flex">
-        <div className="relative z-10 flex items-center gap-3 text-xl font-semibold">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="relative z-10 flex items-center gap-3 text-xl font-semibold"
+        >
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
             <GraduationCap className="h-6 w-6" />
           </span>
           AI Strategic Academy
-        </div>
+        </motion.div>
+
         <div className="relative z-10 flex items-center justify-center">
           <div className="relative h-72 w-72">
-            <div className="animate-float-slow absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl" />
-            <div className="animate-float absolute left-8 top-6 h-20 w-20 rounded-2xl bg-white/5 blur-lg" />
-            <div className="animate-float-delayed absolute bottom-12 right-6 h-16 w-16 rounded-full bg-white/8 blur-xl" />
-            <div className="animate-pulse-glow absolute bottom-20 left-10 h-10 w-10 rounded-full bg-white/10 blur-md" />
-            <div className="animate-float absolute right-12 top-16 h-8 w-8 rounded-lg bg-white/5 blur-md" style={{ animationDelay: "-2s" }} />
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              className="absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl"
+            />
+            <motion.div
+              animate={{
+                y: [0, -15, 0],
+                rotate: [0, 5, 0]
+              }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute left-8 top-6 h-20 w-20 rounded-2xl bg-white/5 blur-lg"
+            />
+            <motion.div
+              animate={{
+                y: [0, 20, 0],
+                rotate: [0, -10, 0]
+              }}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              className="absolute bottom-12 right-6 h-16 w-16 rounded-full bg-white/8 blur-xl"
+            />
+            <motion.div
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.5, 1, 0.5]
+              }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute bottom-20 left-10 h-10 w-10 rounded-full bg-white/10 blur-md"
+            />
+            <motion.div
+              animate={{
+                y: [0, -25, 0],
+                x: [0, 15, 0]
+              }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+              className="absolute right-12 top-16 h-8 w-8 rounded-lg bg-white/5 blur-md"
+            />
           </div>
         </div>
-        <div className="relative z-10 text-sm text-white/50" suppressHydrationWarning>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 0.5 }}
+          className="relative z-10 text-sm text-white/50" suppressHydrationWarning
+        >
           &copy; {new Date().getFullYear()} AI Strategic Academy
-        </div>
+        </motion.div>
+
         {/* Decorative circles */}
         <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-white/5" />
         <div className="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-white/5" />
@@ -34,7 +83,12 @@ export function LoginScreen({ oauthProviders }: { oauthProviders: OAuthProviderF
 
       {/* Form panel */}
       <div className="flex w-full items-center justify-center px-6 lg:w-1/2">
-        <div className="w-full max-w-sm animate-slide-up">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+          className="w-full max-w-sm"
+        >
           {/* Mobile logo */}
           <div className="mb-8 flex items-center gap-3 lg:hidden">
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
@@ -55,7 +109,7 @@ export function LoginScreen({ oauthProviders }: { oauthProviders: OAuthProviderF
               Забыли пароль?
             </Link>
           </div>
-        </div>
+        </motion.div>
       </div>
     </main>
   );

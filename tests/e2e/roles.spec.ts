@@ -2,19 +2,16 @@ import { test, expect, type Page } from "@playwright/test";
 
 // Shared function to test role login and basic routing
 async function loginAs(page: Page, email: string, password: string = "Password123!") {
-  // Clear cookies to log out any previous user
+  // Clear cookies and local storage before logging in
   await page.context().clearCookies();
-
-  // Navigate straight to login
   await page.goto("/login", { waitUntil: "networkidle" });
-
-  // Fast fail check - if redirected away from login (e.g., to a dashboard)
-  // because cookies weren't cleared, manually trigger the signout route.
-  if (!page.url().includes("/login")) {
-    await page.goto("/api/auth/signout");
-    await page.click('button[type="submit"]');
-    await page.waitForURL("**/login**");
-  }
+  await page.evaluate(() => {
+    try {
+      window.localStorage.clear();
+    } catch {
+      // Ignore cross-origin local storage access errors on about:blank
+    }
+  });
 
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', password);
