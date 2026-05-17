@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
-import { TrendingUp, Users, AlertTriangle, Clock } from "lucide-react";
+import { ClipboardCheck, TrendingUp, Users, AlertTriangle, Clock } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getSuperCuratorReportData } from "@/server/actions/super-curator";
 
@@ -123,7 +123,24 @@ export default async function SuperCuratorReportsPage() {
 
                 {/* Download */}
                 <DownloadReports reports={[
-                  { id: "progress", title: "Экспорт прогресса", desc: "Скачать отчёт по прогрессу", icon: TrendingUp },
+                  {
+                    id: "progress",
+                    title: "Экспорт прогресса",
+                    desc: "Скачать отчёт по прогрессу",
+                    icon: TrendingUp,
+                    owner: "Super curator",
+                    scope: "Только потоки, кураторы и слушатели в зоне ответственности",
+                    decision: "Какие потоки проседают и где нужна операционная поддержка.",
+                  },
+                  {
+                    id: "curator_workload",
+                    title: "Нагрузка кураторов",
+                    desc: "Очереди, риски и закрепления",
+                    icon: Users,
+                    owner: "Super curator",
+                    scope: "Только кураторы и потоки в зоне ответственности",
+                    decision: "Где перегрузка и кого нужно перераспределить.",
+                  },
                 ]} />
               </div>
             ),
@@ -150,7 +167,24 @@ export default async function SuperCuratorReportsPage() {
                 </Card>
 
                 <DownloadReports reports={[
-                  { id: "risk", title: "Экспорт рисков", desc: "Скачать отчёт по рискам", icon: AlertTriangle },
+                  {
+                    id: "risk",
+                    title: "Экспорт рисков",
+                    desc: "Скачать отчёт по рискам",
+                    icon: AlertTriangle,
+                    owner: "Super curator",
+                    scope: "Только потоки и слушатели в зоне ответственности",
+                    decision: "Какие риски нужно эскалировать или перераспределить.",
+                  },
+                  {
+                    id: "assignments",
+                    title: "Задания",
+                    desc: "Очередь проверки по зоне ответственности",
+                    icon: ClipboardCheck,
+                    owner: "Super curator",
+                    scope: "Только потоки и слушатели в зоне ответственности",
+                    decision: "Где копятся работы и какой куратор перегружен.",
+                  },
                 ]} />
               </div>
             ),

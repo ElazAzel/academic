@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
+  generateAssignmentCsv,
+  generateCuratorWorkloadCsv,
   generateProgressCsv,
   generateRiskCsv,
   generateCertificateCsv,
 } from "@/lib/reports/csv-generator";
-import type { ProgressRow, RiskRow, CertificateRow } from "@/lib/reports/types";
+import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, RiskRow } from "@/lib/reports/types";
 
 describe("generateProgressCsv", () => {
   const rows: ProgressRow[] = [
@@ -145,6 +147,54 @@ describe("generateCertificateCsv", () => {
   it("handles empty rows", () => {
     const csv = generateCertificateCsv([]);
     expect(csv).toContain("Всего сертификатов,0");
+  });
+});
+
+describe("generateAssignmentCsv", () => {
+  const rows: AssignmentRow[] = [
+    {
+      studentName: "Alice",
+      email: "alice@test.com",
+      course: "AI 101",
+      lesson: "Lesson 1",
+      assignment: "Strategy memo",
+      status: "SUBMITTED",
+      score: null,
+      submittedAt: "2026-05-01",
+      reviewedAt: null,
+      reviewerName: null,
+    },
+  ];
+
+  it("contains assignment status and review columns", () => {
+    const csv = generateAssignmentCsv(rows);
+    expect(csv).toContain("ОТЧЁТ ПО ЗАДАНИЯМ");
+    expect(csv).toContain("Слушатель,Email,Курс,Урок,Задание,Статус,Балл,Отправлено,Проверено,Проверяющий");
+    expect(csv).toContain("Strategy memo");
+    expect(csv).toContain("SUBMITTED");
+  });
+});
+
+describe("generateCuratorWorkloadCsv", () => {
+  const rows: CuratorWorkloadRow[] = [
+    {
+      curatorName: "Curator A",
+      curatorEmail: "curator@test.com",
+      cohorts: "Cohort A",
+      studentsCount: 12,
+      avgProgress: 55,
+      openQuestions: 2,
+      pendingAssignments: 3,
+      activeRisks: 1,
+      criticalRisks: 0,
+    },
+  ];
+
+  it("contains workload decision columns", () => {
+    const csv = generateCuratorWorkloadCsv(rows);
+    expect(csv).toContain("ОТЧЁТ ПО НАГРУЗКЕ КУРАТОРОВ");
+    expect(csv).toContain("Куратор,Email,Потоки,Слушателей,Средний прогресс %,Открытые вопросы,Задания на проверке,Активные риски,Критические риски");
+    expect(csv).toContain("Curator A");
   });
 });
 

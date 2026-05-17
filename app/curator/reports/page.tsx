@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
-import { TrendingUp, AlertTriangle } from "lucide-react";
+import { Award, ClipboardCheck, TrendingUp, AlertTriangle } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorReportData } from "@/server/actions/curator-enhanced";
 
@@ -99,8 +99,42 @@ export default async function CuratorReportsPage() {
 
           {/* Download */}
           <DownloadReports reports={[
-            { id: "curator_progress", title: "Прогресс слушателей", desc: "Успеваемость ваших слушателей", icon: TrendingUp },
-            { id: "curator_risk", title: "Риски слушателей", desc: "Кто требует внимания", icon: AlertTriangle },
+            {
+              id: "curator_progress",
+              title: "Прогресс слушателей",
+              desc: "Успеваемость ваших слушателей",
+              icon: TrendingUp,
+              owner: "Curator",
+              scope: "Только закрепленные слушатели и потоки",
+              decision: "Кому нужен контакт или поддержка в обучении.",
+            },
+            {
+              id: "curator_risk",
+              title: "Риски слушателей",
+              desc: "Кто требует внимания",
+              icon: AlertTriangle,
+              owner: "Curator",
+              scope: "Только закрепленные слушатели и потоки",
+              decision: "Какие риски разобрать в первую очередь.",
+            },
+            {
+              id: "assignments",
+              title: "Задания",
+              desc: "Работы закрепленных слушателей",
+              icon: ClipboardCheck,
+              owner: "Curator",
+              scope: "Только закрепленные слушатели и потоки",
+              decision: "Какие работы нужно проверить или вернуть на доработку.",
+            },
+            {
+              id: "certificates",
+              title: "Сертификаты",
+              desc: "Сертификаты закрепленных слушателей",
+              icon: Award,
+              owner: "Curator",
+              scope: "Только закрепленные слушатели и потоки",
+              decision: "Кто дошел до результата в зоне ответственности.",
+            },
           ]} />
         </div>
       ) : (

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
 import { ReportDesigner } from "@/components/lms/report-designer";
-import { Users, AlertTriangle, Award, TrendingUp } from "lucide-react";
+import { ClipboardCheck, Users, AlertTriangle, Award, TrendingUp } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 
@@ -86,9 +86,51 @@ export default async function AdminReportsPage() {
 
       {/* Quick download */}
       <DownloadReports reports={[
-        { id: "progress", title: "Прогресс по курсам", desc: "Все зачисления и прогресс слушателей", icon: Users },
-        { id: "risk", title: "Риски слушателей", desc: "Неактивные, просроченные, отстающие", icon: AlertTriangle },
-        { id: "certificates", title: "Сертификаты", desc: "Все выпущенные сертификаты", icon: Award, formats: ["csv", "xlsx", "pdf"] },
+        {
+          id: "progress",
+          title: "Прогресс по курсам",
+          desc: "Все зачисления и прогресс слушателей",
+          icon: Users,
+          owner: "Admin",
+          scope: "Вся академия",
+          decision: "Где отстает обучение и какие курсы требуют внимания.",
+        },
+        {
+          id: "risk",
+          title: "Риски слушателей",
+          desc: "Неактивные, просроченные, отстающие",
+          icon: AlertTriangle,
+          owner: "Admin",
+          scope: "Вся академия",
+          decision: "Какие риски нужно разобрать по потокам и курсам.",
+        },
+        {
+          id: "assignments",
+          title: "Задания",
+          desc: "Отправки, статусы проверки и баллы",
+          icon: ClipboardCheck,
+          owner: "Admin",
+          scope: "Вся академия",
+          decision: "Где накапливается очередь проверки.",
+        },
+        {
+          id: "certificates",
+          title: "Сертификаты",
+          desc: "Все выпущенные сертификаты",
+          icon: Award,
+          owner: "Admin",
+          scope: "Вся академия",
+          decision: "Какие сертификаты выпущены и по каким курсам.",
+        },
+        {
+          id: "curator_workload",
+          title: "Нагрузка кураторов",
+          desc: "Очереди, риски и закрепленные слушатели",
+          icon: TrendingUp,
+          owner: "Super curator operations",
+          scope: "Вся академия",
+          decision: "Где перегрузка и кого нужно перераспределить.",
+        },
       ]} />
     </AppShell>
   );

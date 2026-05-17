@@ -5,7 +5,7 @@ import { errorResponse, parseJson } from "@/lib/http";
 import { z } from "zod";
 
 const createJobSchema = z.object({
-  type: z.enum(["progress", "risk", "certificates"]),
+  type: z.enum(["progress", "risk", "assignments", "certificates", "curator_workload"]),
   format: z.enum(["csv", "xlsx", "pdf"]),
 });
 

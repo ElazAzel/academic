@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────────────
 
-type ReportTypeId = "progress" | "risk" | "certificates";
+type ReportTypeId = "progress" | "risk" | "assignments" | "certificates" | "curator_workload";
 type FormatId = "csv" | "xlsx" | "pdf";
 
 interface ColumnDef {
@@ -66,6 +66,39 @@ const REPORT_TYPES: ReportTypeDef[] = [
       { key: "email", label: "Email", defaultOn: true },
       { key: "course", label: "Курс", defaultOn: true },
       { key: "issuedAt", label: "Дата выдачи", defaultOn: true },
+    ],
+  },
+  {
+    id: "assignments",
+    title: "Задания",
+    desc: "Отправки, статусы проверки, баллы",
+    columns: [
+      { key: "studentName", label: "Слушатель", defaultOn: true },
+      { key: "email", label: "Email", defaultOn: true },
+      { key: "course", label: "Курс", defaultOn: true },
+      { key: "lesson", label: "Урок", defaultOn: false },
+      { key: "assignment", label: "Задание", defaultOn: true },
+      { key: "status", label: "Статус", defaultOn: true },
+      { key: "score", label: "Балл", defaultOn: true },
+      { key: "submittedAt", label: "Отправлено", defaultOn: true },
+      { key: "reviewedAt", label: "Проверено", defaultOn: false },
+      { key: "reviewerName", label: "Проверяющий", defaultOn: false },
+    ],
+  },
+  {
+    id: "curator_workload",
+    title: "Нагрузка кураторов",
+    desc: "Очереди, риски, прогресс по зоне ответственности",
+    columns: [
+      { key: "curatorName", label: "Куратор", defaultOn: true },
+      { key: "curatorEmail", label: "Email", defaultOn: true },
+      { key: "cohorts", label: "Потоки", defaultOn: true },
+      { key: "studentsCount", label: "Слушателей", defaultOn: true },
+      { key: "avgProgress", label: "Средний прогресс", defaultOn: true },
+      { key: "openQuestions", label: "Вопросы", defaultOn: true },
+      { key: "pendingAssignments", label: "Задания", defaultOn: true },
+      { key: "activeRisks", label: "Риски", defaultOn: true },
+      { key: "criticalRisks", label: "Критические", defaultOn: true },
     ],
   },
 ];
@@ -200,7 +233,7 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
           <div className="flex gap-2">
             {FORMATS.map((f) => {
               const FmtIcon = f.icon;
-              const isPdfUnsupported = reportType === "certificates";
+              const isPdfUnsupported = false;
               return (
                 <button
                   key={f.id}

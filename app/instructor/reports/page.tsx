@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
-import { Users, AlertTriangle, TrendingUp } from "lucide-react";
+import { Award, ClipboardCheck, Users, AlertTriangle, TrendingUp } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -89,8 +89,42 @@ export default async function InstructorReportsPage() {
 
       {/* Download reports */}
       <DownloadReports reports={[
-        { id: "progress", title: "Прогресс слушателей", desc: "Прогресс по вашим курсам", icon: Users },
-        { id: "risk", title: "Риски слушателей", desc: "Риски с цветовой индикацией", icon: AlertTriangle },
+        {
+          id: "progress",
+          title: "Прогресс слушателей",
+          desc: "Прогресс по вашим курсам",
+          icon: Users,
+          owner: "Instructor",
+          scope: "Только курсы преподавателя",
+          decision: "Какие группы и уроки проседают по образовательному результату.",
+        },
+        {
+          id: "risk",
+          title: "Риски слушателей",
+          desc: "Риски по вашим курсам",
+          icon: AlertTriangle,
+          owner: "Instructor",
+          scope: "Только курсы преподавателя",
+          decision: "Какие риски мешают завершению курса.",
+        },
+        {
+          id: "assignments",
+          title: "Задания",
+          desc: "Отправки и результаты по вашим курсам",
+          icon: ClipboardCheck,
+          owner: "Instructor",
+          scope: "Только курсы преподавателя",
+          decision: "Какие задания требуют методической проверки.",
+        },
+        {
+          id: "certificates",
+          title: "Сертификаты",
+          desc: "Сертификаты по вашим курсам",
+          icon: Award,
+          owner: "Instructor",
+          scope: "Только курсы преподавателя",
+          decision: "Кто завершил курс и получил подтверждение.",
+        },
       ]} />
     </AppShell>
   );

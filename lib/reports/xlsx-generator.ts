@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import type { ProgressRow, RiskRow, CertificateRow } from "./types";
+import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, RiskRow } from "./types";
 import { groupByCourse } from "./data";
 
 // ── Shared helpers ───────────────────────────────────────────────────
@@ -282,6 +282,145 @@ export async function generateCertificateXlsx(rows: CertificateRow[]): Promise<B
     ["По курсам", uniqueCourses],
   ];
 
+  for (const [metric, value] of summaryData) {
+    const row = ss.addRow([metric, value]);
+    row.eachCell((cell) => {
+      cell.font = { name: "Calibri", size: 11 };
+      cell.border = BORDER;
+    });
+  }
+
+  const buf = await wb.xlsx.writeBuffer();
+  return Buffer.from(buf);
+}
+
+// ── Assignment report ────────────────────────────────────────────────
+
+export async function generateAssignmentXlsx(rows: AssignmentRow[]): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "AI Strategic Academy";
+  wb.created = new Date();
+  wb.modified = new Date();
+
+  const ws = wb.addWorksheet("Задания");
+  ws.columns = [
+    { header: "Слушатель", key: "studentName", width: 28 },
+    { header: "Email", key: "email", width: 32 },
+    { header: "Курс", key: "course", width: 34 },
+    { header: "Урок", key: "lesson", width: 28 },
+    { header: "Задание", key: "assignment", width: 34 },
+    { header: "Статус", key: "status", width: 18 },
+    { header: "Балл", key: "score", width: 10 },
+    { header: "Отправлено", key: "submittedAt", width: 16 },
+    { header: "Проверено", key: "reviewedAt", width: 16 },
+    { header: "Проверяющий", key: "reviewerName", width: 24 },
+  ];
+
+  styleHeader(ws);
+  applyAutoFilter(ws, 10);
+  freezeHeader(ws);
+
+  for (const r of rows) {
+    const row = ws.addRow([
+      r.studentName,
+      r.email,
+      r.course,
+      r.lesson ?? "",
+      r.assignment,
+      r.status,
+      r.score ?? "",
+      r.submittedAt,
+      r.reviewedAt ?? "",
+      r.reviewerName ?? "",
+    ]);
+    row.eachCell((cell) => {
+      cell.border = BORDER;
+      cell.alignment = { vertical: "middle" };
+      cell.font = { name: "Calibri", size: 11 };
+    });
+  }
+
+  const ss = wb.addWorksheet("Сводка");
+  ss.columns = [
+    { header: "Показатель", key: "metric", width: 40 },
+    { header: "Значение", key: "value", width: 20 },
+  ];
+  styleHeader(ss);
+  const summaryData = [
+    ["Всего отправок", rows.length],
+    ["На проверке", rows.filter((r) => r.status === "SUBMITTED" || r.status === "IN_REVIEW").length],
+    ["Принято", rows.filter((r) => r.status === "ACCEPTED").length],
+    ["Нужна доработка", rows.filter((r) => r.status === "NEEDS_REVISION" || r.status === "REJECTED").length],
+  ];
+  for (const [metric, value] of summaryData) {
+    const row = ss.addRow([metric, value]);
+    row.eachCell((cell) => {
+      cell.font = { name: "Calibri", size: 11 };
+      cell.border = BORDER;
+    });
+  }
+
+  const buf = await wb.xlsx.writeBuffer();
+  return Buffer.from(buf);
+}
+
+// ── Curator workload report ──────────────────────────────────────────
+
+export async function generateCuratorWorkloadXlsx(rows: CuratorWorkloadRow[]): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "AI Strategic Academy";
+  wb.created = new Date();
+  wb.modified = new Date();
+
+  const ws = wb.addWorksheet("Нагрузка кураторов");
+  ws.columns = [
+    { header: "Куратор", key: "curatorName", width: 28 },
+    { header: "Email", key: "curatorEmail", width: 32 },
+    { header: "Потоки", key: "cohorts", width: 34 },
+    { header: "Слушателей", key: "studentsCount", width: 14 },
+    { header: "Средний прогресс %", key: "avgProgress", width: 20 },
+    { header: "Открытые вопросы", key: "openQuestions", width: 18 },
+    { header: "Задания на проверке", key: "pendingAssignments", width: 22 },
+    { header: "Активные риски", key: "activeRisks", width: 16 },
+    { header: "Критические риски", key: "criticalRisks", width: 18 },
+  ];
+
+  styleHeader(ws);
+  applyAutoFilter(ws, 9);
+  freezeHeader(ws);
+
+  for (const r of rows) {
+    const row = ws.addRow([
+      r.curatorName,
+      r.curatorEmail,
+      r.cohorts,
+      r.studentsCount,
+      r.avgProgress,
+      r.openQuestions,
+      r.pendingAssignments,
+      r.activeRisks,
+      r.criticalRisks,
+    ]);
+    row.eachCell((cell) => {
+      cell.border = BORDER;
+      cell.alignment = { vertical: "middle" };
+      cell.font = { name: "Calibri", size: 11 };
+    });
+  }
+
+  const ss = wb.addWorksheet("Сводка");
+  ss.columns = [
+    { header: "Показатель", key: "metric", width: 40 },
+    { header: "Значение", key: "value", width: 20 },
+  ];
+  styleHeader(ss);
+  const summaryData = [
+    ["Кураторов", rows.length],
+    ["Слушателей", rows.reduce((sum, row) => sum + row.studentsCount, 0)],
+    ["Открытых вопросов", rows.reduce((sum, row) => sum + row.openQuestions, 0)],
+    ["Заданий на проверке", rows.reduce((sum, row) => sum + row.pendingAssignments, 0)],
+    ["Активных рисков", rows.reduce((sum, row) => sum + row.activeRisks, 0)],
+  ];
   for (const [metric, value] of summaryData) {
     const row = ss.addRow([metric, value]);
     row.eachCell((cell) => {

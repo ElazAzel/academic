@@ -2,7 +2,7 @@ import { PDFDocument, PDFFont, PDFPage, rgb, StandardFonts } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import fs from "fs";
 import path from "path";
-import type { ProgressRow, RiskRow, CertificateRow } from "./types";
+import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, RiskRow } from "./types";
 import { groupByCourse } from "./data";
 
 // ── Font loading ────────────────────────────────────────────────────
@@ -414,6 +414,143 @@ export async function generateCertificatePdf(rows: CertificateRow[]): Promise<Ui
   }));
 
   drawTable(doc, pages, columns, tableRows, font, boldFont, y);
+
+  const totalPages = pages.length;
+  for (let i = 0; i < totalPages; i++) {
+    drawFooter(pages[i], font, i + 1, totalPages);
+  }
+
+  return doc.save();
+}
+
+// ── Assignment report (PDF) ──────────────────────────────────────────
+
+export async function generateAssignmentPdf(rows: AssignmentRow[]): Promise<Uint8Array> {
+  const { regular, bold } = getFonts();
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+
+  const font = regular
+    ? await doc.embedFont(regular, { subset: true })
+    : await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = bold
+    ? await doc.embedFont(bold, { subset: true })
+    : await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const pages: PDFPage[] = [addPage(doc)];
+  const page = pages[0];
+  let y = PAGE_H - 80;
+
+  drawHeader(page, font, boldFont, "Отчёт по заданиям", `Сформирован: ${new Date().toLocaleDateString("ru-RU")}`);
+
+  y -= 12;
+  page.drawText("Сводка", { x: MARGIN, y, size: 12, font: boldFont, color: rgb(0.12, 0.23, 0.47) });
+  y -= 18;
+  const summaryItems = [
+    `Всего отправок: ${rows.length}`,
+    `На проверке: ${rows.filter((r) => r.status === "SUBMITTED" || r.status === "IN_REVIEW").length}`,
+    `Принято: ${rows.filter((r) => r.status === "ACCEPTED").length}`,
+  ];
+  for (const item of summaryItems) {
+    page.drawText(`• ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+    y -= 14;
+  }
+  y -= 8;
+
+  drawTable(
+    doc,
+    pages,
+    [
+      { header: "Слушатель", key: "studentName", width: 80 },
+      { header: "Курс", key: "course", width: 95 },
+      { header: "Задание", key: "assignment", width: 110 },
+      { header: "Статус", key: "status", width: 60 },
+      { header: "Балл", key: "score", width: 35, align: "center" },
+      { header: "Отправлено", key: "submittedAt", width: 58, align: "center" },
+    ],
+    rows.map((row) => ({
+      studentName: row.studentName,
+      course: row.course,
+      assignment: row.assignment,
+      status: row.status,
+      score: row.score ?? "",
+      submittedAt: row.submittedAt,
+    })),
+    font,
+    boldFont,
+    y,
+  );
+
+  const totalPages = pages.length;
+  for (let i = 0; i < totalPages; i++) {
+    drawFooter(pages[i], font, i + 1, totalPages);
+  }
+
+  return doc.save();
+}
+
+// ── Curator workload report (PDF) ────────────────────────────────────
+
+export async function generateCuratorWorkloadPdf(rows: CuratorWorkloadRow[]): Promise<Uint8Array> {
+  const { regular, bold } = getFonts();
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+
+  const font = regular
+    ? await doc.embedFont(regular, { subset: true })
+    : await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = bold
+    ? await doc.embedFont(bold, { subset: true })
+    : await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const pages: PDFPage[] = [addPage(doc)];
+  const page = pages[0];
+  let y = PAGE_H - 80;
+
+  drawHeader(page, font, boldFont, "Отчёт по нагрузке кураторов", `Сформирован: ${new Date().toLocaleDateString("ru-RU")}`);
+
+  y -= 12;
+  page.drawText("Сводка", { x: MARGIN, y, size: 12, font: boldFont, color: rgb(0.12, 0.23, 0.47) });
+  y -= 18;
+  const summaryItems = [
+    `Кураторов: ${rows.length}`,
+    `Слушателей: ${rows.reduce((sum, row) => sum + row.studentsCount, 0)}`,
+    `Открытых вопросов: ${rows.reduce((sum, row) => sum + row.openQuestions, 0)}`,
+    `Заданий на проверке: ${rows.reduce((sum, row) => sum + row.pendingAssignments, 0)}`,
+  ];
+  for (const item of summaryItems) {
+    page.drawText(`• ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+    y -= 14;
+  }
+  y -= 8;
+
+  drawTable(
+    doc,
+    pages,
+    [
+      { header: "Куратор", key: "curatorName", width: 92 },
+      { header: "Слуш.", key: "studentsCount", width: 38, align: "center" },
+      { header: "Прогр.", key: "avgProgress", width: 42, align: "center" },
+      { header: "Вопросы", key: "openQuestions", width: 48, align: "center" },
+      { header: "Задания", key: "pendingAssignments", width: 52, align: "center" },
+      { header: "Риски", key: "activeRisks", width: 42, align: "center" },
+      { header: "Крит.", key: "criticalRisks", width: 42, align: "center" },
+      { header: "Потоки", key: "cohorts", width: 98 },
+    ],
+    rows.map((row) => ({
+      curatorName: row.curatorName,
+      studentsCount: row.studentsCount,
+      avgProgress: `${row.avgProgress}%`,
+      openQuestions: row.openQuestions,
+      pendingAssignments: row.pendingAssignments,
+      activeRisks: row.activeRisks,
+      criticalRisks: row.criticalRisks,
+      cohorts: row.cohorts,
+    })),
+    font,
+    boldFont,
+    y,
+  );
 
   const totalPages = pages.length;
   for (let i = 0; i < totalPages; i++) {

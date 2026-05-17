@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { ReportData, ReportFormat, ProgressRow, RiskRow, CertificateRow } from "@/lib/reports/types";
+import type { AssignmentRow, CuratorWorkloadRow, ReportData, ReportFormat, ProgressRow, RiskRow, CertificateRow, ReportType } from "@/lib/reports/types";
 
 describe("ReportFormat", () => {
   it("accepts csv", () => {
@@ -17,6 +17,14 @@ describe("ReportFormat", () => {
     expect(isKnown("pdf")).toBe(true);
     expect(isKnown("html")).toBe(false);
     expect(isKnown("json")).toBe(false);
+  });
+});
+
+describe("ReportType", () => {
+  it("includes operational report types used by M-PR-08", () => {
+    const types: ReportType[] = ["progress", "risk", "assignments", "certificates", "curator_workload"];
+    expect(types).toContain("assignments");
+    expect(types).toContain("curator_workload");
   });
 });
 
@@ -119,5 +127,38 @@ describe("ReportData with CertificateRow", () => {
     expect(certData.rows[0].number).toBe("ASA-001");
     expect(certData.rows[0].issuedAt).toBe("2026-05-01");
     expect(certData.summary.total).toBe(1);
+  });
+});
+
+describe("ReportData with AssignmentRow and CuratorWorkloadRow", () => {
+  it("stores assignment rows correctly", () => {
+    const assignment: AssignmentRow = {
+      studentName: "Alice",
+      email: "a@t.com",
+      course: "AI 101",
+      assignment: "Case",
+      status: "SUBMITTED",
+      submittedAt: "2026-05-01",
+    };
+
+    expect(assignment.assignment).toBe("Case");
+    expect(assignment.status).toBe("SUBMITTED");
+  });
+
+  it("stores curator workload rows correctly", () => {
+    const workload: CuratorWorkloadRow = {
+      curatorName: "Curator A",
+      curatorEmail: "curator@test.com",
+      cohorts: "Cohort A",
+      studentsCount: 10,
+      avgProgress: 60,
+      openQuestions: 2,
+      pendingAssignments: 3,
+      activeRisks: 1,
+      criticalRisks: 0,
+    };
+
+    expect(workload.studentsCount).toBe(10);
+    expect(workload.pendingAssignments).toBe(3);
   });
 });

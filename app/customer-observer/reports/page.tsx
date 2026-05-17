@@ -73,9 +73,33 @@ export default async function CustomerObserverReportsPage() {
 
       {/* Download reports */}
       <DownloadReports reports={[
-        { id: "progress", title: "Прогресс по потокам", desc: "Зачисления и прогресс", icon: Users },
-        { id: "risk", title: "Риски слушателей", desc: "Неактивные и отстающие", icon: TrendingUp },
-        { id: "certificates", title: "Сертификаты", desc: "Все выпущенные", icon: Award },
+        {
+          id: "progress",
+          title: "Прогресс по потокам",
+          desc: "Зачисления и прогресс",
+          icon: Users,
+          owner: "Customer observer",
+          scope: "Только разрешенные проекты и потоки",
+          decision: "Как идет обучение в доступной клиентской зоне.",
+        },
+        {
+          id: "risk",
+          title: "Риски слушателей",
+          desc: "Неактивные и отстающие",
+          icon: TrendingUp,
+          owner: "Customer observer",
+          scope: "Только разрешенные проекты и потоки",
+          decision: "Где требуется управленческое внимание без права вмешательства.",
+        },
+        {
+          id: "certificates",
+          title: "Сертификаты",
+          desc: "Все выпущенные",
+          icon: Award,
+          owner: "Customer observer",
+          scope: "Только разрешенные проекты и потоки",
+          decision: "Какие участники подтвердили завершение обучения.",
+        },
       ]} />
     </AppShell>
   );
