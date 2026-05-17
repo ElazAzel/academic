@@ -5,12 +5,37 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
 import type {
-  QuestionFromStudent,
-  SubmissionForReview,
-  RiskItem,
+  CuratorNextAction,
+  CuratorStudentDeadline,
+  CuratorStudentLastContext,
+  CuratorStudentOperation,
   DashboardMetric,
+  ProgressStatus,
+  QuestionFromStudent,
+  RiskItem,
+  RiskSeverity,
   StudentAnalyticsDetail,
+  SubmissionForReview,
 } from "@/types/domain";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const RISK_WEIGHT: Record<RiskSeverity, number> = {
+  critical: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
+};
+
+const ACTION_WEIGHT: Record<CuratorStudentOperation["nextAction"]["kind"], number> = {
+  risk: 0,
+  question: 1,
+  assignment: 2,
+  chat: 3,
+  deadline: 4,
+  check_in: 5,
+  monitor: 6,
+};
 
 export interface CuratorStudentItem {
   id: string;
@@ -21,7 +46,147 @@ export interface CuratorStudentItem {
   risk: boolean;
 }
 
-export async function getCuratorDashboard() {
+export interface CuratorDashboardData {
+  metrics: DashboardMetric[];
+  questions: QuestionFromStudent[];
+  submissions: SubmissionForReview[];
+  risks: RiskItem[];
+  students: CuratorStudentOperation[];
+}
+
+function groupByKey<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
+  const grouped = new Map<string, T[]>();
+  for (const item of items) {
+    const key = getKey(item);
+    const current = grouped.get(key) ?? [];
+    current.push(item);
+    grouped.set(key, current);
+  }
+  return grouped;
+}
+
+function studentCourseKey(studentId: string, courseId: string | null | undefined) {
+  return `${studentId}:${courseId ?? "none"}`;
+}
+
+function daysUntil(date: Date) {
+  return Math.ceil((date.getTime() - Date.now()) / DAY_MS);
+}
+
+function pickHighestRisk(risks: Array<{ severity: string }>): RiskSeverity | null {
+  let highest: RiskSeverity | null = null;
+  for (const risk of risks) {
+    const severity = risk.severity as RiskSeverity;
+    if (!RISK_WEIGHT[severity]) continue;
+    if (!highest || RISK_WEIGHT[severity] > RISK_WEIGHT[highest]) {
+      highest = severity;
+    }
+  }
+  return highest;
+}
+
+function pickNextDeadline(deadlines: CuratorStudentDeadline[]): CuratorStudentDeadline | null {
+  if (deadlines.length === 0) return null;
+  return [...deadlines].sort((a, b) => {
+    if (a.overdue !== b.overdue) return a.overdue ? -1 : 1;
+    return a.daysLeft - b.daysLeft;
+  })[0] ?? null;
+}
+
+function buildNextAction(input: {
+  risks: number;
+  highestRiskSeverity: RiskSeverity | null;
+  openQuestions: number;
+  pendingAssignments: number;
+  unreadMessages: number;
+  nextDeadline: CuratorStudentDeadline | null;
+  daysSinceLogin: number | null;
+  progressPercent: number;
+}): CuratorNextAction {
+  if (input.risks > 0 && (input.highestRiskSeverity === "critical" || input.highestRiskSeverity === "high")) {
+    return {
+      kind: "risk",
+      label: "Разобрать риск",
+      href: "/curator/risks",
+      tone: "danger",
+      reason: `${input.highestRiskSeverity === "critical" ? "Критический" : "Высокий"} риск у слушателя`,
+    };
+  }
+
+  if (input.openQuestions > 0) {
+    return {
+      kind: "question",
+      label: "Ответить на вопрос",
+      href: "/curator/questions",
+      tone: "primary",
+      reason: `${input.openQuestions} открытых вопросов`,
+    };
+  }
+
+  if (input.pendingAssignments > 0) {
+    return {
+      kind: "assignment",
+      label: "Проверить задание",
+      href: "/curator/assignments",
+      tone: "primary",
+      reason: `${input.pendingAssignments} работ на проверку`,
+    };
+  }
+
+  if (input.unreadMessages > 0) {
+    return {
+      kind: "chat",
+      label: "Ответить в чате",
+      href: "/curator/chat",
+      tone: "primary",
+      reason: `${input.unreadMessages} непрочитанных сообщений`,
+    };
+  }
+
+  if (input.nextDeadline?.overdue || (input.nextDeadline && input.nextDeadline.daysLeft <= 3)) {
+    return {
+      kind: "deadline",
+      label: "Проверить дедлайн",
+      href: "/curator/risks",
+      tone: input.nextDeadline.overdue ? "danger" : "warning",
+      reason: input.nextDeadline.overdue
+        ? `Просрочен дедлайн: ${input.nextDeadline.title}`
+        : `Дедлайн через ${input.nextDeadline.daysLeft} дн.: ${input.nextDeadline.title}`,
+    };
+  }
+
+  if ((input.daysSinceLogin !== null && input.daysSinceLogin >= 7) || input.progressPercent < 20) {
+    return {
+      kind: "check_in",
+      label: "Связаться",
+      href: "/curator/chat",
+      tone: "warning",
+      reason: input.daysSinceLogin !== null && input.daysSinceLogin >= 7
+        ? `Нет входа ${input.daysSinceLogin} дн.`
+        : "Низкий учебный прогресс",
+    };
+  }
+
+  if (input.risks > 0) {
+    return {
+      kind: "risk",
+      label: "Проверить риск",
+      href: "/curator/risks",
+      tone: "warning",
+      reason: "Есть активный риск",
+    };
+  }
+
+  return {
+    kind: "monitor",
+    label: "Наблюдать",
+    href: "/curator/students",
+    tone: "neutral",
+    reason: "Критичных действий сейчас нет",
+  };
+}
+
+export async function getCuratorDashboard(): Promise<CuratorDashboardData | null> {
   await requireRole(["curator"]);
   const user = await getCurrentUser();
   if (!user) return null;
@@ -29,83 +194,351 @@ export async function getCuratorDashboard() {
   return withQueryFallback(async () => {
     const assignments = await prisma.curatorAssignment.findMany({
       where: { curatorId: user.id, active: true },
-      select: { studentId: true, cohort: { select: { id: true, name: true, courseId: true, course: { select: { title: true } } } } },
+      orderBy: { assignedAt: "desc" },
+      include: {
+        student: { select: { id: true, name: true, email: true, lastLoginAt: true } },
+        cohort: {
+          select: {
+            id: true,
+            name: true,
+            courseId: true,
+            endsAt: true,
+            course: { select: { id: true, title: true } },
+            deadlines: {
+              include: { module: { select: { id: true, title: true } } },
+            },
+            blockDeadlines: {
+              include: { block: { select: { id: true, title: true } } },
+            },
+          },
+        },
+      },
     });
-    const studentIds = assignments.map((a) => a.studentId);
 
-    const [questions, submissions, risks] = await Promise.all([
+    const studentIds = [...new Set(assignments.map((assignment) => assignment.studentId))];
+    const courseIds = [
+      ...new Set(
+        assignments
+          .map((assignment) => assignment.cohort.courseId)
+          .filter((courseId): courseId is string => Boolean(courseId)),
+      ),
+    ];
+
+    const [
+      questions,
+      submissions,
+      risks,
+      courseProgress,
+      lessonProgress,
+      enrollments,
+      messages,
+    ] = await Promise.all([
       prisma.lessonQuestion.findMany({
         where: { curatorId: user.id, status: "OPEN" },
         orderBy: { createdAt: "desc" },
         include: {
-          student: { select: { name: true, email: true } },
-          lesson: { include: { module: { include: { course: true } } } },
+          student: { select: { id: true, name: true, email: true } },
+          lesson: {
+            include: {
+              module: { include: { course: { select: { id: true, title: true } } } },
+              block: { select: { title: true } },
+            },
+          },
         },
       }),
       prisma.assignmentSubmission.findMany({
         where: { userId: { in: studentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
         orderBy: { submittedAt: "desc" },
         include: {
-          assignment: { include: { course: true, lesson: true } },
-          user: { select: { name: true, email: true } },
+          assignment: {
+            include: {
+              course: { select: { id: true, title: true } },
+              lesson: {
+                include: {
+                  module: { include: { course: { select: { id: true, title: true } } } },
+                  block: { select: { title: true } },
+                },
+              },
+            },
+          },
+          user: { select: { id: true, name: true, email: true } },
         },
       }),
       prisma.riskFlag.findMany({
-        where: { userId: { in: studentIds }, status: "open" },
+        where: { userId: { in: studentIds }, status: "open", resolvedAt: null },
         orderBy: { createdAt: "desc" },
         include: {
-          user: { select: { name: true, email: true } },
-          course: { select: { title: true } },
-          cohort: { select: { name: true } },
+          user: { select: { id: true, name: true, email: true } },
+          course: { select: { id: true, title: true } },
+          cohort: { select: { id: true, name: true, courseId: true, course: { select: { id: true, title: true } } } },
         },
+      }),
+      prisma.courseProgress.findMany({
+        where: { userId: { in: studentIds }, ...(courseIds.length > 0 ? { courseId: { in: courseIds } } : {}) },
+        select: { userId: true, courseId: true, percent: true, status: true },
+      }),
+      prisma.lessonProgress.findMany({
+        where: {
+          userId: { in: studentIds },
+          ...(courseIds.length > 0 ? { lesson: { module: { courseId: { in: courseIds } } } } : {}),
+        },
+        orderBy: { updatedAt: "desc" },
+        include: {
+          lesson: {
+            include: {
+              module: { select: { id: true, title: true, courseId: true } },
+              block: { select: { title: true } },
+            },
+          },
+        },
+        take: 500,
+      }),
+      prisma.enrollment.findMany({
+        where: { userId: { in: studentIds } },
+        include: {
+          course: { select: { id: true, title: true } },
+          courseProgress: { select: { percent: true, status: true } },
+        },
+      }),
+      prisma.message.findMany({
+        where: {
+          OR: [
+            { senderId: { in: studentIds }, receiverId: user.id },
+            { senderId: user.id, receiverId: { in: studentIds } },
+          ],
+        },
+        orderBy: { createdAt: "desc" },
+        include: { lesson: { select: { id: true, title: true } } },
+        take: 500,
       }),
     ]);
 
-    const formattedQuestions: QuestionFromStudent[] = questions.map((q) => ({
-      id: q.id,
-      text: q.text,
-      studentName: q.student.name ?? q.student.email,
-      courseTitle: q.lesson.module.course.title,
-      moduleTitle: q.lesson.module.title,
-      lessonTitle: q.lesson.title,
-      status: "open" as const,
-      createdAt: q.createdAt.toISOString(),
+    const enrollmentByStudent = new Map<string, (typeof enrollments)[number]>();
+    const enrollmentByStudentCourse = new Map<string, (typeof enrollments)[number]>();
+    for (const enrollment of enrollments) {
+      enrollmentByStudentCourse.set(studentCourseKey(enrollment.userId, enrollment.courseId), enrollment);
+      if (!enrollmentByStudent.has(enrollment.userId)) {
+        enrollmentByStudent.set(enrollment.userId, enrollment);
+      }
+    }
+
+    const progressByStudentCourse = new Map(courseProgress.map((progress) => [
+      studentCourseKey(progress.userId, progress.courseId),
+      progress,
+    ]));
+
+    const lastContextByStudent = new Map<string, CuratorStudentLastContext>();
+    const lastContextByStudentCourse = new Map<string, CuratorStudentLastContext>();
+    for (const progress of lessonProgress) {
+      const context: CuratorStudentLastContext = {
+        lessonId: progress.lesson.id,
+        lessonTitle: progress.lesson.title,
+        moduleTitle: progress.lesson.module.title,
+        blockTitle: progress.lesson.block?.title ?? null,
+        updatedAt: progress.updatedAt.toISOString(),
+      };
+      const key = studentCourseKey(progress.userId, progress.lesson.module.courseId);
+      if (!lastContextByStudentCourse.has(key)) {
+        lastContextByStudentCourse.set(key, context);
+      }
+      if (!lastContextByStudent.has(progress.userId)) {
+        lastContextByStudent.set(progress.userId, context);
+      }
+    }
+
+    const questionsByStudentCourse = groupByKey(questions, (question) =>
+      studentCourseKey(question.studentId, question.lesson.module.course.id),
+    );
+
+    const submissionsByStudentCourse = groupByKey(submissions, (submission) =>
+      studentCourseKey(
+        submission.userId,
+        submission.assignment.course?.id ?? submission.assignment.lesson?.module.course.id ?? null,
+      ),
+    );
+
+    const risksByStudentCourse = groupByKey(risks, (risk) =>
+      studentCourseKey(risk.userId, risk.course?.id ?? risk.cohort?.courseId ?? null),
+    );
+    const risksByStudent = groupByKey(risks, (risk) => risk.userId);
+
+    const conversationByStudent = new Map<string, { unread: number; lastMessageAt: string | null; lessonId?: string; lessonTitle?: string }>();
+    for (const message of messages) {
+      const partnerId = message.senderId === user.id ? message.receiverId : message.senderId;
+      if (!partnerId || !studentIds.includes(partnerId)) continue;
+      const current = conversationByStudent.get(partnerId) ?? { unread: 0, lastMessageAt: null };
+      if (!current.lastMessageAt) {
+        current.lastMessageAt = message.createdAt.toISOString();
+        if (message.lessonId) {
+          current.lessonId = message.lessonId;
+          current.lessonTitle = message.lesson?.title ?? undefined;
+        }
+      }
+      if (message.receiverId === user.id && message.readAt === null) {
+        current.unread += 1;
+      }
+      conversationByStudent.set(partnerId, current);
+    }
+
+    const students: CuratorStudentOperation[] = assignments.map((assignment) => {
+      const fallbackEnrollment = assignment.cohort.courseId
+        ? enrollmentByStudentCourse.get(studentCourseKey(assignment.studentId, assignment.cohort.courseId))
+        : enrollmentByStudent.get(assignment.studentId);
+
+      const courseId = assignment.cohort.courseId ?? fallbackEnrollment?.courseId ?? null;
+      const courseTitle = assignment.cohort.course?.title ?? fallbackEnrollment?.course.title ?? "Курс не назначен";
+      const key = studentCourseKey(assignment.studentId, courseId);
+      const progress = progressByStudentCourse.get(key);
+      const fallbackProgress = fallbackEnrollment?.courseProgress[0];
+      const noCourseRiskKey = studentCourseKey(assignment.studentId, null);
+      const studentRisks = key === noCourseRiskKey
+        ? (risksByStudentCourse.get(key) ?? [])
+        : [
+            ...(risksByStudentCourse.get(key) ?? []),
+            ...(risksByStudentCourse.get(noCourseRiskKey) ?? []),
+          ];
+      const allStudentRisks = risksByStudent.get(assignment.studentId) ?? [];
+      const relevantRisks = studentRisks.length > 0 ? studentRisks : allStudentRisks;
+      const conversation = conversationByStudent.get(assignment.studentId);
+
+      const deadlines: CuratorStudentDeadline[] = [
+        ...assignment.cohort.deadlines.map((deadline) => {
+          const daysLeft = daysUntil(deadline.dueAt);
+          return {
+            title: deadline.module.title,
+            dueAt: deadline.dueAt.toISOString(),
+            daysLeft,
+            overdue: daysLeft < 0,
+            scope: "module" as const,
+          };
+        }),
+        ...assignment.cohort.blockDeadlines.map((deadline) => {
+          const daysLeft = daysUntil(deadline.dueAt);
+          return {
+            title: deadline.block.title,
+            dueAt: deadline.dueAt.toISOString(),
+            daysLeft,
+            overdue: daysLeft < 0,
+            scope: "block" as const,
+          };
+        }),
+      ];
+
+      if (assignment.cohort.endsAt) {
+        const daysLeft = daysUntil(assignment.cohort.endsAt);
+        deadlines.push({
+          title: "Завершение потока",
+          dueAt: assignment.cohort.endsAt.toISOString(),
+          daysLeft,
+          overdue: daysLeft < 0,
+          scope: "course",
+        });
+      }
+
+      const nextDeadline = pickNextDeadline(deadlines);
+      const progressPercent = progress?.percent ?? fallbackProgress?.percent ?? 0;
+      const progressStatus = (progress?.status ?? fallbackProgress?.status ?? "NOT_STARTED") as ProgressStatus;
+      const lastLoginAt = assignment.student.lastLoginAt?.toISOString() ?? null;
+      const daysSinceLogin = assignment.student.lastLoginAt
+        ? Math.floor((Date.now() - assignment.student.lastLoginAt.getTime()) / DAY_MS)
+        : null;
+      const openQuestions = questionsByStudentCourse.get(key)?.length ?? 0;
+      const pendingAssignments = submissionsByStudentCourse.get(key)?.length ?? 0;
+      const activeRisks = relevantRisks.length;
+      const highestRiskSeverity = pickHighestRisk(relevantRisks);
+      const unreadMessages = conversation?.unread ?? 0;
+      const nextAction = buildNextAction({
+        risks: activeRisks,
+        highestRiskSeverity,
+        openQuestions,
+        pendingAssignments,
+        unreadMessages,
+        nextDeadline,
+        daysSinceLogin,
+        progressPercent,
+      });
+
+      return {
+        assignmentId: assignment.id,
+        studentId: assignment.student.id,
+        name: assignment.student.name ?? assignment.student.email,
+        email: assignment.student.email,
+        cohortId: assignment.cohort.id,
+        cohortName: assignment.cohort.name,
+        courseId,
+        courseTitle,
+        progressPercent,
+        progressStatus,
+        lastLoginAt,
+        daysSinceLogin,
+        lastContext: lastContextByStudentCourse.get(key) ?? lastContextByStudent.get(assignment.studentId) ?? null,
+        nextDeadline,
+        openQuestions,
+        pendingAssignments,
+        activeRisks,
+        highestRiskSeverity,
+        unreadMessages,
+        lastMessageAt: conversation?.lastMessageAt ?? null,
+        nextAction,
+      };
+    }).sort((a, b) => {
+      const priorityDelta = ACTION_WEIGHT[a.nextAction.kind] - ACTION_WEIGHT[b.nextAction.kind];
+      if (priorityDelta !== 0) return priorityDelta;
+      return b.activeRisks - a.activeRisks || b.openQuestions - a.openQuestions || b.pendingAssignments - a.pendingAssignments;
+    });
+
+    const formattedQuestions: QuestionFromStudent[] = questions.map((question) => ({
+      id: question.id,
+      text: question.text,
+      studentName: question.student.name ?? question.student.email,
+      courseTitle: question.lesson.module.course.title,
+      moduleTitle: question.lesson.module.title,
+      lessonTitle: question.lesson.title,
+      status: "open",
+      createdAt: question.createdAt.toISOString(),
     }));
 
-    const formattedSubmissions: SubmissionForReview[] = submissions.map((s) => ({
-      id: s.id,
-      assignmentTitle: s.assignment.title,
-      studentName: s.user.name ?? s.user.email,
-      studentEmail: s.user.email,
-      courseTitle: s.assignment.course?.title ?? "",
-      lessonTitle: s.assignment.lesson?.title ?? "",
-      answerText: s.answerText,
-      fileUrl: s.fileUrl,
-      attemptNumber: s.attemptNumber,
-      submittedAt: s.submittedAt.toISOString(),
-      status: s.status as SubmissionForReview["status"],
+    const formattedSubmissions: SubmissionForReview[] = submissions.map((submission) => ({
+      id: submission.id,
+      assignmentTitle: submission.assignment.title,
+      studentName: submission.user.name ?? submission.user.email,
+      studentEmail: submission.user.email,
+      courseTitle: submission.assignment.course?.title ?? submission.assignment.lesson?.module.course.title ?? "",
+      lessonTitle: submission.assignment.lesson?.title ?? "",
+      answerText: submission.answerText,
+      fileUrl: submission.fileUrl,
+      attemptNumber: submission.attemptNumber,
+      submittedAt: submission.submittedAt.toISOString(),
+      status: submission.status as SubmissionForReview["status"],
     }));
 
-    const formattedRisks: RiskItem[] = risks.map((r) => ({
-      id: r.id,
-      type: r.type as RiskItem["type"],
-      severity: r.severity as RiskItem["severity"],
-      studentName: r.user.name ?? r.user.email,
-      studentEmail: r.user.email,
-      courseTitle: r.course?.title ?? "",
-      cohortName: r.cohort?.name,
-      status: "open" as const,
-      createdAt: r.createdAt.toISOString(),
+    const formattedRisks: RiskItem[] = risks.map((risk) => ({
+      id: risk.id,
+      type: risk.type as RiskItem["type"],
+      severity: risk.severity as RiskItem["severity"],
+      studentName: risk.user.name ?? risk.user.email,
+      studentEmail: risk.user.email,
+      courseTitle: risk.course?.title ?? risk.cohort?.course?.title ?? "",
+      cohortName: risk.cohort?.name,
+      status: "open",
+      createdAt: risk.createdAt.toISOString(),
     }));
 
+    const riskStudentCount = new Set(risks.map((risk) => risk.userId)).size;
     const metrics: DashboardMetric[] = [
-      { label: "Мои слушатели", value: studentIds.length, tone: "primary" },
+      { label: "Мои слушатели", value: students.length, tone: "primary" },
       { label: "Открытые вопросы", value: formattedQuestions.length, tone: formattedQuestions.length > 3 ? "danger" : "success" },
       { label: "Задания на проверку", value: formattedSubmissions.length, tone: formattedSubmissions.length > 5 ? "warning" : "success" },
-      { label: "Слушатели с рисками", value: formattedRisks.length, tone: formattedRisks.length > 3 ? "danger" : "success" },
+      { label: "Слушатели с рисками", value: riskStudentCount, tone: riskStudentCount > 3 ? "danger" : "success" },
     ];
 
-    return { metrics, questions: formattedQuestions, submissions: formattedSubmissions, risks: formattedRisks };
+    return {
+      metrics,
+      questions: formattedQuestions,
+      submissions: formattedSubmissions,
+      risks: formattedRisks,
+      students,
+    };
   }, null);
 }
 
@@ -123,27 +556,27 @@ export async function getCuratorStudents() {
             enrollments: {
               include: {
                 course: { select: { title: true } },
-                courseProgress: true
-              }
+                courseProgress: true,
+              },
             },
             riskFlags: {
               where: { resolvedAt: null },
-              take: 1
-            }
-          }
-        }
-      }
+              take: 1,
+            },
+          },
+        },
+      },
     });
 
-    return assignments.map((a) => {
-      const enrollment = a.student.enrollments[0];
+    return assignments.map((assignment) => {
+      const enrollment = assignment.student.enrollments[0];
       return {
-        id: a.student.id,
-        name: a.student.name ?? a.student.email,
-        email: a.student.email,
+        id: assignment.student.id,
+        name: assignment.student.name ?? assignment.student.email,
+        email: assignment.student.email,
         course: enrollment?.course?.title ?? "Не зачислен",
         progress: enrollment?.courseProgress[0]?.percent ?? 0,
-        risk: a.student.riskFlags.length > 0
+        risk: assignment.student.riskFlags.length > 0,
       };
     });
   }, []);
@@ -164,17 +597,17 @@ export async function getCuratorQuestions(status: "OPEN" | "ANSWERED" = "OPEN") 
       },
     });
 
-    return questions.map((q) => ({
-      id: q.id,
-      text: q.text,
-      studentName: q.student.name ?? q.student.email,
-      courseTitle: q.lesson.module.course.title,
-      moduleTitle: q.lesson.module.title,
-      lessonTitle: q.lesson.title,
-      status: (q.status === "ANSWERED" ? "answered" : "open") as "open" | "answered",
-      createdAt: q.createdAt.toISOString(),
-      answer: q.answer,
-      answeredAt: q.answeredAt?.toISOString(),
+    return questions.map((question) => ({
+      id: question.id,
+      text: question.text,
+      studentName: question.student.name ?? question.student.email,
+      courseTitle: question.lesson.module.course.title,
+      moduleTitle: question.lesson.module.title,
+      lessonTitle: question.lesson.title,
+      status: (question.status === "ANSWERED" ? "answered" : "open") as "open" | "answered",
+      createdAt: question.createdAt.toISOString(),
+      answer: question.answer,
+      answeredAt: question.answeredAt?.toISOString(),
     }));
   }, []);
 }
@@ -189,7 +622,7 @@ export async function getCuratorStudentAnalytics(): Promise<StudentAnalyticsDeta
       where: { curatorId: user.id, active: true },
       select: { studentId: true },
     });
-    const studentIds = assignments.map((a) => a.studentId);
+    const studentIds = assignments.map((assignment) => assignment.studentId);
     return getStudentAnalyticsDetail(studentIds);
   }, []);
 }

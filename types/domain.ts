@@ -584,6 +584,63 @@ export interface CuratorLoad {
   lastSeenAt: string | null;
 }
 
+export interface CuratorStudentDeadline {
+  title: string;
+  dueAt: string;
+  daysLeft: number;
+  overdue: boolean;
+  scope: "course" | "module" | "block";
+}
+
+export interface CuratorStudentLastContext {
+  lessonId: string;
+  lessonTitle: string;
+  moduleTitle: string;
+  blockTitle?: string | null;
+  updatedAt: string;
+}
+
+export type CuratorNextActionKind =
+  | "risk"
+  | "question"
+  | "assignment"
+  | "chat"
+  | "deadline"
+  | "check_in"
+  | "monitor";
+
+export interface CuratorNextAction {
+  kind: CuratorNextActionKind;
+  label: string;
+  href: string;
+  tone: "primary" | "warning" | "danger" | "neutral";
+  reason: string;
+}
+
+export interface CuratorStudentOperation {
+  assignmentId: string;
+  studentId: string;
+  name: string;
+  email: string;
+  cohortId: string;
+  cohortName: string;
+  courseId: string | null;
+  courseTitle: string;
+  progressPercent: number;
+  progressStatus: ProgressStatus;
+  lastLoginAt: string | null;
+  daysSinceLogin: number | null;
+  lastContext: CuratorStudentLastContext | null;
+  nextDeadline: CuratorStudentDeadline | null;
+  openQuestions: number;
+  pendingAssignments: number;
+  activeRisks: number;
+  highestRiskSeverity: RiskSeverity | null;
+  unreadMessages: number;
+  lastMessageAt: string | null;
+  nextAction: CuratorNextAction;
+}
+
 // ── Сертификаты ─────────────────────────────────────────────────────
 export interface CertificateSummary {
   id: string;

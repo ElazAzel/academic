@@ -29,11 +29,19 @@ export function ChatPanel({
   replyLessonId,
   curatorId,
   studentId,
+  conversationTitle = "Чат с куратором",
+  emptyState = "Начните диалог с куратором",
+  historyTitle = "Чат с куратором",
+  otherParticipantName = "Куратор",
 }: {
   lessonId?: string;
   replyLessonId?: string;
   curatorId?: string;
   studentId: string;
+  conversationTitle?: string;
+  emptyState?: string;
+  historyTitle?: string;
+  otherParticipantName?: string;
 }) {
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => ["chat", studentId, lessonId], [studentId, lessonId]);
@@ -186,12 +194,12 @@ export function ChatPanel({
   function handleDownload() {
     const date = new Date().toLocaleDateString("ru-RU");
     const lines: string[] = [
-      "Чат с куратором",
+      historyTitle,
       `Дата: ${date}`,
       "---",
       ...messages.map((m) => {
         const time = new Date(m.createdAt).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" });
-        const sender = m.isMine ? "Вы" : m.senderName || "Куратор";
+        const sender = m.isMine ? "Вы" : m.senderName || otherParticipantName;
         const context = m.lessonTitle ? ` (${m.lessonTitle})` : "";
         return `[${time}]${context} ${sender}: ${m.text ?? ""}`;
       }),
@@ -256,7 +264,7 @@ export function ChatPanel({
   return (
     <div className="flex flex-col rounded-2xl border bg-card">
       <div className="flex items-center justify-between px-4 pt-3 pb-1">
-        <span className="text-sm font-medium">Чат с куратором</span>
+        <span className="text-sm font-medium">{conversationTitle}</span>
         {messages.length > 0 && (
           <Button type="button" variant="ghost" size="sm" onClick={handleDownload} aria-label="Скачать историю">
             <Download className="h-4 w-4 mr-1" />
@@ -266,7 +274,7 @@ export function ChatPanel({
       </div>
       <div ref={chatContainerRef} className="flex-1 space-y-3 overflow-auto px-4 pb-3 max-h-[400px] min-h-[200px]">
         {messages.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground py-8">Начните диалог с куратором</p>
+          <p className="text-center text-sm text-muted-foreground py-8">{emptyState}</p>
         )}
         {messages.map((m) => (
           <div key={m.id} className={`flex ${m.isMine ? "justify-end" : "justify-start"}`}>
