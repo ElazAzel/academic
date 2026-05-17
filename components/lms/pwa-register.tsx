@@ -9,15 +9,24 @@ import { toast } from "sonner";
  */
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToArrayBuffer(base64String: string): ArrayBuffer {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = atob(base64);
-  const arr = new Uint8Array(rawData.length);
+  const buffer = new ArrayBuffer(rawData.length);
+  const arr = new Uint8Array(buffer);
   for (let i = 0; i < rawData.length; i++) {
     arr[i] = rawData.charCodeAt(i);
   }
-  return arr;
+  return buffer;
+}
+
+function bufferSourceToUint8Array(source: BufferSource): Uint8Array {
+  if (source instanceof ArrayBuffer) {
+    return new Uint8Array(source);
+  }
+
+  return new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
 }
 
 async function subscribeToPush(registration: ServiceWorkerRegistration) {
@@ -49,9 +58,9 @@ async function subscribeToPush(registration: ServiceWorkerRegistration) {
     if (subscription) {
       try {
         const existingKey = subscription.options?.applicationServerKey;
-        const newKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+        const newKey = new Uint8Array(urlBase64ToArrayBuffer(VAPID_PUBLIC_KEY));
         if (existingKey) {
-          const existingKeyArray = new Uint8Array(existingKey as ArrayBuffer);
+          const existingKeyArray = bufferSourceToUint8Array(existingKey);
           const keysMatch = existingKeyArray.length === newKey.length &&
             existingKeyArray.every((val, i) => val === newKey[i]);
           if (!keysMatch) {
@@ -83,10 +92,10 @@ async function subscribeToPush(registration: ServiceWorkerRegistration) {
     }
 
     // Create new subscription
-    const keyArray = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+    const applicationServerKey = urlBase64ToArrayBuffer(VAPID_PUBLIC_KEY);
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: keyArray.buffer.slice(keyArray.byteOffset, keyArray.byteOffset + keyArray.byteLength) as ArrayBuffer,
+      applicationServerKey,
     });
 
     // Send subscription to server
