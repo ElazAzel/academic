@@ -28,10 +28,40 @@ function getFonts() {
 
 const PAGE_W = 595.28;
 const PAGE_H = 841.89;
-const MARGIN = 48;
+const MARGIN = 40;
 const CONTENT_W = PAGE_W - MARGIN * 2;
-const FONT_SIZE_BODY = 8;
+const FONT_SIZE_BODY = 7.5;
 const ROW_H = 14;
+
+// ── Text truncation ──────────────────────────────────────────────────
+
+/**
+ * Truncate text so that it fits within `maxWidth` at the given font size.
+ * Appends an ellipsis character when truncation occurs.
+ */
+function truncateText(text: string, font: PDFFont, fontSize: number, maxWidth: number): string {
+  if (maxWidth <= 0) return "";
+  try {
+    if (font.widthOfTextAtSize(text, fontSize) <= maxWidth) return text;
+    let lo = 0;
+    let hi = text.length;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (font.widthOfTextAtSize(text.slice(0, mid) + "...", fontSize) <= maxWidth) {
+        lo = mid;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    return lo === 0 ? "" : text.slice(0, lo) + "...";
+  } catch {
+    // If widthOfTextAtSize fails (e.g. missing glyphs), do a rough char-based truncation
+    const avgCharWidth = fontSize * 0.55;
+    const maxChars = Math.floor(maxWidth / avgCharWidth);
+    if (text.length <= maxChars) return text;
+    return text.slice(0, Math.max(0, maxChars - 3)) + "...";
+  }
+}
 
 function addPage(doc: PDFDocument): PDFPage {
   return doc.addPage([PAGE_W, PAGE_H]);
@@ -108,7 +138,8 @@ function drawTable(
       pages.push(page);
       y = PAGE_H - 80;
     }
-    page.drawText(title, {
+    const truncTitle = truncateText(title, bold, 11, CONTENT_W);
+    page.drawText(truncTitle, {
       x: MARGIN, y, size: 11, font: bold, color: rgb(0.12, 0.23, 0.47),
     });
     y -= 20;
@@ -127,10 +158,12 @@ function drawTable(
     color: headerBg,
   });
   for (const col of columns) {
+    const maxCellW = col.width - cellPad * 2;
+    const truncHeader = truncateText(col.header, bold, FONT_SIZE_BODY, maxCellW);
     const textX = col.align === "right" ? x + col.width - cellPad
       : col.align === "center" ? x + col.width / 2
       : x + cellPad;
-    page.drawText(col.header, {
+    page.drawText(truncHeader, {
       x: textX, y: y + 2, size: FONT_SIZE_BODY, font: bold,
       color: headerTextColor,
     });
@@ -141,7 +174,7 @@ function drawTable(
   // Table rows
   for (let i = 0; i < rows.length; i++) {
     if (y < 40) {
-      const page = addPage(doc);
+      page = addPage(doc);
       pages.push(page);
       y = PAGE_H - 60;
       // Redraw header on new page
@@ -151,10 +184,12 @@ function drawTable(
         color: headerBg,
       });
       for (const col of columns) {
+        const maxCellW = col.width - cellPad * 2;
+        const truncHeader = truncateText(col.header, bold, FONT_SIZE_BODY, maxCellW);
         const textX = col.align === "right" ? x + col.width - cellPad
           : col.align === "center" ? x + col.width / 2
           : x + cellPad;
-        page.drawText(col.header, {
+        page.drawText(truncHeader, {
           x: textX, y: y + 2, size: FONT_SIZE_BODY, font: bold,
           color: headerTextColor,
         });
@@ -171,7 +206,9 @@ function drawTable(
     });
 
     for (const col of columns) {
-      const val = String(rows[i][col.key] ?? "");
+      const raw = String(rows[i][col.key] ?? "");
+      const maxCellW = col.width - cellPad * 2;
+      const val = truncateText(raw, font, FONT_SIZE_BODY, maxCellW);
       const textX = col.align === "right" ? x + col.width - cellPad
         : col.align === "center" ? x + col.width / 2
         : x + cellPad;
@@ -239,7 +276,7 @@ export async function generateProgressPdf(rows: ProgressRow[]): Promise<Uint8Arr
     `Средний прогресс: ${avg}%`,
   ];
   for (const item of summaryItems) {
-    page.drawText(`• ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+    page.drawText(`- ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
     y -= 14;
   }
 
@@ -247,13 +284,13 @@ export async function generateProgressPdf(rows: ProgressRow[]): Promise<Uint8Arr
 
   // Table columns
   const columns: TableColumn[] = [
-    { header: "Слушатель", key: "studentName", width: 85 },
-    { header: "Email", key: "email", width: 90 },
-    { header: "Поток", key: "cohort", width: 60 },
-    { header: "Прогресс", key: "progressPercent", width: 38, align: "center" },
-    { header: "Модуль", key: "currentModule", width: 70 },
-    { header: "Урок", key: "currentLesson", width: 80 },
-    { header: "Риски", key: "riskCount", width: 28, align: "center" },
+    { header: "Слушатель", key: "studentName", width: 95 },
+    { header: "Email", key: "email", width: 100 },
+    { header: "Поток", key: "cohort", width: 65 },
+    { header: "%", key: "progressPercent", width: 30, align: "center" },
+    { header: "Модуль", key: "currentModule", width: 75 },
+    { header: "Урок", key: "currentLesson", width: 95 },
+    { header: "Риски", key: "riskCount", width: 26, align: "center" },
   ];
 
   const grouped = groupByCourse(rows);
@@ -323,19 +360,19 @@ export async function generateRiskPdf(rows: RiskRow[]): Promise<Uint8Array> {
     `Низких: ${low}`,
   ];
   for (const item of summaryItems) {
-    page.drawText(`• ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+    page.drawText(`- ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
     y -= 14;
   }
 
   y -= 8;
 
   const columns: TableColumn[] = [
-    { header: "Слушатель", key: "studentName", width: 90 },
-    { header: "Email", key: "email", width: 100 },
-    { header: "Курс", key: "course", width: 95 },
+    { header: "Слушатель", key: "studentName", width: 100 },
+    { header: "Email", key: "email", width: 105 },
+    { header: "Курс", key: "course", width: 105 },
     { header: "Тип риска", key: "type", width: 75 },
-    { header: "Уровень", key: "severity", width: 48, align: "center" },
-    { header: "Статус", key: "status", width: 48, align: "center" },
+    { header: "Уровень", key: "severity", width: 45, align: "center" },
+    { header: "Статус", key: "status", width: 45, align: "center" },
   ];
 
   const tableRows = rows.map((r) => ({
@@ -385,24 +422,24 @@ export async function generateCertificatePdf(rows: CertificateRow[]): Promise<Ui
   y -= 12;
   page.drawText("Сводка", { x: MARGIN, y, size: 12, font: boldFont, color: rgb(0.12, 0.23, 0.47) });
   y -= 18;
-  page.drawText(`• Всего выдано сертификатов: ${rows.length}`, {
+  page.drawText(`- Всего выдано сертификатов: ${rows.length}`, {
     x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3),
   });
   y -= 14;
 
   // Unique courses
   const uniqueCourses = new Set(rows.map((r) => r.course)).size;
-  page.drawText(`• По курсам: ${uniqueCourses}`, {
+  page.drawText(`- По курсам: ${uniqueCourses}`, {
     x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3),
   });
   y -= 22;
 
   const columns: TableColumn[] = [
     { header: "Номер", key: "number", width: 80 },
-    { header: "Слушатель", key: "studentName", width: 95 },
-    { header: "Email", key: "email", width: 95 },
-    { header: "Курс", key: "course", width: 110 },
-    { header: "Дата выдачи", key: "issuedAt", width: 56, align: "center" },
+    { header: "Слушатель", key: "studentName", width: 100 },
+    { header: "Email", key: "email", width: 100 },
+    { header: "Курс", key: "course", width: 120 },
+    { header: "Дата", key: "issuedAt", width: 56, align: "center" },
   ];
 
   const tableRows = rows.map((r) => ({
@@ -452,7 +489,7 @@ export async function generateAssignmentPdf(rows: AssignmentRow[]): Promise<Uint
     `Принято: ${rows.filter((r) => r.status === "ACCEPTED").length}`,
   ];
   for (const item of summaryItems) {
-    page.drawText(`• ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+    page.drawText(`- ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
     y -= 14;
   }
   y -= 8;
@@ -461,12 +498,12 @@ export async function generateAssignmentPdf(rows: AssignmentRow[]): Promise<Uint
     doc,
     pages,
     [
-      { header: "Слушатель", key: "studentName", width: 80 },
-      { header: "Курс", key: "course", width: 95 },
-      { header: "Задание", key: "assignment", width: 110 },
-      { header: "Статус", key: "status", width: 60 },
-      { header: "Балл", key: "score", width: 35, align: "center" },
-      { header: "Отправлено", key: "submittedAt", width: 58, align: "center" },
+      { header: "Слушатель", key: "studentName", width: 95 },
+      { header: "Курс", key: "course", width: 100 },
+      { header: "Задание", key: "assignment", width: 115 },
+      { header: "Статус", key: "status", width: 55 },
+      { header: "Балл", key: "score", width: 30, align: "center" },
+      { header: "Дата", key: "submittedAt", width: 58, align: "center" },
     ],
     rows.map((row) => ({
       studentName: row.studentName,
@@ -519,7 +556,7 @@ export async function generateCuratorWorkloadPdf(rows: CuratorWorkloadRow[]): Pr
     `Заданий на проверке: ${rows.reduce((sum, row) => sum + row.pendingAssignments, 0)}`,
   ];
   for (const item of summaryItems) {
-    page.drawText(`• ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+    page.drawText(`- ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
     y -= 14;
   }
   y -= 8;
@@ -528,14 +565,14 @@ export async function generateCuratorWorkloadPdf(rows: CuratorWorkloadRow[]): Pr
     doc,
     pages,
     [
-      { header: "Куратор", key: "curatorName", width: 92 },
-      { header: "Слуш.", key: "studentsCount", width: 38, align: "center" },
-      { header: "Прогр.", key: "avgProgress", width: 42, align: "center" },
-      { header: "Вопросы", key: "openQuestions", width: 48, align: "center" },
-      { header: "Задания", key: "pendingAssignments", width: 52, align: "center" },
-      { header: "Риски", key: "activeRisks", width: 42, align: "center" },
-      { header: "Крит.", key: "criticalRisks", width: 42, align: "center" },
-      { header: "Потоки", key: "cohorts", width: 98 },
+      { header: "Куратор", key: "curatorName", width: 100 },
+      { header: "Слуш.", key: "studentsCount", width: 35, align: "center" },
+      { header: "%", key: "avgProgress", width: 30, align: "center" },
+      { header: "Вопр.", key: "openQuestions", width: 38, align: "center" },
+      { header: "Зад.", key: "pendingAssignments", width: 38, align: "center" },
+      { header: "Риски", key: "activeRisks", width: 38, align: "center" },
+      { header: "Крит.", key: "criticalRisks", width: 38, align: "center" },
+      { header: "Потоки", key: "cohorts", width: 120 },
     ],
     rows.map((row) => ({
       curatorName: row.curatorName,
