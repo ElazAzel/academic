@@ -6,6 +6,7 @@ import { getPrisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { logAudit } from "@/server/modules/audit/service";
 import { ApiError } from "@/lib/http";
+import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
 
 const prisma = getPrisma();
 
@@ -16,14 +17,51 @@ export async function getRiskOverview(filters?: {
   severity?: string;
   search?: string;
 }) {
-  await requireRole(["super_curator", "admin"]);
+  const actor = await requireRole(["super_curator", "admin"]);
+  const scope = await getSuperCuratorScope(actor);
 
-  const where: Record<string, unknown> = { resolvedAt: null };
-  if (filters?.cohortId) where.cohortId = filters.cohortId;
+  if (!scope.isGlobal && scope.studentIds.length === 0) {
+    return emptyRiskOverview();
+  }
+
+  const where: Record<string, unknown> = {
+    resolvedAt: null,
+    ...(scope.isGlobal ? {} : { userId: { in: scope.studentIds } }),
+  };
+
+  if (filters?.cohortId) {
+    if (!scope.isGlobal && !scope.cohortIds.includes(filters.cohortId)) {
+      return emptyRiskOverview();
+    }
+    where.cohortId = filters.cohortId;
+  }
+
+  if (filters?.curatorId) {
+    if (!scope.isGlobal && !scope.curatorIds.includes(filters.curatorId)) {
+      return emptyRiskOverview();
+    }
+
+    const studentIdsForCurator = scope.isGlobal
+      ? (await prisma.curatorAssignment.findMany({
+          where: { curatorId: filters.curatorId, active: true },
+          select: { studentId: true },
+        })).map((assignment) => assignment.studentId)
+      : scope.assignments
+          .filter((assignment) => assignment.curatorId === filters.curatorId)
+          .map((assignment) => assignment.studentId);
+
+    where.userId = { in: studentIdsForCurator };
+  }
+
   if (filters?.type) where.type = filters.type;
   if (filters?.severity) where.severity = filters.severity;
   if (filters?.search) {
-    where.user = { name: { contains: filters.search, mode: "insensitive" } };
+    where.user = {
+      OR: [
+        { name: { contains: filters.search, mode: "insensitive" } },
+        { email: { contains: filters.search, mode: "insensitive" } },
+      ],
+    };
   }
 
   const risks = await prisma.riskFlag.findMany({
@@ -31,51 +69,73 @@ export async function getRiskOverview(filters?: {
     include: {
       user: { select: { id: true, name: true, email: true, lastLoginAt: true, organization: true } },
       course: { select: { title: true } },
-      cohort: { select: { id: true, name: true, curatorAssignments: { where: { active: true }, include: { curator: { select: { id: true, name: true, email: true } } } } } },
+      cohort: {
+        select: {
+          id: true,
+          name: true,
+          curatorAssignments: {
+            where: { active: true },
+            include: { curator: { select: { id: true, name: true, email: true } } },
+          },
+        },
+      },
     },
     orderBy: [{ severity: "desc" }, { createdAt: "desc" }],
     take: 200,
   });
 
-  // Get all cohorts and curators for filter dropdowns
   const [cohorts, curators] = await Promise.all([
     prisma.cohort.findMany({
-      where: { status: "active" },
+      where: { status: "active", ...(scope.isGlobal ? {} : { id: { in: scope.cohortIds } }) },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     prisma.user.findMany({
-      where: { roles: { some: { role: { key: "curator" } } } },
+      where: {
+        roles: { some: { role: { key: "curator" } } },
+        ...(scope.isGlobal ? {} : { id: { in: scope.curatorIds } }),
+      },
       select: { id: true, name: true, email: true },
       orderBy: { name: "asc" },
     }),
   ]);
 
-  // Severity counts
   const bySeverity = { critical: 0, high: 0, medium: 0, low: 0 };
-  for (const r of risks) {
-    bySeverity[r.severity as keyof typeof bySeverity]++;
+  for (const risk of risks) {
+    if (risk.severity in bySeverity) {
+      bySeverity[risk.severity as keyof typeof bySeverity]++;
+    }
   }
 
+  const scopeAssignmentByStudentCohort = new Map(
+    scope.assignments.map((assignment) => [`${assignment.cohortId}:${assignment.studentId}`, assignment]),
+  );
+
   return {
-    risks: risks.map((r) => {
-      const curator = r.cohort?.curatorAssignments?.[0]?.curator ?? null;
+    risks: risks.map((risk) => {
+      const scopedAssignment = risk.cohortId
+        ? scopeAssignmentByStudentCohort.get(`${risk.cohortId}:${risk.userId}`)
+        : scope.assignments.find((assignment) => assignment.studentId === risk.userId);
+      const curator = risk.cohort?.curatorAssignments?.find((assignment) => {
+        return assignment.studentId === risk.userId || assignment.curatorId === scopedAssignment?.curatorId;
+      })?.curator ?? risk.cohort?.curatorAssignments?.[0]?.curator ?? null;
+
       return {
-        id: r.id,
-        type: r.type,
-        severity: r.severity,
-        studentId: r.userId,
-        studentName: r.user.name ?? r.user.email,
-        studentEmail: r.user.email,
-        studentRealName: r.user.organization ?? null,
-        courseTitle: r.course?.title ?? "",
-        cohortId: r.cohort?.id ?? null,
-        cohortName: r.cohort?.name ?? null,
-        curatorId: curator?.id ?? null,
-        curatorName: curator?.name ?? null,
-        createdAt: r.createdAt.toISOString(),
-        daysSinceLogin: r.user.lastLoginAt
-          ? Math.floor((Date.now() - r.user.lastLoginAt.getTime()) / (1000 * 60 * 60 * 24))
+        id: risk.id,
+        type: risk.type,
+        severity: risk.severity,
+        studentId: risk.userId,
+        studentName: risk.user.name ?? risk.user.email,
+        studentEmail: risk.user.email,
+        studentRealName: risk.user.organization ?? null,
+        courseTitle: risk.course?.title ?? "",
+        cohortId: risk.cohort?.id ?? null,
+        cohortName: risk.cohort?.name ?? null,
+        curatorId: curator?.id ?? scopedAssignment?.curatorId ?? null,
+        curatorName: curator?.name ?? curator?.email ?? null,
+        createdAt: risk.createdAt.toISOString(),
+        daysSinceLogin: risk.user.lastLoginAt
+          ? Math.floor((Date.now() - risk.user.lastLoginAt.getTime()) / (1000 * 60 * 60 * 24))
           : null,
       };
     }),
@@ -88,17 +148,35 @@ export async function getRiskOverview(filters?: {
 
 export async function createRiskAction(formData: FormData) {
   const actor = await requireRole(["admin", "super_curator"]);
+  const scope = await getSuperCuratorScope(actor);
   const userId = formData.get("userId") as string;
   const type = formData.get("type") as string;
   const severity = (formData.get("severity") as string) || "medium";
   const courseId = formData.get("courseId") as string;
   const cohortId = formData.get("cohortId") as string;
 
-  if (!userId || !type) throw new ApiError("bad_request", "Студент и тип риска обязательны", 400);
+  if (!userId || !type) {
+    throw new ApiError("bad_request", "Слушатель и тип риска обязательны", 400);
+  }
+  if (!scope.isGlobal) {
+    if (!scope.studentIds.includes(userId)) {
+      throw new ApiError("forbidden", "Слушатель вне зоны ответственности супер-куратора", 403);
+    }
+    if (cohortId && !scope.cohortIds.includes(cohortId)) {
+      throw new ApiError("forbidden", "Поток вне зоны ответственности супер-куратора", 403);
+    }
+  }
 
-  await prisma.riskFlag.create({ data: { userId, type, severity, courseId: courseId || undefined, cohortId: cohortId || undefined } });
+  await prisma.riskFlag.create({
+    data: { userId, type, severity, courseId: courseId || undefined, cohortId: cohortId || undefined },
+  });
 
-  await logAudit({ actorId: actor.id, action: "risk_flag.created", entity: "risk_flag", metadata: { userId, type, severity } });
+  await logAudit({
+    actorId: actor.id,
+    action: "risk_flag.created",
+    entity: "risk_flag",
+    metadata: { userId, type, severity },
+  });
 
   revalidatePath("/super-curator/risks");
   revalidatePath("/curator/risks");
@@ -107,6 +185,16 @@ export async function createRiskAction(formData: FormData) {
 
 export async function resolveRiskAction(flagId: string) {
   const actor = await requireRole(["admin", "super_curator", "curator"]);
+
+  if (actor.roles.includes("super_curator") && !actor.roles.includes("admin")) {
+    const scope = await getSuperCuratorScope(actor);
+    const risk = await prisma.riskFlag.findUnique({ where: { id: flagId }, select: { userId: true } });
+    if (!risk) throw new ApiError("not_found", "Риск не найден", 404);
+    if (!scope.studentIds.includes(risk.userId)) {
+      throw new ApiError("forbidden", "Риск вне зоны ответственности супер-куратора", 403);
+    }
+  }
+
   await prisma.riskFlag.update({ where: { id: flagId }, data: { status: "resolved", resolvedAt: new Date() } });
   await logAudit({ actorId: actor.id, action: "risk_flag.resolved", entity: "risk_flag", entityId: flagId });
   revalidatePath("/super-curator/risks");
@@ -115,11 +203,26 @@ export async function resolveRiskAction(flagId: string) {
 }
 
 export async function getStudentsForRisk() {
-  await requireRole(["admin", "super_curator"]);
+  const actor = await requireRole(["admin", "super_curator"]);
+  const scope = await getSuperCuratorScope(actor);
+
   return prisma.user.findMany({
-    where: { roles: { some: { role: { key: "student" } } } },
+    where: {
+      roles: { some: { role: { key: "student" } } },
+      ...(scope.isGlobal ? {} : { id: { in: scope.studentIds } }),
+    },
     select: { id: true, name: true, email: true },
     orderBy: { name: "asc" },
     take: 500,
   });
+}
+
+function emptyRiskOverview() {
+  return {
+    risks: [],
+    cohorts: [],
+    curators: [],
+    bySeverity: { critical: 0, high: 0, medium: 0, low: 0 },
+    total: 0,
+  };
 }

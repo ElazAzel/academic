@@ -8,6 +8,11 @@ import { logAudit } from "@/server/modules/audit/service";
 import { RoleKey, UserAccountStatus } from "@prisma/client";
 import { ApiError } from "@/lib/http";
 import { enrollStudentSchema, assignCuratorSchema } from "@/lib/validation";
+import {
+  getSuperCuratorScope,
+  isCohortInSuperCuratorScope,
+  isCuratorInSuperCuratorScope,
+} from "@/server/modules/super-curator/scope";
 
 const prisma = getPrisma();
 
@@ -186,6 +191,41 @@ export async function assignCuratorFromSupervisorAction(formData: FormData) {
 
     if (!studentId || !curatorId || !cohortId) {
       throw new ApiError("bad_request", "Студент, куратор и поток обязательны", 400);
+    }
+
+    const [targetCurator, enrollment, currentAssignment] = await Promise.all([
+      prisma.user.findFirst({
+        where: { id: curatorId, roles: { some: { role: { key: "curator" } } } },
+        select: { id: true },
+      }),
+      prisma.enrollment.findFirst({
+        where: { userId: studentId, cohortId },
+        select: { id: true },
+      }),
+      prisma.curatorAssignment.findUnique({
+        where: { cohortId_studentId: { cohortId, studentId } },
+        select: { active: true, superCuratorId: true },
+      }),
+    ]);
+
+    if (!targetCurator) {
+      throw new ApiError("not_found", "Выбранный пользователь не является куратором", 404);
+    }
+    if (!enrollment) {
+      throw new ApiError("not_found", "Слушатель не зачислен в выбранный поток", 404);
+    }
+
+    if (actor.roles.includes("super_curator") && !actor.roles.includes("admin")) {
+      const scope = await getSuperCuratorScope(actor);
+      if (!isCohortInSuperCuratorScope(scope, cohortId)) {
+        throw new ApiError("forbidden", "Поток вне зоны ответственности супер-куратора", 403);
+      }
+      if (!isCuratorInSuperCuratorScope(scope, curatorId)) {
+        throw new ApiError("forbidden", "Куратор вне зоны ответственности супер-куратора", 403);
+      }
+      if (currentAssignment?.active && currentAssignment.superCuratorId !== actor.id) {
+        throw new ApiError("forbidden", "Слушатель закреплен за другой зоной ответственности", 403);
+      }
     }
 
     await prisma.curatorAssignment.upsert({
