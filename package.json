@@ -82,6 +82,7 @@
     "@types/qrcode": "1.5.5",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
+    "@types/web-push": "^3.6.4",
     "autoprefixer": "10.4.22",
     "eslint": "9.39.1",
     "eslint-config-next": "^15.5.18",
