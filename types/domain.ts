@@ -584,6 +584,69 @@ export interface CuratorLoad {
   lastSeenAt: string | null;
 }
 
+export type SuperCuratorWorkloadLevel = "normal" | "watch" | "overloaded" | "critical";
+
+export interface SuperCuratorWorkload extends CuratorLoad {
+  curatorEmail: string;
+  cohorts: string[];
+  activeRisks: number;
+  criticalRisks: number;
+  unreadMessages: number;
+  workloadScore: number;
+  workloadLevel: SuperCuratorWorkloadLevel;
+  nextActionLabel: string;
+  nextActionHref: string;
+}
+
+export interface SuperCuratorCohortOperation {
+  cohortId: string;
+  cohortName: string;
+  courseTitle: string;
+  status: string;
+  studentsCount: number;
+  curatorCount: number;
+  avgProgress: number;
+  openQuestions: number;
+  pendingReviews: number;
+  activeRisks: number;
+  criticalRisks: number;
+  overloadedCurators: number;
+  nextActionLabel: string;
+  nextActionHref: string;
+}
+
+export interface SuperCuratorProblemQuestion {
+  id: string;
+  text: string;
+  status: "OPEN" | "FORWARDED";
+  studentName: string;
+  studentEmail: string;
+  curatorId: string | null;
+  curatorName: string | null;
+  cohortId: string | null;
+  cohortName: string | null;
+  courseTitle: string;
+  moduleTitle: string;
+  lessonTitle: string;
+  createdAt: string;
+  ageHours: number;
+}
+
+export interface SuperCuratorRiskQueueItem {
+  id: string;
+  type: string;
+  severity: RiskSeverity;
+  studentName: string;
+  studentEmail: string;
+  curatorId: string | null;
+  curatorName: string | null;
+  cohortId: string | null;
+  cohortName: string | null;
+  courseTitle: string;
+  createdAt: string;
+  ageDays: number;
+}
+
 export interface CuratorStudentDeadline {
   title: string;
   dueAt: string;

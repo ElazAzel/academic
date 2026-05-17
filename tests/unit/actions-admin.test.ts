@@ -9,10 +9,14 @@ const mockCreateUserFn = vi.hoisted(() => vi.fn());
 const mockCohortCreate = vi.hoisted(() => vi.fn());
 const mockCohortUpdate = vi.hoisted(() => vi.fn());
 const mockEnrollmentFindUnique = vi.hoisted(() => vi.fn());
+const mockEnrollmentFindFirst = vi.hoisted(() => vi.fn());
 const mockEnrollmentUpdate = vi.hoisted(() => vi.fn());
 const mockEnrollmentDelete = vi.hoisted(() => vi.fn());
+const mockUserFindFirst = vi.hoisted(() => vi.fn());
 const mockCuratorAssignmentUpsert = vi.hoisted(() => vi.fn());
 const mockCuratorAssignmentDeleteMany = vi.hoisted(() => vi.fn());
+const mockCuratorAssignmentFindUnique = vi.hoisted(() => vi.fn());
+const mockCuratorAssignmentFindMany = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth/page-guards", () => ({ requireRole: mockRequireRole }));
 vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
@@ -22,8 +26,14 @@ vi.mock("@/server/modules/users/service", () => ({ createUser: mockCreateUserFn 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
     cohort: { create: mockCohortCreate, update: mockCohortUpdate },
-    enrollment: { findUnique: mockEnrollmentFindUnique, update: mockEnrollmentUpdate, delete: mockEnrollmentDelete },
-    curatorAssignment: { upsert: mockCuratorAssignmentUpsert, deleteMany: mockCuratorAssignmentDeleteMany },
+    user: { findFirst: mockUserFindFirst },
+    enrollment: { findUnique: mockEnrollmentFindUnique, findFirst: mockEnrollmentFindFirst, update: mockEnrollmentUpdate, delete: mockEnrollmentDelete },
+    curatorAssignment: {
+      upsert: mockCuratorAssignmentUpsert,
+      deleteMany: mockCuratorAssignmentDeleteMany,
+      findUnique: mockCuratorAssignmentFindUnique,
+      findMany: mockCuratorAssignmentFindMany,
+    },
   }),
 }));
 
@@ -38,6 +48,12 @@ const adminUser = { id: "admin1", email: "admin@test.com", name: "Admin", roles:
 beforeEach(() => {
   vi.clearAllMocks();
   mockRequireRole.mockResolvedValue(adminUser);
+  mockUserFindFirst.mockResolvedValue({ id: "cur1" });
+  mockEnrollmentFindFirst.mockResolvedValue({ id: "enrollment1" });
+  mockCuratorAssignmentFindUnique.mockResolvedValue(null);
+  mockCuratorAssignmentFindMany.mockResolvedValue([
+    { studentId: "u1", curatorId: "cur1", cohortId: "coh1" },
+  ]);
 });
 
 describe("enrollStudentAction", () => {
@@ -94,6 +110,19 @@ describe("assignCuratorFromSupervisorAction", () => {
     expect(mockCuratorAssignmentUpsert).toHaveBeenCalledWith(expect.objectContaining({
       create: expect.objectContaining({ superCuratorId: "sc1" }),
     }));
+  });
+
+  it("blocks super_curator reassignment outside scope", async () => {
+    mockRequireRole.mockResolvedValue({ id: "sc1", email: "sc@test.com", name: "Super", roles: ["super_curator"] });
+    mockCuratorAssignmentFindMany.mockResolvedValue([
+      { studentId: "u1", curatorId: "cur1", cohortId: "coh1" },
+    ]);
+
+    const fd = new FormData();
+    fd.set("studentId", "u1"); fd.set("curatorId", "cur2"); fd.set("cohortId", "coh1");
+
+    await expect(assignCuratorFromSupervisorAction(fd)).rejects.toThrow("Куратор вне зоны ответственности");
+    expect(mockCuratorAssignmentUpsert).not.toHaveBeenCalled();
   });
 });
 

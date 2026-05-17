@@ -14,7 +14,7 @@ export function AssignCuratorForm({
 }: {
   studentId: string;
   cohortId: string;
-  curators: { id: string; name: string | null; email: string }[];
+  curators: { id: string; name: string | null; email: string; studentCount?: number }[];
   currentCuratorId?: string;
 }) {
   const router = useRouter();
@@ -22,7 +22,7 @@ export function AssignCuratorForm({
   const [selectedCurator, setSelectedCurator] = useState(currentCuratorId ?? "");
 
   async function handleAssign() {
-    if (!selectedCurator) return;
+    if (!selectedCurator || selectedCurator === currentCuratorId) return;
     setPending(true);
     try {
       const formData = new FormData();
@@ -42,19 +42,26 @@ export function AssignCuratorForm({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
       <select
         value={selectedCurator}
-        onChange={(e) => setSelectedCurator(e.target.value)}
-        className="rounded-lg border bg-background px-3 py-1.5 text-sm"
+        onChange={(event) => setSelectedCurator(event.target.value)}
+        className="min-w-56 rounded-lg border bg-background px-3 py-1.5 text-sm"
       >
         <option value="">Выбрать куратора</option>
-        {curators.map((c) => (
-          <option key={c.id} value={c.id}>{c.name ?? c.email}</option>
+        {curators.map((curator) => (
+          <option key={curator.id} value={curator.id}>
+            {curator.name ?? curator.email}
+            {typeof curator.studentCount === "number" ? ` · ${curator.studentCount} слуш.` : ""}
+          </option>
         ))}
       </select>
-      <Button size="sm" onClick={handleAssign} disabled={pending || !selectedCurator}>
-        {pending ? "..." : "Назначить"}
+      <Button
+        size="sm"
+        onClick={handleAssign}
+        disabled={pending || !selectedCurator || selectedCurator === currentCuratorId}
+      >
+        {pending ? "..." : selectedCurator === currentCuratorId ? "Назначен" : "Назначить"}
       </Button>
     </div>
   );

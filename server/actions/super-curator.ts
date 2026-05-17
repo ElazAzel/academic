@@ -2,21 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/page-guards";
-import { getCurrentUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
 import { ApiError } from "@/lib/http";
+import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
 
 const prisma = getPrisma();
 
 // ─── Cohort CRUD ────────────────────────────────────────────────────
 
 export async function getSuperCuratorCohorts() {
-  await requireRole(["super_curator", "admin"]);
-  const user = await getCurrentUser();
-  if (!user) return [];
+  const actor = await requireRole(["super_curator", "admin"]);
+  const scope = await getSuperCuratorScope(actor);
 
   const cohorts = await prisma.cohort.findMany({
+    where: scope.isGlobal ? {} : { id: { in: scope.cohortIds } },
     include: {
       course: { select: { id: true, title: true } },
       _count: { select: { enrollments: true, curatorAssignments: true } },
@@ -127,7 +127,9 @@ export async function deleteCohortAction(id: string) {
 }
 
 export async function getCohortDetail(cohortId: string) {
-  await requireRole(["super_curator", "admin"]);
+  const actor = await requireRole(["super_curator", "admin"]);
+  const scope = await getSuperCuratorScope(actor);
+  if (!scope.isGlobal && !scope.cohortIds.includes(cohortId)) return null;
 
   const cohort = await prisma.cohort.findUnique({
     where: { id: cohortId },
@@ -247,12 +249,15 @@ export async function removeStudentFromCohortAction(enrollmentId: string) {
 // ─── Curator management ─────────────────────────────────────────────
 
 export async function getSuperCuratorCurators() {
-  await requireRole(["super_curator", "admin"]);
-  const user = await getCurrentUser();
-  if (!user) return [];
+  const actor = await requireRole(["super_curator", "admin"]);
+  const scope = await getSuperCuratorScope(actor);
+  if (!scope.isGlobal && scope.curatorIds.length === 0) return [];
 
   const curatorAssignments = await prisma.curatorAssignment.findMany({
-    where: { superCuratorId: user.id, active: true },
+    where: {
+      active: true,
+      ...(scope.isGlobal ? {} : { superCuratorId: actor.id }),
+    },
     include: {
       curator: {
         select: {
@@ -376,7 +381,9 @@ export async function removeCuratorAction(curatorId: string) {
 }
 
 export async function getCuratorActivity(curatorId: string) {
-  await requireRole(["super_curator", "admin"]);
+  const actor = await requireRole(["super_curator", "admin"]);
+  const scope = await getSuperCuratorScope(actor);
+  if (!scope.isGlobal && !scope.curatorIds.includes(curatorId)) return null;
 
   const curator = await prisma.user.findUnique({
     where: { id: curatorId },
@@ -445,13 +452,104 @@ export async function getCuratorActivity(curatorId: string) {
   };
 }
 
+// ─── Distribution scope ─────────────────────────────────────────────
+
+export async function getSuperCuratorDistributionData() {
+  const actor = await requireRole(["super_curator", "admin"]);
+  const scope = await getSuperCuratorScope(actor);
+
+  if (!scope.isGlobal && scope.cohortIds.length === 0) {
+    return { unassignedStudents: [], assignedStudents: [], curators: [] };
+  }
+
+  const cohortWhere = scope.isGlobal ? { not: null } : { in: scope.cohortIds };
+
+  const [enrollments, activeAssignments, curators] = await Promise.all([
+    prisma.enrollment.findMany({
+      where: { status: "ACTIVE", cohortId: cohortWhere },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        course: { select: { title: true } },
+        cohort: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 500,
+    }),
+    prisma.curatorAssignment.findMany({
+      where: { active: true, cohortId: scope.isGlobal ? undefined : { in: scope.cohortIds } },
+      include: {
+        curator: { select: { id: true, name: true, email: true } },
+        student: { select: { id: true, name: true, email: true } },
+        cohort: { select: { id: true, name: true } },
+      },
+    }),
+    prisma.user.findMany({
+      where: {
+        roles: { some: { role: { key: "curator" } } },
+        ...(scope.isGlobal ? {} : { id: { in: scope.curatorIds } }),
+      },
+      select: { id: true, name: true, email: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  const assignmentByCohortStudent = new Map(activeAssignments.map((assignment) => [`${assignment.cohortId}:${assignment.studentId}`, assignment]));
+  const scopedAssignmentKeys = new Set(
+    activeAssignments
+      .filter((assignment) => scope.isGlobal || assignment.superCuratorId === actor.id)
+      .map((assignment) => `${assignment.cohortId}:${assignment.studentId}`),
+  );
+  const loadByCurator = new Map<string, number>();
+  for (const assignment of activeAssignments) {
+    if (scope.isGlobal || assignment.superCuratorId === actor.id) {
+      loadByCurator.set(assignment.curatorId, (loadByCurator.get(assignment.curatorId) ?? 0) + 1);
+    }
+  }
+
+  const normalizedCurators = curators.map((curator) => ({
+    ...curator,
+    studentCount: loadByCurator.get(curator.id) ?? 0,
+  }));
+
+  const unassignedStudents = enrollments
+    .filter((enrollment) => enrollment.cohortId && !assignmentByCohortStudent.has(`${enrollment.cohortId}:${enrollment.userId}`))
+    .map((enrollment) => ({
+      id: enrollment.user.id,
+      name: enrollment.user.name ?? enrollment.user.email,
+      email: enrollment.user.email,
+      cohortId: enrollment.cohortId!,
+      cohortName: enrollment.cohort?.name ?? "",
+      courseTitle: enrollment.course.title,
+    }));
+
+  const assignedStudents = activeAssignments
+    .filter((assignment) => scopedAssignmentKeys.has(`${assignment.cohortId}:${assignment.studentId}`))
+    .map((assignment) => ({
+      id: assignment.student.id,
+      name: assignment.student.name ?? assignment.student.email,
+      email: assignment.student.email,
+      cohortId: assignment.cohortId,
+      cohortName: assignment.cohort.name,
+      curatorId: assignment.curatorId,
+      curatorName: assignment.curator.name ?? assignment.curator.email,
+      curatorEmail: assignment.curator.email,
+    }));
+
+  return { unassignedStudents, assignedStudents, curators: normalizedCurators };
+}
+
 // ─── Enhanced risks ─────────────────────────────────────────────────
 
 export async function getSuperCuratorRisks() {
-  await requireRole(["super_curator", "admin"]);
+  const actor = await requireRole(["super_curator", "admin"]);
+  const scope = await getSuperCuratorScope(actor);
+  if (!scope.isGlobal && scope.studentIds.length === 0) return [];
 
   const risks = await prisma.riskFlag.findMany({
-    where: { resolvedAt: null },
+    where: {
+      resolvedAt: null,
+      ...(scope.isGlobal ? {} : { userId: { in: scope.studentIds } }),
+    },
     include: {
       user: { select: { id: true, name: true, email: true, lastLoginAt: true } },
       course: { select: { id: true, title: true } },
@@ -541,9 +639,11 @@ export async function getSuperCuratorRisks() {
 // ─── Reports ────────────────────────────────────────────────────────
 
 export async function getSuperCuratorReportData() {
-  await requireRole(["super_curator", "admin"]);
+  const actor = await requireRole(["super_curator", "admin"]);
+  const scope = await getSuperCuratorScope(actor);
 
   const cohortStats = await prisma.cohort.findMany({
+    where: scope.isGlobal ? {} : { id: { in: scope.cohortIds } },
     include: {
       course: { select: { title: true } },
       _count: { select: { enrollments: true, curatorAssignments: true } },

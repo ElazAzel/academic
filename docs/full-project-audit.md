@@ -1,7 +1,7 @@
 # Полный аудит платформы — AI Strategic Academy
 
 **Дата:** 2026-05-17
-**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-05
+**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-06
 **Область:** продуктовые сценарии, роли, маршруты, backend/API, доступ, безопасность, тесты, схема, документация
 
 ---
@@ -52,7 +52,7 @@
 | Instructor | Green/yellow | own courses, builder direction, quiz/assignment CRUD scoped, analytics, forwarded questions scoped | Unified builder modernization в M-PR-07 |
 | Student | Green/yellow | dashboard continue-learning, my courses, course/lesson access, embedded quiz/assignment/question/rating, certificates | Playwright happy path on prepared DB |
 | Curator | Green/yellow | assigned students, questions, assignment review, risks, scoped chat, operational student cards with next actions | Browser smoke on prepared curator data; deeper operations continue through M-PR-06/M-PR-08 |
-| Super Curator | Yellow | curator dashboard, distribution, questions, reports scope | workload/risk/reassignment operations в M-PR-06 |
+| Super Curator | Green/yellow | scoped workload dashboard, distribution, questions, risks, curator load, problem queues, reassignment inside scope | Reports/analytics v1 с owner/export tests в M-PR-08 |
 | Customer Observer | Green/yellow | scoped dashboard, reports, certificates, read-only constraints | Reports/analytics v1 с owner/export tests в M-PR-08 |
 
 ---
@@ -66,7 +66,7 @@
 | Student data ownership | Scoped by current user/enrollment |
 | Instructor course ownership | Enforced on course/module/lesson/quiz/assignment mutations |
 | Curator-student relationship | Enforced on answer/review/forward/risk/chat actions |
-| Super-curator operational scope | Enforced for reports/questions/distribution baseline; needs v1 UX hardening |
+| Super-curator operational scope | Enforced for dashboard, questions, distribution, risks, reassignment, and curator/cohort workload views |
 | Customer observer read-only | Enforced by RBAC and no mutation UI |
 | Customer observer private data scope | Explicit project/cohort scope only; no scope means no private data |
 | Certificate public verify | Public verification by code without role cabinet access |
@@ -94,8 +94,9 @@ Current state after M-PR-04:
 - Rating, curator question, and completion content blocks are preserved by parsing and rendered in lesson context.
 - Standalone quiz/assignment pages and aggregators now prefer returning to the originating lesson/course context.
 - Curator screens now expose next-action student cards with progress, deadlines, questions, assignments, risks, latest lesson context, and quick chat.
+- Super-curator screens now expose scoped curator workload, cohort operations, problem questions, high-risk students, and reassignment controls without admin-level global fallback.
 
-M-PR-05 and M-PR-06 should focus on role workflow quality, not on new product categories.
+M-PR-07 should focus on the unified course builder, not on new product categories.
 
 ---
 
@@ -128,7 +129,6 @@ Known limitation:
 
 | Priority | Risk | Why It Matters | Planned Package |
 |---|---|---|---|
-| P1 | Super-curator workload/risk operations need safer v1 UX | Load distribution and escalation must be scoped and actionable | M-PR-06 |
 | P2 | Reports/analytics need owner/scope/export discipline | Reports must support management decisions without data leakage | M-PR-08 |
 | P2 | Notification/audit coverage is incomplete for all core events | Enrollment, curator assignment, assignment review, certificate events need consistent records | M-PR-09 |
 | P3 | Status strings still need enum cleanup | Schema cleanup should happen in a separate downtime window | M-PR-10 |
@@ -157,8 +157,8 @@ Rule going forward: if an old audit table says a risk is open but `docs/update-l
 
 ## 9. Recommended Next Step
 
-Continue with **M-PR-06: Super Curator Operations v1**:
+Continue with **M-PR-07: Course Builder Modernization**:
 
-- expose workload, risk, question, and reassignment actions by curator/cohort;
-- keep reassignment/escalation actions scoped by super-curator responsibility;
-- reuse the M-PR-05 operational pattern so every row answers “what should I do next?”.
+- make the unified builder the primary course authoring path for settings, module/block/lesson tree, content blocks, quizzes, assignments, preview, and publish checks;
+- keep legacy edit/curriculum routes as compatibility redirects where possible;
+- preserve instructor/admin scope checks while moving the authoring UX into one course context.

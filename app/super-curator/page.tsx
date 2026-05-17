@@ -1,9 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
-import { CuratorLeaderboard } from "@/components/lms/curator-leaderboard";
 import { PageHeader } from "@/components/lms/page-header";
-import { Tabs } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SuperCuratorOperationsBoard } from "@/components/lms/super-curator-operations-board";
 import { getSuperCuratorDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
@@ -21,7 +19,7 @@ export default async function SuperCuratorDashboardPage() {
       <AppShell role="super_curator">
         <PageHeader
           title="Дашборд супер-куратора"
-          description="Контроль нагрузки кураторов и мониторинг потоков."
+          description="Контроль нагрузки кураторов, проблемных вопросов, рисков и распределения по потокам."
         />
         <DashboardUnavailable />
       </AppShell>
@@ -30,88 +28,23 @@ export default async function SuperCuratorDashboardPage() {
 
   const metrics = data?.metrics ?? [];
   const curatorLoads = data?.curatorLoads ?? [];
-  const cohorts = data?.cohorts ?? [];
+  const cohortOperations = data?.cohortOperations ?? [];
+  const problemQuestions = data?.problemQuestions ?? [];
+  const riskQueue = data?.riskQueue ?? [];
 
   return (
     <AppShell role="super_curator">
       <PageHeader
         title="Дашборд супер-куратора"
-        description="Контроль нагрузки кураторов и мониторинг потоков."
+        description="Что требует внимания: перегрузка кураторов, риски потоков, проблемные вопросы и перераспределение."
       />
       <div className="space-y-6">
         <MetricGrid metrics={metrics} />
-
-        <Tabs
-          paramName="tab"
-          tabs={[
-            {
-              label: `Лидерборд (${curatorLoads.length})`,
-              content: (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Рейтинг кураторов</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CuratorLeaderboard curators={curatorLoads} />
-                  </CardContent>
-                </Card>
-              ),
-            },
-            {
-              label: `Слушатели (${curatorLoads.reduce((s, c) => s + c.studentsCount, 0)})`,
-              content: (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {curatorLoads.map((c) => (
-                    <Card key={c.curatorId} className="transition-shadow hover:shadow-sm">
-                      <CardContent className="p-5 space-y-4">
-                        <div>
-                          <p className="font-medium">{c.curatorName}</p>
-                          <p className="text-xs text-muted-foreground">{c.studentsCount} слушателей</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div className="rounded-lg bg-muted p-2">
-                            <span className="text-muted-foreground">Вопросы:</span>{" "}
-                            <span className={c.openQuestions > 5 ? "text-destructive font-medium" : ""}>
-                              {c.openQuestions}
-                            </span>
-                          </div>
-                          <div className="rounded-lg bg-muted p-2">
-                            <span className="text-muted-foreground">Проверка:</span>{" "}
-                            <span className={c.pendingReviews > 10 ? "text-amber-600 font-medium" : ""}>
-                              {c.pendingReviews}
-                            </span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ),
-            },
-            {
-              label: `Потоки (${cohorts.length})`,
-              content: (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {cohorts.map((c) => (
-                    <Card key={c.id} className="transition-shadow hover:shadow-sm">
-                      <CardContent className="p-5 space-y-2">
-                        <p className="font-medium line-clamp-1">{c.name}</p>
-                        <p className="text-xs text-muted-foreground line-clamp-1">{c.courseTitle}</p>
-                        <div className="flex items-center justify-between pt-2">
-                          <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                            {c.status}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {c.studentsCount} слушателей
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ),
-            },
-          ]}
+        <SuperCuratorOperationsBoard
+          curatorLoads={curatorLoads}
+          cohortOperations={cohortOperations}
+          problemQuestions={problemQuestions}
+          riskQueue={riskQueue}
         />
       </div>
     </AppShell>
