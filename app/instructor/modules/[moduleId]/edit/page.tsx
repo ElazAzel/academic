@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation";
+import { requireRolePage } from "@/lib/auth/page-guards";
+import { getModule } from "@/server/modules/courses/service";
 
-export default async function RedirectToCourses() {
-  redirect("/instructor/courses");
+export default async function RedirectToBuilder({ params }: { params: Promise<{ moduleId: string }> }) {
+  await requireRolePage(["instructor", "admin"]);
+  const { moduleId } = await params;
+  const mod = await getModule(moduleId);
+  redirect(`/instructor/courses/${mod.course.id}/builder?moduleId=${moduleId}`);
 }

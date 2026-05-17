@@ -151,7 +151,13 @@ export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) 
 }
 
 // ── Сетка курсов (для инструктора/админа) ───────────────────────────
-export function CourseManageGrid({ courses }: { courses: CourseSummary[] }) {
+export function CourseManageGrid({
+  courses,
+  builderBasePath = "/instructor/courses",
+}: {
+  courses: CourseSummary[];
+  builderBasePath?: "/instructor/courses" | "/admin/courses";
+}) {
   return (
     <Stagger className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {courses.map((c) => (
@@ -179,7 +185,7 @@ export function CourseManageGrid({ courses }: { courses: CourseSummary[] }) {
                 )}
                 <div className="mt-4 pt-4 border-t">
                   <Button asChild variant="secondary" size="sm" className="w-full">
-                    <Link href={`/instructor/courses/${c.id}/builder`}>Управление курсом</Link>
+                    <Link href={`${builderBasePath}/${c.id}/builder`}>Управление курсом</Link>
                   </Button>
                 </div>
               </CardContent>

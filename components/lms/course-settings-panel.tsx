@@ -1,23 +1,27 @@
 "use client";
 
+import { CheckCircle2, XCircle } from "lucide-react";
+import type { CourseBuilderPublishCheck } from "@/lib/course-builder-readiness";
 import type { CourseBuilderDetail, BuilderModuleDetail, BuilderLessonDetail } from "@/types/domain";
 
 type SelectedNode =
   | { type: "course" }
   | { type: "module"; moduleId: string }
   | { type: "block"; moduleId: string; blockId: string }
-  | { type: "lesson"; moduleId: string; lessonId: string };
+  | { type: "lesson"; moduleId: string; lessonId: string; blockId?: string };
 
 export function CourseSettingsPanel({
   selected,
   detail,
   module: mod,
   lesson,
+  publishChecks = [],
 }: {
   selected: SelectedNode;
   detail: CourseBuilderDetail;
   module?: BuilderModuleDetail;
   lesson?: BuilderLessonDetail;
+  publishChecks?: CourseBuilderPublishCheck[];
   onChange?: () => void;
 }) {
   if (selected.type === "course") {
@@ -42,7 +46,24 @@ export function CourseSettingsPanel({
         </div>
         <div className="space-y-2">
           <label className="text-xs text-muted-foreground">Всего уроков</label>
-          <p className="text-sm font-medium">{detail.modules.reduce((s, m) => s + m.lessons.length, 0)}</p>
+          <p className="text-sm font-medium">
+            {detail.modules.reduce((sum, mod) => sum + mod.lessons.length + mod.blocks.flatMap((block) => block.lessons).length, 0)}
+          </p>
+        </div>
+        <div className="space-y-3 rounded-xl border bg-background p-3">
+          <h4 className="text-xs font-semibold uppercase text-muted-foreground">Готовность к публикации</h4>
+          {publishChecks.map((check) => {
+            const Icon = check.status === "passed" ? CheckCircle2 : XCircle;
+            return (
+              <div key={check.id} className="flex gap-2">
+                <Icon className={check.status === "passed" ? "mt-0.5 h-4 w-4 shrink-0 text-emerald-600" : "mt-0.5 h-4 w-4 shrink-0 text-amber-600"} />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{check.label}</p>
+                  <p className="text-xs leading-5 text-muted-foreground">{check.description}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
         {detail.coverUrl && (
           <div className="space-y-2">
@@ -69,7 +90,7 @@ export function CourseSettingsPanel({
         </div>
         <div className="space-y-2">
           <label className="text-xs text-muted-foreground">Уроков</label>
-          <p className="text-sm font-medium">{mod.lessons.length}</p>
+          <p className="text-sm font-medium">{mod.lessons.length + mod.blocks.flatMap((block) => block.lessons).length}</p>
         </div>
         <div className="space-y-2">
           <label className="text-xs text-muted-foreground">Описание</label>

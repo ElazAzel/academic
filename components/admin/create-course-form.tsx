@@ -10,7 +10,13 @@ interface CreatedCourse {
   id: string;
 }
 
-export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
+export function CreateCourseForm({
+  onSuccess,
+  builderBasePath = "/instructor/courses",
+}: {
+  onSuccess?: () => void;
+  builderBasePath?: "/instructor/courses" | "/admin/courses";
+}) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -43,7 +49,7 @@ export function CreateCourseForm({ onSuccess }: { onSuccess?: () => void }) {
         const course = await readApiData<CreatedCourse>(response);
         onSuccess?.();
         if (course?.id) {
-          router.push(`/instructor/courses/${course.id}/builder`);
+          router.push(`${builderBasePath}/${course.id}/builder`);
         } else {
           router.refresh();
         }

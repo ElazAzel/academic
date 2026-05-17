@@ -225,6 +225,7 @@ export async function createLesson(moduleId: string, input: {
   content: Record<string, unknown>;
   videoUrl?: string | null;
   durationMinutes: number;
+  isRequired?: boolean;
   blockId?: string | null;
 }, actorId: string) {
   const courseModule = await prisma.module.findUnique({ where: { id: moduleId } });
@@ -242,7 +243,8 @@ export async function createLesson(moduleId: string, input: {
       type: LessonType[input.type],
       content: toJsonValue(input.content),
       videoUrl: input.videoUrl,
-      durationMinutes: input.durationMinutes
+      durationMinutes: input.durationMinutes,
+      isRequired: input.isRequired ?? true
     }
   });
   await logAudit({ actorId, action: "lesson.created", entity: "lesson", entityId: lesson.id });

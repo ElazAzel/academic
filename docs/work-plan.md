@@ -15,7 +15,7 @@
 | M-PR-04 | P1 | Student Learning Flow Polish | green | Dashboard continue-learning uses next available lesson; legacy lesson quizzes/assignments/rating/question blocks stay inside lesson context; aggregators link back to lesson |
 | M-PR-05 | P1 | Curator Operations v1 | green | Curator sees next actions across assigned students, questions, assignments, risks, deadlines, last lesson context, and quick chat |
 | M-PR-06 | P1 | Super Curator Operations v1 | green | Super curator sees scoped workload, cohort risks, problem questions, high-risk queue, and can reassign students only inside operational scope |
-| M-PR-07 | P2 | Course Builder Modernization | pending | Course can be built and published from unified builder |
+| M-PR-07 | P2 | Course Builder Modernization | green | Course can be edited, previewed, checked, and published from unified builder; legacy edit routes keep builder redirects |
 | M-PR-08 | P2 | Reports & Analytics v1 | pending | Role-scoped reports support progress, risks, assignments, certificates, workload |
 | M-PR-09 | P2 | Notification & Audit Completion | pending | Core events create expected in-app notifications and audit records |
 | M-PR-10 | P3 | Schema Cleanup Window | pending | String statuses migrated to enums with backup/downtime runbook |

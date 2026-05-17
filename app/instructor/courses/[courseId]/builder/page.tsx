@@ -1,14 +1,22 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { resolveCourseBuilderSelection } from "@/lib/course-builder-selection";
 import { getCourseForBuilder } from "@/server/modules/course-builder/service";
 import { CourseBuilderShell } from "@/components/lms/course-builder-shell";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function CourseBuilderPage({ params }: { params: Promise<{ courseId: string }> }) {
+export default async function CourseBuilderPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ courseId: string }>;
+  searchParams: Promise<{ moduleId?: string; blockId?: string; lessonId?: string }>;
+}) {
   const user = await requireRolePage(["instructor", "admin"]);
   const { courseId } = await params;
+  const resolvedSearchParams = await searchParams;
 
   let detail;
   try {
@@ -19,7 +27,7 @@ export default async function CourseBuilderPage({ params }: { params: Promise<{ 
 
   return (
     <AppShell role="instructor">
-      <CourseBuilderShell detail={detail} />
+      <CourseBuilderShell detail={detail} initialSelected={resolveCourseBuilderSelection(detail, resolvedSearchParams)} />
     </AppShell>
   );
 }

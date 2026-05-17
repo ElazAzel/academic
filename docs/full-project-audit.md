@@ -1,7 +1,7 @@
 # Полный аудит платформы — AI Strategic Academy
 
 **Дата:** 2026-05-17
-**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-06
+**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-07
 **Область:** продуктовые сценарии, роли, маршруты, backend/API, доступ, безопасность, тесты, схема, документация
 
 ---
@@ -49,7 +49,7 @@
 | Роль | Статус | Что работает | Что дальше |
 |---|---|---|---|
 | Admin | Green | users, roles, courses, cohorts, enrollments, invites, audit, settings, certificates issue/revoke | Reports/analytics v1 и release runbooks |
-| Instructor | Green/yellow | own courses, builder direction, quiz/assignment CRUD scoped, analytics, forwarded questions scoped | Unified builder modernization в M-PR-07 |
+| Instructor | Green/yellow | own courses, unified builder, scoped quiz/assignment creation, preview, publish checks, analytics, forwarded questions scoped | Reports/analytics v1 с owner/export tests в M-PR-08 |
 | Student | Green/yellow | dashboard continue-learning, my courses, course/lesson access, embedded quiz/assignment/question/rating, certificates | Playwright happy path on prepared DB |
 | Curator | Green/yellow | assigned students, questions, assignment review, risks, scoped chat, operational student cards with next actions | Browser smoke on prepared curator data; deeper operations continue through M-PR-06/M-PR-08 |
 | Super Curator | Green/yellow | scoped workload dashboard, distribution, questions, risks, curator load, problem queues, reassignment inside scope | Reports/analytics v1 с owner/export tests в M-PR-08 |
@@ -65,6 +65,7 @@
 | Forbidden role access | Redirect/error to `/403` or guarded route denial |
 | Student data ownership | Scoped by current user/enrollment |
 | Instructor course ownership | Enforced on course/module/lesson/quiz/assignment mutations |
+| Course builder publication | Publish endpoint enforces server-side readiness checklist |
 | Curator-student relationship | Enforced on answer/review/forward/risk/chat actions |
 | Super-curator operational scope | Enforced for dashboard, questions, distribution, risks, reassignment, and curator/cohort workload views |
 | Customer observer read-only | Enforced by RBAC and no mutation UI |
@@ -84,7 +85,7 @@ The product direction remains:
 Course → Module → Block → Lesson → Content / Test / Assignment / Question / Rating / Completion
 ```
 
-Current state after M-PR-04:
+Current state after M-PR-07:
 
 - Course, Module, Block, Lesson exist in product/schema direction.
 - Student dashboard and course pages are usable.
@@ -95,8 +96,10 @@ Current state after M-PR-04:
 - Standalone quiz/assignment pages and aggregators now prefer returning to the originating lesson/course context.
 - Curator screens now expose next-action student cards with progress, deadlines, questions, assignments, risks, latest lesson context, and quick chat.
 - Super-curator screens now expose scoped curator workload, cohort operations, problem questions, high-risk students, and reassignment controls without admin-level global fallback.
+- Unified course builder is now the primary authoring workspace for course settings, module/block/lesson tree, lesson fields, content blocks, inline quiz/assignment creation, preview, snapshot save, and publish checks.
+- Admin has a native `/admin/courses/[courseId]/builder` route; legacy instructor edit/curriculum/module/lesson routes redirect back into the builder context.
 
-M-PR-07 should focus on the unified course builder, not on new product categories.
+M-PR-08 should focus reports and analytics on management decisions, owner, scope, export, and no foreign data leakage.
 
 ---
 
@@ -157,8 +160,8 @@ Rule going forward: if an old audit table says a risk is open but `docs/update-l
 
 ## 9. Recommended Next Step
 
-Continue with **M-PR-07: Course Builder Modernization**:
+Continue with **M-PR-08: Reports & Analytics v1**:
 
-- make the unified builder the primary course authoring path for settings, module/block/lesson tree, content blocks, quizzes, assignments, preview, and publish checks;
-- keep legacy edit/curriculum routes as compatibility redirects where possible;
-- preserve instructor/admin scope checks while moving the authoring UX into one course context.
+- define owner/scope/export expectations for each report;
+- verify admin/instructor/curator/super-curator/customer-observer data boundaries;
+- keep reports operational and decision-oriented, not decorative BI.

@@ -7,15 +7,18 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ASSIGNMENT } from "@/lib/constants";
+import type { AssignmentSummary } from "@/types/domain";
 
 export function AssignmentCreator({
   lessonId,
   courseId,
   onCreated,
+  onCancel,
 }: {
   lessonId: string;
   courseId: string;
-  onCreated: () => void;
+  onCreated: (assignment: AssignmentSummary) => void;
+  onCancel?: () => void;
 }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -41,9 +44,17 @@ export function AssignmentCreator({
         }),
       });
       if (res.ok) {
+        const payload = await res.json();
+        const assignment = payload.data ?? payload;
         toast.success("Задание создано");
         router.refresh();
-        onCreated();
+        onCreated({
+          id: assignment.id,
+          title: assignment.title,
+          deadline: assignment.deadline,
+          maxAttempts: assignment.maxAttempts,
+          submissionStatus: null,
+        });
       } else {
         const err = await res.json().catch(() => ({}));
         toast.error(err.error?.message || "Ошибка");
@@ -82,7 +93,7 @@ export function AssignmentCreator({
         </div>
       </div>
       <div className="flex justify-end gap-2">
-        <Button size="sm" variant="secondary" onClick={onCreated}>Отмена</Button>
+        <Button size="sm" variant="secondary" onClick={onCancel}>Отмена</Button>
         <Button size="sm" onClick={save} disabled={saving}>
           {saving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
           Создать задание
