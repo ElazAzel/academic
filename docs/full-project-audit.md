@@ -1,7 +1,7 @@
 # Полный аудит платформы — AI Strategic Academy
 
 **Дата:** 2026-05-17
-**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-07
+**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-08
 **Область:** продуктовые сценарии, роли, маршруты, backend/API, доступ, безопасность, тесты, схема, документация
 
 ---
@@ -16,6 +16,7 @@
 | Certificates | Green: student видит свои, admin видит все, observer видит scoped, bulk download scoped, PDF owner/instructor/admin |
 | Notifications | Green базовый контракт: default `in_app`, email только при `email` / `email_and_in_app`; preferences service подключён |
 | Chat | Green для текущего MVP: участники scoped, куратор отвечает закреплённому слушателю, имена отображаются по роли |
+| Reports/analytics | Green: reports have owner/scope/decision/export and server-side role scope for progress, risks, assignments, certificates, workload |
 | Release gate | Green: `npm run verify:release` и `docs/release-verification.md` зафиксированы |
 | E2E | Yellow: Playwright smoke готов, но полный release-run требует подготовленную БД и demo seed |
 | Schema cleanup | Deferred: enum migration (`UserAccountStatus`, `QuestionStatus`) вынесена в M-PR-10 |
@@ -48,12 +49,12 @@
 
 | Роль | Статус | Что работает | Что дальше |
 |---|---|---|---|
-| Admin | Green | users, roles, courses, cohorts, enrollments, invites, audit, settings, certificates issue/revoke | Reports/analytics v1 и release runbooks |
-| Instructor | Green/yellow | own courses, unified builder, scoped quiz/assignment creation, preview, publish checks, analytics, forwarded questions scoped | Reports/analytics v1 с owner/export tests в M-PR-08 |
+| Admin | Green | users, roles, courses, cohorts, enrollments, invites, audit, settings, certificates issue/revoke, scoped reports/exports | Notification/audit completion and release runbooks |
+| Instructor | Green/yellow | own courses, unified builder, scoped quiz/assignment creation, preview, publish checks, analytics, forwarded questions scoped, course-scoped reports | Notification/audit completion |
 | Student | Green/yellow | dashboard continue-learning, my courses, course/lesson access, embedded quiz/assignment/question/rating, certificates | Playwright happy path on prepared DB |
-| Curator | Green/yellow | assigned students, questions, assignment review, risks, scoped chat, operational student cards with next actions | Browser smoke on prepared curator data; deeper operations continue through M-PR-06/M-PR-08 |
-| Super Curator | Green/yellow | scoped workload dashboard, distribution, questions, risks, curator load, problem queues, reassignment inside scope | Reports/analytics v1 с owner/export tests в M-PR-08 |
-| Customer Observer | Green/yellow | scoped dashboard, reports, certificates, read-only constraints | Reports/analytics v1 с owner/export tests в M-PR-08 |
+| Curator | Green/yellow | assigned students, questions, assignment review, risks, scoped chat, operational student cards with next actions, assigned-scope reports | Browser smoke on prepared curator data |
+| Super Curator | Green/yellow | scoped workload dashboard, distribution, questions, risks, curator load, problem queues, reassignment inside scope, workload reports | Notification/audit completion |
+| Customer Observer | Green/yellow | scoped dashboard, reports, certificates, read-only constraints, scoped progress/risk/certificate exports | Notification/audit completion |
 
 ---
 
@@ -70,6 +71,7 @@
 | Super-curator operational scope | Enforced for dashboard, questions, distribution, risks, reassignment, and curator/cohort workload views |
 | Customer observer read-only | Enforced by RBAC and no mutation UI |
 | Customer observer private data scope | Explicit project/cohort scope only; no scope means no private data |
+| Reports/export scope | Enforced by canonical report service for progress, risk, assignment, certificate, and curator workload reports |
 | Certificate public verify | Public verification by code without role cabinet access |
 | Default notification channel | `in_app` |
 | Email notification | Only explicit `email` or `email_and_in_app` |
@@ -85,7 +87,7 @@ The product direction remains:
 Course → Module → Block → Lesson → Content / Test / Assignment / Question / Rating / Completion
 ```
 
-Current state after M-PR-07:
+Current state after M-PR-08:
 
 - Course, Module, Block, Lesson exist in product/schema direction.
 - Student dashboard and course pages are usable.
@@ -98,8 +100,10 @@ Current state after M-PR-07:
 - Super-curator screens now expose scoped curator workload, cohort operations, problem questions, high-risk students, and reassignment controls without admin-level global fallback.
 - Unified course builder is now the primary authoring workspace for course settings, module/block/lesson tree, lesson fields, content blocks, inline quiz/assignment creation, preview, snapshot save, and publish checks.
 - Admin has a native `/admin/courses/[courseId]/builder` route; legacy instructor edit/curriculum/module/lesson routes redirect back into the builder context.
+- Reports now expose owner, scope, management decision purpose, and CSV/XLSX/PDF export actions.
+- Report exports are server-scoped for admin, instructor, curator, super-curator, and customer observer roles; assignments and curator workload are included where the role is allowed.
 
-M-PR-08 should focus reports and analytics on management decisions, owner, scope, export, and no foreign data leakage.
+M-PR-09 should complete notification and audit coverage for the core learning/operations events.
 
 ---
 
@@ -132,7 +136,6 @@ Known limitation:
 
 | Priority | Risk | Why It Matters | Planned Package |
 |---|---|---|---|
-| P2 | Reports/analytics need owner/scope/export discipline | Reports must support management decisions without data leakage | M-PR-08 |
 | P2 | Notification/audit coverage is incomplete for all core events | Enrollment, curator assignment, assignment review, certificate events need consistent records | M-PR-09 |
 | P3 | Status strings still need enum cleanup | Schema cleanup should happen in a separate downtime window | M-PR-10 |
 | P3 | Heavy dashboards/reports/chats need bounded query review | Production scale requires pagination/indexes/no unbounded queries | M-PR-11 |
@@ -160,8 +163,8 @@ Rule going forward: if an old audit table says a risk is open but `docs/update-l
 
 ## 9. Recommended Next Step
 
-Continue with **M-PR-08: Reports & Analytics v1**:
+Continue with **M-PR-09: Notification & Audit Completion**:
 
-- define owner/scope/export expectations for each report;
-- verify admin/instructor/curator/super-curator/customer-observer data boundaries;
-- keep reports operational and decision-oriented, not decorative BI.
+- verify enrollment, curator assigned, question answered/forwarded, assignment reviewed, certificate issued/revoked, and password/security events;
+- keep default notification channel as `in_app`;
+- ensure audit logs and notification rows are created consistently without accidental email sending.

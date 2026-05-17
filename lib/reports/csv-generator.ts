@@ -1,4 +1,4 @@
-import type { ProgressRow, RiskRow, CertificateRow } from "./types";
+import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, RiskRow } from "./types";
 import { groupByCourse } from "./data";
 
 function esc(val: string | number): string {
@@ -155,6 +155,80 @@ export function generateCertificateCsv(rows: CertificateRow[]): string {
     lines.push([
       esc(r.number), esc(r.studentName), esc(r.email),
       esc(r.course), r.issuedAt,
+    ].join(","));
+  }
+
+  return lines.join("\n");
+}
+
+// ── Assignment report ────────────────────────────────────────────────
+
+export function generateAssignmentCsv(rows: AssignmentRow[]): string {
+  const lines: string[] = [];
+
+  lines.push(...headerBlock("ОТЧЁТ ПО ЗАДАНИЯМ"));
+
+  const pending = rows.filter((r) => r.status === "SUBMITTED" || r.status === "IN_REVIEW").length;
+  const accepted = rows.filter((r) => r.status === "ACCEPTED").length;
+  const needsRevision = rows.filter((r) => r.status === "NEEDS_REVISION" || r.status === "REJECTED").length;
+
+  lines.push("=== СВОДКА ===");
+  lines.push(`Всего отправок,${rows.length}`);
+  lines.push(`На проверке,${pending}`);
+  lines.push(`Принято,${accepted}`);
+  lines.push(`Нужна доработка,${needsRevision}`);
+  lines.push("");
+  lines.push(separator());
+  lines.push("Слушатель,Email,Курс,Урок,Задание,Статус,Балл,Отправлено,Проверено,Проверяющий");
+
+  for (const r of rows) {
+    lines.push([
+      esc(r.studentName),
+      esc(r.email),
+      esc(r.course),
+      esc(r.lesson ?? ""),
+      esc(r.assignment),
+      esc(r.status),
+      r.score ?? "",
+      r.submittedAt,
+      r.reviewedAt ?? "",
+      esc(r.reviewerName ?? ""),
+    ].join(","));
+  }
+
+  return lines.join("\n");
+}
+
+// ── Curator workload report ──────────────────────────────────────────
+
+export function generateCuratorWorkloadCsv(rows: CuratorWorkloadRow[]): string {
+  const lines: string[] = [];
+
+  lines.push(...headerBlock("ОТЧЁТ ПО НАГРУЗКЕ КУРАТОРОВ"));
+
+  const overloaded = rows.filter((r) => r.criticalRisks > 0 || r.openQuestions > 10 || r.pendingAssignments > 15).length;
+  lines.push("=== СВОДКА ===");
+  lines.push(`Кураторов,${rows.length}`);
+  lines.push(`Слушателей,${rows.reduce((sum, row) => sum + row.studentsCount, 0)}`);
+  lines.push(`Открытых вопросов,${rows.reduce((sum, row) => sum + row.openQuestions, 0)}`);
+  lines.push(`Заданий на проверке,${rows.reduce((sum, row) => sum + row.pendingAssignments, 0)}`);
+  lines.push(`Активных рисков,${rows.reduce((sum, row) => sum + row.activeRisks, 0)}`);
+  lines.push(`Перегружены,${overloaded}`);
+  lines.push("");
+  lines.push(separator());
+  lines.push("Куратор,Email,Потоки,Слушателей,Средний прогресс %,Открытые вопросы,Задания на проверке,Активные риски,Критические риски");
+
+  for (const r of rows) {
+    lines.push([
+      esc(r.curatorName),
+      esc(r.curatorEmail),
+      esc(r.cohorts),
+      r.studentsCount,
+      `${r.avgProgress}%`,
+      r.openQuestions,
+      r.pendingAssignments,
+      r.activeRisks,
+      r.criticalRisks,
     ].join(","));
   }
 

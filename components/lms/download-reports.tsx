@@ -1,5 +1,6 @@
 import { Download, FileText, FileSpreadsheet, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface ReportType {
   id: string;
@@ -10,6 +11,9 @@ interface ReportType {
   typeId?: string;
   /** Which formats are available. Default: ["csv", "xlsx", "pdf"] */
   formats?: ("csv" | "xlsx" | "pdf")[];
+  owner?: string;
+  scope?: string;
+  decision?: string;
 }
 
 const FORMAT_META = {
@@ -40,11 +44,24 @@ export function DownloadReports({ reports }: { reports: ReportType[] }) {
         return (
           <Card key={r.id} className="rounded-2xl transition-all hover:shadow-lg">
             <CardHeader>
-              <Icon className="h-5 w-5 text-primary mb-1" />
+              <div className="flex items-start justify-between gap-3">
+                <Icon className="h-5 w-5 text-primary" />
+                {r.owner ? <Badge variant="secondary" className="shrink-0 text-[10px]">{r.owner}</Badge> : null}
+              </div>
               <CardTitle className="text-base">{r.title}</CardTitle>
               <CardDescription>{r.desc}</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              {(r.scope || r.decision) && (
+                <div className="space-y-1 rounded-lg border bg-muted/30 p-3 text-xs">
+                  {r.scope ? (
+                    <p><span className="font-medium text-foreground">Scope:</span> <span className="text-muted-foreground">{r.scope}</span></p>
+                  ) : null}
+                  {r.decision ? (
+                    <p><span className="font-medium text-foreground">Решение:</span> <span className="text-muted-foreground">{r.decision}</span></p>
+                  ) : null}
+                </div>
+              )}
               <div className="flex flex-wrap gap-2">
                 {formats.map((fmt) => {
                   const meta = FORMAT_META[fmt];
