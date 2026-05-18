@@ -1,14 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 
 type Step = "loading" | "setup" | "verify" | "backup-codes" | "done";
 
 export default function TwoFactorSetup() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>("loading");
   const [secret, setSecret] = useState("");
   const [otpauthUrl, setOtpauthUrl] = useState("");

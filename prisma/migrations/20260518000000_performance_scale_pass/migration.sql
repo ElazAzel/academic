@@ -3,17 +3,25 @@
 
 CREATE INDEX IF NOT EXISTS idx_lessons_block_order ON lessons (block_id, "order");
 
+CREATE INDEX IF NOT EXISTS idx_user_roles_role_id ON user_roles (role_id);
+
 CREATE INDEX IF NOT EXISTS idx_enrollments_course_status ON enrollments (course_id, status);
 CREATE INDEX IF NOT EXISTS idx_enrollments_cohort_status ON enrollments (cohort_id, status);
 CREATE INDEX IF NOT EXISTS idx_enrollments_status_created_at ON enrollments (status, created_at);
 
 CREATE INDEX IF NOT EXISTS idx_lesson_progress_user_updated_at ON lesson_progress (user_id, updated_at);
 
+CREATE INDEX IF NOT EXISTS idx_module_progress_module_status
+  ON module_progress (module_id, status);
+
 CREATE INDEX IF NOT EXISTS idx_course_progress_course_status ON course_progress (course_id, status);
 CREATE INDEX IF NOT EXISTS idx_course_progress_user_updated_at ON course_progress (user_id, updated_at);
 
 CREATE INDEX IF NOT EXISTS idx_quizzes_course_id ON quizzes (course_id);
 CREATE INDEX IF NOT EXISTS idx_quizzes_lesson_id ON quizzes (lesson_id);
+
+CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz_passed
+  ON quiz_attempts (quiz_id, passed);
 
 CREATE INDEX IF NOT EXISTS idx_assignments_course_id ON assignments (course_id);
 CREATE INDEX IF NOT EXISTS idx_assignments_lesson_id ON assignments (lesson_id);

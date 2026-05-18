@@ -130,7 +130,7 @@ export const authOptions: AuthOptions = {
         session.user.email = token.email as string;
         session.user.name = token.name as string | null;
         session.user.image = token.picture as string | null;
-        (session as any).requires2fa = token.requires2fa as boolean;
+        session.requires2fa = token.requires2fa as boolean | undefined;
       }
       return session;
     }

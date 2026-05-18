@@ -1,6 +1,6 @@
 # Release Verification Runbook
 
-Date: 2026-05-16
+Date: 2026-05-18
 
 This runbook is the release gate for AI Strategic Academy. A release is not green until the full command succeeds on a prepared environment.
 
@@ -25,6 +25,7 @@ The command runs:
 - `DATABASE_URL` points to the release/staging database.
 - Migrations are applied with `npm run db:migrate`.
 - Test users exist via `npm run users:create`.
+- Demo credentials are verified via `npm run users:check-demo`.
 - Demo learning data exists via `npm run course:create-demo`.
 - Required auth, storage, SMTP, and app URL env vars are configured.
 - Playwright browsers are installed for the runner.

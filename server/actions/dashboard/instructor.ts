@@ -1,11 +1,12 @@
 "use server";
 
 import { withQueryFallback } from "./shared";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
 import type { CourseSummary, DashboardMetric } from "@/types/domain";
-import { QuestionStatus } from "@prisma/client";
+import { ProgressStatus, QuestionStatus } from "@prisma/client";
 
 export async function getInstructorDashboard() {
   await requireRole(["instructor"]);
@@ -13,15 +14,20 @@ export async function getInstructorDashboard() {
   if (!user) return null;
 
   return withQueryFallback(async () => {
-    const courses = await prisma.course.findMany({
-      where: { instructors: { some: { userId: user.id } } },
-      orderBy: { createdAt: "desc" },
-      include: {
-        modules: { include: { _count: { select: { lessons: true } } } },
-        instructors: { include: { user: { select: { id: true, name: true, email: true } } } },
-        _count: { select: { modules: true } },
-      },
-    });
+    const courseWhere = { instructors: { some: { userId: user.id } } };
+    const [courses, coursesCount] = await Promise.all([
+      prisma.course.findMany({
+        where: courseWhere,
+        orderBy: { createdAt: "desc" },
+        take: QUERY_LIMITS.reportSummaryCourses,
+        include: {
+          modules: { include: { _count: { select: { lessons: true } } } },
+          instructors: { include: { user: { select: { id: true, name: true, email: true } } } },
+          _count: { select: { modules: true } },
+        },
+      }),
+      prisma.course.count({ where: courseWhere }),
+    ]);
 
     const courseIds = courses.map((c) => c.id);
 
@@ -72,7 +78,7 @@ export async function getInstructorDashboard() {
     });
 
     const metrics: DashboardMetric[] = [
-      { label: "Мои курсы", value: courses.length, tone: "primary" },
+      { label: "Мои курсы", value: coursesCount, tone: "primary" },
       { label: "Слушатели", value: studentsCount, tone: "info" },
       { label: "Средний прогресс", value: `${avgProgress}%`, tone: avgProgress > 50 ? "success" : "warning" },
       { label: "Вопросы от кураторов", value: openQuestionsCount, tone: openQuestionsCount > 0 ? "warning" : "success" },
@@ -90,6 +96,8 @@ export async function getInstructorAnalytics() {
   return withQueryFallback(async () => {
     const courses = await prisma.course.findMany({
       where: { instructors: { some: { userId: user.id } } },
+      orderBy: { createdAt: "desc" },
+      take: QUERY_LIMITS.reportSummaryCourses,
       include: {
         modules: {
           include: {
@@ -109,7 +117,7 @@ export async function getInstructorAnalytics() {
         _avg: { percent: true }
       }),
       prisma.courseProgress.count({
-        where: { courseId: { in: courseIds }, status: "COMPLETED" }
+        where: { courseId: { in: courseIds }, status: ProgressStatus.COMPLETED }
       }),
       prisma.quizAttempt.aggregate({
         where: { quiz: { courseId: { in: courseIds } } },
@@ -127,14 +135,14 @@ export async function getInstructorAnalytics() {
       }),
       prisma.moduleProgress.groupBy({
         by: ["moduleId"],
-        where: { moduleId: { in: moduleIds }, status: "COMPLETED" },
+        where: { moduleId: { in: moduleIds }, status: ProgressStatus.COMPLETED },
         _count: { _all: true }
       }),
       prisma.quiz.findMany({
         where: { courseId: { in: courseIds } },
-        include: {
-          attempts: { select: { score: true, passed: true } },
-        },
+        select: { id: true, title: true },
+        orderBy: { createdAt: "desc" },
+        take: QUERY_LIMITS.dashboardQueue,
       }),
     ]);
 
@@ -154,11 +162,30 @@ export async function getInstructorAnalytics() {
       }))
     );
 
+    const quizIds = quizAnalytics.map((quiz) => quiz.id);
+    const [quizAttemptStats, quizPassedStats] = quizIds.length > 0
+      ? await Promise.all([
+          prisma.quizAttempt.groupBy({
+            by: ["quizId"],
+            where: { quizId: { in: quizIds } },
+            _count: { _all: true },
+            _avg: { score: true },
+          }),
+          prisma.quizAttempt.groupBy({
+            by: ["quizId"],
+            where: { quizId: { in: quizIds }, passed: true },
+            _count: { _all: true },
+          }),
+        ])
+      : [[], []] as const;
+    const attemptStatsMap = new Map(quizAttemptStats.map((stat) => [stat.quizId, stat]));
+    const passedStatsMap = new Map(quizPassedStats.map((stat) => [stat.quizId, stat._count._all]));
+
     const quizStats = quizAnalytics.map(q => {
-      const attempts = q.attempts;
-      const total = attempts.length;
-      const passed = attempts.filter(a => a.passed).length;
-      const avgScore = total > 0 ? Math.round(attempts.reduce((s, a) => s + (a.score ?? 0), 0) / total) : 0;
+      const attempts = attemptStatsMap.get(q.id);
+      const total = attempts?._count._all ?? 0;
+      const passed = passedStatsMap.get(q.id) ?? 0;
+      const avgScore = Math.round(attempts?._avg.score ?? 0);
       return {
         title: q.title,
         totalAttempts: total,
@@ -191,6 +218,7 @@ export async function getForwardedQuestions() {
     const questions = await prisma.lessonQuestion.findMany({
       where: { status: QuestionStatus.FORWARDED, ...courseFilter },
       orderBy: { createdAt: "desc" },
+      take: QUERY_LIMITS.questionQueue,
       include: {
         student: { select: { name: true, email: true } },
         curator: { select: { name: true, email: true } },
@@ -221,6 +249,8 @@ export async function getInstructorStudents() {
     const courses = await prisma.course.findMany({
       where: { instructors: { some: { userId: user.id } } },
       select: { id: true, title: true },
+      orderBy: { title: "asc" },
+      take: QUERY_LIMITS.reportRows,
     });
     const courseIds = courses.map((c) => c.id);
     if (courseIds.length === 0) return [];
@@ -234,6 +264,7 @@ export async function getInstructorStudents() {
         courseProgress: { select: { percent: true, status: true } },
       },
       orderBy: [{ courseId: "asc" }, { user: { name: "asc" } }],
+      take: QUERY_LIMITS.reportRows,
     });
 
     return enrollments.map((e) => ({

@@ -192,6 +192,7 @@ model UserRole {
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
+  @@index([roleId], map: "idx_user_roles_role_id")
   @@map("user_roles")
 }
 
@@ -579,6 +580,7 @@ model ModuleProgress {
   @@index([userId])
   @@index([moduleId])
   @@index([enrollmentId])
+  @@index([moduleId, status], map: "idx_module_progress_module_status")
   @@index([userId, status, moduleId], map: "idx_module_progress_user_status_module")
   @@map("module_progress")
 }
@@ -659,6 +661,7 @@ model QuizAttempt {
   @@index([quizId])
   @@index([userId])
   @@index([quizId, userId])
+  @@index([quizId, passed], map: "idx_quiz_attempts_quiz_passed")
   @@index([submittedAt])
   @@index([passed])
   @@map("quiz_attempts")

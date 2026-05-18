@@ -26,7 +26,7 @@ export const options = {
   },
 };
 
-export default function () {
+export default function smokeTest() {
   group("API Health Check", () => {
     const res = http.get(`${BASE_URL}/api/v1/healthz`);
     apiLatency.add(res.timings.duration);
