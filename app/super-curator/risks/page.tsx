@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getRiskOverview } from "@/server/actions/risk-management";
 import { RISK_LABELS } from "@/types/domain";
@@ -28,22 +29,22 @@ export default async function SuperCuratorRisksPage(props: {
     <AppShell role="super_curator">
       <PageHeader title="Риски" description="Управление рисками: фильтры, создание, закрытие." />
 
-      {/* Summary */}
+      {/* Summary — M3 */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-5 mb-6">
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center"><p className="text-2xl font-bold">{data.total}</p><p className="text-xs text-muted-foreground">Всего</p></CardContent>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center"><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{data.total}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Всего</p></CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center"><p className="text-2xl font-bold text-red-600">{data.bySeverity.critical}</p><p className="text-xs text-muted-foreground">Критичных</p></CardContent>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center"><p className="font-display-lg text-m3-headline-large text-m3-error">{data.bySeverity.critical}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Критичных</p></CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center"><p className="text-2xl font-bold text-orange-600">{data.bySeverity.high}</p><p className="text-xs text-muted-foreground">Высоких</p></CardContent>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center"><p className="font-display-lg text-m3-headline-large text-m3-error">{data.bySeverity.high}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Высоких</p></CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center"><p className="text-2xl font-bold text-yellow-600">{data.bySeverity.medium}</p><p className="text-xs text-muted-foreground">Средних</p></CardContent>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center"><p className="font-display-lg text-m3-headline-large text-m3-tertiary">{data.bySeverity.medium}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Средних</p></CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center"><p className="text-2xl font-bold text-green-600">{data.bySeverity.low}</p><p className="text-xs text-muted-foreground">Низких</p></CardContent>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center"><p className="font-display-lg text-m3-headline-large text-m3-primary">{data.bySeverity.low}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Низких</p></CardContent>
         </Card>
       </div>
 
@@ -51,46 +52,47 @@ export default async function SuperCuratorRisksPage(props: {
       <RiskFilters cohorts={data.cohorts} curators={data.curators} />
       <RiskActions />
 
-      {/* Table */}
-      <Card className="rounded-2xl mt-4">
+      {/* Table — M3 */}
+      <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft mt-4">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Студент</TableHead>
-                <TableHead>Реальное имя</TableHead>
-                <TableHead>Тип</TableHead>
-                <TableHead>Уровень</TableHead>
-                <TableHead>Куратор</TableHead>
-                <TableHead>Поток</TableHead>
-                <TableHead>Курс</TableHead>
-                <TableHead>Вход</TableHead>
-                <TableHead className="text-right">Действия</TableHead>
+              <TableRow className="border-b-m3-outline-variant">
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Студент</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Реальное имя</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Тип</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Уровень</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Куратор</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Поток</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Курс</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Вход</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider text-right">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.risks.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Нет активных рисков</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="font-body-md text-body-md text-m3-on-surface-variant text-center py-8">Нет активных рисков</TableCell></TableRow>
               ) : data.risks.map((r) => (
-                <TableRow key={r.id} className={r.severity === "critical" || r.severity === "high" ? "bg-red-50/30" : ""}>
+                <TableRow key={r.id} className={r.severity === "critical" || r.severity === "high" ? "bg-m3-error-container/10" : ""}>
                   <TableCell>
-                    <p className="text-sm font-medium">{r.studentName}</p>
-                    <p className="text-xs text-muted-foreground">{r.studentEmail}</p>
+                    <p className="font-label-md text-label-md text-m3-on-surface">{r.studentName}</p>
+                    <p className="font-body-sm text-body-sm text-m3-on-surface-variant">{r.studentEmail}</p>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.studentRealName ?? "—"}</TableCell>
-                  <TableCell className="text-xs">{RISK_LABELS[r.type as keyof typeof RISK_LABELS] ?? r.type}</TableCell>
+                  <TableCell className="font-body-sm text-body-sm text-m3-on-surface-variant">{r.studentRealName ?? "—"}</TableCell>
+                  <TableCell className="font-body-sm text-body-sm text-m3-on-surface">{RISK_LABELS[r.type as keyof typeof RISK_LABELS] ?? r.type}</TableCell>
                   <TableCell>
-                    <Badge className={
-                      r.severity === "critical" ? "bg-red-100 text-red-700" :
-                      r.severity === "high" ? "bg-orange-100 text-orange-700" :
-                      r.severity === "medium" ? "bg-yellow-100 text-yellow-700" :
-                      "bg-green-100 text-green-700"
-                    }>{r.severity}</Badge>
+                    <Badge
+                      variant={r.severity === "critical" ? "destructive" : r.severity === "high" ? "destructive" : r.severity === "medium" ? "secondary" : "outline"}
+                    >
+                      {r.severity === "critical" ? "Критичный" :
+                       r.severity === "high" ? "Высокий" :
+                       r.severity === "medium" ? "Средний" : "Низкий"}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="text-sm">{r.curatorName ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{r.cohortName ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{r.courseTitle}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
+                  <TableCell className="font-body-sm text-body-sm text-m3-on-surface">{r.curatorName ?? "—"}</TableCell>
+                  <TableCell className="font-body-sm text-body-sm text-m3-on-surface-variant">{r.cohortName ?? "—"}</TableCell>
+                  <TableCell className="font-body-sm text-body-sm text-m3-on-surface-variant">{r.courseTitle}</TableCell>
+                  <TableCell className="font-body-sm text-body-sm text-m3-on-surface-variant">
                     {r.daysSinceLogin !== null ? `${r.daysSinceLogin} дн.` : "—"}
                   </TableCell>
                   <TableCell className="text-right">

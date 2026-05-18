@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
 import { ReportDesigner } from "@/components/lms/report-designer";
-import { ClipboardCheck, Users, AlertTriangle, Award, TrendingUp } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
@@ -55,39 +55,47 @@ export default async function AdminReportsPage() {
     <AppShell role="admin">
       <PageHeader title="Отчёты" description="Просмотр и экспорт статистики платформы." />
 
-      {/* Metrics */}
+      {/* Metrics — M3 */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card className="rounded-2xl">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
           <CardContent className="p-5 flex items-center gap-3">
-            <Users className="h-5 w-5 text-primary" />
-            <div><p className="text-2xl font-bold">{totalUsers}</p><p className="text-xs text-muted-foreground">Пользователей</p></div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-container/20">
+              <Icon name="group" className="text-[22px] text-m3-primary" />
+            </span>
+            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{totalUsers}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Пользователей</p></div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
           <CardContent className="p-5 flex items-center gap-3">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            <div><p className="text-2xl font-bold">{totalEnrollments}</p><p className="text-xs text-muted-foreground">Активных зачислений</p></div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-tertiary-container/20">
+              <Icon name="trending_up" className="text-[22px] text-m3-tertiary" />
+            </span>
+            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{totalEnrollments}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Активных зачислений</p></div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
           <CardContent className="p-5 flex items-center gap-3">
-            <Award className="h-5 w-5 text-emerald-600" />
-            <div><p className="text-2xl font-bold">{completedCourses}</p><p className="text-xs text-muted-foreground">Завершили курс</p></div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-container/20">
+              <Icon name="award_star" className="text-[22px] text-m3-primary" />
+            </span>
+            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{completedCourses}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Завершили курс</p></div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
           <CardContent className="p-5 flex items-center gap-3">
-            <Award className="h-5 w-5 text-amber-600" />
-            <div><p className="text-2xl font-bold">{certsCount}</p><p className="text-xs text-muted-foreground">Сертификатов</p></div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-tertiary-container/20">
+              <Icon name="verified" className="text-[22px] text-m3-tertiary" />
+            </span>
+            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{certsCount}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Сертификатов</p></div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Progress chart */}
-      <Card className="rounded-2xl mb-6">
+      {/* Progress chart — M3 */}
+      <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft mb-6">
         <CardHeader>
-          <CardTitle className="text-base">Прогресс по курсам</CardTitle>
-          <CardDescription>Средний процент прохождения</CardDescription>
+          <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Прогресс по курсам</CardTitle>
+          <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний процент прохождения</CardDescription>
         </CardHeader>
         <CardContent>
           <BarChart items={coursesChart} />
@@ -105,7 +113,7 @@ export default async function AdminReportsPage() {
           id: "progress",
           title: "Прогресс по курсам",
           desc: "Все зачисления и прогресс слушателей",
-          icon: Users,
+          icon: "group",
           owner: "Admin",
           scope: "Вся академия",
           decision: "Где отстает обучение и какие курсы требуют внимания.",
@@ -114,7 +122,7 @@ export default async function AdminReportsPage() {
           id: "risk",
           title: "Риски слушателей",
           desc: "Неактивные, просроченные, отстающие",
-          icon: AlertTriangle,
+          icon: "warning",
           owner: "Admin",
           scope: "Вся академия",
           decision: "Какие риски нужно разобрать по потокам и курсам.",
@@ -123,7 +131,7 @@ export default async function AdminReportsPage() {
           id: "assignments",
           title: "Задания",
           desc: "Отправки, статусы проверки и баллы",
-          icon: ClipboardCheck,
+          icon: "checklist",
           owner: "Admin",
           scope: "Вся академия",
           decision: "Где накапливается очередь проверки.",
@@ -132,7 +140,7 @@ export default async function AdminReportsPage() {
           id: "certificates",
           title: "Сертификаты",
           desc: "Все выпущенные сертификаты",
-          icon: Award,
+          icon: "verified",
           owner: "Admin",
           scope: "Вся академия",
           decision: "Какие сертификаты выпущены и по каким курсам.",
@@ -141,7 +149,7 @@ export default async function AdminReportsPage() {
           id: "curator_workload",
           title: "Нагрузка кураторов",
           desc: "Очереди, риски и закрепленные слушатели",
-          icon: TrendingUp,
+          icon: "trending_up",
           owner: "Super curator operations",
           scope: "Вся академия",
           decision: "Где перегрузка и кого нужно перераспределить.",

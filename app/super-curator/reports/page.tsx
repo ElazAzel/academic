@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
-import { ClipboardCheck, TrendingUp, Users, AlertTriangle, Clock } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getSuperCuratorReportData } from "@/server/actions/super-curator";
 
@@ -27,30 +27,30 @@ export default async function SuperCuratorReportsPage() {
         description="Просмотр и экспорт статистики по потокам в CSV, Excel или PDF."
       />
 
-      {/* Summary metrics */}
+      {/* Summary metrics — M3 */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card className="rounded-2xl">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
           <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10"><Users className="h-5 w-5 text-primary" /></span>
-            <div><p className="text-2xl font-bold">{totalStudents}</p><p className="text-xs text-muted-foreground">Всего слушателей</p></div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-container/20"><Icon name="group" className="text-[22px] text-m3-primary" /></span>
+            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{totalStudents}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Всего слушателей</p></div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
           <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50"><TrendingUp className="h-5 w-5 text-emerald-600" /></span>
-            <div><p className="text-2xl font-bold">{totalCompleted}</p><p className="text-xs text-muted-foreground">Завершили</p></div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-container/20"><Icon name="trending_up" className="text-[22px] text-m3-primary" /></span>
+            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{totalCompleted}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Завершили</p></div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
           <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50"><AlertTriangle className="h-5 w-5 text-amber-600" /></span>
-            <div><p className="text-2xl font-bold">{totalAtRisk}</p><p className="text-xs text-muted-foreground">Требуют внимания</p></div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-error-container/20"><Icon name="warning" className="text-[22px] text-m3-error" /></span>
+            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{totalAtRisk}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Требуют внимания</p></div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
           <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50"><Clock className="h-5 w-5 text-blue-600" /></span>
-            <div><p className="text-2xl font-bold">{avgProgress}%</p><p className="text-xs text-muted-foreground">Средний прогресс</p></div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-tertiary-container/20"><Icon name="schedule" className="text-[22px] text-m3-tertiary" /></span>
+            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{avgProgress}%</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний прогресс</p></div>
           </CardContent>
         </Card>
       </div>
@@ -62,11 +62,11 @@ export default async function SuperCuratorReportsPage() {
             label: "Прогресс по потокам",
             content: (
               <div className="space-y-6">
-                {/* Chart */}
-                <Card className="rounded-2xl">
+                {/* Chart — M3 */}
+                <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                   <CardHeader>
-                    <CardTitle className="text-base">Прогресс по потокам</CardTitle>
-                    <CardDescription>Средний процент завершения курсов по потокам</CardDescription>
+                    <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Прогресс по потокам</CardTitle>
+                    <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний процент завершения курсов по потокам</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <BarChart
@@ -80,38 +80,38 @@ export default async function SuperCuratorReportsPage() {
                   </CardContent>
                 </Card>
 
-                {/* Status breakdown per cohort */}
-                <Card className="rounded-2xl">
+                {/* Status breakdown per cohort — M3 */}
+                <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                   <CardHeader>
-                    <CardTitle className="text-base">Статусы по потокам</CardTitle>
+                    <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Статусы по потокам</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4 md:grid-cols-2">
                       {data.map((c) => {
                         const total = c.totalStudents || 1;
                         return (
-                          <div key={c.cohortId} className="rounded-xl border p-4 space-y-2">
+                          <div key={c.cohortId} className="rounded-xl border border-m3-outline-variant bg-m3-surface-container-low p-4 space-y-2">
                             <div className="flex items-center justify-between">
-                              <p className="font-medium text-sm">{c.cohortName}</p>
-                              <Badge className={c.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}>
+                              <p className="font-label-md text-label-md text-m3-on-surface">{c.cohortName}</p>
+                              <Badge variant={c.status === "active" ? "default" : "secondary"}>
                                 {c.status === "active" ? "Активен" : "Архив"}
                               </Badge>
                             </div>
-                            <p className="text-xs text-muted-foreground">{c.courseTitle}</p>
-                            <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-muted">
-                              <div className="bg-emerald-500" style={{ width: `${(c.completed / total) * 100}%` }} title="Завершили" />
-                              <div className="bg-blue-500" style={{ width: `${(c.inProgress / total) * 100}%` }} title="В процессе" />
-                              <div className="bg-amber-500" style={{ width: `${(c.notStarted / total) * 100}%` }} title="Не начали" />
-                              <div className="bg-red-500" style={{ width: `${(c.blocked / total) * 100}%` }} title="Заблокированы" />
+                            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">{c.courseTitle}</p>
+                            <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-m3-surface-variant">
+                              <div className="bg-m3-primary" style={{ width: `${(c.completed / total) * 100}%` }} title="Завершили" />
+                              <div className="bg-m3-tertiary" style={{ width: `${(c.inProgress / total) * 100}%` }} title="В процессе" />
+                              <div className="bg-m3-secondary" style={{ width: `${(c.notStarted / total) * 100}%` }} title="Не начали" />
+                              <div className="bg-m3-error" style={{ width: `${(c.blocked / total) * 100}%` }} title="Заблокированы" />
                             </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
-                              <span><span className="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1" />{c.completed} завершили</span>
-                              <span><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1" />{c.inProgress} в процессе</span>
-                              <span><span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1" />{c.notStarted} не начали</span>
-                              <span><span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1" />{c.blocked} заблокированы</span>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 font-body-sm text-body-sm text-m3-on-surface-variant">
+                              <span><span className="inline-block w-2 h-2 rounded-full bg-m3-primary mr-1" />{c.completed} завершили</span>
+                              <span><span className="inline-block w-2 h-2 rounded-full bg-m3-tertiary mr-1" />{c.inProgress} в процессе</span>
+                              <span><span className="inline-block w-2 h-2 rounded-full bg-m3-secondary mr-1" />{c.notStarted} не начали</span>
+                              <span><span className="inline-block w-2 h-2 rounded-full bg-m3-error mr-1" />{c.blocked} заблокированы</span>
                             </div>
-                            <div className="flex items-center justify-between text-xs pt-1">
-                              <span>Кураторов: {c.curatorCount}</span>
+                            <div className="flex items-center justify-between font-body-sm text-body-sm text-m3-on-surface-variant pt-1">
+                              <span className="flex items-center gap-1"><Icon name="badge" className="text-[14px]" /> Кураторов: {c.curatorCount}</span>
                               <span>Средний: {c.avgProgress}%</span>
                             </div>
                           </div>
@@ -127,7 +127,7 @@ export default async function SuperCuratorReportsPage() {
                     id: "progress",
                     title: "Экспорт прогресса",
                     desc: "Скачать отчёт по прогрессу",
-                    icon: TrendingUp,
+                    icon: "trending_up",
                     owner: "Super curator",
                     scope: "Только потоки, кураторы и слушатели в зоне ответственности",
                     decision: "Какие потоки проседают и где нужна операционная поддержка.",
@@ -136,7 +136,7 @@ export default async function SuperCuratorReportsPage() {
                     id: "curator_workload",
                     title: "Нагрузка кураторов",
                     desc: "Очереди, риски и закрепления",
-                    icon: Users,
+                    icon: "group",
                     owner: "Super curator",
                     scope: "Только кураторы и потоки в зоне ответственности",
                     decision: "Где перегрузка и кого нужно перераспределить.",
@@ -149,10 +149,10 @@ export default async function SuperCuratorReportsPage() {
             label: "Риски",
             content: (
               <div className="space-y-6">
-                <Card className="rounded-2xl">
+                <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                   <CardHeader>
-                    <CardTitle className="text-base">Риски по потокам</CardTitle>
-                    <CardDescription>Слушатели, требующие внимания кураторов</CardDescription>
+                    <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Риски по потокам</CardTitle>
+                    <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">Слушатели, требующие внимания кураторов</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <BarChart
@@ -171,7 +171,7 @@ export default async function SuperCuratorReportsPage() {
                     id: "risk",
                     title: "Экспорт рисков",
                     desc: "Скачать отчёт по рискам",
-                    icon: AlertTriangle,
+                    icon: "warning",
                     owner: "Super curator",
                     scope: "Только потоки и слушатели в зоне ответственности",
                     decision: "Какие риски нужно эскалировать или перераспределить.",
@@ -180,7 +180,7 @@ export default async function SuperCuratorReportsPage() {
                     id: "assignments",
                     title: "Задания",
                     desc: "Очередь проверки по зоне ответственности",
-                    icon: ClipboardCheck,
+                    icon: "checklist",
                     owner: "Super curator",
                     scope: "Только потоки и слушатели в зоне ответственности",
                     decision: "Где копятся работы и какой куратор перегружен.",

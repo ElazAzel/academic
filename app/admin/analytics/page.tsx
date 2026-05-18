@@ -5,6 +5,7 @@ import { StudentAnalyticsTable } from "@/components/lms/student-analytics-table"
 import { BarChart, DonutChart } from "@/components/lms/bar-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
+import { Icon } from "@/components/ui/icon";
 import type { DashboardMetric } from "@/types/domain";
 import { UserAccountStatus } from "@prisma/client";
 import { requireRolePage } from "@/lib/auth/page-guards";
@@ -20,10 +21,16 @@ async function StudentAnalyticsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground mr-1">Скачать отчёт:</span>
-        <a href="/api/v1/reports?type=progress&format=csv" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">CSV</a>
-        <a href="/api/v1/reports?type=progress&format=xlsx" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">Excel</a>
-        <a href="/api/v1/reports?type=progress&format=pdf" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">PDF</a>
+        <span className="font-body-sm text-body-sm text-m3-on-surface-variant mr-1">Скачать отчёт:</span>
+        <a href="/api/v1/reports?type=progress&format=csv" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+          <Icon name="download" className="text-[16px]" /> CSV
+        </a>
+        <a href="/api/v1/reports?type=progress&format=xlsx" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+          <Icon name="download" className="text-[16px]" /> Excel
+        </a>
+        <a href="/api/v1/reports?type=progress&format=pdf" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+          <Icon name="download" className="text-[16px]" /> PDF
+        </a>
       </div>
       <StudentAnalyticsTable students={students} />
     </div>
@@ -48,35 +55,35 @@ async function ActivityTab(props: { searchParams?: Promise<{ days?: string; coho
       />
 
       <div className="grid gap-4 grid-cols-4">
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{activity.totals.totalLogins}</p>
-            <p className="text-xs text-muted-foreground">Входов за {days} дн.</p>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center">
+            <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{activity.totals.totalLogins}</p>
+            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Входов за {days} дн.</p>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{activity.totals.avgDailyLogins}</p>
-            <p className="text-xs text-muted-foreground">В среднем в день</p>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center">
+            <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{activity.totals.avgDailyLogins}</p>
+            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">В среднем в день</p>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{activity.totals.totalEnrollments}</p>
-            <p className="text-xs text-muted-foreground">Новых зачислений</p>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center">
+            <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{activity.totals.totalEnrollments}</p>
+            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Новых зачислений</p>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{activity.daily.logins.filter((v) => v > 0).length}</p>
-            <p className="text-xs text-muted-foreground">Активных дней</p>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center">
+            <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{activity.daily.logins.filter((v) => v > 0).length}</p>
+            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Активных дней</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="rounded-2xl">
+      <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
         <CardHeader>
-          <CardTitle className="text-base">Ежедневные входы ({days} дней)</CardTitle>
+          <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Ежедневные входы ({days} дней)</CardTitle>
         </CardHeader>
         <CardContent>
           <BarChart items={activity.daily.labels.map((label, i) => ({
@@ -87,9 +94,9 @@ async function ActivityTab(props: { searchParams?: Promise<{ days?: string; coho
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl">
+      <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
         <CardHeader>
-          <CardTitle className="text-base">Еженедельные зачисления</CardTitle>
+          <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Еженедельные зачисления</CardTitle>
         </CardHeader>
         <CardContent>
           <BarChart items={activity.weekly.labels.map((label, i) => ({
@@ -183,10 +190,10 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
             label: "По курсам",
             content: courseStats.length > 0 ? (
               <div className="grid gap-6 md:grid-cols-3">
-                <Card className="md:col-span-2">
+                <Card className="md:col-span-2 border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                   <CardHeader>
-                    <CardTitle>Прогресс по курсам</CardTitle>
-                    <CardDescription>Средний процент прохождения</CardDescription>
+                    <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Прогресс по курсам</CardTitle>
+                    <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний процент прохождения</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <BarChart
@@ -199,43 +206,49 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
                   </CardContent>
                 </Card>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs text-muted-foreground mr-1">Скачать отчёт:</span>
-                  <a href="/api/v1/reports?type=progress&format=csv" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">CSV</a>
-                  <a href="/api/v1/reports?type=progress&format=xlsx" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">Excel</a>
-                  <a href="/api/v1/reports?type=progress&format=pdf" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">PDF</a>
+                  <span className="font-body-sm text-body-sm text-m3-on-surface-variant mr-1">Скачать отчёт:</span>
+                  <a href="/api/v1/reports?type=progress&format=csv" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+                    <Icon name="download" className="text-[16px]" /> CSV
+                  </a>
+                  <a href="/api/v1/reports?type=progress&format=xlsx" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+                    <Icon name="download" className="text-[16px]" /> Excel
+                  </a>
+                  <a href="/api/v1/reports?type=progress&format=pdf" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+                    <Icon name="download" className="text-[16px]" /> PDF
+                  </a>
                 </div>
                 <div className="space-y-4">
-                  <Card>
+                  <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Лучший курс</CardTitle>
+                      <CardTitle className="font-label-md text-label-md text-m3-on-surface">Лучший курс</CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-col items-center gap-2 pt-2">
                       <DonutChart value={bestCourse?.avgProgress ?? 0} size={100} strokeWidth={6} />
-                      <p className="text-sm font-medium text-center">{bestCourse?.title}</p>
-                      <p className="text-xs text-muted-foreground">{bestCourse?.avgProgress}% средний прогресс</p>
+                      <p className="font-label-md text-label-md text-m3-on-surface text-center">{bestCourse?.title}</p>
+                      <p className="font-body-sm text-body-sm text-m3-on-surface-variant">{bestCourse?.avgProgress}% средний прогресс</p>
                     </CardContent>
                   </Card>
-                  <Card>
+                  <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Всего сертификатов</CardTitle>
+                      <CardTitle className="font-label-md text-label-md text-m3-on-surface">Всего сертификатов</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-2">
-                      <p className="text-3xl font-bold">{certsCount}</p>
+                      <p className="font-display-lg text-m3-display-medium text-m3-on-surface">{certsCount}</p>
                     </CardContent>
                   </Card>
                 </div>
               </div>
             ) : (
-              <Card><CardContent className="py-10 text-center text-muted-foreground">Нет данных по курсам.</CardContent></Card>
+              <Card className="border-m3-outline-variant bg-m3-surface-container-lowest"><CardContent className="py-10 text-center font-body-md text-body-md text-m3-on-surface-variant">Нет данных по курсам.</CardContent></Card>
             ),
           },
           {
             label: "По пользователям",
             content: (
               <div className="grid gap-6 md:grid-cols-3">
-                <Card className="md:col-span-2">
+                <Card className="md:col-span-2 border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                   <CardHeader>
-                    <CardTitle>Распределение по ролям</CardTitle>
+                    <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Распределение по ролям</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <BarChart
@@ -247,30 +260,32 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
                   </CardContent>
                 </Card>
                 <div className="space-y-4">
-                  <Card>
+                  <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Всего пользователей</CardTitle>
+                      <CardTitle className="font-label-md text-label-md text-m3-on-surface">Всего пользователей</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl font-bold">{totalUsers}</p>
-                      <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-                        <span className="text-green-600">{activeFromStatus} активных</span>
-                        <span className="text-red-600">{inactiveFromStatus} неактивных</span>
+                      <p className="font-display-lg text-m3-display-medium text-m3-on-surface">{totalUsers}</p>
+                      <div className="flex gap-4 mt-2 font-body-sm text-body-sm text-m3-on-surface-variant">
+                        <span className="text-m3-primary">{activeFromStatus} активных</span>
+                        <span className="text-m3-error">{inactiveFromStatus} неактивных</span>
                       </div>
                     </CardContent>
                   </Card>
-                  <Card>
+                  <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Последние регистрации</CardTitle>
+                      <CardTitle className="font-label-md text-label-md text-m3-on-surface">Последние регистрации</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       {recentUsers.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">Нет пользователей</p>
+                        <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Нет пользователей</p>
                       ) : (
                         recentUsers.map((u) => (
-                          <div key={u.email} className="flex items-center justify-between text-xs">
-                            <span className="truncate max-w-[120px]">{u.name ?? u.email}</span>
-                            <span className={u.status === UserAccountStatus.ACTIVE ? "text-green-600" : "text-red-600"}>{u.status === UserAccountStatus.ACTIVE ? "Активен" : u.status === UserAccountStatus.INACTIVE ? "Неактивен" : u.status === UserAccountStatus.BLOCKED ? "Заблокирован" : "Удален"}</span>
+                          <div key={u.email} className="flex items-center justify-between font-body-sm text-body-sm">
+                            <span className="truncate max-w-[120px] text-m3-on-surface">{u.name ?? u.email}</span>
+                            <span className={u.status === UserAccountStatus.ACTIVE ? "text-m3-primary" : "text-m3-error"}>
+                              {u.status === UserAccountStatus.ACTIVE ? "Активен" : u.status === UserAccountStatus.INACTIVE ? "Неактивен" : u.status === UserAccountStatus.BLOCKED ? "Заблокирован" : "Удален"}
+                            </span>
                           </div>
                         ))
                       )}
