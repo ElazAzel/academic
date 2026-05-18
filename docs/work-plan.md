@@ -18,7 +18,7 @@
 | M-PR-07 | P2 | Course Builder Modernization | green | Course can be edited, previewed, checked, and published from unified builder; legacy edit routes keep builder redirects |
 | M-PR-08 | P2 | Reports & Analytics v1 | green | Reports have owner/scope/decision/export; progress/risk/assignment/certificate/workload exports are role-scoped |
 | M-PR-09 | P2 | Notification & Audit Completion | green | Enrollment, curator assignment, question, assignment review, certificate, and password/security events create expected in-app notifications and audit records; default channel remains `in_app` |
-| M-PR-10 | P3 | Schema Cleanup Window | pending | String statuses migrated to enums with backup/downtime runbook |
+| M-PR-10 | P3 | Schema Cleanup Window | green | `User.status` and `LessonQuestion.status` are enum-backed; backup-first downtime runbook and read-only preflight cover migration-history reconciliation |
 | M-PR-11 | P3 | Performance & Scale Pass | pending | Heavy dashboards/reports/chats have bounded queries and indexes |
 | M-PR-12 | P3 | Production Readiness Release | pending | Release candidate has full verification and rollback plan |
 
@@ -88,7 +88,7 @@ This plan has been superseded by the 90-day modernization sequence. Its remainin
 
 | Feature | Priority |
 |---|---|
-| Enum migration (UserAccountStatus, QuestionStatus) | P3 |
+| Enum migration (UserAccountStatus, QuestionStatus) | Done in M-PR-10 |
 | Real-time notifications (WebSocket/SSE) | P3 |
 | Advanced analytics dashboard | P4 |
 | SCORM/xAPI import | P4 |
@@ -103,6 +103,6 @@ This plan has been superseded by the 90-day modernization sequence. Its remainin
 - ❌ Full UI redesign / cosmetic changes
 - ❌ New stack or framework
 - ❌ Forum, AI recommendations, gamification, or broad chat/forum expansion beyond scoped curator support
-- ❌ Schema migration for enum drift (too breaking for now)
+- ❌ New enum cleanup mixed into feature PRs; future schema changes need a dedicated migration window
 - ❌ Stripe billing reactivation
 - ❌ Advanced video hosting/subtitles

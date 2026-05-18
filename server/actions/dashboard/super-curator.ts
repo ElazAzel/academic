@@ -4,6 +4,7 @@ import { withQueryFallback, getStudentAnalyticsDetail } from "./shared";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
+import { QuestionStatus } from "@prisma/client";
 import type {
   CohortSummary,
   DashboardMetric,
@@ -218,7 +219,7 @@ export async function getSuperCuratorDashboard(): Promise<SuperCuratorDashboardD
       unreadMessages,
     ] = await Promise.all([
       prisma.lessonQuestion.findMany({
-        where: { studentId: { in: studentIds }, status: { in: ["OPEN", "FORWARDED"] } },
+        where: { studentId: { in: studentIds }, status: { in: [QuestionStatus.OPEN, QuestionStatus.FORWARDED] } },
         include: {
           student: { select: { id: true, name: true, email: true } },
           curator: { select: { id: true, name: true, email: true } },
@@ -233,7 +234,7 @@ export async function getSuperCuratorDashboard(): Promise<SuperCuratorDashboardD
         take: 200,
       }),
       prisma.lessonQuestion.findMany({
-        where: { curatorId: { in: curatorIds }, status: "ANSWERED", answeredAt: { not: null } },
+        where: { curatorId: { in: curatorIds }, status: QuestionStatus.ANSWERED, answeredAt: { not: null } },
         select: { curatorId: true, createdAt: true, answeredAt: true },
       }),
       prisma.assignmentSubmission.findMany({
@@ -497,7 +498,7 @@ export async function getSuperCuratorDashboard(): Promise<SuperCuratorDashboardD
   }, null);
 }
 
-export async function getSuperCuratorQuestions(status: "OPEN" | "ANSWERED" = "OPEN"): Promise<QuestionFromStudent[]> {
+export async function getSuperCuratorQuestions(status: QuestionStatus = QuestionStatus.OPEN): Promise<QuestionFromStudent[]> {
   const actor = await requireRole(["super_curator", "admin"]);
   const user = await getCurrentUser();
   if (!user) return [];
@@ -533,7 +534,7 @@ export async function getSuperCuratorQuestions(status: "OPEN" | "ANSWERED" = "OP
       courseTitle: question.lesson.module.course.title,
       moduleTitle: question.lesson.module.title,
       lessonTitle: question.lesson.title,
-      status: (question.status === "ANSWERED" ? "answered" : question.status === "FORWARDED" ? "forwarded" : "open") as "open" | "answered" | "forwarded",
+      status: (question.status === QuestionStatus.ANSWERED ? "answered" : question.status === QuestionStatus.FORWARDED ? "forwarded" : "open") as "open" | "answered" | "forwarded",
       createdAt: question.createdAt.toISOString(),
       answer: question.answer,
       answeredAt: question.answeredAt?.toISOString(),

@@ -4,6 +4,7 @@ import { QuestionsQueue } from "@/components/lms/dashboard-widgets";
 import { Tabs } from "@/components/ui/tabs";
 import { getSuperCuratorQuestions } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { QuestionStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,8 @@ export default async function SuperCuratorQuestionsPage() {
  await requireRolePage(["super_curator"]);
 
  const [open, answered] = await Promise.all([
-   getSuperCuratorQuestions("OPEN"),
-   getSuperCuratorQuestions("ANSWERED"),
+   getSuperCuratorQuestions(QuestionStatus.OPEN),
+   getSuperCuratorQuestions(QuestionStatus.ANSWERED),
  ]);
 
  return (

@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth/page-guards";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { getStudentAnalyticsDetail } from "@/server/actions/dashboard/shared";
+import { QuestionStatus } from "@prisma/client";
 
 const prisma = getPrisma();
 
@@ -141,7 +142,7 @@ export async function getCuratorEnhancedRisks() {
       createdAt: r.createdAt.toISOString(),
       progressPercent: progress?.percent ?? 0,
       progressStatus: progress?.status ?? "NOT_STARTED",
-      openQuestions: questions.filter((q) => q.status === "OPEN").length,
+      openQuestions: questions.filter((q) => q.status === QuestionStatus.OPEN).length,
       pendingAssignments: assignments.filter((s) => s.status === "SUBMITTED" || s.status === "IN_REVIEW").length,
       lastLoginAt: r.user.lastLoginAt?.toISOString() ?? null,
       daysSinceLogin,

@@ -4,6 +4,7 @@ import { withQueryFallback, getStudentAnalyticsDetail } from "./shared";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
+import { QuestionStatus } from "@prisma/client";
 import type {
   CuratorNextAction,
   CuratorStudentDeadline,
@@ -234,7 +235,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
       messages,
     ] = await Promise.all([
       prisma.lessonQuestion.findMany({
-        where: { curatorId: user.id, status: "OPEN" },
+        where: { curatorId: user.id, status: QuestionStatus.OPEN },
         orderBy: { createdAt: "desc" },
         include: {
           student: { select: { id: true, name: true, email: true } },
@@ -582,7 +583,7 @@ export async function getCuratorStudents() {
   }, []);
 }
 
-export async function getCuratorQuestions(status: "OPEN" | "ANSWERED" = "OPEN") {
+export async function getCuratorQuestions(status: QuestionStatus = QuestionStatus.OPEN) {
   await requireRole(["curator", "super_curator", "admin"]);
   const user = await getCurrentUser();
   if (!user) return [];
@@ -604,7 +605,7 @@ export async function getCuratorQuestions(status: "OPEN" | "ANSWERED" = "OPEN") 
       courseTitle: question.lesson.module.course.title,
       moduleTitle: question.lesson.module.title,
       lessonTitle: question.lesson.title,
-      status: (question.status === "ANSWERED" ? "answered" : "open") as "open" | "answered",
+      status: (question.status === QuestionStatus.ANSWERED ? "answered" : "open") as "open" | "answered",
       createdAt: question.createdAt.toISOString(),
       answer: question.answer,
       answeredAt: question.answeredAt?.toISOString(),

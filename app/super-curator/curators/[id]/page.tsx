@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorActivity } from "@/server/actions/super-curator";
 import { DonutChart } from "@/components/lms/bar-chart";
+import { QuestionStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +20,8 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
 
   const { curator, questions, reviews, activityLog } = data;
 
-  const answered = questions.filter((q) => q.status === "ANSWERED" || q.status === "CLOSED");
-  const unanswered = questions.filter((q) => q.status === "OPEN");
+  const answered = questions.filter((q) => q.status === QuestionStatus.ANSWERED || q.status === QuestionStatus.CLOSED);
+  const unanswered = questions.filter((q) => q.status === QuestionStatus.OPEN);
   const avgResponseTime = answered.length > 0
     ? answered.reduce((sum, q) => {
         if (!q.answeredAt) return sum;
@@ -100,8 +101,8 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
                           <TableCell className="text-sm max-w-[200px] truncate">{q.text}</TableCell>
                           <TableCell className="text-xs text-muted-foreground">{q.lessonTitle}</TableCell>
                           <TableCell>
-                            <Badge className={q.status === "ANSWERED" || q.status === "CLOSED" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}>
-                              {q.status === "ANSWERED" ? "Отвечен" : q.status === "CLOSED" ? "Закрыт" : "Открыт"}
+                            <Badge className={q.status === QuestionStatus.ANSWERED || q.status === QuestionStatus.CLOSED ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}>
+                              {q.status === QuestionStatus.ANSWERED ? "Отвечен" : q.status === QuestionStatus.CLOSED ? "Закрыт" : "Открыт"}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">{new Date(q.createdAt).toLocaleString("ru")}</TableCell>

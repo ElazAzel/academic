@@ -7,6 +7,7 @@ import { logAudit } from "@/server/modules/audit/service";
 import { ApiError } from "@/lib/http";
 import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
 import { createNotification } from "@/server/modules/notifications/service";
+import { QuestionStatus } from "@prisma/client";
 
 const prisma = getPrisma();
 
@@ -642,7 +643,7 @@ export async function getSuperCuratorRisks() {
       createdAt: risk.createdAt.toISOString(),
       progressPercent: progress?.percent ?? 0,
       progressStatus: progress?.status ?? "NOT_STARTED",
-      openQuestions: studentQuestions.filter((q) => q.status === "OPEN").length,
+      openQuestions: studentQuestions.filter((q) => q.status === QuestionStatus.OPEN).length,
       pendingAssignments: studentAssignments.filter((s) => s.status === "SUBMITTED" || s.status === "IN_REVIEW").length,
       lastLoginAt: risk.user?.lastLoginAt?.toISOString() ?? lastLogin,
       daysSinceLastLogin,

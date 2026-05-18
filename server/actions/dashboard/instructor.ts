@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
 import type { CourseSummary, DashboardMetric } from "@/types/domain";
+import { QuestionStatus } from "@prisma/client";
 
 export async function getInstructorDashboard() {
   await requireRole(["instructor"]);
@@ -66,7 +67,7 @@ export async function getInstructorDashboard() {
     const openQuestionsCount = await prisma.lessonQuestion.count({
       where: {
         lesson: { module: { courseId: { in: courseIds } } },
-        status: "FORWARDED"
+        status: QuestionStatus.FORWARDED
       }
     });
 
@@ -188,7 +189,7 @@ export async function getForwardedQuestions() {
       : { lesson: { module: { course: { instructors: { some: { userId: user.id } } } } } };
 
     const questions = await prisma.lessonQuestion.findMany({
-      where: { status: "FORWARDED", ...courseFilter },
+      where: { status: QuestionStatus.FORWARDED, ...courseFilter },
       orderBy: { createdAt: "desc" },
       include: {
         student: { select: { name: true, email: true } },
@@ -205,7 +206,7 @@ export async function getForwardedQuestions() {
       courseTitle: q.lesson.module.course.title,
       moduleTitle: q.lesson.module.title,
       lessonTitle: q.lesson.title,
-      status: (q.status === "FORWARDED" ? "forwarded" : "open") as "open" | "forwarded",
+      status: (q.status === QuestionStatus.FORWARDED ? "forwarded" : "open") as "open" | "forwarded",
       createdAt: q.createdAt.toISOString(),
     }));
   }, []);
