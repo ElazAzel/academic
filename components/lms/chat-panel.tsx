@@ -24,6 +24,9 @@ interface ChatMessage {
   createdAt: string;
   readAt: string | null;
   isMine: boolean;
+  replyToId: string | null;
+  replyToText: string | null;
+  replyToSenderName: string | null;
 }
 
 export function ChatPanel({
@@ -54,6 +57,8 @@ export function ChatPanel({
   const [text, setText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [replyToId, setReplyToId] = useState<string | null>(null);
+  const [replyToPreview, setReplyToPreview] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -140,6 +145,10 @@ export function ChatPanel({
       const previous = queryClient.getQueryData<ChatMessage[]>(queryKey);
 
       // Оптимистичное добавление сообщения
+      const replyToId = formData.get("replyToId") as string | null;
+      // Find parent message text for optimistic preview
+      const prevMessages = queryClient.getQueryData<ChatMessage[]>(queryKey) ?? [];
+      const parentMsg = replyToId ? prevMessages.find((m) => m.id === replyToId) : null;
       const optimistic: ChatMessage = {
         id: `optimistic-${Date.now()}`,
         text: formData.get("text") as string,
@@ -152,6 +161,11 @@ export function ChatPanel({
         createdAt: new Date().toISOString(),
         readAt: null,
         isMine: true,
+        replyToId: replyToId,
+        replyToText: parentMsg?.text
+          ? parentMsg.text.slice(0, 100) + (parentMsg.text.length > 100 ? "…" : "")
+          : parentMsg?.attachmentUrl ? "📎 Вложение" : null,
+        replyToSenderName: parentMsg ? (parentMsg.senderName ?? "Пользователь") : null,
       };
 
       queryClient.setQueryData<ChatMessage[]>(queryKey, (old) => [...(old ?? []), optimistic]);
@@ -189,6 +203,16 @@ export function ChatPanel({
     setShowEmojiPicker(false);
   }
 
+  function handleReply(message: ChatMessage) {
+    setReplyToId(message.id);
+    setReplyToPreview(message.text ? message.text.slice(0, 80) + (message.text.length > 80 ? "…" : "") : (message.attachmentUrl ? "📎 Вложение" : "Сообщение"));
+  }
+
+  function cancelReply() {
+    setReplyToId(null);
+    setReplyToPreview(null);
+  }
+
   function handleSend(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (isSendingRef.current) return;
@@ -204,7 +228,9 @@ export function ChatPanel({
     formData.set("text", savedText);
     if (messageLessonId) formData.set("lessonId", messageLessonId);
     formData.set("receiverId", receiverId);
+    if (replyToId) formData.set("replyToId", replyToId);
     sendMutation.mutate(formData);
+    cancelReply();
   }
 
   function handleTextareaKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -295,74 +321,128 @@ export function ChatPanel({
           </Button>
         )}
       </div>
-      <div ref={chatContainerRef} className="flex-1 space-y-3 overflow-auto px-4 pb-3 max-h-[400px] min-h-[200px]">
+      <div ref={chatContainerRef} className="flex-1 overflow-auto px-4 pb-3 max-h-[400px] min-h-[200px]">
         {messages.length === 0 && (
           <p className="text-center text-body-md font-body-md text-m3-on-surface-variant py-8">{emptyState}</p>
         )}
-        {messages.map((m) => (
-          <div key={m.id} className={`flex ${m.isMine ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.isMine ? "bg-m3-primary text-m3-on-primary" : "bg-m3-surface-container-high"}`}>
-              {m.text && <p className="whitespace-pre-wrap break-words text-body-md font-body-md [overflow-wrap:anywhere]">{m.text}</p>}
-              {m.attachmentUrl && m.attachmentType?.includes("image") ? (
-                <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={m.attachmentUrl}
-                  alt="Вложение"
-                  className="mt-2 max-w-full rounded-lg border border-m3-outline-variant"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-                </>
-              ) : m.attachmentUrl ? (
-                <a href={m.attachmentUrl} target="_blank" rel="noreferrer" className={`block mt-1 text-label-sm font-label-sm underline ${m.isMine ? "text-m3-on-primary/80" : "text-m3-primary"}`}>
-                  📎 {m.attachmentType?.includes("pdf") ? "PDF"
-                    : m.attachmentType?.includes("word") || m.attachmentType?.includes("document") ? "Документ"
-                    : "Файл"}
-                </a>
-              ) : null}
-              {m.lessonTitle && (
-                <p className={`mt-1 text-label-sm font-label-sm ${m.isMine ? "text-m3-on-primary/70" : "text-m3-on-surface-variant"}`}>
-                  Контекст урока: {m.lessonTitle}
-                </p>
-              )}
-              <p className={`text-label-sm font-label-sm mt-1 ${m.isMine ? "text-m3-on-primary/60" : "text-m3-on-surface-variant"}`}>
-                {new Date(m.createdAt).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })}
-                {m.isMine && !m.id.startsWith("optimistic-") && (m.readAt ? " · прочитано" : " · отправлено")}
-                {m.id.startsWith("optimistic-") && sendMutation.isPending && " · отправляется..."}
-                {m.id.startsWith("optimistic-") && sendMutation.isError && (
-                  <span className="text-m3-error"> · ошибка</span>
+        {messages.map((m, index) => {
+          const prev = index > 0 ? messages[index - 1] : null;
+          const next = index < messages.length - 1 ? messages[index + 1] : null;
+          const isFirstInGroup = !prev || prev.isMine !== m.isMine;
+          const isLastInGroup = !next || next.isMine !== m.isMine;
+          const isSingle = isFirstInGroup && isLastInGroup;
+
+          let roundClasses = "";
+          if (isSingle) {
+            roundClasses = "rounded-2xl";
+          } else if (m.isMine) {
+            if (isFirstInGroup) roundClasses = "rounded-2xl rounded-br-sm";
+            else if (isLastInGroup) roundClasses = "rounded-2xl rounded-tr-sm";
+            else roundClasses = "rounded-2xl rounded-r-sm rounded-l-2xl";
+          } else {
+            if (isFirstInGroup) roundClasses = "rounded-2xl rounded-bl-sm";
+            else if (isLastInGroup) roundClasses = "rounded-2xl rounded-tl-sm";
+            else roundClasses = "rounded-2xl rounded-l-sm rounded-r-2xl";
+          }
+
+          return (
+            <div key={m.id} className={`flex ${m.isMine ? "justify-end" : "justify-start"} ${isFirstInGroup ? "mt-3" : "mt-0.5"}`}>
+              <div className={`max-w-[80%] px-4 py-2.5 ${roundClasses} ${m.isMine ? "bg-m3-primary text-m3-on-primary" : "bg-m3-surface-container-high"}`}>
+                {(isFirstInGroup || m.lessonTitle) && m.lessonTitle && (
+                  <p className={`text-label-sm font-label-sm mb-1 ${m.isMine ? "text-m3-on-primary/70" : "text-m3-on-surface-variant"}`}>
+                    {m.isMine ? "" : "📚 "}{m.lessonTitle}
+                  </p>
                 )}
-              </p>
-              {showResponseState && !m.isMine && responseStateByMessageId.get(m.id) && (
-                <p className={`mt-1 text-label-sm font-label-sm ${
-                  responseStateByMessageId.get(m.id) === "answered" ? "text-emerald-600" : "text-amber-600"
-                }`}>
-                  {responseStateByMessageId.get(m.id) === "answered" ? "Ответ отправлен" : "Ожидает ответа"}
-                </p>
-              )}
-              {m.id.startsWith("optimistic-") && sendMutation.isError && (
-                <button
-                  onClick={() => {
-                    // Повторная отправка последнего неудачного сообщения
-                    const formData = new FormData();
-                    formData.set("text", m.text ?? "");
-                    if (messageLessonId) formData.set("lessonId", messageLessonId);
-                    formData.set("receiverId", receiverId);
-                    sendMutation.mutate(formData);
-                  }}
-                  className="mt-1 text-label-sm font-label-sm text-m3-error hover:underline"
-                >
-                  Повторить
-                </button>
-              )}
+                {m.replyToId && m.replyToText && (
+                  <div className={`mb-1.5 px-2.5 py-1.5 rounded-md border-l-2 text-label-sm font-label-sm ${
+                    m.isMine
+                      ? "border-m3-on-primary/40 bg-m3-on-primary/10 text-m3-on-primary/80"
+                      : "border-m3-outline bg-m3-surface-container-highest text-m3-on-surface-variant"
+                  }`}>
+                    <span className="font-medium">{m.replyToSenderName ?? "Пользователь"}: </span>
+                    <span className="line-clamp-1">{m.replyToText}</span>
+                  </div>
+                )}
+                {m.text && <p className="whitespace-pre-wrap break-words text-body-md font-body-md [overflow-wrap:anywhere]">{m.text}</p>}
+                {m.attachmentUrl && m.attachmentType?.includes("image") ? (
+                  <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={m.attachmentUrl}
+                    alt="Вложение"
+                    className="mt-2 max-w-full rounded-lg border border-m3-outline-variant"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                  </>
+                ) : m.attachmentUrl ? (
+                  <a href={m.attachmentUrl} target="_blank" rel="noreferrer" className={`block mt-1 text-label-sm font-label-sm underline ${m.isMine ? "text-m3-on-primary/80" : "text-m3-primary"}`}>
+                    📎 {m.attachmentType?.includes("pdf") ? "PDF"
+                      : m.attachmentType?.includes("word") || m.attachmentType?.includes("document") ? "Документ"
+                      : "Файл"}
+                  </a>
+                ) : null}
+                {isLastInGroup && (
+                  <div className={`flex items-center gap-2 mt-1 ${m.isMine ? "justify-end" : "justify-start"}`}>
+                    <p className={`text-label-sm font-label-sm ${m.isMine ? "text-m3-on-primary/60" : "text-m3-on-surface-variant"}`}>
+                      {new Date(m.createdAt).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })}
+                      {m.isMine && !m.id.startsWith("optimistic-") && (m.readAt ? " · прочитано" : " · отправлено")}
+                      {m.id.startsWith("optimistic-") && sendMutation.isPending && " · отправляется..."}
+                      {m.id.startsWith("optimistic-") && sendMutation.isError && (
+                        <span className="text-m3-error"> · ошибка</span>
+                      )}
+                    </p>
+                    {!m.isMine && !m.id.startsWith("optimistic-") && (
+                      <button
+                        type="button"
+                        onClick={() => handleReply(m)}
+                        className={`text-label-sm font-label-sm hover:underline ${m.isMine ? "text-m3-on-primary/60" : "text-m3-primary"}`}
+                      >
+                        Ответить
+                      </button>
+                    )}
+                  </div>
+                )}
+                {showResponseState && !m.isMine && responseStateByMessageId.get(m.id) && (
+                  <p className={`mt-1 text-label-sm font-label-sm ${
+                    responseStateByMessageId.get(m.id) === "answered" ? "text-emerald-600" : "text-amber-600"
+                  }`}>
+                    {responseStateByMessageId.get(m.id) === "answered" ? "Ответ отправлен" : "Ожидает ответа"}
+                  </p>
+                )}
+                {m.id.startsWith("optimistic-") && sendMutation.isError && (
+                  <button
+                    onClick={() => {
+                      const formData = new FormData();
+                      formData.set("text", m.text ?? "");
+                      if (messageLessonId) formData.set("lessonId", messageLessonId);
+                      formData.set("receiverId", receiverId);
+                      sendMutation.mutate(formData);
+                    }}
+                    className="mt-1 text-label-sm font-label-sm text-m3-error hover:underline"
+                  >
+                    Повторить
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div ref={bottomRef} />
       </div>
       <div className="border-t border-m3-outline-variant p-3">
+        {replyToPreview && (
+          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded-lg bg-m3-surface-container-high border border-m3-outline-variant">
+            <Icon name="reply" size={16} className="shrink-0 text-m3-primary" />
+            <span className="flex-1 text-label-sm font-label-sm text-m3-on-surface-variant truncate">
+              {replyToPreview}
+            </span>
+            <button type="button" onClick={cancelReply} className="shrink-0 text-m3-on-surface-variant hover:text-m3-on-surface" aria-label="Отменить ответ">
+              <Icon name="close" size={16} />
+            </button>
+          </div>
+        )}
         {showEmojiPicker && (
           <div className="flex flex-wrap gap-1 mb-2 p-2 border border-m3-outline-variant rounded-lg bg-m3-surface-container-high">
             {COMMON_EMOJIS.map((emoji) => (

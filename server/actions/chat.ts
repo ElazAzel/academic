@@ -135,6 +135,14 @@ export async function getConversation(studentId: string, lessonId?: string) {
         },
       },
       lesson: { select: { id: true, title: true } },
+      replyTo: {
+        select: {
+          id: true,
+          text: true,
+          senderId: true,
+          sender: { select: { name: true, roles: { select: { role: { select: { key: true } } } } } },
+        },
+      },
     },
   });
 
@@ -152,6 +160,9 @@ export async function getConversation(studentId: string, lessonId?: string) {
     createdAt: m.createdAt.toISOString(),
     readAt: m.readAt?.toISOString() ?? null,
     isMine: m.senderId === user.id,
+    replyToId: m.replyToId ?? null,
+    replyToText: m.replyTo ? (m.replyTo.text ? m.replyTo.text.slice(0, 100) : "📎 Вложение") : null,
+    replyToSenderName: m.replyTo ? maskChatName(m.replyTo.sender.name, m.replyTo.senderId, roles, user.id, getRoleKeys(m.replyTo.sender)) : null,
   }));
 }
 
@@ -243,6 +254,7 @@ export async function sendMessageAction(formData: FormData) {
   const attachmentUrl = String(formData.get("attachmentUrl") ?? "").trim();
   const attachmentType = String(formData.get("attachmentType") ?? "").trim();
   const receiverId = String(formData.get("receiverId") ?? "").trim();
+  const replyToIdStr = String(formData.get("replyToId") ?? "").trim();
 
   if (!text && !attachmentUrl) {
     throw new ApiError("bad_request", "Текст или вложение обязательны", 400);
@@ -253,6 +265,18 @@ export async function sendMessageAction(formData: FormData) {
 
   if (attachmentUrl && attachmentType && !ALLOWED_ATTACHMENT_TYPES.has(attachmentType)) {
     throw new ApiError("bad_request", "Формат вложения не поддерживается", 400);
+  }
+
+  // If replying, resolve lessonId from parent message
+  let resolvedLessonId = lessonId;
+  if (replyToIdStr && !lessonId) {
+    const parentMsg = await prisma.message.findUnique({
+      where: { id: replyToIdStr },
+      select: { lessonId: true },
+    });
+    if (parentMsg?.lessonId) {
+      resolvedLessonId = parentMsg.lessonId;
+    }
   }
 
   let toUserId = receiverId;
@@ -286,9 +310,9 @@ export async function sendMessageAction(formData: FormData) {
   const receiverRoles = receiver.roles.map((entry) => entry.role.key as RoleKey);
   const receiverIsStudent = receiverRoles.includes("student");
   const contextStudentId = roles.includes("student") ? user.id : receiverIsStudent ? toUserId : null;
-  const lessonContext = lessonId
+  const lessonContext = resolvedLessonId
     ? contextStudentId
-      ? await getLessonContextForStudent(contextStudentId, lessonId)
+      ? await getLessonContextForStudent(contextStudentId, resolvedLessonId)
       : (() => {
           throw new ApiError("bad_request", "Контекст урока можно указать только в диалоге со слушателем", 400);
         })()
@@ -301,7 +325,8 @@ export async function sendMessageAction(formData: FormData) {
       text: text || null,
       attachmentUrl: attachmentUrl || null,
       attachmentType: attachmentType || null,
-      lessonId: lessonId || null,
+      lessonId: resolvedLessonId || null,
+      replyToId: replyToIdStr || null,
     },
     select: { id: true },
   });
@@ -309,7 +334,7 @@ export async function sendMessageAction(formData: FormData) {
   if (toUserId !== user.id) {
     const messagePreview = buildMessagePreview(text, Boolean(attachmentUrl));
     const link = receiverIsStudent
-      ? (lessonId ? `/student/lessons/${lessonId}` : "/student")
+      ? (resolvedLessonId ? `/student/lessons/${resolvedLessonId}` : "/student")
       : "/curator/chat";
 
     const displaySenderName = deriveDisplayName(user.name, user.id, roles);
