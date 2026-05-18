@@ -56,6 +56,23 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // ── 2FA check ────────────────────────────────────────────────────────
+  // If user requires 2FA, only allow 2FA-related paths
+  if (token.requires2fa) {
+    const allowed2faPaths = [
+      "/auth/2fa",
+      "/api/v1/auth/2fa/verify-login",
+      "/api/auth/session",
+      AUTH_ROUTES.LOGIN,
+    ];
+    const isAllowed2faPath = allowed2faPaths.some(
+      (p) => pathname === p || pathname.startsWith(p),
+    );
+    if (!isAllowed2faPath) {
+      return NextResponse.redirect(new URL("/auth/2fa", req.url));
+    }
+  }
+
   const roles = (token.roles as string[]) ?? [];
   const allowedRoles = getRouteRoles(pathname);
 
