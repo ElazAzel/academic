@@ -11,6 +11,7 @@ const mockMessageCreate = vi.hoisted(() => vi.fn());
 const mockMessageUpdateMany = vi.hoisted(() => vi.fn());
 const mockCuratorAssignmentFindFirst = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockLessonFindFirst = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth/page-guards", () => ({ requireRole: mockRequireRole }));
 vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
@@ -28,6 +29,7 @@ vi.mock("@/lib/prisma", () => ({
     },
     curatorAssignment: { findFirst: mockCuratorAssignmentFindFirst },
     user: { findUnique: mockUserFindUnique },
+    lesson: { findFirst: mockLessonFindFirst },
   }),
 }));
 
@@ -50,7 +52,18 @@ beforeEach(() => {
   mockMessageUpdateMany.mockResolvedValue({ count: 1 });
   mockUserFindUnique.mockResolvedValue({
     id: "student1",
+    name: "Слушатель1",
     roles: [{ role: { key: "student" } }],
+  });
+  mockLessonFindFirst.mockResolvedValue({
+    id: "lesson1",
+    title: "Prompt engineering",
+    module: {
+      id: "module1",
+      title: "AI Governance",
+      courseId: "course1",
+      course: { title: "AI Strategy" },
+    },
   });
   mockCreateNotification.mockResolvedValue({ id: "notification1" });
   mockBuildStorageKey.mockReturnValue("chat/cur1/file.pdf");
@@ -157,6 +170,62 @@ describe("chat actions", () => {
       expect.objectContaining({
         partnerId: "student1",
         partnerName: "Слушатель1",
+        responseStatus: "awaiting_reply",
+        responseLabel: "Ожидает ответа",
+      }),
+    ]);
+  });
+
+  it("marks a conversation as answered when the latest message is mine", async () => {
+    mockMessageFindMany.mockResolvedValue([
+      {
+        id: "m2",
+        text: "Ответил",
+        senderId: "cur1",
+        receiverId: "student1",
+        readAt: null,
+        createdAt: new Date("2026-05-16T09:00:00.000Z"),
+        lessonId: "lesson1",
+        lesson: { id: "lesson1", title: "Prompt engineering" },
+        sender: {
+          id: "cur1",
+          name: "Мадина",
+          roles: [{ role: { key: "curator" } }],
+        },
+        receiver: {
+          id: "student1",
+          name: "Слушатель1",
+          roles: [{ role: { key: "student" } }],
+        },
+      },
+      {
+        id: "m1",
+        text: "Вопрос по уроку",
+        senderId: "student1",
+        receiverId: "cur1",
+        readAt: new Date("2026-05-16T08:30:00.000Z"),
+        createdAt: new Date("2026-05-16T08:00:00.000Z"),
+        lessonId: "lesson1",
+        lesson: { id: "lesson1", title: "Prompt engineering" },
+        sender: {
+          id: "student1",
+          name: "Слушатель1",
+          roles: [{ role: { key: "student" } }],
+        },
+        receiver: {
+          id: "cur1",
+          name: "Мадина",
+          roles: [{ role: { key: "curator" } }],
+        },
+      },
+    ]);
+
+    await expect(getMyConversations()).resolves.toEqual([
+      expect.objectContaining({
+        partnerId: "student1",
+        responseStatus: "answered",
+        responseLabel: "Отвечено",
+        lessonTitle: "Prompt engineering",
       }),
     ]);
   });
@@ -183,11 +252,79 @@ describe("chat actions", () => {
     expect(mockCreateNotification).toHaveBeenCalledWith(
       expect.objectContaining({
         title: "Новое сообщение от Куратор Мадина",
+        body: "Prompt engineering: Проверьте комментарий",
         userId: "student1",
-        data: expect.objectContaining({ link: "/student/lessons/lesson1" }),
+        refType: "message",
+        refId: "message1",
+        data: expect.objectContaining({
+          link: "/student/lessons/lesson1",
+          url: "/student/lessons/lesson1",
+          messageId: "message1",
+          lessonId: "lesson1",
+          lessonTitle: "Prompt engineering",
+          conversationStudentId: "student1",
+        }),
       }),
     );
     expect(mockRevalidatePath).toHaveBeenCalledWith("/curator/chat");
+  });
+
+  it("routes a student message to the assigned curator with lesson origin", async () => {
+    mockRequireRole.mockResolvedValue({
+      id: "student1",
+      email: "student@test.com",
+      name: "Слушатель1",
+      roles: ["student"],
+    });
+    mockCuratorAssignmentFindFirst.mockResolvedValue({ curatorId: "cur1" });
+    mockUserFindUnique.mockResolvedValue({
+      id: "cur1",
+      name: "Мадина",
+      roles: [{ role: { key: "curator" } }],
+    });
+
+    const formData = new FormData();
+    formData.set("lessonId", "lesson1");
+    formData.set("text", "Нужна помощь по кейсу");
+
+    await expect(sendMessageAction(formData)).resolves.toEqual({ success: true });
+
+    expect(mockLessonFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: "lesson1" }),
+      }),
+    );
+    expect(mockMessageCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          senderId: "student1",
+          receiverId: "cur1",
+          lessonId: "lesson1",
+        }),
+      }),
+    );
+    expect(mockCreateNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "cur1",
+        title: "Новое сообщение от Слушатель1",
+        body: "Prompt engineering: Нужна помощь по кейсу",
+        data: expect.objectContaining({
+          link: "/curator/chat",
+          url: "/curator/chat",
+          conversationStudentId: "student1",
+          lessonTitle: "Prompt engineering",
+        }),
+      }),
+    );
+  });
+
+  it("rejects oversized text messages before creating a message", async () => {
+    const formData = new FormData();
+    formData.set("receiverId", "student1");
+    formData.set("text", "x".repeat(10_001));
+
+    await expect(sendMessageAction(formData)).rejects.toMatchObject({ code: "bad_request", status: 400 });
+    expect(mockMessageCreate).not.toHaveBeenCalled();
   });
 
   it("marks only messages received by the current user as read", async () => {

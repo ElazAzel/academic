@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Icon } from "@/components/ui/icon";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendMessageAction, getConversation, markAsRead, getUploadUrlForFile } from "@/server/actions/chat";
@@ -10,6 +10,7 @@ import { getSupabaseClient } from "@/lib/supabase-client";
 import { toast } from "sonner";
 
 const COMMON_EMOJIS = ["😊", "👍", "❤️", "🎉", "🔥", "👏", "😄", "🚀", "⭐", "🙏", "💪", "😎", "✨"];
+const MAX_CHAT_TEXT_LENGTH = 10_000;
 
 interface ChatMessage {
   id: string;
@@ -21,6 +22,7 @@ interface ChatMessage {
   senderId: string;
   senderName: string;
   createdAt: string;
+  readAt: string | null;
   isMine: boolean;
 }
 
@@ -33,6 +35,7 @@ export function ChatPanel({
   emptyState = "Начните диалог с куратором",
   historyTitle = "Чат с куратором",
   otherParticipantName = "Куратор",
+  showResponseState = false,
 }: {
   lessonId?: string;
   replyLessonId?: string;
@@ -42,6 +45,7 @@ export function ChatPanel({
   emptyState?: string;
   historyTitle?: string;
   otherParticipantName?: string;
+  showResponseState?: boolean;
 }) {
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => ["chat", studentId, lessonId], [studentId, lessonId]);
@@ -53,6 +57,7 @@ export function ChatPanel({
   const bottomRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const isSendingRef = useRef(false);
 
   const { data: messages = [] } = useQuery({
@@ -114,8 +119,18 @@ export function ChatPanel({
   }, [messages]);
 
   useEffect(() => {
-    const unreadIds = messages.filter((m) => !m.isMine).map((m) => m.id);
+    const unreadIds = messages.filter((m) => !m.isMine && !m.readAt).map((m) => m.id);
     if (unreadIds.length > 0) markAsRead(unreadIds);
+  }, [messages]);
+
+  const responseStateByMessageId = useMemo(() => {
+    const states = new Map<string, "answered" | "awaiting_reply">();
+    messages.forEach((message, index) => {
+      if (message.isMine) return;
+      const hasLaterReply = messages.slice(index + 1).some((candidate) => candidate.isMine);
+      states.set(message.id, hasLaterReply ? "answered" : "awaiting_reply");
+    });
+    return states;
   }, [messages]);
 
   const sendMutation = useMutation({
@@ -135,6 +150,7 @@ export function ChatPanel({
         senderId: "optimistic",
         senderName: "Вы",
         createdAt: new Date().toISOString(),
+        readAt: null,
         isMine: true,
       };
 
@@ -189,6 +205,13 @@ export function ChatPanel({
     if (messageLessonId) formData.set("lessonId", messageLessonId);
     formData.set("receiverId", receiverId);
     sendMutation.mutate(formData);
+  }
+
+  function handleTextareaKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      event.preventDefault();
+      formRef.current?.requestSubmit();
+    }
   }
 
   function handleDownload() {
@@ -279,7 +302,7 @@ export function ChatPanel({
         {messages.map((m) => (
           <div key={m.id} className={`flex ${m.isMine ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.isMine ? "bg-m3-primary text-m3-on-primary" : "bg-m3-surface-container-high"}`}>
-              {m.text && <p className="text-body-md font-body-md">{m.text}</p>}
+              {m.text && <p className="whitespace-pre-wrap break-words text-body-md font-body-md [overflow-wrap:anywhere]">{m.text}</p>}
               {m.attachmentUrl && m.attachmentType?.includes("image") ? (
                 <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -306,11 +329,19 @@ export function ChatPanel({
               )}
               <p className={`text-label-sm font-label-sm mt-1 ${m.isMine ? "text-m3-on-primary/60" : "text-m3-on-surface-variant"}`}>
                 {new Date(m.createdAt).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })}
+                {m.isMine && !m.id.startsWith("optimistic-") && (m.readAt ? " · прочитано" : " · отправлено")}
                 {m.id.startsWith("optimistic-") && sendMutation.isPending && " · отправляется..."}
                 {m.id.startsWith("optimistic-") && sendMutation.isError && (
                   <span className="text-m3-error"> · ошибка</span>
                 )}
               </p>
+              {showResponseState && !m.isMine && responseStateByMessageId.get(m.id) && (
+                <p className={`mt-1 text-label-sm font-label-sm ${
+                  responseStateByMessageId.get(m.id) === "answered" ? "text-emerald-600" : "text-amber-600"
+                }`}>
+                  {responseStateByMessageId.get(m.id) === "answered" ? "Ответ отправлен" : "Ожидает ответа"}
+                </p>
+              )}
               {m.id.startsWith("optimistic-") && sendMutation.isError && (
                 <button
                   onClick={() => {
@@ -346,7 +377,7 @@ export function ChatPanel({
             ))}
           </div>
         )}
-        <form onSubmit={handleSend} className="flex items-center gap-2">
+        <form ref={formRef} onSubmit={handleSend} className="flex items-end gap-2">
           <input
             type="file"
             ref={fileInputRef}
@@ -360,14 +391,24 @@ export function ChatPanel({
           <Button type="button" variant="ghost" size="sm" onClick={() => setShowEmojiPicker(!showEmojiPicker)} aria-label="Выбрать эмодзи">
             <Icon name="emoji_emotions" size={16} />
           </Button>
-          <Input
+          <div className="min-w-0 flex-1">
+          <Textarea
             name="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleTextareaKeyDown}
+            maxLength={MAX_CHAT_TEXT_LENGTH}
             placeholder="Напишите сообщение..."
-            className="flex-1"
+            rows={1}
+            className="max-h-40 min-h-11 resize-y py-2.5"
           />
-          <Button type="submit" size="sm" disabled={sendMutation.isPending || (!text.trim())}>
+          {text.length > MAX_CHAT_TEXT_LENGTH * 0.8 && (
+            <p className="mt-1 text-right text-[11px] text-m3-on-surface-variant">
+              {text.length}/{MAX_CHAT_TEXT_LENGTH}
+            </p>
+          )}
+          </div>
+          <Button type="submit" size="sm" disabled={sendMutation.isPending || uploading || (!text.trim())}>
             {sendMutation.isPending ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="send" size={16} />}
           </Button>
         </form>

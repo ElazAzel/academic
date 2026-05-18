@@ -4,15 +4,21 @@ const mockOutboxEventCreate = vi.hoisted(() => vi.fn());
 const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockSendPushToUser = vi.hoisted(() => vi.fn());
+const mockEnv = vi.hoisted(() => ({
+  FEATURE_EMAIL_NOTIFICATIONS: false,
+  FEATURE_PUSH_NOTIFICATIONS: false,
+  EMAIL_FROM: "noreply@academy.local",
+  SMTP_HOST: "localhost",
+  SMTP_PORT: 1025,
+}));
 
 vi.mock("@/lib/env", () => ({
-  env: {
-    FEATURE_EMAIL_NOTIFICATIONS: false,
-    FEATURE_PUSH_NOTIFICATIONS: false,
-    EMAIL_FROM: "noreply@academy.local",
-    SMTP_HOST: "localhost",
-    SMTP_PORT: 1025,
-  },
+  env: mockEnv,
+}));
+
+vi.mock("@/server/modules/notifications/push", () => ({
+  sendPushToUser: mockSendPushToUser,
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -63,6 +69,7 @@ describe("createNotification (outbox path)", () => {
 describe("createNotificationInternal (sync path)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockEnv.FEATURE_PUSH_NOTIFICATIONS = false;
     mockNotificationPreferenceFindMany.mockResolvedValue([]);
     mockNotificationCreate.mockResolvedValue({ id: "notification-1" });
     mockUserFindUnique.mockResolvedValue({ email: "student@academy.local" });
@@ -108,6 +115,23 @@ describe("createNotificationInternal (sync path)", () => {
           type: "password_changed",
           channel: "email",
         }),
+      }),
+    );
+  });
+
+  it("uses notification link as push url when url is not provided", async () => {
+    mockEnv.FEATURE_PUSH_NOTIFICATIONS = true;
+
+    await createNotificationInternal({
+      userId: "curator-1",
+      event: "new_message",
+      data: { link: "/curator/chat" },
+    });
+
+    expect(mockSendPushToUser).toHaveBeenCalledWith(
+      "curator-1",
+      expect.objectContaining({
+        url: "/curator/chat",
       }),
     );
   });

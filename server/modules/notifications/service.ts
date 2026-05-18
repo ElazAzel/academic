@@ -192,10 +192,11 @@ export async function createNotificationInternal(input: {
   if (env.FEATURE_PUSH_NOTIFICATIONS && channel !== NOTIFICATION_CHANNELS.EMAIL) {
     try {
       const { sendPushToUser } = await import("@/server/modules/notifications/push");
+      const notificationData = input.data as Record<string, string | undefined> | undefined;
       await sendPushToUser(input.userId, {
         title: rendered.title,
         body: rendered.body,
-        url: (input.data as Record<string, string>)?.url,
+        url: notificationData?.url ?? notificationData?.link,
         tag: `${input.event}-${notification.id}`,
       });
     } catch (error) {
