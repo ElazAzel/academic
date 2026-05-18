@@ -169,7 +169,7 @@ export function NotificationToast() {
       checkNotifications();
     }
 
-    const interval = setInterval(checkNotifications, 30000);
+    const interval = setInterval(checkNotifications, 60000);
     return () => { mounted = false; clearInterval(interval); };
   }, [sessionStatus, session?.user]);
 
