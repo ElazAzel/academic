@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { PWARegister } from "@/components/lms/pwa-register";
 import { Heartbeat } from "@/components/lms/heartbeat";
+import { BackgroundAnimations } from "@/components/lms/background-animations";
 
 export const metadata: Metadata = {
   title: "AI Strategic Academy",
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Перейти к содержимому
         </a>
+        <BackgroundAnimations />
         <Providers>{children}</Providers>
         <PWARegister />
         <Heartbeat />
