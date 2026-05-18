@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/http";
 import { toJsonValue } from "@/lib/json";
 import { slugify } from "@/lib/utils";
 import { logAudit } from "@/server/modules/audit/service";
+import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
@@ -437,6 +438,18 @@ export async function enrollStudent(input: {
     entity: "enrollment",
     entityId: enrollment.id,
     metadata: input
+  });
+  await createNotification({
+    userId: input.userId,
+    event: "access_granted",
+    refType: "enrollment",
+    refId: enrollment.id,
+    data: {
+      courseId: input.courseId,
+      cohortId: input.cohortId ?? null,
+      enrollmentId: enrollment.id,
+      link: `/student/courses/${input.courseId}`
+    }
   });
   return enrollment;
 }

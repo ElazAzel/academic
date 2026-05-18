@@ -1,9 +1,22 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockCourseCreate = vi.hoisted(() => vi.fn());
 const mockCourseFindUnique = vi.hoisted(() => vi.fn());
 const mockEnrollmentUpsert = vi.hoisted(() => vi.fn());
 const mockAuditLogCreate = vi.hoisted(() => vi.fn());
+const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
+const mockNotificationCreate = vi.hoisted(() => vi.fn());
+const mockNotificationUserFindUnique = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/env", () => ({
+  env: {
+    FEATURE_EMAIL_NOTIFICATIONS: false,
+    FEATURE_PUSH_NOTIFICATIONS: false,
+    EMAIL_FROM: "noreply@academy.local",
+    SMTP_HOST: "localhost",
+    SMTP_PORT: 1025,
+  },
+}));
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
@@ -17,6 +30,9 @@ vi.mock("@/lib/prisma", () => ({
     auditLog: {
       create: mockAuditLogCreate,
     },
+    notificationPreference: { findMany: mockNotificationPreferenceFindMany },
+    notification: { create: mockNotificationCreate },
+    user: { findUnique: mockNotificationUserFindUnique },
   }),
 }));
 
@@ -83,6 +99,12 @@ describe("getCourse", () => {
 });
 
 describe("enrollStudent", () => {
+  beforeEach(() => {
+    mockNotificationPreferenceFindMany.mockResolvedValue([]);
+    mockNotificationCreate.mockResolvedValue({ id: "n1" });
+    mockNotificationUserFindUnique.mockResolvedValue({ email: "student@test.com" });
+  });
+
   it("creates enrollment with ACTIVE status", async () => {
     mockEnrollmentUpsert.mockResolvedValue({
       id: "e1",
@@ -112,6 +134,24 @@ describe("enrollStudent", () => {
         data: expect.objectContaining({
           action: "enrollment.upserted",
           actorId: "actor1",
+        }),
+      }),
+    );
+  });
+
+  it("notifies the student with default in-app channel", async () => {
+    mockEnrollmentUpsert.mockResolvedValue({ id: "e3", userId: "u3", courseId: "c3", status: "ACTIVE", cohortId: "coh1" });
+
+    await enrollStudent({ userId: "u3", courseId: "c3", cohortId: "coh1" }, "actor1");
+
+    expect(mockNotificationCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: "u3",
+          type: "access_granted",
+          channel: "in_app",
+          refType: "enrollment",
+          refId: "e3",
         }),
       }),
     );

@@ -68,6 +68,9 @@ export async function answerQuestionAction(questionId: string, answer: string) {
       userId: question.studentId,
       event: "question_answered",
       channel: NOTIFICATION_CHANNELS.IN_APP,
+      refType: "lesson_question",
+      refId: questionId,
+      data: { lessonId: question.lessonId, questionId },
     });
   }
 
@@ -142,7 +145,22 @@ export async function forwardQuestionAction(questionId: string) {
 
   const question = await prisma.lessonQuestion.findUnique({
     where: { id: questionId },
-    include: { student: { select: { name: true } } }
+    include: {
+      student: { select: { name: true } },
+      lesson: {
+        select: {
+          module: {
+            select: {
+              course: {
+                select: {
+                  instructors: { select: { userId: true } },
+                },
+              },
+            },
+          },
+        },
+      },
+    }
   });
 
   if (!question) {
@@ -175,16 +193,40 @@ export async function forwardQuestionAction(questionId: string) {
     await createNotification({
       userId: question.studentId,
       event: "question_forwarded",
-      data: { lessonId: question.lessonId }
+      refType: "lesson_question",
+      refId: questionId,
+      data: { lessonId: question.lessonId, questionId, link: `/student/lessons/${question.lessonId}` }
     }).catch((e) => console.error("Failed to notify student:", e));
   }
   if (question?.curatorId) {
     await createNotification({
       userId: question.curatorId,
       event: "question_forwarded",
-      data: { lessonId: question.lessonId, studentName: question.student?.name }
+      refType: "lesson_question",
+      refId: questionId,
+      data: { lessonId: question.lessonId, questionId, studentName: question.student?.name, link: "/curator/questions" }
     }).catch((e) => console.error("Failed to notify curator:", e));
   }
+  const instructorIds = [
+    ...new Set(question.lesson.module.course.instructors.map((instructor) => instructor.userId)),
+  ].filter((instructorId) => instructorId !== actor.id);
+  await Promise.all(
+    instructorIds.map((instructorId) =>
+      createNotification({
+        userId: instructorId,
+        event: "question_forwarded",
+        refType: "lesson_question",
+        refId: questionId,
+        data: {
+          lessonId: question.lessonId,
+          questionId,
+          studentId: question.studentId,
+          studentName: question.student?.name,
+          link: "/instructor/questions",
+        },
+      }).catch((e) => console.error("Failed to notify instructor:", e)),
+    ),
+  );
 
   revalidatePath("/instructor");
   return { success: true };
@@ -244,14 +286,18 @@ export async function answerForwardedQuestionAction(formData: FormData) {
     await createNotification({
       userId: question.studentId,
       event: "question_answered",
-      data: { lessonId: question.lessonId }
+      refType: "lesson_question",
+      refId: questionId,
+      data: { lessonId: question.lessonId, questionId, link: `/student/lessons/${question.lessonId}` }
     }).catch((e) => console.error("Failed to notify student:", e));
   }
   if (question?.curatorId) {
     await createNotification({
       userId: question.curatorId,
       event: "question_answered",
-      data: { lessonId: question.lessonId, studentName: question.student?.name }
+      refType: "lesson_question",
+      refId: questionId,
+      data: { lessonId: question.lessonId, questionId, studentName: question.student?.name, link: "/curator/questions" }
     }).catch((e) => console.error("Failed to notify curator:", e));
   }
 

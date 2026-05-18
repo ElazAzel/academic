@@ -1,7 +1,7 @@
 # Полный аудит платформы — AI Strategic Academy
 
 **Дата:** 2026-05-17
-**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-08
+**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-09
 **Область:** продуктовые сценарии, роли, маршруты, backend/API, доступ, безопасность, тесты, схема, документация
 
 ---
@@ -14,7 +14,7 @@
 | Auth/access | Закрытый вход, self-registration отключён, role redirect работает |
 | Observer privacy | Green: observer видит только явно scoped project/cohort data; без scope приватные данные не возвращаются |
 | Certificates | Green: student видит свои, admin видит все, observer видит scoped, bulk download scoped, PDF owner/instructor/admin |
-| Notifications | Green базовый контракт: default `in_app`, email только при `email` / `email_and_in_app`; preferences service подключён |
+| Notifications | Green: default `in_app`, email только при `email` / `email_and_in_app`; core enrollment/curator/question/assignment/certificate/password events create notification records |
 | Chat | Green для текущего MVP: участники scoped, куратор отвечает закреплённому слушателю, имена отображаются по роли |
 | Reports/analytics | Green: reports have owner/scope/decision/export and server-side role scope for progress, risks, assignments, certificates, workload |
 | Release gate | Green: `npm run verify:release` и `docs/release-verification.md` зафиксированы |
@@ -49,12 +49,12 @@
 
 | Роль | Статус | Что работает | Что дальше |
 |---|---|---|---|
-| Admin | Green | users, roles, courses, cohorts, enrollments, invites, audit, settings, certificates issue/revoke, scoped reports/exports | Notification/audit completion and release runbooks |
-| Instructor | Green/yellow | own courses, unified builder, scoped quiz/assignment creation, preview, publish checks, analytics, forwarded questions scoped, course-scoped reports | Notification/audit completion |
+| Admin | Green | users, roles, courses, cohorts, enrollments, invites, audit, settings, certificates issue/revoke, scoped reports/exports, notification/audit coverage for core ops | Schema cleanup window and release runbooks |
+| Instructor | Green/yellow | own courses, unified builder, scoped quiz/assignment creation, preview, publish checks, analytics, forwarded questions scoped, course-scoped reports, forwarded-question notifications | Schema cleanup window |
 | Student | Green/yellow | dashboard continue-learning, my courses, course/lesson access, embedded quiz/assignment/question/rating, certificates | Playwright happy path on prepared DB |
-| Curator | Green/yellow | assigned students, questions, assignment review, risks, scoped chat, operational student cards with next actions, assigned-scope reports | Browser smoke on prepared curator data |
-| Super Curator | Green/yellow | scoped workload dashboard, distribution, questions, risks, curator load, problem queues, reassignment inside scope, workload reports | Notification/audit completion |
-| Customer Observer | Green/yellow | scoped dashboard, reports, certificates, read-only constraints, scoped progress/risk/certificate exports | Notification/audit completion |
+| Curator | Green/yellow | assigned students, questions, assignment review, risks, scoped chat, operational student cards with next actions, assigned-scope reports, assignment/question notifications | Browser smoke on prepared curator data |
+| Super Curator | Green/yellow | scoped workload dashboard, distribution, questions, risks, curator load, problem queues, reassignment inside scope, workload reports, assignment audit/notification events | Schema cleanup window |
+| Customer Observer | Green/yellow | scoped dashboard, reports, certificates, read-only constraints, scoped progress/risk/certificate exports | Full release smoke on prepared data |
 
 ---
 
@@ -87,7 +87,7 @@ The product direction remains:
 Course → Module → Block → Lesson → Content / Test / Assignment / Question / Rating / Completion
 ```
 
-Current state after M-PR-08:
+Current state after M-PR-09:
 
 - Course, Module, Block, Lesson exist in product/schema direction.
 - Student dashboard and course pages are usable.
@@ -102,8 +102,10 @@ Current state after M-PR-08:
 - Admin has a native `/admin/courses/[courseId]/builder` route; legacy instructor edit/curriculum/module/lesson routes redirect back into the builder context.
 - Reports now expose owner, scope, management decision purpose, and CSV/XLSX/PDF export actions.
 - Report exports are server-scoped for admin, instructor, curator, super-curator, and customer observer roles; assignments and curator workload are included where the role is allowed.
+- Core notification/audit events are wired for enrollment, curator assignment, question forwarding/answers, assignment review, certificate issue/revoke, profile update, and password/security events.
+- Unsupported notification channels are normalized to `in_app`; email is only sent through explicit `email` / `email_and_in_app` notification calls or direct auth email flows such as password reset request.
 
-M-PR-09 should complete notification and audit coverage for the core learning/operations events.
+M-PR-10 should handle schema cleanup in a dedicated downtime window.
 
 ---
 
@@ -136,7 +138,6 @@ Known limitation:
 
 | Priority | Risk | Why It Matters | Planned Package |
 |---|---|---|---|
-| P2 | Notification/audit coverage is incomplete for all core events | Enrollment, curator assignment, assignment review, certificate events need consistent records | M-PR-09 |
 | P3 | Status strings still need enum cleanup | Schema cleanup should happen in a separate downtime window | M-PR-10 |
 | P3 | Heavy dashboards/reports/chats need bounded query review | Production scale requires pagination/indexes/no unbounded queries | M-PR-11 |
 | P3 | Final production runbooks and rollback need rehearsal | Release candidate needs clear deploy/migration/rollback instructions | M-PR-12 |
@@ -163,8 +164,8 @@ Rule going forward: if an old audit table says a risk is open but `docs/update-l
 
 ## 9. Recommended Next Step
 
-Continue with **M-PR-09: Notification & Audit Completion**:
+Continue with **M-PR-10: Schema Cleanup Window**:
 
-- verify enrollment, curator assigned, question answered/forwarded, assignment reviewed, certificate issued/revoked, and password/security events;
-- keep default notification channel as `in_app`;
-- ensure audit logs and notification rows are created consistently without accidental email sending.
+- migrate planned string statuses to enums in a controlled downtime window;
+- prepare backup, normalization, deploy, smoke, and rollback steps;
+- keep migration work separate from UX and feature changes.

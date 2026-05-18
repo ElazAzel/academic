@@ -5,6 +5,7 @@ const mockHashPassword = vi.hoisted(() => vi.fn());
 const mockVerifyPassword = vi.hoisted(() => vi.fn());
 const mockRevalidatePath = vi.hoisted(() => vi.fn());
 const mockCreateNotification = vi.hoisted(() => vi.fn());
+const mockLogAudit = vi.hoisted(() => vi.fn());
 const mockGetUserNotificationPreferences = vi.hoisted(() => vi.fn());
 const mockSetNotificationPreferences = vi.hoisted(() => vi.fn());
 const mockGetAllAppSettings = vi.hoisted(() => vi.fn());
@@ -16,6 +17,7 @@ vi.mock("@/lib/auth/session", () => ({ requireUser: mockRequireUser }));
 vi.mock("@/lib/auth/password", () => ({ hashPassword: mockHashPassword, verifyPassword: mockVerifyPassword }));
 vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
 vi.mock("@/server/modules/notifications/service", () => ({ createNotification: mockCreateNotification }));
+vi.mock("@/server/modules/audit/service", () => ({ logAudit: mockLogAudit }));
 vi.mock("@/server/modules/notifications/preferences", () => ({
   getUserNotificationPreferences: mockGetUserNotificationPreferences,
   setNotificationPreferences: mockSetNotificationPreferences,
@@ -58,6 +60,8 @@ describe("updateProfileSettingsAction", () => {
       data: expect.objectContaining({ name: "New Name", phone: "+7-999-123-45-67", organization: "Acme" }),
     }));
     expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ event: "profile_updated" }));
+    expect(mockCreateNotification).toHaveBeenCalledWith(expect.not.objectContaining({ channel: "email" }));
+    expect(mockLogAudit).toHaveBeenCalledWith(expect.objectContaining({ action: "profile.updated" }));
     expect(mockRevalidatePath).toHaveBeenCalledWith("/", "layout");
   });
 
@@ -87,6 +91,8 @@ describe("updatePasswordAction", () => {
       data: { passwordHash: "hashed-new-pass" },
     }));
     expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ event: "password_changed" }));
+    expect(mockCreateNotification).toHaveBeenCalledWith(expect.not.objectContaining({ channel: "email" }));
+    expect(mockLogAudit).toHaveBeenCalledWith(expect.objectContaining({ action: "auth.password_changed" }));
   });
 
   it("throws if passwords do not match", async () => {

@@ -17,6 +17,17 @@ const mockTxBlockProgressUpsert = vi.hoisted(() => vi.fn());
 const mockTxModuleProgressUpsert = vi.hoisted(() => vi.fn());
 const mockTxCourseProgressUpsert = vi.hoisted(() => vi.fn());
 
+vi.mock("@/lib/env", () => ({
+  env: {
+    CERTIFICATE_COMPLETION_THRESHOLD: 85,
+    FEATURE_EMAIL_NOTIFICATIONS: false,
+    FEATURE_PUSH_NOTIFICATIONS: false,
+    EMAIL_FROM: "noreply@academy.local",
+    SMTP_HOST: "localhost",
+    SMTP_PORT: 1025,
+  },
+}));
+
 const mock$transaction = vi.hoisted(() => vi.fn(async (arg: unknown) => {
   if (typeof arg === "function") {
     return (arg as (tx: Record<string, unknown>) => unknown)({

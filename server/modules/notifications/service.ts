@@ -44,7 +44,9 @@ export type NotificationEvent =
   | "question_answered"
   | "live_session_soon"
   | "certificate_available"
+  | "certificate_revoked"
   | "curator_assigned"
+  | "student_assigned"
   | "question_received"
   | "question_forwarded"
   | "password_changed"
@@ -65,7 +67,9 @@ const templates: Record<NotificationEvent, { title: string; body: string }> = {
   question_answered: { title: "Куратор ответил", body: "Ответ доступен в уроке." },
   live_session_soon: { title: "Скоро трансляция", body: "Не пропустите занятие." },
   certificate_available: { title: "Сертификат доступен", body: "Сертификат можно скачать в кабинете." },
+  certificate_revoked: { title: "Сертификат отозван", body: "Сертификат больше не считается действительным." },
   curator_assigned: { title: "Куратор назначен", body: "Теперь у вас есть ответственный куратор." },
+  student_assigned: { title: "Слушатель назначен", body: "Вам назначен слушатель для сопровождения." },
   question_received: { title: "Новый вопрос", body: "Слушатель задал вопрос по уроку." },
   question_forwarded: { title: "Вопрос переадресован", body: "Ваш вопрос передан инструктору." },
   password_changed: { title: "Пароль изменён", body: "Пароль от вашей учётной записи успешно изменён." },
@@ -81,6 +85,17 @@ export function renderNotificationTemplate(event: NotificationEvent, overrides?:
   return { ...templates[event], ...overrides };
 }
 
+type NotificationDeliveryChannel = (typeof NOTIFICATION_CHANNELS)[keyof typeof NOTIFICATION_CHANNELS];
+
+const deliveryChannels = new Set<string>(Object.values(NOTIFICATION_CHANNELS));
+
+export function normalizeNotificationChannel(channel?: string): NotificationDeliveryChannel {
+  if (channel && deliveryChannels.has(channel)) {
+    return channel as NotificationDeliveryChannel;
+  }
+  return NOTIFICATION_CHANNELS.IN_APP;
+}
+
 export async function createNotification(input: {
   userId: string;
   event: string;
@@ -91,11 +106,12 @@ export async function createNotification(input: {
   refType?: string;
   refId?: string;
 }) {
+  const channel = normalizeNotificationChannel(input.channel);
   // Проверяем настройки пользователя — если канал отключён, пропускаем
   const preferences = await getUserNotificationPreferences(input.userId);
-  const prefKey = input.channel === NOTIFICATION_CHANNELS.EMAIL || input.channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP
+  const prefKey = channel === NOTIFICATION_CHANNELS.EMAIL || channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP
     ? input.event
-    : input.channel ?? NOTIFICATION_CHANNELS.IN_APP;
+    : channel;
 
   if (preferences[prefKey] === false) {
     return null; // Пользователь отключил этот тип уведомлений
@@ -108,7 +124,7 @@ export async function createNotification(input: {
     data: {
       userId: input.userId,
       type: input.event,
-      channel: input.channel ?? NOTIFICATION_CHANNELS.IN_APP,
+      channel,
       title: rendered.title,
       body: rendered.body,
       status: "SENT",
@@ -125,7 +141,7 @@ export async function createNotification(input: {
   });
 
   // Проверяем email-подписку отдельно
-  if (user?.email && (input.channel === NOTIFICATION_CHANNELS.EMAIL || input.channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP)) {
+  if (user?.email && (channel === NOTIFICATION_CHANNELS.EMAIL || channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP)) {
     const emailPrefKey = `email_${input.event}`;
     if (preferences[emailPrefKey] !== false) {
       try {
@@ -137,7 +153,7 @@ export async function createNotification(input: {
   }
 
   // Push notification (Web Push via VAPID)
-  if (env.FEATURE_PUSH_NOTIFICATIONS && input.channel !== NOTIFICATION_CHANNELS.EMAIL) {
+  if (env.FEATURE_PUSH_NOTIFICATIONS && channel !== NOTIFICATION_CHANNELS.EMAIL) {
     try {
       const { sendPushToUser } = await import("@/server/modules/notifications/push");
       await sendPushToUser(input.userId, {
