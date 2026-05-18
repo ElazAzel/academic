@@ -4,6 +4,7 @@ import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { BarChart, DonutChart } from "@/components/lms/bar-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
+import { Icon } from "@/components/ui/icon";
 import { getInstructorAnalytics } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
@@ -39,10 +40,10 @@ export default async function InstructorAnalyticsPage() {
             label: "По модулям",
             content: moduleAnalytics.length > 0 ? (
               <div className="grid gap-6 md:grid-cols-3">
-                <Card className="md:col-span-2">
+                <Card className="md:col-span-2 border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                   <CardHeader>
-                    <CardTitle>Прогресс по модулям</CardTitle>
-                    <CardDescription>Средний процент прохождения</CardDescription>
+                    <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Прогресс по модулям</CardTitle>
+                    <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний процент прохождения</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <BarChart
@@ -55,15 +56,21 @@ export default async function InstructorAnalyticsPage() {
                   </CardContent>
                 </Card>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs text-muted-foreground mr-1">Скачать отчёт:</span>
-                  <a href="/api/v1/reports?type=progress&format=csv" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">CSV</a>
-                  <a href="/api/v1/reports?type=progress&format=xlsx" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">Excel</a>
-                  <a href="/api/v1/reports?type=progress&format=pdf" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">PDF</a>
+                  <span className="font-body-sm text-body-sm text-m3-on-surface-variant mr-1">Скачать отчёт:</span>
+                  <a href="/api/v1/reports?type=progress&format=csv" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+                    <Icon name="download" className="text-[16px]" /> CSV
+                  </a>
+                  <a href="/api/v1/reports?type=progress&format=xlsx" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+                    <Icon name="download" className="text-[16px]" /> Excel
+                  </a>
+                  <a href="/api/v1/reports?type=progress&format=pdf" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+                    <Icon name="download" className="text-[16px]" /> PDF
+                  </a>
                 </div>
-                <Card>
+                <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                   <CardHeader>
-                    <CardTitle>Общий прогресс</CardTitle>
-                    <CardDescription>Среднее по всем модулям</CardDescription>
+                    <CardTitle className="font-label-md text-label-md text-m3-on-surface">Общий прогресс</CardTitle>
+                    <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">Среднее по всем модулям</CardDescription>
                   </CardHeader>
                   <CardContent className="flex flex-col items-center gap-4 pt-4">
                     <DonutChart
@@ -73,33 +80,27 @@ export default async function InstructorAnalyticsPage() {
                     />
                     <div className="space-y-1 text-center">
                       {moduleAnalytics.map((m) => (
-                        <div key={m.title} className="flex items-center justify-between gap-4 text-xs">
-                          <span className="text-muted-foreground truncate max-w-[100px]">{m.title}</span>
-                          <span className="font-medium">{m.avgProgress}%</span>
+                        <div key={m.title} className="flex items-center justify-between gap-4 font-body-sm text-body-sm">
+                          <span className="text-m3-on-surface-variant truncate max-w-[100px]">{m.title}</span>
+                          <span className="font-label-md text-label-md text-m3-on-surface">{m.avgProgress}%</span>
                         </div>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs text-muted-foreground mr-1">Скачать отчёт:</span>
-                  <a href="/api/v1/reports?type=progress&format=csv" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">CSV</a>
-                  <a href="/api/v1/reports?type=progress&format=xlsx" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">Excel</a>
-                  <a href="/api/v1/reports?type=progress&format=pdf" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">PDF</a>
-                </div>
               </div>
             ) : (
-              <Card><CardContent className="py-10 text-center text-muted-foreground">Данные по модулям отсутствуют.</CardContent></Card>
+              <Card className="border-m3-outline-variant bg-m3-surface-container-lowest"><CardContent className="py-10 text-center font-body-md text-body-md text-m3-on-surface-variant">Данные по модулям отсутствуют.</CardContent></Card>
             ),
           },
           {
             label: "По тестам",
             content: quizStats.length > 0 ? (
               <div className="grid gap-6 md:grid-cols-3">
-                <Card className="md:col-span-2">
+                <Card className="md:col-span-2 border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                   <CardHeader>
-                    <CardTitle>Результаты тестов</CardTitle>
-                    <CardDescription>Средний балл и количество попыток</CardDescription>
+                    <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Результаты тестов</CardTitle>
+                    <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний балл и количество попыток</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <BarChart
@@ -111,9 +112,9 @@ export default async function InstructorAnalyticsPage() {
                     />
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
                   <CardHeader>
-                    <CardTitle>Общая статистика</CardTitle>
+                    <CardTitle className="font-label-md text-label-md text-m3-on-surface">Общая статистика</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 pt-4">
                     <div className="text-center">
@@ -122,13 +123,13 @@ export default async function InstructorAnalyticsPage() {
                         size={100}
                         strokeWidth={6}
                       />
-                      <p className="text-xs text-muted-foreground mt-2">Средний балл</p>
+                      <p className="font-body-sm text-body-sm text-m3-on-surface-variant mt-2">Средний балл</p>
                     </div>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-2 font-body-sm text-body-sm">
                       {quizStats.map((q) => (
                         <div key={q.title} className="flex items-center justify-between">
-                          <span className="text-muted-foreground truncate max-w-[140px]">{q.title}</span>
-                          <span className="font-medium">{q.avgScore}%</span>
+                          <span className="text-m3-on-surface-variant truncate max-w-[140px]">{q.title}</span>
+                          <span className="font-label-md text-label-md text-m3-on-surface">{q.avgScore}%</span>
                         </div>
                       ))}
                     </div>
@@ -136,7 +137,7 @@ export default async function InstructorAnalyticsPage() {
                 </Card>
               </div>
             ) : (
-              <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">Нет данных по тестам.</CardContent></Card>
+              <Card className="border-m3-outline-variant bg-m3-surface-container-lowest"><CardContent className="py-10 text-center font-body-sm text-body-sm text-m3-on-surface-variant">Нет данных по тестам.</CardContent></Card>
             ),
           },
         ]}/>

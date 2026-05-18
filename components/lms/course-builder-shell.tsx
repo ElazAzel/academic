@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, AlertTriangle, CheckCircle2, Eye, Loader2, Pencil, Rocket, Save } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Icon } from "@/components/ui/icon";
 import { CourseOutline } from "@/components/lms/course-outline";
 import { CourseSettingsPanel } from "@/components/lms/course-settings-panel";
 import { ModuleEditor } from "@/components/lms/module-editor";
@@ -284,20 +284,21 @@ export function CourseBuilderShell({
   }, [selectedLesson?.assignments, selectedLesson?.content, updateSelectedLesson]);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col bg-background">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 lg:px-6">
+    <div className="flex h-[calc(100vh-4rem)] flex-col bg-m3-surface">
+      {/* Top bar — M3 */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-m3-outline-variant px-4 py-3 lg:px-6 bg-m3-surface-container-lowest">
         <div className="flex min-w-0 items-center gap-3">
           <Button size="icon" variant="ghost" asChild>
             <Link href={backHref} aria-label="Назад к курсам">
-              <ArrowLeft className="h-4 w-4" />
+              <Icon name="arrow_back" className="text-[20px]" />
             </Link>
           </Button>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="max-w-[42vw] truncate text-base font-semibold tracking-normal">{detail.title}</h1>
+              <h1 className="max-w-[42vw] truncate text-m3-headline-sm text-m3-on-surface">{detail.title}</h1>
               <Badge variant={detail.status === "PUBLISHED" ? "default" : "secondary"}>{statusLabel(detail.status)}</Badge>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
               Course → Module → Block → Lesson · единый builder
             </p>
           </div>
@@ -305,15 +306,15 @@ export function CourseBuilderShell({
 
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant={mode === "edit" ? "primary" : "secondary"} onClick={() => setMode("edit")}>
-            <Pencil className="h-4 w-4" />
+            <Icon name="edit" className="text-[18px]" />
             Редактор
           </Button>
           <Button size="sm" variant={mode === "preview" ? "primary" : "secondary"} onClick={() => setMode("preview")}>
-            <Eye className="h-4 w-4" />
+            <Icon name="visibility" className="text-[18px]" />
             Предпросмотр
           </Button>
           <Button size="sm" variant="secondary" onClick={handleSave} disabled={!dirty || saving}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            <Icon name={saving ? "hourglass_top" : "save"} className="text-[18px]" />
             {saving ? "Сохраняем..." : "Сохранить"}
           </Button>
           {detail.status === "PUBLISHED" ? (
@@ -322,15 +323,17 @@ export function CourseBuilderShell({
             </Button>
           ) : (
             <Button size="sm" onClick={handlePublish} disabled={!readyToPublish || publishing}>
-              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+              <Icon name="rocket_launch" className="text-[18px]" />
               Опубликовать
             </Button>
           )}
         </div>
       </div>
 
+      {/* 3-column layout — M3 */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-72 shrink-0 overflow-y-auto border-r bg-muted/20">
+        {/* Left: Course Outline */}
+        <div className="w-72 shrink-0 overflow-y-auto border-r border-m3-outline-variant bg-m3-surface-container-low">
           <CourseOutline
             modules={detail.modules}
             selected={selected}
@@ -343,7 +346,8 @@ export function CourseBuilderShell({
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6">
+        {/* Center: Editor Canvas */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-m3-surface">
           {mode === "preview" ? (
             <CourseBuilderPreview detail={detail} lesson={selectedLesson} />
           ) : (
@@ -351,43 +355,43 @@ export function CourseBuilderShell({
               {selected.type === "course" && (
                 <div className="mx-auto max-w-3xl space-y-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold uppercase text-muted-foreground">Название курса</label>
+                    <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название курса</label>
                     <input
-                      className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                      className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                       value={detail.title}
                       onChange={(event) => { setDetail((current) => ({ ...current, title: event.target.value })); setDirty(true); }}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
+                    <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
                     <textarea
-                      className="min-h-[120px] w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                      className="min-h-[120px] w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                       value={detail.description}
                       onChange={(event) => { setDetail((current) => ({ ...current, description: event.target.value })); setDirty(true); }}
                     />
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold uppercase text-muted-foreground">Цель</label>
+                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Цель</label>
                       <input
-                        className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                         value={detail.goal ?? ""}
                         onChange={(event) => { setDetail((current) => ({ ...current, goal: event.target.value })); setDirty(true); }}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold uppercase text-muted-foreground">Длительность, часов</label>
+                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Длительность, часов</label>
                       <input
                         type="number"
-                        className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                         value={detail.durationHours}
                         onChange={(event) => { setDetail((current) => ({ ...current, durationHours: Number(event.target.value) })); setDirty(true); }}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold uppercase text-muted-foreground">Режим прохождения</label>
+                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Режим прохождения</label>
                       <select
-                        className="h-10 w-full rounded-xl border bg-background px-3 text-sm"
+                        className="h-10 w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                         value={detail.traversalMode}
                         onChange={(event) => { setDetail((current) => ({ ...current, traversalMode: event.target.value as "sequential" | "open" })); setDirty(true); }}
                       >
@@ -396,19 +400,19 @@ export function CourseBuilderShell({
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold uppercase text-muted-foreground">Порог завершения, %</label>
+                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Порог завершения, %</label>
                       <input
                         type="number"
-                        className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                         value={detail.completionThreshold}
                         onChange={(event) => { setDetail((current) => ({ ...current, completionThreshold: Number(event.target.value) })); setDirty(true); }}
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold uppercase text-muted-foreground">Обложка</label>
+                    <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Обложка</label>
                     <input
-                      className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                      className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                       value={detail.coverUrl ?? ""}
                       onChange={(event) => { setDetail((current) => ({ ...current, coverUrl: event.target.value || null })); setDirty(true); }}
                       placeholder="https://..."
@@ -433,9 +437,9 @@ export function CourseBuilderShell({
               {selected.type === "block" && selectedBlock && (
                 <div className="mx-auto max-w-2xl space-y-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold uppercase text-muted-foreground">Название блока</label>
+                    <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название блока</label>
                     <input
-                      className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                      className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                       value={selectedBlock.title}
                       onChange={(event) => {
                         setDetail((current) => ({
@@ -451,9 +455,9 @@ export function CourseBuilderShell({
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
+                    <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
                     <textarea
-                      className="min-h-[80px] w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                      className="min-h-[80px] w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                       value={selectedBlock.description ?? ""}
                       onChange={(event) => {
                         setDetail((current) => ({
@@ -468,7 +472,7 @@ export function CourseBuilderShell({
                       }}
                     />
                   </div>
-                  <div className="rounded-xl bg-muted/30 p-4 text-sm text-muted-foreground">
+                  <div className="rounded-xl bg-m3-surface-container-low p-4 font-body-md text-body-md text-m3-on-surface-variant">
                     Уроков в блоке: {selectedBlock.lessons.length}
                   </div>
                 </div>
@@ -487,8 +491,9 @@ export function CourseBuilderShell({
           )}
         </div>
 
+        {/* Right: Settings Panel */}
         {settingsOpen && (
-          <div className="w-80 shrink-0 overflow-y-auto border-l bg-muted/10 p-5">
+          <div className="w-80 shrink-0 overflow-y-auto border-l border-m3-outline-variant bg-m3-surface-container-low p-5">
             <CourseSettingsPanel
               selected={selected}
               detail={detail}
@@ -500,10 +505,11 @@ export function CourseBuilderShell({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t px-4 py-2 text-xs text-muted-foreground lg:px-6">
+      {/* Footer status bar — M3 */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-m3-outline-variant px-4 py-2 font-body-sm text-body-sm text-m3-on-surface-variant lg:px-6 bg-m3-surface-container-lowest">
         <span>{dirty ? "Есть несохраненные изменения" : "Все изменения сохранены"}</span>
         <span className="inline-flex items-center gap-2">
-          {readyToPublish ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />}
+          <Icon name={readyToPublish ? "check_circle" : "warning"} className={readyToPublish ? "text-emerald-600" : "text-amber-600"} />
           {readyToPublish ? "Курс готов к публикации" : "Публикация требует доработки"}
         </span>
         <span>Ctrl+S — сохранить · Esc — панель свойств</span>

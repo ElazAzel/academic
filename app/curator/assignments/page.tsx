@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { SubmissionsQueue } from "@/components/lms/dashboard-widgets";
+import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
@@ -24,8 +25,6 @@ export default async function CuratorAssignmentsPage({
   });
   const studentIds = assignedStudents.map((a) => a.studentId);
 
-  // Фильтры
-
   const statusFilter = params.status
     ? [params.status]
     : ["SUBMITTED", "IN_REVIEW", "NEEDS_REVISION"];
@@ -35,10 +34,8 @@ export default async function CuratorAssignmentsPage({
     status: { in: statusFilter },
   };
 
-  // Фильтр по студенту
   if (params.student) {
     where.userId = { in: studentIds.filter(() => true) };
-    // Поиск по имени через отдельный запрос
     const matchingUsers = await prisma.user.findMany({
       where: {
         id: { in: studentIds },
@@ -79,7 +76,7 @@ export default async function CuratorAssignmentsPage({
     <AppShell role="curator">
       <PageHeader title="Задания на проверку" description="Работы слушателей, ожидающие вашей оценки." />
 
-      {/* Filters */}
+      {/* Filters — M3 */}
       <div className="flex flex-wrap items-center gap-3 mt-4 mb-6">
         <form className="flex flex-wrap items-center gap-3">
           <select
@@ -91,7 +88,7 @@ export default async function CuratorAssignmentsPage({
               else url.searchParams.delete("status");
               window.location.href = url.toString();
             }}
-            className="h-9 rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-10 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
           >
             <option value="">Все статусы</option>
             <option value="SUBMITTED">Отправлено</option>
@@ -103,7 +100,7 @@ export default async function CuratorAssignmentsPage({
             name="student"
             defaultValue={params.student ?? ""}
             placeholder="Поиск по слушателю..."
-            className="h-9 rounded-xl border bg-background px-3 text-sm outline-none w-48 focus:ring-2 focus:ring-primary/20"
+            className="h-10 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 font-body-md text-body-md text-m3-on-surface outline-none w-48 focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all placeholder:text-m3-on-surface-variant"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 const url = new URL(window.location.href);
@@ -117,14 +114,15 @@ export default async function CuratorAssignmentsPage({
           {(params.status || params.student) && (
             <a
               href="/curator/assignments"
-              className="text-xs text-muted-foreground hover:text-foreground underline"
+              className="font-body-sm text-body-sm text-m3-primary hover:text-m3-primary/80 underline underline-offset-2 transition-colors"
             >
               Сбросить фильтры
             </a>
           )}
         </form>
 
-        <span className="text-xs text-muted-foreground ml-auto">
+        <span className="font-body-sm text-body-sm text-m3-on-surface-variant ml-auto inline-flex items-center gap-1">
+          <Icon name="assignment" className="text-[16px]" />
           {submissions.length} на проверку
         </span>
       </div>

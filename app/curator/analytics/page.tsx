@@ -2,6 +2,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { StudentAnalyticsTable } from "@/components/lms/student-analytics-table";
+import { Icon } from "@/components/ui/icon";
 import type { DashboardMetric } from "@/types/domain";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorStudentAnalytics } from "@/server/actions/dashboard";
@@ -42,10 +43,16 @@ export default async function CuratorAnalyticsPage() {
       <div className="space-y-6">
         <MetricGrid metrics={metrics} />
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-xs text-muted-foreground mr-1">Скачать отчёт:</span>
-          <a href="/api/v1/reports?type=curator_progress&format=csv" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">CSV</a>
-          <a href="/api/v1/reports?type=curator_progress&format=xlsx" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">Excel</a>
-          <a href="/api/v1/reports?type=curator_progress&format=pdf" className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">PDF</a>
+          <span className="font-body-sm text-body-sm text-m3-on-surface-variant mr-1">Скачать отчёт:</span>
+          <a href="/api/v1/reports?type=curator_progress&format=csv" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+            <Icon name="download" className="text-[16px]" /> CSV
+          </a>
+          <a href="/api/v1/reports?type=curator_progress&format=xlsx" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+            <Icon name="download" className="text-[16px]" /> Excel
+          </a>
+          <a href="/api/v1/reports?type=curator_progress&format=pdf" className="inline-flex items-center gap-1 rounded-lg border border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface transition-colors hover:bg-m3-surface-container-high hover:border-m3-primary/30">
+            <Icon name="download" className="text-[16px]" /> PDF
+          </a>
         </div>
         <StudentAnalyticsTable students={students} />
       </div>

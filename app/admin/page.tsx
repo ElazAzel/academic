@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/lms/page-header";
 import { PageSkeleton } from "@/components/lms/page-skeleton";
 import { Tabs } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Icon } from "@/components/ui/icon";
 import { getAdminDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
@@ -52,14 +54,14 @@ async function AdminDashboardContent() {
       content: (
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {courses.map((c) => (
-         <Card key={c.id}>
+         <Card key={c.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
           <CardContent className="p-5">
-           <p className="font-medium line-clamp-1">{c.title}</p>
-           <p className="text-xs text-muted-foreground pt-1">{c.modulesCount} модулей</p>
+           <p className="font-label-lg text-label-lg text-m3-on-surface line-clamp-1">{c.title}</p>
+           <p className="font-body-sm text-body-sm text-m3-on-surface-variant pt-1">{c.modulesCount} модулей</p>
            <div className="mt-4 flex items-center justify-between">
-            <span className="text-xs font-medium text-sky-600 bg-sky-50 px-2 py-1 rounded-full">
+            <Badge variant={c.status === "PUBLISHED" ? "default" : "secondary"}>
              {c.status}
-            </span>
+            </Badge>
            </div>
           </CardContent>
          </Card>
@@ -72,14 +74,16 @@ async function AdminDashboardContent() {
       content: (
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cohorts.map((c) => (
-         <Card key={c.id}>
+         <Card key={c.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
           <CardContent className="p-5">
-           <p className="font-medium line-clamp-1">{c.name}</p>
-           <p className="text-xs text-muted-foreground pt-1">{c.studentsCount} слушателей</p>
+           <p className="font-label-lg text-label-lg text-m3-on-surface line-clamp-1">{c.name}</p>
+           <p className="font-body-sm text-body-sm text-m3-on-surface-variant pt-1 flex items-center gap-1">
+            <Icon name="group" className="text-[16px] text-m3-on-surface-variant" /> {c.studentsCount} слушателей
+           </p>
            <div className="mt-4 flex items-center justify-between">
-            <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-             {c.status}
-            </span>
+            <Badge variant={c.status === "active" ? "default" : "secondary"}>
+             {c.status === "active" ? "Активен" : "Архив"}
+            </Badge>
            </div>
           </CardContent>
          </Card>
@@ -92,11 +96,14 @@ async function AdminDashboardContent() {
       content: (
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {certificates.map((c) => (
-         <Card key={c.id}>
-          <CardContent className="p-5">
-           <p className="font-medium text-sm">{c.number}</p>
-           <p className="text-sm pt-1">{c.studentName}</p>
-           <p className="text-xs text-muted-foreground pt-1">{c.courseTitle}</p>
+         <Card key={c.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
+          <CardContent className="p-5 space-y-1">
+           <div className="flex items-center gap-2">
+            <Icon name="verified" className="text-[20px] text-m3-primary" />
+            <p className="font-label-lg text-label-lg text-m3-on-surface">{c.number}</p>
+           </div>
+           <p className="font-body-md text-body-md text-m3-on-surface pt-1">{c.studentName}</p>
+           <p className="font-body-sm text-body-sm text-m3-on-surface-variant">{c.courseTitle}</p>
           </CardContent>
          </Card>
         ))}

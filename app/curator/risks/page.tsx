@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Icon } from "@/components/ui/icon";
 import { BarChart } from "@/components/lms/bar-chart";
-import { AlertTriangle, UserX, Clock } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorEnhancedRisks } from "@/server/actions/curator-enhanced";
 import { RISK_LABELS } from "@/types/domain";
@@ -30,38 +30,38 @@ export default async function CuratorRisksPage() {
         description="Детальная информация о рисках: неактивные, просроченные, отстающие."
       />
 
-      {/* Metrics */}
+      {/* Metrics — M3 */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center space-y-1">
-            <p className="text-2xl font-bold text-red-600">{severityCounts.critical + severityCounts.high}</p>
-            <p className="text-xs text-muted-foreground">Критических</p>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center space-y-1">
+            <p className="font-display-lg text-m3-headline-large text-m3-error">{severityCounts.critical + severityCounts.high}</p>
+            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Критических</p>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center space-y-1">
-            <p className="text-2xl font-bold">{risks.length}</p>
-            <p className="text-xs text-muted-foreground">Всего рисков</p>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center space-y-1">
+            <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{risks.length}</p>
+            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Всего рисков</p>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center space-y-1">
-            <p className="text-2xl font-bold">{risks.filter((r) => r.daysSinceLogin !== null && r.daysSinceLogin > 14).length}</p>
-            <p className="text-xs text-muted-foreground">Не заходили &gt;14 дн.</p>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center space-y-1">
+            <p className="font-display-lg text-m3-headline-large text-m3-error">{risks.filter((r) => r.daysSinceLogin !== null && r.daysSinceLogin > 14).length}</p>
+            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Не заходили &gt;14 дн.</p>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center space-y-1">
-            <p className="text-2xl font-bold">{risks.filter((r) => r.progressPercent < 25).length}</p>
-            <p className="text-xs text-muted-foreground">Прогресс &lt;25%</p>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="p-5 text-center space-y-1">
+            <p className="font-display-lg text-m3-headline-large text-m3-error">{risks.filter((r) => r.progressPercent < 25).length}</p>
+            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Прогресс &lt;25%</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts */}
+      {/* Charts — M3 */}
       <div className="grid gap-4 md:grid-cols-2 mb-6">
-        <Card className="rounded-2xl">
-          <CardHeader><CardTitle className="text-sm">По уровням</CardTitle></CardHeader>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardHeader><CardTitle className="font-label-lg text-label-lg text-m3-on-surface">По уровням</CardTitle></CardHeader>
           <CardContent>
             <BarChart
               items={[
@@ -73,8 +73,8 @@ export default async function CuratorRisksPage() {
             />
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardHeader><CardTitle className="text-sm">По типам</CardTitle></CardHeader>
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardHeader><CardTitle className="font-label-lg text-label-lg text-m3-on-surface">По типам</CardTitle></CardHeader>
           <CardContent>
             <BarChart
               items={Object.entries(typeCounts).map(([type, count]) => ({
@@ -86,50 +86,47 @@ export default async function CuratorRisksPage() {
         </Card>
       </div>
 
-      {/* Risk table */}
-      <Card className="rounded-2xl">
+      {/* Risk table — M3 */}
+      <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Слушатель</TableHead>
-                <TableHead>Тип риска</TableHead>
-                <TableHead>Уровень</TableHead>
-                <TableHead>Прогресс</TableHead>
-                <TableHead>Вопросов</TableHead>
-                <TableHead>Заданий</TableHead>
-                <TableHead>Последний вход</TableHead>
+              <TableRow className="border-b-m3-outline-variant">
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Слушатель</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Тип риска</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Уровень</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Прогресс</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Вопросов</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Заданий</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Последний вход</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {risks.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Нет активных рисков</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="font-body-md text-body-md text-m3-on-surface-variant text-center py-8">Нет активных рисков</TableCell></TableRow>
               ) : risks.map((r) => (
-                <TableRow key={r.id} className={r.severity === "critical" || r.severity === "high" ? "bg-red-50/30" : ""}>
+                <TableRow key={r.id} className={r.severity === "critical" || r.severity === "high" ? "bg-m3-error-container/10" : ""}>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Avatar name={r.studentName} className="h-7 w-7 text-[10px]" />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{r.studentName}</p>
-                        <p className="text-xs text-muted-foreground truncate">{r.studentEmail}</p>
+                        <p className="font-label-md text-label-md text-m3-on-surface truncate">{r.studentName}</p>
+                        <p className="font-body-sm text-body-sm text-m3-on-surface-variant truncate">{r.studentEmail}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      {r.type === "inactive_login" && <UserX className="h-3.5 w-3.5 text-amber-500" />}
-                      {r.type === "inactive_learning" && <Clock className="h-3.5 w-3.5 text-orange-500" />}
-                      {r.type === "overdue_module" && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
-                      <span className="text-xs">{RISK_LABELS[r.type as keyof typeof RISK_LABELS] ?? r.type}</span>
+                      {r.type === "inactive_login" && <Icon name="person_off" className="text-[16px] text-m3-error" />}
+                      {r.type === "inactive_learning" && <Icon name="schedule" className="text-[16px] text-m3-tertiary" />}
+                      {r.type === "overdue_module" && <Icon name="warning" className="text-[16px] text-m3-error" />}
+                      <span className="font-body-sm text-body-sm">{RISK_LABELS[r.type as keyof typeof RISK_LABELS] ?? r.type}</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={
-                      r.severity === "critical" ? "bg-red-100 text-red-700" :
-                      r.severity === "high" ? "bg-orange-100 text-orange-700" :
-                      r.severity === "medium" ? "bg-yellow-100 text-yellow-700" :
-                      "bg-green-100 text-green-700"
-                    }>
+                    <Badge
+                      variant={r.severity === "critical" ? "destructive" : r.severity === "high" ? "destructive" : r.severity === "medium" ? "secondary" : "outline"}
+                    >
                       {r.severity === "critical" ? "Критичный" :
                        r.severity === "high" ? "Высокий" :
                        r.severity === "medium" ? "Средний" : "Низкий"}
@@ -137,16 +134,18 @@ export default async function CuratorRisksPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-16 rounded-full bg-muted overflow-hidden">
-                        <div className={`h-full rounded-full ${r.progressPercent < 25 ? "bg-red-500" : r.progressPercent < 50 ? "bg-yellow-500" : "bg-green-500"}`}
-                          style={{ width: `${r.progressPercent}%` }} />
+                      <div className="h-2 w-16 rounded-full bg-m3-surface-variant overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${r.progressPercent < 25 ? "bg-m3-error" : r.progressPercent < 50 ? "bg-m3-tertiary" : "bg-m3-primary"}`}
+                          style={{ width: `${r.progressPercent}%` }}
+                        />
                       </div>
-                      <span className="text-xs tabular-nums">{r.progressPercent}%</span>
+                      <span className="font-body-sm text-body-sm tabular-nums text-m3-on-surface">{r.progressPercent}%</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-xs">{r.openQuestions}</TableCell>
-                  <TableCell className="text-xs">{r.pendingAssignments}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
+                  <TableCell className="font-body-sm text-body-sm text-m3-on-surface">{r.openQuestions}</TableCell>
+                  <TableCell className="font-body-sm text-body-sm text-m3-on-surface">{r.pendingAssignments}</TableCell>
+                  <TableCell className="font-body-sm text-body-sm text-m3-on-surface-variant">
                     {r.daysSinceLogin !== null ? `${r.daysSinceLogin} дн. назад` : "—"}
                   </TableCell>
                 </TableRow>
