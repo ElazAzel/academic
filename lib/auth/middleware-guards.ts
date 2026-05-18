@@ -36,6 +36,7 @@ export const PUBLIC_PATH_PREFIXES = [
   "/api/v1/readyz",
   "/api/v1/certificates/verify",
   "/certificates/verify",
+  "/docs",
   "/_next/static",
   "/_next/image",
   "/favicon.ico",

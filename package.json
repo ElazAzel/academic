@@ -42,6 +42,7 @@
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
     "@tanstack/react-query": "5.91.2",
+    "@tanstack/react-virtual": "^3.13.24",
     "@upstash/redis": "^1.38.0",
     "clsx": "2.1.1",
     "cmdk": "^1.1.1",

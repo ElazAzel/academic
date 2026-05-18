@@ -2,7 +2,14 @@ import fs from "fs";
 import path from "path";
 import { notFound } from "next/navigation";
 
+export const revalidate = 86400; // ISR: revalidate once per day
+export const dynamicParams = true; // Allow generating new slugs on-demand
+
 const ALLOWED_SLUGS = ["privacy-policy", "terms-of-use", "cookie-notice"];
+
+export function generateStaticParams() {
+  return ALLOWED_SLUGS.map((slug) => ({ slug }));
+}
 
 function renderMarkdown(md: string): string {
   const lines = md.split("\n");
