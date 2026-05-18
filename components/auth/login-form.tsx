@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
@@ -53,20 +54,58 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
 
   return (
     <form className="space-y-4" onSubmit={onSubmit} data-auth-ready={hydrated ? "true" : "false"}>
-      <label className="block text-sm font-medium">
+      <motion.label 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+        className="block text-sm font-medium"
+      >
         Логин / Email
         <Input className="mt-2" name="email" type="email" required autoComplete="email" onChange={() => setError("")} />
-      </label>
-      <label className="block text-sm font-medium">
+      </motion.label>
+      
+      <motion.label 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.5 }}
+        className="block text-sm font-medium"
+      >
         Пароль
         <Input className="mt-2" name="password" type="password" required autoComplete="current-password" onChange={() => setError("")} />
-      </label>
-      {error ? <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}
-      <Button className="w-full" type="submit" disabled={pending || !hydrated}>
-        {pending ? "Входим..." : "Войти"}
-      </Button>
+      </motion.label>
+
+      <AnimatePresence>
+        {error ? (
+          <motion.p 
+            initial={{ opacity: 0, height: 0, scale: 0.95 }}
+            animate={{ opacity: 1, height: "auto", scale: 1 }}
+            exit={{ opacity: 0, height: 0, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+            className="rounded-xl bg-red-50 p-3 text-sm text-red-700 overflow-hidden" 
+            role="alert"
+          >
+            {error}
+          </motion.p>
+        ) : null}
+      </AnimatePresence>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.6 }}
+      >
+        <Button className="w-full" type="submit" disabled={pending || !hydrated}>
+          {pending ? "Входим..." : "Войти"}
+        </Button>
+      </motion.div>
+
       {hasOAuth ? (
-        <div className="grid gap-2 sm:grid-cols-2">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.7 }}
+          className="grid gap-2 sm:grid-cols-2"
+        >
           {oauthProviders.google ? (
             <Button type="button" variant="secondary" onClick={() => signIn("google")}>
               Google
@@ -77,7 +116,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
               GitHub
             </Button>
           ) : null}
-        </div>
+        </motion.div>
       ) : null}
     </form>
   );
