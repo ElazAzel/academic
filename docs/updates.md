@@ -2,6 +2,23 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-18 — Оптимизация производительности (масштабирование до 4k+ пользователей)
+
+- **Индексы БД**: добавлены 4 составных индекса в Prisma-схему:
+  - `consent_logs (user_id, type, status)` — проверка согласия
+  - `lesson_progress (user_id, status)` — проверка пройденных уроков
+  - `module_progress (user_id, status, module_id)` — дашборды
+  - `course_progress (user_id, status)` — дашборды
+- **Migration `add_performance_indexes_v2`** применена на Supabase (для существующих таблиц)
+- **Connection pooler**: `lib/prisma.ts` теперь автоматически определяет Supabase Supavisor (порт 6543) и устанавливает `max: 20`, добавляет `?pgbouncer=true`
+- **Rate Limiting**: создан `middleware.ts` с in-memory rate limiter (120 запросов/мин на IP), только для `/api/*`
+- **Notification polling**: `NotificationToast` снижен с 30с до 60с
+- **HTTP кэширование**: добавлены `Cache-Control` заголовки на:
+  - `GET /api/v1/notifications` — s-maxage=15, stale-while-revalidate=30
+  - `GET /api/v1/unread-counts` — s-maxage=10, stale-while-revalidate=20
+- Supabase-анализ показал: индексы на messages и notifications не используются — это нормально для низкой текущей нагрузки, при 4000 пользователях они начнут работать
+- **Остаётся**: RLS политики для таблиц в public схеме (отдельная задача безопасности)
+
 ## 2026-05-18 — Фоновые анимации + всплывающие уведомления при входе
 
 - Добавлены новые анимации в `globals.css`: drift, morph, shimmer, fade-in-scale, notification-slide-in, notification-progress

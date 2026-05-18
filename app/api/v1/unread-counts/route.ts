@@ -1,6 +1,7 @@
+import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
-import { ok, errorResponse } from "@/lib/http";
+import { errorResponse } from "@/lib/http";
 import { QuestionStatus } from "@prisma/client";
 
 export async function GET() {
@@ -31,12 +32,12 @@ export async function GET() {
         : 0,
     ]);
 
-    return ok({
-      notifications,
-      messages,
-      openQuestions,
-      pendingReviews,
-    });
+    const response = NextResponse.json(
+      { data: { notifications, messages, openQuestions, pendingReviews } },
+      { status: 200 }
+    );
+    response.headers.set("Cache-Control", "private, max-age=0, s-maxage=10, stale-while-revalidate=20");
+    return response;
   } catch (error) {
     return errorResponse(error);
   }

@@ -554,6 +554,7 @@ model LessonProgress {
   @@index([lessonId])
   @@index([enrollmentId])
   @@index([userId, updatedAt], map: "idx_lesson_progress_user_updated_at")
+  @@index([userId, status], map: "idx_lesson_progress_user_status")
   @@map("lesson_progress")
 }
 
@@ -575,6 +576,7 @@ model ModuleProgress {
   @@index([userId])
   @@index([moduleId])
   @@index([enrollmentId])
+  @@index([userId, status, moduleId], map: "idx_module_progress_user_status_module")
   @@map("module_progress")
 }
 
@@ -598,6 +600,7 @@ model CourseProgress {
   @@index([enrollmentId])
   @@index([courseId, status], map: "idx_course_progress_course_status")
   @@index([userId, updatedAt], map: "idx_course_progress_user_updated_at")
+  @@index([userId, status], map: "idx_course_progress_user_status")
   @@map("course_progress")
 }
 
@@ -890,6 +893,7 @@ model ConsentLog {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, type, status], map: "idx_consent_logs_user_type_status")
   @@map("consent_logs")
 }
 
