@@ -47,42 +47,45 @@ function snapshotPayload(detail: CourseBuilderDetail) {
     durationHours: detail.durationHours,
     traversalMode: detail.traversalMode,
     completionThreshold: detail.completionThreshold,
-    modules: detail.modules.map((mod, moduleIndex) => ({
-      id: mod.id,
-      order: moduleIndex,
-      title: mod.title,
-      description: mod.description,
-      recommendedDays: mod.recommendedDays,
-      status: mod.status,
-      blocks: mod.blocks.map((block, blockIndex) => ({
-        id: block.id,
-        order: blockIndex,
-        title: block.title,
-        description: block.description,
-        lessons: block.lessons.map((lesson, lessonIndex) => ({
+    modules: detail.modules.map((mod, moduleIndex) => {
+      let nextLessonOrder = 0;
+      return {
+        id: mod.id,
+        order: moduleIndex,
+        title: mod.title,
+        description: mod.description,
+        recommendedDays: mod.recommendedDays,
+        status: mod.status,
+        blocks: mod.blocks.map((block, blockIndex) => ({
+          id: block.id,
+          order: blockIndex,
+          title: block.title,
+          description: block.description,
+          lessons: block.lessons.map((lesson) => ({
+            id: lesson.id,
+            order: nextLessonOrder++,
+            title: lesson.title,
+            summary: lesson.summary,
+            type: lesson.type,
+            videoUrl: lesson.videoUrl,
+            durationMinutes: lesson.durationMinutes,
+            isRequired: lesson.isRequired,
+            blockId: block.id,
+          })),
+        })),
+        lessons: mod.lessons.map((lesson) => ({
           id: lesson.id,
-          order: lessonIndex,
+          order: nextLessonOrder++,
           title: lesson.title,
           summary: lesson.summary,
           type: lesson.type,
           videoUrl: lesson.videoUrl,
           durationMinutes: lesson.durationMinutes,
           isRequired: lesson.isRequired,
-          blockId: block.id,
+          blockId: null,
         })),
-      })),
-      lessons: mod.lessons.map((lesson, lessonIndex) => ({
-        id: lesson.id,
-        order: lessonIndex,
-        title: lesson.title,
-        summary: lesson.summary,
-        type: lesson.type,
-        videoUrl: lesson.videoUrl,
-        durationMinutes: lesson.durationMinutes,
-        isRequired: lesson.isRequired,
-        blockId: null,
-      })),
-    })),
+      };
+    }),
   };
 }
 

@@ -98,20 +98,21 @@ export function CourseOutline({
     const blocks = modules[moduleIndex]?.blocks ?? [];
     const block = blockId ? blocks.find((b) => b.id === blockId) : null;
     const lessonsInTarget = block ? block.lessons : (modules[moduleIndex]?.lessons ?? []);
+    const nextModuleOrder = blocks.reduce((sum, item) => sum + item.lessons.length, 0) + (modules[moduleIndex]?.lessons ?? []).length;
     const title = `Урок ${lessonsInTarget.length + 1}`;
     try {
       const res = await fetch(`/api/v1/modules/${moduleId}/lessons`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title, type: "MIXED", order: lessonsInTarget.length,
+          title, type: "MIXED", order: nextModuleOrder,
           durationMinutes: 30, isRequired: true, blockId: blockId ?? null,
         }),
       });
       if (res.ok) {
         const data = await res.json();
         const newLesson = {
-          id: data.data?.id ?? data.id, order: lessonsInTarget.length, title,
+          id: data.data?.id ?? data.id, order: nextModuleOrder, title,
           type: "MIXED" as const, summary: null, durationMinutes: 30, isRequired: true,
           content: {}, videoUrl: null, quizzes: [], assignments: [], blockId: blockId ?? null,
         };

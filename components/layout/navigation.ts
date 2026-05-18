@@ -13,6 +13,12 @@ export interface BottomNavItem {
   icon: string;
 }
 
+export function getActiveNavHref(pathname: string, links: Array<Pick<NavItem, "href">>): string | null {
+  const matches = links.filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
+  matches.sort((a, b) => b.href.length - a.href.length);
+  return matches[0]?.href ?? null;
+}
+
 export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
   student: [
     { href: "/student", label: "Дашборд", icon: "dashboard" },
@@ -24,19 +30,19 @@ export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
     { href: "/curator", label: "Дашборд", icon: "dashboard" },
     { href: "/curator/students", label: "Слушатели", icon: "group" },
     { href: "/curator/chat", label: "Чат", icon: "chat" },
-    { href: "/curator/notifications", label: "Уведомления", icon: "Bell" },
-    { href: "/curator/glossary", label: "Глоссарий", icon: "FileText" },
-    { href: "/curator/assignments", label: "Проверка", icon: "ClipboardCheck" },
-    { href: "/curator/risks", label: "Риски", icon: "AlertTriangle" },
-    { href: "/curator/reports", label: "Отчёты", icon: "BarChart3" },
-    { href: "/curator/settings", label: "Настройки", icon: "Settings" },
+    { href: "/curator/notifications", label: "Уведомления", icon: "notifications" },
+    { href: "/curator/glossary", label: "Глоссарий", icon: "description" },
+    { href: "/curator/assignments", label: "Проверка", icon: "assignment" },
+    { href: "/curator/risks", label: "Риски", icon: "warning" },
+    { href: "/curator/reports", label: "Отчёты", icon: "bar_chart" },
+    { href: "/curator/settings", label: "Настройки", icon: "settings" },
   ],
   super_curator: [
-    { href: "/super-curator", label: "Дашборд", icon: "LayoutDashboard" },
-    { href: "/super-curator/cohorts", label: "Потоки", icon: "Users2" },
-    { href: "/super-curator/curators", label: "Кураторы", icon: "UserCheck" },
-    { href: "/super-curator/distribution", label: "Распределение", icon: "Users" },
-    { href: "/super-curator/chat", label: "Чат кураторов", icon: "MessageCircle" },
+    { href: "/super-curator", label: "Дашборд", icon: "dashboard" },
+    { href: "/super-curator/cohorts", label: "Потоки", icon: "groups" },
+    { href: "/super-curator/curators", label: "Кураторы", icon: "verified_user" },
+    { href: "/super-curator/distribution", label: "Распределение", icon: "group" },
+    { href: "/super-curator/chat", label: "Чат кураторов", icon: "chat" },
     { href: "/super-curator/notifications", label: "Уведомления", icon: "notifications" },
     { href: "/super-curator/risks", label: "Риски потоков", icon: "warning" },
     { href: "/super-curator/reports", label: "Отчеты", icon: "bar_chart" },
@@ -89,7 +95,7 @@ export const BOTTOM_NAV_BY_ROLE: Record<RoleKey, BottomNavItem[]> = {
     { href: "/curator", label: "Дашборд", icon: "dashboard" },
     { href: "/curator/students", label: "Слушатели", icon: "group" },
     { href: "/curator/chat", label: "Чат", icon: "chat" },
-    { href: "/curator/assignments", label: "Проверка", icon: "clipboard_check" },
+    { href: "/curator/assignments", label: "Проверка", icon: "assignment" },
     { href: "/curator/notifications", label: "Уведомления", icon: "notifications" },
   ],
   super_curator: [
