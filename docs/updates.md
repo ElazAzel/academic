@@ -2,6 +2,19 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-18 — Suspense boundaries для дашбордов (streaming)
+
+- **Все 6 ролевых дашбордов** переведены на streaming с Suspense:
+  - `app/student/page.tsx` — StudentDashboardPage → `<Suspense>` + `StudentDashboardContent`
+  - `app/curator/page.tsx` — CuratorDashboardPage → `<Suspense>` + `CuratorDashboardContent`
+  - `app/instructor/page.tsx` — InstructorDashboardPage → `<Suspense>` + `InstructorDashboardContent`
+  - `app/admin/page.tsx` — AdminDashboardPage → `<Suspense>` + `AdminDashboardContent`
+  - `app/super-curator/page.tsx` — SuperCuratorDashboardPage → `<Suspense>` + `SuperCuratorDashboardContent`
+  - `app/customer-observer/page.tsx` — CustomerObserverDashboardPage → `<Suspense>` + `CustomerObserverDashboardContent`
+- **Как работает**: страница больше не `async` — экспорт по умолчанию рендерит AppShell + PageHeader мгновенно, затем `<Suspense fallback={<PageSkeleton />}>` показывает скелет, пока inner async-компонент выполняет `requireRolePage()` + `getXDashboard()` и стримит готовый контент
+- **Переиспользован** существующий `PageSkeleton` из `components/lms/page-skeleton.tsx` (скелет с заголовком, 3 карточками метрик и блоком контента)
+- **type-check**: пройден (`npx tsc --noEmit` — 0 ошибок)
+
 ## 2026-05-18 — ISR + proxy.ts rate limiting
 
 - Удалён `middleware.ts` (конфликт с `proxy.ts` в Next.js 16)
