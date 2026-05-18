@@ -2,6 +2,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle } from "lucide-react";
 
@@ -14,55 +15,87 @@ const prisma = getPrisma();
  * Показывает: кто из кураторов с кем ведёт диалог, последнее сообщение.
  */
 export default async function SuperCuratorChatPage() {
-  await requireRolePage(["super_curator"]);
+  const user = await requireRolePage(["super_curator"]);
 
   // Получаем всех кураторов и их последние сообщения
   const curatorAssignments = await prisma.curatorAssignment.findMany({
-    where: { active: true },
+    where: { active: true, superCuratorId: user.id },
     include: {
       curator: { select: { id: true, name: true, email: true } },
       student: { select: { id: true, name: true, email: true } },
     },
+    take: QUERY_LIMITS.dashboardStudents,
   });
 
   // Для каждой пары куратор-слушатель получаем последнее сообщение
-  const pairs = await Promise.all(
-    curatorAssignments.map(async (a) => {
-      const lastMsg = await prisma.message.findFirst({
-        where: {
-          OR: [
-            { senderId: a.curatorId, receiverId: a.studentId },
-            { senderId: a.studentId, receiverId: a.curatorId },
-          ],
-        },
-        orderBy: { createdAt: "desc" },
-        select: {
-          text: true,
-          createdAt: true,
-          senderId: true,
-        },
-      });
+  const curatorIds = [...new Set(curatorAssignments.map((assignment) => assignment.curatorId))];
+  const studentIds = [...new Set(curatorAssignments.map((assignment) => assignment.studentId))];
+  const curatorIdSet = new Set(curatorIds);
+  const studentIdSet = new Set(studentIds);
+  const assignmentPairKeys = new Set(curatorAssignments.map((assignment) => `${assignment.curatorId}:${assignment.studentId}`));
 
-      const unreadCount = await prisma.message.count({
-        where: {
-          senderId: a.studentId,
-          receiverId: a.curatorId,
-          readAt: null,
-        },
-      });
+  const [messages, unreadCounts] = curatorIds.length === 0 || studentIds.length === 0
+    ? [[], []] as const
+    : await Promise.all([
+        prisma.message.findMany({
+          where: {
+            OR: [
+              { senderId: { in: curatorIds }, receiverId: { in: studentIds } },
+              { senderId: { in: studentIds }, receiverId: { in: curatorIds } },
+            ],
+          },
+          orderBy: { createdAt: "desc" },
+          select: { text: true, createdAt: true, senderId: true, receiverId: true },
+          take: QUERY_LIMITS.reportRows,
+        }),
+        prisma.message.groupBy({
+          by: ["senderId", "receiverId"],
+          where: {
+            senderId: { in: studentIds },
+            receiverId: { in: curatorIds },
+            readAt: null,
+          },
+          _count: { _all: true },
+        }),
+      ]);
 
-      return {
-        curatorId: a.curatorId,
-        curatorName: a.curator.name ?? a.curator.email,
-        studentId: a.studentId,
-        studentName: a.student.name ?? a.student.email,
-        lastMessage: lastMsg?.text ?? null,
-        lastDate: lastMsg?.createdAt?.toISOString() ?? null,
-        lastSenderId: lastMsg?.senderId ?? null,
-        unread: unreadCount,
-      };
-    })
+  const lastMessageByPair = new Map<string, (typeof messages)[number]>();
+  for (const message of messages) {
+    const curatorId = curatorIdSet.has(message.senderId)
+      ? message.senderId
+      : message.receiverId && curatorIdSet.has(message.receiverId)
+        ? message.receiverId
+        : null;
+    const studentId = studentIdSet.has(message.senderId)
+      ? message.senderId
+      : message.receiverId && studentIdSet.has(message.receiverId)
+        ? message.receiverId
+        : null;
+    if (!curatorId || !studentId) continue;
+    const key = `${curatorId}:${studentId}`;
+    if (assignmentPairKeys.has(key) && !lastMessageByPair.has(key)) {
+      lastMessageByPair.set(key, message);
+    }
+  }
+
+  const unreadByPair = new Map(
+    unreadCounts.map((row) => [`${row.receiverId}:${row.senderId}`, row._count._all]),
   );
+
+  const pairs = curatorAssignments.map((assignment) => {
+    const key = `${assignment.curatorId}:${assignment.studentId}`;
+    const lastMsg = lastMessageByPair.get(key);
+    return {
+      curatorId: assignment.curatorId,
+      curatorName: assignment.curator.name ?? assignment.curator.email,
+      studentId: assignment.studentId,
+      studentName: assignment.student.name ?? assignment.student.email,
+      lastMessage: lastMsg?.text ?? null,
+      lastDate: lastMsg?.createdAt?.toISOString() ?? null,
+      lastSenderId: lastMsg?.senderId ?? null,
+      unread: unreadByPair.get(key) ?? 0,
+    };
+  });
 
   // Сортировка: сначала с непрочитанными, потом по дате
   const sorted = pairs.sort((a, b) => {

@@ -2,6 +2,7 @@
 
 import { withQueryFallback, getStudentAnalyticsDetail } from "./shared";
 import { prisma } from "@/lib/prisma";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
 import { QuestionStatus } from "@prisma/client";
@@ -185,6 +186,7 @@ export async function getSuperCuratorDashboard(): Promise<SuperCuratorDashboardD
           },
         },
       },
+      take: QUERY_LIMITS.dashboardStudents,
     });
 
     const assignments = scopedAssignments as ScopedAssignment[];
@@ -231,11 +233,13 @@ export async function getSuperCuratorDashboard(): Promise<SuperCuratorDashboardD
           },
         },
         orderBy: { createdAt: "asc" },
-        take: 200,
+        take: QUERY_LIMITS.questionQueue,
       }),
       prisma.lessonQuestion.findMany({
         where: { curatorId: { in: curatorIds }, status: QuestionStatus.ANSWERED, answeredAt: { not: null } },
         select: { curatorId: true, createdAt: true, answeredAt: true },
+        orderBy: { answeredAt: "desc" },
+        take: QUERY_LIMITS.dashboardProgressRows,
       }),
       prisma.assignmentSubmission.findMany({
         where: { userId: { in: studentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
@@ -251,7 +255,7 @@ export async function getSuperCuratorDashboard(): Promise<SuperCuratorDashboardD
           },
         },
         orderBy: { submittedAt: "asc" },
-        take: 300,
+        take: QUERY_LIMITS.dashboardQueue,
       }),
       prisma.riskFlag.findMany({
         where: { userId: { in: studentIds }, status: "open", resolvedAt: null },
@@ -261,16 +265,17 @@ export async function getSuperCuratorDashboard(): Promise<SuperCuratorDashboardD
           cohort: { select: { id: true, name: true } },
         },
         orderBy: [{ severity: "desc" }, { createdAt: "asc" }],
-        take: 300,
+        take: QUERY_LIMITS.dashboardQueue,
       }),
       prisma.courseProgress.findMany({
         where: { userId: { in: studentIds } },
         select: { userId: true, courseId: true, percent: true, status: true },
+        take: QUERY_LIMITS.dashboardProgressRows,
       }),
       prisma.message.findMany({
         where: { senderId: { in: studentIds }, receiverId: { in: curatorIds }, readAt: null },
         select: { senderId: true, receiverId: true },
-        take: 500,
+        take: QUERY_LIMITS.dashboardMessages,
       }),
     ]);
 
@@ -509,6 +514,7 @@ export async function getSuperCuratorQuestions(status: QuestionStatus = Question
       : await prisma.curatorAssignment.findMany({
           where: { superCuratorId: user.id, active: true },
           select: { studentId: true },
+          take: QUERY_LIMITS.dashboardStudents,
         });
     const studentIds = unique(scopedAssignments.map((assignment) => assignment.studentId));
 
@@ -524,7 +530,7 @@ export async function getSuperCuratorQuestions(status: QuestionStatus = Question
         student: { select: { name: true, email: true } },
         lesson: { include: { module: { include: { course: true } } } },
       },
-      take: 200,
+      take: QUERY_LIMITS.questionQueue,
     });
 
     return questions.map((question) => ({
@@ -551,6 +557,7 @@ export async function getSuperCuratorStudentAnalytics(): Promise<StudentAnalytic
     const assignments = await prisma.curatorAssignment.findMany({
       where: { superCuratorId: user.id, active: true },
       select: { studentId: true },
+      take: QUERY_LIMITS.dashboardStudents,
     });
     const studentIds = assignments.map((assignment) => assignment.studentId);
     return getStudentAnalyticsDetail(studentIds);

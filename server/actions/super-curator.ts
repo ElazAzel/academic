@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import { logAudit } from "@/server/modules/audit/service";
 import { ApiError } from "@/lib/http";
 import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
@@ -580,14 +581,17 @@ export async function getSuperCuratorRisks() {
     prisma.courseProgress.findMany({
       where: { userId: { in: userIds } },
       select: { userId: true, percent: true, status: true, updatedAt: true },
+      take: QUERY_LIMITS.dashboardProgressRows,
     }),
     prisma.lessonQuestion.findMany({
       where: { studentId: { in: userIds } },
       select: { id: true, studentId: true, status: true, createdAt: true },
+      take: QUERY_LIMITS.dashboardQueue,
     }),
     prisma.assignmentSubmission.findMany({
       where: { userId: { in: userIds } },
       select: { id: true, userId: true, status: true, submittedAt: true },
+      take: QUERY_LIMITS.dashboardQueue,
     }),
     prisma.activityLog.findMany({
       where: {
@@ -596,6 +600,7 @@ export async function getSuperCuratorRisks() {
       },
       select: { userId: true, createdAt: true },
       orderBy: { createdAt: "desc" },
+      take: QUERY_LIMITS.dashboardProgressRows,
     }),
   ]);
 
@@ -664,26 +669,38 @@ export async function getSuperCuratorReportData() {
       course: { select: { title: true } },
       _count: { select: { enrollments: true, curatorAssignments: true } },
     },
+    take: QUERY_LIMITS.reportRows,
   });
 
-  const cohortProgress = await Promise.all(
-    cohortStats.map(async (c) => {
-      const enrollments = await prisma.enrollment.findMany({
-        where: { cohortId: c.id },
+  const cohortIds = cohortStats.map((cohort) => cohort.id);
+  const enrollments = cohortIds.length === 0
+    ? []
+    : await prisma.enrollment.findMany({
+        where: { cohortId: { in: cohortIds } },
         include: {
           courseProgress: { select: { percent: true, status: true } },
           user: { select: { lastLoginAt: true } },
         },
+        take: QUERY_LIMITS.reportRows,
       });
+  const enrollmentsByCohort = new Map<string, typeof enrollments>();
+  for (const enrollment of enrollments) {
+    if (!enrollment.cohortId) continue;
+    const list = enrollmentsByCohort.get(enrollment.cohortId) ?? [];
+    list.push(enrollment);
+    enrollmentsByCohort.set(enrollment.cohortId, list);
+  }
 
-      const completed = enrollments.filter((e) => e.courseProgress[0]?.status === "COMPLETED").length;
-      const inProgress = enrollments.filter((e) => e.courseProgress[0]?.status === "IN_PROGRESS").length;
-      const notStarted = enrollments.filter((e) => !e.courseProgress[0] || e.courseProgress[0].status === "NOT_STARTED").length;
-      const blocked = enrollments.filter((e) => e.courseProgress[0]?.status === "BLOCKED").length;
-      const avgProgress = enrollments.length > 0
-        ? Math.round(enrollments.reduce((s, e) => s + (e.courseProgress[0]?.percent ?? 0), 0) / enrollments.length)
+  const cohortProgress = cohortStats.map((c) => {
+      const cohortEnrollments = enrollmentsByCohort.get(c.id) ?? [];
+      const completed = cohortEnrollments.filter((e) => e.courseProgress[0]?.status === "COMPLETED").length;
+      const inProgress = cohortEnrollments.filter((e) => e.courseProgress[0]?.status === "IN_PROGRESS").length;
+      const notStarted = cohortEnrollments.filter((e) => !e.courseProgress[0] || e.courseProgress[0].status === "NOT_STARTED").length;
+      const blocked = cohortEnrollments.filter((e) => e.courseProgress[0]?.status === "BLOCKED").length;
+      const avgProgress = cohortEnrollments.length > 0
+        ? Math.round(cohortEnrollments.reduce((s, e) => s + (e.courseProgress[0]?.percent ?? 0), 0) / cohortEnrollments.length)
         : 0;
-      const daysSinceLastLogin = enrollments
+      const daysSinceLastLogin = cohortEnrollments
         .map((e) => e.user.lastLoginAt ? Math.floor((Date.now() - e.user.lastLoginAt.getTime()) / (1000 * 60 * 60 * 24)) : null)
         .filter((d): d is number => d !== null);
 
@@ -703,8 +720,7 @@ export async function getSuperCuratorReportData() {
           ? Math.round(daysSinceLastLogin.reduce((s, d) => s + d, 0) / daysSinceLastLogin.length)
           : null,
       };
-    }),
-  );
+    });
 
   return cohortProgress;
 }

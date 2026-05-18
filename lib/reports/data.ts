@@ -1,4 +1,5 @@
 import { getPrisma } from "@/lib/prisma";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import { QuestionStatus, type Prisma } from "@prisma/client";
 import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, ReportDataScope, RiskRow } from "./types";
 
@@ -77,6 +78,7 @@ export async function fetchProgressData(input?: ReportDataScope | string[]) {
       courseProgress: { select: { percent: true } },
     },
     orderBy: [{ course: { title: "asc" } }, { cohort: { name: "asc" } }, { user: { name: "asc" } }],
+    take: QUERY_LIMITS.reportRows,
   });
 
   const userIds = unique(enrollments.map((e) => e.userId));
@@ -90,6 +92,7 @@ export async function fetchProgressData(input?: ReportDataScope | string[]) {
     },
     orderBy: [{ userId: "asc" }, { updatedAt: "desc" }],
     distinct: ["userId"],
+    take: QUERY_LIMITS.reportRows,
     include: {
       lesson: {
         include: {
@@ -109,6 +112,7 @@ export async function fetchProgressData(input?: ReportDataScope | string[]) {
       ...(scope.courseIds ? { lesson: { module: { courseId: { in: scope.courseIds } } } } : {}),
     },
     select: { userId: true, lesson: { select: { durationMinutes: true } } },
+    take: QUERY_LIMITS.reportDetailRows,
   });
   const timeMap = new Map<string, { count: number; total: number }>();
   for (const lp of allLessonProgress) {
@@ -158,6 +162,7 @@ export async function fetchRiskData(input?: ReportDataScope | string[]) {
       course: { select: { title: true } },
     },
     orderBy: [{ severity: "desc" }, { user: { name: "asc" } }],
+    take: QUERY_LIMITS.reportRows,
   });
 
   const rows: RiskRow[] = risks.map((r) => ({
@@ -183,6 +188,7 @@ export async function fetchCertificateData(input?: ReportDataScope | string[]) {
       course: { select: { title: true } },
     },
     orderBy: [{ issuedAt: "desc" }],
+    take: QUERY_LIMITS.reportRows,
   });
 
   const rows: CertificateRow[] = certs.map((c) => ({
@@ -218,6 +224,7 @@ export async function fetchAssignmentData(input?: ReportDataScope | string[]) {
       },
     },
     orderBy: [{ submittedAt: "desc" }],
+    take: QUERY_LIMITS.reportRows,
   });
 
   const rows: AssignmentRow[] = submissions.map((submission) => ({
@@ -252,6 +259,7 @@ export async function fetchCuratorWorkloadData(input?: ReportDataScope | string[
       cohort: { select: { id: true, name: true, courseId: true } },
     },
     orderBy: [{ curator: { name: "asc" } }, { assignedAt: "desc" }],
+    take: QUERY_LIMITS.reportRows,
   });
 
   if (assignments.length === 0) return [];
@@ -268,7 +276,7 @@ export async function fetchCuratorWorkloadData(input?: ReportDataScope | string[
         ...(courseIds.length > 0 ? { lesson: { module: { courseId: { in: courseIds } } } } : {}),
       },
       select: { studentId: true },
-      take: 1000,
+      take: QUERY_LIMITS.reportRows,
     }),
     prisma.assignmentSubmission.findMany({
       where: {
@@ -276,12 +284,12 @@ export async function fetchCuratorWorkloadData(input?: ReportDataScope | string[
         status: { in: ["SUBMITTED", "IN_REVIEW"] },
       },
       select: { userId: true },
-      take: 1000,
+      take: QUERY_LIMITS.reportRows,
     }),
     prisma.riskFlag.findMany({
       where: { ...buildRiskWhere(scopedForStudents), status: "open", resolvedAt: null },
       select: { userId: true, severity: true },
-      take: 1000,
+      take: QUERY_LIMITS.reportRows,
     }),
     prisma.courseProgress.findMany({
       where: {
@@ -289,6 +297,7 @@ export async function fetchCuratorWorkloadData(input?: ReportDataScope | string[
         ...(courseIds.length > 0 ? { courseId: { in: courseIds } } : {}),
       },
       select: { userId: true, percent: true },
+      take: QUERY_LIMITS.reportRows,
     }),
   ]);
 
