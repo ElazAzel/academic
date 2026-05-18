@@ -1,7 +1,7 @@
 # Полный аудит платформы — AI Strategic Academy
 
-**Дата:** 2026-05-17
-**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-10
+**Дата:** 2026-05-18
+**Статус:** актуализировано после legacy PR-1..PR-12 и M-PR-01..M-PR-11
 **Область:** продуктовые сценарии, роли, маршруты, backend/API, доступ, безопасность, тесты, схема, документация
 
 ---
@@ -17,6 +17,7 @@
 | Notifications | Green: default `in_app`, email только при `email` / `email_and_in_app`; core enrollment/curator/question/assignment/certificate/password events create notification records |
 | Chat | Green для текущего MVP: участники scoped, куратор отвечает закреплённому слушателю, имена отображаются по роли |
 | Reports/analytics | Green: reports have owner/scope/decision/export and server-side role scope for progress, risks, assignments, certificates, workload |
+| Performance/scale | Green: heavy dashboards/reports/chats have bounded queries, batched chat summaries, and targeted indexes |
 | Release gate | Green: `npm run verify:release` и `docs/release-verification.md` зафиксированы |
 | E2E | Yellow: Playwright smoke готов, но полный release-run требует подготовленную БД и demo seed |
 | Schema cleanup | Green: `User.status` and `LessonQuestion.status` are enum-backed; downtime runbook and read-only preflight are documented in M-PR-10 |
@@ -49,11 +50,11 @@
 
 | Роль | Статус | Что работает | Что дальше |
 |---|---|---|---|
-| Admin | Green | users, roles, courses, cohorts, enrollments, invites, audit, settings, certificates issue/revoke, scoped reports/exports, notification/audit coverage for core ops, enum-backed account statuses | Performance and release runbooks |
-| Instructor | Green/yellow | own courses, unified builder, scoped quiz/assignment creation, preview, publish checks, analytics, forwarded questions scoped, course-scoped reports, forwarded-question notifications, enum-backed forwarded question status | Performance pass |
+| Admin | Green | users, roles, courses, cohorts, enrollments, invites, audit, settings, certificates issue/revoke, scoped reports/exports, notification/audit coverage for core ops, enum-backed account statuses, bounded analytics summaries | Release runbooks |
+| Instructor | Green/yellow | own courses, unified builder, scoped quiz/assignment creation, preview, publish checks, analytics, forwarded questions scoped, course-scoped reports, forwarded-question notifications, enum-backed forwarded question status, bounded quiz analytics | Full release smoke |
 | Student | Green/yellow | dashboard continue-learning, my courses, course/lesson access, embedded quiz/assignment/question/rating, certificates | Playwright happy path on prepared DB |
 | Curator | Green/yellow | assigned students, questions, assignment review, risks, scoped chat, operational student cards with next actions, assigned-scope reports, assignment/question notifications | Browser smoke on prepared curator data |
-| Super Curator | Green/yellow | scoped workload dashboard, distribution, questions, risks, curator load, problem queues, reassignment inside scope, workload reports, assignment audit/notification events, enum-backed question queues | Performance pass |
+| Super Curator | Green/yellow | scoped workload dashboard, distribution, questions, risks, curator load, problem queues, reassignment inside scope, workload reports, assignment audit/notification events, enum-backed question queues, batched chat summaries | Full release smoke |
 | Customer Observer | Green/yellow | scoped dashboard, reports, certificates, read-only constraints, scoped progress/risk/certificate exports | Full release smoke on prepared data |
 
 ---
@@ -87,7 +88,7 @@ The product direction remains:
 Course → Module → Block → Lesson → Content / Test / Assignment / Question / Rating / Completion
 ```
 
-Current state after M-PR-10:
+Current state after M-PR-11:
 
 - Course, Module, Block, Lesson exist in product/schema direction.
 - Student dashboard and course pages are usable.
@@ -106,6 +107,8 @@ Current state after M-PR-10:
 - Unsupported notification channels are normalized to `in_app`; email is only sent through explicit `email` / `email_and_in_app` notification calls or direct auth email flows such as password reset request.
 - `users.status` and `lesson_questions.status` are represented as Prisma/PostgreSQL enums.
 - M-PR-10 added `docs/schema-cleanup-window.md` and `scripts/schema-cleanup-preflight.ts`; connected production DB preflight shows enum columns already present but missing `_prisma_migrations`, so the runbook requires migration-history reconciliation before future `migrate deploy` runs.
+- M-PR-11 added central query caps, bounded heavy dashboard/report/chat queries, removed the super-curator chat N+1 summary lookup, and added targeted indexes in `prisma/migrations/20260518000000_performance_scale_pass/migration.sql`.
+- Demo login incident on 2026-05-18 was caused by production schema drift: auth expected `users.totp_secret`, `users.totp_enabled`, and `users.backup_codes`; the columns were added with an idempotent SQL migration and demo credentials were verified against production.
 
 ---
 
@@ -138,7 +141,6 @@ Known limitation:
 
 | Priority | Risk | Why It Matters | Planned Package |
 |---|---|---|---|
-| P3 | Heavy dashboards/reports/chats need bounded query review | Production scale requires pagination/indexes/no unbounded queries | M-PR-11 |
 | P3 | Final production runbooks and rollback need rehearsal | Release candidate needs clear deploy/migration/rollback instructions | M-PR-12 |
 
 ---
@@ -153,6 +155,7 @@ Known limitation:
 | `docs/update-log.md` | Current change log and decision record |
 | `docs/release-verification.md` | Release gate runbook |
 | `docs/schema-cleanup-window.md` | M-PR-10 backup-first enum cleanup and migration-history runbook |
+| `docs/performance-review.md` | M-PR-11 query/index performance review |
 | `docs/student-interaction-audit-results.md` | Historical audit snapshot; use with `update-log` for current status |
 | `docs/ux-student-course-player.md` | Student course player direction |
 | `docs/ux-unified-course-builder.md` | Builder modernization direction |
@@ -164,8 +167,9 @@ Rule going forward: if an old audit table says a risk is open but `docs/update-l
 
 ## 9. Recommended Next Step
 
-Continue with **M-PR-11: Performance & Scale Pass**:
+Continue with **M-PR-12: Production Readiness Release**:
 
-- review heavy dashboards, reports, and chats for bounded queries and N+1 patterns;
-- add indexes only for real query shapes;
-- keep performance changes separate from schema cleanup and final release hardening.
+- run full release verification on prepared staging/production-like data;
+- reconcile Prisma migration history before future `prisma migrate deploy`;
+- rehearse backup/restore and rollback;
+- update final deploy, migration, seed/demo, E2E, and rollback runbooks.

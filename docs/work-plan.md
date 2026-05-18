@@ -1,7 +1,7 @@
 # Work Plan — AI Strategic Academy LMS
 
-**Date:** 2026-05-17
-**Status:** Legacy stabilization PR-1 through PR-12 complete; 90-day modernization execution started
+**Date:** 2026-05-18
+**Status:** Legacy stabilization PR-1 through PR-12 complete; M-PR-01 through M-PR-11 implemented
 
 ---
 
@@ -19,7 +19,7 @@
 | M-PR-08 | P2 | Reports & Analytics v1 | green | Reports have owner/scope/decision/export; progress/risk/assignment/certificate/workload exports are role-scoped |
 | M-PR-09 | P2 | Notification & Audit Completion | green | Enrollment, curator assignment, question, assignment review, certificate, and password/security events create expected in-app notifications and audit records; default channel remains `in_app` |
 | M-PR-10 | P3 | Schema Cleanup Window | green | `User.status` and `LessonQuestion.status` are enum-backed; backup-first downtime runbook and read-only preflight cover migration-history reconciliation |
-| M-PR-11 | P3 | Performance & Scale Pass | pending | Heavy dashboards/reports/chats have bounded queries and indexes |
+| M-PR-11 | P3 | Performance & Scale Pass | green | Heavy dashboards/reports/chats have bounded queries, N+1 chat lookup removed, and targeted indexes documented |
 | M-PR-12 | P3 | Production Readiness Release | pending | Release candidate has full verification and rollback plan |
 
 ---

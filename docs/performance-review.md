@@ -2,6 +2,18 @@
 
 > AI Strategic Academy — performance audit results and recommendations
 
+## M-PR-11 Applied Changes
+
+Status: implemented for the production MVP performance pass.
+
+- Added central query caps in `lib/query-limits.ts` for dashboards, queues, reports, chats, and analytics detail views.
+- Bounded heavy curator and super-curator dashboard queries with `take` limits while preserving role scope.
+- Replaced the super-curator chat N+1 pair lookup with batched message and unread-count queries.
+- Bounded report exports and detailed progress calculations to explicit export/detail limits.
+- Reworked admin reports and admin analytics course summaries to use grouped aggregates instead of loading all course progress rows into React pages.
+- Reworked instructor quiz analytics to use `groupBy` aggregates instead of loading every quiz attempt under every quiz.
+- Added targeted PostgreSQL indexes for progress, reports, assignments, questions, certificates, notifications, curator assignments, risk flags, chat messages, user-role grouping, module progress, and quiz-attempt aggregates.
+
 ## Bundle Size
 
 ### Current State (from `next build`)
@@ -19,19 +31,22 @@
 
 ## Database Indexes
 
-**Current: 87 indexes across all tables.** Comprehensive coverage verified:
+M-PR-11 adds targeted indexes for query shapes that are now part of dashboards, reports, analytics, and chat.
 
-| Table | Key Indexes | Status |
+| Area | Key Indexes | Query Shape |
 |---|---|---|
-| `enrollments` | `@@unique([userId, courseId])`, `@@index([userId, status])` | ✅ |
-| `lesson_progress` | `@@unique([userId, lessonId])`, `@@index([userId])` | ✅ |
-| `module_progress` | `@@unique([userId, moduleId])`, `@@index([userId])` | ✅ |
-| `course_progress` | `@@unique([userId, courseId])` | ✅ |
-| `assignment_submissions` | `@@index([userId])`, `@@index([assignmentId])`, `@@index([status])`, `@@index([submittedAt])` | ✅ |
-| `notifications` | `@@index([userId])`, `@@index([createdAt])` | ✅ |
-| `certificates` | `@@unique([number])`, `@@unique([verificationCode])` | ✅ |
+| Curriculum | `idx_lessons_block_order` | lesson tree ordered by block |
+| Enrollments | `idx_enrollments_course_status`, `idx_enrollments_cohort_status`, `idx_enrollments_status_created_at` | reports, active enrollment counts, cohort dashboards |
+| Progress | `idx_lesson_progress_user_updated_at`, `idx_module_progress_module_status`, `idx_course_progress_course_status`, `idx_course_progress_user_updated_at` | progress dashboards and grouped analytics |
+| Quiz/assignments | `idx_quizzes_course_id`, `idx_quizzes_lesson_id`, `idx_quiz_attempts_quiz_passed`, assignment/submission indexes | instructor analytics and review queues |
+| Questions/risks | lesson question status/curator/student indexes, risk status/scope indexes | curator and super-curator operational queues |
+| Reports/certificates | certificate user/course/enrollment indexes | scoped certificate exports and verification lists |
+| Notifications/chat | notification read-state index and sender/receiver message indexes | unread counters and chat history |
+| Role analytics | `idx_user_roles_role_id` | admin role distribution grouping |
 
-**No missing indexes found.** All common query patterns are covered.
+Migration: `prisma/migrations/20260518000000_performance_scale_pass/migration.sql`.
+
+Operational note: production currently has migration-history drift from previous manual schema work, so apply this SQL in the same controlled path used for M-PR-10 until `_prisma_migrations` is reconciled.
 
 ## Images
 
@@ -76,6 +91,8 @@
 ## Action Items
 
 ### Sprint 1 (High Impact)
+- [x] Bound heavy dashboard/report/chat queries and remove known N+1 chat pair lookup
+- [x] Add targeted database indexes for real query shapes
 - [ ] Dynamic import for `pdf-lib`/`exceljs` in report routes
 - [ ] Lazy-load framer-motion on non-animated pages
 - [ ] Remove `"use client"` from `bar-chart.tsx` and `widget-skeletons.tsx`

@@ -1,6 +1,7 @@
 "use server";
 
 import { withQueryFallback, getStudentAnalyticsDetail } from "./shared";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/page-guards";
 import type {
@@ -29,6 +30,7 @@ export async function getAdminDashboard() {
       prisma.certificate.count(),
       prisma.course.findMany({
         orderBy: { createdAt: "desc" },
+        take: QUERY_LIMITS.reportSummaryCourses,
         include: {
           modules: { include: { _count: { select: { lessons: true } } } },
           instructors: { include: { user: { select: { id: true, name: true, email: true } } } },
@@ -37,6 +39,7 @@ export async function getAdminDashboard() {
       }),
       prisma.cohort.findMany({
         orderBy: { createdAt: "desc" },
+        take: QUERY_LIMITS.dashboardQueue,
         include: { course: { select: { title: true } }, _count: { select: { enrollments: true } } },
       }),
       prisma.certificate.findMany({
@@ -108,22 +111,26 @@ export async function getEnrollmentData(): Promise<{
       prisma.user.findMany({
         where: { roles: { some: { role: { key: "student" } } } },
         select: { id: true, name: true, email: true },
-        orderBy: { name: "asc" }
+        orderBy: { name: "asc" },
+        take: QUERY_LIMITS.dashboardStudents,
       }),
       prisma.course.findMany({
         where: { status: "PUBLISHED" },
         select: { id: true, title: true },
-        orderBy: { title: "asc" }
+        orderBy: { title: "asc" },
+        take: QUERY_LIMITS.reportSummaryCourses,
       }),
       prisma.cohort.findMany({
         where: { status: "active" },
         select: { id: true, name: true, courseId: true },
-        orderBy: { name: "asc" }
+        orderBy: { name: "asc" },
+        take: QUERY_LIMITS.dashboardQueue,
       }),
       prisma.user.findMany({
         where: { roles: { some: { role: { key: { in: ["curator", "super_curator"] } } } } },
         select: { id: true, name: true, email: true },
-        orderBy: { name: "asc" }
+        orderBy: { name: "asc" },
+        take: QUERY_LIMITS.dashboardStudents,
       })
     ]);
 
@@ -152,6 +159,7 @@ export async function getAdminStudentAnalytics(): Promise<StudentAnalyticsDetail
     const enrollments = await prisma.enrollment.findMany({
       where: { status: "ACTIVE" },
       select: { userId: true },
+      take: QUERY_LIMITS.reportRows,
     });
     const studentIds = [...new Set(enrollments.map((e) => e.userId))];
     return getStudentAnalyticsDetail(studentIds);

@@ -6,8 +6,9 @@ import { BarChart, DonutChart } from "@/components/lms/bar-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { Icon } from "@/components/ui/icon";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import type { DashboardMetric } from "@/types/domain";
-import { UserAccountStatus } from "@prisma/client";
+import { ProgressStatus, UserAccountStatus } from "@prisma/client";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { getAdminStudentAnalytics } from "@/server/actions/dashboard";
@@ -126,12 +127,13 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
   ] = await Promise.all([
     prisma.user.count({ where: { status: UserAccountStatus.ACTIVE } }),
     prisma.courseProgress.aggregate({ _avg: { percent: true } }),
-    prisma.courseProgress.count({ where: { status: "COMPLETED" } }),
+    prisma.courseProgress.count({ where: { status: ProgressStatus.COMPLETED } }),
     prisma.certificate.count(),
     prisma.course.findMany({
+      orderBy: { title: "asc" },
+      take: QUERY_LIMITS.reportSummaryCourses,
       include: {
         _count: { select: { enrollments: true } },
-        courseProgress: { select: { status: true, percent: true } }
       }
     }),
     prisma.user.count(),
@@ -158,6 +160,27 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
     select: { id: true, name: true },
   }) : [];
   const roleMap = new Map(roles.map((r) => [r.id, r]));
+  const courseIds = coursesDb.map((course) => course.id);
+  const [courseProgressAverages, courseCompletedCounts] = courseIds.length > 0
+    ? await Promise.all([
+        prisma.courseProgress.groupBy({
+          by: ["courseId"],
+          where: { courseId: { in: courseIds } },
+          _avg: { percent: true },
+        }),
+        prisma.courseProgress.groupBy({
+          by: ["courseId"],
+          where: { courseId: { in: courseIds }, status: ProgressStatus.COMPLETED },
+          _count: { _all: true },
+        }),
+      ])
+    : [[], []] as const;
+  const avgProgressByCourse = new Map(
+    courseProgressAverages.map((row) => [row.courseId, Math.round(row._avg.percent ?? 0)]),
+  );
+  const completedByCourse = new Map(
+    courseCompletedCounts.map((row) => [row.courseId, row._count._all]),
+  );
 
   const activeFromStatus = usersByStatus.find((u) => u.status === UserAccountStatus.ACTIVE)?._count._all ?? 0;
   const inactiveFromStatus = usersByStatus.find((u) => u.status === UserAccountStatus.INACTIVE)?._count._all ?? 0;
@@ -171,10 +194,8 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
 
   const courseStats = coursesDb.map(c => {
     const enrollments = c._count.enrollments;
-    const completed = c.courseProgress.filter(cp => cp.status === "COMPLETED").length;
-    const avgProgress = enrollments > 0
-      ? Math.round(c.courseProgress.reduce((acc, curr) => acc + curr.percent, 0) / enrollments)
-      : 0;
+    const completed = completedByCourse.get(c.id) ?? 0;
+    const avgProgress = avgProgressByCourse.get(c.id) ?? 0;
     return { title: c.title, enrolled: enrollments, completed, avgProgress };
   });
 
