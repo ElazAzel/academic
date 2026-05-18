@@ -2,6 +2,14 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-18 — Full DB schema sync + RLS hardening
+
+- **29 missing tables created** в production: `oauth_accounts`, `sessions`, `verification_tokens`, `permissions`, `role_permissions`, `clients`, `projects`, `blocks`, `lesson_media`, `cohort_deadlines`, `block_cohort_deadlines`, `lesson_progress`, `quiz_attempts`, `assignment_submissions`, `activity_logs`, `lesson_questions`, `certificate_templates`, `audit_logs`, `consent_logs`, `app_settings`, `curator_assignments`, `risk_flags`, `reports`, `import_jobs`, `observer_projects`, `observer_cohorts`, `notification_preferences`, `lesson_ratings`, `glossary_entries`
+- **RLS включён** на 42 таблицах с `deny_anon_all` политикой (default-deny через анон-ключ). Приложение использует Prisma (service_role), так что полный defence-in-depth
+- **`certificates.enrollment_id`** + `verification_url` добавлены (колонки отсутствовали)
+- **Проверка**: `supabase_get_advisors` — CRITICAL `rls_disabled` больше нет (понижен до INFO)
+- **type-check**: 0 ошибок
+
 ## 2026-05-18 — Fix: instructor chat 404 + push subscribe 500
 
 - **404 `/instructor/chat`**: создана страница `app/instructor/chat/page.tsx` (копирует паттерн curator chat)

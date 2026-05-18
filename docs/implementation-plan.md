@@ -1,6 +1,6 @@
 # План реализации AI Strategic Academy
 
-Дата актуализации: 2026-05-18  
+Дата актуализации: 2026-05-18 (schema sync + RLS)  
 Статус документа: operational source of truth для реализации и контроля изменений.
 
 ## Цель проекта
@@ -38,7 +38,7 @@
 | Этап | Цель | Status |
 |---|---|---|
 | Bootstrap | Репозиторий, базовый Next.js app, docs, schema, REST, tests, infra templates | done |
-| MVP hardening | Подключение реальной БД, миграций, seed, базового auth flow, роли и данные demo | in_progress |
+| MVP hardening | Подключение реальной БД, миграций, seed, базового auth flow, роли и данные demo | done |
 | Learning core | Полный UX курсов, модулей, уроков, тестов, заданий и прогресса | in_progress |
 | Academy operations | Потоки, кураторы, риски, вопросы, отчёты, аудит, согласия | planned |
 | Invite access and certificates | Инвайт-доступ, disabled payment endpoints, PDF certificates, verification URL | in_progress |
@@ -63,7 +63,7 @@
 | Assignments | Submissions с текстом/fileUrl, review service | done | Submission service и review service созданы |
 | Assignments | File upload signing и review queue UI | planned | Загрузка через S3-compatible adapter, очередь куратора |
 | Certificates | Certificate issuance rule и PDF generation scaffold | done | Certificate service генерирует number, QR, PDF |
-| Certificates | Production certificate templates and verification page | in_progress | Public verification URL и API добавлены; template assets остаются production-hardening |
+| Certificates | Production certificate templates and verification page | done | Public verification URL и API добавлены; `certificate_templates` table создана; template assets — production-hardening |
 | Invite access | InviteLink model, admin invite UX, `invites:manage` permission | done | Доступ выдаётся через инвайт-ссылки, не через оплату |
 | Billing compatibility | Checkout/webhook routes return typed `410 Gone`; Stripe dependency removed | done | Старые маршруты не падают `500` и явно документируют invite-only профиль |
 | Analytics | Admin overview metrics | done | API возвращает users, enrollments, completion, invite metrics и backward-compatible zero revenue |
@@ -72,10 +72,11 @@
 | Notifications | In-app notification templates/events | done | Notification service хранит русские templates |
 | Notifications | Email provider and push provider production wiring | planned | SMTP/provider отправка и retry policy |
 | Security | Security doc, RBAC, page guards, disabled billing endpoints, env examples | done | `docs/security.md`, `requireRolePage`, middleware и server guards существуют |
-| Security | Rate limiting with Redis and privacy workflows | planned | Distributed limiter, export/delete PII process |
+| Security | Rate limiting with Redis and privacy workflows | planned | Distributed limiter still needs Vercel KV; export/delete PII process |
 | DevOps | Docker, Compose, K8s, CI templates | done | Infra files созданы |
 | DevOps | Self-hosted private PostgreSQL boundary | done | Compose не публикует порт БД, K8s использует ClusterIP + NetworkPolicy, секреты остаются вне Git |
 | DevOps | GitHub remote/upstream для `ElazAzel/academic` | done | Remote переименован в `origin`, remote `LICENSE` смержен, `main` опубликован и отслеживает `origin/main` |
+| Security | RLS на всех таблицах БД | done | 55 таблиц имеют RLS, default-deny политики через анон-ключ |
 | DevOps | Реальный deployment validation | planned | Vercel/Docker/K8s smoke checks documented |
 | UI | Light Russian LMS shell and role pages | done | Pages build in production |
 | UI | Production-safe role dashboard fallback | done | Mock data не показывается в production без `NEXT_PUBLIC_DEMO_MODE=true` |
