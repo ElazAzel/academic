@@ -6,6 +6,8 @@ import { useState } from "react";
 import { Toaster } from "sonner";
 import { CommandPalette } from "@/components/lms/command-palette";
 import { PopupModal } from "@/components/lms/popup-modal";
+import { ConsentModal } from "@/components/lms/consent-modal";
+import { NotificationToast } from "@/components/lms/notification-toast";
 import { PWAInstallPrompt } from "@/components/lms/pwa-install-prompt";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -29,6 +31,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
             }} />
           <CommandPalette />
           <PopupModal />
+          <ConsentModal />
+          <NotificationToast />
           <PWAInstallPrompt />
         </ThemeProvider>
       </QueryClientProvider>
