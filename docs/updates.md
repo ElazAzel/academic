@@ -2,6 +2,14 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-18 — Tests fixed + k6 load test + FK indexes
+
+- **4 test files fixed**: `assignments.test.ts`, `courses-service.test.ts`, `certificates-service.test.ts`, `analytics-service.test.ts` — добавлен `outboxEvent: { create: vi.fn() }` в prisma mock
+- **Все 304 теста проходят** (53/53 test files)
+- **k6 smoke test** создан: `tests/load/smoke-test.js` — симуляция 2000 concurrent с ramp-up
+- **Созданы FK индексы** для внешних ключей, отмеченных Supabase advisor (INFO-level)
+- **RLS конфликт устранён**: удалён `deny_anon_all` policy с `messages` (там уже была легитимная policy "Users can subscribe to their messages")
+
 ## 2026-05-18 — Full DB schema sync + RLS hardening
 
 - **29 missing tables created** в production: `oauth_accounts`, `sessions`, `verification_tokens`, `permissions`, `role_permissions`, `clients`, `projects`, `blocks`, `lesson_media`, `cohort_deadlines`, `block_cohort_deadlines`, `lesson_progress`, `quiz_attempts`, `assignment_submissions`, `activity_logs`, `lesson_questions`, `certificate_templates`, `audit_logs`, `consent_logs`, `app_settings`, `curator_assignments`, `risk_flags`, `reports`, `import_jobs`, `observer_projects`, `observer_cohorts`, `notification_preferences`, `lesson_ratings`, `glossary_entries`

@@ -10,6 +10,7 @@ const mockAuditLogCreate = vi.hoisted(() => vi.fn());
 const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockOutboxEventCreate = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/env", () => ({
   env: {
@@ -36,6 +37,7 @@ vi.mock("@/lib/prisma", () => ({
     auditLog: { create: mockAuditLogCreate },
     notificationPreference: { findMany: mockNotificationPreferenceFindMany },
     notification: { create: mockNotificationCreate },
+    outboxEvent: { create: mockOutboxEventCreate },
     user: { findUnique: mockUserFindUnique },
   }),
 }));
@@ -74,14 +76,17 @@ describe("certificate notification and audit events", () => {
         }),
       }),
     );
-    expect(mockNotificationCreate).toHaveBeenCalledWith(
+    expect(mockOutboxEventCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          userId: "student-1",
-          type: "certificate_available",
-          channel: "in_app",
-          refType: "certificate",
-          refId: "certificate-1",
+          eventType: "notification.send",
+          payload: expect.objectContaining({
+            userId: "student-1",
+            event: "certificate_available",
+            channel: "in_app",
+            refType: "certificate",
+            refId: "certificate-1",
+          }),
         }),
       }),
     );
@@ -114,14 +119,17 @@ describe("certificate notification and audit events", () => {
         }),
       }),
     );
-    expect(mockNotificationCreate).toHaveBeenCalledWith(
+    expect(mockOutboxEventCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          userId: "student-1",
-          type: "certificate_revoked",
-          channel: "in_app",
-          refType: "certificate",
-          refId: "certificate-1",
+          eventType: "notification.send",
+          payload: expect.objectContaining({
+            userId: "student-1",
+            event: "certificate_revoked",
+            channel: "in_app",
+            refType: "certificate",
+            refId: "certificate-1",
+          }),
         }),
       }),
     );

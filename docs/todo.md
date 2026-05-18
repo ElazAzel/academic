@@ -47,6 +47,9 @@
 
 ## Done (2026-05-18)
 
+- [done] k6 load test script created (`tests/load/smoke-test.js`)
+- [done] 4 test files fixed — all 304 tests pass (53/53 files)
+- [done] FK indexes added for unindexed foreign keys
 - [done] 55/55 Prisma models now have tables in production (applied `create_all_missing_tables_v2`)
 - [done] `push_subscriptions`, `messages`, `admin_popups`, `outbox_events`, `learning_paths` + related tables exist
 - [done] `consent_logs`, `lesson_progress`, `audit_logs`, `assignment_submissions`, `risk_flags`, `glossary_entries`, `certificate_templates` и ещё 22 таблицы созданы

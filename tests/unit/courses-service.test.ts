@@ -7,6 +7,7 @@ const mockAuditLogCreate = vi.hoisted(() => vi.fn());
 const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockNotificationUserFindUnique = vi.hoisted(() => vi.fn());
+const mockOutboxEventCreate = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/env", () => ({
   env: {
@@ -32,6 +33,7 @@ vi.mock("@/lib/prisma", () => ({
     },
     notificationPreference: { findMany: mockNotificationPreferenceFindMany },
     notification: { create: mockNotificationCreate },
+    outboxEvent: { create: mockOutboxEventCreate },
     user: { findUnique: mockNotificationUserFindUnique },
   }),
 }));
@@ -144,14 +146,17 @@ describe("enrollStudent", () => {
 
     await enrollStudent({ userId: "u3", courseId: "c3", cohortId: "coh1" }, "actor1");
 
-    expect(mockNotificationCreate).toHaveBeenCalledWith(
+    expect(mockOutboxEventCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          userId: "u3",
-          type: "access_granted",
-          channel: "in_app",
-          refType: "enrollment",
-          refId: "e3",
+          eventType: "notification.send",
+          payload: expect.objectContaining({
+            userId: "u3",
+            event: "access_granted",
+            channel: "in_app",
+            refType: "enrollment",
+            refId: "e3",
+          }),
         }),
       }),
     );
