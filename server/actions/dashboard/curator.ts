@@ -2,6 +2,7 @@
 
 import { withQueryFallback, getStudentAnalyticsDetail } from "./shared";
 import { prisma } from "@/lib/prisma";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
 import { QuestionStatus } from "@prisma/client";
@@ -214,6 +215,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
           },
         },
       },
+      take: QUERY_LIMITS.dashboardStudents,
     });
 
     const studentIds = [...new Set(assignments.map((assignment) => assignment.studentId))];
@@ -246,6 +248,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
             },
           },
         },
+        take: QUERY_LIMITS.questionQueue,
       }),
       prisma.assignmentSubmission.findMany({
         where: { userId: { in: studentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
@@ -264,6 +267,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
           },
           user: { select: { id: true, name: true, email: true } },
         },
+        take: QUERY_LIMITS.dashboardQueue,
       }),
       prisma.riskFlag.findMany({
         where: { userId: { in: studentIds }, status: "open", resolvedAt: null },
@@ -273,10 +277,12 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
           course: { select: { id: true, title: true } },
           cohort: { select: { id: true, name: true, courseId: true, course: { select: { id: true, title: true } } } },
         },
+        take: QUERY_LIMITS.dashboardQueue,
       }),
       prisma.courseProgress.findMany({
         where: { userId: { in: studentIds }, ...(courseIds.length > 0 ? { courseId: { in: courseIds } } : {}) },
         select: { userId: true, courseId: true, percent: true, status: true },
+        take: QUERY_LIMITS.dashboardProgressRows,
       }),
       prisma.lessonProgress.findMany({
         where: {
@@ -292,7 +298,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
             },
           },
         },
-        take: 500,
+        take: QUERY_LIMITS.dashboardProgressRows,
       }),
       prisma.enrollment.findMany({
         where: { userId: { in: studentIds } },
@@ -300,6 +306,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
           course: { select: { id: true, title: true } },
           courseProgress: { select: { percent: true, status: true } },
         },
+        take: QUERY_LIMITS.dashboardProgressRows,
       }),
       prisma.message.findMany({
         where: {
@@ -310,7 +317,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
         },
         orderBy: { createdAt: "desc" },
         include: { lesson: { select: { id: true, title: true } } },
-        take: 500,
+        take: QUERY_LIMITS.dashboardMessages,
       }),
     ]);
 
@@ -567,6 +574,7 @@ export async function getCuratorStudents() {
           },
         },
       },
+      take: QUERY_LIMITS.dashboardStudents,
     });
 
     return assignments.map((assignment) => {
@@ -596,6 +604,7 @@ export async function getCuratorQuestions(status: QuestionStatus = QuestionStatu
         student: { select: { name: true, email: true } },
         lesson: { include: { module: { include: { course: true } } } },
       },
+      take: QUERY_LIMITS.questionQueue,
     });
 
     return questions.map((question) => ({
@@ -622,6 +631,7 @@ export async function getCuratorStudentAnalytics(): Promise<StudentAnalyticsDeta
     const assignments = await prisma.curatorAssignment.findMany({
       where: { curatorId: user.id, active: true },
       select: { studentId: true },
+      take: QUERY_LIMITS.dashboardStudents,
     });
     const studentIds = assignments.map((assignment) => assignment.studentId);
     return getStudentAnalyticsDetail(studentIds);

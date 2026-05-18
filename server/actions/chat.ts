@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import { buildStorageKey, createPresignedUploadUrl } from "@/lib/storage";
 import { createNotification } from "@/server/modules/notifications/service";
 import { maskChatName, deriveDisplayName } from "@/lib/auth/mask-name";
@@ -73,7 +74,7 @@ export async function getConversation(studentId: string, lessonId?: string) {
       ],
     },
     orderBy: { createdAt: "desc" },
-    take: 100,
+    take: QUERY_LIMITS.chatConversationMessages,
     include: {
       sender: {
         select: {
@@ -139,7 +140,7 @@ export async function getMyConversations() {
       },
       lesson: { select: { id: true, title: true } },
     },
-    take: 200,
+    take: QUERY_LIMITS.chatConversationScan,
   });
 
   const convMap = new Map<string, ConversationInfo>();

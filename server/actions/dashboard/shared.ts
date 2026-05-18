@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import type { StudentAnalyticsDetail } from "@/types/domain";
 
 export async function withQueryFallback<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
@@ -12,9 +13,10 @@ export async function withQueryFallback<T>(fn: () => Promise<T>, fallback: T): P
 
 export async function getStudentAnalyticsDetail(studentIds: string[]): Promise<StudentAnalyticsDetail[]> {
   if (studentIds.length === 0) return [];
+  const scopedStudentIds = studentIds.slice(0, QUERY_LIMITS.studentAnalyticsStudents);
 
   const enrollments = await prisma.enrollment.findMany({
-    where: { userId: { in: studentIds } },
+    where: { userId: { in: scopedStudentIds } },
     include: {
       user: { select: { id: true, name: true, email: true, lastLoginAt: true } },
       course: { select: { title: true } },
@@ -37,8 +39,9 @@ export async function getStudentAnalyticsDetail(studentIds: string[]): Promise<S
   });
 
   const allLessonProgress = await prisma.lessonProgress.findMany({
-    where: { userId: { in: studentIds } },
+    where: { userId: { in: scopedStudentIds } },
     select: { userId: true, lesson: { select: { durationMinutes: true } }, updatedAt: true },
+    take: QUERY_LIMITS.reportDetailRows,
   });
 
   const lessonTimeMap = new Map<string, { count: number; totalMinutes: number }>();
@@ -51,7 +54,7 @@ export async function getStudentAnalyticsDetail(studentIds: string[]): Promise<S
 
   const riskCounts = await prisma.riskFlag.groupBy({
     by: ["userId"],
-    where: { userId: { in: studentIds }, status: "open" },
+    where: { userId: { in: scopedStudentIds }, status: "open" },
     _count: { _all: true },
   });
   const riskMap = new Map(riskCounts.map((r) => [r.userId, r._count._all]));

@@ -432,6 +432,7 @@ model Lesson {
   messages    Message[]
 
   @@unique([moduleId, order])
+  @@index([blockId, order], map: "idx_lessons_block_order")
   @@map("lessons")
 }
 
@@ -526,6 +527,9 @@ model Enrollment {
 
   @@unique([userId, courseId])
   @@index([userId, status])
+  @@index([courseId, status], map: "idx_enrollments_course_status")
+  @@index([cohortId, status], map: "idx_enrollments_cohort_status")
+  @@index([status, createdAt], map: "idx_enrollments_status_created_at")
   @@map("enrollments")
 }
 
@@ -549,6 +553,7 @@ model LessonProgress {
   @@index([userId])
   @@index([lessonId])
   @@index([enrollmentId])
+  @@index([userId, updatedAt], map: "idx_lesson_progress_user_updated_at")
   @@map("lesson_progress")
 }
 
@@ -591,6 +596,8 @@ model CourseProgress {
   @@index([userId])
   @@index([courseId])
   @@index([enrollmentId])
+  @@index([courseId, status], map: "idx_course_progress_course_status")
+  @@index([userId, updatedAt], map: "idx_course_progress_user_updated_at")
   @@map("course_progress")
 }
 
@@ -610,6 +617,8 @@ model Quiz {
   questions QuizQuestion[]
   attempts  QuizAttempt[]
 
+  @@index([courseId], map: "idx_quizzes_course_id")
+  @@index([lessonId], map: "idx_quizzes_lesson_id")
   @@map("quizzes")
 }
 
@@ -665,6 +674,8 @@ model Assignment {
   lesson      Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   submissions AssignmentSubmission[]
 
+  @@index([courseId], map: "idx_assignments_course_id")
+  @@index([lessonId], map: "idx_assignments_lesson_id")
   @@map("assignments")
 }
 
@@ -691,6 +702,8 @@ model AssignmentSubmission {
   @@index([assignmentId])
   @@index([userId])
   @@index([reviewedById])
+  @@index([userId, status, submittedAt], map: "idx_assignment_submissions_user_status_submitted_at")
+  @@index([status, submittedAt], map: "idx_assignment_submissions_status_submitted_at")
   @@map("assignment_submissions")
 }
 
@@ -733,6 +746,9 @@ model LessonQuestion {
   @@index([curatorId])
   @@index([status])
   @@index([createdAt])
+  @@index([curatorId, status, createdAt], map: "idx_lesson_questions_curator_status_created_at")
+  @@index([studentId, status, createdAt], map: "idx_lesson_questions_student_status_created_at")
+  @@index([status, createdAt], map: "idx_lesson_questions_status_created_at")
   @@map("lesson_questions")
 }
 
@@ -755,6 +771,9 @@ model Certificate {
   templateId String?     @map("template_id")
 
   @@index([issuedAt])
+  @@index([userId, issuedAt], map: "idx_certificates_user_issued_at")
+  @@index([courseId, issuedAt], map: "idx_certificates_course_issued_at")
+  @@index([enrollmentId], map: "idx_certificates_enrollment_id")
   @@map("certificates")
 }
 
@@ -795,6 +814,7 @@ model Notification {
   @@index([userId, status, createdAt])
   @@index([userId, createdAt])
   @@index([userId, status])
+  @@index([userId, readAt, createdAt], map: "idx_notifications_user_read_at_created_at")
   @@index([refType, refId])
   @@map("notifications")
 }
@@ -899,6 +919,9 @@ model CuratorAssignment {
   @@unique([cohortId, studentId])
   @@index([curatorId, active])
   @@index([studentId, active])
+  @@index([superCuratorId, active], map: "idx_curator_assignments_super_curator_active")
+  @@index([cohortId, active], map: "idx_curator_assignments_cohort_active")
+  @@index([active, assignedAt], map: "idx_curator_assignments_active_assigned_at")
   @@map("curator_assignments")
 }
 
@@ -922,6 +945,10 @@ model RiskFlag {
   @@index([cohortId])
   @@index([courseId])
   @@index([status])
+  @@index([userId, status, resolvedAt, createdAt], map: "idx_risk_flags_user_status_resolved_created_at")
+  @@index([status, resolvedAt, createdAt], map: "idx_risk_flags_status_resolved_created_at")
+  @@index([cohortId, status, resolvedAt], map: "idx_risk_flags_cohort_status_resolved")
+  @@index([courseId, status, resolvedAt], map: "idx_risk_flags_course_status_resolved")
   @@map("risk_flags")
 }
 
@@ -1042,6 +1069,13 @@ model Message {
   @@index([lessonId])
   @@index([senderId, receiverId])
   @@index([createdAt])
+  @@index([senderId, createdAt], map: "idx_messages_sender_created_at")
+  @@index([receiverId, createdAt], map: "idx_messages_receiver_created_at")
+  @@index([senderId, receiverId, createdAt], map: "idx_messages_sender_receiver_created_at")
+  @@index([receiverId, senderId, createdAt], map: "idx_messages_receiver_sender_created_at")
+  @@index([receiverId, readAt, createdAt], map: "idx_messages_receiver_read_at_created_at")
+  @@index([senderId, lessonId, createdAt], map: "idx_messages_sender_lesson_created_at")
+  @@index([receiverId, lessonId, createdAt], map: "idx_messages_receiver_lesson_created_at")
   @@map("messages")
 }
 

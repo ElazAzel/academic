@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/lms/page-header";
 import { SubmissionsQueue } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import type { SubmissionForReview } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
@@ -17,8 +18,9 @@ export default async function CuratorAssignmentsPage({
   const params = await searchParams;
 
   const assignedStudents = await prisma.curatorAssignment.findMany({
-    where: { curatorId: user.id },
+    where: { curatorId: user.id, active: true },
     select: { studentId: true },
+    take: QUERY_LIMITS.dashboardStudents,
   });
   const studentIds = assignedStudents.map((a) => a.studentId);
 
@@ -46,6 +48,7 @@ export default async function CuratorAssignmentsPage({
         ],
       },
       select: { id: true },
+      take: QUERY_LIMITS.dashboardStudents,
     });
     where.userId = { in: matchingUsers.map((u) => u.id) };
   }
@@ -57,6 +60,7 @@ export default async function CuratorAssignmentsPage({
       assignment: { include: { course: true, lesson: true } },
     },
     orderBy: { submittedAt: "desc" },
+    take: QUERY_LIMITS.dashboardQueue,
   });
 
   const submissions: SubmissionForReview[] = submissionsDb.map((sub) => ({

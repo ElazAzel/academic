@@ -7,6 +7,8 @@ import { ReportDesigner } from "@/components/lms/report-designer";
 import { ClipboardCheck, Users, AlertTriangle, Award, TrendingUp } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
+import { QUERY_LIMITS } from "@/lib/query-limits";
+import { ProgressStatus } from "@prisma/client";
 
 const prisma = getPrisma();
 
@@ -15,24 +17,37 @@ export const dynamic = "force-dynamic";
 export default async function AdminReportsPage() {
   await requireRolePage(["admin"]);
 
-  const [totalUsers, totalEnrollments, completedCourses, certsCount, courseStats] = await Promise.all([
+  const [totalUsers, totalEnrollments, completedCourses, certsCount, courseStats, progressByCourse, completedByCourse] = await Promise.all([
     prisma.user.count(),
     prisma.enrollment.count({ where: { status: "ACTIVE" } }),
-    prisma.courseProgress.count({ where: { status: "COMPLETED" } }),
+    prisma.courseProgress.count({ where: { status: ProgressStatus.COMPLETED } }),
     prisma.certificate.count(),
     prisma.course.findMany({
       select: {
+        id: true,
         title: true,
         _count: { select: { enrollments: true } },
-        courseProgress: { select: { percent: true, status: true } },
       },
+      orderBy: { title: "asc" },
+      take: QUERY_LIMITS.reportSummaryCourses,
+    }),
+    prisma.courseProgress.groupBy({
+      by: ["courseId"],
+      _avg: { percent: true },
+    }),
+    prisma.courseProgress.groupBy({
+      by: ["courseId"],
+      where: { status: ProgressStatus.COMPLETED },
+      _count: { _all: true },
     }),
   ]);
 
+  const avgProgressByCourse = new Map(progressByCourse.map((row) => [row.courseId, Math.round(row._avg.percent ?? 0)]));
+  const completedCountByCourse = new Map(completedByCourse.map((row) => [row.courseId, row._count._all]));
+
   const coursesChart = courseStats.map((c) => {
-    const total = c._count.enrollments || 1;
-    const completed = c.courseProgress.filter((p) => p.status === "COMPLETED").length;
-    const avgProgress = total > 0 ? Math.round(c.courseProgress.reduce((s, p) => s + p.percent, 0) / total) : 0;
+    const completed = completedCountByCourse.get(c.id) ?? 0;
+    const avgProgress = avgProgressByCourse.get(c.id) ?? 0;
     return { label: c.title, value: avgProgress, sublabel: `${completed}/${c._count.enrollments} завершили`, color: avgProgress > 75 ? "#16a34a" : avgProgress > 40 ? "#ca8a04" : "#dc2626" };
   });
 
