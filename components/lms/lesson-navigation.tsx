@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 
 export function LessonNavigation({
@@ -14,8 +14,8 @@ export function LessonNavigation({
       {prevLesson ? (
         <Button asChild variant="secondary" size="sm">
           <Link href={`/student/lessons/${prevLesson.id}`}>
-            <ArrowLeft className="h-4 w-4" />
-            {prevLesson.title}
+            <Icon name="arrow_back" size={16} />
+            <span className="max-w-[200px] truncate">{prevLesson.title}</span>
           </Link>
         </Button>
       ) : (
@@ -24,14 +24,14 @@ export function LessonNavigation({
       {nextLesson ? (
         nextLesson.locked ? (
           <Button size="sm" disabled title="Урок заблокирован">
-            {nextLesson.title}
-            <ArrowRight className="h-4 w-4" />
+            <span className="max-w-[200px] truncate">{nextLesson.title}</span>
+            <Icon name="arrow_forward" size={16} />
           </Button>
         ) : (
           <Button asChild size="sm">
             <Link href={`/student/lessons/${nextLesson.id}`}>
-              {nextLesson.title}
-              <ArrowRight className="h-4 w-4" />
+              <span className="max-w-[200px] truncate">{nextLesson.title}</span>
+              <Icon name="arrow_forward" size={16} />
             </Link>
           </Button>
         )

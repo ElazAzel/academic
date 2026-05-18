@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { updateProfileSettingsAction, updatePasswordAction } from "@/server/actions/settings";
-import { Loader2 } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
 
 export function ProfileSettingsForm({ user }: { user: { name: string | null; email: string; } }) {
@@ -23,26 +23,26 @@ export function ProfileSettingsForm({ user }: { user: { name: string | null; ema
   }
 
   return (
-    <Card>
+    <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
       <CardHeader>
-        <CardTitle>Профиль</CardTitle>
-        <CardDescription>Имя и контактные данные</CardDescription>
+        <CardTitle className="text-title-lg font-title-lg text-m3-on-surface">Профиль</CardTitle>
+        <CardDescription className="text-body-md font-body-md text-m3-on-surface-variant">Имя и контактные данные</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={action} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-sm font-medium">Имя</label>
+              <label className="text-label-lg font-label-lg text-m3-on-surface-variant">Имя</label>
               <Input name="name" className="mt-1" defaultValue={user.name || ""} />
             </div>
             <div>
-              <label className="text-sm font-medium">Email</label>
+              <label className="text-label-lg font-label-lg text-m3-on-surface-variant">Email</label>
               <Input className="mt-1" defaultValue={user.email} disabled />
             </div>
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending && <Icon name="progress_activity" size={16} className="mr-2 animate-spin" />}
               Сохранить
             </Button>
           </div>
@@ -69,28 +69,28 @@ export function SecuritySettingsForm() {
   }
 
   return (
-    <Card>
+    <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
       <CardHeader>
-        <CardTitle>Безопасность</CardTitle>
-        <CardDescription>Смена пароля</CardDescription>
+        <CardTitle className="text-title-lg font-title-lg text-m3-on-surface">Безопасность</CardTitle>
+        <CardDescription className="text-body-md font-body-md text-m3-on-surface-variant">Смена пароля</CardDescription>
       </CardHeader>
       <CardContent>
         <form ref={formRef} action={action} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Текущий пароль</label>
+            <label className="text-label-lg font-label-lg text-m3-on-surface-variant">Текущий пароль</label>
             <Input name="currentPassword" type="password" required className="mt-1" placeholder="Текущий пароль" />
           </div>
           <div>
-            <label className="text-sm font-medium">Новый пароль</label>
+            <label className="text-label-lg font-label-lg text-m3-on-surface-variant">Новый пароль</label>
             <Input name="newPassword" type="password" required minLength={10} className="mt-1" placeholder="Мин. 10 символов" />
           </div>
           <div>
-            <label className="text-sm font-medium">Повторите новый пароль</label>
+            <label className="text-label-lg font-label-lg text-m3-on-surface-variant">Повторите новый пароль</label>
             <Input name="confirmPassword" type="password" required minLength={10} className="mt-1" placeholder="Повторите пароль" />
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending && <Icon name="progress_activity" size={16} className="mr-2 animate-spin" />}
               Изменить пароль
             </Button>
           </div>

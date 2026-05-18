@@ -224,8 +224,8 @@ export function VideoBlock({ video, videoUrl, title, duration, onProgress, showW
   if (!resolvedVideo && !videoUrl) return null;
 
   return (
-    <div className="overflow-hidden rounded-2xl border bg-card shadow-sm transition-shadow hover:shadow-md">
-      <div className="relative aspect-video bg-muted/30">
+    <div className="overflow-hidden rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 ease-in-out hover:shadow-m3-soft-hover">
+      <div className="relative aspect-video bg-m3-surface-container-high">
         {canWatch ? (
           useIFrameAPI ? (
             <div ref={playerContainerRef} className="absolute inset-0" />
@@ -237,9 +237,9 @@ export function VideoBlock({ video, videoUrl, title, duration, onProgress, showW
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
-          ) : resolvedVideo ? (
+            ) : resolvedVideo ? (
             <div className="flex h-full items-center justify-center px-6 text-center">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-body-md font-body-md text-m3-on-surface-variant">
                 Видео на платформе {resolvedVideo.provider}
               </p>
             </div>
@@ -247,9 +247,9 @@ export function VideoBlock({ video, videoUrl, title, duration, onProgress, showW
         ) : (
           <div className="flex h-full items-center justify-center px-6 text-center">
             <div className="space-y-3">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted-foreground/10">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-m3-surface-container-high">
                 <svg
-                  className="h-6 w-6 text-muted-foreground/60"
+                  className="h-6 w-6 text-m3-on-surface-variant/60"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth={1.5}
@@ -262,7 +262,7 @@ export function VideoBlock({ video, videoUrl, title, duration, onProgress, showW
                   />
                 </svg>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-body-md font-body-md text-m3-on-surface-variant">
                 Видео доступно только авторизованным пользователям
               </p>
             </div>
@@ -277,12 +277,12 @@ export function VideoBlock({ video, videoUrl, title, duration, onProgress, showW
       </div>
 
       {(displayTitle || displayDuration) && (
-        <div className="flex items-center justify-between gap-3 border-t px-4 py-3">
+        <div className="flex items-center justify-between gap-3 border-t border-m3-outline-variant px-4 py-3">
           {displayTitle && (
-            <p className="truncate text-sm font-medium">{displayTitle}</p>
+            <p className="truncate text-body-md font-body-md text-m3-on-surface">{displayTitle}</p>
           )}
           {displayDuration && (
-            <Badge className="shrink-0 border-primary/20 bg-primary/5 text-primary">
+            <Badge className="shrink-0 border-m3-primary-fixed-dim bg-m3-primary-fixed text-m3-primary">
               {displayDuration} мин.
             </Badge>
           )}

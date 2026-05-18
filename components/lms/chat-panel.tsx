@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Paperclip, Loader2, Download, Smile } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendMessageAction, getConversation, markAsRead, getUploadUrlForFile } from "@/server/actions/chat";
 import { getSupabaseClient } from "@/lib/supabase-client";
@@ -262,53 +262,53 @@ export function ChatPanel({
   }
 
   return (
-    <div className="flex flex-col rounded-2xl border bg-card">
+    <div className="flex flex-col rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
       <div className="flex items-center justify-between px-4 pt-3 pb-1">
-        <span className="text-sm font-medium">{conversationTitle}</span>
+        <span className="text-label-lg font-label-lg text-m3-on-surface">{conversationTitle}</span>
         {messages.length > 0 && (
           <Button type="button" variant="ghost" size="sm" onClick={handleDownload} aria-label="Скачать историю">
-            <Download className="h-4 w-4 mr-1" />
+            <Icon name="download" size={16} className="mr-1" />
             Скачать историю
           </Button>
         )}
       </div>
       <div ref={chatContainerRef} className="flex-1 space-y-3 overflow-auto px-4 pb-3 max-h-[400px] min-h-[200px]">
         {messages.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground py-8">{emptyState}</p>
+          <p className="text-center text-body-md font-body-md text-m3-on-surface-variant py-8">{emptyState}</p>
         )}
         {messages.map((m) => (
           <div key={m.id} className={`flex ${m.isMine ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.isMine ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-              {m.text && <p className="text-sm">{m.text}</p>}
+            <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.isMine ? "bg-m3-primary text-m3-on-primary" : "bg-m3-surface-container-high"}`}>
+              {m.text && <p className="text-body-md font-body-md">{m.text}</p>}
               {m.attachmentUrl && m.attachmentType?.includes("image") ? (
                 <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={m.attachmentUrl}
                   alt="Вложение"
-                  className="mt-2 max-w-full rounded-lg border"
+                  className="mt-2 max-w-full rounded-lg border border-m3-outline-variant"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = "none";
                   }}
                 />
                 </>
               ) : m.attachmentUrl ? (
-                <a href={m.attachmentUrl} target="_blank" rel="noreferrer" className={`block mt-1 text-xs underline ${m.isMine ? "text-primary-foreground/80" : "text-primary"}`}>
+                <a href={m.attachmentUrl} target="_blank" rel="noreferrer" className={`block mt-1 text-label-sm font-label-sm underline ${m.isMine ? "text-m3-on-primary/80" : "text-m3-primary"}`}>
                   📎 {m.attachmentType?.includes("pdf") ? "PDF"
                     : m.attachmentType?.includes("word") || m.attachmentType?.includes("document") ? "Документ"
                     : "Файл"}
                 </a>
               ) : null}
               {m.lessonTitle && (
-                <p className={`mt-1 text-[10px] ${m.isMine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                <p className={`mt-1 text-label-sm font-label-sm ${m.isMine ? "text-m3-on-primary/70" : "text-m3-on-surface-variant"}`}>
                   Контекст урока: {m.lessonTitle}
                 </p>
               )}
-              <p className={`text-[10px] mt-1 ${m.isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+              <p className={`text-label-sm font-label-sm mt-1 ${m.isMine ? "text-m3-on-primary/60" : "text-m3-on-surface-variant"}`}>
                 {new Date(m.createdAt).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })}
                 {m.id.startsWith("optimistic-") && sendMutation.isPending && " · отправляется..."}
                 {m.id.startsWith("optimistic-") && sendMutation.isError && (
-                  <span className="text-destructive"> · ошибка</span>
+                  <span className="text-m3-error"> · ошибка</span>
                 )}
               </p>
               {m.id.startsWith("optimistic-") && sendMutation.isError && (
@@ -321,7 +321,7 @@ export function ChatPanel({
                     formData.set("receiverId", receiverId);
                     sendMutation.mutate(formData);
                   }}
-                  className="mt-1 text-[10px] text-destructive hover:underline"
+                  className="mt-1 text-label-sm font-label-sm text-m3-error hover:underline"
                 >
                   Повторить
                 </button>
@@ -331,15 +331,15 @@ export function ChatPanel({
         ))}
         <div ref={bottomRef} />
       </div>
-      <div className="border-t p-3">
+      <div className="border-t border-m3-outline-variant p-3">
         {showEmojiPicker && (
-          <div className="flex flex-wrap gap-1 mb-2 p-2 border rounded-lg bg-background">
+          <div className="flex flex-wrap gap-1 mb-2 p-2 border border-m3-outline-variant rounded-lg bg-m3-surface-container-high">
             {COMMON_EMOJIS.map((emoji) => (
               <button
                 key={emoji}
                 type="button"
                 onClick={() => insertEmoji(emoji)}
-                className="text-lg hover:bg-muted rounded p-1 transition-colors"
+                className="text-lg hover:bg-m3-surface-container-high rounded p-1 transition-colors"
               >
                 {emoji}
               </button>
@@ -355,10 +355,10 @@ export function ChatPanel({
             onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
           />
           <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} aria-label="Прикрепить файл">
-            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+            {uploading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="attach_file" size={16} />}
           </Button>
           <Button type="button" variant="ghost" size="sm" onClick={() => setShowEmojiPicker(!showEmojiPicker)} aria-label="Выбрать эмодзи">
-            <Smile className="h-4 w-4" />
+            <Icon name="emoji_emotions" size={16} />
           </Button>
           <Input
             name="text"
@@ -368,7 +368,7 @@ export function ChatPanel({
             className="flex-1"
           />
           <Button type="submit" size="sm" disabled={sendMutation.isPending || (!text.trim())}>
-            {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {sendMutation.isPending ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="send" size={16} />}
           </Button>
         </form>
       </div>

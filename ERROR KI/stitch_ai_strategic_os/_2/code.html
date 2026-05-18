@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Strategic Academy - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#001f25",
+                        "surface-tint": "#4159ab",
+                        "secondary": "#6339db",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "surface-container-highest": "#dbe3ec",
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#004e59",
+                        "primary-fixed": "#dce1ff",
+                        "on-secondary-fixed": "#1f005f",
+                        "error": "#ba1a1a",
+                        "tertiary": "#003a43",
+                        "inverse-surface": "#293138",
+                        "surface-container-high": "#e1e9f1",
+                        "on-primary-fixed-variant": "#264192",
+                        "outline": "#757683",
+                        "on-primary-container": "#a6b8ff",
+                        "secondary-container": "#7d56f5",
+                        "tertiary-fixed-dim": "#5bd7ec",
+                        "on-secondary-fixed-variant": "#4d17c5",
+                        "on-surface": "#151c22",
+                        "background": "#f6faff",
+                        "surface": "#f6faff",
+                        "outline-variant": "#c5c5d3",
+                        "on-secondary-container": "#fffbff",
+                        "on-surface-variant": "#444651",
+                        "tertiary-container": "#00535e",
+                        "on-error-container": "#93000a",
+                        "on-background": "#151c22",
+                        "on-primary-fixed": "#00164f",
+                        "surface-variant": "#dbe3ec",
+                        "surface-dim": "#d3dbe3",
+                        "inverse-primary": "#b6c4ff",
+                        "surface-container": "#e7eff7",
+                        "on-tertiary-container": "#4dcbe0",
+                        "surface-container-low": "#edf4fd",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#e7deff",
+                        "tertiary-fixed": "#a0efff",
+                        "primary-container": "#2b4596",
+                        "inverse-on-surface": "#eaf2fa",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#0c2d7e",
+                        "surface-bright": "#f6faff",
+                        "secondary-fixed-dim": "#ccbdff"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "lg": "24px",
+                        "xxl": "48px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "unit": "4px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "container-max": "1280px",
+                        "xl": "32px",
+                        "xs": "4px"
+                    },
+                    fontFamily: {
+                        "headline-lg-mobile": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "mono-sm": ["JetBrains Mono"],
+                        "label-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    fontSize: {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "mono-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label-lg": ["14px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px rgba(0, 0, 0, 0.05)',
+                        'soft-hover': '0 8px 30px rgba(0, 0, 0, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex">
+<!-- SideNavBar (Desktop) -->
+<aside class="hidden md:flex flex-col h-full py-lg fixed left-0 top-0 h-full w-64 border-r border-outline-variant dark:border-outline bg-surface-container-low dark:bg-surface-dim z-40">
+<div class="px-lg mb-xl flex flex-col gap-sm">
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed">AI Academy</h1>
+<span class="font-label-md text-label-md text-on-surface-variant">Strategic LMS</span>
+</div>
+<nav class="flex-1 px-sm space-y-unit">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-primary dark:text-primary-fixed-dim font-bold border-l-4 border-secondary-container bg-secondary-fixed/10 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined fill">dashboard</span>
+<span class="font-label-lg text-label-lg">Панель управления</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="font-label-lg text-label-lg">Курсы</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-lg text-label-lg">Пользователи</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-lg text-label-lg">Отчеты</span>
+</a>
+</nav>
+<div class="mt-auto px-sm space-y-unit">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-lg text-label-lg">Настройки</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-lg text-label-lg">Выход</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 md:ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar (Mobile) -->
+<header class="md:hidden fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg py-md bg-surface-container-lowest dark:bg-inverse-surface border-b border-outline-variant dark:border-outline shadow-sm">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">AI Strategic Academy</span>
+<div class="flex items-center gap-md">
+<button class="text-primary dark:text-primary-fixed-dim hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors p-xs rounded-full cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-primary dark:text-primary-fixed-dim hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors p-xs rounded-full cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">contrast</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant ml-sm">
+<img alt="Аватар пользователя" class="w-full h-full object-cover" data-alt="A professional headshot of a confident young person in a corporate setting. The lighting is soft and flattering, highlighting a modern, clean, and optimistic mood suitable for a premium educational platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9HjzOW-Dyp69dl9GS7V37Cm6LbtIJuBo8pItA771An29W85dwsa6K1kGUMpYoK_HR649u9Cj8XqBJhds8UPFY0XnGOchRcCwfmN-ai_8YahGLEOF9X00CwgCDXGfYMzSjWkpOa_E6utRfJTVMLyAmjMb4T2GFDSwSLDgdscPtblHPgTv5ABHQV5DySRGkRnQMuyE_W48b2fINRBv5Iq3o70CqchuOx_4l7NFSFf1C5CXnUcEk_ABzXCyqLMDdkDlwvdDt9GPNBRE"/>
+</div>
+</div>
+</header>
+<!-- TopAppBar (Desktop - Page Title Area) -->
+<div class="hidden md:flex w-full max-w-container-max mx-auto px-xxl pt-xxl pb-lg flex-col gap-sm bg-transparent">
+<div class="flex items-center justify-between w-full">
+<h2 class="font-headline-lg text-headline-lg font-bold text-primary">Панель управления</h2>
+<div class="flex items-center gap-md">
+<button class="p-sm text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
+<img alt="Аватар пользователя" class="w-full h-full object-cover" data-alt="A professional headshot of a confident young person in a corporate setting. The lighting is soft and flattering, highlighting a modern, clean, and optimistic mood suitable for a premium educational platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgKHCizqFcpCjl7u4pwfFowycYGeTJIxC-MiHpXPkT_kyF_0CTd-z-ppRpLHT_ln3SNTsVGNSmeNZSJ81RJX6eE4Y0FFFZuxaqyDUPWunoJNQPXuBrM8XVoGKvdgh4boxXL6OdUNrRgcwRavwsoMPT3RgzUAmR9bx1lGbh14eA4NXHGpzgUamWHAVZcXSuM1L8Ckvd4_-oblw10JtAtkkciKYajXmIOc0Fvw9lGPn6J4Vc-PRNfddG1Lca7gsZ00256VKsMHMFCIw"/>
+</div>
+</div>
+</div>
+</div>
+<main class="flex-1 w-full max-w-container-max mx-auto px-margin-mobile md:px-xxl py-xl md:py-0 mt-[72px] md:mt-0 flex flex-col gap-xl">
+<!-- Hero / Continue Learning Card -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-soft p-lg md:p-xl flex flex-col md:flex-row gap-lg md:items-center transition-shadow hover:shadow-soft-hover">
+<div class="w-full md:w-48 h-32 rounded-lg overflow-hidden shrink-0 bg-surface-container">
+<img alt="Course Cover" class="w-full h-full object-cover" data-alt="A sleek, modern composition representing artificial intelligence and data science. Abstract geometric lines and soft blue gradients evoke a sense of high-tech learning and strategic foresight in a pristine, bright environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGTsJlYOVhcC7_sKIg9fBuUhOir6agA_ORAcuvDsmQbLzlZrwzIWX4Vr1q4fdHSsiM8Bj6f2xiYNNqatxIiglq41ATvbAOLtqgcRgPMojYJ_6EoDzeTx0wx_2zdndLcMUaBONJcgygN7_RIVXoZgf7IVRy2g4CNv2oGQ_cjOmxPwVXd17eQvAme90bqOEGQnuRDjuyrry7jeou2ncs3WARtzb-1-4MvunJep2rRbnr_h-O5Hax0KBnlp7scK4E2eo0S6VTQcaSG_4"/>
+</div>
+<div class="flex-1 flex flex-col gap-md">
+<div>
+<div class="flex items-center gap-sm mb-xs">
+<span class="px-sm py-xs bg-primary/10 text-primary font-label-md text-label-md rounded-full">В процессе</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Ближайший дедлайн: 24 Октября</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-unit">Стратегическое внедрение ИИ</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Модуль 3: Этические аспекты машинного обучения</p>
+</div>
+<div class="flex flex-col gap-unit">
+<div class="flex justify-between font-label-md text-label-md text-on-surface-variant">
+<span>Прогресс курса</span>
+<span class="font-bold text-primary">64%</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[64%]"></div>
+</div>
+</div>
+</div>
+<div class="md:ml-auto md:pl-lg border-t md:border-t-0 md:border-l border-outline-variant pt-lg md:pt-0 flex flex-col justify-center shrink-0">
+<button class="bg-primary text-on-primary font-label-lg text-label-lg px-xl py-md rounded-lg flex items-center justify-center gap-sm hover:bg-primary/90 transition-colors">
+                        Продолжить обучение
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<!-- Мои курсы -->
+<section class="md:col-span-2 bg-surface-container-lowest rounded-xl border border-outline-variant shadow-soft p-lg flex flex-col gap-md">
+<div class="flex items-center justify-between border-b border-outline-variant pb-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Мои курсы</h3>
+<a class="text-primary font-label-lg text-label-lg hover:underline" href="#">Все курсы</a>
+</div>
+<div class="flex flex-col gap-md">
+<!-- Course Item 1 -->
+<div class="flex items-center gap-md p-md rounded-lg hover:bg-surface-container-low transition-colors group cursor-pointer border border-transparent hover:border-outline-variant">
+<div class="w-12 h-12 rounded-md bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<div class="flex-1">
+<h4 class="font-label-lg text-label-lg text-on-surface group-hover:text-primary transition-colors">Основы нейронных сетей</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Модуль 1 из 8</p>
+</div>
+<div class="text-right">
+<span class="font-label-lg text-label-lg text-on-surface">12%</span>
+</div>
+</div>
+<!-- Course Item 2 -->
+<div class="flex items-center gap-md p-md rounded-lg hover:bg-surface-container-low transition-colors group cursor-pointer border border-transparent hover:border-outline-variant">
+<div class="w-12 h-12 rounded-md bg-tertiary text-on-tertiary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined">leaderboard</span>
+</div>
+<div class="flex-1">
+<h4 class="font-label-lg text-label-lg text-on-surface group-hover:text-primary transition-colors">Data-Driven Менеджмент</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Модуль 5 из 6</p>
+</div>
+<div class="text-right">
+<span class="font-label-lg text-label-lg text-on-surface">88%</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Задания & Тесты -->
+<section class="flex flex-col gap-lg">
+<!-- Задания -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-soft p-lg flex-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface border-b border-outline-variant pb-md mb-md">Задания</h3>
+<div class="flex flex-col gap-sm">
+<div class="flex items-start gap-sm">
+<span class="material-symbols-outlined text-error mt-unit">warning</span>
+<div>
+<h4 class="font-label-lg text-label-lg text-on-surface">Практикум: NLP модели</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">До завтра, 23:59</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Тесты -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-soft p-lg flex-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface border-b border-outline-variant pb-md mb-md">Тесты</h3>
+<div class="flex items-start gap-sm text-on-surface-variant">
+<span class="material-symbols-outlined">check_circle</span>
+<span class="font-body-sm text-body-sm">Нет активных тестов на данный момент. Отличная работа!</span>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+</body></html>

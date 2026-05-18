@@ -3,49 +3,114 @@
 @tailwind utilities;
 
 /* ── Theme variables ─────────────────────────────────────────────── */
+/* Material 3 Deep Indigo palette — Executive Academic OS           */
 
 :root {
-  --background: 220 33% 98%;
-  --foreground: 222 47% 11%;
+  /* shadcn/ui semantic tokens (HSL) mapped to M3 palette */
+  --background: 214 100% 97%;
+  --foreground: 214 24% 11%;
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --primary: 224 76% 48%;
+  --card-foreground: 214 24% 11%;
+  --primary: 224 83% 27%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 162 47% 93%;
-  --secondary-foreground: 164 85% 18%;
-  --muted: 220 18% 94%;
-  --muted-foreground: 220 9% 43%;
-  --accent: 38 92% 92%;
-  --accent-foreground: 28 74% 26%;
-  --destructive: 0 72% 51%;
+  --secondary: 256 69% 54%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 210 38% 94%;
+  --muted-foreground: 240 7% 29%;
+  --accent: 232 100% 93%;
+  --accent-foreground: 224 83% 27%;
+  --destructive: 0 76% 42%;
   --destructive-foreground: 0 0% 100%;
-  --border: 220 16% 88%;
-  --input: 220 16% 88%;
-  --ring: 224 76% 48%;
-  --radius: 16px;
+  --border: 240 14% 80%;
+  --input: 240 14% 80%;
+  --ring: 224 83% 27%;
+  --radius: 12px;
+
+  /* M3 Surface Container tokens (hex) — for direct use in classes */
+  --m3-surface: #f6faff;
+  --m3-surface-dim: #d3dbe3;
+  --m3-surface-bright: #f6faff;
+  --m3-surface-container-lowest: #ffffff;
+  --m3-surface-container-low: #edf4fd;
+  --m3-surface-container: #e7eff7;
+  --m3-surface-container-high: #e1e9f1;
+  --m3-surface-container-highest: #dbe3ec;
+  --m3-on-surface: #151c22;
+  --m3-on-surface-variant: #444651;
+  --m3-outline: #757683;
+  --m3-outline-variant: #c5c5d3;
+  --m3-primary: #0c2d7e;
+  --m3-primary-container: #2b4596;
+  --m3-on-primary: #ffffff;
+  --m3-on-primary-container: #a6b8ff;
+  --m3-secondary: #6339db;
+  --m3-secondary-container: #7d56f5;
+  --m3-on-secondary: #ffffff;
+  --m3-error: #ba1a1a;
+  --m3-error-container: #ffdad6;
+  --m3-primary-fixed: #dce1ff;
+  --m3-primary-fixed-dim: #b6c4ff;
+  --m3-secondary-fixed: #e7deff;
+  --m3-secondary-fixed-dim: #ccbdff;
+  --m3-tertiary: #003a43;
+  --m3-tertiary-container: #00535e;
+  --m3-background: #f6faff;
 
   /* Mobile bottom nav */
   --nav-height: 64px;
 }
 
 .dark {
-  --background: 222 47% 8%;
+  --background: 214 24% 8%;
   --foreground: 210 40% 92%;
-  --card: 222 47% 11%;
+  --card: 214 24% 11%;
   --card-foreground: 210 40% 92%;
-  --primary: 217 91% 60%;
+  --primary: 225 57% 38%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 217 19% 15%;
-  --secondary-foreground: 210 40% 85%;
-  --muted: 217 19% 15%;
-  --muted-foreground: 215 16% 60%;
-  --accent: 215 25% 18%;
-  --accent-foreground: 210 40% 85%;
+  --secondary: 256 69% 54%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 214 24% 15%;
+  --muted-foreground: 240 14% 70%;
+  --accent: 225 24% 20%;
+  --accent-foreground: 232 100% 93%;
   --destructive: 0 62% 40%;
   --destructive-foreground: 0 0% 100%;
-  --border: 217 19% 22%;
-  --input: 217 19% 22%;
-  --ring: 217 91% 60%;
+  --border: 240 10% 22%;
+  --input: 240 10% 22%;
+  --ring: 225 57% 38%;
+
+  --m3-surface: #1a1c1e;
+  --m3-surface-dim: #101214;
+  --m3-surface-bright: #3a3c3e;
+  --m3-surface-container-lowest: #0c0e0f;
+  --m3-surface-container-low: #222426;
+  --m3-surface-container: #2a2c2e;
+  --m3-surface-container-high: #353739;
+  --m3-surface-container-highest: #404244;
+  --m3-on-surface: #e2e2e6;
+  --m3-on-surface-variant: #c4c4c7;
+  --m3-outline: #8e8e93;
+  --m3-outline-variant: #444446;
+  --m3-primary: #b6c4ff;
+  --m3-primary-container: #2b4596;
+  --m3-on-primary: #00164f;
+  --m3-secondary: #ccbdff;
+  --m3-secondary-container: #4d17c5;
+  --m3-error: #ffb4ab;
+  --m3-error-container: #93000a;
+  --m3-background: #1a1c1e;
+}
+
+/* ── Material Symbols ────────────────────────────────────────────── */
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 24px;
+  display: inline-block;
+  line-height: 1;
+}
+.material-symbols-outlined.fill {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
 /* ── Reset ───────────────────────────────────────────────────────── */
@@ -70,27 +135,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Desktop: subtle gradient backgrounds */
+/* Desktop & Mobile: clean M3 surface background */
+body {
+  background-color: var(--m3-background);
+}
+
+/* Desktop: subtle gradient overlay (very faint) */
 @media (min-width: 768px) {
   body {
     background:
-      radial-gradient(circle at 15% 0%, rgba(59, 130, 246, 0.08), transparent 34rem),
-      radial-gradient(circle at 85% 10%, rgba(16, 185, 129, 0.08), transparent 30rem),
-      hsl(var(--background));
-  }
-
-  .dark body {
-    background:
-      radial-gradient(circle at 15% 0%, rgba(59, 130, 246, 0.06), transparent 34rem),
-      radial-gradient(circle at 85% 10%, rgba(16, 185, 129, 0.04), transparent 30rem),
-      hsl(var(--background));
-  }
-}
-
-/* Mobile: solid clean background (app-like) */
-@media (max-width: 767px) {
-  body {
-    background: hsl(var(--background));
+      radial-gradient(circle at 15% 0%, rgba(65, 89, 171, 0.04), transparent 34rem),
+      radial-gradient(circle at 85% 10%, rgba(99, 57, 219, 0.03), transparent 30rem),
+      var(--m3-background);
   }
 }
 
@@ -227,7 +283,7 @@ a {
 }
 
 .dark .bottom-nav-bar {
-  background: hsl(222 47% 8% / 0.92);
+  background: rgba(26, 28, 30, 0.92);
 }
 
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
@@ -246,7 +302,45 @@ a {
   flex: 1;
   height: 100%;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition: color 0.15s ease;
+}
+
+/* ── Interactive micro-animations ─────────────────────────────────── */
+
+/* Tap highlight removal for all interactive elements */
+button, a, [role="button"], input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Smooth image load */
+img {
+  transition: opacity 0.2s ease-in-out;
+}
+img[loading="lazy"] {
+  opacity: 0;
+}
+img[loading="lazy"]:not([src=""]) {
+  opacity: 1;
+}
+
+/* Focus ring utility */
+.focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.15s ease;
+}
+.focus-ring:focus-visible {
+  outline-color: hsl(var(--m3-primary));
+}
+
+/* Subtle scale for touch feedback on interactive cards */
+@media (hover: none) {
+  .bottom-nav-item:active {
+    transform: scale(0.92);
+    transition: transform 0.1s ease;
+  }
 }
 
 /* ── Page transition wrapper ─────────────────────────────────────── */
@@ -255,6 +349,7 @@ a {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  scroll-behavior: smooth;
 }
 
 /* Mobile: extra bottom padding for nav bar */
