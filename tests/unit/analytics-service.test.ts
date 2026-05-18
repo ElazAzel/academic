@@ -5,7 +5,10 @@ const mockCourseCount = vi.hoisted(() => vi.fn());
 const mockEnrollmentCount = vi.hoisted(() => vi.fn());
 const mockCourseProgressCount = vi.hoisted(() => vi.fn());
 const mockQuizAttemptFindMany = vi.hoisted(() => vi.fn());
+const mockQuizAttemptAggregate = vi.hoisted(() => vi.fn());
+const mockQuizAttemptCount = vi.hoisted(() => vi.fn());
 const mockCertificateCount = vi.hoisted(() => vi.fn());
+const mockOutboxEventCreate = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
@@ -13,8 +16,9 @@ vi.mock("@/lib/prisma", () => ({
     course: { count: mockCourseCount },
     enrollment: { count: mockEnrollmentCount },
     courseProgress: { count: mockCourseProgressCount },
-    quizAttempt: { findMany: mockQuizAttemptFindMany },
+    quizAttempt: { findMany: mockQuizAttemptFindMany, aggregate: mockQuizAttemptAggregate, count: mockQuizAttemptCount },
     certificate: { count: mockCertificateCount },
+    outboxEvent: { create: mockOutboxEventCreate },
   }),
 }));
 
@@ -30,6 +34,8 @@ describe("getAdminOverview", () => {
       { score: 80, passed: true },
       { score: 60, passed: false },
     ]);
+    mockQuizAttemptAggregate.mockResolvedValue({ _avg: { score: 70 } });
+    mockQuizAttemptCount.mockResolvedValue(1);
     mockCertificateCount.mockResolvedValue(8);
 
     const result = await getAdminOverview();
@@ -52,6 +58,8 @@ describe("getAdminOverview", () => {
     mockEnrollmentCount.mockResolvedValue(0);
     mockCourseProgressCount.mockResolvedValue(0);
     mockQuizAttemptFindMany.mockResolvedValue([]);
+    mockQuizAttemptAggregate.mockResolvedValue({ _avg: { score: null } });
+    mockQuizAttemptCount.mockResolvedValue(0);
     mockCertificateCount.mockResolvedValue(0);
 
     const result = await getAdminOverview();
@@ -72,6 +80,8 @@ describe("getAdminOverview", () => {
     mockEnrollmentCount.mockResolvedValue(10);
     mockCourseProgressCount.mockResolvedValue(4);
     mockQuizAttemptFindMany.mockResolvedValue([{ score: 90, passed: true }]);
+    mockQuizAttemptAggregate.mockResolvedValue({ _avg: { score: 90 } });
+    mockQuizAttemptCount.mockResolvedValue(1);
     mockCertificateCount.mockResolvedValue(2);
 
     const result = await getAdminOverview();
