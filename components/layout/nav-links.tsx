@@ -5,18 +5,20 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
-import type { NavItem } from "@/components/layout/navigation";
+import { getActiveNavHref, type NavItem } from "@/components/layout/navigation";
 
 const BADGE_MAP: Record<string, string> = {
   "notifications": "notifications",
   "chat": "messages",
   "help": "openQuestions",
+  "assignment": "pendingReviews",
   "clipboard_check": "pendingReviews",
 };
 
 export function NavLinks({ links }: { links: NavItem[] }) {
   const pathname = usePathname();
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const activeHref = getActiveNavHref(pathname, links);
 
   const fetchCounts = useCallback(async () => {
     try {
@@ -39,7 +41,7 @@ export function NavLinks({ links }: { links: NavItem[] }) {
   return (
     <div className="flex flex-col gap-unit">
       {links.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+        const isActive = activeHref === item.href;
         const badgeKey = BADGE_MAP[item.icon];
         const badgeCount = badgeKey ? (counts[badgeKey] ?? 0) : 0;
         const showBadge = badgeCount > 0;

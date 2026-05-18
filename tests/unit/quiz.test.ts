@@ -1,5 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { gradeObjectiveQuiz } from "@/server/modules/quizzes/service";
+
+vi.mock("@/lib/prisma", () => ({
+  getPrisma: () => ({}),
+}));
+
+vi.mock("@/server/modules/audit/service", () => ({
+  logAudit: vi.fn(),
+}));
+
+vi.mock("@/server/modules/progress/service", () => ({
+  markLessonProgress: vi.fn(),
+}));
 
 describe("quiz grading", () => {
   it("autogrades objective questions", () => {
@@ -112,4 +124,3 @@ describe("quiz grading", () => {
     expect(result.passed).toBe(true);
   });
 });
-

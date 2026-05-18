@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
-import { BOTTOM_NAV_BY_ROLE } from "@/components/layout/navigation";
+import { BOTTOM_NAV_BY_ROLE, getActiveNavHref } from "@/components/layout/navigation";
 import { cn } from "@/lib/utils";
 import type { RoleKey } from "@/types/domain";
 
@@ -12,6 +12,7 @@ export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
   const pathname = usePathname();
   const shouldReduce = useReducedMotion();
   const items = BOTTOM_NAV_BY_ROLE[role] ?? BOTTOM_NAV_BY_ROLE.student;
+  const activeHref = getActiveNavHref(pathname, items);
 
   return (
     <nav
@@ -19,7 +20,7 @@ export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
       aria-label="Мобильная навигация"
     >
       {items.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+        const isActive = activeHref === item.href;
 
         return (
           <Link

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { CourseStatus, LessonType } from "@prisma/client";
+import { CourseStatus, LessonType, Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { toJsonValue } from "@/lib/json";
@@ -12,6 +12,16 @@ import type { z } from "zod";
 
 const prisma = getPrisma();
 type CourseBuilderSnapshotInput = z.infer<typeof courseBuilderSnapshotSchema>;
+type SnapshotModule = CourseBuilderSnapshotInput["modules"][number];
+type SnapshotBlock = SnapshotModule["blocks"][number];
+type SnapshotLesson = SnapshotModule["lessons"][number] & { blockId: string | null };
+type NormalizedSnapshotBlock = Omit<SnapshotBlock, "lessons"> & { lessons: SnapshotLesson[] };
+type NormalizedSnapshotModule = Omit<SnapshotModule, "blocks" | "lessons"> & {
+  blocks: NormalizedSnapshotBlock[];
+  lessons: SnapshotLesson[];
+};
+
+const TEMP_ORDER_OFFSET = 1_000_000_000;
 
 export { assertInstructorOfCourse, createModule, updateModule, deleteModule, createLesson, updateLesson, deleteLesson, createBlock, updateBlock, deleteBlock };
 
@@ -54,8 +64,71 @@ function toBuilderModule(m: Record<string, unknown>): BuilderModuleDetail {
     recommendedDays: mod.recommendedDays,
     status: mod.status as BuilderModuleDetail["status"],
     blocks: (mod.blocks ?? []).map(toBuilderBlock),
-    lessons: (mod.lessons ?? []).map(toBuilderLesson),
+    lessons: (mod.lessons ?? []).filter((lesson) => !lesson.blockId).map(toBuilderLesson),
   };
+}
+
+function normalizeSnapshotOrder(modules: SnapshotModule[]): NormalizedSnapshotModule[] {
+  return modules.map((mod, moduleIndex) => {
+    let nextLessonOrder = 0;
+    return {
+      ...mod,
+      order: moduleIndex,
+      blocks: mod.blocks.map((block, blockIndex) => ({
+        ...block,
+        order: blockIndex,
+        lessons: block.lessons.map((lesson) => ({
+          ...lesson,
+          order: nextLessonOrder++,
+          blockId: block.id,
+        })),
+      })),
+      lessons: mod.lessons.map((lesson) => ({
+        ...lesson,
+        order: nextLessonOrder++,
+        blockId: null,
+      })),
+    };
+  });
+}
+
+function assertSnapshotHasUniqueIds(modules: NormalizedSnapshotModule[]) {
+  const moduleIds = new Set<string>();
+  const blockIds = new Set<string>();
+  const lessonIds = new Set<string>();
+
+  for (const mod of modules) {
+    if (moduleIds.has(mod.id)) throw new ApiError("bad_request", "Модуль повторяется в снимке курса", 400);
+    moduleIds.add(mod.id);
+
+    for (const block of mod.blocks) {
+      if (blockIds.has(block.id)) throw new ApiError("bad_request", "Блок повторяется в снимке курса", 400);
+      blockIds.add(block.id);
+
+      for (const lesson of block.lessons) {
+        if (lessonIds.has(lesson.id)) throw new ApiError("bad_request", "Урок повторяется в снимке курса", 400);
+        lessonIds.add(lesson.id);
+      }
+    }
+
+    for (const lesson of mod.lessons) {
+      if (lessonIds.has(lesson.id)) throw new ApiError("bad_request", "Урок повторяется в снимке курса", 400);
+      lessonIds.add(lesson.id);
+    }
+  }
+}
+
+async function rewriteOrdersWithoutUniqueCollisions(
+  tx: Prisma.TransactionClient,
+  ids: string[],
+  updateOrder: (tx: Prisma.TransactionClient, id: string, order: number) => Promise<unknown>,
+) {
+  for (const [index, id] of ids.entries()) {
+    await updateOrder(tx, id, TEMP_ORDER_OFFSET + index);
+  }
+  for (const [index, id] of ids.entries()) {
+    await updateOrder(tx, id, index);
+  }
 }
 
 function toBuilderBlock(b: Record<string, unknown>): BuilderBlockDetail {
@@ -200,6 +273,8 @@ export async function publishCourseFromBuilder(courseId: string, actorId: string
 
 export async function saveCourseBuilderSnapshot(courseId: string, input: CourseBuilderSnapshotInput, actorId: string) {
   const parsed = courseBuilderSnapshotSchema.parse(input);
+  const normalizedModules = normalizeSnapshotOrder(parsed.modules);
+  assertSnapshotHasUniqueIds(normalizedModules);
   await assertInstructorOfCourse(actorId, courseId);
 
   const existing = await prisma.course.findUnique({
@@ -209,8 +284,8 @@ export async function saveCourseBuilderSnapshot(courseId: string, input: CourseB
       modules: {
         select: {
           id: true,
-          blocks: { select: { id: true } },
-          lessons: { select: { id: true } },
+          blocks: { select: { id: true, moduleId: true } },
+          lessons: { select: { id: true, moduleId: true } },
         },
       },
     },
@@ -218,32 +293,32 @@ export async function saveCourseBuilderSnapshot(courseId: string, input: CourseB
   if (!existing) throw new ApiError("not_found", "Курс не найден", 404);
 
   const moduleIds = new Set(existing.modules.map((mod) => mod.id));
-  const blockIds = new Set(existing.modules.flatMap((mod) => mod.blocks.map((block) => block.id)));
-  const lessonIds = new Set(existing.modules.flatMap((mod) => mod.lessons.map((lesson) => lesson.id)));
+  const blockModuleById = new Map(existing.modules.flatMap((mod) => mod.blocks.map((block) => [block.id, block.moduleId] as const)));
+  const lessonModuleById = new Map(existing.modules.flatMap((mod) => mod.lessons.map((lesson) => [lesson.id, lesson.moduleId] as const)));
 
-  for (const mod of parsed.modules) {
+  for (const mod of normalizedModules) {
     if (!moduleIds.has(mod.id)) {
       throw new ApiError("forbidden", "Модуль не принадлежит этому курсу", 403);
     }
     for (const block of mod.blocks) {
-      if (!blockIds.has(block.id)) {
+      if (blockModuleById.get(block.id) !== mod.id) {
         throw new ApiError("forbidden", "Блок не принадлежит этому курсу", 403);
       }
       for (const lesson of block.lessons) {
-        if (!lessonIds.has(lesson.id) || (lesson.blockId && !blockIds.has(lesson.blockId))) {
-          throw new ApiError("forbidden", "Урок не принадлежит этому курсу или блоку", 403);
+        if (lessonModuleById.get(lesson.id) !== mod.id) {
+          throw new ApiError("forbidden", "Урок не принадлежит этому курсу или модулю", 403);
         }
       }
     }
     for (const lesson of mod.lessons) {
-      if (!lessonIds.has(lesson.id)) {
+      if (lessonModuleById.get(lesson.id) !== mod.id) {
         throw new ApiError("forbidden", "Урок не принадлежит этому курсу", 403);
       }
     }
   }
 
-  await prisma.$transaction([
-    prisma.course.update({
+  await prisma.$transaction(async (tx) => {
+    await tx.course.update({
       where: { id: courseId },
       data: {
         title: parsed.title,
@@ -254,9 +329,25 @@ export async function saveCourseBuilderSnapshot(courseId: string, input: CourseB
         traversalMode: parsed.traversalMode,
         completionThreshold: parsed.completionThreshold,
       },
-    }),
-    ...parsed.modules.flatMap((mod) => [
-      prisma.module.update({
+    });
+
+    for (const [index, mod] of normalizedModules.entries()) {
+      await tx.module.update({ where: { id: mod.id }, data: { order: TEMP_ORDER_OFFSET + index } });
+    }
+
+    for (const mod of normalizedModules) {
+      for (const [index, block] of mod.blocks.entries()) {
+        await tx.block.update({ where: { id: block.id }, data: { order: TEMP_ORDER_OFFSET + index } });
+      }
+
+      const lessons = [...mod.blocks.flatMap((block) => block.lessons), ...mod.lessons];
+      for (const [index, lesson] of lessons.entries()) {
+        await tx.lesson.update({ where: { id: lesson.id }, data: { order: TEMP_ORDER_OFFSET + index } });
+      }
+    }
+
+    for (const mod of normalizedModules) {
+      await tx.module.update({
         where: { id: mod.id },
         data: {
           title: mod.title,
@@ -265,20 +356,22 @@ export async function saveCourseBuilderSnapshot(courseId: string, input: CourseB
           recommendedDays: mod.recommendedDays,
           status: mod.status ? CourseStatus[mod.status] : undefined,
         },
-      }),
-      ...mod.blocks.map((block) =>
-        prisma.block.update({
+      });
+
+      for (const block of mod.blocks) {
+        await tx.block.update({
           where: { id: block.id },
           data: {
             title: block.title,
             description: block.description ?? null,
             order: block.order,
           },
-        }),
-      ),
-      ...mod.blocks.flatMap((block) =>
-        block.lessons.map((lesson) =>
-          prisma.lesson.update({
+        });
+      }
+
+      for (const block of mod.blocks) {
+        for (const lesson of block.lessons) {
+          await tx.lesson.update({
             where: { id: lesson.id },
             data: {
               title: lesson.title,
@@ -290,11 +383,12 @@ export async function saveCourseBuilderSnapshot(courseId: string, input: CourseB
               isRequired: lesson.isRequired,
               blockId: block.id,
             },
-          }),
-        ),
-      ),
-      ...mod.lessons.map((lesson) =>
-        prisma.lesson.update({
+          });
+        }
+      }
+
+      for (const lesson of mod.lessons) {
+        await tx.lesson.update({
           where: { id: lesson.id },
           data: {
             title: lesson.title,
@@ -306,10 +400,10 @@ export async function saveCourseBuilderSnapshot(courseId: string, input: CourseB
             isRequired: lesson.isRequired,
             blockId: null,
           },
-        }),
-      ),
-    ]),
-  ]);
+        });
+      }
+    }
+  });
 
   await logAudit({ actorId, action: "course.builder.snapshot_saved", entity: "course", entityId: courseId });
   return getCourseForBuilder(courseId, actorId);
@@ -317,7 +411,11 @@ export async function saveCourseBuilderSnapshot(courseId: string, input: CourseB
 
 export async function reorderModules(courseId: string, moduleIds: string[], actorId: string) {
   await assertInstructorOfCourse(actorId, courseId);
-  await prisma.$transaction(moduleIds.map((id, index) => prisma.module.update({ where: { id }, data: { order: index } })));
+  await prisma.$transaction(async (tx) => {
+    await rewriteOrdersWithoutUniqueCollisions(tx, moduleIds, (client, id, order) =>
+      client.module.update({ where: { id }, data: { order } }),
+    );
+  });
   await logAudit({ actorId, action: "modules.reordered", entity: "course", entityId: courseId, metadata: { moduleIds } });
 }
 
@@ -325,7 +423,11 @@ export async function reorderLessons(moduleId: string, lessonIds: string[], acto
   const mod = await prisma.module.findUnique({ where: { id: moduleId }, select: { courseId: true } });
   if (!mod) throw new ApiError("not_found", "Модуль не найден", 404);
   await assertInstructorOfCourse(actorId, mod.courseId);
-  await prisma.$transaction(lessonIds.map((id, index) => prisma.lesson.update({ where: { id }, data: { order: index } })));
+  await prisma.$transaction(async (tx) => {
+    await rewriteOrdersWithoutUniqueCollisions(tx, lessonIds, (client, id, order) =>
+      client.lesson.update({ where: { id }, data: { order } }),
+    );
+  });
   await logAudit({ actorId, action: "lessons.reordered", entity: "module", entityId: moduleId, metadata: { lessonIds } });
 }
 

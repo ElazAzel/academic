@@ -36,6 +36,8 @@ export function Icon({
       style={{
         fontVariationSettings: `'FILL' ${fill ? 1 : 0}, 'wght' ${weight}, 'GRAD' ${grade}, 'opsz' ${opticalSize}`,
         fontSize: size,
+        width: size,
+        height: size,
         lineHeight: 1,
         ...style,
       }}
