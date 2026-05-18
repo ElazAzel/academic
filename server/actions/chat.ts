@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { EnrollmentStatus } from "@prisma/client";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
@@ -11,6 +12,8 @@ import { ApiError } from "@/lib/http";
 import type { RoleKey } from "@/types/domain";
 
 const prisma = getPrisma();
+const MAX_CHAT_MESSAGE_LENGTH = 10_000;
+const MESSAGE_PREVIEW_LENGTH = 160;
 
 const ALLOWED_ATTACHMENT_TYPES = new Set([
   "image/png",
@@ -29,6 +32,54 @@ function isElevatedChatRole(roles: RoleKey[]) {
 
 function getRoleKeys(user: { roles?: Array<{ role: { key: RoleKey } }> } | null | undefined): RoleKey[] {
   return user?.roles?.map((entry) => entry.role.key) ?? [];
+}
+
+function buildMessagePreview(text: string, hasAttachment: boolean) {
+  const source = text.trim().replace(/\s+/g, " ") || (hasAttachment ? "Вложение" : "Сообщение");
+  return source.length > MESSAGE_PREVIEW_LENGTH ? `${source.slice(0, MESSAGE_PREVIEW_LENGTH)}…` : source;
+}
+
+async function getLessonContextForStudent(studentId: string, lessonId: string) {
+  const lesson = await prisma.lesson.findFirst({
+    where: {
+      id: lessonId,
+      module: {
+        course: {
+          enrollments: {
+            some: {
+              userId: studentId,
+              status: EnrollmentStatus.ACTIVE,
+            },
+          },
+        },
+      },
+    },
+    select: {
+      id: true,
+      title: true,
+      module: {
+        select: {
+          id: true,
+          title: true,
+          courseId: true,
+          course: { select: { title: true } },
+        },
+      },
+    },
+  });
+
+  if (!lesson) {
+    throw new ApiError("forbidden", "Контекст урока недоступен для этого слушателя", 403);
+  }
+
+  return {
+    lessonId: lesson.id,
+    lessonTitle: lesson.title,
+    moduleId: lesson.module.id,
+    moduleTitle: lesson.module.title,
+    courseId: lesson.module.courseId,
+    courseTitle: lesson.module.course.title,
+  };
 }
 
 async function assertCanAccessStudentChat(user: { id: string; roles: RoleKey[] }, studentId: string) {
@@ -110,6 +161,8 @@ export interface ConversationInfo {
   lastMessage: string;
   lastDate: string;
   unread: number;
+  responseStatus: "awaiting_reply" | "answered";
+  responseLabel: string;
   lessonId?: string;
   lessonTitle?: string;
 }
@@ -155,12 +208,15 @@ export async function getMyConversations() {
     const partnerName = maskChatName(rawName, partnerId, roles, user.id, partnerRoles);
 
     if (!convMap.has(partnerId)) {
+      const latestIsMine = m.senderId === user.id;
       convMap.set(partnerId, {
         partnerId,
         partnerName,
-        lastMessage: m.text ?? "(вложение)",
+        lastMessage: buildMessagePreview(m.text ?? "", Boolean(m.attachmentUrl)),
         lastDate: m.createdAt.toISOString(),
         unread: m.readAt === null && m.senderId !== user.id ? 1 : 0,
+        responseStatus: latestIsMine ? "answered" : "awaiting_reply",
+        responseLabel: latestIsMine ? "Отвечено" : "Ожидает ответа",
         lessonId: m.lessonId ?? undefined,
         lessonTitle: m.lesson?.title ?? undefined,
       });
@@ -191,6 +247,9 @@ export async function sendMessageAction(formData: FormData) {
   if (!text && !attachmentUrl) {
     throw new ApiError("bad_request", "Текст или вложение обязательны", 400);
   }
+  if (text.length > MAX_CHAT_MESSAGE_LENGTH) {
+    throw new ApiError("bad_request", `Сообщение слишком длинное. Максимум ${MAX_CHAT_MESSAGE_LENGTH} символов`, 400);
+  }
 
   if (attachmentUrl && attachmentType && !ALLOWED_ATTACHMENT_TYPES.has(attachmentType)) {
     throw new ApiError("bad_request", "Формат вложения не поддерживается", 400);
@@ -218,13 +277,24 @@ export async function sendMessageAction(formData: FormData) {
 
   const receiver = await prisma.user.findUnique({
     where: { id: toUserId },
-    select: { id: true, roles: { include: { role: true } } },
+    select: { id: true, name: true, roles: { include: { role: true } } },
   });
   if (!receiver) {
     throw new ApiError("not_found", "Получатель не найден", 404);
   }
 
-  await prisma.message.create({
+  const receiverRoles = receiver.roles.map((entry) => entry.role.key as RoleKey);
+  const receiverIsStudent = receiverRoles.includes("student");
+  const contextStudentId = roles.includes("student") ? user.id : receiverIsStudent ? toUserId : null;
+  const lessonContext = lessonId
+    ? contextStudentId
+      ? await getLessonContextForStudent(contextStudentId, lessonId)
+      : (() => {
+          throw new ApiError("bad_request", "Контекст урока можно указать только в диалоге со слушателем", 400);
+        })()
+    : null;
+
+  const message = await prisma.message.create({
     data: {
       senderId: user.id,
       receiverId: toUserId,
@@ -233,35 +303,52 @@ export async function sendMessageAction(formData: FormData) {
       attachmentType: attachmentType || null,
       lessonId: lessonId || null,
     },
+    select: { id: true },
   });
 
   if (toUserId !== user.id) {
-    const messagePreview = text ? (text.length > 100 ? `${text.substring(0, 100)}...` : text) : "Вложение";
-    const receiverRoles = receiver.roles.map((entry) => entry.role.key);
-    const receiverIsStudent = receiverRoles.includes("student");
+    const messagePreview = buildMessagePreview(text, Boolean(attachmentUrl));
     const link = receiverIsStudent
       ? (lessonId ? `/student/lessons/${lessonId}` : "/student")
       : "/curator/chat";
 
     const displaySenderName = deriveDisplayName(user.name, user.id, roles);
+    const body = lessonContext?.lessonTitle
+      ? `${lessonContext.lessonTitle}: ${messagePreview}`
+      : messagePreview;
 
     await createNotification({
       userId: toUserId,
       event: "new_message",
       title: `Новое сообщение от ${displaySenderName}`,
-      body: messagePreview,
+      body,
+      refType: "message",
+      refId: message.id,
       data: {
         refType: "message",
-        refId: lessonId || "general",
+        refId: message.id,
         link,
+        url: link,
+        messageId: message.id,
         senderId: user.id,
         senderName: displaySenderName,
+        receiverId: toUserId,
+        conversationStudentId: contextStudentId,
+        lessonId: lessonContext?.lessonId ?? null,
+        lessonTitle: lessonContext?.lessonTitle ?? null,
+        moduleId: lessonContext?.moduleId ?? null,
+        moduleTitle: lessonContext?.moduleTitle ?? null,
+        courseId: lessonContext?.courseId ?? null,
+        courseTitle: lessonContext?.courseTitle ?? null,
       },
     });
   }
 
   revalidatePath("/curator/chat");
   revalidatePath("/student");
+  if (lessonId) {
+    revalidatePath(`/student/lessons/${lessonId}`);
+  }
   return { success: true };
 }
 

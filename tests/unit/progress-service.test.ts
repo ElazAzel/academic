@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompletionBasis } from "@/server/modules/progress/service";
 
 const mockLessonFindUnique = vi.hoisted(() => vi.fn());
@@ -10,11 +10,17 @@ const mockCertificateFindFirst = vi.hoisted(() => vi.fn());
 const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockNotificationUserFindUnique = vi.hoisted(() => vi.fn());
+const mockCreateNotification = vi.hoisted(() => vi.fn());
+const mockIssueCertificate = vi.hoisted(() => vi.fn());
 const mockTxLessonProgressUpsert = vi.hoisted(() => vi.fn());
+const mockTxLessonProgressFindUnique = vi.hoisted(() => vi.fn());
 const mockTxBlockFindUnique = vi.hoisted(() => vi.fn());
 const mockTxLessonProgressCount = vi.hoisted(() => vi.fn());
+const mockTxBlockProgressFindUnique = vi.hoisted(() => vi.fn());
 const mockTxBlockProgressUpsert = vi.hoisted(() => vi.fn());
+const mockTxModuleProgressFindUnique = vi.hoisted(() => vi.fn());
 const mockTxModuleProgressUpsert = vi.hoisted(() => vi.fn());
+const mockTxCourseProgressFindUnique = vi.hoisted(() => vi.fn());
 const mockTxCourseProgressUpsert = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/env", () => ({
@@ -31,10 +37,10 @@ vi.mock("@/lib/env", () => ({
 const mock$transaction = vi.hoisted(() => vi.fn(async (arg: unknown) => {
   if (typeof arg === "function") {
     return (arg as (tx: Record<string, unknown>) => unknown)({
-      lessonProgress: { upsert: mockTxLessonProgressUpsert, count: mockTxLessonProgressCount },
-      blockProgress: { upsert: mockTxBlockProgressUpsert },
-      moduleProgress: { upsert: mockTxModuleProgressUpsert },
-      courseProgress: { upsert: mockTxCourseProgressUpsert },
+      lessonProgress: { findUnique: mockTxLessonProgressFindUnique, upsert: mockTxLessonProgressUpsert, count: mockTxLessonProgressCount },
+      blockProgress: { findUnique: mockTxBlockProgressFindUnique, upsert: mockTxBlockProgressUpsert },
+      moduleProgress: { findUnique: mockTxModuleProgressFindUnique, upsert: mockTxModuleProgressUpsert },
+      courseProgress: { findUnique: mockTxCourseProgressFindUnique, upsert: mockTxCourseProgressUpsert },
       block: { findUnique: mockTxBlockFindUnique },
     });
   }
@@ -58,9 +64,27 @@ vi.mock("@/lib/prisma", () => ({
   }),
 }));
 
+vi.mock("@/server/modules/notifications/service", () => ({
+  createNotification: mockCreateNotification,
+}));
+
+vi.mock("@/server/modules/certificates/service", () => ({
+  issueCertificate: mockIssueCertificate,
+}));
+
 const { markLessonProgress } = await import("@/server/modules/progress/service");
 
 describe("markLessonProgress", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockTxLessonProgressFindUnique.mockResolvedValue(null);
+    mockTxBlockProgressFindUnique.mockResolvedValue(null);
+    mockTxModuleProgressFindUnique.mockResolvedValue(null);
+    mockTxCourseProgressFindUnique.mockResolvedValue(null);
+    mockCreateNotification.mockResolvedValue({ id: "notification-1" });
+    mockIssueCertificate.mockResolvedValue({ id: "certificate-1" });
+  });
+
   it("updates lesson progress and cascades to module and course", async () => {
     mockLessonFindUnique.mockResolvedValue({
       id: "l1",
@@ -71,6 +95,7 @@ describe("markLessonProgress", () => {
         lessons: [{ id: "l1", isRequired: true, order: 1 }],
         course: {
           id: "c1",
+          completionThreshold: 85,
           traversalMode: "open",
           modules: [
             {
@@ -113,6 +138,91 @@ describe("markLessonProgress", () => {
     expect(result.moduleProgress.status).toBe("COMPLETED");
     expect(result.courseProgress.status).toBe("COMPLETED");
     expect(mockAuditLogCreate).toHaveBeenCalled();
+    expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ event: "module_completed" }));
+  });
+
+  it("issues a certificate when course percent reaches the course threshold", async () => {
+    mockLessonFindUnique.mockResolvedValue({
+      id: "l9",
+      blockId: null,
+      moduleId: "m1",
+      module: {
+        id: "m1",
+        order: 1,
+        lessons: [{ id: "l9", isRequired: true, order: 9 }],
+        course: {
+          id: "c1",
+          completionThreshold: 90,
+          traversalMode: "open",
+          modules: [
+            {
+              id: "m1",
+              order: 1,
+              lessons: Array.from({ length: 10 }, (_, index) => ({ id: `l${index + 1}`, isRequired: true, order: index + 1 })),
+            },
+          ],
+        },
+      },
+    });
+    mockEnrollmentFindUnique.mockResolvedValue({ id: "e1", status: "ACTIVE" });
+    mockTxLessonProgressCount
+      .mockResolvedValueOnce(1)
+      .mockResolvedValueOnce(9);
+    mockTxLessonProgressUpsert.mockResolvedValue({
+      id: "lp9",
+      percent: 100,
+      status: "COMPLETED",
+      userId: "u1",
+      lessonId: "l9",
+    });
+    mockTxModuleProgressUpsert.mockResolvedValue({
+      id: "mp1",
+      percent: 100,
+      status: "COMPLETED",
+    });
+    mockTxCourseProgressUpsert.mockResolvedValue({
+      id: "cp1",
+      percent: 90,
+      status: "IN_PROGRESS",
+    });
+    mockCertificateFindFirst.mockResolvedValue(null);
+    mockModuleFindUnique.mockResolvedValue({ title: "Module 1" });
+
+    const result = await markLessonProgress("u1", "l9", 100);
+
+    expect(result.coursePercent).toBe(90);
+    expect(mockCertificateFindFirst).toHaveBeenCalledWith({ where: { userId: "u1", courseId: "c1" } });
+    expect(mockIssueCertificate).toHaveBeenCalledWith({ userId: "u1", courseId: "c1" }, "u1");
+  });
+
+  it("does not resend completion notifications for already completed modules", async () => {
+    mockLessonFindUnique.mockResolvedValue({
+      id: "l1",
+      blockId: null,
+      moduleId: "m1",
+      module: {
+        id: "m1",
+        order: 1,
+        lessons: [{ id: "l1", isRequired: true, order: 1 }],
+        course: {
+          id: "c1",
+          completionThreshold: 85,
+          traversalMode: "open",
+          modules: [{ id: "m1", order: 1, lessons: [{ id: "l1", isRequired: true, order: 1 }] }],
+        },
+      },
+    });
+    mockEnrollmentFindUnique.mockResolvedValue({ id: "e1", status: "ACTIVE" });
+    mockTxModuleProgressFindUnique.mockResolvedValue({ status: "COMPLETED", completedAt: new Date("2026-05-01T00:00:00.000Z") });
+    mockTxLessonProgressCount.mockResolvedValue(1);
+    mockTxLessonProgressUpsert.mockResolvedValue({ id: "lp1", percent: 100, status: "COMPLETED" });
+    mockTxModuleProgressUpsert.mockResolvedValue({ id: "mp1", percent: 100, status: "COMPLETED" });
+    mockTxCourseProgressUpsert.mockResolvedValue({ id: "cp1", percent: 100, status: "COMPLETED" });
+    mockCertificateFindFirst.mockResolvedValue({ id: "cert1" });
+
+    await markLessonProgress("u1", "l1", 100);
+
+    expect(mockCreateNotification).not.toHaveBeenCalledWith(expect.objectContaining({ event: "module_completed" }));
   });
 
   it("rejects progress for non-enrolled user", async () => {
@@ -123,7 +233,7 @@ describe("markLessonProgress", () => {
         id: "m1",
         order: 1,
         lessons: [],
-        course: { id: "c1", traversalMode: "open", modules: [] },
+        course: { id: "c1", completionThreshold: 85, traversalMode: "open", modules: [] },
       },
     });
     mockEnrollmentFindUnique.mockResolvedValue(null);
@@ -139,7 +249,7 @@ describe("markLessonProgress", () => {
         id: "m1",
         order: 1,
         lessons: [],
-        course: { id: "c1", traversalMode: "open", modules: [] },
+        course: { id: "c1", completionThreshold: 85, traversalMode: "open", modules: [] },
       },
     });
     mockEnrollmentFindUnique.mockResolvedValue({ id: "e1", status: "INACTIVE" });

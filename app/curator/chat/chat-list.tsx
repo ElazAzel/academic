@@ -6,7 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChatPanel } from "@/components/lms/chat-panel";
-import { BookOpen, MessageCircle, Search } from "lucide-react";
+import { BookOpen, CheckCircle2, MessageCircle, Search } from "lucide-react";
 import type { ConversationInfo } from "@/server/actions/chat";
 
 export function CuratorChatList({
@@ -54,7 +54,12 @@ export function CuratorChatList({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">{c.partnerName}</p>
-                      {c.unread > 0 && <Badge className="bg-primary text-primary-foreground">{c.unread}</Badge>}
+                      <div className="flex items-center gap-1">
+                        <Badge variant={c.responseStatus === "awaiting_reply" ? "destructive" : "secondary"} className="text-[10px]">
+                          {c.responseStatus === "awaiting_reply" ? "Ожидает ответа" : "Отвечено"}
+                        </Badge>
+                        {c.unread > 0 && <Badge className="bg-primary text-primary-foreground">{c.unread}</Badge>}
+                      </div>
                     </div>
                     <p className="text-xs text-muted-foreground truncate mt-0.5">{c.lastMessage}</p>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -86,8 +91,8 @@ export function CuratorChatList({
               </DialogDescription>
               {selectedPartner.lessonId && (
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                  <BookOpen className="h-3 w-3" />
-                  Контекст: {selectedPartner.lessonId}
+                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                  Ответ будет связан с контекстом: {selectedPartner.lessonTitle ?? selectedPartner.lessonId}
                 </p>
               )}
             </DialogHeader>
@@ -99,6 +104,7 @@ export function CuratorChatList({
               emptyState="Напишите слушателю первое сообщение."
               historyTitle={`Чат со слушателем: ${selectedPartner.name}`}
               otherParticipantName="Слушатель"
+              showResponseState
             />
           </DialogContent>
         </Dialog>
