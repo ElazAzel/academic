@@ -115,7 +115,7 @@ export interface ConversationInfo {
 }
 
 export async function getMyConversations() {
-  const user = await requireRole(["student", "curator", "super_curator", "admin"]);
+  const user = await requireRole(["student", "curator", "super_curator", "admin", "instructor"]);
   const roles = user.roles as RoleKey[];
 
   const messages = await prisma.message.findMany({

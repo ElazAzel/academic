@@ -2,6 +2,12 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-18 — Fix: instructor chat 404 + push subscribe 500
+
+- **404 `/instructor/chat`**: создана страница `app/instructor/chat/page.tsx` (копирует паттерн curator chat)
+- **500 `POST /api/v1/push/subscribe`**: применена миграция `apply_push_subscriptions_and_tables_v2` — созданы таблицы `push_subscriptions`, `messages`, `admin_popups`, `outbox_events`, `learning_paths` и др.
+- **`getMyConversations`**: добавлена роль `instructor` в `requireRole` — теперь преподаватели могут видеть свои чаты
+
 ## 2026-05-18 — Outbox-паттерн для асинхронного создания уведомлений
 
 - **`createNotification` переведён на outbox**: вместо синхронного создания уведомления (проверка предпочтений → DB insert → email → push) теперь пишет событие `notification.send` в `outbox_events` и возвращает управление
