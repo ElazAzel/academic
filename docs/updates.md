@@ -2,6 +2,13 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-18 — proxy.ts rate limiter unified with Vercel KV
+
+- **`proxy.ts`** больше не использует собственный in-memory rate limiter
+- Теперь использует `lib/rate-limit.ts` → `lib/cache.ts` → **Vercel KV (`@upstash/redis`)** при наличии `KV_URL` или `REDIS_URL`
+- Если KV не настроен — автоматический fallback на in-memory (поведение не изменилось)
+- **type-check**: 0 ошибок
+
 ## 2026-05-18 — Tests fixed + k6 load test + FK indexes
 
 - **4 test files fixed**: `assignments.test.ts`, `courses-service.test.ts`, `certificates-service.test.ts`, `analytics-service.test.ts` — добавлен `outboxEvent: { create: vi.fn() }` в prisma mock
