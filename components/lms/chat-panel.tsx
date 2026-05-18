@@ -393,15 +393,17 @@ export function ChatPanel({
                         <span className="text-m3-error"> · ошибка</span>
                       )}
                     </p>
-                    {!m.isMine && !m.id.startsWith("optimistic-") && (
-                      <button
-                        type="button"
-                        onClick={() => handleReply(m)}
-                        className={`text-label-sm font-label-sm hover:underline ${m.isMine ? "text-m3-on-primary/60" : "text-m3-primary"}`}
-                      >
-                        Ответить
-                      </button>
-                    )}
+                  </div>
+                )}
+                {!m.isMine && !m.id.startsWith("optimistic-") && (
+                  <div className="mt-1 text-left">
+                    <button
+                      type="button"
+                      onClick={() => handleReply(m)}
+                      className="text-label-sm font-label-sm text-m3-primary hover:underline"
+                    >
+                      Ответить
+                    </button>
                   </div>
                 )}
                 {showResponseState && !m.isMine && responseStateByMessageId.get(m.id) && (
