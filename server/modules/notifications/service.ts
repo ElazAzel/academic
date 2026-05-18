@@ -1,6 +1,7 @@
 import { getPrisma } from "@/lib/prisma";
 import { toJsonValue } from "@/lib/json";
 import { env } from "@/lib/env";
+import { writeOutboxEvent } from "@/server/modules/outbox/service";
 import { getUserNotificationPreferences } from "@/server/modules/notifications/preferences";
 import { NOTIFICATION_CHANNELS } from "@/lib/constants";
 
@@ -96,7 +97,42 @@ export function normalizeNotificationChannel(channel?: string): NotificationDeli
   return NOTIFICATION_CHANNELS.IN_APP;
 }
 
+/**
+ * Отправляет уведомление через outbox (асинхронно).
+ *
+ * Пишет событие `notification.send` в outbox-таблицу и возвращает управление.
+ * Фактическая проверка предпочтений, создание записи и отправка email/push
+ * выполняются фоновым процессом (outbox handler).
+ *
+ * Возвращает ID события outbox.
+ */
 export async function createNotification(input: {
+  userId: string;
+  event: string;
+  channel?: string;
+  title?: string;
+  body?: string;
+  data?: Record<string, unknown>;
+  refType?: string;
+  refId?: string;
+}): Promise<{ id: string }> {
+  return writeOutboxEvent("notification.send", {
+    userId: input.userId,
+    event: input.event,
+    channel: input.channel ?? "in_app",
+    title: input.title ?? null,
+    body: input.body ?? null,
+    data: input.data ?? {},
+    refType: input.refType ?? null,
+    refId: input.refId ?? null,
+  });
+}
+
+/**
+ * Внутренняя реализация — создаёт уведомление в БД и отправляет email/push.
+ * Вызывается outbox-обработчиком, НЕ напрямую из бизнес-кода.
+ */
+export async function createNotificationInternal(input: {
   userId: string;
   event: string;
   channel?: string;

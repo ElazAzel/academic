@@ -2,6 +2,17 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-18 — Outbox-паттерн для асинхронного создания уведомлений
+
+- **`createNotification` переведён на outbox**: вместо синхронного создания уведомления (проверка предпочтений → DB insert → email → push) теперь пишет событие `notification.send` в `outbox_events` и возвращает управление
+- **Новый файл**: `server/modules/notifications/outbox-handler.ts` — `processNotificationEvents()` читает pending события и вызывает `createNotificationInternal` (старая логика) для каждого
+- **Новый endpoint**: `POST /api/v1/outbox/process` — универсальный cron-воркер, обрабатывает `report.generate` + `notification.send` за один вызов
+- **Сохранена обратная совместимость**: `POST /api/v1/reports/scheduled` продолжает работать, но в документации рекомендован unified endpoint
+- **Старая логика** переименована в `createNotificationInternal` — не экспортируется публично
+- **Тесты обновлены**: `notifications-service.test.ts` теперь проверяет запись в outbox, `auth-service-notifications.test.ts` мокает `outboxEvent.create`
+- **type-check**: 0 ошибок
+- **tests**: 8 passed (3 suites)
+
 ## 2026-05-18 — Suspense boundaries для дашбордов (streaming)
 
 - **Все 6 ролевых дашбордов** переведены на streaming с Suspense:
