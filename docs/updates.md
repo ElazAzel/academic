@@ -2,6 +2,12 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-18 — Fix: redirect-target race condition (все роли попадали на /student)
+
+- **Проблема**: После логина `redirect-target` использовал `getServerSession(authOptions)`, который не успевал прочитать только что созданную сессионную куку. `requireUser()` кидал 401, клиент фолбечился на `/student` — **все роли видели меню слушателя**.
+- **Фикс**: Заменён `getServerSession` → `getToken` из `next-auth/jwt`. `getToken` читает JWT напрямую из Cookie без полного Session pipeline, что исключает race condition.
+- **build**: passed (ƒ Proxy (Middleware) — Next.js 16 корректно использует `proxy.ts` как middleware).
+
 ## 2026-05-18 — Material 3 редизайн: все P0-P2 компоненты
 
 - **P0 (Foundation)**: Tailwind config + CSS-переменные M3 Deep Indigo (30+ токенов), M3-типографика (text-headline-lg/body-md/label-lg/mono-sm), M3-тени, Material Symbols + JetBrains Mono в layout.tsx
