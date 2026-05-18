@@ -21,7 +21,7 @@
       "name": "Дашборд",
       "short_name": "Главная",
       "description": "Перейти на дашборд",
-      "url": "/login",
+      "url": "/",
       "icons": [{ "src": "/icon.svg", "sizes": "192x192" }]
     }
   ]

@@ -171,6 +171,15 @@ export function PWARegister() {
           },
         });
       }
+
+      // Navigate to target URL when push notification is clicked
+      if (event.data?.type === "NAVIGATE" && event.data?.url) {
+        const targetUrl = new URL(event.data.url, window.location.origin).href;
+        const currentUrl = window.location.href;
+        if (targetUrl !== currentUrl) {
+          window.location.href = targetUrl;
+        }
+      }
     };
 
     navigator.serviceWorker?.addEventListener("message", handleMessage);
