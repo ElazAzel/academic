@@ -117,6 +117,7 @@ export const authOptions: AuthOptions = {
             token.email = dbUser.email;
             token.name = dbUser.name;
             token.picture = dbUser.image;
+            token.requires2fa = dbUser.totpEnabled === true;
           }
         }
       }
@@ -129,6 +130,7 @@ export const authOptions: AuthOptions = {
         session.user.email = token.email as string;
         session.user.name = token.name as string | null;
         session.user.image = token.picture as string | null;
+        (session as any).requires2fa = token.requires2fa as boolean;
       }
       return session;
     }

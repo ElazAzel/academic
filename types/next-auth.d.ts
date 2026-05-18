@@ -11,6 +11,7 @@ declare module "next-auth" {
       image?: string | null;
       roles: RoleKey[];
     };
+    requires2fa?: boolean;
   }
 
   interface User {
@@ -22,5 +23,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
     roles?: RoleKey[];
+    requires2fa?: boolean;
   }
 }

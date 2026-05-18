@@ -69,6 +69,7 @@ export const AUTH_ROUTES = {
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
   VERIFY_EMAIL: "/verify-email",
+  TWO_FA: "/auth/2fa",
 } as const;
 
 export const SUPER_CURATOR_ROUTES = {
