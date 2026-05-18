@@ -44,3 +44,13 @@
 - Add scheduled encrypted database backups with retention policy.
 - Document admin-only database access through bastion or Kubernetes port-forward.
 - Add restore rehearsal checklist before production cohort launch.
+
+## Done (2026-05-18)
+
+- [done] 55/55 Prisma models now have tables in production (applied `create_all_missing_tables_v2`)
+- [done] `push_subscriptions`, `messages`, `admin_popups`, `outbox_events`, `learning_paths` + related tables exist
+- [done] `consent_logs`, `lesson_progress`, `audit_logs`, `assignment_submissions`, `risk_flags`, `glossary_entries`, `certificate_templates` и ещё 22 таблицы созданы
+- [done] RLS включён на всех 42 unprotected таблицах с default-deny политикой
+- [done] `certificates.enrollment_id` + `verification_url` добавлены
+- [done] 404 `/instructor/chat` — page created
+- [done] 500 `POST /api/v1/push/subscribe` — таблица создана
