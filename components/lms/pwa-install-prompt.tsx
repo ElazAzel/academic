@@ -60,8 +60,10 @@ export function PWAInstallPrompt() {
   if (isStandalone()) return null;
 
   // На iOS всегда предлагаем инструкцию (beforeinstallprompt не работает)
+  // На Android и desktop (Chrome/Edge/Opera) — через beforeinstallprompt
   const showBanner = !dismissed && (
     (platform === "android" && installEvent) ||
+    (platform === "other" && installEvent) ||
     platform === "ios"
   );
 
