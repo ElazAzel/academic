@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { verifyCertificateByCode } from "@/server/modules/certificates/service";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export default async function CertificateVerificationPage({
   params

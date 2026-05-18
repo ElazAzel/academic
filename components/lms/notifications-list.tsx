@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
@@ -75,10 +76,13 @@ function getNotificationAction(n: NotificationItem): { link: string; label: stri
   return { link: defaultLink, label: "Подробнее" };
 }
 
+const NOTIFICATION_ESTIMATED_SIZE = 96;
+
 export function NotificationsList() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [popupView, setPopupView] = useState<{ n: NotificationItem } | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: notifications = [], isLoading } = useQuery<NotificationItem[]>({
     queryKey: ["notifications"],
@@ -135,6 +139,13 @@ export function NotificationsList() {
 
   const unreadCount = notifications.filter((n) => !n.readAt).length;
 
+  const virtualizer = useVirtualizer({
+    count: notifications.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => NOTIFICATION_ESTIMATED_SIZE,
+    overscan: 5,
+  });
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -174,50 +185,64 @@ export function NotificationsList() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
-          {notifications.map((n) => {
-            const Icon = getNotificationIcon(n.type, n.refType);
-            const { label } = getNotificationAction(n);
-            return (
-              <Card
-                key={n.id}
-                className={cn(
-                  "rounded-2xl cursor-pointer transition-all hover:shadow-sm",
-                  !n.readAt && "border-primary/20 bg-primary/[0.02]"
-                )}
-                onClick={() => handleAction(n)}
-              >
-                <CardContent className="flex items-start gap-4 p-4">
-                  <span className={cn("mt-1 shrink-0", !n.readAt ? "text-primary" : "text-muted-foreground")}>
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className={cn("text-sm", !n.readAt && "font-semibold")}>{n.title}</p>
-                      {!n.readAt && (
-                        <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
-                      )}
-                    </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{n.body}</p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAction(n);
-                      }}
-                      className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      {label}
-                    </button>
-                  </div>
-                  <span className="shrink-0 text-[11px] text-muted-foreground truncate max-w-[100px] sm:max-w-none">
-                    {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: ru })}
-                  </span>
-                  <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div ref={scrollRef} className="relative overflow-auto" style={{ maxHeight: "70vh" }}>
+          <div
+            className="relative w-full"
+            style={{ height: `${virtualizer.getTotalSize()}px` }}
+          >
+            {virtualizer.getVirtualItems().map((virtualItem) => {
+              const n = notifications[virtualItem.index];
+              const Icon = getNotificationIcon(n.type, n.refType);
+              const { label } = getNotificationAction(n);
+              return (
+                <div
+                  key={n.id}
+                  className="absolute left-0 top-0 w-full px-0.5"
+                  style={{
+                    height: `${virtualItem.size}px`,
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
+                >
+                  <Card
+                    className={cn(
+                      "rounded-2xl cursor-pointer transition-all hover:shadow-sm",
+                      !n.readAt && "border-primary/20 bg-primary/[0.02]"
+                    )}
+                    onClick={() => handleAction(n)}
+                  >
+                    <CardContent className="flex items-start gap-4 p-4">
+                      <span className={cn("mt-1 shrink-0", !n.readAt ? "text-primary" : "text-muted-foreground")}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className={cn("text-sm", !n.readAt && "font-semibold")}>{n.title}</p>
+                          {!n.readAt && (
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{n.body}</p>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAction(n);
+                          }}
+                          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          {label}
+                        </button>
+                      </div>
+                      <span className="shrink-0 text-[11px] text-muted-foreground truncate max-w-[100px] sm:max-w-none">
+                        {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: ru })}
+                      </span>
+                      <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+                    </CardContent>
+                  </Card>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
       <PopupNotificationViewer
