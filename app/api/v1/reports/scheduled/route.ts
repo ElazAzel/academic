@@ -5,28 +5,15 @@ import { processReportJobs } from "@/server/modules/reports/processor";
 /**
  * Scheduled report generation endpoint.
  *
- * Can be triggered by:
- * - Vercel Cron Jobs (crons.json)
- * - External cron service (cron-job.org, GitHub Actions, etc.)
- * - pg_cron (PostgreSQL extension)
+ * Can be triggered by Vercel Cron Jobs, external cron, or pg_cron.
+ * Protected by CRON_SECRET.
  *
- * Protected by CRON_SECRET env variable.
+ * Prefer the unified endpoint `POST /api/v1/outbox/process`
+ * which processes both report and notification events in a single call.
  *
  * Usage:
  *   POST /api/v1/reports/scheduled
  *   Authorization: Bearer <CRON_SECRET>
- *
- * Vercel crons.json example:
- * ```json
- * {
- *   "crons": [
- *     {
- *       "path": "/api/v1/reports/scheduled",
- *       "schedule": "0 6 * * 1"
- *     }
- *   ]
- * }
- * ```
  */
 export async function POST(request: Request) {
   // Verify cron secret

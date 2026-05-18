@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const mockOutboxEventCreate = vi.hoisted(() => vi.fn());
 const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
@@ -16,15 +17,50 @@ vi.mock("@/lib/env", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
+    outboxEvent: { create: mockOutboxEventCreate },
     notificationPreference: { findMany: mockNotificationPreferenceFindMany },
     notification: { create: mockNotificationCreate },
     user: { findUnique: mockUserFindUnique },
   }),
 }));
 
-const { createNotification, normalizeNotificationChannel } = await import("@/server/modules/notifications/service");
+const { createNotification, createNotificationInternal, normalizeNotificationChannel } = await import("@/server/modules/notifications/service");
 
-describe("notification delivery channel contract", () => {
+describe("createNotification (outbox path)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockOutboxEventCreate.mockResolvedValue({ id: "outbox-event-1" });
+  });
+
+  it("writes a notification.send outbox event", async () => {
+    await createNotification({ userId: "student-1", event: "access_granted" });
+
+    expect(mockOutboxEventCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          eventType: "notification.send",
+          status: "pending",
+        }),
+      }),
+    );
+  });
+
+  it("includes normalized channel in payload", async () => {
+    await createNotification({ userId: "student-1", event: "access_granted" });
+
+    const callArgs = mockOutboxEventCreate.mock.calls[0][0];
+    const payload = callArgs.data.payload;
+    expect(payload.channel).toBe("in_app");
+  });
+
+  it("returns outbox event id", async () => {
+    const result = await createNotification({ userId: "student-1", event: "access_granted" });
+
+    expect(result).toEqual({ id: "outbox-event-1" });
+  });
+});
+
+describe("createNotificationInternal (sync path)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockNotificationPreferenceFindMany.mockResolvedValue([]);
@@ -32,8 +68,8 @@ describe("notification delivery channel contract", () => {
     mockUserFindUnique.mockResolvedValue({ email: "student@academy.local" });
   });
 
-  it("defaults omitted channels to in_app", async () => {
-    await createNotification({ userId: "student-1", event: "access_granted" });
+  it("creates notification with defaults in_app", async () => {
+    await createNotificationInternal({ userId: "student-1", event: "access_granted" });
 
     expect(mockNotificationCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -49,7 +85,7 @@ describe("notification delivery channel contract", () => {
   it("normalizes unsupported channels to in_app", async () => {
     expect(normalizeNotificationChannel("student_submission")).toBe("in_app");
 
-    await createNotification({ userId: "curator-1", event: "student_assigned", channel: "student_submission" });
+    await createNotificationInternal({ userId: "curator-1", event: "student_assigned", channel: "student_submission" });
 
     expect(mockNotificationCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -63,7 +99,7 @@ describe("notification delivery channel contract", () => {
   });
 
   it("keeps email delivery only when explicitly requested", async () => {
-    await createNotification({ userId: "student-1", event: "password_changed", channel: "email" });
+    await createNotificationInternal({ userId: "student-1", event: "password_changed", channel: "email" });
 
     expect(mockNotificationCreate).toHaveBeenCalledWith(
       expect.objectContaining({
