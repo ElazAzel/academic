@@ -6,6 +6,7 @@ import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
 import { ApiError } from "@/lib/http";
 import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
+import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
@@ -208,13 +209,27 @@ export async function addStudentToCohortAction(formData: FormData) {
   });
 
   if (existing) {
-    await prisma.enrollment.update({
+    const enrollment = await prisma.enrollment.update({
       where: { id: existing.id },
       data: { cohortId, status: "ACTIVE" },
     });
+    await createNotification({
+      userId: studentId,
+      event: "access_granted",
+      refType: "enrollment",
+      refId: enrollment.id,
+      data: { courseId, cohortId, enrollmentId: enrollment.id, link: `/student/courses/${courseId}` },
+    });
   } else {
-    await prisma.enrollment.create({
+    const enrollment = await prisma.enrollment.create({
       data: { userId: studentId, courseId, cohortId, status: "ACTIVE" },
+    });
+    await createNotification({
+      userId: studentId,
+      event: "access_granted",
+      refType: "enrollment",
+      refId: enrollment.id,
+      data: { courseId, cohortId, enrollmentId: enrollment.id, link: `/student/courses/${courseId}` },
     });
   }
 

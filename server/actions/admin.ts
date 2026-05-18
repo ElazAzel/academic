@@ -13,8 +13,36 @@ import {
   isCohortInSuperCuratorScope,
   isCuratorInSuperCuratorScope,
 } from "@/server/modules/super-curator/scope";
+import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
+
+async function notifyCuratorAssignment(input: { studentId: string; curatorId: string; cohortId: string }) {
+  await Promise.all([
+    createNotification({
+      userId: input.studentId,
+      event: "curator_assigned",
+      refType: "curator_assignment",
+      refId: `${input.cohortId}-${input.studentId}`,
+      data: {
+        curatorId: input.curatorId,
+        cohortId: input.cohortId,
+        link: "/student",
+      },
+    }),
+    createNotification({
+      userId: input.curatorId,
+      event: "student_assigned",
+      refType: "curator_assignment",
+      refId: `${input.cohortId}-${input.studentId}`,
+      data: {
+        studentId: input.studentId,
+        cohortId: input.cohortId,
+        link: `/curator/students`,
+      },
+    }),
+  ]);
+}
 
 export async function enrollStudentAction(formData: FormData) {
   try {
@@ -53,6 +81,14 @@ export async function enrollStudentAction(formData: FormData) {
           active: true
         }
       });
+      await logAudit({
+        actorId: actor.id,
+        action: "curator.assigned",
+        entity: "curator_assignment",
+        entityId: `${cohortId}-${userId}`,
+        metadata: { studentId: userId, curatorId, cohortId },
+      });
+      await notifyCuratorAssignment({ studentId: userId, curatorId, cohortId });
     }
 
     revalidatePath("/admin/enrollments");
@@ -93,6 +129,7 @@ export async function assignCuratorAction(input: { studentId: string; curatorId:
       entityId: `${input.cohortId}-${input.studentId}`,
       metadata: input
     });
+    await notifyCuratorAssignment(input);
 
     revalidatePath("/admin/enrollments");
     return { success: true };
@@ -241,6 +278,7 @@ export async function assignCuratorFromSupervisorAction(formData: FormData) {
       entityId: `${cohortId}-${studentId}`,
       metadata: { curatorId, cohortId },
     });
+    await notifyCuratorAssignment({ studentId, curatorId, cohortId });
 
     revalidatePath("/super-curator/distribution");
     revalidatePath("/super-curator");

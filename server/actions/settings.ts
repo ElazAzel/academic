@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { getUserNotificationPreferences, setNotificationPreferences, type NotificationChannel } from "@/server/modules/notifications/preferences";
 import { getAllAppSettings, setAppSettings, type AppSettings } from "@/server/modules/admin/settings";
 import { createNotification } from "@/server/modules/notifications/service";
+import { logAudit } from "@/server/modules/audit/service";
 import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
@@ -33,7 +34,13 @@ export async function updateProfileSettingsAction(formData: FormData) {
     await createNotification({
       userId: user.id,
       event: "profile_updated",
-      channel: "email",
+    });
+    await logAudit({
+      actorId: user.id,
+      action: "profile.updated",
+      entity: "user",
+      entityId: user.id,
+      metadata: { fields: Object.keys(data) },
     });
 
     revalidatePath("/", "layout");
@@ -76,7 +83,12 @@ export async function updatePasswordAction(formData: FormData) {
     await createNotification({
       userId: userSession.id,
       event: "password_changed",
-      channel: "email",
+    });
+    await logAudit({
+      actorId: userSession.id,
+      action: "auth.password_changed",
+      entity: "user",
+      entityId: userSession.id,
     });
   } catch (err) {
     throw err instanceof Error ? err : new ApiError("internal_error", "Failed to update password", 500);

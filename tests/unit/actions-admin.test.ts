@@ -5,6 +5,7 @@ const mockRevalidatePath = vi.hoisted(() => vi.fn());
 const mockLogAudit = vi.hoisted(() => vi.fn());
 const mockEnrollStudent = vi.hoisted(() => vi.fn());
 const mockCreateUserFn = vi.hoisted(() => vi.fn());
+const mockCreateNotification = vi.hoisted(() => vi.fn());
 
 const mockCohortCreate = vi.hoisted(() => vi.fn());
 const mockCohortUpdate = vi.hoisted(() => vi.fn());
@@ -23,6 +24,7 @@ vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
 vi.mock("@/server/modules/audit/service", () => ({ logAudit: mockLogAudit }));
 vi.mock("@/server/modules/courses/service", () => ({ enrollStudent: mockEnrollStudent }));
 vi.mock("@/server/modules/users/service", () => ({ createUser: mockCreateUserFn }));
+vi.mock("@/server/modules/notifications/service", () => ({ createNotification: mockCreateNotification }));
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
     cohort: { create: mockCohortCreate, update: mockCohortUpdate },
@@ -74,6 +76,9 @@ describe("enrollStudentAction", () => {
     const result = await enrollStudentAction(fd);
     expect(result).toEqual({ success: true });
     expect(mockCuratorAssignmentUpsert).toHaveBeenCalled();
+    expect(mockLogAudit).toHaveBeenCalledWith(expect.objectContaining({ action: "curator.assigned" }));
+    expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: "u1", event: "curator_assigned" }));
+    expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: "cur1", event: "student_assigned" }));
   });
 
   it("throws without userId or courseId", async () => {
@@ -95,6 +100,8 @@ describe("assignCuratorAction", () => {
     expect(result).toEqual({ success: true });
     expect(mockCuratorAssignmentUpsert).toHaveBeenCalled();
     expect(mockLogAudit).toHaveBeenCalledWith(expect.objectContaining({ action: "curator.assigned" }));
+    expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: "u1", event: "curator_assigned" }));
+    expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: "cur1", event: "student_assigned" }));
   });
 });
 
@@ -110,6 +117,8 @@ describe("assignCuratorFromSupervisorAction", () => {
     expect(mockCuratorAssignmentUpsert).toHaveBeenCalledWith(expect.objectContaining({
       create: expect.objectContaining({ superCuratorId: "sc1" }),
     }));
+    expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: "u1", event: "curator_assigned" }));
+    expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: "cur1", event: "student_assigned" }));
   });
 
   it("blocks super_curator reassignment outside scope", async () => {

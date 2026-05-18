@@ -7,6 +7,7 @@ import { env } from "@/lib/env";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { logAudit } from "@/server/modules/audit/service";
+import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
@@ -50,13 +51,25 @@ export async function issueCertificate(input: { userId: string; courseId: string
     }
   });
   await logAudit({ actorId, action: "certificate.issued", entity: "certificate", entityId: certificate.id });
+  await createNotification({
+    userId: input.userId,
+    event: "certificate_available",
+    refType: "certificate",
+    refId: certificate.id,
+    data: {
+      certificateId: certificate.id,
+      courseId: input.courseId,
+      verificationCode,
+      link: "/student/certificates"
+    }
+  });
   return certificate;
 }
 
 export async function revokeCertificate(certificateId: string, actorId: string) {
   const certificate = await prisma.certificate.findUnique({
     where: { id: certificateId },
-    select: { id: true, revokedAt: true }
+    select: { id: true, userId: true, courseId: true, revokedAt: true }
   });
   if (!certificate) {
     throw new ApiError("not_found", "Сертификат не найден", 404);
@@ -76,6 +89,18 @@ export async function revokeCertificate(certificateId: string, actorId: string) 
     entity: "certificate",
     entityId: certificate.id,
     metadata: { revokedAt: updated.revokedAt }
+  });
+  await createNotification({
+    userId: certificate.userId,
+    event: "certificate_revoked",
+    refType: "certificate",
+    refId: certificate.id,
+    data: {
+      certificateId: certificate.id,
+      courseId: certificate.courseId,
+      revokedAt: updated.revokedAt?.toISOString() ?? null,
+      link: "/student/certificates"
+    }
   });
 
   return updated;

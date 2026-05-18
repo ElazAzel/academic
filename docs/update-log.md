@@ -30,6 +30,42 @@ Living-документ для фиксации всех изменений, р�
 
 # Current Baseline
 
+## 2026-05-18 - M-PR-09 Notification & Audit Completion
+
+- Author: Codex
+- Scope: ninth implementation package from the 90-day modernization plan.
+- Fixed:
+  - Notification delivery channel is now normalized: omitted or unsupported channels are stored as `in_app`.
+  - Email delivery remains possible only when a caller explicitly uses `email` or `email_and_in_app`.
+  - Enrollment creation/reactivation now notifies the student with `access_granted` and keeps the enrollment audit record.
+  - Curator assignment from admin and super-curator flows now creates audit records and notifies both the student and assigned curator.
+  - Forwarded questions now notify the student, curator, and course instructors; answered questions include lesson/question refs in notifications.
+  - Assignment review service now creates `assignment_reviewed` notification for the student in addition to audit logging.
+  - Certificate issue/revoke now creates `certificate_available` / `certificate_revoked` notifications and keeps audit records.
+  - Password reset and in-cabinet password change now create `password_changed` in-app notifications and security audit records.
+  - Profile update now creates an audit record and uses the default in-app notification path instead of forcing email.
+- Tests added/updated:
+  - `tests/unit/notifications-service.test.ts`
+  - `tests/unit/certificates-service.test.ts`
+  - `tests/unit/auth-service-notifications.test.ts`
+  - `tests/unit/actions-admin.test.ts`
+  - `tests/unit/actions-curator.test.ts`
+  - `tests/unit/actions-settings.test.ts`
+  - `tests/unit/assignments.test.ts`
+  - `tests/unit/courses-service.test.ts`
+  - `tests/unit/progress-service.test.ts`
+- Focused validation:
+  - `npm run typecheck` - green
+  - `npm run test -- tests/unit/notifications-service.test.ts tests/unit/certificates-service.test.ts tests/unit/auth-service-notifications.test.ts tests/unit/courses-service.test.ts tests/unit/assignments.test.ts tests/unit/progress-service.test.ts tests/unit/actions-admin.test.ts tests/unit/actions-curator.test.ts tests/unit/actions-settings.test.ts` - green, 74 tests / 9 files
+- Full validation:
+  - `npm run lint -- --max-warnings=0` - green
+  - `npm run typecheck` - green
+  - `npx prisma validate` - green
+  - `npm run test` - green, 297 tests / 52 files
+  - `npm run db:generate` - green
+  - `npm run build` - green
+- Status: green.
+
 ## 2026-05-17 - M-PR-08 Reports & Analytics v1
 
 - Author: Codex

@@ -3,7 +3,7 @@ import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { hashPassword } from "@/lib/auth/password";
 import { logAudit } from "@/server/modules/audit/service";
-import { sendEmail } from "@/server/modules/notifications/service";
+import { createNotification, sendEmail } from "@/server/modules/notifications/service";
 import type { z } from "zod";
 import type { profileSchema } from "@/lib/validation";
 
@@ -53,6 +53,13 @@ export async function resetPassword(token: string, password: string) {
   });
   await prisma.verificationToken.delete({ where: { token } });
   await logAudit({ actorId: user.id, action: "auth.password_reset_completed", entity: "user", entityId: user.id });
+  await createNotification({
+    userId: user.id,
+    event: "password_changed",
+    refType: "user",
+    refId: user.id,
+    data: { source: "password_reset" },
+  });
   return { reset: true };
 }
 

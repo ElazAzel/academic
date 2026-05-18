@@ -115,6 +115,7 @@ describe("forwardQuestionAction", () => {
     mockLessonQuestionFindUnique.mockResolvedValue({
       id: "q1", studentId: "u1", lessonId: "l1", curatorId: "cur1",
       student: { name: "Student" },
+      lesson: { module: { course: { instructors: [{ userId: "inst1" }] } } },
     });
 
     const result = await forwardQuestionAction("q1");
@@ -122,7 +123,8 @@ describe("forwardQuestionAction", () => {
     expect(mockLessonQuestionUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "q1" }, data: { status: "FORWARDED" } }),
     );
-    expect(mockCreateNotification).toHaveBeenCalledTimes(2);
+    expect(mockCreateNotification).toHaveBeenCalledTimes(3);
+    expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: "inst1", event: "question_forwarded" }));
   });
 
   it("throws if question not found", async () => {
