@@ -130,8 +130,7 @@ function showNotificationToast(n: NotificationItem) {
     {
       duration: 5000,
       position: "bottom-right",
-      unstyled: true,
-      className: "!p-0 !bg-transparent !shadow-none !border-none",
+      style: { padding: 0, background: "transparent", boxShadow: "none", border: "none" },
     }
   );
 }
