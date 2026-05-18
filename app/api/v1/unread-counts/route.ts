@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { ok, errorResponse } from "@/lib/http";
+import { QuestionStatus } from "@prisma/client";
 
 export async function GET() {
   try {
@@ -20,7 +21,7 @@ export async function GET() {
         : 0,
       isCurator
         ? prisma.lessonQuestion.count({
-            where: { status: "OPEN" },
+            where: { status: QuestionStatus.OPEN },
           })
         : 0,
       user.roles.includes("curator")

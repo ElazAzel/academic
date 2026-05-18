@@ -1,5 +1,5 @@
 import { getPrisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import { QuestionStatus, type Prisma } from "@prisma/client";
 import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, ReportDataScope, RiskRow } from "./types";
 
 const prisma = getPrisma();
@@ -264,7 +264,7 @@ export async function fetchCuratorWorkloadData(input?: ReportDataScope | string[
     prisma.lessonQuestion.findMany({
       where: {
         studentId: { in: studentIds },
-        status: { in: ["OPEN", "FORWARDED"] },
+        status: { in: [QuestionStatus.OPEN, QuestionStatus.FORWARDED] },
         ...(courseIds.length > 0 ? { lesson: { module: { courseId: { in: courseIds } } } } : {}),
       },
       select: { studentId: true },

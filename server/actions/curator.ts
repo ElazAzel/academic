@@ -9,6 +9,7 @@ import { markLessonProgress } from "@/server/modules/progress/service";
 import { ApiError } from "@/lib/http";
 import { NOTIFICATION_CHANNELS } from "@/lib/constants";
 import { answerForwardedQuestionSchema } from "@/lib/validation";
+import { QuestionStatus } from "@prisma/client";
 
 const prisma = getPrisma();
 
@@ -49,7 +50,7 @@ export async function answerQuestionAction(questionId: string, answer: string) {
     where: { id: questionId },
     data: {
       answer,
-      status: "ANSWERED",
+      status: QuestionStatus.ANSWERED,
       answeredAt: new Date(),
       curatorId: actor.id
     }
@@ -172,7 +173,7 @@ export async function forwardQuestionAction(questionId: string) {
   await prisma.lessonQuestion.update({
     where: { id: questionId },
     data: {
-      status: "FORWARDED"
+      status: QuestionStatus.FORWARDED
     }
   });
 
@@ -251,7 +252,7 @@ export async function answerForwardedQuestionAction(formData: FormData) {
       lesson: { include: { module: { include: { course: { include: { instructors: { select: { userId: true } } } } } } } }
     }
   });
-  if (!question || question.status !== "FORWARDED") {
+  if (!question || question.status !== QuestionStatus.FORWARDED) {
     throw new ApiError("not_found", "Вопрос не найден или не был переадресован", 404);
   }
 
@@ -268,7 +269,7 @@ export async function answerForwardedQuestionAction(formData: FormData) {
     where: { id: questionId },
     data: {
       answer,
-      status: "ANSWERED",
+      status: QuestionStatus.ANSWERED,
       answeredAt: new Date()
     }
   });
