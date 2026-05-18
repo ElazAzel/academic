@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
+import { PageSkeleton } from "@/components/lms/page-skeleton";
 import { SuperCuratorOperationsBoard } from "@/components/lms/super-curator-operations-board";
 import { getSuperCuratorDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
@@ -9,21 +11,27 @@ import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 
 export const dynamic = "force-dynamic";
 
-export default async function SuperCuratorDashboardPage() {
+export default function SuperCuratorDashboardPage() {
+  return (
+    <AppShell role="super_curator">
+      <PageHeader
+        title="Дашборд супер-куратора"
+        description="Контроль нагрузки кураторов, проблемных вопросов, рисков и распределения по потокам."
+      />
+      <Suspense fallback={<PageSkeleton />}>
+        <SuperCuratorDashboardContent />
+      </Suspense>
+    </AppShell>
+  );
+}
+
+async function SuperCuratorDashboardContent() {
   await requireRolePage(["super_curator"]);
   const data = await getSuperCuratorDashboard();
   const demoMode = isDemoModeEnabled();
 
   if (!data && !demoMode) {
-    return (
-      <AppShell role="super_curator">
-        <PageHeader
-          title="Дашборд супер-куратора"
-          description="Контроль нагрузки кураторов, проблемных вопросов, рисков и распределения по потокам."
-        />
-        <DashboardUnavailable />
-      </AppShell>
-    );
+    return <DashboardUnavailable />;
   }
 
   const metrics = data?.metrics ?? [];
@@ -33,20 +41,14 @@ export default async function SuperCuratorDashboardPage() {
   const riskQueue = data?.riskQueue ?? [];
 
   return (
-    <AppShell role="super_curator">
-      <PageHeader
-        title="Дашборд супер-куратора"
-        description="Что требует внимания: перегрузка кураторов, риски потоков, проблемные вопросы и перераспределение."
+    <div className="space-y-6">
+      <MetricGrid metrics={metrics} />
+      <SuperCuratorOperationsBoard
+        curatorLoads={curatorLoads}
+        cohortOperations={cohortOperations}
+        problemQuestions={problemQuestions}
+        riskQueue={riskQueue}
       />
-      <div className="space-y-6">
-        <MetricGrid metrics={metrics} />
-        <SuperCuratorOperationsBoard
-          curatorLoads={curatorLoads}
-          cohortOperations={cohortOperations}
-          problemQuestions={problemQuestions}
-          riskQueue={riskQueue}
-        />
-      </div>
-    </AppShell>
+    </div>
   );
 }
