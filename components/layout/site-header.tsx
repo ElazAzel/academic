@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GraduationCap, LogIn } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
 import { UserAccountNav } from "@/components/layout/user-account-nav";
@@ -30,14 +30,15 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-m3-outline-variant bg-m3-surface-container-lowest/80 shadow-m3-soft backdrop-blur-xl">
       <div className="mx-auto flex h-14 md:h-16 max-w-7xl items-center justify-between px-3 md:px-6">
         {/* Logo — compact on mobile */}
         <Link href="/" className="flex items-center gap-2 font-semibold shrink-0">
-          <span className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <GraduationCap className="h-4 w-4 md:h-5 md:w-5" aria-hidden />
+          <span className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-lg bg-m3-primary text-white">
+            <Icon name="school" size={20} className="md:hidden" aria-hidden />
+            <Icon name="school" size={24} className="hidden md:block" aria-hidden />
           </span>
-          <span className="hidden sm:inline text-sm md:text-base">AI Strategic Academy</span>
+          <span className="hidden sm:inline text-sm md:text-base text-m3-primary">AI Strategic Academy</span>
         </Link>
 
         {/* Desktop nav links — hidden on mobile (bottom nav handles it) */}
@@ -65,7 +66,7 @@ export async function SiteHeader() {
           ) : (
             <Button asChild size="sm">
               <Link href={AUTH_ROUTES.LOGIN}>
-                <LogIn className="h-4 w-4 mr-1.5" aria-hidden />
+                <Icon name="login" size={16} className="mr-1.5" aria-hidden />
                 <span className="hidden sm:inline">Войти</span>
               </Link>
             </Button>

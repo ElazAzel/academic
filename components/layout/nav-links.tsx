@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { ICON_MAP } from "@/components/layout/navigation";
+import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "@/components/layout/navigation";
 
 const BADGE_MAP: Record<string, string> = {
-  "Bell": "notifications",
-  "MessageCircle": "messages",
-  "HelpCircle": "openQuestions",
-  "ClipboardCheck": "pendingReviews",
+  "notifications": "notifications",
+  "chat": "messages",
+  "help": "openQuestions",
+  "clipboard_check": "pendingReviews",
 };
 
 export function NavLinks({ links }: { links: NavItem[] }) {
@@ -37,9 +37,8 @@ export function NavLinks({ links }: { links: NavItem[] }) {
   }, [fetchCounts]);
 
   return (
-    <>
+    <div className="flex flex-col gap-unit">
       {links.map((item) => {
-        const Icon = ICON_MAP[item.icon];
         const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
         const badgeKey = BADGE_MAP[item.icon];
         const badgeCount = badgeKey ? (counts[badgeKey] ?? 0) : 0;
@@ -50,22 +49,31 @@ export function NavLinks({ links }: { links: NavItem[] }) {
             href={item.href}
             prefetch={false}
             className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+              "group flex items-center gap-md rounded-lg px-md py-sm text-label-lg font-label-lg transition-all duration-200 ease-in-out",
               isActive
-                ? "bg-primary/10 text-primary font-medium"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "border-l-4 border-m3-secondary-container bg-m3-secondary-fixed/10 font-bold text-m3-primary"
+                : "border-l-4 border-transparent text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface"
             )}
           >
-            {Icon && <Icon className="h-4 w-4 shrink-0" />}
+            <Icon
+              name={item.icon}
+              size={20}
+              className={cn(
+                "shrink-0 transition-colors",
+                isActive
+                  ? "text-m3-primary"
+                  : "text-m3-on-surface-variant group-hover:text-m3-on-surface"
+              )}
+            />
             <span className="flex-1">{item.label}</span>
             {showBadge ? (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-white">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-m3-error px-1.5 text-[10px] font-bold text-white">
                 {badgeCount}
               </span>
             ) : null}
           </Link>
         );
       })}
-    </>
+    </div>
   );
 }

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Очередь вопросов куратора | AI Strategic Academy</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#001f25",
+                        "surface-tint": "#4159ab",
+                        "secondary": "#6339db",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "surface-container-highest": "#dbe3ec",
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#004e59",
+                        "primary-fixed": "#dce1ff",
+                        "on-secondary-fixed": "#1f005f",
+                        "error": "#ba1a1a",
+                        "tertiary": "#003a43",
+                        "inverse-surface": "#293138",
+                        "surface-container-high": "#e1e9f1",
+                        "on-primary-fixed-variant": "#264192",
+                        "outline": "#757683",
+                        "on-primary-container": "#a6b8ff",
+                        "secondary-container": "#7d56f5",
+                        "tertiary-fixed-dim": "#5bd7ec",
+                        "on-secondary-fixed-variant": "#4d17c5",
+                        "on-surface": "#151c22",
+                        "background": "#f6faff",
+                        "surface": "#f6faff",
+                        "outline-variant": "#c5c5d3",
+                        "on-secondary-container": "#fffbff",
+                        "on-surface-variant": "#444651",
+                        "tertiary-container": "#00535e",
+                        "on-error-container": "#93000a",
+                        "on-background": "#151c22",
+                        "on-primary-fixed": "#00164f",
+                        "surface-variant": "#dbe3ec",
+                        "surface-dim": "#d3dbe3",
+                        "inverse-primary": "#b6c4ff",
+                        "surface-container": "#e7eff7",
+                        "on-tertiary-container": "#4dcbe0",
+                        "surface-container-low": "#edf4fd",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#e7deff",
+                        "tertiary-fixed": "#a0efff",
+                        "primary-container": "#2b4596",
+                        "inverse-on-surface": "#eaf2fa",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#0c2d7e",
+                        "surface-bright": "#f6faff",
+                        "secondary-fixed-dim": "#ccbdff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "xxl": "48px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "unit": "4px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "container-max": "1280px",
+                        "xl": "32px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "mono-sm": ["JetBrains Mono"],
+                        "label-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "mono-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label-lg": ["14px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: theme('colors.surface-variant');
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex flex-col h-full py-lg fixed left-0 top-0 w-64 border-r border-outline-variant dark:border-outline bg-surface-container-low dark:bg-surface-dim z-40">
+<div class="px-lg mb-xl flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center font-headline-sm font-bold">
+                AI
+            </div>
+<div>
+<div class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed">AI Academy</div>
+<div class="font-label-md text-label-md text-on-surface-variant">Strategic LMS</div>
+</div>
+</div>
+<div class="flex-1 px-sm space-y-unit">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all duration-200 ease-in-out font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Панель управления
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all duration-200 ease-in-out font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+                Курсы
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all duration-200 ease-in-out font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+                Пользователи
+            </a>
+<!-- Active State: 'Вопросы' isn't explicitly in the JSON array, but intent maps here or we add it for semantic fit. Assuming dashboard/analytics intent, but let's highlight Dashboard or add custom intent. We'll leave Dashboard inactive and highlight a custom active state for this specific screen context as a sub-route, or default to a generic "Отчеты" if we strictly follow JSON tabs. We will highlight Dashboard as intent fallback. Actually, let's just use the exact classes for active state on a hypothetical 'Вопросы' tab if we were to extend, but strictly speaking, I must use what's provided. Let's make "Панель управления" active as it's the closest main hub. -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-primary dark:text-primary-fixed-dim font-bold border-l-4 border-secondary-container bg-secondary-fixed/10 transition-all duration-200 ease-in-out font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+                Вопросы
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all duration-200 ease-in-out font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                Отчеты
+            </a>
+</div>
+<div class="px-sm space-y-unit mt-auto pt-lg border-t border-outline-variant/30">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all duration-200 ease-in-out font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Настройки
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all duration-200 ease-in-out font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Выход
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 flex flex-col h-screen overflow-hidden">
+<!-- TopAppBar (Shared Component adapted for context) -->
+<header class="w-full px-lg md:px-xxl pt-lg md:pt-xxl pb-md flex flex-col gap-sm bg-background dark:bg-background z-30 shrink-0">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-md">
+<button class="md:hidden text-primary dark:text-primary-fixed-dim hover:opacity-90 transition-transform active:scale-95">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg font-bold text-primary">Очередь вопросов</h1>
+</div>
+<div class="flex items-center gap-sm">
+<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<img alt="Avatar" class="w-10 h-10 rounded-full border border-outline-variant object-cover" data-alt="A professional headshot of a corporate instructor, well-lit, high-resolution, modern office background. Deep blue corporate styling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7mtZrzj3zQZwo5eyRV1hlohaeX7Miocok_Jfu79J86SN3WtDd2a8WpQlUy1lhiLtBG6ycx4tIVVPSMRDwh8DPjwl5c7CZ71UJFnncF84OIrRqzUa_3i8poXoLUd2aLD1bMzPhGTpw5q_If2ZajoUmhLUJ81hewVMpj6C45dQt4KY6tlEJBN8VgIikNFH2O9ImEwncVZUnaA9YcnI5aboC-tCUU99zcIeUMS2uRJMwQ7AHVUlxm002gbMajJvlaMQ9HwWai1Jomks"/>
+</div>
+</div>
+<!-- Filters -->
+<div class="flex gap-sm mt-md overflow-x-auto pb-sm custom-scrollbar">
+<button class="px-md py-sm rounded-full bg-primary-container text-on-primary-container font-label-lg text-label-lg whitespace-nowrap">Все (42)</button>
+<button class="px-md py-sm rounded-full bg-surface-container-high text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-variant transition-colors whitespace-nowrap">Открытые (15)</button>
+<button class="px-md py-sm rounded-full bg-error-container text-on-error-container font-label-lg text-label-lg hover:bg-error-container/80 transition-colors whitespace-nowrap flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" data-icon="warning">warning</span> Просроченные (3)
+                </button>
+<button class="px-md py-sm rounded-full bg-surface-container-high text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-variant transition-colors whitespace-nowrap">Решенные (24)</button>
+</div>
+</header>
+<!-- Split Layout: List & Detail -->
+<div class="flex-1 flex overflow-hidden px-lg md:px-xxl pb-xxl gap-lg">
+<!-- Questions List -->
+<div class="flex-1 flex flex-col bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden min-w-[300px]">
+<!-- List Header -->
+<div class="grid grid-cols-12 gap-sm px-md py-sm border-b border-outline-variant bg-surface-container-low font-label-md text-label-md text-on-surface-variant uppercase tracking-wider sticky top-0">
+<div class="col-span-3">Студент</div>
+<div class="col-span-4">Урок</div>
+<div class="col-span-3">Ожидание</div>
+<div class="col-span-2 text-right">Статус</div>
+</div>
+<!-- List Items -->
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<!-- Item 1 (Active/Selected) -->
+<div class="grid grid-cols-12 gap-sm px-md py-md border-b border-outline-variant/50 bg-primary-container/5 hover:bg-primary-container/10 cursor-pointer transition-colors relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="col-span-3 flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-label-lg text-label-lg shrink-0">ИП</div>
+<span class="font-body-md text-body-md text-on-surface truncate">Иван Петров</span>
+</div>
+<div class="col-span-4 flex flex-col justify-center">
+<span class="font-label-md text-label-md text-on-surface-variant truncate">Модуль 2. Стратегический анализ</span>
+<span class="font-body-sm text-body-sm text-on-surface truncate font-medium">Урок 2.4: Матрица Ансоффа</span>
+</div>
+<div class="col-span-3 flex items-center text-error font-body-sm text-body-sm font-medium">
+<span class="material-symbols-outlined text-[16px] mr-xs" data-icon="schedule">schedule</span> 4 ч. назад
+                        </div>
+<div class="col-span-2 flex items-center justify-end">
+<span class="px-sm py-xs rounded bg-error-container text-on-error-container font-label-md text-label-md whitespace-nowrap">Просрочен</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="grid grid-cols-12 gap-sm px-md py-md border-b border-outline-variant/50 hover:bg-surface-container transition-colors cursor-pointer">
+<div class="col-span-3 flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-label-lg text-label-lg shrink-0">АС</div>
+<span class="font-body-md text-body-md text-on-surface truncate">Анна Смирнова</span>
+</div>
+<div class="col-span-4 flex flex-col justify-center">
+<span class="font-label-md text-label-md text-on-surface-variant truncate">Модуль 3. ИИ в бизнесе</span>
+<span class="font-body-sm text-body-sm text-on-surface truncate">Урок 3.1: Введение в LLM</span>
+</div>
+<div class="col-span-3 flex items-center text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] mr-xs" data-icon="schedule">schedule</span> 45 мин. назад
+                        </div>
+<div class="col-span-2 flex items-center justify-end">
+<span class="px-sm py-xs rounded bg-surface-variant text-on-surface-variant font-label-md text-label-md whitespace-nowrap">Открыт</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="grid grid-cols-12 gap-sm px-md py-md border-b border-outline-variant/50 hover:bg-surface-container transition-colors cursor-pointer">
+<div class="col-span-3 flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-label-lg text-label-lg shrink-0">МК</div>
+<span class="font-body-md text-body-md text-on-surface truncate">Михаил Козлов</span>
+</div>
+<div class="col-span-4 flex flex-col justify-center">
+<span class="font-label-md text-label-md text-on-surface-variant truncate">Модуль 1. Основы</span>
+<span class="font-body-sm text-body-sm text-on-surface truncate">Урок 1.2: Целеполагание</span>
+</div>
+<div class="col-span-3 flex items-center text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] mr-xs" data-icon="schedule">schedule</span> 2 ч. назад
+                        </div>
+<div class="col-span-2 flex items-center justify-end">
+<span class="px-sm py-xs rounded bg-surface-variant text-on-surface-variant font-label-md text-label-md whitespace-nowrap">Открыт</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Detail Panel (Active Question) -->
+<div class="hidden lg:flex w-2/5 flex-col bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+<!-- Detail Header -->
+<div class="p-lg border-b border-outline-variant bg-surface-container-lowest shrink-0">
+<div class="flex justify-between items-start mb-md">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-headline-sm text-headline-sm shrink-0">ИП</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface">Иван Петров</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Прогресс по курсу: 34%</p>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="open_in_new">open_in_new</span>
+</button>
+</div>
+<div class="bg-surface-container-low p-md rounded-lg">
+<p class="font-label-md text-label-md text-primary mb-xs">Модуль 2. Стратегический анализ / Урок 2.4</p>
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Матрица Ансоффа в условиях неопределенности</h4>
+</div>
+</div>
+<!-- Conversation Area -->
+<div class="flex-1 p-lg overflow-y-auto custom-scrollbar bg-surface-bright flex flex-col gap-lg">
+<!-- Question Bubble -->
+<div class="flex flex-col gap-xs max-w-[90%]">
+<div class="flex items-center gap-sm">
+<span class="font-label-md text-label-md font-semibold text-on-surface">Иван Петров</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Сегодня, 10:24</span>
+</div>
+<div class="bg-surface-container p-md rounded-2xl rounded-tl-sm text-on-surface font-body-md text-body-md">
+                            Здравствуйте! Я пытаюсь применить матрицу Ансоффа для кейса "ТехноПром". Не совсем понятно, как классифицировать их новый продукт (ИИ-ассистент) для текущего рынка B2B. Это развитие продукта или диверсификация, учитывая, что технология для них абсолютно новая?
+                        </div>
+</div>
+<!-- Previous context (System note) -->
+<div class="flex items-center justify-center">
+<span class="px-md py-xs bg-surface-variant rounded-full font-label-md text-label-md text-on-surface-variant">
+                            Отправлено уведомление куратору (11:00)
+                        </span>
+</div>
+</div>
+<!-- Reply Area -->
+<div class="p-lg border-t border-outline-variant bg-surface-container-lowest shrink-0">
+<div class="mb-sm flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Ваш ответ</span>
+<button class="text-primary font-label-md text-label-md flex items-center gap-xs hover:underline">
+<span class="material-symbols-outlined text-[16px]" data-icon="smart_toy">smart_toy</span> Сгенерировать черновик ИИ
+                        </button>
+</div>
+<textarea class="w-full h-32 p-md border border-outline-variant rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-body-md text-body-md text-on-surface custom-scrollbar" placeholder="Напишите подробный ответ..."></textarea>
+<div class="flex items-center justify-between mt-md">
+<button class="flex items-center gap-sm px-md py-sm rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors font-label-lg text-label-lg">
+<span class="material-symbols-outlined" data-icon="forward_to_inbox">forward_to_inbox</span>
+                            Передать лектору
+                        </button>
+<button class="flex items-center gap-sm px-lg py-sm rounded-lg bg-primary text-on-primary hover:opacity-90 transition-opacity font-label-lg text-label-lg font-medium shadow-sm">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+                            Отправить ответ
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

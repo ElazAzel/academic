@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Strategic Academy - Панель управления</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed": "#a0efff",
+                      "tertiary-fixed-dim": "#5bd7ec",
+                      "tertiary-container": "#00535e",
+                      "outline": "#757683",
+                      "on-secondary-fixed": "#1f005f",
+                      "error-container": "#ffdad6",
+                      "error": "#ba1a1a",
+                      "surface-container-highest": "#dbe3ec",
+                      "surface-container-high": "#e1e9f1",
+                      "on-surface-variant": "#444651",
+                      "on-surface": "#151c22",
+                      "inverse-primary": "#b6c4ff",
+                      "surface-bright": "#f6faff",
+                      "on-secondary-fixed-variant": "#4d17c5",
+                      "tertiary": "#003a43",
+                      "surface-container": "#e7eff7",
+                      "background": "#f6faff",
+                      "surface-dim": "#d3dbe3",
+                      "surface": "#f6faff",
+                      "primary-fixed-dim": "#b6c4ff",
+                      "surface-variant": "#dbe3ec",
+                      "primary-fixed": "#dce1ff",
+                      "primary": "#0c2d7e",
+                      "secondary": "#6339db",
+                      "outline-variant": "#c5c5d3",
+                      "on-primary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-low": "#edf4fd",
+                      "on-secondary-container": "#fffbff",
+                      "secondary-fixed": "#e7deff",
+                      "primary-container": "#2b4596",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "secondary-container": "#7d56f5",
+                      "on-primary-fixed-variant": "#264192",
+                      "on-primary-fixed": "#00164f",
+                      "inverse-surface": "#293138",
+                      "on-tertiary-fixed": "#001f25",
+                      "on-primary-container": "#a6b8ff",
+                      "on-secondary": "#ffffff",
+                      "on-background": "#151c22",
+                      "surface-tint": "#4159ab",
+                      "on-tertiary-fixed-variant": "#004e59",
+                      "inverse-on-surface": "#eaf2fa",
+                      "on-tertiary-container": "#4dcbe0",
+                      "on-error": "#ffffff",
+                      "secondary-fixed-dim": "#ccbdff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "xl": "32px",
+                      "sm": "8px",
+                      "gutter": "24px",
+                      "container-max": "1280px",
+                      "unit": "4px",
+                      "lg": "24px",
+                      "xxl": "48px",
+                      "xs": "4px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "headline-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-lg": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "mono-sm": ["JetBrains Mono"],
+                      "body-sm": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "headline-lg-mobile": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-lg": ["14px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "label-md": ["12px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "mono-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar (Shared Component JSON Mapping) -->
+<header class="bg-surface-container-lowest fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg py-md border-b border-outline-variant shadow-sm">
+<div class="flex items-center gap-sm">
+<span class="font-headline-md text-headline-md font-bold text-primary">AI Strategic Academy</span>
+</div>
+<div class="flex items-center gap-md">
+<button aria-label="notifications" class="text-on-surface-variant hover:bg-surface-container-high transition-colors p-sm rounded-full flex items-center justify-center cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button aria-label="contrast" class="text-on-surface-variant hover:bg-surface-container-high transition-colors p-sm rounded-full flex items-center justify-center cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">contrast</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant cursor-pointer">
+<img alt="Аватар пользователя" class="w-full h-full object-cover" data-alt="A professional headshot of a confident academic professional in a modern, brightly lit office environment. The lighting is soft and natural, emphasizing a sophisticated corporate aesthetic. The background is slightly blurred, showing a minimalist workspace with cool blue and white tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMFk5FIjaAVdDA-x3NxKZwxXWl11-z4vDG19cNRh0xBKKu-wQ3qmR0XjxKw3HhiQuygM77xWyUP34ArEt8wNzqtelbBCXPUiVr2WFpBKq9mDoRGF7iE6aSFXw-9HWpH3W3N8V6sQ1m2DXQFn96fFWBn8jKlXikWR5yhqEPm7Ln7AzQl9P1NRz3XEYIaEdPQ0rDFlFXY7plGtGQ9Oi4NwMGjrXqRMgPD0Rnnr-4MRljM6jIxHoNs3u9Y9gc4if5wmfAb6iWeHHZEuw"/>
+</div>
+</div>
+</header>
+<!-- Main Mobile Canvas -->
+<main class="flex-grow pt-[80px] pb-[100px] px-margin-mobile flex flex-col gap-lg md:max-w-container-max md:mx-auto md:w-full md:px-lg md:py-xxl">
+<!-- Welcome & Date -->
+<div class="flex flex-col gap-xs pt-sm">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">С возвращением!</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">14 Октября, 2023 • Семестр Осени</p>
+</div>
+<!-- Continue Learning Hero Card (Premium Academic) -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden flex flex-col group transition-shadow hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+<div class="h-24 bg-primary relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-tr from-primary to-secondary-container opacity-90"></div>
+<div class="absolute top-sm right-sm bg-surface/20 backdrop-blur-sm rounded-full px-sm py-xs border border-surface/30 flex items-center gap-xs">
+<span class="material-symbols-outlined text-on-primary text-[14px]">school</span>
+<span class="font-label-md text-label-md text-on-primary">В процессе</span>
+</div>
+</div>
+<div class="p-md flex flex-col gap-md -mt-8 relative z-10">
+<div class="bg-surface-container-lowest w-14 h-14 rounded-lg border border-outline-variant shadow-sm flex items-center justify-center p-xs">
+<span class="material-symbols-outlined text-primary text-3xl fill-icon">strategy</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Стратегическое внедрение ИИ</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Модуль 4: Этика и управление рисками</p>
+</div>
+<div class="flex flex-col gap-xs">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant">Прогресс курса</span>
+<span class="font-label-md text-label-md text-primary font-bold">68%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-500 ease-out" style="width: 68%;"></div>
+</div>
+</div>
+<button class="w-full mt-sm bg-primary-container text-on-primary rounded-lg py-sm px-md font-label-lg text-label-lg flex items-center justify-center gap-xs hover:bg-primary transition-colors active:scale-[0.98]">
+                    Продолжить обучение
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- My Courses Horizontal Scroller -->
+<section class="flex flex-col gap-md">
+<div class="flex justify-between items-end">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Мои курсы</h3>
+<button class="font-label-md text-label-md text-primary hover:underline">Все курсы</button>
+</div>
+<div class="flex overflow-x-auto gap-md pb-sm snap-x -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0 hide-scrollbar">
+<!-- Course Card 1 -->
+<div class="min-w-[260px] max-w-[280px] flex-shrink-0 bg-surface-container-lowest rounded-xl border border-outline-variant p-md snap-start flex flex-col gap-md shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+<div class="flex items-start justify-between">
+<div class="w-10 h-10 rounded bg-tertiary-container/10 flex items-center justify-center text-tertiary-container">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant bg-surface-container px-2 py-1 rounded">Q3 '23</span>
+</div>
+<div>
+<h4 class="font-label-lg text-label-lg text-on-surface line-clamp-2 mb-1">Аналитика данных для руководителей</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Проф. А. Смирнов</p>
+</div>
+<div class="mt-auto">
+<div class="h-1 w-full bg-surface-container-high rounded-full overflow-hidden mb-1">
+<div class="h-full bg-tertiary-container rounded-full" style="width: 30%;"></div>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant text-right">30%</p>
+</div>
+</div>
+<!-- Course Card 2 -->
+<div class="min-w-[260px] max-w-[280px] flex-shrink-0 bg-surface-container-lowest rounded-xl border border-outline-variant p-md snap-start flex flex-col gap-md shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+<div class="flex items-start justify-between">
+<div class="w-10 h-10 rounded bg-secondary-container/10 flex items-center justify-center text-secondary-container">
+<span class="material-symbols-outlined">group_work</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant bg-surface-container px-2 py-1 rounded">Q4 '23</span>
+</div>
+<div>
+<h4 class="font-label-lg text-label-lg text-on-surface line-clamp-2 mb-1">Трансформация корпоративной культуры</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Док. Е. Иванова</p>
+</div>
+<div class="mt-auto">
+<div class="h-1 w-full bg-surface-container-high rounded-full overflow-hidden mb-1">
+<div class="h-full bg-secondary-container rounded-full" style="width: 0%;"></div>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant text-right">0%</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Upcoming Deadlines List -->
+<section class="flex flex-col gap-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Предстоящие дедлайны</h3>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant flex flex-col overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+<!-- Deadline Item -->
+<div class="p-md flex items-start gap-md border-b border-outline-variant/50 last:border-b-0 hover:bg-surface-container-lowest/80 transition-colors cursor-pointer">
+<div class="flex flex-col items-center justify-center bg-error-container text-on-error-container rounded-lg min-w-[48px] py-xs px-sm">
+<span class="font-label-md text-label-md uppercase opacity-80">Окт</span>
+<span class="font-headline-sm text-headline-sm font-bold leading-none mt-xs">16</span>
+</div>
+<div class="flex-grow flex flex-col gap-xs pt-xs">
+<h4 class="font-label-lg text-label-lg text-on-surface">Эссе: Анализ рисков ИИ</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Стратегическое внедрение ИИ</p>
+</div>
+<span class="material-symbols-outlined text-outline mt-sm">chevron_right</span>
+</div>
+<!-- Deadline Item -->
+<div class="p-md flex items-start gap-md border-b border-outline-variant/50 last:border-b-0 hover:bg-surface-container-lowest/80 transition-colors cursor-pointer">
+<div class="flex flex-col items-center justify-center bg-surface-container text-on-surface rounded-lg min-w-[48px] py-xs px-sm">
+<span class="font-label-md text-label-md uppercase opacity-80">Окт</span>
+<span class="font-headline-sm text-headline-sm font-bold leading-none mt-xs">22</span>
+</div>
+<div class="flex-grow flex flex-col gap-xs pt-xs">
+<h4 class="font-label-lg text-label-lg text-on-surface">Групповой проект: Модель данных</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Аналитика данных для руководителей</p>
+</div>
+<span class="material-symbols-outlined text-outline mt-sm">chevron_right</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only Shell) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 pb-safe">
+<ul class="flex justify-around items-center h-16 px-sm">
+<!-- Dashboard (Active) -->
+<li class="flex-1">
+<a class="flex flex-col items-center justify-center h-full w-full gap-1 text-primary" href="#">
+<div class="bg-secondary-fixed/30 px-xl py-1 rounded-full flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined fill-icon">dashboard</span>
+</div>
+<span class="font-label-md text-[10px] font-bold text-primary text-center leading-none">Панель управления</span>
+</a>
+</li>
+<!-- Courses -->
+<li class="flex-1">
+<a class="flex flex-col items-center justify-center h-full w-full gap-1 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<div class="px-xl py-1 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">school</span>
+</div>
+<span class="font-label-md text-[10px] text-center leading-none">Курсы</span>
+</a>
+</li>
+<!-- Users/Community -->
+<li class="flex-1">
+<a class="flex flex-col items-center justify-center h-full w-full gap-1 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<div class="px-xl py-1 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">group</span>
+</div>
+<span class="font-label-md text-[10px] text-center leading-none">Пользователи</span>
+</a>
+</li>
+<!-- Reports/Profile -->
+<li class="flex-1">
+<a class="flex flex-col items-center justify-center h-full w-full gap-1 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<div class="px-xl py-1 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<span class="font-label-md text-[10px] text-center leading-none">Отчеты</span>
+</a>
+</li>
+</ul>
+</nav>
+<style>
+        /* Utility for safe area on mobile devices */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        /* Hide scrollbar for clean horizontal scrolling */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body></html>

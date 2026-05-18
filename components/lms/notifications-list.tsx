@@ -7,18 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
-import {
-  Bell,
-  MessageCircle,
-  Box,
-  Layers,
-  Info,
-  ExternalLink,
-  CheckCheck,
-  ChevronRight,
-  Clock,
-  FileText,
-} from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { PopupNotificationViewer } from "@/components/lms/popup-notification-viewer";
@@ -35,15 +24,15 @@ interface NotificationItem {
   createdAt: string;
 }
 
-function getNotificationIcon(type: string, refType: string | null) {
-  if (refType === "popup" || refType === "admin_popup") return Info;
-  if (type === "new_message" || refType === "message") return MessageCircle;
-  if (type === "block_completed") return Box;
-  if (type === "module_completed") return Layers;
-  if (type === "question_answered") return MessageCircle;
-  if (type === "module_deadline_near") return Clock;
-  if (type === "assignment_reviewed") return FileText;
-  return Bell;
+function getNotificationIcon(type: string, refType: string | null): string {
+  if (refType === "popup" || refType === "admin_popup") return "info";
+  if (type === "new_message" || refType === "message") return "chat";
+  if (type === "block_completed") return "inventory_2";
+  if (type === "module_completed") return "layers";
+  if (type === "question_answered") return "chat";
+  if (type === "module_deadline_near") return "schedule";
+  if (type === "assignment_reviewed") return "description";
+  return "notifications";
 }
 
 function getNotificationAction(n: NotificationItem): { link: string; label: string } {
@@ -151,8 +140,8 @@ export function NotificationsList() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5 text-primary" />
-          <span className="text-sm text-muted-foreground">
+          <Icon name="notifications" size={20} className="text-m3-primary" />
+          <span className="text-body-md font-body-md text-m3-on-surface-variant">
             {unreadCount > 0
               ? `${unreadCount} непрочитанных`
               : "Нет непрочитанных"}
@@ -164,9 +153,9 @@ export function NotificationsList() {
             size="sm"
             onClick={() => markAllRead.mutate()}
             disabled={markAllRead.isPending}
-            className="text-xs"
+            className="text-label-md font-label-md"
           >
-            <CheckCheck className="h-3.5 w-3.5 mr-1.5" />
+            <Icon name="done_all" size={14} className="mr-1.5" />
             Прочитать все
           </Button>
         )}
@@ -175,13 +164,13 @@ export function NotificationsList() {
       {/* List */}
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-m3-primary border-t-transparent" />
         </div>
       ) : notifications.length === 0 ? (
-        <Card className="rounded-2xl">
+        <Card className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
           <CardContent className="py-16 text-center">
-            <Bell className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">У вас пока нет уведомлений.</p>
+            <Icon name="notifications" size={40} className="mx-auto mb-3 text-m3-on-surface-variant/40" />
+            <p className="text-body-md font-body-md text-m3-on-surface-variant">У вас пока нет уведомлений.</p>
           </CardContent>
         </Card>
       ) : (
@@ -192,7 +181,7 @@ export function NotificationsList() {
           >
             {virtualizer.getVirtualItems().map((virtualItem) => {
               const n = notifications[virtualItem.index];
-              const Icon = getNotificationIcon(n.type, n.refType);
+              const iconName = getNotificationIcon(n.type, n.refType);
               const { label } = getNotificationAction(n);
               return (
                 <div
@@ -205,38 +194,38 @@ export function NotificationsList() {
                 >
                   <Card
                     className={cn(
-                      "rounded-2xl cursor-pointer transition-all hover:shadow-sm",
-                      !n.readAt && "border-primary/20 bg-primary/[0.02]"
+                      "rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft cursor-pointer transition-all hover:shadow-m3-soft-hover",
+                      !n.readAt && "border-m3-primary-fixed-dim bg-m3-primary-fixed/10"
                     )}
                     onClick={() => handleAction(n)}
                   >
                     <CardContent className="flex items-start gap-4 p-4">
-                      <span className={cn("mt-1 shrink-0", !n.readAt ? "text-primary" : "text-muted-foreground")}>
-                        <Icon className="h-5 w-5" />
+                      <span className={cn("mt-1 shrink-0", !n.readAt ? "text-m3-primary" : "text-m3-on-surface-variant")}>
+                        <Icon name={iconName} size={20} />
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className={cn("text-sm", !n.readAt && "font-semibold")}>{n.title}</p>
+                          <p className={cn("text-body-md font-body-md", !n.readAt && "font-semibold text-m3-on-surface")}>{n.title}</p>
                           {!n.readAt && (
-                            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-m3-primary" />
                           )}
                         </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{n.body}</p>
+                        <p className="mt-0.5 text-label-sm font-label-sm text-m3-on-surface-variant line-clamp-2">{n.body}</p>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleAction(n);
                           }}
-                          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                          className="mt-2 inline-flex items-center gap-1 text-label-sm font-label-sm text-m3-primary hover:underline"
                         >
-                          <ExternalLink className="h-3 w-3" />
+                          <Icon name="open_in_new" size={12} />
                           {label}
                         </button>
                       </div>
-                      <span className="shrink-0 text-[11px] text-muted-foreground truncate max-w-[100px] sm:max-w-none">
+                      <span className="shrink-0 text-label-sm font-label-sm text-m3-on-surface-variant truncate max-w-[100px] sm:max-w-none">
                         {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: ru })}
                       </span>
-                      <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+                      <Icon name="chevron_right" size={16} className="mt-1 shrink-0 text-m3-on-surface-variant" />
                     </CardContent>
                   </Card>
                 </div>

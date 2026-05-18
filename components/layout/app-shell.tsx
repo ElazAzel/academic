@@ -21,10 +21,10 @@ export function AppShell({
 
   return (
     <div className="page-container">
-      {/* Header — shown on all screen sizes */}
+      {/* Header on all sizes */}
       <SiteHeader />
 
-      {/* Mobile bottom navigation */}
+      {/* Mobile bottom nav */}
       <MobileBottomNav role={role} />
 
       {/* Desktop sidebar layout */}
@@ -33,15 +33,21 @@ export function AppShell({
           {/* Desktop sidebar — hidden on mobile */}
           <aside className="hidden md:block">
             <nav
-              className="sticky top-24 space-y-1 rounded-2xl border bg-card/80 p-3 shadow-sm backdrop-blur-xl"
+              className="sticky top-24 flex flex-col rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest p-sm shadow-m3-soft"
               aria-label={`Кабинет: ${roleLabel}`}
             >
-              <div className="mb-2 px-3 pb-2 border-b border-border">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              {/* Role label */}
+              <div className="mx-sm mb-xs border-b border-m3-outline-variant px-sm pb-xs">
+                <span className="font-label-md text-label-md uppercase tracking-wider text-m3-on-surface-variant">
                   {roleLabel}
                 </span>
               </div>
+
+              {/* Navigation items */}
               <NavLinks links={links} />
+
+              {/* Spacer */}
+              <div className="mt-auto" />
             </nav>
           </aside>
 
@@ -49,9 +55,7 @@ export function AppShell({
           <main
             id="main-content"
             className={cn(
-              "min-w-0 outline-none",
-              // Mobile: full width, no padding (handled by page content)
-              // Desktop: proper padding
+              "min-w-0 outline-none animate-slide-up",
               "px-4 md:px-0 pb-4 md:pb-8",
               className
             )}

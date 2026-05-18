@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { ICON_MAP, BOTTOM_NAV_BY_ROLE } from "@/components/layout/navigation";
+import { Icon } from "@/components/ui/icon";
+import { BOTTOM_NAV_BY_ROLE } from "@/components/layout/navigation";
 import { cn } from "@/lib/utils";
 import type { RoleKey } from "@/types/domain";
 
@@ -12,16 +13,12 @@ export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
   const shouldReduce = useReducedMotion();
   const items = BOTTOM_NAV_BY_ROLE[role] ?? BOTTOM_NAV_BY_ROLE.student;
 
-  // Get unread counts from sidebar if available (NavLinks fetches them)
-  // We re-use the same endpoint via a simple approach: show badge from NAV_BY_ROLE
-
   return (
     <nav
       className="bottom-nav-bar md:hidden"
       aria-label="Мобильная навигация"
     >
       {items.map((item) => {
-        const Icon = ICON_MAP[item.icon];
         const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
 
         return (
@@ -32,20 +29,20 @@ export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
             aria-current={isActive ? "page" : undefined}
           >
             <div className="relative">
-              {Icon && (
-                <Icon
-                  className={cn(
-                    "h-5 w-5 transition-colors",
-                    isActive
-                      ? "text-primary"
-                      : "text-muted-foreground group-hover:text-foreground"
-                  )}
-                />
-              )}
+              <Icon
+                name={item.icon}
+                size={20}
+                className={cn(
+                  "transition-colors",
+                  isActive
+                    ? "text-m3-primary"
+                    : "text-m3-on-surface-variant"
+                )}
+              />
               {isActive && (
                 <motion.span
                   layoutId={shouldReduce ? undefined : "bottom-nav-indicator"}
-                  className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary"
+                  className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-m3-primary"
                   transition={shouldReduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 35 }}
                 />
               )}
@@ -54,8 +51,8 @@ export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
               className={cn(
                 "text-[10px] font-medium leading-tight transition-colors",
                 isActive
-                  ? "text-primary"
-                  : "text-muted-foreground"
+                  ? "text-m3-primary"
+                  : "text-m3-on-surface-variant"
               )}
             >
               {item.label}

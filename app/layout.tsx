@@ -40,6 +40,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {/* PWA theme-color with media query for dark mode */}
         <meta name="theme-color" content="#F8FAFC" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)" />
+        {/* Material Symbols + Inter + JetBrains Mono */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body>
         <a

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Strategic Academy - Dashboard Куратора</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-tint": "#4159ab",
+                      "on-primary-fixed-variant": "#264192",
+                      "on-background": "#151c22",
+                      "error": "#ba1a1a",
+                      "surface-variant": "#dbe3ec",
+                      "primary-fixed-dim": "#b6c4ff",
+                      "on-tertiary-container": "#4dcbe0",
+                      "background": "#f6faff",
+                      "on-secondary": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "surface-container": "#e7eff7",
+                      "primary-fixed": "#dce1ff",
+                      "on-primary-fixed": "#00164f",
+                      "on-tertiary-fixed": "#001f25",
+                      "inverse-on-surface": "#eaf2fa",
+                      "on-primary-container": "#a6b8ff",
+                      "secondary-fixed-dim": "#ccbdff",
+                      "on-error": "#ffffff",
+                      "outline-variant": "#c5c5d3",
+                      "surface-container-highest": "#dbe3ec",
+                      "on-secondary-container": "#fffbff",
+                      "surface-container-low": "#edf4fd",
+                      "on-tertiary-fixed-variant": "#004e59",
+                      "tertiary-fixed-dim": "#5bd7ec",
+                      "surface-container-high": "#e1e9f1",
+                      "outline": "#757683",
+                      "secondary-container": "#7d56f5",
+                      "tertiary-container": "#00535e",
+                      "inverse-surface": "#293138",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface": "#151c22",
+                      "on-secondary-fixed": "#1f005f",
+                      "error-container": "#ffdad6",
+                      "surface": "#f6faff",
+                      "surface-bright": "#f6faff",
+                      "on-surface-variant": "#444651",
+                      "inverse-primary": "#b6c4ff",
+                      "surface-dim": "#d3dbe3",
+                      "secondary": "#6339db",
+                      "on-secondary-fixed-variant": "#4d17c5",
+                      "primary": "#0c2d7e",
+                      "on-tertiary": "#ffffff",
+                      "tertiary": "#003a43",
+                      "secondary-fixed": "#e7deff",
+                      "primary-container": "#2b4596",
+                      "tertiary-fixed": "#a0efff",
+                      "on-error-container": "#93000a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "32px",
+                      "lg": "24px",
+                      "sm": "8px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px",
+                      "container-max": "1280px",
+                      "xxl": "48px",
+                      "md": "16px",
+                      "xs": "4px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "mono-sm": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-lg": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "mono-sm": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "14px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-lg": [
+                              "14px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          }
+        }
+    </script>
+<style>
+        body {
+            background-color: #f6faff; /* background */
+            color: #151c22; /* on-background */
+        }
+        /* Mobile specific overrides to hide scrollbar but allow scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md pb-[80px]"> <!-- Added pb to account for bottom nav -->
+<!-- TopNavBar (Mobile App Style) -->
+<header class="bg-surface-container-lowest border-b border-outline-variant shadow-sm fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile py-sm h-[64px]">
+<div class="flex items-center gap-sm">
+<span class="font-headline-sm text-headline-sm font-bold text-primary">AI Strategic Academy</span>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant cursor-pointer">
+<img alt="Аватар пользователя" class="w-full h-full object-cover" data-alt="A professional headshot of a modern educator or strategist in a high-key, well-lit studio setting. The lighting is soft and bright, emphasizing a clean, contemporary academic aesthetic. The background is a minimalist, neutral grey. The subject wears smart-casual corporate attire, conveying authority and approachability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSMxn-5S_lmRIIOPLMBdvSxF1MptnSj8nA3QRFKQzQVoEFg13MHc2dAZJQyicv4cJ9cf-CTjwKh2GfoXlyewuejJJUnZE_qOxPzMglfZrBypxa-z_pwhB3KwOju45IHJSvSnmV0hGtxjLrHCP5RzhzOM-yp83ykkrPiiqjlKRsYOVfUKK_Hy-h---qQ5PdvKBqT6R27fmOOGm0YeW2SFxzE9lOQpgOZ4wznUlgmlxD52slEXtJHSdE7jE11dgGvCww-LPgX8Jejq8"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-[80px] px-margin-mobile flex flex-col gap-lg">
+<!-- Welcome Section -->
+<section>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-background mb-xs">Привет, Куратор</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Обзор задач на сегодня</p>
+</section>
+<!-- Summary Metrics (Bento Style) -->
+<section class="grid grid-cols-2 gap-sm">
+<div class="col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex justify-between items-center relative overflow-hidden">
+<div class="absolute right-0 top-0 w-1/2 h-full opacity-10 pointer-events-none">
+<!-- Subtle pattern/gradient -->
+<div class="w-full h-full bg-gradient-to-r from-transparent to-primary"></div>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-1">На проверку</p>
+<p class="font-display-lg text-display-lg text-primary">12</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Работ от студентов</p>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary z-10">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assignment</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex flex-col justify-between">
+<div class="flex justify-between items-start mb-2">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Вопросы</p>
+<span class="material-symbols-outlined text-secondary-container text-opacity-80">forum</span>
+</div>
+<div>
+<p class="font-headline-lg-mobile text-headline-lg-mobile text-on-background">4</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[10px]">Ждут ответа</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-error/20 rounded-xl p-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex flex-col justify-between relative overflow-hidden">
+<div class="absolute bottom-0 left-0 w-full h-1 bg-error"></div>
+<div class="flex justify-between items-start mb-2">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">В зоне риска</p>
+<span class="material-symbols-outlined text-error text-opacity-80">warning</span>
+</div>
+<div>
+<p class="font-headline-lg-mobile text-headline-lg-mobile text-error">2</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[10px]">Студента</p>
+</div>
+</div>
+</section>
+<!-- Primary Actions -->
+<section class="flex gap-sm">
+<button class="flex-1 bg-primary-container text-on-primary rounded-lg py-sm px-md font-label-lg text-label-lg flex items-center justify-center gap-xs shadow-sm active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">rule</span>
+                Проверить
+            </button>
+<button class="flex-1 bg-surface-container-lowest border border-outline-variant text-primary rounded-lg py-sm px-md font-label-lg text-label-lg flex items-center justify-center gap-xs shadow-sm active:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">reply</span>
+                Ответить
+            </button>
+</section>
+<!-- Tasks for Today -->
+<section>
+<div class="flex justify-between items-end mb-sm">
+<h2 class="font-headline-sm text-headline-sm text-on-background">Задачи на сегодня</h2>
+<a class="font-label-md text-label-md text-primary" href="#">Все</a>
+</div>
+<div class="flex flex-col gap-xs">
+<!-- Task Card 1 (Urgent) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] relative overflow-hidden">
+<div class="absolute left-0 top-0 h-full w-1 bg-error"></div>
+<div class="flex justify-between items-start mb-xs pl-sm">
+<div class="flex items-center gap-2">
+<span class="bg-error/10 text-error px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Просрочено</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">Стратегический менеджмент</span>
+</div>
+</div>
+<div class="pl-sm">
+<p class="font-label-lg text-label-lg text-on-background mb-1">Проверка эссе: Сергей Иванов</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">Модуль 3: Анализ конкурентной среды...</p>
+</div>
+</div>
+<!-- Task Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] relative overflow-hidden">
+<div class="absolute left-0 top-0 h-full w-1 bg-secondary-container"></div>
+<div class="flex justify-between items-start mb-xs pl-sm">
+<div class="flex items-center gap-2">
+<span class="bg-secondary-container/10 text-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Новый вопрос</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">Основы ИИ</span>
+</div>
+</div>
+<div class="pl-sm">
+<p class="font-label-lg text-label-lg text-on-background mb-1">Вопрос от: Анна Смирнова</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">Не могу разобраться с концепцией нейросетей в...</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Recent Activity Feed -->
+<section class="mb-lg">
+<h2 class="font-headline-sm text-headline-sm text-on-background mb-sm">Последняя активность</h2>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] p-md">
+<!-- Feed Item 1 -->
+<div class="flex gap-md relative pb-md">
+<div class="absolute left-[11px] top-6 bottom-0 w-[2px] bg-surface-container-high"></div>
+<div class="relative z-10 w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 border-2 border-surface-container-lowest">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px] mb-0.5">10 минут назад</p>
+<p class="font-label-lg text-label-lg text-on-background">Игорь Петров сдал итоговый проект</p>
+</div>
+</div>
+<!-- Feed Item 2 -->
+<div class="flex gap-md relative pb-md">
+<div class="absolute left-[11px] top-6 bottom-0 w-[2px] bg-surface-container-high"></div>
+<div class="relative z-10 w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 border-2 border-surface-container-lowest">
+<div class="w-2 h-2 rounded-full bg-secondary-container"></div>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px] mb-0.5">1 час назад</p>
+<p class="font-label-lg text-label-lg text-on-background">Новый комментарий в дискуссии "Этика ИИ"</p>
+</div>
+</div>
+<!-- Feed Item 3 -->
+<div class="flex gap-md relative">
+<div class="relative z-10 w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 border-2 border-surface-container-lowest">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px] mb-0.5">Вчера, 18:30</p>
+<p class="font-label-lg text-label-lg text-on-background">Вы проверили 5 заданий</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only based on guidance) -->
+<nav class="fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant/30 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 md:hidden pb-safe">
+<ul class="flex justify-around items-center h-[64px] px-sm">
+<!-- Active Tab: Dashboard -->
+<li class="flex-1 flex flex-col items-center justify-center gap-1 cursor-pointer">
+<div class="px-4 py-1 rounded-full bg-secondary-fixed/20">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+</div>
+<span class="font-label-md text-label-md text-primary font-bold text-[10px]">Панель управления</span>
+</li>
+<!-- Inactive Tabs -->
+<li class="flex-1 flex flex-col items-center justify-center gap-1 cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
+<div class="px-4 py-1 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">school</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant text-[10px]">Курсы</span>
+</li>
+<li class="flex-1 flex flex-col items-center justify-center gap-1 cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
+<div class="px-4 py-1 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">group</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant text-[10px]">Пользователи</span>
+</li>
+<li class="flex-1 flex flex-col items-center justify-center gap-1 cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
+<div class="px-4 py-1 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">analytics</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant text-[10px]">Отчеты</span>
+</li>
+</ul>
+</nav>
+<!-- SideNavBar (Hidden on Mobile, shown on md+ to comply with responsive pivot) -->
+<nav class="hidden md:flex flex-col h-full py-lg bg-surface-container-low border-r border-outline-variant fixed left-0 top-0 w-64 z-40">
+<!-- Content would go here for desktop, but task specifies mobile dashboard. Leaving structural shell for completeness based on guidelines. -->
+<div class="px-lg mb-8">
+<h2 class="font-headline-sm text-headline-sm font-bold text-primary">AI Academy</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Strategic LMS</p>
+</div>
+</nav>
+</body></html>

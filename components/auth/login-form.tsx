@@ -3,9 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { AnimatePresence, motion } from "framer-motion";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
 
 export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFlags }) {
@@ -21,9 +19,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending || !hydrated) {
-      return;
-    }
+    if (pending || !hydrated) return;
 
     setPending(true);
     setError("");
@@ -53,35 +49,57 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
   }
 
   return (
-    <form className="space-y-4" onSubmit={onSubmit} data-auth-ready={hydrated ? "true" : "false"}>
-      <motion.label 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.4 }}
-        className="block text-sm font-medium"
-      >
-        Логин / Email
-        <Input className="mt-2" name="email" type="email" required autoComplete="email" onChange={() => setError("")} />
-      </motion.label>
-      
-      <motion.label 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.5 }}
-        className="block text-sm font-medium"
-      >
-        Пароль
-        <Input className="mt-2" name="password" type="password" required autoComplete="current-password" onChange={() => setError("")} />
-      </motion.label>
+    <form className="flex flex-col gap-md" onSubmit={onSubmit} data-auth-ready={hydrated ? "true" : "false"}>
+      {/* Email */}
+      <div className="flex flex-col gap-xs">
+        <label className="font-label-md text-label-md text-m3-on-surface" htmlFor="email">E-mail</label>
+        <div className="relative">
+          <span className="material-symbols-outlined pointer-events-none absolute left-sm top-1/2 -translate-y-1/2 text-[20px] text-m3-outline" aria-hidden="true">mail</span>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            placeholder="Введите ваш e-mail"
+            className="w-full rounded border border-m3-outline-variant bg-m3-surface py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface shadow-sm placeholder:text-m3-outline transition-all focus:border-m3-primary focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
+            onChange={() => setError("")}
+          />
+        </div>
+      </div>
 
+      {/* Password */}
+      <div className="flex flex-col gap-xs">
+        <div className="flex items-center justify-between">
+          <label className="font-label-md text-label-md text-m3-on-surface" htmlFor="password">Пароль</label>
+          <a href="/forgot-password" className="font-label-md text-label-md text-m3-primary transition-colors hover:text-m3-primary-container hover:underline">
+            Забыли пароль?
+          </a>
+        </div>
+        <div className="relative">
+          <span className="material-symbols-outlined pointer-events-none absolute left-sm top-1/2 -translate-y-1/2 text-[20px] text-m3-outline" aria-hidden="true">lock</span>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            placeholder="Введите пароль"
+            className="w-full rounded border border-m3-outline-variant bg-m3-surface py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface shadow-sm placeholder:text-m3-outline transition-all focus:border-m3-primary focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
+            onChange={() => setError("")}
+          />
+        </div>
+      </div>
+
+      {/* Error */}
       <AnimatePresence>
         {error ? (
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, height: 0, scale: 0.95 }}
             animate={{ opacity: 1, height: "auto", scale: 1 }}
             exit={{ opacity: 0, height: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="rounded-xl bg-red-50 p-3 text-sm text-red-700 overflow-hidden" 
+            className="overflow-hidden rounded-md bg-m3-error-container px-md py-sm text-body-sm font-body-sm text-m3-error"
             role="alert"
           >
             {error}
@@ -89,34 +107,42 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
         ) : null}
       </AnimatePresence>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.6 }}
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={pending || !hydrated}
+        className="mt-sm flex w-full items-center justify-center gap-sm rounded bg-m3-primary py-md text-label-lg font-label-lg text-m3-on-primary shadow-sm transition-colors hover:bg-m3-primary-container active:scale-[0.99] disabled:opacity-50"
       >
-        <Button className="w-full" type="submit" disabled={pending || !hydrated}>
-          {pending ? "Входим..." : "Войти"}
-        </Button>
-      </motion.div>
+        <span>{pending ? "Входим..." : "Войти в систему"}</span>
+        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">arrow_forward</span>
+      </button>
 
+      {/* OAuth */}
       {hasOAuth ? (
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.7 }}
-          className="grid gap-2 sm:grid-cols-2"
-        >
+        <div className="mt-sm grid gap-2 sm:grid-cols-2">
           {oauthProviders.google ? (
-            <Button type="button" variant="secondary" onClick={() => signIn("google")}>
-              Google
-            </Button>
+            <button
+              type="button"
+              onClick={() => signIn("google")}
+              aria-label="Google"
+              className="flex items-center justify-center gap-sm rounded border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
+            >
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">login</span>
+              <span>Google</span>
+            </button>
           ) : null}
           {oauthProviders.github ? (
-            <Button type="button" variant="secondary" onClick={() => signIn("github")}>
-              GitHub
-            </Button>
+            <button
+              type="button"
+              onClick={() => signIn("github")}
+              aria-label="GitHub"
+              className="flex items-center justify-center gap-sm rounded border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
+            >
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">code</span>
+              <span>GitHub</span>
+            </button>
           ) : null}
-        </motion.div>
+        </div>
       ) : null}
     </form>
   );

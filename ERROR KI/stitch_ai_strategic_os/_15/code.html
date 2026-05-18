@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Super Curator - Управление рисками</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            font-feature-settings: 'liga';
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#d8dadc",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-fixed-dim": "#c0c1ff",
+                        "tertiary-fixed-dim": "#bec6e0",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "secondary-fixed": "#e1e0ff",
+                        "on-primary-container": "#c1beff",
+                        "inverse-primary": "#c3c0ff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#464554",
+                        "on-tertiary-container": "#bcc4de",
+                        "inverse-surface": "#2d3133",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "secondary": "#4648d4",
+                        "on-secondary-container": "#fffbff",
+                        "outline": "#777586",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed": "#07006c",
+                        "on-surface": "#191c1e",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#6063ee",
+                        "primary": "#2a14b4",
+                        "surface-variant": "#e0e3e5",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#323a4f",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#5148d7",
+                        "tertiary-fixed": "#dae2fd",
+                        "on-tertiary-fixed-variant": "#3f465c",
+                        "surface-bright": "#f7f9fb",
+                        "background": "#f7f9fb",
+                        "outline-variant": "#c7c4d7",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#100069",
+                        "on-primary": "#ffffff",
+                        "surface": "#f7f9fb",
+                        "primary-fixed": "#e3dfff",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-primary-fixed-variant": "#372abf",
+                        "primary-container": "#4338ca",
+                        "on-background": "#191c1e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#2f2ebe",
+                        "tertiary-container": "#495167",
+                        "on-tertiary-fixed": "#131b2e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "8px",
+                        "margin": "32px",
+                        "sm": "16px",
+                        "md": "24px",
+                        "xl": "64px",
+                        "lg": "40px",
+                        "base": "4px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Source Serif 4"],
+                        "display-lg": ["Source Serif 4"],
+                        "body-sm": ["Hanken Grotesk"],
+                        "headline-lg": ["Source Serif 4"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "headline-sm": ["Source Serif 4"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-md": ["Source Serif 4"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md antialiased overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-inverse-surface fixed top-0 w-full z-50 border-b border-outline-variant dark:border-outline shadow-sm flex justify-between items-center px-lg h-16">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary cursor-pointer active:scale-95 duration-150">Super Curator</span>
+</div>
+<div class="flex-1 max-w-md mx-xl hidden md:flex items-center bg-surface-container-low rounded-full px-sm py-xs border border-outline-variant focus-within:ring-2 focus-within:ring-primary transition-all">
+<span class="material-symbols-outlined text-on-surface-variant mr-xs">search</span>
+<input class="w-full bg-transparent border-none focus:ring-0 text-body-sm font-body-sm text-on-surface outline-none" placeholder="Поиск студентов, когорт..." type="text"/>
+</div>
+<div class="flex items-center gap-sm">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors cursor-pointer active:scale-95 duration-150 text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors cursor-pointer active:scale-95 duration-150 text-on-surface-variant">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors cursor-pointer active:scale-95 duration-150 text-on-surface-variant">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="ml-sm w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md overflow-hidden cursor-pointer">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A professional headshot of an academic administrator, well-lit studio portrait against a neutral gray background. The lighting is soft and even, typical of corporate profiles. The subject conveys authority and approachability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKVTsrwAHTxWjcjXIHoHOvm9Qat6jMhnQKCO8ZLpLeARXYZ-kqREV_23ul2Qi6ZtXt9tIY18rX9cgwBeJ5jha2Rwg9WFS8jklUES-by29VB_SSFlMNOR6bP18999vj7KtZXxoKWmOopKV4FZ2Vr0EyqMZ42mvNX-w5F9HuEV_Hj5v80x6tWLzxrhy0zwZ_g0ZJcEmOnZHiAtk-wkodjgqhEtUwwuMqPwidsBZE4Elmoq_Ntkf_MO0q_A8yEymKa6NbM1k0-F8auDQ"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="bg-surface-container-low dark:bg-surface-container fixed left-0 top-0 h-full w-64 z-40 border-r border-outline-variant dark:border-outline flex flex-col pt-20 pb-lg">
+<div class="px-md mb-xl">
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface dark:text-inverse-on-surface">Workspace</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Curator Lead</p>
+</div>
+<div class="flex-1 flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-all cursor-pointer transition-transform duration-200 font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-all cursor-pointer transition-transform duration-200 font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined">pending_actions</span>
+                Workload
+            </a>
+<a class="flex items-center gap-md px-md py-sm text-primary dark:text-inverse-primary font-semibold border-l-4 border-primary bg-surface-container-high cursor-pointer transition-transform duration-200 font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+                Risks
+            </a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-all cursor-pointer transition-transform duration-200 font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined">assessment</span>
+                Reports
+            </a>
+</div>
+<div class="mt-auto flex flex-col gap-xs border-t border-outline-variant pt-sm px-md">
+<a class="flex items-center gap-md py-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all rounded-DEFAULT cursor-pointer font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+                Support
+            </a>
+<a class="flex items-center gap-md py-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all rounded-DEFAULT cursor-pointer font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="ml-64 pt-24 px-lg pb-xl min-h-screen">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-xl">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-xs">Студенты в зоне риска</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Мониторинг академической активности и метрик вовлеченности.</p>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-sm rounded-DEFAULT border border-outline text-on-surface font-label-md text-label-md hover:bg-surface-container-low transition-colors shadow-[0px_1px_2px_rgba(15,23,42,0.05)]">Экспорт отчета</button>
+<button class="px-md py-sm rounded-DEFAULT bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors shadow-[0px_1px_2px_rgba(15,23,42,0.05)] flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Новое правило
+                </button>
+</div>
+</div>
+<!-- Risk Summaries (Cohort-Level) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-xl">
+<div class="bg-surface-container-lowest p-md rounded-lg shadow-[0px_4px_20px_rgba(15,23,42,0.05)] border border-surface-variant">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Критический риск</span>
+<span class="material-symbols-outlined text-error bg-error-container p-xs rounded-full">error</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mb-xs">14</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Требуют немедленного вмешательства</p>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-lg shadow-[0px_4px_20px_rgba(15,23,42,0.05)] border border-surface-variant">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Зона внимания</span>
+<span class="material-symbols-outlined text-surface-tint bg-tertiary-fixed p-xs rounded-full">warning</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mb-xs">42</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Пропущено более 1 дедлайна</p>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-lg shadow-[0px_4px_20px_rgba(15,23,42,0.05)] border border-surface-variant">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Среднее время реакции</span>
+<span class="material-symbols-outlined text-primary bg-primary-fixed p-xs rounded-full">schedule</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mb-xs">4.2 ч</div>
+<div class="w-full bg-surface-container h-2 rounded-full mt-sm overflow-hidden">
+<div class="bg-primary h-full w-[65%]"></div>
+</div>
+</div>
+</div>
+<!-- Data Grid Canvas -->
+<div class="bg-surface-container-lowest rounded-lg shadow-[0px_4px_20px_rgba(15,23,42,0.05)] overflow-hidden">
+<!-- Grid Header -->
+<div class="grid grid-cols-12 gap-sm px-lg py-md border-b border-surface-variant bg-surface-bright font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">
+<div class="col-span-3">Студент</div>
+<div class="col-span-2">Когорта</div>
+<div class="col-span-3">Причина риска</div>
+<div class="col-span-2">Куратор</div>
+<div class="col-span-1 text-center">Дней</div>
+<div class="col-span-1 text-right">Действия</div>
+</div>
+<!-- List Items -->
+<div class="flex flex-col">
+<!-- Row 1: High Risk -->
+<div class="grid grid-cols-12 gap-sm px-lg py-md border-b border-surface-variant hover:bg-surface-container-low transition-colors items-center group">
+<div class="col-span-3 flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-error animate-pulse"></div>
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-headline-sm text-headline-sm overflow-hidden">
+<img alt="Anna Smirnova" class="w-full h-full object-cover" data-alt="A portrait of a young female student, late 20s, looking slightly stressed. The lighting is cool and desaturated, fitting a serious academic or corporate environment context. Shot against a plain white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjKJ5LosbwjlFRJCXSJFXv6pHTorDfJeETJHUJ1fRKAo4tIcxuy6W_ohLOsafBqq93Mld9BoQO6dvFGI4YAKPKbnBd_h-rYM4x7X6PWCCbPv8S5H9WJTZIBfzVSK57E6p37xrpYnfLnhUXKSFZCfB3yqsfS3MqhLoljsqOsRwV6arjQ41TLpcFB0fM6YXT_RFS6tkFFnzBsulfdofIsB0frUlcs99-c2_0NuCjXSYqe9rkRuxIpJGkVr5R-bJpUvEf8Mi4TLNPHP8"/>
+</div>
+<div>
+<div class="font-body-md text-body-md font-semibold text-on-surface">Анна Смирнова</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">asmirnova@edu.ru</div>
+</div>
+</div>
+<div class="col-span-2 font-body-sm text-body-sm text-on-surface">Data Science - Осень '23</div>
+<div class="col-span-3">
+<span class="inline-flex items-center gap-xs px-xs py-[2px] rounded-DEFAULT bg-error-container text-on-error-container font-label-md text-label-md">
+<span class="material-symbols-outlined text-[14px]">timer_off</span>
+                            Пропущено 3 дедлайна
+                        </span>
+</div>
+<div class="col-span-2 font-body-sm text-body-sm text-on-surface">М. Иванов</div>
+<div class="col-span-1 text-center font-headline-sm text-headline-sm text-error">12</div>
+<div class="col-span-1 flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors" title="Уведомить">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+</button>
+<button class="p-xs rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors" title="Прогресс">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+</button>
+</div>
+</div>
+<!-- Row 2: Medium Risk -->
+<div class="grid grid-cols-12 gap-sm px-lg py-md border-b border-surface-variant hover:bg-surface-container-low transition-colors items-center group">
+<div class="col-span-3 flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-surface-tint"></div>
+<div class="w-10 h-10 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-headline-sm text-headline-sm overflow-hidden">
+<img alt="Ivan Petrov" class="w-full h-full object-cover" data-alt="A portrait of a male student, early 30s, looking focused. Warm, soft directional lighting creates a professional atmosphere. Shot against a light gray minimalist background, typical for corporate avatars." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbBMyu3WDstte1cefyJ0kXBFfOgM2h_f3SZn5yvYWpLwG891xalaEipmoLIFLL07xbnodxt_tbhnZwcuRqI2MYKWz56-nAP7zBtzF6hCSIY64wt2QJNvcd4nH4dSzOLJgNWEHPgR6tQnc27bgm3CwWhBz142nam7wL5ygAE33B3HBeELQXd9xCLOTmlaouX-At0QEsofO07esy_2-Etm2fCxIkxTzGe0c2EyH46N9RqLvqbPTyD-M-CIQzFfKITqq_23dPbLK7zwg"/>
+</div>
+<div>
+<div class="font-body-md text-body-md font-semibold text-on-surface">Иван Петров</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">ipetrov@edu.ru</div>
+</div>
+</div>
+<div class="col-span-2 font-body-sm text-body-sm text-on-surface">UX Design - Зима '24</div>
+<div class="col-span-3">
+<span class="inline-flex items-center gap-xs px-xs py-[2px] rounded-DEFAULT bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md">
+<span class="material-symbols-outlined text-[14px]">snooze</span>
+                            Неактивен 7 дней
+                        </span>
+</div>
+<div class="col-span-2 font-body-sm text-body-sm text-on-surface">Е. Соколова</div>
+<div class="col-span-1 text-center font-headline-sm text-headline-sm text-surface-tint">7</div>
+<div class="col-span-1 flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors" title="Напомнить куратору">
+<span class="material-symbols-outlined text-[20px]">notification_important</span>
+</button>
+<button class="p-xs rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors" title="Перевести">
+<span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+</button>
+</div>
+</div>
+<!-- Row 3: High Risk -->
+<div class="grid grid-cols-12 gap-sm px-lg py-md border-b border-surface-variant hover:bg-surface-container-low transition-colors items-center group">
+<div class="col-span-3 flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-error animate-pulse"></div>
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-sm text-headline-sm overflow-hidden">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div>
+<div class="font-body-md text-body-md font-semibold text-on-surface">Елена Волкова</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">evol@edu.ru</div>
+</div>
+</div>
+<div class="col-span-2 font-body-sm text-body-sm text-on-surface">Backend Dev - Весна '24</div>
+<div class="col-span-3">
+<span class="inline-flex items-center gap-xs px-xs py-[2px] rounded-DEFAULT bg-error-container text-on-error-container font-label-md text-label-md">
+<span class="material-symbols-outlined text-[14px]">trending_down</span>
+                            Низкий балл за тест (32%)
+                        </span>
+</div>
+<div class="col-span-2 font-body-sm text-body-sm text-on-surface">А. Лебедев</div>
+<div class="col-span-1 text-center font-headline-sm text-headline-sm text-error">4</div>
+<div class="col-span-1 flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors" title="Уведомить">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+</button>
+<button class="p-xs rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors" title="Прогресс">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+</button>
+</div>
+</div>
+<!-- Row 4: Medium Risk -->
+<div class="grid grid-cols-12 gap-sm px-lg py-md hover:bg-surface-container-low transition-colors items-center group">
+<div class="col-span-3 flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-surface-tint"></div>
+<div class="w-10 h-10 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-headline-sm text-headline-sm overflow-hidden">
+<img alt="Dmitry Kozlov" class="w-full h-full object-cover" data-alt="Portrait of a young male student wearing glasses, looking thoughtful. Soft, high-key lighting creates a clean, modern aesthetic. The background is pure white, emphasizing a clean corporate or academic style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY1tZJ5Pv859rAoo7N2KbeI8TMoRpLZhHamcCh9vULL62PfgOAB00I2Qes1QyRWPpzQ7rdviizaLbX6MNR5EAeb3IKLjdwETeNJAQXAT9QCFmM2vyytZeyQwnjyTETppc98VP7G_n3v-D1ZDU4mdgRM5T__0MFvobi4mlOqufQ9ddRlq0oQDFPX0ZHzkx8y7KZea5AyKvSnuMx29GThKycKbIenM5Gm_s_OtVo4Vyij-oK59bc6ktbGwnOQ-xzpWP790Q3AAmBsLw"/>
+</div>
+<div>
+<div class="font-body-md text-body-md font-semibold text-on-surface">Дмитрий Козлов</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">dkozlov@edu.ru</div>
+</div>
+</div>
+<div class="col-span-2 font-body-sm text-body-sm text-on-surface">Product Mgt - Осень '23</div>
+<div class="col-span-3">
+<span class="inline-flex items-center gap-xs px-xs py-[2px] rounded-DEFAULT bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md">
+<span class="material-symbols-outlined text-[14px]">assignment_late</span>
+                            Нет сдачи проекта
+                        </span>
+</div>
+<div class="col-span-2 font-body-sm text-body-sm text-on-surface">М. Иванов</div>
+<div class="col-span-1 text-center font-headline-sm text-headline-sm text-surface-tint">2</div>
+<div class="col-span-1 flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors" title="Напомнить куратору">
+<span class="material-symbols-outlined text-[20px]">notification_important</span>
+</button>
+<button class="p-xs rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors" title="Прогресс">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

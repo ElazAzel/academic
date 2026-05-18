@@ -19,9 +19,9 @@ beforeEach(() => {
 describe("LoginForm", () => {
   it("renders form with email and password inputs", () => {
     render(<LoginForm oauthProviders={{ google: false, github: false }} />);
-    expect(screen.getByLabelText(/Логин/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/E-mail/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Пароль/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Войти" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Войти в систему/i })).toBeInTheDocument();
   });
 
   it("shows OAuth buttons when providers exist", () => {
@@ -42,9 +42,9 @@ describe("LoginForm", () => {
 
     render(<LoginForm oauthProviders={{ google: false, github: false }} />);
 
-    await user.type(screen.getByLabelText(/Логин/), "test@test.com");
+    await user.type(screen.getByLabelText(/E-mail/), "test@test.com");
     await user.type(screen.getByLabelText(/Пароль/), "wrong");
-    await user.click(screen.getByRole("button", { name: "Войти" }));
+    await user.click(screen.getByRole("button", { name: /Войти в систему/i }));
 
     await waitFor(() => {
       expect(screen.getByText("Неверный логин или пароль")).toBeInTheDocument();
@@ -59,9 +59,9 @@ describe("LoginForm", () => {
 
     render(<LoginForm oauthProviders={{ google: false, github: false }} />);
 
-    await user.type(screen.getByLabelText(/Логин/), "admin@test.com");
+    await user.type(screen.getByLabelText(/E-mail/), "admin@test.com");
     await user.type(screen.getByLabelText(/Пароль/), "correct");
-    await user.click(screen.getByRole("button", { name: "Войти" }));
+    await user.click(screen.getByRole("button", { name: /Войти в систему/i }));
 
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith("/admin");

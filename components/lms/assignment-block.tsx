@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Send, Upload } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,39 +49,39 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
   if (submitted && assignment.submission) {
     const sub = assignment.submission;
     const statusLabel: Record<string, { label: string; cls: string }> = {
-      SUBMITTED: { label: "Отправлено", cls: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300" },
-      IN_REVIEW: { label: "На проверке", cls: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
-      ACCEPTED: { label: "Зачтено", cls: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" },
-      REJECTED: { label: "Отклонено", cls: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300" },
-      NEEDS_REVISION: { label: "На доработку", cls: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
+      SUBMITTED: { label: "Отправлено", cls: "border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed text-m3-tertiary" },
+      IN_REVIEW: { label: "На проверке", cls: "border-m3-secondary-fixed-dim bg-m3-secondary-fixed text-m3-secondary" },
+      ACCEPTED: { label: "Зачтено", cls: "border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed text-m3-tertiary" },
+      REJECTED: { label: "Отклонено", cls: "border-m3-error-fixed-dim bg-m3-error-fixed text-m3-error" },
+      NEEDS_REVISION: { label: "На доработку", cls: "border-m3-secondary-fixed-dim bg-m3-secondary-fixed text-m3-secondary" },
     };
     const sb = statusLabel[sub.status] ?? statusLabel.SUBMITTED;
 
     return (
-      <div className="rounded-2xl border bg-card p-5 space-y-4">
+      <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold">{assignment.title}</p>
+          <p className="text-body-md font-body-md text-m3-on-surface">{assignment.title}</p>
           <Badge className={sb.cls}>{sb.label}</Badge>
         </div>
 
         {sub.answerText && (
-          <div className="rounded-xl bg-muted/30 p-3">
-            <p className="text-xs text-muted-foreground mb-1">Ваш ответ:</p>
-            <p className="text-sm whitespace-pre-wrap">{sub.answerText}</p>
+          <div className="rounded-xl bg-m3-surface-container-high p-3">
+            <p className="text-label-sm font-label-sm text-m3-on-surface-variant mb-1">Ваш ответ:</p>
+            <p className="text-body-md font-body-md text-m3-on-surface whitespace-pre-wrap">{sub.answerText}</p>
           </div>
         )}
 
         {sub.score !== null && sub.score !== undefined && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Оценка:</span>
-            <span className="text-sm font-semibold">{sub.score}/{assignment.maxAttempts > 0 ? 100 : "—"}</span>
+            <span className="text-label-sm font-label-sm text-m3-on-surface-variant">Оценка:</span>
+            <span className="text-body-md font-body-md text-m3-on-surface">{sub.score}/{assignment.maxAttempts > 0 ? 100 : "—"}</span>
           </div>
         )}
 
         {sub.feedback && (
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3">
-            <p className="text-xs text-muted-foreground mb-1">Комментарий:</p>
-            <p className="text-sm text-emerald-900">{sub.feedback}</p>
+          <div className="rounded-xl border border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed/30 p-3">
+            <p className="text-label-sm font-label-sm text-m3-on-surface-variant mb-1">Комментарий:</p>
+            <p className="text-body-md font-body-md text-m3-tertiary">{sub.feedback}</p>
           </div>
         )}
 
@@ -100,32 +100,32 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
 
   // ── Before submission ─────────────────────────────────────────────
   return (
-    <div className="rounded-2xl border bg-card p-5 space-y-4">
+    <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold">{assignment.title}</p>
+          <p className="text-body-md font-body-md text-m3-on-surface">{assignment.title}</p>
           {assignment.deadline && (
-            <p className="text-xs text-muted-foreground mt-0.5">Дедлайн: {assignment.deadline.slice(0, 10)}</p>
+            <p className="text-label-sm font-label-sm text-m3-on-surface-variant mt-0.5">Дедлайн: {assignment.deadline.slice(0, 10)}</p>
           )}
         </div>
-        <Badge className="border-violet-200 bg-violet-50 text-violet-700">Задание</Badge>
+        <Badge className="border-m3-secondary-fixed-dim bg-m3-secondary-fixed text-m3-secondary">Задание</Badge>
       </div>
 
       {/* Instructions */}
       <div
-        className="rounded-xl bg-muted/30 p-4 text-sm leading-relaxed text-muted-foreground [&_h1]:text-base [&_h1]:font-semibold [&_h1]:text-foreground [&_h2]:font-semibold [&_h2]:text-foreground [&_p]:my-2"
+        className="rounded-xl bg-m3-surface-container-high p-4 text-body-md font-body-md leading-relaxed text-m3-on-surface-variant [&_h1]:text-title-lg [&_h1]:font-semibold [&_h1]:text-m3-on-surface [&_h2]:font-semibold [&_h2]:text-m3-on-surface [&_p]:my-2"
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(assignment.instructions) }}
       />
 
       {/* Submission info */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="flex items-center gap-4 text-label-sm font-label-sm text-m3-on-surface-variant">
         <span>Попыток: {attemptsUsed}/{assignment.maxAttempts}</span>
         <span>Макс. балл: {assignment.maxAttempts > 0 ? 100 : "—"}</span>
       </div>
 
       {/* Answer textarea */}
       <textarea
-        className="min-h-[120px] w-full resize-none rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+        className="min-h-[120px] w-full resize-none rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface outline-none focus:ring-2 focus:ring-m3-outline placeholder:text-m3-on-surface-variant/50"
         placeholder="Ваш ответ..."
         value={answerText}
         onChange={(e) => setAnswerText(e.target.value)}
@@ -134,13 +134,13 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
       {/* File URL input (placeholder — actual file upload TBD) */}
       <div className="flex items-center gap-2">
         <input
-          className="flex-1 rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+          className="flex-1 rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface outline-none focus:ring-2 focus:ring-m3-outline placeholder:text-m3-on-surface-variant/50"
           placeholder="Ссылка на файл (необязательно)"
           value={fileUrl}
           onChange={(e) => setFileUrl(e.target.value)}
         />
         <Button size="sm" variant="secondary" disabled>
-          <Upload className="h-4 w-4" />
+          <Icon name="upload_file" size={16} />
         </Button>
       </div>
 
@@ -150,7 +150,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
           disabled={submitting || (!answerText.trim() && !fileUrl)}
           size="sm"
         >
-          <Send className="h-4 w-4 mr-1" />
+          <Icon name="send" size={16} className="mr-1" />
           {submitting ? "Отправка..." : "Отправить"}
         </Button>
       </div>

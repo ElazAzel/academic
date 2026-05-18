@@ -2,6 +2,29 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-18 — Material 3 редизайн: все P0-P2 компоненты
+
+- **P0 (Foundation)**: Tailwind config + CSS-переменные M3 Deep Indigo (30+ токенов), M3-типографика (text-headline-lg/body-md/label-lg/mono-sm), M3-тени, Material Symbols + JetBrains Mono в layout.tsx
+- **P0 (Login)**: `login-screen.tsx` + `login-form.tsx` — центрированная M3-карта, blur-блобы, M3-инпуты/кнопки
+- **P1 (Navigation)**: `app-shell.tsx`, `nav-links.tsx` (active left border), `site-header.tsx`, `mobile-bottom-nav.tsx` — M3 surface/border/shadow/color токены
+- **P1 (Cards)**: shadcn `card.tsx` — `border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft`, page-header с M3-типографикой
+- **P2 (Lesson Player)**: `lesson-player-shell.tsx` — M3 top bar (backdrop-blur, M3 colors), progress bar в M3-стиле, блоки с M3-контейнерами, M3 badges/типографика
+- **P2 (Course Catalog)**: `module-accordion.tsx` — M3 карточки модулей, M3 progress, hover-эффекты; `lesson-card.tsx` — M3 card/shadow/border/icon container; `course-hero-card.tsx` — M3 cover gradient, M3 badge/text/colors; `course-contents-drawer.tsx` — M3 sheet/colors/active accent
+- **P2 (Content Blocks)**: `video-block.tsx` — M3 container/badge/border; `text-block.tsx` — M3 typography/colors; `file-block.tsx` — M3 card/shadow/icon; `quiz-block.tsx` — M3 card/options/progress/result/review; `assignment-block.tsx` — M3 card/status badges/forms; `lesson-navigation.tsx` — M3 button styling
+- **P2 (System)**: `status-badge.tsx` — M3 variant classes (tertiary/secondary/error/surface); `notifications-list.tsx` — M3 card/colors/typography; `chat-panel.tsx` — M3 bubble/input/header; `breadcrumbs.tsx`; `empty-state.tsx`; `list-toolbar.tsx`; `settings-forms.tsx` — M3 во всех
+- **type-check**: 0 ошибок | **tests**: 304/304 passed (53/53 test files)
+
+## 2026-05-18 — P3.1: Lucide → Material Symbols (core components) + Icon wrapper
+
+- **Создан** `components/ui/icon.tsx` — обёртка Material Symbols с поддержкой fontVariationSettings (`FILL`, `wght`, `GRAD`, `opsz`), кастомного размера и className
+- **Заменены Lucide → Icon** во всех M3-компонентах (30+ файлов):
+  - Layout: `site-header.tsx`, `nav-links.tsx`, `mobile-bottom-nav.tsx`, `navigation.ts`
+  - Lesson player: `lesson-player-shell.tsx`, `lesson-card.tsx`, `lesson-navigation.tsx`, `video-block.tsx`, `file-block.tsx`, `quiz-block.tsx`, `assignment-block.tsx`, `course-contents-drawer.tsx`
+  - Course catalog: `module-accordion.tsx`, `course-hero-card.tsx`, `breadcrumbs.tsx`
+  - System: `notifications-list.tsx`, `chat-panel.tsx`, `list-toolbar.tsx`, `settings-forms.tsx`, `empty-state.tsx`
+- `EmptyState` — type-safe: принимает как строку (Material Symbols name), так и LucideIcon для обратной совместимости
+- **type-check**: 0 ошибок | **tests**: 304/304 passed (53/53 test files)
+
 ## 2026-05-18 — proxy.ts rate limiter unified with Vercel KV
 
 - **`proxy.ts`** больше не использует собственный in-memory rate limiter

@@ -4,9 +4,8 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, ArrowRight, CheckCircle2, Menu } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { VideoBlock } from "@/components/lms/video-block";
@@ -82,7 +81,6 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
     }
   }, [progressPercent, isCompleted, markCompleted]);
 
-  // Determine if we have a videoUrl at the lesson level (legacy) or as a block
   const legacyVideoUrl = lesson.videoUrl;
   const hasContentBlocks = blocks.length > 0;
 
@@ -93,48 +91,48 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
       lessonId={lesson.id}
       protectionLevel="standard"
     >
-      {/* Top bar */}
-      <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 bg-background/80 backdrop-blur-md border-b">
+      {/* ── Top bar ───────────────────────────────────── */}
+      <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 border-b border-m3-outline-variant bg-m3-surface-container-lowest/80 px-4 py-2 shadow-m3-soft backdrop-blur-md sm:px-6">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex min-w-0 items-center gap-2">
             <Link
               href={`/student/courses/${lesson.courseId}`}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+              className="flex shrink-0 items-center gap-1 text-xs text-m3-on-surface-variant transition-colors hover:text-m3-primary"
             >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Курс
+            <Icon name="arrow_back" size={14} className="text-m3-on-surface-variant" />
+            Курс
             </Link>
-            <span className="text-xs text-muted-foreground hidden sm:inline">/</span>
-            <span className="text-xs text-muted-foreground hidden sm:block truncate">{lesson.moduleTitle}</span>
-            <span className="text-xs text-muted-foreground hidden sm:inline">/</span>
-            <span className="text-xs font-medium truncate">{lesson.title}</span>
+            <span className="hidden text-xs text-m3-outline sm:inline">/</span>
+            <span className="hidden truncate text-xs text-m3-on-surface-variant sm:block">{lesson.moduleTitle}</span>
+            <span className="hidden text-xs text-m3-outline sm:inline">/</span>
+            <span className="truncate text-xs font-medium text-m3-on-surface">{lesson.title}</span>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex shrink-0 items-center gap-1">
             <CourseContentsDrawer modules={courseTree} currentLessonId={lesson.id}>
               <button
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-m3-on-surface-variant transition-colors hover:bg-m3-surface-container-high"
                 title="Содержание курса"
                 aria-label="Содержание курса"
               >
-                <Menu className="h-4 w-4" />
+                <Icon name="menu" size={16} />
               </button>
             </CourseContentsDrawer>
             {lesson.prevLesson && (
               <Link
                 href={`/student/lessons/${lesson.prevLesson.id}`}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-m3-on-surface-variant transition-colors hover:bg-m3-surface-container-high"
                 title={lesson.prevLesson.title}
               >
-                <ArrowLeft className="h-4 w-4" />
+                <Icon name="arrow_back" size={16} />
               </Link>
             )}
             {lesson.nextLesson && !lesson.nextLesson.locked && (
               <Link
                 href={`/student/lessons/${lesson.nextLesson.id}`}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-m3-on-surface-variant transition-colors hover:bg-m3-surface-container-high"
                 title={lesson.nextLesson.title}
               >
-                <ArrowRight className="h-4 w-4" />
+                <Icon name="arrow_forward" size={16} />
               </Link>
             )}
           </div>
@@ -142,13 +140,13 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
       </div>
 
       <div className="mx-auto max-w-4xl space-y-6 py-6">
-        {/* Sticky progress bar */}
-        <div className="sticky top-16 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-background/80 backdrop-blur-md border-b">
+        {/* ── Progress bar ────────────────────────────── */}
+        <div className="sticky top-16 z-10 -mx-4 border-b border-m3-outline-variant bg-m3-surface-container-low/80 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6">
           <div className="flex items-center gap-4">
             <div className="flex-1 space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Прогресс урока</span>
-                <span className="font-medium">{progressPercent}%</span>
+              <div className="flex items-center justify-between text-label-md font-label-md text-m3-on-surface-variant">
+                <span>Прогресс урока</span>
+                <span className="font-semibold text-m3-primary">{progressPercent}%</span>
               </div>
               <Progress value={progressPercent} className="h-1.5" />
             </div>
@@ -160,7 +158,7 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
               className="shrink-0"
             >
               {isCompleted ? (
-                <><CheckCircle2 className="h-4 w-4" /> Завершён</>
+                <><Icon name="check_circle" size={16} /> Завершён</>
               ) : savingProgress ? (
                 "Сохранение..."
               ) : (
@@ -170,25 +168,25 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
           </div>
         </div>
 
-        {/* Title */}
+        {/* ── Title ───────────────────────────────────── */}
         <div>
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <Badge className="border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300">Урок {lesson.order}</Badge>
-            <Badge className="border-primary/20 bg-primary/5 text-primary">{lesson.durationMinutes} мин.</Badge>
-            {isCompleted && <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">Завершён</Badge>}
+            <span className="rounded bg-m3-primary-fixed px-2 py-0.5 text-label-md font-label-md text-m3-primary">Урок {lesson.order}</span>
+            <span className="rounded border border-m3-outline-variant px-2 py-0.5 text-label-md font-label-md text-m3-on-surface-variant">{lesson.durationMinutes} мин.</span>
+            {isCompleted && (
+              <span className="rounded bg-m3-secondary-fixed px-2 py-0.5 text-label-md font-label-md text-m3-secondary">Завершён</span>
+            )}
           </div>
-          <h1 className="text-xl font-semibold sm:text-2xl">{lesson.title}</h1>
-          {lesson.summary && <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{lesson.summary}</p>}
+          <h1 className="text-headline-md font-headline-md text-m3-on-surface">{lesson.title}</h1>
+          {lesson.summary && <p className="mt-1 max-w-2xl text-body-md font-body-md text-m3-on-surface-variant">{lesson.summary}</p>}
         </div>
 
-        {/* Block content */}
+        {/* ── Content blocks ─────────────────────────── */}
         <div className="space-y-6">
-          {/* Legacy video (if no blocks) */}
           {!hasContentBlocks && legacyVideoUrl && (
             <VideoBlock videoUrl={legacyVideoUrl} title={lesson.title} duration={lesson.durationMinutes} onProgress={handleVideoProgress} />
           )}
 
-          {/* Render blocks from content.blocks */}
           {hasContentBlocks ? (
             blocks.map((block) => {
               switch (block.type) {
@@ -211,14 +209,14 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
                 case "curator_question":
                   return session?.user?.id && curatorId ? (
                     <div key={block.id} className="space-y-3">
-                      <h3 className="text-sm font-semibold">Чат с куратором {curatorName ? `(${curatorName})` : ""}</h3>
+                      <h3 className="text-label-lg font-label-lg text-m3-on-surface">Чат с куратором {curatorName ? `(${curatorName})` : ""}</h3>
                       <ChatPanel studentId={session.user.id} curatorId={curatorId} lessonId={block.data.lessonId || lesson.id} />
                     </div>
                   ) : null;
                 case "completion":
                   return (
-                    <div key={block.id} className="rounded-2xl border bg-card p-6 text-center shadow-sm">
-                      <p className="text-sm text-muted-foreground">{block.data.label ?? "Урок завершён"}</p>
+                    <div key={block.id} className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-6 text-center shadow-m3-soft">
+                      <p className="text-body-md font-body-md text-m3-on-surface-variant">{block.data.label ?? "Урок завершён"}</p>
                     </div>
                   );
                 default:
@@ -226,9 +224,8 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
               }
             })
           ) : (
-            /* Legacy: render text from lesson.content */
             legacyVideoUrl ? null : (
-              <div className="mx-auto max-w-[720px] text-sm leading-relaxed text-muted-foreground">
+              <div className="mx-auto max-w-[720px] text-body-md font-body-md text-m3-on-surface-variant">
                 {lesson.summary || "Материалы урока пока не опубликованы."}
               </div>
             )
@@ -236,7 +233,7 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
 
           {lessonQuizzes.length > 0 && (
             <section className="space-y-3">
-              <h3 className="text-sm font-semibold">Тест урока</h3>
+              <h3 className="text-label-lg font-label-lg text-m3-on-surface">Тест урока</h3>
               {lessonQuizzes.map((quiz) => (
                 <QuizBlock key={quiz.id} quiz={quiz} />
               ))}
@@ -245,18 +242,18 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
 
           {lessonAssignments.length > 0 && (
             <section className="space-y-3">
-              <h3 className="text-sm font-semibold">Задание урока</h3>
+              <h3 className="text-label-lg font-label-lg text-m3-on-surface">Задание урока</h3>
               {lessonAssignments.map((assignment) => (
                 <AssignmentBlock key={assignment.id} assignment={assignment} />
               ))}
             </section>
           )}
 
-          {/* Materials section (legacy media files) */}
+          {/* Materials */}
           {lesson.media.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold">Материалы</h3>
-              <div className="grid gap-2 sm:grid-cols-2">
+              <h3 className="text-label-lg font-label-lg text-m3-on-surface">Материалы</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
                 {lesson.media.map((item) => (
                   <FileBlock key={item.id} url={item.url} filename={item.filename ?? undefined} fileType={item.type} lessonId={lesson.id} mediaId={item.id} useSignedUrl />
                 ))}
@@ -264,18 +261,15 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
             </div>
           )}
 
-          {/* Rating */}
           <LessonRating lessonId={lesson.id} />
 
-          {/* Chat with curator */}
           {session?.user?.id && curatorId && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold">Чат с куратором {curatorName ? `(${curatorName})` : ""}</h3>
+              <h3 className="text-label-lg font-label-lg text-m3-on-surface">Чат с куратором {curatorName ? `(${curatorName})` : ""}</h3>
               <ChatPanel studentId={session.user.id} curatorId={curatorId} lessonId={lesson.id} />
             </div>
           )}
 
-          {/* Navigation */}
           <LessonNavigation prevLesson={lesson.prevLesson} nextLesson={lesson.nextLesson} />
         </div>
       </div>

@@ -74,17 +74,17 @@ const STATUS_CONFIG: Record<BadgeStatus, StatusBadgeConfig> = {
 
 const VARIANT_CLASSES: Record<string, string> = {
   success:
-    "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+    "border-m3-tertiary-fixed-dim/60 bg-m3-tertiary-fixed text-m3-tertiary dark:border-m3-tertiary-fixed-dim dark:bg-m3-tertiary-container dark:text-m3-tertiary-dark",
   warning:
-    "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+    "border-m3-secondary-fixed-dim/60 bg-m3-secondary-fixed text-m3-secondary dark:border-m3-secondary-fixed-dim dark:bg-m3-secondary-container dark:text-m3-secondary-dark",
   danger:
-    "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300",
+    "border-m3-error-fixed-dim/60 bg-m3-error-fixed text-m3-error dark:border-m3-error-fixed-dim dark:bg-m3-error-container dark:text-m3-error-dark",
   info:
-    "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300",
+    "border-m3-tertiary-fixed-dim/40 bg-m3-tertiary-fixed-dim/30 text-m3-tertiary dark:bg-m3-tertiary-container dark:text-m3-tertiary-dark",
   neutral:
-    "border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-400",
+    "border-m3-outline-variant bg-m3-surface-container-high text-m3-on-surface-variant",
   primary:
-    "border-primary/20 bg-primary/5 text-primary",
+    "border-m3-primary-fixed-dim/60 bg-m3-primary-fixed text-m3-primary",
 };
 
 export function StatusBadge({
