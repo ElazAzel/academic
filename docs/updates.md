@@ -2,7 +2,16 @@
 
 Правило: новые записи добавляются сверху.
 
-## 2026-05-19 — Security hardening (C1–C5) + ESLint fixes + тесты
+## 2026-05-19 — Fix: Vercel build не падает на CRON_SECRET (env validation deferred)
+
+- **Проблема**: Vercel build падал на `Collecting page data` с ошибкой `CRON_SECRET обязателен в production`, потому что `lib/env.ts` валидирует production-секреты при импорте модуля, а Next.js подгружает все роуты (включая `/api/auth/[...nextauth]`), транзитивно импортирующие env
+- **Фикс** (`lib/env.ts`): production-проверки (C1 — dev-секрет, C4 — CRON_SECRET) обёрнуты в `if (process.env.NEXT_PHASE !== "phase-production-build")`, чтобы билд не падал
+- **Runtime**: cron-роуты (`outbox/process`, `reports/scheduled`) остаются fail-closed — при отсутствии `CRON_SECRET` в Vercel env возвращают 503 при запросе
+- **Итог**: деплой не блокируется. После деплоя нужно добавить `CRON_SECRET` в Vercel Project Environment Variables для работы cron
+- **typecheck**: passed ✅
+- **lint**: 0 errors, 0 warnings ✅
+- **tests**: 319/319 passed (57/57 test files) ✅
+- **build**: проходит мимо env-валидации, падает только на DATABASE_URL (проблема локального окружения)
 
 - **C1 (P1 High) — Production secret guard** (`lib/env.ts`):
   - `NEXTAUTH_SECRET === "development-secret-change-me"` в production → `throw Error('Запрещённый dev-секрет в production')`

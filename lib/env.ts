@@ -74,21 +74,23 @@ const envSchema = z.object({
 
 export const env = envSchema.parse(process.env);
 
-// C1: В production отклоняем дефолтный dev-секрет — он известен публично.
-if (env.NODE_ENV === "production" && env.NEXTAUTH_SECRET === KNOWN_DEV_SECRET) {
-  throw new Error(
-    "NEXTAUTH_SECRET не переопределён. " +
-    "В production требуется установить сильный уникальный секрет (минимум 32 символа). " +
-    "Значение по умолчанию известно публично и не может быть использовано."
-  );
-}
+// C1 + C4: Production-проверки только в runtime, не во время next build
+// (Collecting page data грузит все модули, а билд-окружение не содержит CRON_SECRET)
+if (process.env.NEXT_PHASE !== "phase-production-build") {
+  if (env.NODE_ENV === "production" && env.NEXTAUTH_SECRET === KNOWN_DEV_SECRET) {
+    throw new Error(
+      "NEXTAUTH_SECRET не переопределён. " +
+      "В production требуется установить сильный уникальный секрет (минимум 32 символа). " +
+      "Значение по умолчанию известно публично и не может быть использовано."
+    );
+  }
 
-// C4: В production CRON_SECRET обязателен
-if (env.NODE_ENV === "production" && !env.CRON_SECRET) {
-  throw new Error(
-    "CRON_SECRET обязателен в production. " +
-    "Установите сильный уникальный секрет для защиты cron-эндпоинтов."
-  );
+  if (env.NODE_ENV === "production" && !env.CRON_SECRET) {
+    throw new Error(
+      "CRON_SECRET обязателен в production. " +
+      "Установите сильный уникальный секрет для защиты cron-эндпоинтов."
+    );
+  }
 }
 
 process.env.APP_URL ??= env.APP_URL;
