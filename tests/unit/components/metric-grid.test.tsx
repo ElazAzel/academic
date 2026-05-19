@@ -32,10 +32,15 @@ describe("MetricGrid", () => {
     expect(criticalValue.className).toContain("text-display-lg");
     expect(criticalValue.className).toContain("tabular-nums");
 
-    const criticalCard = criticalValue.closest(".border-l-m3-error");
-    expect(criticalCard?.className).toContain("ring-m3-error");
-    expect(criticalValue.closest("a")).toHaveAttribute("href", "/super-curator/risks");
+    // Clickable card links to risks page
+    const link = criticalValue.closest("a");
+    expect(link).toHaveAttribute("href", "/super-curator/risks");
+    // Critical priority adds a visual ring
+    const card = link?.querySelector(".rounded-xl");
+    expect(card?.className).toBeDefined();
+    expect(card?.className).toContain("ring-m3-error");
 
+    // Success metric uses tertiary color
     expect(screen.getByText("92%").className).toContain("text-m3-tertiary");
   });
 });

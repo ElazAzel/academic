@@ -4,7 +4,7 @@
   "private": true,
   "description": "Closed academy LMS for AI Strategic Academy.",
   "scripts": {
-    "dev": "next dev",
+    "dev": "powershell -ExecutionPolicy Bypass -File scripts/start-db.ps1 & next dev",
     "build": "node scripts/clean-next-dev-types.mjs && prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
