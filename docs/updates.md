@@ -2,6 +2,32 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-19 — Локальная БД: PostgreSQL + .env + prisma db push + автозапуск
+
+- **Проблема**: на машине не было PostgreSQL, Docker отсутствовал, билд и дев-сервер не работали
+- **Установлен PostgreSQL 17.4** (portable) в `C:\Temp\opencode\pgsql\`
+- **Создан `.env`** с полными настройками для локальной разработки (DATABASE_URL, CRON_SECRET, NEXTAUTH_SECRET, etc.)
+- **`prisma db push`**: созданы все 54 таблицы в БД `academy`
+- **`prisma db seed`**: заполнены тестовые данные
+- **Скрипт автозапуска** (`scripts/start-db.ps1`): запускает PostgreSQL, если он не запущен; создаёт БД при первом запуске
+- **`package.json`**: `dev` скрипт обновлён на `powershell -ExecutionPolicy Bypass -File scripts/start-db.ps1 & next dev` — БД стартует автоматически при `npm run dev`
+- **typecheck**: passed ✅
+- **lint**: 0 errors, 0 warnings ✅
+- **tests**: 319/319 passed (57/57 test files) ✅
+- **build**: ✅ **80/80 страниц, 0 ошибок** (раньше падал без DATABASE_URL)
+
+## 2026-05-19 — MetricGrid: редизайн для ПК (сетка, акцент, hover)
+
+- **Проблема**: на ПК (`xl:grid-cols-4`, `2xl:grid-cols-6`) карточки метрик выглядели «стрёмно» — слишком растянутые, `2xl:6` в ряд некрасиво, `border-l-4` плохо читался на широких карточках
+- **Сетка**: `auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6` → `gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4` (макс. 4 колонки, без `auto-rows-fr`)
+- **Акцент**: `border-l-4` → верхняя градиентная полоса (`before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:to-transparent` + `TONE_TOP_ACCENT` Map)
+- **Иконка**: `rounded-lg` → `rounded-full` + `shadow-m3-soft`
+- **Hover**: добавлена `hover:shadow-m3-soft-hover` для подъёма карточки
+- **Отступы**: `p-4 md:p-5` → `px-5 py-4 md:px-6 md:py-5` (больше горизонтального воздуха на ПК)
+- **Защита от `twMerge`**: `text-display-lg` в `cn()` отбрасывался `tailwind-merge` из-за конфликта с `text-m3-error` — вернул template literal
+- **typecheck**: passed ✅
+- **tests**: 319/319 passed (57/57 test files) ✅
+
 ## 2026-05-19 — Fix: Vercel build не падает на CRON_SECRET (env validation deferred)
 
 - **Проблема**: Vercel build падал на `Collecting page data` с ошибкой `CRON_SECRET обязателен в production`, потому что `lib/env.ts` валидирует production-секреты при импорте модуля, а Next.js подгружает все роуты (включая `/api/auth/[...nextauth]`), транзитивно импортирующие env

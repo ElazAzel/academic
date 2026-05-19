@@ -54,13 +54,14 @@ const TONE_BG_CLASSES: Record<DashboardMetric["tone"], string> = {
   neutral: "bg-m3-surface-container-high",
 };
 
-const TONE_BORDER_CLASSES: Record<DashboardMetric["tone"], string> = {
-  primary: "border-l-m3-primary",
-  success: "border-l-m3-tertiary",
-  warning: "border-l-m3-secondary",
-  danger: "border-l-m3-error",
-  info: "border-l-m3-outline",
-  neutral: "border-l-m3-outline",
+/** Акцентная полоса сверху (для горизонтальных карточек на ПК удобнее, чем border-l) */
+const TONE_TOP_ACCENT: Record<DashboardMetric["tone"], string> = {
+  primary: "from-m3-primary/40",
+  success: "from-m3-tertiary/40",
+  warning: "from-m3-secondary/40",
+  danger: "from-m3-error/40",
+  info: "from-m3-outline/30",
+  neutral: "from-m3-outline/20",
 };
 
 const TONE_ICON_NAMES: Record<DashboardMetric["tone"], string> = {
@@ -75,7 +76,7 @@ const TONE_ICON_NAMES: Record<DashboardMetric["tone"], string> = {
 // ── Метрики ─────────────────────────────────────────────────────────
 export function MetricGrid({ metrics }: { metrics: DashboardMetric[] }) {
   return (
-    <Stagger className="grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6">
+    <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {metrics.map((m) => (
         <FadeIn key={m.label} className="h-full">
           <MetricCard metric={m} />
@@ -89,10 +90,13 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
   const card = (
     <Card
       className={cn(
-        "flex h-full flex-col justify-between overflow-hidden rounded-xl border-l-4 bg-m3-surface-container-lowest p-4 shadow-m3-soft md:p-5",
+        "relative flex h-full flex-col overflow-hidden rounded-xl bg-m3-surface-container-lowest shadow-m3-soft transition-all hover:shadow-m3-soft-hover",
+        "px-5 py-4 md:px-6 md:py-5",
+        // Верхняя акцентная полоса
+        "before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:to-transparent",
+        TONE_TOP_ACCENT[metric.tone],
         metric.priority === "critical" && "ring-1 ring-m3-error/25",
         metric.priority === "elevated" && "ring-1 ring-amber-400/25",
-        TONE_BORDER_CLASSES[metric.tone],
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -104,12 +108,18 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
             </p>
           ) : null}
         </div>
-        <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", TONE_BG_CLASSES[metric.tone])}>
-          <Icon name={TONE_ICON_NAMES[metric.tone]} size={22} className={TONE_CLASSES[metric.tone]} />
+        <span
+          className={cn(
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+            "shadow-m3-soft",
+            TONE_BG_CLASSES[metric.tone],
+          )}
+        >
+          <Icon name={TONE_ICON_NAMES[metric.tone]} size={20} className={TONE_CLASSES[metric.tone]} />
         </span>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 flex-1">
         <p className={`text-display-lg font-bold leading-none tabular-nums ${TONE_CLASSES[metric.tone]}`}>
           {metric.value}
         </p>
