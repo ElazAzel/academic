@@ -1,6 +1,38 @@
 # Журнал обновлений AI Strategic Academy
 
-Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
+Правило: новые записи добавляются сверху.
+
+## 2026-05-19 — Security hardening (C1–C5) + ESLint fixes + тесты
+
+- **C1 (P1 High) — Production secret guard** (`lib/env.ts`):
+  - `NEXTAUTH_SECRET === "development-secret-change-me"` в production → `throw Error('Запрещённый dev-секрет в production')`
+  - `CRON_SECRET` теперь обязателен в production (был optional)
+- **C2 (P1 High) — Quiz answer key isolation**:
+  - `server/modules/quizzes/service.ts`: `listQuizzes()` деструктурирует `correctAnswer` из всех вопросов
+  - `server/modules/courses/service.ts`: `getLesson()` по умолчанию `stripAnswerKeys = true`
+  - `app/api/v1/quizzes/[quizId]/route.ts`: студентам без `correctAnswer`, elevated-ролям (admin, super_curator, curator, instructor) — с ответами
+  - `app/api/v1/lessons/[lessonId]/route.ts`: elevated-проверка роли для включения ответов
+- **C3 (P1 High) — Server-side progress verification** (`server/modules/progress/service.ts`):
+  - `markLessonProgress()` проверяет `quizAttempt.passed` и `assignmentSubmission.status === "ACCEPTED"`
+  - Без пройденного теста/принятого задания — макс. 99%, COMPLETED не ставится
+  - `effectivePercent` используется во всех расчётах (lesson → block → module → course)
+- **C4 (P2 Medium) — Stale JWT protection** (`lib/auth/session.ts`):
+  - `requireUser()` перепроверяет статус + роли в БД через `revalidateSession()` на каждый вызов
+  - Деактивированные пользователи получают 401
+- **C5 (P2 Medium) — Cron fail-closed**:
+  - `app/api/v1/outbox/process/route.ts` и `app/api/v1/reports/scheduled/route.ts`:
+  - Без `CRON_SECRET` → 503; иначе Bearer-проверка → 401
+  - Ранее были fail-open (пропускали запрос без секрета)
+- **ESLint**: исправлены 3 `@typescript-eslint/no-unused-vars` (деструктуризация `correctAnswer` в courses/service.ts, quizzes/service.ts)
+- **Тесты**: исправлены 7 тестов, сломавшихся после изменений:
+  - 5 тестов `progress-service.test.ts` — добавлены `moduleId`, `quizzes: []`, `assignments: []` в моки lesson + optional chaining в сервисе
+  - 1 тест `status-badge.test.tsx`: `text-rose-700` → `text-m3-error`, `text-amber-700` → `text-m3-secondary`
+  - 1 тест `metric-grid.test.tsx`: `text-emerald` → `text-m3-tertiary`
+- **`.env.example`**: добавлен закомментированный `CRON_SECRET`
+- **typecheck**: passed ✅
+- **lint**: 0 errors, 0 warnings ✅
+- **tests**: 319/319 passed (57/57 test files) ✅
+- **build**: compilation passed ✅ (Collecting page data требует DATABASE_URL — проблема среды, не кода) Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
 ## 2026-05-19 — Уведомления: исправлены «блоки» — группировка по дате, убран virtualizer, улучшен дизайн
 

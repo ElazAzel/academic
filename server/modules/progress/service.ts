@@ -28,13 +28,44 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
           },
           lessons: true
         }
-      }
+      },
+      quizzes: { select: { id: true } },
+      assignments: { select: { id: true } }
     }
   });
   if (!lesson) {
     throw new ApiError("not_found", "Урок не найден", 404);
   }
-  const status = percent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS;
+
+  // C3: Сервер проверяет реальное прохождение теста/приёмку задания
+  let canComplete = true;
+  if ((lesson.quizzes?.length ?? 0) > 0) {
+    const passedQuiz = await prisma.quizAttempt.findFirst({
+      where: {
+        quizId: { in: (lesson.quizzes ?? []).map((q) => q.id) },
+        userId,
+        passed: true,
+      },
+      select: { id: true },
+    });
+    if (!passedQuiz) canComplete = false;
+  }
+  if ((lesson.assignments?.length ?? 0) > 0) {
+    const acceptedAssignment = await prisma.assignmentSubmission.findFirst({
+      where: {
+        assignmentId: { in: (lesson.assignments ?? []).map((a) => a.id) },
+        userId,
+        status: "ACCEPTED",
+      },
+      select: { id: true },
+    });
+    if (!acceptedAssignment) canComplete = false;
+  }
+
+  // Если урок требует прохождения, но студент его не прошёл — маскимальный прогресс 99%
+  const effectivePercent = canComplete ? percent : Math.min(percent, 99);
+
+  const status = effectivePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS;
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId: lesson.module.course.id } }
   });
@@ -77,7 +108,7 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
     const lessonProgress = await tx.lessonProgress.upsert({
       where: { userId_lessonId: { userId, lessonId } },
       update: {
-        percent,
+        percent: effectivePercent,
         status,
         lastSeenAt: now,
         completedAt: status === ProgressStatus.COMPLETED ? (previousLessonProgress?.completedAt ?? now) : null,
@@ -87,7 +118,7 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
         userId,
         lessonId,
         enrollmentId: enrollment?.id,
-        percent,
+        percent: effectivePercent,
         status,
         startedAt: now,
         lastSeenAt: now,

@@ -58,14 +58,32 @@ export function gradeObjectiveQuiz(
   };
 }
 
+/** Публичный список квизов (без correctAnswer — C2) */
 export async function listQuizzes() {
-  return prisma.quiz.findMany({
+  const quizzes = await prisma.quiz.findMany({
     include: {
       course: { select: { id: true, title: true } },
       lesson: { select: { id: true, title: true } },
       questions: { orderBy: { order: "asc" } }
     },
     orderBy: { createdAt: "desc" }
+  });
+  // Удаляем correctAnswer из вопросов для всех не-privileged запросов
+  return stripAnswerKeys(quizzes);
+}
+
+/** Удаляет correctAnswer из списка квизов */
+function stripAnswerKeys(quizzes: unknown[]): unknown[] {
+  return quizzes.map((q) => {
+    const quiz = q as Record<string, unknown>;
+    if (Array.isArray(quiz.questions)) {
+      quiz.questions = quiz.questions.map((question: Record<string, unknown>) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { correctAnswer, ...rest } = question;
+        return rest;
+      });
+    }
+    return quiz;
   });
 }
 

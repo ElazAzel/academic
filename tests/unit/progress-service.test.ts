@@ -88,7 +88,10 @@ describe("markLessonProgress", () => {
   it("updates lesson progress and cascades to module and course", async () => {
     mockLessonFindUnique.mockResolvedValue({
       id: "l1",
+      moduleId: "m1",
       blockId: null,
+      quizzes: [],
+      assignments: [],
       module: {
         id: "m1",
         order: 1,
@@ -144,8 +147,10 @@ describe("markLessonProgress", () => {
   it("issues a certificate when course percent reaches the course threshold", async () => {
     mockLessonFindUnique.mockResolvedValue({
       id: "l9",
-      blockId: null,
       moduleId: "m1",
+      blockId: null,
+      quizzes: [],
+      assignments: [],
       module: {
         id: "m1",
         order: 1,
@@ -198,8 +203,10 @@ describe("markLessonProgress", () => {
   it("does not resend completion notifications for already completed modules", async () => {
     mockLessonFindUnique.mockResolvedValue({
       id: "l1",
-      blockId: null,
       moduleId: "m1",
+      blockId: null,
+      quizzes: [],
+      assignments: [],
       module: {
         id: "m1",
         order: 1,
@@ -244,7 +251,10 @@ describe("markLessonProgress", () => {
   it("rejects progress for inactive enrollment", async () => {
     mockLessonFindUnique.mockResolvedValue({
       id: "l1",
+      moduleId: "m1",
       blockId: null,
+      quizzes: [],
+      assignments: [],
       module: {
         id: "m1",
         order: 1,

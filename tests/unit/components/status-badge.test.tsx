@@ -13,8 +13,8 @@ describe("StatusBadge", () => {
       </div>,
     );
 
-    expect(screen.getByText("Критический").className).toContain("text-rose-700");
-    expect(screen.getByText("На проверке").className).toContain("text-amber-700");
+    expect(screen.getByText("Критический").className).toContain("text-m3-error");
+    expect(screen.getByText("На проверке").className).toContain("text-m3-secondary");
     expect(screen.getByText("Активный поток").className).toContain("bg-m3-primary-fixed");
   });
 
