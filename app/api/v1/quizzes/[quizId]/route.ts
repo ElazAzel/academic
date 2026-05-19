@@ -1,7 +1,8 @@
-import { errorResponse, ok, parseJson } from "@/lib/http";
+import { ApiError, errorResponse, ok, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
-import { ApiError } from "@/lib/http";
+import { getQuizForActor } from "@/server/modules/quizzes/service";
+import { assertInstructorOfCourse } from "@/server/modules/courses/service";
 import { z } from "zod";
 
 type Context = { params: Promise<{ quizId: string }> };
@@ -19,37 +20,26 @@ export async function GET(_request: Request, context: Context) {
   try {
     const user = await requireUser("courses:read");
     const { quizId } = await context.params;
-    const quiz = await prisma.quiz.findUnique({
-      where: { id: quizId },
-      include: { questions: { orderBy: { order: "asc" } } }
-    });
-    if (!quiz) throw new ApiError("not_found", "Тест не найден", 404);
-    // C2: Студенты не должны видеть correctAnswer
-    const userRoles = user.roles as string[];
-    const isElevated = userRoles.some((r) => ["admin", "super_curator", "curator", "instructor"].includes(r));
-    if (!isElevated && quiz.questions) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-quiz.questions = quiz.questions.map(({ correctAnswer, ...rest }) => rest as typeof quiz.questions[0]);
-    }
-    return ok(quiz);
+    return ok(await getQuizForActor(user, quizId));
   } catch (error) {
     return errorResponse(error);
   }
 }
 
-async function assertCourseInstructor(userId: string, courseId: string | null) {
-  if (!courseId) return;
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { roles: { include: { role: { select: { key: true } } } } }
+async function getQuizCourseId(quizId: string) {
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: quizId },
+    select: {
+      courseId: true,
+      lesson: {
+        select: {
+          module: { select: { courseId: true } },
+        },
+      },
+    },
   });
-  if (!user) throw new ApiError("forbidden", "Пользователь не найден", 403);
-  const roleKeys = user.roles.map((r) => r.role.key);
-  if (roleKeys.includes("admin")) return;
-  const instructor = await prisma.courseInstructor.findUnique({
-    where: { courseId_userId: { courseId, userId } }
-  });
-  if (!instructor) throw new ApiError("forbidden", "Вы не являетесь преподавателем этого курса", 403);
+  if (!quiz) throw new ApiError("not_found", "Тест не найден", 404);
+  return quiz.courseId ?? quiz.lesson?.module.courseId ?? null;
 }
 
 export async function PATCH(request: Request, context: Context) {
@@ -58,12 +48,9 @@ export async function PATCH(request: Request, context: Context) {
     const { quizId } = await context.params;
     const input = await parseJson(request, updateQuizSchema);
     
-    const quiz = await prisma.quiz.findUnique({
-      where: { id: quizId },
-      select: { courseId: true }
-    });
-    if (!quiz) throw new ApiError("not_found", "Тест не найден", 404);
-    if (quiz.courseId) await assertCourseInstructor(user.id, quiz.courseId);
+    const courseId = await getQuizCourseId(quizId);
+    if (!courseId) throw new ApiError("bad_request", "Тест не привязан к курсу", 400);
+    await assertInstructorOfCourse(user.id, courseId);
 
     const updated = await prisma.quiz.update({
       where: { id: quizId },
@@ -81,12 +68,9 @@ export async function DELETE(_request: Request, context: Context) {
     const user = await requireUser("quizzes:write");
     const { quizId } = await context.params;
 
-    const quiz = await prisma.quiz.findUnique({
-      where: { id: quizId },
-      select: { courseId: true }
-    });
-    if (!quiz) throw new ApiError("not_found", "Тест не найден", 404);
-    if (quiz.courseId) await assertCourseInstructor(user.id, quiz.courseId);
+    const courseId = await getQuizCourseId(quizId);
+    if (!courseId) throw new ApiError("bad_request", "Тест не привязан к курсу", 400);
+    await assertInstructorOfCourse(user.id, courseId);
 
     await prisma.quiz.delete({ where: { id: quizId } });
     return ok({ success: true });

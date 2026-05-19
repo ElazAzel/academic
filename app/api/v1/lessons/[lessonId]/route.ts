@@ -11,10 +11,7 @@ export async function GET(_request: Request, context: Context) {
   try {
     const user = await requireUser("courses:read");
     const { lessonId } = await context.params;
-    const userRoles = user.roles as string[];
-    const isElevated = userRoles.some((r) => ["admin", "super_curator", "curator", "instructor"].includes(r));
-    // C2: Студенты получают урок без correctAnswer; elevated роли — с ответами
-    return ok(await getLesson(lessonId, !isElevated));
+    return ok(await getLesson(lessonId, true, user));
   } catch (error) {
     return errorResponse(error);
   }

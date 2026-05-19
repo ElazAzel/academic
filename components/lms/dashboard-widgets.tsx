@@ -76,7 +76,7 @@ const TONE_ICON_NAMES: Record<DashboardMetric["tone"], string> = {
 // ── Метрики ─────────────────────────────────────────────────────────
 export function MetricGrid({ metrics }: { metrics: DashboardMetric[] }) {
   return (
-    <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <Stagger className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
       {metrics.map((m) => (
         <FadeIn key={m.label} className="h-full">
           <MetricCard metric={m} />
@@ -90,9 +90,8 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
   const card = (
     <Card
       className={cn(
-        "relative flex h-full flex-col overflow-hidden rounded-xl bg-m3-surface-container-lowest shadow-m3-soft transition-all hover:shadow-m3-soft-hover",
-        "px-5 py-4 md:px-6 md:py-5",
-        // Верхняя акцентная полоса
+        "relative flex min-h-[178px] h-full flex-col overflow-hidden rounded-xl bg-m3-surface-container-lowest shadow-m3-soft transition-all hover:shadow-m3-soft-hover",
+        "px-5 py-4",
         "before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:to-transparent",
         TONE_TOP_ACCENT[metric.tone],
         metric.priority === "critical" && "ring-1 ring-m3-error/25",
@@ -100,10 +99,10 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-label-lg font-label-lg text-m3-on-surface-variant">{metric.label}</p>
+        <div className="min-w-0 max-w-[calc(100%-3rem)]">
+          <p className="text-body-md font-semibold leading-5 text-m3-on-surface">{metric.label}</p>
           {metric.description ? (
-            <p className="mt-1 line-clamp-2 text-body-sm font-body-sm text-m3-on-surface-variant">
+            <p className="mt-1 line-clamp-2 text-body-sm font-body-sm leading-5 text-m3-on-surface-variant">
               {metric.description}
             </p>
           ) : null}
@@ -119,12 +118,12 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
         </span>
       </div>
 
-      <div className="mt-4 flex-1">
+      <div className="mt-5 flex flex-1 flex-col justify-end">
         <p className={`text-display-lg font-bold leading-none tabular-nums ${TONE_CLASSES[metric.tone]}`}>
           {metric.value}
         </p>
         {metric.detail || metric.change ? (
-          <p className="mt-2 line-clamp-2 text-body-sm font-body-sm text-m3-on-surface-variant">
+          <p className="mt-3 text-body-sm font-body-sm leading-5 text-m3-on-surface-variant">
             {metric.detail ?? metric.change}
           </p>
         ) : null}

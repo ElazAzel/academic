@@ -12,6 +12,8 @@ const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockNotificationUserFindUnique = vi.hoisted(() => vi.fn());
 const mockCreateNotification = vi.hoisted(() => vi.fn());
 const mockIssueCertificate = vi.hoisted(() => vi.fn());
+const mockQuizAttemptFindFirst = vi.hoisted(() => vi.fn());
+const mockAssignmentSubmissionFindFirst = vi.hoisted(() => vi.fn());
 const mockTxLessonProgressUpsert = vi.hoisted(() => vi.fn());
 const mockTxLessonProgressFindUnique = vi.hoisted(() => vi.fn());
 const mockTxBlockFindUnique = vi.hoisted(() => vi.fn());
@@ -56,6 +58,8 @@ vi.mock("@/lib/prisma", () => ({
     module: { findUnique: mockModuleFindUnique },
     lessonProgress: { count: mockLessonProgressCount },
     certificate: { findFirst: mockCertificateFindFirst },
+    quizAttempt: { findFirst: mockQuizAttemptFindFirst },
+    assignmentSubmission: { findFirst: mockAssignmentSubmissionFindFirst },
     notificationPreference: { findMany: mockNotificationPreferenceFindMany },
     notification: { create: mockNotificationCreate },
     user: { findUnique: mockNotificationUserFindUnique },
@@ -83,6 +87,8 @@ describe("markLessonProgress", () => {
     mockTxCourseProgressFindUnique.mockResolvedValue(null);
     mockCreateNotification.mockResolvedValue({ id: "notification-1" });
     mockIssueCertificate.mockResolvedValue({ id: "certificate-1" });
+    mockQuizAttemptFindFirst.mockResolvedValue(null);
+    mockAssignmentSubmissionFindFirst.mockResolvedValue(null);
   });
 
   it("updates lesson progress and cascades to module and course", async () => {
@@ -230,6 +236,52 @@ describe("markLessonProgress", () => {
     await markLessonProgress("u1", "l1", 100);
 
     expect(mockCreateNotification).not.toHaveBeenCalledWith(expect.objectContaining({ event: "module_completed" }));
+  });
+
+  it("does not complete a quiz lesson until the student has a passed attempt", async () => {
+    mockLessonFindUnique.mockResolvedValue({
+      id: "l1",
+      moduleId: "m1",
+      blockId: null,
+      quizzes: [{ id: "quiz-1" }],
+      assignments: [],
+      module: {
+        id: "m1",
+        order: 1,
+        lessons: [{ id: "l1", isRequired: true, order: 1 }],
+        course: {
+          id: "c1",
+          completionThreshold: 85,
+          traversalMode: "open",
+          modules: [{ id: "m1", order: 1, lessons: [{ id: "l1", isRequired: true, order: 1 }] }],
+        },
+      },
+    });
+    mockEnrollmentFindUnique.mockResolvedValue({ id: "e1", status: "ACTIVE" });
+    mockTxLessonProgressCount.mockResolvedValue(0);
+    mockTxLessonProgressUpsert.mockResolvedValue({
+      id: "lp1",
+      percent: 99,
+      status: "IN_PROGRESS",
+    });
+    mockTxModuleProgressUpsert.mockResolvedValue({ id: "mp1", percent: 0, status: "IN_PROGRESS" });
+    mockTxCourseProgressUpsert.mockResolvedValue({ id: "cp1", percent: 0, status: "IN_PROGRESS" });
+    mockCertificateFindFirst.mockResolvedValue(null);
+
+    const result = await markLessonProgress("u1", "l1", 100);
+
+    expect(mockQuizAttemptFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          quizId: { in: ["quiz-1"] },
+          userId: "u1",
+          passed: true,
+        }),
+      }),
+    );
+    expect(result.lessonProgress.percent).toBe(99);
+    expect(result.lessonProgress.status).toBe("IN_PROGRESS");
+    expect(mockIssueCertificate).not.toHaveBeenCalled();
   });
 
   it("rejects progress for non-enrolled user", async () => {
