@@ -293,7 +293,7 @@ export async function deleteLesson(lessonId: string, actorId: string) {
   return deleted;
 }
 
-export async function getLesson(lessonId: string) {
+export async function getLesson(lessonId: string, stripAnswerKeys = true) {
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
     include: {
@@ -307,6 +307,16 @@ export async function getLesson(lessonId: string) {
   if (!lesson) {
     throw new ApiError("not_found", "Урок не найден", 404);
   }
+
+  // C2: Убираем correctAnswer по умолчанию (для студенческих запросов)
+  if (stripAnswerKeys && lesson.quizzes) {
+    lesson.quizzes = lesson.quizzes.map((quiz) => ({
+      ...quiz,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      questions: quiz.questions.map(({ correctAnswer, ...rest }) => rest),
+    })) as typeof lesson.quizzes;
+  }
+
   return lesson;
 }
 

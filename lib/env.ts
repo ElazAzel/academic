@@ -8,11 +8,13 @@ if (typeof process.loadEnvFile === "function") {
   }
 }
 
+const KNOWN_DEV_SECRET = "development-secret-change-me";
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_URL: z.string().url().default("http://localhost:3000"),
   NEXTAUTH_URL: z.string().url().default("http://localhost:3000"),
-  NEXTAUTH_SECRET: z.string().min(16).default("development-secret-change-me"),
+  NEXTAUTH_SECRET: z.string().min(16).default(KNOWN_DEV_SECRET),
   DATABASE_URL: z.string().min(1).default("postgresql://academy:academy-local-only@postgres:5432/academy?schema=public"),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
@@ -67,10 +69,27 @@ const envSchema = z.object({
   SENTRY_DSN: z.string().optional(),
 
   // Cron / Scheduled Jobs
-  CRON_SECRET: z.string().optional(),
+  CRON_SECRET: z.string().min(16).optional(),
 });
 
 export const env = envSchema.parse(process.env);
+
+// C1: В production отклоняем дефолтный dev-секрет — он известен публично.
+if (env.NODE_ENV === "production" && env.NEXTAUTH_SECRET === KNOWN_DEV_SECRET) {
+  throw new Error(
+    "NEXTAUTH_SECRET не переопределён. " +
+    "В production требуется установить сильный уникальный секрет (минимум 32 символа). " +
+    "Значение по умолчанию известно публично и не может быть использовано."
+  );
+}
+
+// C4: В production CRON_SECRET обязателен
+if (env.NODE_ENV === "production" && !env.CRON_SECRET) {
+  throw new Error(
+    "CRON_SECRET обязателен в production. " +
+    "Установите сильный уникальный секрет для защиты cron-эндпоинтов."
+  );
+}
 
 process.env.APP_URL ??= env.APP_URL;
 process.env.NEXTAUTH_URL ??= env.NEXTAUTH_URL;

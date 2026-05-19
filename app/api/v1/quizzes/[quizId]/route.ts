@@ -17,13 +17,20 @@ const updateQuizSchema = z.object({
 
 export async function GET(_request: Request, context: Context) {
   try {
-    await requireUser("courses:read");
+    const user = await requireUser("courses:read");
     const { quizId } = await context.params;
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId },
       include: { questions: { orderBy: { order: "asc" } } }
     });
     if (!quiz) throw new ApiError("not_found", "Тест не найден", 404);
+    // C2: Студенты не должны видеть correctAnswer
+    const userRoles = user.roles as string[];
+    const isElevated = userRoles.some((r) => ["admin", "super_curator", "curator", "instructor"].includes(r));
+    if (!isElevated && quiz.questions) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+quiz.questions = quiz.questions.map(({ correctAnswer, ...rest }) => rest as typeof quiz.questions[0]);
+    }
     return ok(quiz);
   } catch (error) {
     return errorResponse(error);

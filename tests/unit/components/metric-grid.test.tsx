@@ -36,6 +36,6 @@ describe("MetricGrid", () => {
     expect(criticalCard?.className).toContain("ring-m3-error");
     expect(criticalValue.closest("a")).toHaveAttribute("href", "/super-curator/risks");
 
-    expect(screen.getByText("92%").className).toContain("text-emerald");
+    expect(screen.getByText("92%").className).toContain("text-m3-tertiary");
   });
 });

@@ -22,14 +22,19 @@ import { processNotificationEvents } from "@/server/modules/notifications/outbox
  *   Authorization: Bearer <CRON_SECRET>
  */
 export async function POST(request: Request) {
-  // Verify cron secret
+  // Verify cron secret — fail CLOSED when unset
   const auth = request.headers.get("authorization");
   const expectedSecret = env.CRON_SECRET;
 
-  if (expectedSecret) {
-    if (!auth || !auth.startsWith("Bearer ") || auth.slice(7) !== expectedSecret) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  if (!expectedSecret) {
+    return NextResponse.json(
+      { error: "Сервер не настроен: CRON_SECRET не задан. Обработка отключена." },
+      { status: 503 }
+    );
+  }
+
+  if (!auth || !auth.startsWith("Bearer ") || auth.slice(7) !== expectedSecret) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
