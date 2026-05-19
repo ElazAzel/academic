@@ -60,7 +60,13 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
         body: JSON.stringify({ lessonId: lesson.id, percent: 100 }),
       });
       if (res.ok) {
-        setProgressPercent(100);
+        const payload = await res.json().catch(() => null);
+        const savedPercent = payload?.data?.lessonProgress?.percent;
+        const nextPercent = typeof savedPercent === "number" ? savedPercent : 100;
+        setProgressPercent(nextPercent);
+        if (nextPercent < 100) {
+          toast.info("Сначала завершите обязательный тест или задание урока");
+        }
         router.refresh();
       } else {
         const err = await res.json().catch(() => ({}));

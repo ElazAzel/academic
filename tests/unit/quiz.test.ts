@@ -1,8 +1,19 @@
-import { describe, expect, it, vi } from "vitest";
-import { gradeObjectiveQuiz } from "@/server/modules/quizzes/service";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const mockQuizFindMany = vi.hoisted(() => vi.fn());
+const mockQuizFindFirst = vi.hoisted(() => vi.fn());
+const mockCourseInstructorFindUnique = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/prisma", () => ({
-  getPrisma: () => ({}),
+  getPrisma: () => ({
+    quiz: {
+      findMany: mockQuizFindMany,
+      findFirst: mockQuizFindFirst,
+    },
+    courseInstructor: {
+      findUnique: mockCourseInstructorFindUnique,
+    },
+  }),
 }));
 
 vi.mock("@/server/modules/audit/service", () => ({
@@ -12,6 +23,12 @@ vi.mock("@/server/modules/audit/service", () => ({
 vi.mock("@/server/modules/progress/service", () => ({
   markLessonProgress: vi.fn(),
 }));
+
+const { gradeObjectiveQuiz, getQuizForActor, listQuizzes } = await import("@/server/modules/quizzes/service");
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("quiz grading", () => {
   it("autogrades objective questions", () => {
@@ -122,5 +139,67 @@ describe("quiz grading", () => {
     expect(result.earned).toBe(1);
     expect(result.score).toBe(100);
     expect(result.passed).toBe(true);
+  });
+});
+
+describe("quiz read API shaping", () => {
+  it("scopes quiz lists to the actor and never returns answer keys", async () => {
+    mockQuizFindMany.mockResolvedValue([
+      {
+        id: "quiz-1",
+        title: "Quiz",
+        questions: [
+          { id: "q1", prompt: "Question", correctAnswer: { value: "a" }, points: 1 },
+        ],
+      },
+    ]);
+
+    const result = await listQuizzes({ id: "student-1", roles: ["student"] });
+
+    expect(mockQuizFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ OR: expect.any(Array) }),
+      }),
+    );
+    expect(JSON.stringify(result)).not.toContain("correctAnswer");
+  });
+
+  it("hides answer keys from enrolled students on quiz detail", async () => {
+    mockQuizFindFirst.mockResolvedValue({
+      id: "quiz-1",
+      courseId: "course-1",
+      lesson: null,
+      questions: [
+        { id: "q1", prompt: "Question", correctAnswer: { value: "a" }, points: 1 },
+      ],
+    });
+
+    const result = await getQuizForActor({ id: "student-1", roles: ["student"] }, "quiz-1");
+
+    expect(mockQuizFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: "quiz-1",
+          OR: expect.any(Array),
+        }),
+      }),
+    );
+    expect(JSON.stringify(result)).not.toContain("correctAnswer");
+  });
+
+  it("keeps answer keys for the assigned instructor", async () => {
+    mockQuizFindFirst.mockResolvedValue({
+      id: "quiz-1",
+      courseId: "course-1",
+      lesson: null,
+      questions: [
+        { id: "q1", prompt: "Question", correctAnswer: { value: "a" }, points: 1 },
+      ],
+    });
+    mockCourseInstructorFindUnique.mockResolvedValue({ courseId: "course-1" });
+
+    const result = await getQuizForActor({ id: "instructor-1", roles: ["instructor"] }, "quiz-1");
+
+    expect(JSON.stringify(result)).toContain("correctAnswer");
   });
 });

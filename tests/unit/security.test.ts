@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { hasPermission } from "@/lib/auth/rbac";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { verifyCsrf } from "@/lib/http";
+import { isPublicRoute } from "@/lib/auth/middleware-guards";
 
 vi.mock("@/lib/env", () => ({
   env: {
@@ -145,5 +146,13 @@ describe("CSRF verification", () => {
       headers: { referer: "http://localhost:3000/login" }
     });
     expect(() => verifyCsrf(request)).not.toThrow();
+  });
+});
+
+describe("Public asset middleware exemptions", () => {
+  it("allows PWA assets without authentication", () => {
+    expect(isPublicRoute("/sw.js")).toBe(true);
+    expect(isPublicRoute("/manifest.json")).toBe(true);
+    expect(isPublicRoute("/icon.svg")).toBe(true);
   });
 });

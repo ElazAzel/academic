@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockCourseProgressFindUnique = vi.hoisted(() => vi.fn());
 const mockCourseFindUniqueOrThrow = vi.hoisted(() => vi.fn());
 const mockAssignmentSubmissionFindFirst = vi.hoisted(() => vi.fn());
+const mockLessonProgressCount = vi.hoisted(() => vi.fn());
 const mockCertificateCreate = vi.hoisted(() => vi.fn());
 const mockCertificateFindUnique = vi.hoisted(() => vi.fn());
 const mockCertificateUpdate = vi.hoisted(() => vi.fn());
@@ -29,6 +30,7 @@ vi.mock("@/lib/prisma", () => ({
     courseProgress: { findUnique: mockCourseProgressFindUnique },
     course: { findUniqueOrThrow: mockCourseFindUniqueOrThrow },
     assignmentSubmission: { findFirst: mockAssignmentSubmissionFindFirst },
+    lessonProgress: { count: mockLessonProgressCount },
     certificate: {
       create: mockCertificateCreate,
       findUnique: mockCertificateFindUnique,
@@ -51,11 +53,12 @@ describe("certificate notification and audit events", () => {
     mockNotificationCreate.mockResolvedValue({ id: "notification-1" });
     mockUserFindUnique.mockResolvedValue({ email: "student@academy.local" });
     mockAuditLogCreate.mockResolvedValue({ id: "audit-1" });
+    mockLessonProgressCount.mockResolvedValue(0);
   });
 
   it("creates audit and in-app notification when certificate is issued", async () => {
     mockCourseProgressFindUnique.mockResolvedValue({ enrollmentId: "enrollment-1", percent: 100 });
-    mockCourseFindUniqueOrThrow.mockResolvedValue({ id: "course-1", finalAssignmentId: null });
+    mockCourseFindUniqueOrThrow.mockResolvedValue({ id: "course-1", finalAssignmentId: null, modules: [] });
     mockCertificateCreate.mockResolvedValue({
       id: "certificate-1",
       userId: "student-1",
@@ -90,6 +93,33 @@ describe("certificate notification and audit events", () => {
         }),
       }),
     );
+  });
+
+  it("blocks certificates when required quiz or assignment lessons are not completed", async () => {
+    mockCourseProgressFindUnique.mockResolvedValue({ enrollmentId: "enrollment-1", percent: 100 });
+    mockCourseFindUniqueOrThrow.mockResolvedValue({
+      id: "course-1",
+      finalAssignmentId: null,
+      modules: [
+        {
+          lessons: [
+            {
+              id: "lesson-1",
+              isRequired: true,
+              quizzes: [{ id: "quiz-1" }],
+              assignments: [],
+            },
+          ],
+        },
+      ],
+    });
+    mockLessonProgressCount.mockResolvedValue(0);
+
+    await expect(issueCertificate({ userId: "student-1", courseId: "course-1" }, "student-1")).rejects.toMatchObject({
+      code: "forbidden",
+      status: 403,
+    });
+    expect(mockCertificateCreate).not.toHaveBeenCalled();
   });
 
   it("creates audit and in-app notification when certificate is revoked", async () => {

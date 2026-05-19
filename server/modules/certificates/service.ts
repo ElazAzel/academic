@@ -16,6 +16,11 @@ export function generateCertificateNumber() {
   return `ASA-${year}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
 }
 
+function completionBasis<T extends { isRequired: boolean | null }>(lessons: T[]) {
+  const required = lessons.filter((lesson) => lesson.isRequired);
+  return required.length > 0 ? required : lessons;
+}
+
 export async function issueCertificate(input: { userId: string; courseId: string }, actorId: string) {
   const progress = await prisma.courseProgress.findUnique({
     where: { userId_courseId: { userId: input.userId, courseId: input.courseId } }
@@ -26,7 +31,38 @@ export async function issueCertificate(input: { userId: string; courseId: string
       actualPercent: progress?.percent ?? 0
     });
   }
-  const course = await prisma.course.findUniqueOrThrow({ where: { id: input.courseId } });
+  const course = await prisma.course.findUniqueOrThrow({
+    where: { id: input.courseId },
+    include: {
+      modules: {
+        include: {
+          lessons: {
+            include: {
+              quizzes: { select: { id: true } },
+              assignments: { select: { id: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const gatedLessons = completionBasis(course.modules.flatMap((module) => module.lessons)).filter(
+    (lesson) => lesson.quizzes.length > 0 || lesson.assignments.length > 0,
+  );
+  if (gatedLessons.length > 0) {
+    const completedGatedLessons = await prisma.lessonProgress.count({
+      where: {
+        userId: input.userId,
+        lessonId: { in: gatedLessons.map((lesson) => lesson.id) },
+        status: "COMPLETED",
+      },
+    });
+    if (completedGatedLessons !== gatedLessons.length) {
+      throw new ApiError("forbidden", "Тесты и задания курса должны быть завершены перед выдачей сертификата", 403);
+    }
+  }
+
   if (course.finalAssignmentId) {
     const accepted = await prisma.assignmentSubmission.findFirst({
       where: { userId: input.userId, assignmentId: course.finalAssignmentId, status: "ACCEPTED" }

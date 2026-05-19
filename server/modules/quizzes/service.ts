@@ -3,6 +3,11 @@ import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { logAudit } from "@/server/modules/audit/service";
 import { markLessonProgress } from "@/server/modules/progress/service";
+import {
+  canReadCourseAnswerKeys,
+  quizReadWhereForActor,
+  type CourseAccessActor,
+} from "@/server/modules/courses/access";
 
 const prisma = getPrisma();
 
@@ -58,9 +63,9 @@ export function gradeObjectiveQuiz(
   };
 }
 
-/** Публичный список квизов (без correctAnswer — C2) */
-export async function listQuizzes() {
+export async function listQuizzes(actor: CourseAccessActor) {
   const quizzes = await prisma.quiz.findMany({
+    where: quizReadWhereForActor(actor),
     include: {
       course: { select: { id: true, title: true } },
       lesson: { select: { id: true, title: true } },
@@ -68,23 +73,56 @@ export async function listQuizzes() {
     },
     orderBy: { createdAt: "desc" }
   });
-  // Удаляем correctAnswer из вопросов для всех не-privileged запросов
   return stripAnswerKeys(quizzes);
 }
 
-/** Удаляет correctAnswer из списка квизов */
 function stripAnswerKeys(quizzes: unknown[]): unknown[] {
   return quizzes.map((q) => {
     const quiz = q as Record<string, unknown>;
     if (Array.isArray(quiz.questions)) {
       quiz.questions = quiz.questions.map((question: Record<string, unknown>) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { correctAnswer, ...rest } = question;
+        const { correctAnswer, ...rest } = question;
         return rest;
       });
     }
     return quiz;
   });
+}
+
+function stripAnswerKeysFromQuiz<T extends Record<string, unknown>>(quiz: T): T {
+  return stripAnswerKeys([quiz])[0] as T;
+}
+
+export async function getQuizForActor(actor: CourseAccessActor, quizId: string) {
+  const quiz = await prisma.quiz.findFirst({
+    where: {
+      id: quizId,
+      ...quizReadWhereForActor(actor),
+    },
+    include: {
+      questions: { orderBy: { order: "asc" } },
+      course: { select: { id: true, title: true } },
+      lesson: {
+        select: {
+          id: true,
+          title: true,
+          module: { select: { courseId: true } },
+        },
+      },
+    },
+  });
+
+  if (!quiz) {
+    throw new ApiError("not_found", "Тест не найден", 404);
+  }
+
+  const courseId = quiz.courseId ?? quiz.lesson?.module.courseId;
+  if (!courseId || !(await canReadCourseAnswerKeys(actor, courseId))) {
+    return stripAnswerKeysFromQuiz(quiz as unknown as Record<string, unknown>);
+  }
+
+  return quiz;
 }
 
 export async function submitQuizAttempt(quizId: string, userId: string, answers: Record<string, unknown>, skipLimit = false) {

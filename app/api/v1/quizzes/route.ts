@@ -4,8 +4,8 @@ import { listQuizzes } from "@/server/modules/quizzes/service";
 
 export async function GET() {
   try {
-    await requireUser("courses:read");
-    return ok(await listQuizzes());
+    const user = await requireUser("courses:read");
+    return ok(await listQuizzes(user));
   } catch (error) {
     return errorResponse(error);
   }

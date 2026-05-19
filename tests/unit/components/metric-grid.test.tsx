@@ -23,13 +23,16 @@ describe("MetricGrid", () => {
       },
     ];
 
-    render(<MetricGrid metrics={metrics} />);
+    const { container } = render(<MetricGrid metrics={metrics} />);
+
+    expect(container.firstElementChild?.className).toContain("minmax(220px,1fr)");
 
     expect(screen.getByText("Критичные")).toBeInTheDocument();
     expect(screen.getByText("3 старше 24 часов")).toBeInTheDocument();
 
     const criticalValue = screen.getByText("12");
     expect(criticalValue.className).toContain("text-display-lg");
+    expect(criticalValue.className).toContain("font-bold");
     expect(criticalValue.className).toContain("tabular-nums");
 
     // Clickable card links to risks page
