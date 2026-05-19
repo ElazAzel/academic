@@ -298,7 +298,7 @@ export function CourseBuilderShell({
           </Button>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="max-w-[42vw] truncate text-m3-headline-sm text-m3-on-surface">{detail.title}</h1>
+              <h1 className="max-w-[42vw] truncate text-headline-sm text-m3-on-surface">{detail.title}</h1>
               <Badge variant={detail.status === "PUBLISHED" ? "default" : "secondary"}>{statusLabel(detail.status)}</Badge>
             </div>
             <p className="font-body-sm text-body-sm text-m3-on-surface-variant">

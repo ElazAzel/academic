@@ -39,6 +39,7 @@ export function ChatPanel({
   historyTitle = "Чат с куратором",
   otherParticipantName = "Куратор",
   showResponseState = false,
+  fullHeight = false,
 }: {
   lessonId?: string;
   replyLessonId?: string;
@@ -49,6 +50,7 @@ export function ChatPanel({
   historyTitle?: string;
   otherParticipantName?: string;
   showResponseState?: boolean;
+  fullHeight?: boolean;
 }) {
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => ["chat", studentId, lessonId], [studentId, lessonId]);
@@ -311,8 +313,8 @@ export function ChatPanel({
   }
 
   return (
-    <div className="flex flex-col rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-      <div className="flex items-center justify-between px-4 pt-3 pb-1">
+    <div className={`flex flex-col rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft ${fullHeight ? 'h-full' : ''}`}>
+      <div className="flex items-center justify-between px-4 pt-3 pb-1 shrink-0">
         <span className="text-label-lg font-label-lg text-m3-on-surface">{conversationTitle}</span>
         {messages.length > 0 && (
           <Button type="button" variant="ghost" size="sm" onClick={handleDownload} aria-label="Скачать историю">
@@ -321,7 +323,7 @@ export function ChatPanel({
           </Button>
         )}
       </div>
-      <div ref={chatContainerRef} className="flex-1 overflow-auto px-4 pb-3 max-h-[400px] min-h-[200px]">
+      <div ref={chatContainerRef} className={`flex-1 overflow-auto px-4 pb-3 ${fullHeight ? 'max-h-none' : 'max-h-[400px]'} min-h-[200px]`}>
         {messages.length === 0 && (
           <p className="text-center text-body-md font-body-md text-m3-on-surface-variant py-8">{emptyState}</p>
         )}
@@ -433,7 +435,7 @@ export function ChatPanel({
         })}
         <div ref={bottomRef} />
       </div>
-      <div className="border-t border-m3-outline-variant p-3">
+      <div className="border-t border-m3-outline-variant p-3 shrink-0">
         {replyToPreview && (
           <div className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded-lg bg-m3-surface-container-high border border-m3-outline-variant">
             <Icon name="reply" size={16} className="shrink-0 text-m3-primary" />

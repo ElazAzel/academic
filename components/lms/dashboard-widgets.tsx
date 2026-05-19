@@ -38,28 +38,28 @@ import { cn } from "@/lib/utils";
 // ── M3 tone classes ──────────────────────────────────────────────────
 const TONE_CLASSES: Record<DashboardMetric["tone"], string> = {
   primary: "text-m3-primary",
-  success: "text-emerald-600 dark:text-emerald-400",
-  warning: "text-amber-600 dark:text-amber-400",
+  success: "text-m3-tertiary dark:text-m3-tertiary",
+  warning: "text-m3-secondary dark:text-m3-secondary",
   danger: "text-m3-error",
-  info: "text-sky-600 dark:text-sky-400",
+  info: "text-m3-on-surface-variant",
   neutral: "text-m3-on-surface",
 };
 
 const TONE_BG_CLASSES: Record<DashboardMetric["tone"], string> = {
   primary: "bg-m3-primary/10",
-  success: "bg-emerald-100 dark:bg-emerald-900/30",
-  warning: "bg-amber-100 dark:bg-amber-900/30",
+  success: "bg-m3-tertiary-fixed/60 dark:bg-m3-tertiary-container/30",
+  warning: "bg-m3-secondary-fixed/60 dark:bg-m3-secondary-container/30",
   danger: "bg-m3-error-container/30",
-  info: "bg-sky-100 dark:bg-sky-900/30",
+  info: "bg-m3-surface-container-high",
   neutral: "bg-m3-surface-container-high",
 };
 
 const TONE_BORDER_CLASSES: Record<DashboardMetric["tone"], string> = {
   primary: "border-l-m3-primary",
-  success: "border-l-emerald-500",
-  warning: "border-l-amber-500",
+  success: "border-l-m3-tertiary",
+  warning: "border-l-m3-secondary",
   danger: "border-l-m3-error",
-  info: "border-l-sky-500",
+  info: "border-l-m3-outline",
   neutral: "border-l-m3-outline",
 };
 
@@ -142,7 +142,7 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
     <Card className="overflow-hidden border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-shadow hover:shadow-m3-soft-hover rounded-xl">
       <CardHeader>
         <StatusBadge status="ACTIVE" label="Следующее действие" className="w-fit" />
-        <CardTitle className="text-m3-headline-md text-m3-on-surface">Продолжить: {data.courseTitle}</CardTitle>
+        <CardTitle className="text-headline-md text-m3-on-surface">Продолжить: {data.courseTitle}</CardTitle>
         <CardDescription className="font-body-md text-body-md text-m3-on-surface-variant">
           {data.moduleTitle} · {data.lessonTitle}
           {data.deadlineDaysLeft != null && ` · дедлайн через ${data.deadlineDaysLeft} дн.`}
@@ -193,7 +193,7 @@ export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) 
               <StatusBadge status={c.status as BadgeStatus} />
               <Icon name="menu_book" className="text-m3-on-surface-variant text-[20px]" />
             </div>
-            <CardTitle className="text-m3-headline-sm text-m3-on-surface">{c.courseTitle}</CardTitle>
+            <CardTitle className="text-headline-sm text-m3-on-surface">{c.courseTitle}</CardTitle>
             <CardDescription className="font-body-md text-body-md text-m3-on-surface-variant">
               {c.currentModuleTitle && `${c.currentModuleTitle}`}
               {c.currentLessonTitle && ` → ${c.currentLessonTitle}`}
@@ -235,7 +235,7 @@ export function CourseManageGrid({
                   <StatusBadge status={c.status as BadgeStatus} />
                   <Icon name="school" className="text-m3-on-surface-variant text-[20px]" />
                 </div>
-                <CardTitle className="text-m3-headline-sm text-m3-on-surface">{c.title}</CardTitle>
+                <CardTitle className="text-headline-sm text-m3-on-surface">{c.title}</CardTitle>
                 <CardDescription className="font-body-md text-body-md text-m3-on-surface-variant">{c.description}</CardDescription>
               </CardHeader>
               <CardContent>

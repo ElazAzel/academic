@@ -28,7 +28,7 @@ const RISK_LABELS: Record<RiskSeverity, string> = {
 
 const ACTION_TONE_CLASSES: Record<CuratorStudentOperation["nextAction"]["tone"], string> = {
   primary: "border-m3-primary/20 bg-m3-primary-fixed/10",
-  warning: "border-amber-200 bg-amber-50/70 dark:border-amber-800 dark:bg-amber-950/30",
+  warning: "border-m3-secondary-fixed-dim/50 bg-m3-secondary-fixed/20 dark:border-m3-secondary-container dark:bg-m3-secondary-container/20",
   danger: "border-m3-error/20 bg-m3-error-container/20",
   neutral: "border-m3-outline-variant bg-m3-surface-container-lowest",
 };
@@ -121,7 +121,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
     <section className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-m3-headline-sm text-m3-on-surface">Операционная карта слушателей</h2>
+          <h2 className="text-headline-sm text-m3-on-surface">Операционная карта слушателей</h2>
           <p className="font-body-md text-body-md text-m3-on-surface-variant">
             Карточки отсортированы по срочности: риски, вопросы, задания, чат и дедлайны.
           </p>
@@ -157,7 +157,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
                 <Avatar name={student.name} className="h-11 w-11" />
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="truncate text-m3-label-lg text-label-lg text-m3-on-surface">{student.name}</h3>
+                    <h3 className="truncate text-label-lg text-label-lg text-m3-on-surface">{student.name}</h3>
                     <StatusBadge status={student.progressStatus} label={PROGRESS_LABELS[student.progressStatus]} />
                     {student.highestRiskSeverity && (
                       <StatusBadge
@@ -259,7 +259,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
         {chatStudent && (
           <DialogContent className="max-w-3xl p-0">
             <DialogHeader>
-              <DialogTitle className="text-m3-headline-sm text-m3-on-surface">Чат: {chatStudent.name}</DialogTitle>
+              <DialogTitle className="text-headline-sm text-m3-on-surface">Чат: {chatStudent.name}</DialogTitle>
               <DialogDescription className="font-body-md text-body-md text-m3-on-surface-variant">
                 Быстрый диалог с закрепленным слушателем. Сообщение сохранит контекст последнего урока, если он есть.
               </DialogDescription>
