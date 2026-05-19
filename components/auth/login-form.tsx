@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Icon } from "@/components/ui/icon";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
 
 export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFlags }) {
@@ -54,7 +55,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
       <div className="flex flex-col gap-xs">
         <label className="font-label-md text-label-md text-m3-on-surface" htmlFor="email">E-mail</label>
         <div className="relative">
-          <span className="material-symbols-outlined pointer-events-none absolute left-sm top-1/2 -translate-y-1/2 text-[20px] text-m3-outline" aria-hidden="true">mail</span>
+          <Icon name="mail" size={20} className="pointer-events-none absolute left-sm top-1/2 -translate-y-1/2 text-m3-outline" />
           <input
             id="email"
             name="email"
@@ -77,7 +78,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
           </a>
         </div>
         <div className="relative">
-          <span className="material-symbols-outlined pointer-events-none absolute left-sm top-1/2 -translate-y-1/2 text-[20px] text-m3-outline" aria-hidden="true">lock</span>
+          <Icon name="lock" size={20} className="pointer-events-none absolute left-sm top-1/2 -translate-y-1/2 text-m3-outline" />
           <input
             id="password"
             name="password"
@@ -114,7 +115,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
         className="mt-sm flex w-full items-center justify-center gap-sm rounded bg-m3-primary py-md text-label-lg font-label-lg text-m3-on-primary shadow-sm transition-colors hover:bg-m3-primary-container active:scale-[0.99] disabled:opacity-50"
       >
         <span>{pending ? "Входим..." : "Войти в систему"}</span>
-        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">arrow_forward</span>
+        <Icon name="arrow_forward" size={20} />
       </button>
 
       {/* OAuth */}
@@ -127,7 +128,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
               aria-label="Google"
               className="flex items-center justify-center gap-sm rounded border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
             >
-              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">login</span>
+              <Icon name="login" size={20} />
               <span>Google</span>
             </button>
           ) : null}
@@ -138,7 +139,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
               aria-label="GitHub"
               className="flex items-center justify-center gap-sm rounded border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
             >
-              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">code</span>
+              <Icon name="code" size={20} />
               <span>GitHub</span>
             </button>
           ) : null}

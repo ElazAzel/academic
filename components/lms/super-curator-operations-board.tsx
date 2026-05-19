@@ -46,7 +46,7 @@ export function SuperCuratorOperationsBoard({
     <section className="space-y-6" aria-labelledby="super-curator-operations-title">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h2 id="super-curator-operations-title" className="text-m3-headline-sm text-m3-on-surface">
+          <h2 id="super-curator-operations-title" className="text-headline-sm text-m3-on-surface">
             Операционный контроль
           </h2>
           <p className="font-body-md text-body-md text-m3-on-surface-variant">
@@ -72,7 +72,7 @@ export function SuperCuratorOperationsBoard({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
         <Card className="rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-m3-headline-sm text-m3-on-surface">
+            <CardTitle className="flex items-center gap-2 text-headline-sm text-m3-on-surface">
               <Icon name="group" className="text-[22px] text-m3-primary" />
               Нагрузка кураторов
             </CardTitle>
@@ -126,7 +126,7 @@ export function SuperCuratorOperationsBoard({
 
         <Card className="rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-m3-headline-sm text-m3-on-surface">
+            <CardTitle className="flex items-center gap-2 text-headline-sm text-m3-on-surface">
               <Icon name="help_center" className="text-[22px] text-m3-secondary" />
               Проблемные вопросы
             </CardTitle>
@@ -163,7 +163,7 @@ export function SuperCuratorOperationsBoard({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
         <Card className="rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-m3-headline-sm text-m3-on-surface">
+            <CardTitle className="flex items-center gap-2 text-headline-sm text-m3-on-surface">
               <Icon name="shuffle" className="text-[22px] text-amber-600" />
               Потоки и зоны риска
             </CardTitle>
@@ -201,7 +201,7 @@ export function SuperCuratorOperationsBoard({
 
         <Card className="rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-m3-headline-sm text-m3-on-surface">
+            <CardTitle className="flex items-center gap-2 text-headline-sm text-m3-on-surface">
               <Icon name="warning" className="text-[22px] text-m3-error" />
               Высокие риски
             </CardTitle>

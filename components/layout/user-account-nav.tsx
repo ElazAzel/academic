@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { Avatar } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -48,19 +48,19 @@ export function UserAccountNav({ user }: { user: AppSessionUser }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={homePath}>
-            <LayoutDashboard className="h-4 w-4" />
+            <Icon name="dashboard" size={16} />
             Дашборд
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={`${homePath}/settings`}>
-            <Settings className="h-4 w-4" />
+            <Icon name="settings" size={16} />
             Настройки
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut({ callbackUrl: AUTH_ROUTES.LOGIN })}>
-          <LogOut className="h-4 w-4" />
+          <Icon name="logout" size={16} />
           Выйти
         </DropdownMenuItem>
       </DropdownMenuContent>

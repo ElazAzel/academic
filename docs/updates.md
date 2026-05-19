@@ -2,6 +2,44 @@
 
 Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
 
+## 2026-05-19 — Аудит дизайна: исправление цветов, типографики, иконок, замена raw-инпутов на компоненты
+
+- **StatusBadge** (`components/lms/status-badge.tsx`): хардкодные `emerald`/`amber`/`rose`/`sky` цвета заменены на M3-токены:
+  - `success` → `m3-tertiary` (teal-green), `warning` → `m3-secondary` (purple), `danger` → `m3-error`, `info` → `m3-primary`
+  - И light, и dark mode корректно отображаются через M3-палитру
+- **Dialog** (`components/ui/dialog.tsx`):
+  - `DialogTitle`: `text-lg font-bold` → `text-headline-sm font-headline-sm text-m3-on-surface`
+  - `DialogFooter`: `bg-muted/20` → `bg-m3-surface-container`
+  - `DialogContent`: `bg-card` → `bg-m3-surface-container-lowest`
+- **Login form** (`components/auth/login-form.tsx`): все `material-symbols-outlined` span заменены на компонент `<Icon>` (mail, lock, arrow_forward, login, code)
+- **DashboardWidgets** (`components/lms/dashboard-widgets.tsx`): `TONE_CLASSES`, `TONE_BG_CLASSES`, `TONE_BORDER_CLASSES` переведены с emerald/amber/sky на M3-токены (`m3-tertiary`, `m3-secondary`, `m3-on-surface-variant`)
+- **CuratorOperationsBoard** (`components/lms/curator-operations-board.tsx`): `ACTION_TONE_CLASSES` — `amber-200/800` заменены на `m3-secondary-fixed-dim/container`
+- **UserAccountNav** (`components/layout/user-account-nav.tsx`): Lucide-иконки (`LayoutDashboard`, `Settings`, `LogOut`) заменены на Material Symbols через `<Icon>` (dashboard, settings, logout); импорт lucide-react удалён
+- **AdminSettings** (`app/admin/settings/page.tsx`):
+  - Все raw `<input>` заменены на `<Input>`-компонент
+  - Hand-rolled toggle заменён на `<Switch>`-компонент из Radix
+  - Lucide-иконки (`Flag`, `Mail`, `Shield`, `RefreshCw`) заменены на `<Icon>` (flag, mail, verified, refresh)
+  - `CardTitle` исправлен с `text-base` на `text-headline-sm`
+  - `bg-muted/50` заменён на `bg-m3-surface-container-high`
+- **typecheck**: passed ✅
+- **lint**: passed ✅
+
+## 2026-05-19 — Чат: двухпанельный layout + установка superpowers + аудит дизайна
+
+- **Superpowers**: установлен plugin `obra/superpowers` в `opencode.json` (git+https)
+- **Чат: двухпанельный layout** (`app/curator/chat/chat-list.tsx`):
+  - Полностью переписан `CuratorChatList`: вместо списка карточек + Dialog-оверлея сделан split-pane layout
+  - Левая панель: список диалогов («папки») с поиском, unread-badge на каждой папке, сводка внизу
+  - Правая панель: активный диалог (ChatPanel) без наложения на список
+  - На мобильных: либо список, либо чат с кнопкой «Назад» (ChevronLeft)
+  - Пустое состояние: подсказка «Выберите диалог» с общим числом диалогов/непрочитанных
+- **ChatPanel** (`components/lms/chat-panel.tsx`): добавлен prop `fullHeight` — при включении компонент занимает всю высоту контейнера (h-full, max-h-none)
+- **Дизайн-аудит**:
+  - Исправлены 12 сломанных CSS-классов `text-m3-headline-md`, `text-m3-headline-sm`, `text-m3-label-lg` → `text-headline-md`, `text-headline-sm`, `text-label-lg` (эти классы не существовали в tailwind.config.ts)
+  - Файлы: `dashboard-widgets.tsx`, `super-curator-operations-board.tsx`, `curator-operations-board.tsx`, `course-builder-shell.tsx`
+- **typecheck**: passed ✅
+- **lint**: passed ✅
+
 ## 2026-05-18 — Fix: reply-to-message на каждом сообщении + PWA: NAVIGATE handler, manifest, desktop install
 
 - **Кнопка «Ответить» на каждом сообщении** (`chat-panel.tsx`):
