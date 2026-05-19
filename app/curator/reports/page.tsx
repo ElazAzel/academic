@@ -4,8 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
 import { Icon } from "@/components/ui/icon";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorReportData } from "@/server/actions/curator-enhanced";
+import type { DashboardMetric } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
@@ -22,39 +24,24 @@ export default async function CuratorReportsPage() {
 
       {data && data.total > 0 ? (
         <div className="space-y-6">
-          {/* Summary — M3 */}
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
-            <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-              <CardContent className="p-5 text-center space-y-1">
-                <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{data.total}</p>
-                <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Слушателей</p>
-              </CardContent>
-            </Card>
-            <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-              <CardContent className="p-5 text-center space-y-1">
-                <p className="font-display-lg text-m3-headline-large text-m3-primary">{data.completed}</p>
-                <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Завершили</p>
-              </CardContent>
-            </Card>
-            <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-              <CardContent className="p-5 text-center space-y-1">
-                <p className="font-display-lg text-m3-headline-large text-m3-tertiary">{data.inProgress}</p>
-                <p className="font-body-sm text-body-sm text-m3-on-surface-variant">В процессе</p>
-              </CardContent>
-            </Card>
-            <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-              <CardContent className="p-5 text-center space-y-1">
-                <p className="font-display-lg text-m3-headline-large text-m3-error">{data.withRisks}</p>
-                <p className="font-body-sm text-body-sm text-m3-on-surface-variant">С рисками</p>
-              </CardContent>
-            </Card>
-            <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-              <CardContent className="p-5 text-center space-y-1">
-                <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{data.avgProgress}%</p>
-                <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний прогресс</p>
-              </CardContent>
-            </Card>
-          </div>
+          <MetricGrid
+            metrics={[
+              { label: "Слушателей", value: data.total, tone: "primary", detail: `${data.withRisks} с рисками` },
+              { label: "Завершили", value: data.completed, tone: "success" },
+              { label: "В процессе", value: data.inProgress, tone: "info" },
+              {
+                label: "С рисками",
+                value: data.withRisks,
+                tone: data.withRisks > 0 ? "danger" : "success",
+                priority: data.withRisks > 0 ? "elevated" : "normal",
+              },
+              {
+                label: "Средний прогресс",
+                value: `${data.avgProgress}%`,
+                tone: data.avgProgress >= 70 ? "success" : data.avgProgress >= 40 ? "warning" : "danger",
+              },
+            ] satisfies DashboardMetric[]}
+          />
 
           {/* Progress overview — M3 */}
           <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">

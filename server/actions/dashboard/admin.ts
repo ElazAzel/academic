@@ -11,6 +11,7 @@ import type {
   DashboardMetric,
   StudentAnalyticsDetail,
 } from "@/types/domain";
+import { SubmissionStatus } from "@prisma/client";
 
 export async function getAdminDashboard() {
   await requireRole(["admin"]);
@@ -20,6 +21,11 @@ export async function getAdminDashboard() {
       cohortsCount,
       usersCount,
       certsCount,
+      activeEnrollmentsCount,
+      publishedCoursesCount,
+      draftCoursesCount,
+      openRisksCount,
+      pendingSubmissionsCount,
       courses,
       cohorts,
       certificates
@@ -28,6 +34,11 @@ export async function getAdminDashboard() {
       prisma.cohort.count(),
       prisma.user.count(),
       prisma.certificate.count(),
+      prisma.enrollment.count({ where: { status: "ACTIVE" } }),
+      prisma.course.count({ where: { status: "PUBLISHED" } }),
+      prisma.course.count({ where: { status: "DRAFT" } }),
+      prisma.riskFlag.count({ where: { status: "open", resolvedAt: null } }),
+      prisma.assignmentSubmission.count({ where: { status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.IN_REVIEW] } } }),
       prisma.course.findMany({
         orderBy: { createdAt: "desc" },
         take: QUERY_LIMITS.reportSummaryCourses,
@@ -88,10 +99,46 @@ export async function getAdminDashboard() {
     }));
 
     const metrics: DashboardMetric[] = [
-      { label: "Курсы", value: coursesCount, tone: "primary" },
-      { label: "Потоки", value: cohortsCount, tone: "info" },
-      { label: "Пользователи", value: usersCount, tone: "success" },
-      { label: "Сертификаты", value: certsCount, tone: "warning" },
+      {
+        label: "Курсы",
+        value: coursesCount,
+        tone: "primary",
+        detail: `${publishedCoursesCount} опубликовано, ${draftCoursesCount} черновиков`,
+        href: "/admin/courses",
+      },
+      {
+        label: "Потоки",
+        value: cohortsCount,
+        tone: "info",
+        detail: `${activeEnrollmentsCount} активных зачислений`,
+        href: "/admin/cohorts",
+      },
+      {
+        label: "Пользователи",
+        value: usersCount,
+        tone: "success",
+        href: "/admin/users",
+      },
+      {
+        label: "Открытые риски",
+        value: openRisksCount,
+        tone: openRisksCount > 0 ? "danger" : "success",
+        href: "/admin/reports",
+        priority: openRisksCount > 0 ? "elevated" : "normal",
+      },
+      {
+        label: "Работы на проверке",
+        value: pendingSubmissionsCount,
+        tone: pendingSubmissionsCount > 0 ? "warning" : "success",
+        href: "/admin/reports",
+        priority: pendingSubmissionsCount > 20 ? "critical" : pendingSubmissionsCount > 0 ? "elevated" : "normal",
+      },
+      {
+        label: "Сертификаты",
+        value: certsCount,
+        tone: "success",
+        href: "/admin/reports",
+      },
     ];
 
     return { metrics, courses: formattedCourses, cohorts: formattedCohorts, certificates: formattedCerts };

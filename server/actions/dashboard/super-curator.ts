@@ -484,19 +484,83 @@ export async function getSuperCuratorDashboard(): Promise<SuperCuratorDashboardD
       studentsCount: cohort.studentsCount,
     }));
 
+    const cohortIds = Array.from(cohortAssignments.keys());
+    const scopedEnrollments = cohortIds.length > 0
+      ? await prisma.enrollment.findMany({
+          where: { cohortId: { in: cohortIds }, status: "ACTIVE" },
+          select: { userId: true, cohortId: true },
+          take: QUERY_LIMITS.dashboardStudents,
+        })
+      : [];
+    const assignedStudentCohortKeys = new Set(assignments.map((assignment) => `${assignment.cohort.id}:${assignment.studentId}`));
+    const unassignedStudentsCount = scopedEnrollments.filter((enrollment) =>
+      enrollment.cohortId ? !assignedStudentCohortKeys.has(`${enrollment.cohortId}:${enrollment.userId}`) : false,
+    ).length;
+
     const totalStudents = curatorLoads.reduce((sum, curator) => sum + curator.studentsCount, 0);
     const openQuestionsCount = problemQuestions.length;
     const pendingReviewsCount = curatorLoads.reduce((sum, curator) => sum + curator.pendingReviews, 0);
     const hotRisksCount = riskQueue.length;
+    const criticalRisksCount = curatorLoads.reduce((sum, curator) => sum + curator.criticalRisks, 0);
     const overloadedCount = curatorLoads.filter((curator) => curator.workloadLevel === "critical" || curator.workloadLevel === "overloaded").length;
+    const staleQuestionsCount = problemQuestions.filter((question) => question.ageHours >= 24).length;
+    const avgProgress = cohortOperations.length > 0
+      ? Math.round(cohortOperations.reduce((sum, cohort) => sum + cohort.avgProgress, 0) / cohortOperations.length)
+      : 0;
 
     const metrics: DashboardMetric[] = [
-      { label: "Кураторов в зоне", value: curatorLoads.length, tone: "primary" },
-      { label: "Слушателей", value: totalStudents, tone: "info" },
-      { label: "Проблемных вопросов", value: openQuestionsCount, tone: openQuestionsCount > 0 ? "warning" : "success" },
-      { label: "Работ на контроле", value: pendingReviewsCount, tone: pendingReviewsCount > 0 ? "warning" : "success" },
-      { label: "Высоких рисков", value: hotRisksCount, tone: hotRisksCount > 0 ? "danger" : "success" },
-      { label: "Перегрузка", value: overloadedCount, tone: overloadedCount > 0 ? "warning" : "success" },
+      {
+        label: "Кураторов в зоне",
+        value: curatorLoads.length,
+        tone: "primary",
+        detail: `${overloadedCount} перегружены`,
+        href: "/super-curator/curators",
+      },
+      {
+        label: "Слушателей",
+        value: totalStudents,
+        tone: "info",
+        detail: `${unassignedStudentsCount} без куратора`,
+        href: "/super-curator/distribution",
+        priority: unassignedStudentsCount > 0 ? "elevated" : "normal",
+      },
+      {
+        label: "Средний прогресс",
+        value: `${avgProgress}%`,
+        tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
+        detail: `${cohortOperations.length} потоков в зоне`,
+      },
+      {
+        label: "Проблемных вопросов",
+        value: openQuestionsCount,
+        tone: staleQuestionsCount > 0 ? "danger" : openQuestionsCount > 0 ? "warning" : "success",
+        detail: `${staleQuestionsCount} старше 24 часов`,
+        href: "/super-curator/questions",
+        priority: staleQuestionsCount > 0 ? "critical" : openQuestionsCount > 0 ? "elevated" : "normal",
+      },
+      {
+        label: "Работ на контроле",
+        value: pendingReviewsCount,
+        tone: pendingReviewsCount > 0 ? "warning" : "success",
+        detail: "Очередь проверок по зоне",
+        href: "/super-curator/curators",
+      },
+      {
+        label: "Высоких рисков",
+        value: hotRisksCount,
+        tone: hotRisksCount > 0 ? "danger" : "success",
+        detail: `${criticalRisksCount} критичных`,
+        href: "/super-curator/risks",
+        priority: criticalRisksCount > 0 ? "critical" : hotRisksCount > 0 ? "elevated" : "normal",
+      },
+      {
+        label: "Перегрузка",
+        value: overloadedCount,
+        tone: overloadedCount > 0 ? "warning" : "success",
+        detail: "Кураторы с высоким workload score",
+        href: "/super-curator/distribution",
+        priority: overloadedCount > 0 ? "elevated" : "normal",
+      },
     ];
 
     return { metrics, curatorLoads, cohorts: formattedCohorts, cohortOperations, problemQuestions, riskQueue };

@@ -533,11 +533,53 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
     }));
 
     const riskStudentCount = new Set(risks.map((risk) => risk.userId)).size;
+    const avgProgress = students.length > 0
+      ? Math.round(students.reduce((sum, student) => sum + student.progressPercent, 0) / students.length)
+      : 0;
+    const overdueDeadlines = students.filter((student) => student.nextDeadline?.overdue).length;
+    const unreadMessagesCount = students.reduce((sum, student) => sum + student.unreadMessages, 0);
+    const urgentStudents = students.filter((student) => student.nextAction.kind !== "monitor").length;
     const metrics: DashboardMetric[] = [
-      { label: "Мои слушатели", value: students.length, tone: "primary" },
-      { label: "Открытые вопросы", value: formattedQuestions.length, tone: formattedQuestions.length > 3 ? "danger" : "success" },
-      { label: "Задания на проверку", value: formattedSubmissions.length, tone: formattedSubmissions.length > 5 ? "warning" : "success" },
-      { label: "Слушатели с рисками", value: riskStudentCount, tone: riskStudentCount > 3 ? "danger" : "success" },
+      {
+        label: "Мои слушатели",
+        value: students.length,
+        tone: students.length > 0 ? "primary" : "neutral",
+        detail: `${urgentStudents} требуют действия`,
+        href: "/curator/students",
+      },
+      {
+        label: "Открытые вопросы",
+        value: formattedQuestions.length,
+        tone: formattedQuestions.length > 3 ? "danger" : formattedQuestions.length > 0 ? "warning" : "success",
+        href: "/curator/questions",
+        priority: formattedQuestions.length > 3 ? "critical" : formattedQuestions.length > 0 ? "elevated" : "normal",
+      },
+      {
+        label: "Задания на проверку",
+        value: formattedSubmissions.length,
+        tone: formattedSubmissions.length > 5 ? "warning" : "success",
+        href: "/curator/assignments",
+        priority: formattedSubmissions.length > 5 ? "elevated" : "normal",
+      },
+      {
+        label: "Слушатели с рисками",
+        value: riskStudentCount,
+        tone: riskStudentCount > 3 ? "danger" : riskStudentCount > 0 ? "warning" : "success",
+        href: "/curator/risks",
+        priority: riskStudentCount > 3 ? "critical" : riskStudentCount > 0 ? "elevated" : "normal",
+      },
+      {
+        label: "Просроченные дедлайны",
+        value: overdueDeadlines,
+        tone: overdueDeadlines > 0 ? "danger" : "success",
+        priority: overdueDeadlines > 0 ? "critical" : "normal",
+      },
+      {
+        label: "Средний прогресс",
+        value: `${avgProgress}%`,
+        tone: avgProgress >= 70 ? "success" : avgProgress >= 35 ? "warning" : "danger",
+        detail: `${unreadMessagesCount} непрочитанных сообщений`,
+      },
     ];
 
     return {

@@ -28,7 +28,7 @@ export default async function InstructorQuestionsPage() {
           </Card>
         ) : (
           questions.map((q) => (
-            <Card key={q.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
+            <Card key={q.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-soft-hover">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 font-body-sm text-body-sm">

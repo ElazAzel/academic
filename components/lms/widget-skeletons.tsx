@@ -1,15 +1,16 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
-/** Скелет для метрик (4 колонки) */
+/** Скелет для операционных метрик */
 export function MetricGridSkeleton() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={i} className="rounded-2xl">
+    <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Card key={i} className="rounded-xl border-l-4 border-l-m3-outline-variant">
           <CardHeader className="pb-2">
             <Skeleton className="h-3 w-24" />
-            <Skeleton className="h-8 w-16 mt-1" />
+            <Skeleton className="mt-3 h-11 w-20" />
+            <Skeleton className="mt-2 h-3 w-28" />
           </CardHeader>
         </Card>
       ))}

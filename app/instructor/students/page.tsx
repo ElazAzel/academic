@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart } from "@/components/lms/bar-chart";
-import { TrendingUp, Users } from "lucide-react";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getInstructorStudents } from "@/server/actions/dashboard";
+import type { DashboardMetric } from "@/types/domain";
 
 interface StudentRow {
   id: string;
@@ -22,6 +23,11 @@ interface StudentRow {
 
 export const dynamic = "force-dynamic";
 
+function daysInactive(lastLoginAt: string | null): number | null {
+  if (!lastLoginAt) return null;
+  return Math.floor((Date.now() - new Date(lastLoginAt).getTime()) / (1000 * 60 * 60 * 24));
+}
+
 export default async function InstructorStudentsPage() {
   await requireRolePage(["instructor", "admin"]);
   const students: StudentRow[] = await getInstructorStudents();
@@ -35,36 +41,45 @@ export default async function InstructorStudentsPage() {
   const total = students.length;
   const completed = students.filter((s) => s.progressStatus === "COMPLETED").length;
   const avgProgress = total > 0 ? Math.round(students.reduce((sum, c) => sum + c.progress, 0) / total) : 0;
+  const inProgress = students.filter((s) => s.progressStatus === "IN_PROGRESS").length;
+  const staleStudents = students.filter((s) => {
+    const days = daysInactive(s.lastLoginAt);
+    return days === null || days >= 7;
+  }).length;
+  const metrics = [
+    {
+      label: "Слушателей",
+      value: total,
+      tone: total > 0 ? "primary" : "neutral",
+      detail: `${Object.keys(courseGroups).length} курсов`,
+    },
+    {
+      label: "Завершили",
+      value: completed,
+      tone: "success",
+      detail: total > 0 ? `${Math.round((completed / total) * 100)}% от списка` : "Нет слушателей",
+    },
+    {
+      label: "Средний прогресс",
+      value: `${avgProgress}%`,
+      tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
+      detail: `${inProgress} в процессе`,
+    },
+    {
+      label: "Нет входа 7+ дн.",
+      value: staleStudents,
+      tone: staleStudents > 0 ? "warning" : "success",
+      detail: "Нужен контакт",
+      priority: staleStudents > 0 ? "elevated" : "normal",
+    },
+  ] satisfies DashboardMetric[];
 
   return (
     <AppShell role="instructor">
       <PageHeader title="Слушатели курсов" description="Все слушатели, зачисленные на ваши курсы." />
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card className="rounded-2xl">
-          <CardContent className="p-5 flex items-center gap-3">
-            <Users className="h-5 w-5 text-primary" />
-            <div><p className="text-2xl font-bold">{total}</p><p className="text-xs text-muted-foreground">Слушателей</p></div>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-5 flex items-center gap-3">
-            <TrendingUp className="h-5 w-5 text-emerald-600" />
-            <div><p className="text-2xl font-bold">{completed}</p><p className="text-xs text-muted-foreground">Завершили</p></div>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-5 flex items-center gap-3">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            <div><p className="text-2xl font-bold">{avgProgress}%</p><p className="text-xs text-muted-foreground">Средний прогресс</p></div>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-5 flex items-center gap-3">
-            <TrendingUp className="h-5 w-5 text-amber-600" />
-            <div><p className="text-2xl font-bold">{total - completed}</p><p className="text-xs text-muted-foreground">В процессе</p></div>
-          </CardContent>
-        </Card>
+      <div className="mb-6">
+        <MetricGrid metrics={metrics} />
       </div>
 
       {Object.keys(courseGroups).length > 0 && (

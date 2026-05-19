@@ -719,5 +719,9 @@ export interface DashboardMetric {
   label: string;
   value: string | number;
   change?: string;
-  tone: "primary" | "success" | "warning" | "danger" | "info";
+  description?: string;
+  detail?: string;
+  href?: string;
+  priority?: "normal" | "elevated" | "critical";
+  tone: "primary" | "success" | "warning" | "danger" | "info" | "neutral";
 }

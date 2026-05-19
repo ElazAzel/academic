@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar } from "@/components/ui/avatar";
-import { Users, GraduationCap } from "lucide-react";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { notFound } from "next/navigation";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCohortDetail } from "@/server/actions/super-curator";
 import { EditCohortForm } from "../cohort-form";
 import { AddStudentForm } from "./add-student-form";
+import type { DashboardMetric } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,41 @@ export default async function CohortDetailPage(props: { params: Promise<{ id: st
   await requireRolePage(["super_curator", "admin"]);
   const cohort = await getCohortDetail(id);
   if (!cohort) notFound();
+  const completedCount = cohort.students.filter((s) => s.progressStatus === "COMPLETED").length;
+  const laggingCount = cohort.students.filter((s) => s.progress < 25 && s.progressStatus !== "COMPLETED").length;
+  const unassignedCount = cohort.students.filter((s) => !s.curator).length;
+  const avgProgress = cohort.students.length > 0
+    ? Math.round(cohort.students.reduce((sum, student) => sum + student.progress, 0) / cohort.students.length)
+    : 0;
+  const metrics = [
+    {
+      label: "Слушателей",
+      value: cohort.students.length,
+      tone: "primary",
+      detail: `${cohort.curators.length} кураторов`,
+    },
+    {
+      label: "Средний прогресс",
+      value: `${avgProgress}%`,
+      tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
+      detail: `${completedCount} завершили`,
+    },
+    {
+      label: "Отстающие",
+      value: laggingCount,
+      tone: laggingCount > 0 ? "danger" : "success",
+      detail: "Ниже 25%",
+      priority: laggingCount > 0 ? "elevated" : "normal",
+    },
+    {
+      label: "Без куратора",
+      value: unassignedCount,
+      tone: unassignedCount > 0 ? "warning" : "success",
+      detail: "Нужно распределить",
+      priority: unassignedCount > 0 ? "elevated" : "normal",
+      href: "/super-curator/distribution",
+    },
+  ] satisfies DashboardMetric[];
 
   return (
     <AppShell role="super_curator">
@@ -38,57 +74,7 @@ export default async function CohortDetailPage(props: { params: Promise<{ id: st
       </div>
 
       <div className="space-y-6">
-        {/* Stats */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          <Card className="rounded-2xl">
-            <CardContent className="p-5 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                <Users className="h-5 w-5 text-primary" />
-              </span>
-              <div>
-                <p className="text-2xl font-bold">{cohort.students.length}</p>
-                <p className="text-xs text-muted-foreground">Слушателей</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl">
-            <CardContent className="p-5 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
-                <GraduationCap className="h-5 w-5 text-emerald-600" />
-              </span>
-              <div>
-                <p className="text-2xl font-bold">{cohort.curators.length}</p>
-                <p className="text-xs text-muted-foreground">Кураторов</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl">
-            <CardContent className="p-5 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
-                <GraduationCap className="h-5 w-5 text-blue-600" />
-              </span>
-              <div>
-                <p className="text-2xl font-bold">
-                  {cohort.students.filter((s) => s.progressStatus === "COMPLETED").length}
-                </p>
-                <p className="text-xs text-muted-foreground">Завершили</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl">
-            <CardContent className="p-5 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
-                <Users className="h-5 w-5 text-amber-600" />
-              </span>
-              <div>
-                <p className="text-2xl font-bold">
-                  {cohort.students.filter((s) => s.progress < 25).length}
-                </p>
-                <p className="text-xs text-muted-foreground">Отстающие (&lt;25%)</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <MetricGrid metrics={metrics} />
 
         {/* Curators assigned */}
         <Card className="rounded-2xl">

@@ -7,6 +7,7 @@ const mockLessonQuestionFindMany = vi.hoisted(() => vi.fn());
 const mockAssignmentSubmissionFindMany = vi.hoisted(() => vi.fn());
 const mockRiskFlagFindMany = vi.hoisted(() => vi.fn());
 const mockCourseProgressFindMany = vi.hoisted(() => vi.fn());
+const mockEnrollmentFindMany = vi.hoisted(() => vi.fn());
 const mockMessageFindMany = vi.hoisted(() => vi.fn());
 const mockMessageGroupBy = vi.hoisted(() => vi.fn());
 
@@ -19,6 +20,7 @@ vi.mock("@/lib/prisma", () => ({
     assignmentSubmission: { findMany: mockAssignmentSubmissionFindMany },
     riskFlag: { findMany: mockRiskFlagFindMany },
     courseProgress: { findMany: mockCourseProgressFindMany },
+    enrollment: { findMany: mockEnrollmentFindMany },
     message: { findMany: mockMessageFindMany, groupBy: mockMessageGroupBy },
   },
 }));
@@ -95,6 +97,7 @@ describe("getSuperCuratorDashboard", () => {
       },
     ]);
     mockCourseProgressFindMany.mockResolvedValue([{ userId: student.id, courseId: course.id, percent: 25, status: "IN_PROGRESS" }]);
+    mockEnrollmentFindMany.mockResolvedValue([{ userId: student.id, cohortId: cohort.id }]);
     mockMessageFindMany.mockResolvedValue([{ senderId: student.id, receiverId: curator.id }]);
     mockMessageGroupBy.mockResolvedValue([{ senderId: curator.id, _count: { _all: 4 } }]);
 
@@ -120,6 +123,12 @@ describe("getSuperCuratorDashboard", () => {
       activeRisks: 1,
       criticalRisks: 1,
     });
+    expect(data?.metrics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "Слушателей", detail: "0 без куратора" }),
+        expect.objectContaining({ label: "Высоких рисков", priority: "critical" }),
+      ]),
+    );
     expect(data?.problemQuestions[0]).toMatchObject({ id: "q1", curatorName: curator.name });
     expect(data?.riskQueue[0]).toMatchObject({ id: "risk1", severity: "critical" });
   });

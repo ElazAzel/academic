@@ -63,13 +63,6 @@ export async function getStudentDashboard() {
 
     const openQuestionsCount = formattedQuestions.filter((q) => q.status === "open").length;
 
-    const metrics: DashboardMetric[] = [
-      { label: "Активные курсы", value: activeCourses, tone: "primary" },
-      { label: "Средний прогресс", value: `${avgPercent}%`, tone: avgPercent > 50 ? "success" : "warning" },
-      { label: "Сертификаты", value: certificatesCount, tone: "success" },
-      { label: "Вопросы куратору", value: openQuestionsCount, tone: openQuestionsCount > 0 ? "info" : "primary" },
-    ];
-
     const now = new Date();
     const deadlines: CohortDeadline[] = enrollments.flatMap((e) =>
       e.cohort?.deadlines.map((d) => {
@@ -84,6 +77,43 @@ export async function getStudentDashboard() {
         };
       }) ?? []
     );
+    const overdueDeadlines = deadlines.filter((deadline) => deadline.isOverdue).length;
+    const upcomingDeadlines = deadlines.filter((deadline) => !deadline.isOverdue && deadline.daysLeft <= 7).length;
+
+    const metrics: DashboardMetric[] = [
+      {
+        label: "Активные курсы",
+        value: activeCourses,
+        tone: activeCourses > 0 ? "primary" : "neutral",
+        detail: continueLearning ? `Следующий урок: ${continueLearning.lessonTitle}` : "Нет следующего шага",
+        href: "/student/my-courses",
+      },
+      {
+        label: "Средний прогресс",
+        value: `${avgPercent}%`,
+        tone: avgPercent >= 70 ? "success" : avgPercent >= 35 ? "warning" : "danger",
+        detail: `${coursesProgress.length} курсов в личном плане`,
+      },
+      {
+        label: "Дедлайны",
+        value: overdueDeadlines + upcomingDeadlines,
+        tone: overdueDeadlines > 0 ? "danger" : upcomingDeadlines > 0 ? "warning" : "success",
+        detail: overdueDeadlines > 0 ? `${overdueDeadlines} просрочено` : `${upcomingDeadlines} на ближайшие 7 дн.`,
+        priority: overdueDeadlines > 0 ? "critical" : upcomingDeadlines > 0 ? "elevated" : "normal",
+      },
+      {
+        label: "Вопросы куратору",
+        value: openQuestionsCount,
+        tone: openQuestionsCount > 0 ? "info" : "success",
+        detail: `${formattedQuestions.length} всего в истории`,
+      },
+      {
+        label: "Сертификаты",
+        value: certificatesCount,
+        tone: "success",
+        href: "/student/certificates",
+      },
+    ];
 
     return { metrics, coursesProgress, continueLearning, questions: formattedQuestions, deadlines };
   }, null);

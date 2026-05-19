@@ -41,7 +41,7 @@ export function DownloadReports({ reports }: { reports: ReportType[] }) {
       {reports.map((r) => {
         const formats = r.formats ?? ["csv", "xlsx", "pdf"];
         return (
-          <Card key={r.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
+          <Card key={r.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-soft-hover">
             <CardHeader>
               <div className="flex items-start justify-between gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-container/20">

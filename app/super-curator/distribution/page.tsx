@@ -21,7 +21,7 @@ export default async function SuperCuratorDistributionPage() {
       />
 
       <div className="space-y-6">
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-soft-hover">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Icon name="verified_user" className="text-[22px] text-m3-primary" />
@@ -54,7 +54,7 @@ export default async function SuperCuratorDistributionPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-soft-hover">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Icon name="group" className="text-[22px] text-m3-tertiary" />
@@ -90,7 +90,7 @@ export default async function SuperCuratorDistributionPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-soft-hover">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Icon name="swap_horiz" className="text-[22px] text-m3-primary" />

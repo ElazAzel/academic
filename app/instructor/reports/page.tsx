@@ -3,10 +3,12 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
-import { Icon } from "@/components/ui/icon";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
+import { QuestionStatus, SubmissionStatus } from "@prisma/client";
+import type { DashboardMetric } from "@/types/domain";
 
 const prisma = getPrisma();
 
@@ -20,48 +22,84 @@ export default async function InstructorReportsPage() {
   const courses = await prisma.course.findMany({
     where: { instructors: { some: { userId: user.id } } },
     select: {
+      id: true,
       title: true,
       _count: { select: { enrollments: true } },
       courseProgress: { select: { percent: true, status: true } },
     },
   });
 
+  const courseIds = courses.map((course) => course.id);
   const totalStudents = courses.reduce((s, c) => s + c._count.enrollments, 0);
   const completed = courses.reduce((s, c) => s + c.courseProgress.filter((p) => p.status === "COMPLETED").length, 0);
   const avgProgress = totalStudents > 0
     ? Math.round(courses.reduce((s, c) => s + c.courseProgress.reduce((a, p) => a + p.percent, 0), 0) / totalStudents)
     : 0;
+  const [forwardedQuestions, reviewBacklog, quizAttempts, passedQuizAttempts] = await Promise.all([
+    prisma.lessonQuestion.count({
+      where: {
+        lesson: { module: { courseId: { in: courseIds } } },
+        status: QuestionStatus.FORWARDED,
+      },
+    }),
+    prisma.assignmentSubmission.count({
+      where: {
+        status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.IN_REVIEW] },
+        assignment: {
+          OR: [
+            { courseId: { in: courseIds } },
+            { lesson: { module: { courseId: { in: courseIds } } } },
+          ],
+        },
+      },
+    }),
+    prisma.quizAttempt.count({ where: { quiz: { courseId: { in: courseIds } } } }),
+    prisma.quizAttempt.count({ where: { quiz: { courseId: { in: courseIds } }, passed: true } }),
+  ]);
+  const passRate = quizAttempts > 0 ? Math.round((passedQuizAttempts / quizAttempts) * 100) : 0;
+  const metrics = [
+    {
+      label: "Курсов",
+      value: courses.length,
+      tone: courses.length > 0 ? "primary" : "neutral",
+      detail: `${totalStudents} активных слушателей`,
+    },
+    {
+      label: "Завершили",
+      value: completed,
+      tone: "success",
+      detail: totalStudents > 0 ? `${Math.round((completed / totalStudents) * 100)}% завершений` : "Нет зачислений",
+    },
+    {
+      label: "Средний прогресс",
+      value: `${avgProgress}%`,
+      tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
+      detail: "По курсам преподавателя",
+    },
+    {
+      label: "Forwarded-вопросы",
+      value: forwardedQuestions,
+      tone: forwardedQuestions > 0 ? "warning" : "success",
+      detail: "Переданы от кураторов",
+      priority: forwardedQuestions > 0 ? "elevated" : "normal",
+      href: "/instructor/questions",
+    },
+    {
+      label: "Работы на проверке",
+      value: reviewBacklog,
+      tone: reviewBacklog > 0 ? "warning" : "success",
+      detail: `Quiz pass rate ${passRate}%`,
+      priority: reviewBacklog > 10 ? "critical" : reviewBacklog > 0 ? "elevated" : "normal",
+      href: "/instructor/assignments",
+    },
+  ] satisfies DashboardMetric[];
 
   return (
     <AppShell role="instructor">
       <PageHeader title="Отчёты" description="Просмотр и экспорт статистики по вашим курсам." />
 
-      {/* Metrics — M3 */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
-          <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-container/20"><Icon name="school" className="text-[22px] text-m3-primary" /></span>
-            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{courses.length}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Курсов</p></div>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
-          <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-tertiary-container/20"><Icon name="trending_up" className="text-[22px] text-m3-tertiary" /></span>
-            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{totalStudents}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Слушателей</p></div>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
-          <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-container/20"><Icon name="award_star" className="text-[22px] text-m3-primary" /></span>
-            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{completed}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Завершили</p></div>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
-          <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-secondary-container/20"><Icon name="trending_up" className="text-[22px] text-m3-secondary" /></span>
-            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{avgProgress}%</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний прогресс</p></div>
-          </CardContent>
-        </Card>
+      <div className="mb-6">
+        <MetricGrid metrics={metrics} />
       </div>
 
       {courses.length > 0 && (
