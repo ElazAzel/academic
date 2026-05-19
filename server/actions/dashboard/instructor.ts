@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
 import type { CourseSummary, DashboardMetric } from "@/types/domain";
-import { ProgressStatus, QuestionStatus } from "@prisma/client";
+import { ProgressStatus, QuestionStatus, SubmissionStatus } from "@prisma/client";
 
 export async function getInstructorDashboard() {
   await requireRole(["instructor"]);
@@ -31,14 +31,28 @@ export async function getInstructorDashboard() {
 
     const courseIds = courses.map((c) => c.id);
 
-    const [studentsCount, avgProgressResult] = await Promise.all([
+    const [studentsCount, avgProgressResult, completedCount, pendingSubmissionsCount] = await Promise.all([
       prisma.enrollment.count({
         where: { courseId: { in: courseIds }, status: "ACTIVE" }
       }),
       prisma.courseProgress.aggregate({
         where: { courseId: { in: courseIds } },
         _avg: { percent: true }
-      })
+      }),
+      prisma.courseProgress.count({
+        where: { courseId: { in: courseIds }, status: ProgressStatus.COMPLETED },
+      }),
+      prisma.assignmentSubmission.count({
+        where: {
+          status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.IN_REVIEW] },
+          assignment: {
+            OR: [
+              { courseId: { in: courseIds } },
+              { lesson: { module: { courseId: { in: courseIds } } } },
+            ],
+          },
+        },
+      }),
     ]);
 
     const progressStats = await prisma.courseProgress.groupBy({
@@ -78,10 +92,41 @@ export async function getInstructorDashboard() {
     });
 
     const metrics: DashboardMetric[] = [
-      { label: "Мои курсы", value: coursesCount, tone: "primary" },
-      { label: "Слушатели", value: studentsCount, tone: "info" },
-      { label: "Средний прогресс", value: `${avgProgress}%`, tone: avgProgress > 50 ? "success" : "warning" },
-      { label: "Вопросы от кураторов", value: openQuestionsCount, tone: openQuestionsCount > 0 ? "warning" : "success" },
+      {
+        label: "Мои курсы",
+        value: coursesCount,
+        tone: coursesCount > 0 ? "primary" : "neutral",
+        detail: `${formattedCourses.filter((course) => course.status === "PUBLISHED").length} опубликовано`,
+        href: "/instructor/courses",
+      },
+      {
+        label: "Активные слушатели",
+        value: studentsCount,
+        tone: studentsCount > 0 ? "info" : "neutral",
+        detail: `${completedCount} завершили курс`,
+        href: "/instructor/students",
+      },
+      {
+        label: "Средний прогресс",
+        value: `${avgProgress}%`,
+        tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
+        detail: `${courseIds.length} курсов в расчёте`,
+      },
+      {
+        label: "Forwarded-вопросы",
+        value: openQuestionsCount,
+        tone: openQuestionsCount > 0 ? "warning" : "success",
+        detail: "Переданы кураторами преподавателю",
+        href: "/instructor/questions",
+        priority: openQuestionsCount > 0 ? "elevated" : "normal",
+      },
+      {
+        label: "Работы на проверке",
+        value: pendingSubmissionsCount,
+        tone: pendingSubmissionsCount > 0 ? "warning" : "success",
+        href: "/instructor/assignments",
+        priority: pendingSubmissionsCount > 10 ? "critical" : pendingSubmissionsCount > 0 ? "elevated" : "normal",
+      },
     ];
 
     return { metrics, courses: formattedCourses };
@@ -195,10 +240,29 @@ export async function getInstructorAnalytics() {
     });
 
     const metrics: DashboardMetric[] = [
-      { label: "Зачисленных", value: totalEnrollments, tone: "primary" },
-      { label: "Средний прогресс", value: `${Math.round(avgProgressResult._avg.percent ?? 0)}%`, tone: "success" },
-      { label: "Завершивших", value: completedCount, tone: "info" },
-      { label: "Средний балл тестов", value: `${Math.round(avgQuizScore._avg.score ?? 0)}%`, tone: "warning" },
+      {
+        label: "Зачисленных",
+        value: totalEnrollments,
+        tone: "primary",
+        detail: `${completedCount} завершили курс`,
+      },
+      {
+        label: "Средний прогресс",
+        value: `${Math.round(avgProgressResult._avg.percent ?? 0)}%`,
+        tone: Math.round(avgProgressResult._avg.percent ?? 0) >= 70 ? "success" : "warning",
+        detail: `${moduleAnalytics.length} модулей в аналитике`,
+      },
+      {
+        label: "Завершивших",
+        value: completedCount,
+        tone: "info",
+      },
+      {
+        label: "Средний балл тестов",
+        value: `${Math.round(avgQuizScore._avg.score ?? 0)}%`,
+        tone: Math.round(avgQuizScore._avg.score ?? 0) >= 80 ? "success" : "warning",
+        detail: `${quizStats.reduce((sum, quiz) => sum + quiz.totalAttempts, 0)} попыток`,
+      },
     ];
 
     return { metrics, moduleAnalytics, quizStats };

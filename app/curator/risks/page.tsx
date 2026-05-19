@@ -6,9 +6,11 @@ import { Avatar } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Icon } from "@/components/ui/icon";
 import { BarChart } from "@/components/lms/bar-chart";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorEnhancedRisks } from "@/server/actions/curator-enhanced";
 import { RISK_LABELS } from "@/types/domain";
+import type { DashboardMetric } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +24,35 @@ export default async function CuratorRisksPage() {
     severityCounts[r.severity as keyof typeof severityCounts]++;
     typeCounts[r.type] = (typeCounts[r.type] ?? 0) + 1;
   }
+  const criticalAndHigh = severityCounts.critical + severityCounts.high;
+  const staleLoginCount = risks.filter((r) => r.daysSinceLogin !== null && r.daysSinceLogin > 14).length;
+  const lowProgressCount = risks.filter((r) => r.progressPercent < 25).length;
+  const metrics = [
+    {
+      label: "Критичных",
+      value: criticalAndHigh,
+      tone: criticalAndHigh > 0 ? "danger" : "success",
+      detail: `${severityCounts.critical} критических, ${severityCounts.high} высоких`,
+      priority: criticalAndHigh > 0 ? "critical" : "normal",
+    },
+    {
+      label: "Всего рисков",
+      value: risks.length,
+      tone: risks.length > 0 ? "warning" : "success",
+    },
+    {
+      label: "Не заходили >14 дн.",
+      value: staleLoginCount,
+      tone: staleLoginCount > 0 ? "danger" : "success",
+      priority: staleLoginCount > 0 ? "elevated" : "normal",
+    },
+    {
+      label: "Прогресс <25%",
+      value: lowProgressCount,
+      tone: lowProgressCount > 0 ? "danger" : "success",
+      priority: lowProgressCount > 0 ? "elevated" : "normal",
+    },
+  ] satisfies DashboardMetric[];
 
   return (
     <AppShell role="curator">
@@ -30,32 +61,8 @@ export default async function CuratorRisksPage() {
         description="Детальная информация о рисках: неактивные, просроченные, отстающие."
       />
 
-      {/* Metrics — M3 */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center space-y-1">
-            <p className="font-display-lg text-m3-headline-large text-m3-error">{severityCounts.critical + severityCounts.high}</p>
-            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Критических</p>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center space-y-1">
-            <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{risks.length}</p>
-            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Всего рисков</p>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center space-y-1">
-            <p className="font-display-lg text-m3-headline-large text-m3-error">{risks.filter((r) => r.daysSinceLogin !== null && r.daysSinceLogin > 14).length}</p>
-            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Не заходили &gt;14 дн.</p>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center space-y-1">
-            <p className="font-display-lg text-m3-headline-large text-m3-error">{risks.filter((r) => r.progressPercent < 25).length}</p>
-            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Прогресс &lt;25%</p>
-          </CardContent>
-        </Card>
+      <div className="mb-6">
+        <MetricGrid metrics={metrics} />
       </div>
 
       {/* Charts — M3 */}

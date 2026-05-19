@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/lms/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { UserPlus, Users2, GraduationCap } from "lucide-react";
 import Link from "next/link";
+import type { DashboardMetric } from "@/types/domain";
 
 const prisma = getPrisma();
 export const dynamic = "force-dynamic";
@@ -34,6 +36,39 @@ export default async function AdminManagementPage() {
   ]);
 
   const totalEnrollments = enrollments;
+  const activeUsers = users.filter((user) => user.status === "ACTIVE").length;
+  const blockedUsers = users.filter((user) => user.status === "BLOCKED").length;
+  const activeCohorts = cohorts.filter((cohort) => cohort.status === "active").length;
+  const metrics = [
+    {
+      label: "Пользователей",
+      value: users.length,
+      tone: "primary",
+      detail: `${activeUsers} активных`,
+      href: "/admin/users",
+    },
+    {
+      label: "Потоков",
+      value: cohorts.length,
+      tone: cohorts.length > 0 ? "info" : "neutral",
+      detail: `${activeCohorts} активных`,
+      href: "/admin/cohorts",
+    },
+    {
+      label: "Активных зачислений",
+      value: totalEnrollments,
+      tone: totalEnrollments > 0 ? "success" : "neutral",
+      detail: "На курсах",
+      href: "/admin/enrollments",
+    },
+    {
+      label: "Блокировки",
+      value: blockedUsers,
+      tone: blockedUsers > 0 ? "danger" : "success",
+      detail: "Пользователи со статусом BLOCKED",
+      priority: blockedUsers > 0 ? "elevated" : "normal",
+    },
+  ] satisfies DashboardMetric[];
 
   return (
     <AppShell role="admin">
@@ -63,40 +98,8 @@ export default async function AdminManagementPage() {
         </div>
       </PageHeader>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3 mb-6">
-        <Card className="rounded-2xl">
-          <CardContent className="p-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <UserPlus className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{users.length}</p>
-              <p className="text-xs text-muted-foreground">Пользователей</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
-              <Users2 className="h-5 w-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{cohorts.length}</p>
-              <p className="text-xs text-muted-foreground">Потоков</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
-              <GraduationCap className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{totalEnrollments}</p>
-              <p className="text-xs text-muted-foreground">Активных зачислений</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="mt-6 mb-6">
+        <MetricGrid metrics={metrics} />
       </div>
 
       <Card className="rounded-2xl">

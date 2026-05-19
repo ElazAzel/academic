@@ -29,12 +29,36 @@ export default async function SuperCuratorAnalyticsPage() {
   const completed = students.filter((s) => s.progressStatus === "COMPLETED").length;
   const avgProgress = total > 0 ? Math.round(students.reduce((s, c) => s + c.coursePercent, 0) / total) : 0;
   const withRisks = students.filter((s) => s.riskCount > 0).length;
+  const lowProgress = students.filter((s) => s.coursePercent < 40 && s.progressStatus !== "COMPLETED").length;
+  const staleLogin = students.filter((s) => {
+    if (!s.lastLoginAt) return true;
+    return Date.now() - new Date(s.lastLoginAt).getTime() >= 7 * 24 * 60 * 60 * 1000;
+  }).length;
 
   const metrics: DashboardMetric[] = [
-    { label: "Всего слушателей", value: total, tone: "primary" },
-    { label: "Завершили курс", value: completed, tone: "success" },
-    { label: "Средний прогресс", value: `${avgProgress}%`, tone: avgProgress > 50 ? "success" : "warning" },
-    { label: "С рисками", value: withRisks, tone: withRisks > 5 ? "danger" : "info" },
+    { label: "Всего слушателей", value: total, tone: "primary", detail: `${completed} завершили` },
+    {
+      label: "Средний прогресс",
+      value: `${avgProgress}%`,
+      tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
+      detail: `${lowProgress} ниже 40%`,
+      priority: lowProgress > 0 ? "elevated" : "normal",
+    },
+    {
+      label: "С рисками",
+      value: withRisks,
+      tone: withRisks > 0 ? "danger" : "success",
+      detail: "Открытые флаги",
+      priority: withRisks > 5 ? "critical" : withRisks > 0 ? "elevated" : "normal",
+      href: "/super-curator/risks",
+    },
+    {
+      label: "Нет входа 7+ дн.",
+      value: staleLogin,
+      tone: staleLogin > 0 ? "warning" : "success",
+      detail: "Приоритетный контакт",
+      priority: staleLogin > 0 ? "elevated" : "normal",
+    },
   ];
 
   return (

@@ -44,6 +44,34 @@ async function ActivityTab(props: { searchParams?: Promise<{ days?: string; coho
   const cohortId = sp?.cohortId || undefined;
   const courseId = sp?.courseId || undefined;
   const activity = await getActivityAnalytics(days, cohortId, courseId);
+  const activeDays = activity.daily.logins.filter((value) => value > 0).length;
+  const activityMetrics = [
+    {
+      label: "Входов",
+      value: activity.totals.totalLogins,
+      tone: activity.totals.totalLogins > 0 ? "primary" : "neutral",
+      detail: `За ${days} дней`,
+    },
+    {
+      label: "В среднем в день",
+      value: activity.totals.avgDailyLogins,
+      tone: "info",
+      detail: `${activeDays} активных дней`,
+    },
+    {
+      label: "Новых зачислений",
+      value: activity.totals.totalEnrollments,
+      tone: activity.totals.totalEnrollments > 0 ? "success" : "neutral",
+      detail: "По выбранному срезу",
+    },
+    {
+      label: "Активных дней",
+      value: activeDays,
+      tone: activeDays < Math.ceil(days / 2) ? "warning" : "success",
+      detail: `${days - activeDays} дней без входов`,
+      priority: activeDays < Math.ceil(days / 2) ? "elevated" : "normal",
+    },
+  ] satisfies DashboardMetric[];
 
   return (
     <div className="space-y-6">
@@ -55,32 +83,7 @@ async function ActivityTab(props: { searchParams?: Promise<{ days?: string; coho
         courses={activity.filters.courses}
       />
 
-      <div className="grid gap-4 grid-cols-4">
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center">
-            <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{activity.totals.totalLogins}</p>
-            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Входов за {days} дн.</p>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center">
-            <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{activity.totals.avgDailyLogins}</p>
-            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">В среднем в день</p>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center">
-            <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{activity.totals.totalEnrollments}</p>
-            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Новых зачислений</p>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center">
-            <p className="font-display-lg text-m3-headline-large text-m3-on-surface">{activity.daily.logins.filter((v) => v > 0).length}</p>
-            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">Активных дней</p>
-          </CardContent>
-        </Card>
-      </div>
+      <MetricGrid metrics={activityMetrics} />
 
       <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
         <CardHeader>
@@ -184,12 +187,34 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
 
   const activeFromStatus = usersByStatus.find((u) => u.status === UserAccountStatus.ACTIVE)?._count._all ?? 0;
   const inactiveFromStatus = usersByStatus.find((u) => u.status === UserAccountStatus.INACTIVE)?._count._all ?? 0;
+  const avgProgress = Math.round(avgProgressAgg._avg.percent ?? 0);
 
   const metrics: DashboardMetric[] = [
-    { label: "Активных пользователей", value: activeUsersCount, tone: "primary" },
-    { label: "Средний прогресс", value: `${Math.round(avgProgressAgg._avg.percent ?? 0)}%`, tone: "success" },
-    { label: "Завершивших курс", value: completedCount, tone: "info" },
-    { label: "Сертификатов выдано", value: certsCount, tone: "warning" },
+    {
+      label: "Активных пользователей",
+      value: activeUsersCount,
+      tone: "primary",
+      detail: `${inactiveFromStatus} неактивных`,
+      href: "/admin/users",
+    },
+    {
+      label: "Средний прогресс",
+      value: `${avgProgress}%`,
+      tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
+      detail: `${courseIds.length} курсов в срезе`,
+    },
+    {
+      label: "Завершивших курс",
+      value: completedCount,
+      tone: "info",
+      detail: `${certsCount} сертификатов выдано`,
+    },
+    {
+      label: "Всего пользователей",
+      value: totalUsers,
+      tone: activeUsersCount === 0 && totalUsers > 0 ? "warning" : "neutral",
+      detail: `${activeFromStatus} активных по статусу`,
+    },
   ];
 
   const courseStats = coursesDb.map(c => {
@@ -254,7 +279,7 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
                       <CardTitle className="font-label-md text-label-md text-m3-on-surface">Всего сертификатов</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-2">
-                      <p className="font-display-lg text-m3-display-medium text-m3-on-surface">{certsCount}</p>
+                      <p className="text-display-lg font-bold text-m3-on-surface">{certsCount}</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -286,7 +311,7 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
                       <CardTitle className="font-label-md text-label-md text-m3-on-surface">Всего пользователей</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="font-display-lg text-m3-display-medium text-m3-on-surface">{totalUsers}</p>
+                      <p className="text-display-lg font-bold text-m3-on-surface">{totalUsers}</p>
                       <div className="flex gap-4 mt-2 font-body-sm text-body-sm text-m3-on-surface-variant">
                         <span className="text-m3-primary">{activeFromStatus} активных</span>
                         <span className="text-m3-error">{inactiveFromStatus} неактивных</span>

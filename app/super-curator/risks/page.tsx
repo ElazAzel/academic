@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/layout/app-shell";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getRiskOverview } from "@/server/actions/risk-management";
 import { RISK_LABELS } from "@/types/domain";
+import type { DashboardMetric } from "@/types/domain";
 import { RiskFilters } from "./risk-filters";
 import { RiskActions, ResolveRiskButton } from "./risk-actions";
 
@@ -23,28 +25,51 @@ export default async function SuperCuratorRisksPage(props: {
     severity: sp?.severity,
     search: sp?.search,
   });
+  const urgentRisks = data.bySeverity.critical + data.bySeverity.high;
+  const metrics = [
+    {
+      label: "Всего рисков",
+      value: data.total,
+      tone: data.total > 0 ? "warning" : "success",
+      detail: `${urgentRisks} критичных/высоких`,
+      priority: urgentRisks > 0 ? "elevated" : "normal",
+    },
+    {
+      label: "Критичных",
+      value: data.bySeverity.critical,
+      tone: data.bySeverity.critical > 0 ? "danger" : "success",
+      detail: "Нужна эскалация",
+      href: "/super-curator/risks?severity=critical",
+      priority: data.bySeverity.critical > 0 ? "critical" : "normal",
+    },
+    {
+      label: "Высоких",
+      value: data.bySeverity.high,
+      tone: data.bySeverity.high > 0 ? "danger" : "success",
+      detail: "В первую очередь",
+      href: "/super-curator/risks?severity=high",
+      priority: data.bySeverity.high > 0 ? "elevated" : "normal",
+    },
+    {
+      label: "Средних",
+      value: data.bySeverity.medium,
+      tone: data.bySeverity.medium > 0 ? "warning" : "neutral",
+      detail: "Контроль динамики",
+    },
+    {
+      label: "Низких",
+      value: data.bySeverity.low,
+      tone: "info",
+      detail: "Мониторинг",
+    },
+  ] satisfies DashboardMetric[];
 
   return (
     <AppShell role="super_curator">
       <PageHeader title="Риски" description="Управление рисками: фильтры, создание, закрытие." />
 
-      {/* Summary — M3 */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5 mb-6">
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center"><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{data.total}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Всего</p></CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center"><p className="font-display-lg text-m3-headline-large text-m3-error">{data.bySeverity.critical}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Критичных</p></CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center"><p className="font-display-lg text-m3-headline-large text-m3-error">{data.bySeverity.high}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Высоких</p></CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center"><p className="font-display-lg text-m3-headline-large text-m3-tertiary">{data.bySeverity.medium}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Средних</p></CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-          <CardContent className="p-5 text-center"><p className="font-display-lg text-m3-headline-large text-m3-primary">{data.bySeverity.low}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Низких</p></CardContent>
-        </Card>
+      <div className="mb-6">
+        <MetricGrid metrics={metrics} />
       </div>
 
       {/* Filters + Create */}

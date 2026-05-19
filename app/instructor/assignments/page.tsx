@@ -41,7 +41,7 @@ export default async function InstructorAssignmentsPage() {
     <div className="space-y-3">
      {assignments.length > 0 ? (
       assignments.map((a) => (
-       <Card key={a.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
+       <Card key={a.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-soft-hover">
         <CardContent className="flex items-center gap-4 py-4">
          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-tertiary-container/20 shrink-0">
           <Icon name="description" className="text-[22px] text-m3-tertiary" />

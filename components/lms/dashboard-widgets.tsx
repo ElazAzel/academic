@@ -33,6 +33,7 @@ import type {
   SubmissionForReview,
 } from "@/types/domain";
 import { RISK_LABELS } from "@/types/domain";
+import { cn } from "@/lib/utils";
 
 // ── M3 tone classes ──────────────────────────────────────────────────
 const TONE_CLASSES: Record<DashboardMetric["tone"], string> = {
@@ -41,6 +42,7 @@ const TONE_CLASSES: Record<DashboardMetric["tone"], string> = {
   warning: "text-amber-600 dark:text-amber-400",
   danger: "text-m3-error",
   info: "text-sky-600 dark:text-sky-400",
+  neutral: "text-m3-on-surface",
 };
 
 const TONE_BG_CLASSES: Record<DashboardMetric["tone"], string> = {
@@ -49,6 +51,16 @@ const TONE_BG_CLASSES: Record<DashboardMetric["tone"], string> = {
   warning: "bg-amber-100 dark:bg-amber-900/30",
   danger: "bg-m3-error-container/30",
   info: "bg-sky-100 dark:bg-sky-900/30",
+  neutral: "bg-m3-surface-container-high",
+};
+
+const TONE_BORDER_CLASSES: Record<DashboardMetric["tone"], string> = {
+  primary: "border-l-m3-primary",
+  success: "border-l-emerald-500",
+  warning: "border-l-amber-500",
+  danger: "border-l-m3-error",
+  info: "border-l-sky-500",
+  neutral: "border-l-m3-outline",
 };
 
 const TONE_ICON_NAMES: Record<DashboardMetric["tone"], string> = {
@@ -57,37 +69,69 @@ const TONE_ICON_NAMES: Record<DashboardMetric["tone"], string> = {
   warning: "warning",
   danger: "error",
   info: "info",
+  neutral: "analytics",
 };
 
 // ── Метрики ─────────────────────────────────────────────────────────
 export function MetricGrid({ metrics }: { metrics: DashboardMetric[] }) {
   return (
-    <Stagger className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <Stagger className="grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6">
       {metrics.map((m) => (
-        <FadeIn key={m.label}>
-          <CardHover>
-            <Card className="rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-              <CardHeader className="pb-2 flex-row items-start justify-between">
-                <div>
-                  <CardDescription className="text-m3-label-md text-m3-on-surface-variant">{m.label}</CardDescription>
-                  <CardTitle className={`text-m3-display-lg mt-1 ${TONE_CLASSES[m.tone]}`}>
-                    {m.value}
-                  </CardTitle>
-                </div>
-                <div className={`w-10 h-10 rounded-lg ${TONE_BG_CLASSES[m.tone]} flex items-center justify-center shrink-0`}>
-                  <Icon name={TONE_ICON_NAMES[m.tone]} className={`text-[22px] ${TONE_CLASSES[m.tone]}`} />
-                </div>
-              </CardHeader>
-              {m.change && (
-                <CardContent className="pt-0">
-                  <p className="font-body-sm text-body-sm text-m3-on-surface-variant">{m.change}</p>
-                </CardContent>
-              )}
-            </Card>
-          </CardHover>
+        <FadeIn key={m.label} className="h-full">
+          <MetricCard metric={m} />
         </FadeIn>
       ))}
     </Stagger>
+  );
+}
+
+function MetricCard({ metric }: { metric: DashboardMetric }) {
+  const card = (
+    <Card
+      className={cn(
+        "flex h-full flex-col justify-between overflow-hidden rounded-xl border-l-4 bg-m3-surface-container-lowest p-4 shadow-m3-soft md:p-5",
+        metric.priority === "critical" && "ring-1 ring-m3-error/25",
+        metric.priority === "elevated" && "ring-1 ring-amber-400/25",
+        TONE_BORDER_CLASSES[metric.tone],
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-label-lg font-label-lg text-m3-on-surface-variant">{metric.label}</p>
+          {metric.description ? (
+            <p className="mt-1 line-clamp-2 text-body-sm font-body-sm text-m3-on-surface-variant">
+              {metric.description}
+            </p>
+          ) : null}
+        </div>
+        <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", TONE_BG_CLASSES[metric.tone])}>
+          <Icon name={TONE_ICON_NAMES[metric.tone]} size={22} className={TONE_CLASSES[metric.tone]} />
+        </span>
+      </div>
+
+      <div className="mt-4">
+        <p className={`text-display-lg font-bold leading-none tabular-nums ${TONE_CLASSES[metric.tone]}`}>
+          {metric.value}
+        </p>
+        {metric.detail || metric.change ? (
+          <p className="mt-2 line-clamp-2 text-body-sm font-body-sm text-m3-on-surface-variant">
+            {metric.detail ?? metric.change}
+          </p>
+        ) : null}
+      </div>
+    </Card>
+  );
+
+  if (!metric.href) {
+    return <CardHover className="h-full">{card}</CardHover>;
+  }
+
+  return (
+    <CardHover className="h-full">
+      <Link href={metric.href} className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary focus-visible:ring-offset-2">
+        {card}
+      </Link>
+    </CardHover>
   );
 }
 

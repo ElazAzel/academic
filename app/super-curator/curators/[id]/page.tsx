@@ -7,7 +7,8 @@ import { Tabs } from "@/components/ui/tabs";
 import { notFound } from "next/navigation";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorActivity } from "@/server/actions/super-curator";
-import { DonutChart } from "@/components/lms/bar-chart";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
+import type { DashboardMetric } from "@/types/domain";
 import { QuestionStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,43 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
   const daysSinceLogin = curator.lastLoginAt
     ? Math.floor((Date.now() - new Date(curator.lastLoginAt).getTime()) / (1000 * 60 * 60 * 24))
     : null;
+  const responseRate = questions.length > 0 ? Math.round((answered.length / questions.length) * 100) : 0;
+  const metrics = [
+    {
+      label: "Ответы",
+      value: `${responseRate}%`,
+      tone: responseRate >= 80 ? "success" : responseRate >= 50 ? "warning" : "danger",
+      detail: `${answered.length}/${questions.length} вопросов`,
+      priority: unanswered.length > 0 ? "elevated" : "normal",
+    },
+    {
+      label: "Открытые вопросы",
+      value: unanswered.length,
+      tone: unanswered.length > 0 ? "warning" : "success",
+      detail: "В очереди куратора",
+      priority: unanswered.length > 0 ? "elevated" : "normal",
+    },
+    {
+      label: "Ср. ответ",
+      value: avgResponseTime < 1 ? "<1ч" : `${Math.round(avgResponseTime)}ч`,
+      tone: avgResponseTime > 24 ? "danger" : avgResponseTime > 8 ? "warning" : "success",
+      detail: "По закрытым вопросам",
+      priority: avgResponseTime > 24 ? "critical" : avgResponseTime > 8 ? "elevated" : "normal",
+    },
+    {
+      label: "Проверено работ",
+      value: reviews.length,
+      tone: "info",
+      detail: "История проверок",
+    },
+    {
+      label: "Последний вход",
+      value: daysSinceLogin !== null ? `${daysSinceLogin} дн.` : "—",
+      tone: daysSinceLogin === null || daysSinceLogin >= 7 ? "warning" : "success",
+      detail: `${activityLog.length} действий за 30 дн.`,
+      priority: daysSinceLogin === null || daysSinceLogin >= 7 ? "elevated" : "normal",
+    },
+  ] satisfies DashboardMetric[];
 
   return (
     <AppShell role="super_curator">
@@ -40,38 +78,8 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
         description={curator.email}
       />
 
-      {/* Stats */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5 mb-6">
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center space-y-1">
-            <DonutChart value={answered.length} max={Math.max(answered.length + unanswered.length, 1)} size={60} strokeWidth={5} />
-            <p className="text-xs text-muted-foreground">Ответов ({answered.length}/{questions.length})</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center space-y-1">
-            <p className="text-2xl font-bold">{avgResponseTime < 1 ? "<1" : Math.round(avgResponseTime)}</p>
-            <p className="text-xs text-muted-foreground">Ср. время ответа (ч)</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center space-y-1">
-            <p className="text-2xl font-bold">{reviews.length}</p>
-            <p className="text-xs text-muted-foreground">Проверено работ</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center space-y-1">
-            <p className="text-2xl font-bold">{daysSinceLogin !== null ? `${daysSinceLogin} дн.` : "—"}</p>
-            <p className="text-xs text-muted-foreground">С последнего входа</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-4 text-center space-y-1">
-            <p className="text-2xl font-bold">{activityLog.length}</p>
-            <p className="text-xs text-muted-foreground">Действий за 30 дн.</p>
-          </CardContent>
-        </Card>
+      <div className="mb-6">
+        <MetricGrid metrics={metrics} />
       </div>
 
       <Tabs

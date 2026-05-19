@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getSuperCuratorReportData } from "@/server/actions/super-curator";
+import type { DashboardMetric } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,37 @@ export default async function SuperCuratorReportsPage() {
   const totalCompleted = data.reduce((s, c) => s + c.completed, 0);
   const totalAtRisk = data.reduce((s, c) => s + (c.blocked + c.notStarted), 0);
   const avgProgress = data.length > 0 ? Math.round(data.reduce((s, c) => s + c.avgProgress, 0) / data.length) : 0;
+  const activeCohorts = data.filter((c) => c.status === "active").length;
+  const problemCohorts = data.filter((c) => c.blocked + c.notStarted > 5 || c.avgProgress < 40).length;
+  const metrics = [
+    {
+      label: "Слушателей",
+      value: totalStudents,
+      tone: "primary",
+      detail: `${activeCohorts} активных потоков`,
+    },
+    {
+      label: "Завершили",
+      value: totalCompleted,
+      tone: "success",
+      detail: totalStudents > 0 ? `${Math.round((totalCompleted / totalStudents) * 100)}% от базы` : "Нет зачислений",
+    },
+    {
+      label: "Требуют внимания",
+      value: totalAtRisk,
+      tone: totalAtRisk > 0 ? "danger" : "success",
+      detail: `${problemCohorts} проблемных потоков`,
+      priority: totalAtRisk > 0 ? "elevated" : "normal",
+      href: "/super-curator/reports?tab=risks",
+    },
+    {
+      label: "Средний прогресс",
+      value: `${avgProgress}%`,
+      tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
+      detail: "По потокам зоны",
+      priority: avgProgress < 40 && totalStudents > 0 ? "elevated" : "normal",
+    },
+  ] satisfies DashboardMetric[];
 
   return (
     <AppShell role="super_curator">
@@ -27,32 +60,8 @@ export default async function SuperCuratorReportsPage() {
         description="Просмотр и экспорт статистики по потокам в CSV, Excel или PDF."
       />
 
-      {/* Summary metrics — M3 */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
-          <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-container/20"><Icon name="group" className="text-[22px] text-m3-primary" /></span>
-            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{totalStudents}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Всего слушателей</p></div>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
-          <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-container/20"><Icon name="trending_up" className="text-[22px] text-m3-primary" /></span>
-            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{totalCompleted}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Завершили</p></div>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
-          <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-error-container/20"><Icon name="warning" className="text-[22px] text-m3-error" /></span>
-            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{totalAtRisk}</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Требуют внимания</p></div>
-          </CardContent>
-        </Card>
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
-          <CardContent className="p-5 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-tertiary-container/20"><Icon name="schedule" className="text-[22px] text-m3-tertiary" /></span>
-            <div><p className="font-display-lg text-m3-headline-large text-m3-on-surface">{avgProgress}%</p><p className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний прогресс</p></div>
-          </CardContent>
-        </Card>
+      <div className="mb-6">
+        <MetricGrid metrics={metrics} />
       </div>
 
       <Tabs

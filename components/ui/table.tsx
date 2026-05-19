@@ -2,14 +2,14 @@ import { cn } from "@/lib/utils";
 
 export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-auto rounded-xl border">
+    <div className="w-full overflow-auto rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
       <table className={cn("w-full caption-bottom text-sm", className)} {...props} />
     </div>
   );
 }
 
 export function TableHeader({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn("bg-muted/40 [&_tr]:border-b", className)} {...props} />;
+  return <thead className={cn("sticky top-0 z-10 bg-m3-surface-container-high [&_tr]:border-b", className)} {...props} />;
 }
 
 export function TableBody({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
@@ -20,7 +20,7 @@ export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTable
   return (
     <tr
       className={cn(
-        "border-b transition-colors hover:bg-muted/30 data-[state=selected]:bg-muted",
+        "border-b border-m3-outline-variant transition-colors hover:bg-m3-surface-container-low data-[state=selected]:bg-m3-surface-container",
         className,
       )}
       {...props}
@@ -32,7 +32,7 @@ export function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTa
   return (
     <th
       className={cn(
-        "h-11 px-4 text-left align-middle text-xs font-medium tracking-wide text-muted-foreground",
+        "h-10 whitespace-nowrap px-4 text-left align-middle text-label-md font-label-md uppercase text-m3-on-surface-variant",
         className,
       )}
       {...props}
@@ -41,5 +41,5 @@ export function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTa
 }
 
 export function TableCell({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={cn("px-4 py-3 align-middle", className)} {...props} />;
+  return <td className={cn("px-4 py-2.5 align-middle text-body-sm font-body-sm text-m3-on-surface", className)} {...props} />;
 }

@@ -54,7 +54,7 @@ async function AdminDashboardContent() {
       content: (
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {courses.map((c) => (
-         <Card key={c.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
+         <Card key={c.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-soft-hover">
           <CardContent className="p-5">
            <p className="font-label-lg text-label-lg text-m3-on-surface line-clamp-1">{c.title}</p>
            <p className="font-body-sm text-body-sm text-m3-on-surface-variant pt-1">{c.modulesCount} модулей</p>
@@ -74,7 +74,7 @@ async function AdminDashboardContent() {
       content: (
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cohorts.map((c) => (
-         <Card key={c.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
+         <Card key={c.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-soft-hover">
           <CardContent className="p-5">
            <p className="font-label-lg text-label-lg text-m3-on-surface line-clamp-1">{c.name}</p>
            <p className="font-body-sm text-body-sm text-m3-on-surface-variant pt-1 flex items-center gap-1">
@@ -96,7 +96,7 @@ async function AdminDashboardContent() {
       content: (
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {certificates.map((c) => (
-         <Card key={c.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-medium">
+         <Card key={c.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-soft-hover">
           <CardContent className="p-5 space-y-1">
            <div className="flex items-center gap-2">
             <Icon name="verified" className="text-[20px] text-m3-primary" />

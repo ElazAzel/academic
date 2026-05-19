@@ -18,7 +18,7 @@ export async function getCustomerObserverDashboard() {
     const certFilter = { userId: { in: scopedStudentIds ?? [] } };
     const progressFilter = { userId: { in: scopedStudentIds ?? [] } };
 
-    const [projects, cohorts, certCount, progressAgg] = await Promise.all([
+    const [projects, cohorts, certCount, progressAgg, openRisksCount] = await Promise.all([
       prisma.project.count({ where: projectFilter }),
       prisma.cohort.findMany({
         where: cohortFilter,
@@ -31,6 +31,7 @@ export async function getCustomerObserverDashboard() {
       }),
       prisma.certificate.count({ where: certFilter }),
       prisma.courseProgress.aggregate({ _avg: { percent: true }, where: progressFilter }),
+      prisma.riskFlag.count({ where: { userId: { in: scopedStudentIds ?? [] }, status: "open", resolvedAt: null } }),
     ]);
 
     const avgProgress = Math.round(progressAgg._avg.percent ?? 0);
@@ -48,11 +49,39 @@ export async function getCustomerObserverDashboard() {
       status: c.status,
     }));
 
+    const totalStudents = cohortSummaries.reduce((sum, cohort) => sum + cohort.studentsCount, 0);
+    const stuckCohorts = cohortSummaries.filter((cohort) => cohort.avgProgress < 40 && cohort.studentsCount > 0).length;
+
     const metrics: DashboardMetric[] = [
-      { label: "Проекты", value: projects, tone: "primary" },
-      { label: "Потоки", value: cohorts.length, tone: "info" },
-      { label: "Прогресс", value: `${avgProgress}%`, tone: avgProgress > 50 ? "success" : "warning" },
-      { label: "Сертификаты", value: certCount, tone: "success" },
+      {
+        label: "Проекты",
+        value: projects,
+        tone: "primary",
+        detail: `${cohortSummaries.length} потоков в доступе`,
+      },
+      {
+        label: "Слушатели",
+        value: totalStudents,
+        tone: totalStudents > 0 ? "info" : "neutral",
+      },
+      {
+        label: "Прогресс",
+        value: `${avgProgress}%`,
+        tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
+        detail: `${stuckCohorts} потоков ниже 40%`,
+        priority: stuckCohorts > 0 ? "elevated" : "normal",
+      },
+      {
+        label: "Открытые риски",
+        value: openRisksCount,
+        tone: openRisksCount > 0 ? "warning" : "success",
+        priority: openRisksCount > 0 ? "elevated" : "normal",
+      },
+      {
+        label: "Сертификаты",
+        value: certCount,
+        tone: "success",
+      },
     ];
 
     return { metrics, cohorts: cohortSummaries };

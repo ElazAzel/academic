@@ -158,6 +158,12 @@ describe("getCuratorDashboard", () => {
     const data = await getCuratorDashboard();
 
     expect(data?.metrics[0]).toMatchObject({ label: "Мои слушатели", value: 1 });
+    expect(data?.metrics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "Слушатели с рисками", value: 1, priority: "elevated" }),
+        expect.objectContaining({ label: "Средний прогресс", value: "42%", detail: "1 непрочитанных сообщений" }),
+      ]),
+    );
     expect(data?.questions).toHaveLength(1);
     expect(data?.submissions).toHaveLength(1);
     expect(data?.risks).toHaveLength(1);
