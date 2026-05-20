@@ -25,12 +25,13 @@ export async function assertInstructorOfCourse(actorId: string, courseId: string
   }
 }
 
-export const listCourses = cache(async (status?: CourseStatus, instructorId?: string) => {
+export const listCourses = cache(async (status?: CourseStatus, instructorId?: string, courseIds?: string[]) => {
   return prisma.course.findMany({
     take: 50,
     where: {
       ...(status ? { status } : {}),
-      ...(instructorId ? { instructors: { some: { userId: instructorId } } } : {})
+      ...(instructorId ? { instructors: { some: { userId: instructorId } } } : {}),
+      ...(courseIds ? { id: { in: courseIds } } : {})
     },
     orderBy: { createdAt: "desc" },
     select: {

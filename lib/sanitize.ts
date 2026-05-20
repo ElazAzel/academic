@@ -1,4 +1,4 @@
-import DOMPurify from "dompurify";
+import DOMPurify from "isomorphic-dompurify";
 
 const ALLOWED_TAGS = [
   "p", "br", "strong", "b", "em", "i", "u", "s", "strike",
@@ -16,11 +16,6 @@ const ALLOWED_ATTR = [
 ];
 
 export function sanitizeHtml(dirty: string): string {
-  if (typeof window === "undefined") {
-    // Server-side: return plain text or use a server-safe sanitizer
-    // DOMPurify requires a DOM; on server we strip tags entirely as fallback
-    return dirty.replace(/<[^>]*>?/gm, "");
-  }
   return DOMPurify.sanitize(dirty, {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
