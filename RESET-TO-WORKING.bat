@@ -2,7 +2,7 @@
 chcp 65001 >nul
 echo.
 echo ============================================
-echo   Откат ветки main к рабочему коммиту fb6e894
+echo   Откат ветки main к рабочему коммиту 75c7b10
 echo ============================================
 echo.
 echo Это удалит все сломанные коммиты и вернёт рабочую версию.
@@ -10,7 +10,7 @@ echo.
 pause
 
 cd /d "%~dp0"
-git reset --hard fb6e894
+git reset --hard 75c7b10
 if %errorlevel% neq 0 (
     echo.
     echo ОШИБКА: git reset не удался

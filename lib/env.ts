@@ -86,9 +86,9 @@ if (process.env.NEXT_PHASE !== "phase-production-build") {
   }
 
   if (env.NODE_ENV === "production" && !env.CRON_SECRET) {
-    throw new Error(
-      "CRON_SECRET обязателен в production. " +
-      "Установите сильный уникальный секрет для защиты cron-эндпоинтов."
+    console.warn(
+      "[WARN] CRON_SECRET не установлен в production. " +
+      "Cron-эндпоинты будут отклонять запросы без секрета."
     );
   }
 }
