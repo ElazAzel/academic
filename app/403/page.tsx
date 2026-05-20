@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDefaultRolePath } from "@/lib/auth/role-redirect";
+import { AUTH_ROUTES } from "@/lib/constants";
 
 export default async function ForbiddenPage() {
   const user = await getCurrentUser();
-  const homePath = user ? getDefaultRolePath(user.roles) : "/login";
+  const homePath = user ? getDefaultRolePath(user.roles) : AUTH_ROUTES.LOGIN;
 
   return (
     <div className="min-h-screen">
@@ -30,7 +31,7 @@ export default async function ForbiddenPage() {
                 <Link href={homePath}>Вернуться в кабинет</Link>
               </Button>
               <Button asChild variant="secondary">
-                <Link href="/login">Войти другим аккаунтом</Link>
+                <Link href={AUTH_ROUTES.LOGIN}>Войти другим аккаунтом</Link>
               </Button>
             </div>
           </CardContent>

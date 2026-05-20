@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Strategic Academy - Assignment Review</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed": "#001f25",
+                    "on-primary-fixed": "#00164f",
+                    "inverse-surface": "#293138",
+                    "on-primary-container": "#a6b8ff",
+                    "on-primary-fixed-variant": "#264192",
+                    "on-tertiary": "#ffffff",
+                    "primary-container": "#2b4596",
+                    "secondary-container": "#7d56f5",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed-dim": "#ccbdff",
+                    "on-tertiary-container": "#4dcbe0",
+                    "on-error": "#ffffff",
+                    "on-background": "#151c22",
+                    "surface-tint": "#4159ab",
+                    "on-tertiary-fixed-variant": "#004e59",
+                    "inverse-on-surface": "#eaf2fa",
+                    "on-secondary": "#ffffff",
+                    "surface-container": "#e7eff7",
+                    "background": "#f6faff",
+                    "surface": "#f6faff",
+                    "surface-dim": "#d3dbe3",
+                    "tertiary": "#003a43",
+                    "surface-bright": "#f6faff",
+                    "on-secondary-fixed-variant": "#4d17c5",
+                    "surface-container-highest": "#dbe3ec",
+                    "surface-container-high": "#e1e9f1",
+                    "on-surface-variant": "#444651",
+                    "on-surface": "#151c22",
+                    "inverse-primary": "#b6c4ff",
+                    "tertiary-fixed": "#a0efff",
+                    "error-container": "#ffdad6",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed-dim": "#5bd7ec",
+                    "tertiary-container": "#00535e",
+                    "outline": "#757683",
+                    "on-secondary-fixed": "#1f005f",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed": "#e7deff",
+                    "surface-container-low": "#edf4fd",
+                    "on-secondary-container": "#fffbff",
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c5c5d3",
+                    "secondary": "#6339db",
+                    "primary": "#0c2d7e",
+                    "surface-variant": "#dbe3ec",
+                    "primary-fixed": "#dce1ff",
+                    "primary-fixed-dim": "#b6c4ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "container-max": "1280px",
+                    "xl": "32px",
+                    "sm": "8px",
+                    "md": "16px",
+                    "margin-mobile": "16px",
+                    "xs": "4px",
+                    "xxl": "48px",
+                    "unit": "4px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "body-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-lg": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "mono-sm": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-lg": ["14px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "mono-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { background-color: #f6faff; color: #151c22; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .card-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+        .card-shadow:hover { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); transition: box-shadow 0.3s ease; }
+    </style>
+</head>
+<body class="font-body-md bg-background min-h-screen flex">
+<!-- TopNavBar (Mobile) -->
+<nav class="md:hidden bg-surface-container-lowest text-primary font-headline-sm text-headline-sm font-bold full-width top-0 border-b border-outline-variant shadow-sm fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg py-md">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="arrow_back">arrow_back</span>
+</div>
+<div class="font-headline-md text-headline-md font-bold text-primary">AI Strategic Academy</div>
+<div class="flex items-center gap-sm">
+<img alt="Аватар пользователя" class="w-8 h-8 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6tdAxdyj6IQAJh4Tj5CVxXiJ33_DQHv8WGmTJYus6OaliboiPmV4XCBvIIEyzKfxSw3i6nHX6dLw7CzEWsciHD9YMtrD133h-6kVJfsKI0yVv0PDrOK9wCbHOEKkerN_AD9JU9Jixta1qUVaQLv8GNcAkVFye3S6x2NveYhAJhdyEZdmw3A3NGkd7ZR4JgQ4ZP2k4_WtmBzCLsFZ_hCHx-MTUY77mfPD-NzyeHPuoJq83hc5Ln-2Jw1OJuUj5jk0SlbgADKK-Go0"/>
+</div>
+</nav>
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-full py-lg bg-surface-container-low text-primary font-label-lg text-label-lg fixed left-0 top-0 h-full w-64 border-r border-outline-variant z-40">
+<div class="px-gutter mb-xl">
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">AI Academy</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Strategic LMS</p>
+</div>
+<div class="flex-1 overflow-y-auto px-sm flex flex-col gap-sm">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Панель управления
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+                Курсы
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-primary font-bold border-l-4 border-secondary-container bg-secondary-fixed/10 hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="group" style="font-variation-settings: 'FILL' 1;">group</span>
+                Пользователи
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                Отчеты
+            </a>
+</div>
+<div class="mt-auto px-sm border-t border-outline-variant pt-md flex flex-col gap-sm">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Настройки
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Выход
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 pt-20 md:pt-0 min-h-screen flex flex-col">
+<!-- TopAppBar Context Header -->
+<header class="bg-background w-full max-w-container-max mx-auto px-margin-mobile md:px-xxl pt-xl pb-lg flex flex-col gap-sm">
+<div class="flex items-center gap-sm text-on-surface-variant mb-xs">
+<button class="flex items-center gap-xs font-label-lg text-label-lg hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="arrow_back">arrow_back</span>
+                    Назад к очереди
+                </button>
+</div>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg font-bold text-primary mb-xs">Проверка задания: Сергей Иванов</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Курс: Стратегический менеджмент ИИ • Модуль 3</p>
+</div>
+<div class="flex gap-sm">
+<span class="inline-flex items-center px-sm py-xs rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md border border-outline-variant">
+                        Ожидает проверки
+                    </span>
+<span class="inline-flex items-center px-sm py-xs rounded-full bg-surface-container-lowest text-on-surface-variant font-label-md text-label-md border border-outline-variant">
+                        Сдано: Вчера, 14:30
+                    </span>
+</div>
+</div>
+</header>
+<!-- Two-column Layout -->
+<div class="w-full max-w-container-max mx-auto px-margin-mobile md:px-xxl pb-xxl flex-1 flex flex-col lg:flex-row gap-gutter">
+<!-- Left Column: Student Submission -->
+<section class="flex-1 flex flex-col gap-gutter">
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-lg card-shadow flex flex-col h-full">
+<h3 class="font-headline-sm text-headline-sm font-semibold text-primary mb-md border-b border-surface-container-high pb-sm">Ответ студента</h3>
+<div class="prose max-w-none font-body-md text-body-md text-on-surface flex-1 overflow-y-auto mb-lg">
+<p class="mb-4">В рамках стратегии внедрения ИИ в производственные процессы компании, я предлагаю сфокусироваться на предиктивной аналитике для обслуживания оборудования. Это позволит снизить время простоев на 15-20% в первый год.</p>
+<p class="mb-4">Основные этапы:</p>
+<ul class="list-disc pl-5 mb-4">
+<li>Сбор исторических данных с датчиков (вибрация, температура).</li>
+<li>Очистка и подготовка датасета.</li>
+<li>Обучение модели машинного обучения (Random Forest или градиентный бустинг).</li>
+<li>Пилотное внедрение на одной линии.</li>
+</ul>
+<p>Риски включают недостаток качественных данных и сопротивление персонала, что требует отдельной программы управления изменениями.</p>
+</div>
+<div class="mt-auto border-t border-surface-container-high pt-md">
+<h4 class="font-label-lg text-label-lg text-on-surface-variant mb-sm">Прикрепленные файлы</h4>
+<div class="flex flex-col gap-sm">
+<div class="flex items-center justify-between p-sm border border-outline-variant rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary" data-icon="picture_as_pdf">picture_as_pdf</span>
+<span class="font-body-sm text-body-sm font-medium text-on-surface group-hover:text-primary transition-colors">AI_Strategy_Ivanov.pdf</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">2.4 MB</span>
+</div>
+<div class="flex items-center justify-between p-sm border border-outline-variant rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="dataset">dataset</span>
+<span class="font-body-sm text-body-sm font-medium text-on-surface group-hover:text-primary transition-colors">dataset_sample.csv</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">15 KB</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Feedback Panel -->
+<section class="w-full lg:w-[400px] xl:w-[480px] flex flex-col gap-gutter">
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-lg card-shadow flex flex-col sticky top-gutter">
+<!-- Assignment Context -->
+<div class="mb-lg border-b border-surface-container-high pb-md">
+<h3 class="font-headline-sm text-headline-sm font-semibold text-primary mb-xs">Задание: Проект внедрения</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-sm">Опишите стратегию внедрения ИИ-решения для выбранного бизнес-кейса. Оцените риски и предложите метрики успеха.</p>
+<button class="text-primary font-label-lg text-label-lg flex items-center gap-xs hover:underline">
+<span class="material-symbols-outlined text-[16px]" data-icon="info">info</span>
+                            Критерии оценки
+                        </button>
+</div>
+<!-- Evaluation Form -->
+<form class="flex flex-col gap-md">
+<!-- Score Input -->
+<div>
+<label class="block font-label-lg text-label-lg text-on-surface mb-xs" for="score">Оценка (0-100)</label>
+<input class="w-24 px-sm py-sm border border-outline-variant rounded-lg font-body-lg text-body-lg text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" id="score" max="100" min="0" name="score" placeholder="0" type="number"/>
+</div>
+<!-- Feedback Textarea -->
+<div class="flex-1 flex flex-col">
+<label class="block font-label-lg text-label-lg text-on-surface mb-xs" for="feedback">Комментарий куратора</label>
+<textarea class="w-full px-md py-sm border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none" id="feedback" name="feedback" placeholder="Введите развернутый отзыв..." rows="8"></textarea>
+</div>
+<!-- Action Buttons -->
+<div class="pt-md border-t border-surface-container-high mt-sm flex flex-col gap-sm">
+<button class="w-full bg-primary-container text-on-primary text-center py-sm rounded-lg font-label-lg text-label-lg hover:bg-primary transition-colors flex items-center justify-center gap-sm" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="check_circle">check_circle</span>
+                                Принять
+                            </button>
+<div class="flex gap-sm">
+<button class="flex-1 bg-surface-container-lowest border border-outline-variant text-on-surface-variant text-center py-sm rounded-lg font-label-lg text-label-lg hover:bg-surface-container-low transition-colors flex items-center justify-center gap-sm" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit_note">edit_note</span>
+                                    На доработку
+                                </button>
+<button class="flex-1 bg-surface-container-lowest border border-error text-error text-center py-sm rounded-lg font-label-lg text-label-lg hover:bg-error-container transition-colors flex items-center justify-center gap-sm" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="cancel">cancel</span>
+                                    Отклонить
+                                </button>
+</div>
+</div>
+</form>
+</div>
+</section>
+</div>
+</main>
+</body></html>

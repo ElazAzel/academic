@@ -57,8 +57,11 @@ export function errorResponse(error: unknown) {
     );
   }
 
+  const errorMessage = error instanceof Error ? error.message : "Внутренняя ошибка сервера";
+  const errorStack = process.env.NODE_ENV === "development" && error instanceof Error ? error.stack : undefined;
+  console.error("[API Error]", errorMessage);
   return NextResponse.json(
-    { error: { code: "internal_error", message: "Внутренняя ошибка сервера" } },
+    { error: { code: "internal_error", message: errorMessage, details: errorStack } },
     { status: 500 }
   );
 }

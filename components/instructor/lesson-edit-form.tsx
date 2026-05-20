@@ -84,7 +84,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase text-muted-foreground">Тип урока</label>
-            <select name="type" defaultValue={lesson.type} className="w-full h-10 rounded-xl border bg-white px-3 text-sm">
+            <select name="type" defaultValue={lesson.type} className="w-full h-10 rounded-xl border bg-background px-3 text-sm">
               <option value="VIDEO">Видео</option>
               <option value="TEXT">Текст</option>
               <option value="VIDEO_DOCUMENT">Видео + документ</option>
@@ -116,7 +116,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
           <textarea
             name="summary"
             defaultValue={lesson.summary || ""}
-            className="w-full min-h-[80px] rounded-2xl border bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+            className="w-full min-h-[80px] rounded-2xl border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
           />
         </div>
 
@@ -125,7 +125,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
           <textarea
             name="contentText"
             defaultValue={lesson.content?.text || ""}
-            className="w-full min-h-[300px] rounded-2xl border bg-white px-4 py-3 text-sm font-mono focus:ring-2 focus:ring-primary/20 outline-none"
+            className="w-full min-h-[300px] rounded-2xl border bg-background px-4 py-3 text-sm font-mono focus:ring-2 focus:ring-primary/20 outline-none"
           />
         </div>
       </CardContent>
@@ -135,7 +135,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
   return (
     <form onSubmit={handleSubmit}>
       <div className="flex items-center justify-between mb-6">
-        <Link href={`/instructor/courses/${lesson.module.course.id}/curriculum`}>
+        <Link href={`/instructor/courses/${lesson.module.course.id}/builder`}>
           <Button type="button" size="sm" variant="secondary">
             <ArrowLeft className="h-4 w-4 mr-2" />
             К учебному плану

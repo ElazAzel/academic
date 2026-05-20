@@ -1,8 +1,11 @@
+import { cache } from "react";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { hashPassword } from "@/lib/auth/password";
 import { logAudit } from "@/server/modules/audit/service";
-import { sendEmail } from "@/server/modules/notifications/service";
+import { createNotification, sendEmail } from "@/server/modules/notifications/service";
+import type { z } from "zod";
+import type { profileSchema } from "@/lib/validation";
 
 const prisma = getPrisma();
 
@@ -50,6 +53,13 @@ export async function resetPassword(token: string, password: string) {
   });
   await prisma.verificationToken.delete({ where: { token } });
   await logAudit({ actorId: user.id, action: "auth.password_reset_completed", entity: "user", entityId: user.id });
+  await createNotification({
+    userId: user.id,
+    event: "password_changed",
+    refType: "user",
+    refId: user.id,
+    data: { source: "password_reset" },
+  });
   return { reset: true };
 }
 
@@ -68,7 +78,23 @@ export async function verifyEmail(token: string) {
   return { verified: true };
 }
 
-export async function getProfile(userId: string) {
+export async function updateProfile(
+  userId: string,
+  data: z.infer<typeof profileSchema>
+) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      name: data.name ?? undefined,
+      phone: data.phone ?? null,
+      organization: data.organization ?? null,
+      company: data.company ?? null,
+      position: data.position ?? null,
+    }
+  });
+}
+
+export const getProfile = cache(async (userId: string) => {
   return prisma.user.findUniqueOrThrow({
     where: { id: userId },
     select: {
@@ -77,8 +103,12 @@ export async function getProfile(userId: string) {
       name: true,
       image: true,
       locale: true,
+      phone: true,
+      organization: true,
+      company: true,
+      position: true,
       roles: { include: { role: true } },
       consentLogs: { orderBy: { createdAt: "desc" }, take: 5 }
     }
   });
-}
+});

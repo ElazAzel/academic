@@ -2,11 +2,14 @@ import { EnrollmentStatus, ProgressStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { clamp } from "@/lib/utils";
+import { TRAVERSAL_MODES } from "@/lib/constants";
 import { logAudit } from "@/server/modules/audit/service";
+import { issueCertificate } from "@/server/modules/certificates/service";
+import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
-function getCompletionBasis<T extends { isRequired: boolean | null }>(lessons: T[]) {
+export function getCompletionBasis<T extends { isRequired: boolean | null }>(lessons: T[]) {
   const required = lessons.filter((l) => l.isRequired);
   return required.length > 0 ? required : lessons;
 }
@@ -25,13 +28,44 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
           },
           lessons: true
         }
-      }
+      },
+      quizzes: { select: { id: true } },
+      assignments: { select: { id: true } }
     }
   });
   if (!lesson) {
     throw new ApiError("not_found", "Урок не найден", 404);
   }
-  const status = percent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS;
+
+  // C3: Сервер проверяет реальное прохождение теста/приёмку задания
+  let canComplete = true;
+  if ((lesson.quizzes?.length ?? 0) > 0) {
+    const passedQuiz = await prisma.quizAttempt.findFirst({
+      where: {
+        quizId: { in: (lesson.quizzes ?? []).map((q) => q.id) },
+        userId,
+        passed: true,
+      },
+      select: { id: true },
+    });
+    if (!passedQuiz) canComplete = false;
+  }
+  if ((lesson.assignments?.length ?? 0) > 0) {
+    const acceptedAssignment = await prisma.assignmentSubmission.findFirst({
+      where: {
+        assignmentId: { in: (lesson.assignments ?? []).map((a) => a.id) },
+        userId,
+        status: "ACCEPTED",
+      },
+      select: { id: true },
+    });
+    if (!acceptedAssignment) canComplete = false;
+  }
+
+  // Если урок требует прохождения, но студент его не прошёл — маскимальный прогресс 99%
+  const effectivePercent = canComplete ? percent : Math.min(percent, 99);
+
+  const status = effectivePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS;
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId: lesson.module.course.id } }
   });
@@ -39,7 +73,7 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
     throw new ApiError("forbidden", "Нет доступа к этому уроку", 403);
   }
 
-  if (lesson.module.course.traversalMode === "sequential") {
+  if (lesson.module.course.traversalMode === TRAVERSAL_MODES.SEQUENTIAL) {
     const orderedLessons = lesson.module.course.modules
       .flatMap((module) => module.lessons.map((item) => ({ ...item, moduleOrder: module.order })))
       .sort((left, right) => left.moduleOrder - right.moduleOrder || left.order - right.order);
@@ -64,37 +98,47 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
   }
 
   const course = lesson.module.course;
+  const now = new Date();
 
   const result = await prisma.$transaction(async (tx) => {
+    const previousLessonProgress = await tx.lessonProgress.findUnique({
+      where: { userId_lessonId: { userId, lessonId } },
+      select: { status: true, completedAt: true },
+    });
     const lessonProgress = await tx.lessonProgress.upsert({
       where: { userId_lessonId: { userId, lessonId } },
       update: {
-        percent,
+        percent: effectivePercent,
         status,
-        lastSeenAt: new Date(),
-        completedAt: status === ProgressStatus.COMPLETED ? new Date() : undefined,
+        lastSeenAt: now,
+        completedAt: status === ProgressStatus.COMPLETED ? (previousLessonProgress?.completedAt ?? now) : null,
         enrollmentId: enrollment?.id
       },
       create: {
         userId,
         lessonId,
         enrollmentId: enrollment?.id,
-        percent,
+        percent: effectivePercent,
         status,
-        startedAt: new Date(),
-        lastSeenAt: new Date(),
-        completedAt: status === ProgressStatus.COMPLETED ? new Date() : undefined
+        startedAt: now,
+        lastSeenAt: now,
+        completedAt: status === ProgressStatus.COMPLETED ? now : null
       }
     });
 
     // Block-level progress (if lesson belongs to a block)
     let blockProgress = null;
+    let blockJustCompleted = false;
     if (lesson.blockId) {
       const block = await tx.block.findUnique({
         where: { id: lesson.blockId },
         include: { lessons: true }
       });
       if (block) {
+        const previousBlockProgress = await tx.blockProgress.findUnique({
+          where: { userId_blockId: { userId, blockId: lesson.blockId } },
+          select: { status: true, completedAt: true },
+        });
         const blockLessons = getCompletionBasis(block.lessons);
         const completedBlockLessons = await tx.lessonProgress.count({
           where: {
@@ -104,12 +148,14 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
           }
         });
         const blockPercent = blockLessons.length === 0 ? 0 : Math.round((completedBlockLessons / blockLessons.length) * 100);
+        const blockStatus = blockPercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS;
+        blockJustCompleted = previousBlockProgress?.status !== ProgressStatus.COMPLETED && blockStatus === ProgressStatus.COMPLETED;
         blockProgress = await tx.blockProgress.upsert({
           where: { userId_blockId: { userId, blockId: lesson.blockId } },
           update: {
             percent: blockPercent,
-            status: blockPercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
-            completedAt: blockPercent >= 100 ? new Date() : undefined,
+            status: blockStatus,
+            completedAt: blockStatus === ProgressStatus.COMPLETED ? (previousBlockProgress?.completedAt ?? now) : null,
             enrollmentId: enrollment?.id
           },
           create: {
@@ -117,13 +163,17 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
             blockId: lesson.blockId,
             enrollmentId: enrollment?.id,
             percent: blockPercent,
-            status: blockPercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
-            completedAt: blockPercent >= 100 ? new Date() : undefined
+            status: blockStatus,
+            completedAt: blockStatus === ProgressStatus.COMPLETED ? now : null
           }
         });
       }
     }
 
+    const previousModuleProgress = await tx.moduleProgress.findUnique({
+      where: { userId_moduleId: { userId, moduleId: lesson.moduleId } },
+      select: { status: true, completedAt: true },
+    });
     const moduleLessons = getCompletionBasis(lesson.module.lessons);
     const completedModuleLessons = await tx.lessonProgress.count({
       where: {
@@ -133,12 +183,14 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
       }
     });
     const modulePercent = moduleLessons.length === 0 ? 0 : Math.round((completedModuleLessons / moduleLessons.length) * 100);
+    const moduleStatus = modulePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS;
+    const moduleJustCompleted = previousModuleProgress?.status !== ProgressStatus.COMPLETED && moduleStatus === ProgressStatus.COMPLETED;
     const moduleProgress = await tx.moduleProgress.upsert({
       where: { userId_moduleId: { userId, moduleId: lesson.moduleId } },
       update: {
         percent: modulePercent,
-        status: modulePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
-        completedAt: modulePercent >= 100 ? new Date() : undefined,
+        status: moduleStatus,
+        completedAt: moduleStatus === ProgressStatus.COMPLETED ? (previousModuleProgress?.completedAt ?? now) : null,
         enrollmentId: enrollment?.id
       },
       create: {
@@ -146,11 +198,15 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
         moduleId: lesson.moduleId,
         enrollmentId: enrollment?.id,
         percent: modulePercent,
-        status: modulePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
-        completedAt: modulePercent >= 100 ? new Date() : undefined
+        status: moduleStatus,
+        completedAt: moduleStatus === ProgressStatus.COMPLETED ? now : null
       }
     });
 
+    const previousCourseProgress = await tx.courseProgress.findUnique({
+      where: { userId_courseId: { userId, courseId: course.id } },
+      select: { status: true, completedAt: true },
+    });
     const courseLessons = getCompletionBasis(course.modules.flatMap((m) => m.lessons));
     const completedCourseLessons = await tx.lessonProgress.count({
       where: {
@@ -160,12 +216,14 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
       }
     });
     const coursePercent = courseLessons.length === 0 ? 0 : Math.round((completedCourseLessons / courseLessons.length) * 100);
+    const courseStatus = coursePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS;
+    const courseJustCompleted = previousCourseProgress?.status !== ProgressStatus.COMPLETED && courseStatus === ProgressStatus.COMPLETED;
     const courseProgress = await tx.courseProgress.upsert({
       where: { userId_courseId: { userId, courseId: course.id } },
       update: {
         percent: coursePercent,
-        status: coursePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
-        completedAt: coursePercent >= 100 ? new Date() : undefined,
+        status: courseStatus,
+        completedAt: courseStatus === ProgressStatus.COMPLETED ? (previousCourseProgress?.completedAt ?? now) : null,
         enrollmentId: enrollment?.id
       },
       create: {
@@ -173,15 +231,59 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
         courseId: course.id,
         enrollmentId: enrollment?.id,
         percent: coursePercent,
-        status: coursePercent >= 100 ? ProgressStatus.COMPLETED : ProgressStatus.IN_PROGRESS,
-        completedAt: coursePercent >= 100 ? new Date() : undefined
+        status: courseStatus,
+        completedAt: courseStatus === ProgressStatus.COMPLETED ? now : null
       }
     });
 
-    return { lessonProgress, blockProgress, moduleProgress, courseProgress, modulePercent, coursePercent };
+    return { lessonProgress, blockProgress, moduleProgress, courseProgress, blockJustCompleted, moduleJustCompleted, courseJustCompleted, modulePercent, coursePercent };
   });
 
   await logAudit({ actorId: userId, action: "progress.lesson_marked", entity: "lesson", entityId: lessonId, metadata: { percent } });
+
+  // Send notification when block is completed
+  if (lesson.blockId && result.blockJustCompleted) {
+    const block = await prisma.block.findUnique({ where: { id: lesson.blockId }, select: { title: true } });
+    createNotification({
+      userId,
+      event: "block_completed",
+      title: "Блок пройден",
+      body: `Вы завершили блок «${block?.title ?? ""}»`,
+      data: {
+        refType: "block",
+        refId: lesson.blockId,
+        link: `/student/courses/${course.id}`,
+      },
+    }).catch((e) => console.error("Failed to send block completion notification:", e));
+  }
+
+  // Send notification when module is completed
+  if (result.moduleJustCompleted) {
+    const module_ = await prisma.module.findUnique({ where: { id: lesson.moduleId }, select: { title: true } });
+    createNotification({
+      userId,
+      event: "module_completed",
+      title: "Модуль пройден",
+      body: `Поздравляем с завершением модуля «${module_?.title ?? ""}»!`,
+      data: {
+        refType: "module",
+        refId: lesson.moduleId,
+        link: `/student/courses/${course.id}`,
+      },
+    }).catch((e) => console.error("Failed to send module completion notification:", e));
+  }
+
+  if (result.coursePercent >= course.completionThreshold) {
+    const existing = await prisma.certificate.findFirst({
+      where: { userId, courseId: course.id }
+    });
+    if (!existing) {
+      issueCertificate({ userId, courseId: course.id }, userId).catch(
+        (e) => console.error("Failed to auto-issue certificate:", e)
+      );
+    }
+  }
+
   return result;
 }
 

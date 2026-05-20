@@ -1,3 +1,4 @@
+import { ProgressStatus, UserAccountStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 
 const prisma = getPrisma();
@@ -8,26 +9,21 @@ export async function getAdminOverview() {
     courses,
     enrollments,
     completions,
-    quizAttempts,
+    quizScore,
+    quizPassed,
     certificates,
-    activeInviteLinks,
-    inviteActivationStats
   ] = await Promise.all([
-    prisma.user.count({ where: { status: "active" } }),
+    prisma.user.count({ where: { status: UserAccountStatus.ACTIVE } }),
     prisma.course.count(),
     prisma.enrollment.count(),
-    prisma.courseProgress.count({ where: { status: "COMPLETED" } }),
-    prisma.quizAttempt.findMany({ select: { score: true, passed: true } }),
+    prisma.courseProgress.count({ where: { status: ProgressStatus.COMPLETED } }),
+    prisma.quizAttempt.aggregate({ _avg: { score: true } }),
+    prisma.quizAttempt.count({ where: { passed: true } }),
     prisma.certificate.count(),
-    prisma.inviteLink.count({ where: { status: "active" } }),
-    prisma.inviteLink.aggregate({ _sum: { activationCount: true } })
   ]);
 
   const completionRate = enrollments === 0 ? 0 : Math.round((completions / enrollments) * 100);
-  const averageQuizScore =
-    quizAttempts.length === 0
-      ? 0
-      : Math.round(quizAttempts.reduce((sum, attempt) => sum + attempt.score, 0) / quizAttempts.length);
+  const averageQuizScore = Math.round(quizScore._avg.score ?? 0);
 
   return {
     activeUsers,
@@ -35,11 +31,9 @@ export async function getAdminOverview() {
     enrollments,
     completionRate,
     averageQuizScore,
-    passedQuizAttempts: quizAttempts.filter((attempt) => attempt.passed).length,
+    passedQuizAttempts: quizPassed,
     revenueCents: 0,
     currency: "rub",
     certificates,
-    activeInviteLinks,
-    inviteActivations: inviteActivationStats._sum.activationCount ?? 0
   };
 }

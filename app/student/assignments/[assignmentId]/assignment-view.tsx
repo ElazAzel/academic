@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, Loader2, RotateCcw, Send, Upload } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, RotateCcw, Send, Upload, File, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +13,65 @@ import type { StudentAssignmentDetail } from "@/types/domain";
 
 export function AssignmentView({ assignment }: { assignment: StudentAssignmentDetail }) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [answer, setAnswer] = useState(assignment.submission?.answerText ?? "");
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [fileUrl, setFileUrl] = useState<string | null>(assignment.submission?.fileUrl ?? null);
+  const [fileName, setFileName] = useState<string | null>(null);
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      // Get presigned URL
+      const presignRes = await fetch("/api/v1/media/uploads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+          fileSize: file.size,
+        }),
+      });
+
+      if (!presignRes.ok) {
+        const err = await presignRes.json().catch(() => ({}));
+        toast.error(err.error?.message || "Ошибка при подготовке загрузки");
+        return;
+      }
+
+      const { url, publicUrl } = await presignRes.json();
+
+      // Upload to S3
+      const uploadRes = await fetch(url, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+
+      if (!uploadRes.ok) {
+        toast.error("Ошибка при загрузке файла");
+        return;
+      }
+
+      setFileUrl(publicUrl);
+      setFileName(file.name);
+      toast.success("Файл загружен");
+    } catch {
+      toast.error("Ошибка сети при загрузке файла");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removeFile() {
+    setFileUrl(null);
+    setFileName(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
 
   const canSubmit =
     !assignment.submission ||
@@ -21,7 +79,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
     assignment.submission.status === "DRAFT";
 
   async function handleSubmit() {
-    if (submitting || !answer.trim()) {
+    if (submitting || (!answer.trim() && !fileUrl)) {
       return;
     }
 
@@ -30,7 +88,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
       const response = await fetch(`/api/v1/assignments/${assignment.id}/submissions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answerText: answer }),
+        body: JSON.stringify({ answerText: answer, fileUrl }),
       });
 
       if (response.ok) {
@@ -47,6 +105,8 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
   }
 
   const submission = assignment.submission;
+  const courseHref = assignment.courseId ? `/student/courses/${assignment.courseId}` : "/student/my-courses";
+  const lessonHref = assignment.lessonId ? `/student/lessons/${assignment.lessonId}` : courseHref;
 
   return (
     <div className="space-y-6">
@@ -86,17 +146,47 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
           />
 
           {canSubmit ? (
-            <div className="flex items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/30 p-6">
-              <div className="text-center">
-                <Upload className="mx-auto mb-1 h-6 w-6 text-muted-foreground/40" />
-                <p className="text-xs text-muted-foreground">Загрузить файл (опционально)</p>
+            <div className="space-y-3">
+              <div
+                className="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/30 p-6 transition-colors hover:border-primary/30 hover:bg-primary/5"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {uploading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Загрузка...</p>
+                  </div>
+                ) : fileUrl ? (
+                  <div className="flex items-center gap-2">
+                    <File className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-medium">{fileName ?? "Файл прикреплён"}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeFile(); }}
+                      className="ml-2 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <Upload className="mx-auto mb-1 h-6 w-6 text-muted-foreground/40" />
+                    <p className="text-xs text-muted-foreground">Нажмите, чтобы загрузить файл (PDF, изображение, архив)</p>
+                  </div>
+                )}
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.zip,.doc,.docx"
+                onChange={handleFileUpload}
+              />
             </div>
           ) : null}
 
           {canSubmit ? (
             <div className="flex justify-end">
-              <Button disabled={submitting || !answer.trim()} onClick={handleSubmit}>
+              <Button disabled={submitting || (!answer.trim() && !fileUrl)} onClick={handleSubmit}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 {submitting ? "Отправка..." : "Отправить на проверку"}
               </Button>
@@ -153,6 +243,12 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
             <p className="text-xs text-muted-foreground">
               Отправлено: {new Date(submission.submittedAt).toLocaleString("ru-RU")}
             </p>
+            <Button asChild size="sm" variant="secondary">
+              <Link href={lessonHref}>
+                <ArrowLeft className="h-4 w-4" />
+                {assignment.lessonId ? "Вернуться к уроку" : "Вернуться к курсу"}
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       ) : null}

@@ -8,6 +8,7 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getAssignmentForStudent } from "@/server/modules/learning/service";
 import { AssignmentView } from "./assignment-view";
 import { ApiError } from "@/lib/http";
+import { FORBIDDEN_ROUTE } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -22,19 +23,22 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
    if (error instanceof ApiError && error.code === "not_found") {
     notFound();
    }
-   if (error instanceof ApiError && error.code === "forbidden") {
-    redirect("/403");
-   }
+    if (error instanceof ApiError && error.code === "forbidden") {
+     redirect(FORBIDDEN_ROUTE);
+    }
    throw error;
   }
+
+ const courseHref = assignment.courseId ? `/student/courses/${assignment.courseId}` : "/student/my-courses";
+ const lessonHref = assignment.lessonId ? `/student/lessons/${assignment.lessonId}` : courseHref;
 
  return (
   <AppShell role="student">
    <div className="mb-4">
     <Button asChild size="sm" variant="secondary">
-     <Link href={`/student/lessons/${assignment.lessonId}`}>
+     <Link href={lessonHref}>
       <ArrowLeft className="h-4 w-4"/>
-      Назад к уроку
+      {assignment.lessonId ? "Назад к уроку" : "Назад к курсу"}
      </Link>
     </Button>
    </div>

@@ -1,260 +1,598 @@
-import type { ProgressRow, RiskRow } from "./types";
+import { PDFDocument, PDFFont, PDFPage, rgb, StandardFonts } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
+import fs from "fs";
+import path from "path";
+import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, RiskRow } from "./types";
 import { groupByCourse } from "./data";
 
-async function getPdfMake() {
-  const pdfMake = await import("pdfmake/build/pdfmake");
-  const pdfFonts = await import("pdfmake/build/vfs_fonts");
-  const fonts = (pdfFonts.default as unknown as { pdfMake?: { vfs: Record<string, string> } })?.pdfMake?.vfs ?? (pdfFonts.default as unknown as Record<string, string>);
-  (pdfMake.default as unknown as { vfs: Record<string, string> }).vfs = fonts;
-  return pdfMake.default;
+// ── Font loading ────────────────────────────────────────────────────
+
+let regularFontBytes: Uint8Array | null = null;
+let boldFontBytes: Uint8Array | null = null;
+
+function loadFontBytes(name: string): Uint8Array | null {
+  try {
+    const p = path.join(process.cwd(), "public", "assets", "fonts", name);
+    if (fs.existsSync(p)) return fs.readFileSync(p);
+  } catch { /* ignore */ }
+  return null;
 }
 
-type Margin = [number, number, number, number];
-
-const STYLES = {
-  header: { fontSize: 18, bold: true, color: "#1E3A5F", margin: [0, 0, 0, 8] as Margin },
-  subheader: { fontSize: 13, bold: true, color: "#1E3A5F", margin: [0, 12, 0, 4] as Margin },
-  summaryLabel: { fontSize: 10, color: "#666666", margin: [0, 2, 0, 2] as Margin },
-  summaryValue: { fontSize: 11, bold: true, margin: [0, 2, 0, 2] as Margin },
-  tableHeader: { fontSize: 9, bold: true, color: "#FFFFFF", fillColor: "#1E3A5F", alignment: "center" as const },
-  tableCell: { fontSize: 8, margin: [2, 2, 2, 2] as Margin },
-  dateLabel: { fontSize: 8, color: "#999999", margin: [0, 0, 0, 12] as Margin },
-};
-
-interface BarItem {
-  label: string;
-  value: number;
+function getFonts() {
+  if (!regularFontBytes) regularFontBytes = loadFontBytes("NotoSans-Regular.ttf");
+  if (!boldFontBytes) boldFontBytes = loadFontBytes("NotoSans-Bold.ttf");
+  return { regular: regularFontBytes, bold: boldFontBytes };
 }
 
-function buildBarChart(data: BarItem[], maxBars: number = 15) {
-  const sliced = data.slice(0, maxBars);
-  const maxVal = Math.max(...sliced.map((d) => d.value), 1);
-  const labelWidth = 140;
-  const barMaxWidth = 460 - labelWidth - 40;
+// ── Page helpers ─────────────────────────────────────────────────────
 
-  const rects: Record<string, unknown>[] = [];
-  let y = 0;
+const PAGE_W = 595.28;
+const PAGE_H = 841.89;
+const MARGIN = 40;
+const CONTENT_W = PAGE_W - MARGIN * 2;
+const FONT_SIZE_BODY = 7.5;
+const ROW_H = 14;
 
-  for (const item of sliced) {
-    const barW = Math.max(2, (item.value / maxVal) * barMaxWidth);
-    const pctColor = item.value >= 100 ? "#22C55E" : item.value >= 50 ? "#EAB308" : "#EF4444";
+// ── Text truncation ──────────────────────────────────────────────────
 
-    rects.push(
-      { type: "rect", x: labelWidth, y, w: barW, h: 12, color: pctColor, r: 2 },
-      { type: "line", x1: labelWidth, y1: y + 14, x2: labelWidth + barMaxWidth, y2: y + 14, lineWidth: 0.5, lineColor: "#E5E7EB" },
-    );
-    y += 16;
+/**
+ * Truncate text so that it fits within `maxWidth` at the given font size.
+ * Appends an ellipsis character when truncation occurs.
+ */
+function truncateText(text: string, font: PDFFont, fontSize: number, maxWidth: number): string {
+  if (maxWidth <= 0) return "";
+  try {
+    if (font.widthOfTextAtSize(text, fontSize) <= maxWidth) return text;
+    let lo = 0;
+    let hi = text.length;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (font.widthOfTextAtSize(text.slice(0, mid) + "...", fontSize) <= maxWidth) {
+        lo = mid;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    return lo === 0 ? "" : text.slice(0, lo) + "...";
+  } catch {
+    // If widthOfTextAtSize fails (e.g. missing glyphs), do a rough char-based truncation
+    const avgCharWidth = fontSize * 0.55;
+    const maxChars = Math.floor(maxWidth / avgCharWidth);
+    if (text.length <= maxChars) return text;
+    return text.slice(0, Math.max(0, maxChars - 3)) + "...";
+  }
+}
+
+function addPage(doc: PDFDocument): PDFPage {
+  return doc.addPage([PAGE_W, PAGE_H]);
+}
+
+function drawHeader(page: PDFPage, font: PDFFont, bold: PDFFont, title: string, dateStr: string) {
+  page.drawRectangle({
+    x: 0, y: PAGE_H - 52, width: PAGE_W, height: 52,
+    color: rgb(0.12, 0.23, 0.47),
+  });
+  page.drawText(title, {
+    x: MARGIN, y: PAGE_H - 36, size: 14, font: bold,
+    color: rgb(1, 1, 1),
+  });
+  page.drawText(dateStr, {
+    x: MARGIN, y: PAGE_H - 50, size: 7, font,
+    color: rgb(0.8, 0.85, 0.95),
+  });
+}
+
+function drawFooter(page: PDFPage, font: PDFFont, pageNum: number, totalPages: number) {
+  const footerY = 24;
+  page.drawLine({
+    start: { x: MARGIN, y: footerY + 8 },
+    end: { x: PAGE_W - MARGIN, y: footerY + 8 },
+    thickness: 0.5,
+    color: rgb(0.8, 0.8, 0.85),
+  });
+  page.drawText(`AI Strategic Academy  |  ${new Date().toLocaleDateString("ru-RU")}`, {
+    x: MARGIN, y: footerY - 2, size: 6, font,
+    color: rgb(0.6, 0.6, 0.65),
+  });
+  page.drawText(`Страница ${pageNum} из ${totalPages}`, {
+    x: PAGE_W - MARGIN - 60, y: footerY - 2, size: 6, font,
+    color: rgb(0.6, 0.6, 0.65),
+  });
+}
+
+// ── Table drawing ────────────────────────────────────────────────────
+
+interface TableColumn {
+  header: string;
+  key: string;
+  width: number;
+  align?: "left" | "center" | "right";
+}
+
+function drawTable(
+  doc: PDFDocument,
+  pages: PDFPage[],
+  columns: TableColumn[],
+  rows: Record<string, string | number>[],
+  font: PDFFont,
+  bold: PDFFont,
+  startY: number,
+  title?: string,
+): number {
+  let page = pages[pages.length - 1];
+  let y = startY;
+
+  const headerBg = rgb(0.12, 0.23, 0.47);
+  const altBg1 = rgb(0.97, 0.98, 1);
+  const altBg2 = rgb(1, 1, 1);
+  const borderColor = rgb(0.85, 0.87, 0.9);
+  const textColor = rgb(0.15, 0.18, 0.25);
+  const headerTextColor = rgb(1, 1, 1);
+  const lineH = ROW_H;
+  const cellPad = 4;
+
+  // Section title
+  if (title) {
+    if (y < 60) {
+      page = addPage(doc);
+      pages.push(page);
+      y = PAGE_H - 80;
+    }
+    const truncTitle = truncateText(title, bold, 11, CONTENT_W);
+    page.drawText(truncTitle, {
+      x: MARGIN, y, size: 11, font: bold, color: rgb(0.12, 0.23, 0.47),
+    });
+    y -= 20;
   }
 
-  return rects;
-}
+  // Table header
+  if (y < 50) {
+    page = addPage(doc);
+    pages.push(page);
+    y = PAGE_H - 80;
+  }
 
-function summaryCard(text: string, value: string | number, bg: string, color: string) {
-  return {
-    text: `${text}\n${value}`,
-    alignment: "center" as const,
-    margin: [8, 8, 8, 8] as Margin,
-    fillColor: bg,
-    fontSize: 14,
-    bold: true,
-    color,
-  };
-}
+  let x = MARGIN;
+  page.drawRectangle({
+    x: MARGIN, y: y - 2, width: CONTENT_W, height: lineH,
+    color: headerBg,
+  });
+  for (const col of columns) {
+    const maxCellW = col.width - cellPad * 2;
+    const truncHeader = truncateText(col.header, bold, FONT_SIZE_BODY, maxCellW);
+    const textX = col.align === "right" ? x + col.width - cellPad
+      : col.align === "center" ? x + col.width / 2
+      : x + cellPad;
+    page.drawText(truncHeader, {
+      x: textX, y: y + 2, size: FONT_SIZE_BODY, font: bold,
+      color: headerTextColor,
+    });
+    x += col.width;
+  }
+  y -= lineH;
 
-export async function generateProgressPdf(rows: ProgressRow[]): Promise<Buffer> {
-  const pdfMake = await getPdfMake();
-  const grouped = groupByCourse(rows);
-  const total = rows.length;
-  const completed = rows.filter((r) => r.progressPercent >= 100).length;
-  const avg = total > 0 ? Math.round(rows.reduce((s, r) => s + r.progressPercent, 0) / total) : 0;
-  const active = total - completed;
-  const dateStr = new Date().toLocaleDateString("ru-RU");
-
-  const content: Record<string, unknown>[] = [
-    { text: "Отчёт по прогрессу слушателей", style: "header" },
-    { text: `Сформирован: ${dateStr}`, style: "dateLabel" },
-    {
-      layout: "noBorders",
-      table: {
-        widths: ["auto", "auto", "auto", "auto"],
-        body: [[
-          summaryCard("Всего", total, "#E8F0FE", "#1E3A5F"),
-          summaryCard("Завершили", completed, "#DCFCE7", "#16A34A"),
-          summaryCard("Средний", `${avg}%`, "#FEF3C7", "#D97706"),
-          summaryCard("Активных", active, "#FEE2E2", "#DC2626"),
-        ]],
-      },
-    },
-  ];
-
-  for (const [course, courseRows] of grouped) {
-    const courseCompleted = courseRows.filter((r) => r.progressPercent >= 100).length;
-    const courseAvg = Math.round(courseRows.reduce((s, r) => s + r.progressPercent, 0) / courseRows.length);
-
-    content.push(
-      { text: course, style: "subheader" },
-      { text: `Слушателей: ${courseRows.length} · Завершили: ${courseCompleted} · Средний: ${courseAvg}%`, style: "summaryLabel" },
-    );
-
-    const chartData = courseRows.map((r) => ({ label: r.studentName, value: r.progressPercent }));
-    const bars = buildBarChart(chartData);
-
-    if (bars.length > 0) {
-      content.push({ canvas: bars, margin: [0, 4, 0, 8] });
+  // Table rows
+  for (let i = 0; i < rows.length; i++) {
+    if (y < 40) {
+      page = addPage(doc);
+      pages.push(page);
+      y = PAGE_H - 60;
+      // Redraw header on new page
+      x = MARGIN;
+      page.drawRectangle({
+        x: MARGIN, y: y - 2, width: CONTENT_W, height: lineH,
+        color: headerBg,
+      });
+      for (const col of columns) {
+        const maxCellW = col.width - cellPad * 2;
+        const truncHeader = truncateText(col.header, bold, FONT_SIZE_BODY, maxCellW);
+        const textX = col.align === "right" ? x + col.width - cellPad
+          : col.align === "center" ? x + col.width / 2
+          : x + cellPad;
+        page.drawText(truncHeader, {
+          x: textX, y: y + 2, size: FONT_SIZE_BODY, font: bold,
+          color: headerTextColor,
+        });
+        x += col.width;
+      }
+      y -= lineH;
     }
 
-    const tableBody: Record<string, unknown>[][] = [
-      [
-        { text: "Слушатель", style: "tableHeader" },
-        { text: "Email", style: "tableHeader" },
-        { text: "Поток", style: "tableHeader" },
-        { text: "Прогресс", style: "tableHeader" },
-        { text: "Модуль", style: "tableHeader" },
-        { text: "Блок", style: "tableHeader" },
-        { text: "Урок", style: "tableHeader" },
-      ],
-    ];
-
-    for (const r of courseRows) {
-      const pctColor = r.progressPercent >= 100 ? "#22C55E" : r.progressPercent === 0 ? "#EF4444" : "#EAB308";
-      tableBody.push([
-        { text: r.studentName, style: "tableCell" },
-        { text: r.email, style: "tableCell" },
-        { text: r.cohort, style: "tableCell" },
-        { text: `${r.progressPercent}%`, style: "tableCell", color: pctColor, bold: true, alignment: "center" },
-        { text: r.currentModule ?? "—", style: "tableCell" },
-        { text: r.currentBlock ?? "—", style: "tableCell" },
-        { text: r.currentLesson ?? "—", style: "tableCell" },
-      ]);
-    }
-
-    content.push({
-      table: {
-        headerRows: 1,
-        widths: ["auto", "auto", "auto", "auto", "auto", "auto", "auto"],
-        body: tableBody,
-      },
-      layout: {
-        fillColor: (rowIndex: number) => rowIndex === 0 ? "#1E3A5F" : rowIndex % 2 === 0 ? "#F9FAFB" : "#FFFFFF",
-        hLineWidth: () => 0.5,
-        vLineWidth: () => 0.5,
-        hLineColor: () => "#E5E7EB",
-        vLineColor: () => "#E5E7EB",
-        paddingLeft: () => 6,
-        paddingRight: () => 6,
-        paddingTop: () => 4,
-        paddingBottom: () => 4,
-      },
+    const bg = i % 2 === 0 ? altBg1 : altBg2;
+    x = MARGIN;
+    page.drawRectangle({
+      x: MARGIN, y: y - 2, width: CONTENT_W, height: lineH,
+      color: bg,
     });
 
-    content.push({ text: "", margin: [0, 8, 0, 0] });
+    for (const col of columns) {
+      const raw = String(rows[i][col.key] ?? "");
+      const maxCellW = col.width - cellPad * 2;
+      const val = truncateText(raw, font, FONT_SIZE_BODY, maxCellW);
+      const textX = col.align === "right" ? x + col.width - cellPad
+        : col.align === "center" ? x + col.width / 2
+        : x + cellPad;
+      page.drawText(val, {
+        x: textX, y: y + 2, size: FONT_SIZE_BODY, font,
+        color: textColor,
+      });
+      x += col.width;
+    }
+
+    // Row border
+    page.drawLine({
+      start: { x: MARGIN, y: y - 2 },
+      end: { x: PAGE_W - MARGIN, y: y - 2 },
+      thickness: 0.3,
+      color: borderColor,
+    });
+
+    y -= lineH;
   }
 
-  const dd = {
-    content,
-    styles: STYLES,
-    defaultStyle: { font: "Roboto", fontSize: 9 },
-    pageSize: "A4",
-    pageMargins: [40, 40, 40, 40] as Margin,
-    footer: (currentPage: number, pageCount: number) => ({
-      text: `Страница ${currentPage} из ${pageCount} · AI Strategic Academy`,
-      alignment: "center" as const,
-      fontSize: 7,
-      color: "#999999",
-      margin: [0, 10, 0, 0] as Margin,
-    }),
-  };
-
-  return new Promise((resolve) => {
-    const pdfDoc = pdfMake.createPdf(dd);
-    pdfDoc.getBuffer((buffer: Buffer) => { resolve(buffer); });
-  });
+  return y;
 }
 
-export async function generateRiskPdf(rows: RiskRow[]): Promise<Buffer> {
-  const pdfMake = await getPdfMake();
-  const dateStr = new Date().toLocaleDateString("ru-RU");
+// ── Progress report ──────────────────────────────────────────────────
 
-  const critical = rows.filter((r) => r.severity === "critical").length;
-  const high = rows.filter((r) => r.severity === "high").length;
+export async function generateProgressPdf(rows: ProgressRow[]): Promise<Uint8Array> {
+  const { regular, bold } = getFonts();
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
 
-  const content: Record<string, unknown>[] = [
-    { text: "Отчёт по рискам слушателей", style: "header" },
-    { text: `Сформирован: ${dateStr}`, style: "dateLabel" },
-    {
-      layout: "noBorders",
-      table: {
-        widths: ["auto", "auto", "auto"],
-        body: [[
-          summaryCard("Всего", rows.length, "#E8F0FE", "#1E3A5F"),
-          summaryCard("Критических", critical, "#FEE2E2", "#DC2626"),
-          summaryCard("Высоких", high, "#FEF3C7", "#D97706"),
-        ]],
-      },
-    },
+  const font = regular
+    ? await doc.embedFont(regular, { subset: true })
+    : await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = bold
+    ? await doc.embedFont(bold, { subset: true })
+    : await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const pages: PDFPage[] = [addPage(doc)];
+  const page = pages[0];
+  let y = PAGE_H - 80;
+
+  const dateStr = `Сформирован: ${new Date().toLocaleDateString("ru-RU", {
+    year: "numeric", month: "long", day: "numeric",
+  })}`;
+
+  drawHeader(page, font, boldFont, "Отчёт по прогрессу слушателей", dateStr);
+
+  // Summary
+  const total = rows.length;
+  const completed = rows.filter((r) => r.progressPercent >= 100).length;
+  const inProgress = rows.filter((r) => r.progressPercent > 0 && r.progressPercent < 100).length;
+  const notStarted = rows.filter((r) => r.progressPercent === 0).length;
+  const avg = total > 0 ? Math.round(rows.reduce((s, r) => s + r.progressPercent, 0) / total) : 0;
+
+  y -= 12;
+  page.drawText("Сводка", { x: MARGIN, y, size: 12, font: boldFont, color: rgb(0.12, 0.23, 0.47) });
+  y -= 18;
+
+  const summaryItems = [
+    `Всего слушателей: ${total}`,
+    `Завершили курс: ${completed}`,
+    `В процессе: ${inProgress}`,
+    `Не начали: ${notStarted}`,
+    `Средний прогресс: ${avg}%`,
   ];
-
-  const severityColors: Record<string, string> = {
-    critical: "#FEE2E2",
-    high: "#FEF3C7",
-    medium: "#FEF9C3",
-    low: "#F3F4F6",
-  };
-
-  const tableBody: Record<string, unknown>[][] = [
-    [
-      { text: "Слушатель", style: "tableHeader" },
-      { text: "Email", style: "tableHeader" },
-      { text: "Курс", style: "tableHeader" },
-      { text: "Тип риска", style: "tableHeader" },
-      { text: "Уровень", style: "tableHeader" },
-      { text: "Статус", style: "tableHeader" },
-    ],
-  ];
-
-  for (const r of rows) {
-    tableBody.push([
-      { text: r.studentName, style: "tableCell" },
-      { text: r.email, style: "tableCell" },
-      { text: r.course, style: "tableCell" },
-      { text: r.type, style: "tableCell" },
-      { text: r.severity, style: "tableCell", fillColor: severityColors[r.severity] ?? undefined, bold: r.severity === "critical" },
-      { text: r.status, style: "tableCell" },
-    ]);
+  for (const item of summaryItems) {
+    page.drawText(`- ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+    y -= 14;
   }
 
-  content.push({
-    table: {
-      headerRows: 1,
-      widths: ["auto", "auto", "auto", "auto", "auto", "auto"],
-      body: tableBody,
-    },
-    layout: {
-      fillColor: (rowIndex: number) => rowIndex === 0 ? "#1E3A5F" : rowIndex % 2 === 0 ? "#F9FAFB" : "#FFFFFF",
-      hLineWidth: () => 0.5,
-      vLineWidth: () => 0.5,
-      hLineColor: () => "#E5E7EB",
-      vLineColor: () => "#E5E7EB",
-    },
-    margin: [0, 12, 0, 0],
-  });
+  y -= 8;
 
-  const dd = {
-    content,
-    styles: STYLES,
-    defaultStyle: { font: "Roboto", fontSize: 9 },
-    pageSize: "A4",
-    pageMargins: [40, 40, 40, 40] as Margin,
-    footer: (currentPage: number, pageCount: number) => ({
-      text: `Страница ${currentPage} из ${pageCount} · AI Strategic Academy`,
-      alignment: "center" as const,
-      fontSize: 7,
-      color: "#999999",
-    }),
-  };
+  // Table columns
+  const columns: TableColumn[] = [
+    { header: "Слушатель", key: "studentName", width: 95 },
+    { header: "Email", key: "email", width: 100 },
+    { header: "Поток", key: "cohort", width: 65 },
+    { header: "%", key: "progressPercent", width: 30, align: "center" },
+    { header: "Модуль", key: "currentModule", width: 75 },
+    { header: "Урок", key: "currentLesson", width: 95 },
+    { header: "Риски", key: "riskCount", width: 26, align: "center" },
+  ];
 
-  return new Promise((resolve) => {
-    const pdfDoc = pdfMake.createPdf(dd);
-    pdfDoc.getBuffer((buffer: Buffer) => { resolve(buffer); });
+  const grouped = groupByCourse(rows);
+  for (const [course, courseRows] of grouped) {
+    const tableRows = courseRows.map((r) => ({
+      studentName: r.studentName,
+      email: r.email,
+      cohort: r.cohort,
+      progressPercent: `${r.progressPercent}%`,
+      currentModule: r.currentModule ?? "",
+      currentLesson: r.currentLesson ?? "",
+      riskCount: r.riskCount ?? 0,
+    }));
+
+    y = drawTable(doc, pages, columns, tableRows, font, boldFont, y, course);
+    y -= 12;
+  }
+
+  // Footer on each page
+  const totalPages = pages.length;
+  for (let i = 0; i < totalPages; i++) {
+    drawFooter(pages[i], font, i + 1, totalPages);
+  }
+
+  return doc.save();
+}
+
+// ── Risk report ──────────────────────────────────────────────────────
+
+export async function generateRiskPdf(rows: RiskRow[]): Promise<Uint8Array> {
+  const { regular, bold } = getFonts();
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+
+  const font = regular
+    ? await doc.embedFont(regular, { subset: true })
+    : await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = bold
+    ? await doc.embedFont(bold, { subset: true })
+    : await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const pages: PDFPage[] = [addPage(doc)];
+  const page = pages[0];
+  let y = PAGE_H - 80;
+
+  const dateStr = `Сформирован: ${new Date().toLocaleDateString("ru-RU", {
+    year: "numeric", month: "long", day: "numeric",
+  })}`;
+
+  drawHeader(page, font, boldFont, "Отчёт по рискам слушателей", dateStr);
+
+  // Summary
+  const critical = rows.filter((r) => r.severity === "critical").length;
+  const high = rows.filter((r) => r.severity === "high").length;
+  const medium = rows.filter((r) => r.severity === "medium").length;
+  const low = rows.filter((r) => r.severity === "low").length;
+
+  y -= 12;
+  page.drawText("Сводка", { x: MARGIN, y, size: 12, font: boldFont, color: rgb(0.12, 0.23, 0.47) });
+  y -= 18;
+
+  const summaryItems = [
+    `Всего рисков: ${rows.length}`,
+    `Критических: ${critical}`,
+    `Высоких: ${high}`,
+    `Средних: ${medium}`,
+    `Низких: ${low}`,
+  ];
+  for (const item of summaryItems) {
+    page.drawText(`- ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+    y -= 14;
+  }
+
+  y -= 8;
+
+  const columns: TableColumn[] = [
+    { header: "Слушатель", key: "studentName", width: 100 },
+    { header: "Email", key: "email", width: 105 },
+    { header: "Курс", key: "course", width: 105 },
+    { header: "Тип риска", key: "type", width: 75 },
+    { header: "Уровень", key: "severity", width: 45, align: "center" },
+    { header: "Статус", key: "status", width: 45, align: "center" },
+  ];
+
+  const tableRows = rows.map((r) => ({
+    studentName: r.studentName,
+    email: r.email,
+    course: r.course,
+    type: r.type,
+    severity: r.severity,
+    status: r.status,
+  }));
+
+  drawTable(doc, pages, columns, tableRows, font, boldFont, y);
+
+  const totalPages = pages.length;
+  for (let i = 0; i < totalPages; i++) {
+    drawFooter(pages[i], font, i + 1, totalPages);
+  }
+
+  return doc.save();
+}
+
+// ── Certificate report (PDF) ─────────────────────────────────────────
+
+export async function generateCertificatePdf(rows: CertificateRow[]): Promise<Uint8Array> {
+  const { regular, bold } = getFonts();
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+
+  const font = regular
+    ? await doc.embedFont(regular, { subset: true })
+    : await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = bold
+    ? await doc.embedFont(bold, { subset: true })
+    : await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const pages: PDFPage[] = [addPage(doc)];
+  const page = pages[0];
+  let y = PAGE_H - 80;
+
+  const dateStr = `Сформирован: ${new Date().toLocaleDateString("ru-RU", {
+    year: "numeric", month: "long", day: "numeric",
+  })}`;
+
+  drawHeader(page, font, boldFont, "Отчёт по сертификатам", dateStr);
+
+  // Summary
+  y -= 12;
+  page.drawText("Сводка", { x: MARGIN, y, size: 12, font: boldFont, color: rgb(0.12, 0.23, 0.47) });
+  y -= 18;
+  page.drawText(`- Всего выдано сертификатов: ${rows.length}`, {
+    x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3),
   });
+  y -= 14;
+
+  // Unique courses
+  const uniqueCourses = new Set(rows.map((r) => r.course)).size;
+  page.drawText(`- По курсам: ${uniqueCourses}`, {
+    x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3),
+  });
+  y -= 22;
+
+  const columns: TableColumn[] = [
+    { header: "Номер", key: "number", width: 80 },
+    { header: "Слушатель", key: "studentName", width: 100 },
+    { header: "Email", key: "email", width: 100 },
+    { header: "Курс", key: "course", width: 120 },
+    { header: "Дата", key: "issuedAt", width: 56, align: "center" },
+  ];
+
+  const tableRows = rows.map((r) => ({
+    number: r.number,
+    studentName: r.studentName,
+    email: r.email,
+    course: r.course,
+    issuedAt: r.issuedAt,
+  }));
+
+  drawTable(doc, pages, columns, tableRows, font, boldFont, y);
+
+  const totalPages = pages.length;
+  for (let i = 0; i < totalPages; i++) {
+    drawFooter(pages[i], font, i + 1, totalPages);
+  }
+
+  return doc.save();
+}
+
+// ── Assignment report (PDF) ──────────────────────────────────────────
+
+export async function generateAssignmentPdf(rows: AssignmentRow[]): Promise<Uint8Array> {
+  const { regular, bold } = getFonts();
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+
+  const font = regular
+    ? await doc.embedFont(regular, { subset: true })
+    : await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = bold
+    ? await doc.embedFont(bold, { subset: true })
+    : await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const pages: PDFPage[] = [addPage(doc)];
+  const page = pages[0];
+  let y = PAGE_H - 80;
+
+  drawHeader(page, font, boldFont, "Отчёт по заданиям", `Сформирован: ${new Date().toLocaleDateString("ru-RU")}`);
+
+  y -= 12;
+  page.drawText("Сводка", { x: MARGIN, y, size: 12, font: boldFont, color: rgb(0.12, 0.23, 0.47) });
+  y -= 18;
+  const summaryItems = [
+    `Всего отправок: ${rows.length}`,
+    `На проверке: ${rows.filter((r) => r.status === "SUBMITTED" || r.status === "IN_REVIEW").length}`,
+    `Принято: ${rows.filter((r) => r.status === "ACCEPTED").length}`,
+  ];
+  for (const item of summaryItems) {
+    page.drawText(`- ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+    y -= 14;
+  }
+  y -= 8;
+
+  drawTable(
+    doc,
+    pages,
+    [
+      { header: "Слушатель", key: "studentName", width: 95 },
+      { header: "Курс", key: "course", width: 100 },
+      { header: "Задание", key: "assignment", width: 115 },
+      { header: "Статус", key: "status", width: 55 },
+      { header: "Балл", key: "score", width: 30, align: "center" },
+      { header: "Дата", key: "submittedAt", width: 58, align: "center" },
+    ],
+    rows.map((row) => ({
+      studentName: row.studentName,
+      course: row.course,
+      assignment: row.assignment,
+      status: row.status,
+      score: row.score ?? "",
+      submittedAt: row.submittedAt,
+    })),
+    font,
+    boldFont,
+    y,
+  );
+
+  const totalPages = pages.length;
+  for (let i = 0; i < totalPages; i++) {
+    drawFooter(pages[i], font, i + 1, totalPages);
+  }
+
+  return doc.save();
+}
+
+// ── Curator workload report (PDF) ────────────────────────────────────
+
+export async function generateCuratorWorkloadPdf(rows: CuratorWorkloadRow[]): Promise<Uint8Array> {
+  const { regular, bold } = getFonts();
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+
+  const font = regular
+    ? await doc.embedFont(regular, { subset: true })
+    : await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = bold
+    ? await doc.embedFont(bold, { subset: true })
+    : await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const pages: PDFPage[] = [addPage(doc)];
+  const page = pages[0];
+  let y = PAGE_H - 80;
+
+  drawHeader(page, font, boldFont, "Отчёт по нагрузке кураторов", `Сформирован: ${new Date().toLocaleDateString("ru-RU")}`);
+
+  y -= 12;
+  page.drawText("Сводка", { x: MARGIN, y, size: 12, font: boldFont, color: rgb(0.12, 0.23, 0.47) });
+  y -= 18;
+  const summaryItems = [
+    `Кураторов: ${rows.length}`,
+    `Слушателей: ${rows.reduce((sum, row) => sum + row.studentsCount, 0)}`,
+    `Открытых вопросов: ${rows.reduce((sum, row) => sum + row.openQuestions, 0)}`,
+    `Заданий на проверке: ${rows.reduce((sum, row) => sum + row.pendingAssignments, 0)}`,
+  ];
+  for (const item of summaryItems) {
+    page.drawText(`- ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+    y -= 14;
+  }
+  y -= 8;
+
+  drawTable(
+    doc,
+    pages,
+    [
+      { header: "Куратор", key: "curatorName", width: 100 },
+      { header: "Слуш.", key: "studentsCount", width: 35, align: "center" },
+      { header: "%", key: "avgProgress", width: 30, align: "center" },
+      { header: "Вопр.", key: "openQuestions", width: 38, align: "center" },
+      { header: "Зад.", key: "pendingAssignments", width: 38, align: "center" },
+      { header: "Риски", key: "activeRisks", width: 38, align: "center" },
+      { header: "Крит.", key: "criticalRisks", width: 38, align: "center" },
+      { header: "Потоки", key: "cohorts", width: 120 },
+    ],
+    rows.map((row) => ({
+      curatorName: row.curatorName,
+      studentsCount: row.studentsCount,
+      avgProgress: `${row.avgProgress}%`,
+      openQuestions: row.openQuestions,
+      pendingAssignments: row.pendingAssignments,
+      activeRisks: row.activeRisks,
+      criticalRisks: row.criticalRisks,
+      cohorts: row.cohorts,
+    })),
+    font,
+    boldFont,
+    y,
+  );
+
+  const totalPages = pages.length;
+  for (let i = 0; i < totalPages; i++) {
+    drawFooter(pages[i], font, i + 1, totalPages);
+  }
+
+  return doc.save();
 }

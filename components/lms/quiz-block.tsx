@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,13 +60,13 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
   // ── Idle / before start ────────────────────────────────────────────
   if (phase === "idle") {
     return (
-      <div className="rounded-2xl border bg-card p-5 space-y-4">
+      <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold">{quiz.title}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{quiz.questionsCount} вопросов · порог {quiz.passThreshold}% · {quiz.maxAttempts} попытки</p>
+            <p className="text-body-md font-body-md text-m3-on-surface">{quiz.title}</p>
+            <p className="text-label-sm font-label-sm text-m3-on-surface-variant mt-0.5">{quiz.questionsCount} вопросов · порог {quiz.passThreshold}% · {quiz.maxAttempts} попытки</p>
           </div>
-          <Badge className="border-amber-200 bg-amber-50 text-amber-700">Тест</Badge>
+          <Badge className="border-m3-secondary-fixed-dim bg-m3-secondary-fixed text-m3-secondary">Тест</Badge>
         </div>
         <Button onClick={() => setPhase("active")} size="sm">
           Начать тест
@@ -78,19 +78,19 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
   // ── Active (during quiz) ──────────────────────────────────────────
   if (phase === "active") {
     return (
-      <div className="rounded-2xl border bg-card">
+      <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
         {/* Question numbers */}
-        <div className="flex items-center gap-1.5 px-5 py-3 border-b overflow-x-auto">
+        <div className="flex items-center gap-1.5 px-5 py-3 border-b border-m3-outline-variant overflow-x-auto">
           {quiz.questions.map((q, i) => (
             <button
               key={q.id}
               onClick={() => setCurrentIndex(i)}
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-medium transition-colors ${
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-label-sm font-label-sm transition-colors ${
                 i === currentIndex
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-m3-primary text-m3-on-primary"
                   : answers[q.id]
-                  ? "bg-primary/10 text-primary"
-                  : "bg-muted text-muted-foreground"
+                  ? "bg-m3-primary-container text-m3-primary"
+                  : "bg-m3-surface-container-high text-m3-on-surface-variant"
               }`}
             >
               {i + 1}
@@ -100,14 +100,14 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
 
         <CardContent className="space-y-4 py-5">
           {/* Progress */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-between text-label-sm font-label-sm text-m3-on-surface-variant">
             <span>Вопрос {currentIndex + 1} из {quiz.questions.length}</span>
             <span>{Math.round((Object.keys(answers).length / quiz.questions.length) * 100)}%</span>
           </div>
           <Progress value={progressPercent} className="h-1" />
 
           {/* Question */}
-          <p className="text-sm font-medium">{currentQuestion.text}</p>
+          <p className="text-body-md font-body-md text-m3-on-surface">{currentQuestion.text}</p>
 
           {/* Options */}
           <div className="space-y-2">
@@ -116,18 +116,18 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
                 key={option}
                 className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-all ${
                   answers[currentQuestion.id] === option
-                    ? "border-primary bg-primary/5 ring-1 ring-primary"
-                    : "hover:bg-muted"
+                    ? "border-m3-primary bg-m3-primary-container/20 ring-1 ring-m3-primary"
+                    : "border-m3-outline-variant hover:bg-m3-surface-container-high"
                 }`}
               >
                 <input
                   type="radio"
                   name={currentQuestion.id}
-                  className="h-4 w-4 text-primary focus:ring-primary"
+                  className="h-4 w-4 text-m3-primary focus:ring-m3-primary accent-m3-primary"
                   checked={answers[currentQuestion.id] === option}
                   onChange={() => handleOptionChange(currentQuestion.id, option)}
                 />
-                <span className="text-sm">{option}</span>
+                <span className="text-body-md font-body-md text-m3-on-surface">{option}</span>
               </label>
             ))}
           </div>
@@ -155,7 +155,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
                 onClick={handleSubmit}
                 disabled={submitting}
               >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                {submitting ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="check_circle" size={16} />}
                 {submitting ? "Отправка..." : "Завершить тест"}
               </Button>
             )}
@@ -168,21 +168,21 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
   // ── Result ────────────────────────────────────────────────────────
   if (phase === "result") {
     return (
-      <div className="rounded-2xl border bg-card p-8 text-center space-y-5">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+      <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-8 shadow-m3-soft text-center space-y-5">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-m3-surface-container-high">
           {result?.passed ? (
-            <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+            <Icon name="check_circle" size={40} className="text-m3-tertiary" fill />
           ) : (
-            <XCircle className="h-10 w-10 text-rose-600" />
+            <Icon name="cancel" size={40} className="text-m3-error" fill />
           )}
         </div>
         <div>
-          <p className="text-3xl font-bold">{result?.score ?? 0}%</p>
+          <p className="text-headline-lg font-headline-lg text-m3-on-surface">{result?.score ?? 0}%</p>
           <Badge
             className={
               result?.passed
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700 mt-2"
-                : "border-rose-200 bg-rose-50 text-rose-700 mt-2"
+                ? "border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed text-m3-tertiary mt-2"
+                : "border-m3-error-fixed-dim bg-m3-error-fixed text-m3-error mt-2"
             }
           >
             {result?.passed ? "Пройден" : "Не пройден"}
@@ -209,25 +209,25 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
   // ── Review ────────────────────────────────────────────────────────
   if (phase === "review") {
     return (
-      <div className="rounded-2xl border bg-card p-5 space-y-4">
-        <p className="text-sm font-semibold">Ответы</p>
+      <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
+        <p className="text-body-md font-body-md text-m3-on-surface">Ответы</p>
         {quiz.questions.map((q, i) => {
           const selected = answers[q.id];
           return (
-            <div key={q.id} className="rounded-xl border p-4 space-y-2">
-              <p className="text-sm font-medium">{i + 1}. {q.text}</p>
+            <div key={q.id} className="rounded-xl border border-m3-outline-variant p-4 space-y-2">
+              <p className="text-body-md font-body-md text-m3-on-surface">{i + 1}. {q.text}</p>
               <div className="space-y-1">
                 {q.options.map((option) => {
                   const isSelected = selected === option;
                   return (
                     <div
                       key={option}
-                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
-                        isSelected ? "bg-primary/5 border border-primary/20" : "bg-muted/30"
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-body-md font-body-md ${
+                        isSelected ? "bg-m3-primary-container/20 border border-m3-outline-variant" : "bg-m3-surface-container-high"
                       }`}
                     >
-                      {isSelected && <span className="text-primary">▶</span>}
-                      <span>{option}</span>
+                      {isSelected && <span className="text-m3-primary">▶</span>}
+                      <span className="text-m3-on-surface">{option}</span>
                     </div>
                   );
                 })}

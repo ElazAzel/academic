@@ -37,10 +37,10 @@ export default async function AdminCoursesPage() {
      <div className="flex justify-between items-center">
       <h2 className="text-xl font-bold">Список курсов</h2>
      </div>
-     <CourseManageGrid courses={courses}/>
+     <CourseManageGrid courses={courses} builderBasePath="/admin/courses" />
     </div>
     <div className="lg:col-span-1">
-     <CreateCourseForm/>
+     <CreateCourseForm builderBasePath="/admin/courses" />
     </div>
    </div>
   </AppShell>

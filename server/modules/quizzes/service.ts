@@ -30,6 +30,21 @@ export function gradeObjectiveQuiz(
       expected = question.options[correct.index];
     }
 
+    // If correctAnswer.value is an ID (like "a") and options are [{id,label},...],
+    // resolve the ID to the matching label so it can be compared against the student's answer
+    if (typeof expected === "string" && Array.isArray(question.options) && question.options.length > 0) {
+      const firstOpt = question.options[0];
+      if (typeof firstOpt === "object" && firstOpt !== null && "id" in firstOpt) {
+        const matched = (question.options as Array<{ id?: string; label?: string }>).find((o) => o.id === expected);
+        if (matched) expected = matched.label ?? matched.id;
+      } else if (typeof expected === "string" && expected.length <= 3 && Array.isArray(question.options)) {
+        const idx = parseInt(expected, 10);
+        if (!isNaN(idx) && idx >= 0 && idx < question.options.length) {
+          expected = question.options[idx];
+        }
+      }
+    }
+
     const actual = answers[question.id];
     const match = JSON.stringify(normalizeAnswer(expected)) === JSON.stringify(normalizeAnswer(actual));
     return sum + (match ? question.points : 0);
@@ -43,14 +58,32 @@ export function gradeObjectiveQuiz(
   };
 }
 
+/** Публичный список квизов (без correctAnswer — C2) */
 export async function listQuizzes() {
-  return prisma.quiz.findMany({
+  const quizzes = await prisma.quiz.findMany({
     include: {
       course: { select: { id: true, title: true } },
       lesson: { select: { id: true, title: true } },
       questions: { orderBy: { order: "asc" } }
     },
     orderBy: { createdAt: "desc" }
+  });
+  // Удаляем correctAnswer из вопросов для всех не-privileged запросов
+  return stripAnswerKeys(quizzes);
+}
+
+/** Удаляет correctAnswer из списка квизов */
+function stripAnswerKeys(quizzes: unknown[]): unknown[] {
+  return quizzes.map((q) => {
+    const quiz = q as Record<string, unknown>;
+    if (Array.isArray(quiz.questions)) {
+      quiz.questions = quiz.questions.map((question: Record<string, unknown>) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { correctAnswer, ...rest } = question;
+        return rest;
+      });
+    }
+    return quiz;
   });
 }
 

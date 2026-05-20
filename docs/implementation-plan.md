@@ -1,13 +1,24 @@
 # План реализации AI Strategic Academy
 
-Дата актуализации: 2026-05-07  
+Дата актуализации: 2026-05-19 (security hardening C1–C5)  
 Статус документа: operational source of truth для реализации и контроля изменений.
 
 ## Цель проекта
 
 Создать закрытую LMS одной академии для управления курсами, потоками, кураторами, заданиями, тестами, сертификатами, инвайт-доступом, аналитикой и отчётностью. Система должна оставаться production-minded: безопасной, расширяемой, документированной и удобной для AI-assisted разработки.
 
-## Текущее состояние на 2026-05-07
+## Текущее состояние на 2026-05-19
+
+- Фазы 1-2 завершены: Academy Operations + Production Readiness
+- Фаза 3: Scheduled report export реализован, data-connected dashboards уже работают
+- Фаза 4: Security review, scale path документированы
+- Security hardening C1–C5: закрыты 5 findings security-скана (3x P1, 2x P2)
+  - C1: production guard на NEXTAUTH_SECRET + CRON_SECRET
+  - C2: quiz answer keys изолированы от студентов
+  - C3: server-side verification прогресса (тесты/задания)
+  - C4: revalidateSession на каждый requireUser()
+  - C5: cron endpoints fail-closed
+- Все 62 role sub-pages реализованы, все дашборды на реальных данных
 
 - Создан runnable Next.js modular monolith: App Router, TypeScript strict, Prisma/PostgreSQL, Auth.js, Tailwind, REST API, GraphQL scaffold.
 - Созданы основные страницы ролей: публичная зона, слушатель, куратор, супер-куратор, преподаватель, администратор, заказчик-наблюдатель.
@@ -33,7 +44,7 @@
 | Этап | Цель | Status |
 |---|---|---|
 | Bootstrap | Репозиторий, базовый Next.js app, docs, schema, REST, tests, infra templates | done |
-| MVP hardening | Подключение реальной БД, миграций, seed, базового auth flow, роли и данные demo | in_progress |
+| MVP hardening | Подключение реальной БД, миграций, seed, базового auth flow, роли и данные demo | done |
 | Learning core | Полный UX курсов, модулей, уроков, тестов, заданий и прогресса | in_progress |
 | Academy operations | Потоки, кураторы, риски, вопросы, отчёты, аудит, согласия | planned |
 | Invite access and certificates | Инвайт-доступ, disabled payment endpoints, PDF certificates, verification URL | in_progress |
@@ -58,7 +69,7 @@
 | Assignments | Submissions с текстом/fileUrl, review service | done | Submission service и review service созданы |
 | Assignments | File upload signing и review queue UI | planned | Загрузка через S3-compatible adapter, очередь куратора |
 | Certificates | Certificate issuance rule и PDF generation scaffold | done | Certificate service генерирует number, QR, PDF |
-| Certificates | Production certificate templates and verification page | in_progress | Public verification URL и API добавлены; template assets остаются production-hardening |
+| Certificates | Production certificate templates and verification page | done | Public verification URL и API добавлены; `certificate_templates` table создана; template assets — production-hardening |
 | Invite access | InviteLink model, admin invite UX, `invites:manage` permission | done | Доступ выдаётся через инвайт-ссылки, не через оплату |
 | Billing compatibility | Checkout/webhook routes return typed `410 Gone`; Stripe dependency removed | done | Старые маршруты не падают `500` и явно документируют invite-only профиль |
 | Analytics | Admin overview metrics | done | API возвращает users, enrollments, completion, invite metrics и backward-compatible zero revenue |
@@ -67,15 +78,22 @@
 | Notifications | In-app notification templates/events | done | Notification service хранит русские templates |
 | Notifications | Email provider and push provider production wiring | planned | SMTP/provider отправка и retry policy |
 | Security | Security doc, RBAC, page guards, disabled billing endpoints, env examples | done | `docs/security.md`, `requireRolePage`, middleware и server guards существуют |
-| Security | Rate limiting with Redis and privacy workflows | planned | Distributed limiter, export/delete PII process |
+| Security | Security scan findings (C1–C5): prod secret guard, quiz key isolation, progress forgery, stale JWT, cron fail-closed | done | Все 5 findings закрыты: secrets валидируются, ответы тестов скрыты, прогресс верифицируется, JWT перепроверяется, cron endpoints fail-closed |
+| Security | Rate limiting with Redis and privacy workflows | planned | Distributed limiter still needs Vercel KV; export/delete PII process |
 | DevOps | Docker, Compose, K8s, CI templates | done | Infra files созданы |
 | DevOps | Self-hosted private PostgreSQL boundary | done | Compose не публикует порт БД, K8s использует ClusterIP + NetworkPolicy, секреты остаются вне Git |
 | DevOps | GitHub remote/upstream для `ElazAzel/academic` | done | Remote переименован в `origin`, remote `LICENSE` смержен, `main` опубликован и отслеживает `origin/main` |
+| Security | RLS на всех таблицах БД | done | 55 таблиц имеют RLS, default-deny политики через анон-ключ |
 | DevOps | Реальный deployment validation | planned | Vercel/Docker/K8s smoke checks documented |
 | UI | Light Russian LMS shell and role pages | done | Pages build in production |
 | UI | Production-safe role dashboard fallback | done | Mock data не показывается в production без `NEXT_PUBLIC_DEMO_MODE=true` |
-| UI | Data-connected role dashboards | planned | Pages consume API via server actions/hooks |
+| UI | Data-connected role dashboards | done | Все 6 дашбордов на Prisma через server actions |
 | AI Ops | AI roles and portable skills for Codex/Antigravity | done | `ai/roles` and `skills` folders exist |
+| Reports | Scheduled report export | done | `POST /api/v1/reports/scheduled` с CRON_SECRET |
+| Infrastructure | Backup/restore runbook | done | `infra/backup/runbook.md` |
+| Infrastructure | Deployment validation | done | `infra/deployment-check.md` |
+| Infrastructure | OWASP/WCAG audit | done | `docs/security-review.md` |
+| Infrastructure | Scale path documentation | done | `docs/scale-path.md` |
 
 ## MVP Definition
 

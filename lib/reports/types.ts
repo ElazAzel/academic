@@ -29,6 +29,31 @@ export interface CertificateRow {
   issuedAt: string;
 }
 
+export interface AssignmentRow {
+  studentName: string;
+  email: string;
+  course: string;
+  lesson?: string;
+  assignment: string;
+  status: string;
+  score?: number | null;
+  submittedAt: string;
+  reviewedAt?: string | null;
+  reviewerName?: string | null;
+}
+
+export interface CuratorWorkloadRow {
+  curatorName: string;
+  curatorEmail: string;
+  cohorts: string;
+  studentsCount: number;
+  avgProgress: number;
+  openQuestions: number;
+  pendingAssignments: number;
+  activeRisks: number;
+  criticalRisks: number;
+}
+
 export interface ReportData<T> {
   title: string;
   filename: string;
@@ -37,4 +62,12 @@ export interface ReportData<T> {
   summary: Record<string, number>;
 }
 
+export interface ReportDataScope {
+  studentIds?: string[];
+  courseIds?: string[];
+  cohortIds?: string[];
+  curatorIds?: string[];
+}
+
 export type ReportFormat = "csv" | "xlsx" | "pdf";
+export type ReportType = "progress" | "risk" | "assignments" | "certificates" | "curator_workload";

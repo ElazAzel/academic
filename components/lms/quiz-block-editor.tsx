@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { QUIZ } from "@/lib/constants";
 
 interface QuestionInput {
   type: string;
@@ -21,8 +22,8 @@ export function QuizBlockEditor({
   onChange: (data: Record<string, unknown>) => void;
 }) {
   const [title, setTitle] = useState(value?.title ?? "");
-  const [passThreshold, setPassThreshold] = useState(value?.passThreshold ?? 80);
-  const [maxAttempts, setMaxAttempts] = useState(value?.maxAttempts ?? 1);
+  const [passThreshold, setPassThreshold] = useState(value?.passThreshold ?? QUIZ.DEFAULT_PASS_THRESHOLD);
+  const [maxAttempts, setMaxAttempts] = useState(value?.maxAttempts ?? QUIZ.DEFAULT_MAX_ATTEMPTS);
   const [questions, setQuestions] = useState<QuestionInput[]>(value?.questions ?? []);
 
   const updateParent = (q: QuestionInput[], t: string, pt: number, ma: number) => {
@@ -40,15 +41,15 @@ export function QuizBlockEditor({
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="text-xs text-muted-foreground">Название теста</label>
-          <input className="w-full rounded-lg border bg-white px-3 py-1.5 text-sm" value={title} onChange={(e) => { setTitle(e.target.value); updateParent(questions, e.target.value, passThreshold, maxAttempts); }} />
+           <input className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={title} onChange={(e) => { setTitle(e.target.value); updateParent(questions, e.target.value, passThreshold, maxAttempts); }} />
         </div>
         <div>
           <label className="text-xs text-muted-foreground">Порог (%)</label>
-          <input type="number" className="w-full rounded-lg border bg-white px-3 py-1.5 text-sm" value={passThreshold} onChange={(e) => { const v = Number(e.target.value); setPassThreshold(v); updateParent(questions, title, v, maxAttempts); }} />
+          <input type="number" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={passThreshold} onChange={(e) => { const v = Number(e.target.value); setPassThreshold(v); updateParent(questions, title, v, maxAttempts); }} />
         </div>
         <div>
           <label className="text-xs text-muted-foreground">Макс. попыток</label>
-          <input type="number" className="w-full rounded-lg border bg-white px-3 py-1.5 text-sm" value={maxAttempts} onChange={(e) => { const v = Number(e.target.value); setMaxAttempts(v); updateParent(questions, title, passThreshold, v); }} />
+          <input type="number" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={maxAttempts} onChange={(e) => { const v = Number(e.target.value); setMaxAttempts(v); updateParent(questions, title, passThreshold, v); }} />
         </div>
       </div>
 

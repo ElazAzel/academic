@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { Avatar } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -14,13 +14,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ROLE_HOME_PATH } from "@/lib/auth/role-redirect";
 import { ROLE_LABELS } from "@/types/domain";
+import { AUTH_ROUTES, FORBIDDEN_ROUTE } from "@/lib/constants";
 import type { AppSessionUser, RoleKey } from "@/types/domain";
 
 export function UserAccountNav({ user }: { user: AppSessionUser }) {
   const primaryRole = (["admin", "super_curator", "curator", "instructor", "customer_observer", "student"] as RoleKey[]).find((r) =>
     user.roles.includes(r)
   );
-  const homePath = primaryRole ? ROLE_HOME_PATH[primaryRole] : "/403";
+  const homePath = primaryRole ? ROLE_HOME_PATH[primaryRole] : FORBIDDEN_ROUTE;
   const roleLabel = primaryRole ? ROLE_LABELS[primaryRole] : "";
 
   return (
@@ -47,19 +48,19 @@ export function UserAccountNav({ user }: { user: AppSessionUser }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={homePath}>
-            <LayoutDashboard className="h-4 w-4" />
+            <Icon name="dashboard" size={16} />
             Дашборд
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={`${homePath}/settings`}>
-            <Settings className="h-4 w-4" />
+            <Icon name="settings" size={16} />
             Настройки
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
-          <LogOut className="h-4 w-4" />
+        <DropdownMenuItem onClick={() => signOut({ callbackUrl: AUTH_ROUTES.LOGIN })}>
+          <Icon name="logout" size={16} />
           Выйти
         </DropdownMenuItem>
       </DropdownMenuContent>

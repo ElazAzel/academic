@@ -15,20 +15,35 @@ export async function GET(_request: Request, context: Context) {
 
     const certificate = await prisma.certificate.findUnique({
       where: { id: certificateId },
-      select: { userId: true }
+      select: {
+        userId: true,
+        courseId: true,
+        number: true,
+        user: { select: { name: true } },
+        course: { select: { title: true } },
+      }
     });
     if (!certificate) {
       throw new ApiError("not_found", "Сертификат не найден", 404);
     }
-    if (certificate.userId !== user.id && !user.roles.includes("admin")) {
+
+    const isOwner = certificate.userId === user.id;
+    const isAdmin = user.roles.includes("admin");
+    const isInstructor = await prisma.courseInstructor.findFirst({
+      where: { courseId: certificate.courseId, userId: user.id },
+    });
+
+    if (!isOwner && !isAdmin && !isInstructor) {
       throw new ApiError("forbidden", "Нет доступа к сертификату", 403);
     }
 
     const pdf = await generateCertificatePdf(certificateId);
+    const studentName = certificate.user.name ?? "student";
+    const safeFilename = `Сертификат_${certificate.number}_${studentName.replace(/[^a-zA-Zа-яА-Я0-9_-]/g, "")}.pdf`;
     return new NextResponse(Buffer.from(pdf), {
       headers: {
         "content-type": "application/pdf",
-        "content-disposition": `attachment; filename="${certificateId}.pdf"`
+        "content-disposition": `attachment; filename="${safeFilename}"`
       }
     });
   } catch (error) {

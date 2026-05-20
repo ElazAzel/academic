@@ -17,12 +17,13 @@
 - [done] Quiz submission resolves courseId from lesson, errors on progress sync no longer swallowed.
 - [done] Student lesson view: YouTube URL normalization, toast error handling for questions.
 - [done] Reports API scoped per-role (admin, curator, super_curator, instructor, customer_observer).
-- Add production S3 bucket configuration and test presigned upload flow.
-- Wire push provider with Firebase Admin SDK or Telegram bot when credentials are available.
-- Add production backup jobs and restore runbooks under `infra/backup/`.
-- Add real PDF styling/signature assets for certificates in `public/assets/certificates/`.
-
-## Pages still on stubs (none — all 62 role sub-pages implemented)
+- [done] S3 production config documented (`infra/s3-config.md`).
+- [done] Push provider wired (firebase-admin installed, subscribe API, PWA subscribe, send in service).
+- [done] Backup/restore runbook + autobackup script (`infra/backup/`).
+- [done] Certificate production assets created (`public/assets/certificates/` with SVG border, seal, signature).
+- [done] Rate limiting expanded to quiz attempts and push subscribe.
+- [done] Forgot password flow: no email, creates admin notification instead.
+- [done] OWASP/WCAG security review (`docs/security-review.md`).
 
 ## Learning Features
 
@@ -43,3 +44,16 @@
 - Add scheduled encrypted database backups with retention policy.
 - Document admin-only database access through bastion or Kubernetes port-forward.
 - Add restore rehearsal checklist before production cohort launch.
+
+## Done (2026-05-18)
+
+- [done] k6 load test script created (`tests/load/smoke-test.js`)
+- [done] 4 test files fixed — all 304 tests pass (53/53 files)
+- [done] FK indexes added for unindexed foreign keys
+- [done] 55/55 Prisma models now have tables in production (applied `create_all_missing_tables_v2`)
+- [done] `push_subscriptions`, `messages`, `admin_popups`, `outbox_events`, `learning_paths` + related tables exist
+- [done] `consent_logs`, `lesson_progress`, `audit_logs`, `assignment_submissions`, `risk_flags`, `glossary_entries`, `certificate_templates` и ещё 22 таблицы созданы
+- [done] RLS включён на всех 42 unprotected таблицах с default-deny политикой
+- [done] `certificates.enrollment_id` + `verification_url` добавлены
+- [done] 404 `/instructor/chat` — page created
+- [done] 500 `POST /api/v1/push/subscribe` — таблица создана

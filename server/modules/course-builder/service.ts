@@ -1,27 +1,29 @@
-import { LessonType, CourseStatus } from "@prisma/client";
+import { randomUUID } from "node:crypto";
+import { CourseStatus, LessonType, Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { toJsonValue } from "@/lib/json";
+import { getCourseBuilderPublishChecks, isCourseBuilderReadyToPublish } from "@/lib/course-builder-readiness";
+import { courseBuilderSnapshotSchema } from "@/lib/validation";
 import { logAudit } from "@/server/modules/audit/service";
-import type { CourseBuilderDetail, BuilderModuleDetail, BuilderLessonDetail, ContentBlock } from "@/types/domain";
+import { assertInstructorOfCourse, createModule, updateModule, deleteModule, createLesson, updateLesson, deleteLesson, createBlock, updateBlock, deleteBlock } from "@/server/modules/courses/service";
+import type { CourseBuilderDetail, BuilderModuleDetail, BuilderBlockDetail, BuilderLessonDetail, ContentBlock } from "@/types/domain";
+import type { z } from "zod";
 
 const prisma = getPrisma();
+type CourseBuilderSnapshotInput = z.infer<typeof courseBuilderSnapshotSchema>;
+type SnapshotModule = CourseBuilderSnapshotInput["modules"][number];
+type SnapshotBlock = SnapshotModule["blocks"][number];
+type SnapshotLesson = SnapshotModule["lessons"][number] & { blockId: string | null };
+type NormalizedSnapshotBlock = Omit<SnapshotBlock, "lessons"> & { lessons: SnapshotLesson[] };
+type NormalizedSnapshotModule = Omit<SnapshotModule, "blocks" | "lessons"> & {
+  blocks: NormalizedSnapshotBlock[];
+  lessons: SnapshotLesson[];
+};
 
-async function assertInstructorOfCourse(actorId: string, courseId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: actorId },
-    include: { roles: { include: { role: { select: { key: true } } } } }
-  });
-  if (!user) throw new Error("Пользователь не найден");
-  const roleKeys = user.roles.map((r) => r.role.key);
-  if (roleKeys.includes("admin")) return;
-  const instructor = await prisma.courseInstructor.findUnique({
-    where: { courseId_userId: { courseId, userId: actorId } }
-  });
-  if (!instructor) {
-    throw new ApiError("forbidden", "Вы не являетесь преподавателем этого курса", 403);
-  }
-}
+const TEMP_ORDER_OFFSET = 1_000_000_000;
+
+export { assertInstructorOfCourse, createModule, updateModule, deleteModule, createLesson, updateLesson, deleteLesson, createBlock, updateBlock, deleteBlock };
 
 function toBuilderDetail(course: Record<string, unknown>): CourseBuilderDetail {
   const c = course as {
@@ -51,6 +53,7 @@ function toBuilderModule(m: Record<string, unknown>): BuilderModuleDetail {
     id: string; order: number; title: string;
     description?: string | null; recommendedDays: number;
     status: string;
+    blocks: Array<Record<string, unknown>>;
     lessons: Array<Record<string, unknown>>;
   };
   return {
@@ -60,7 +63,86 @@ function toBuilderModule(m: Record<string, unknown>): BuilderModuleDetail {
     description: mod.description,
     recommendedDays: mod.recommendedDays,
     status: mod.status as BuilderModuleDetail["status"],
-    lessons: (mod.lessons ?? []).map(toBuilderLesson),
+    blocks: (mod.blocks ?? []).map(toBuilderBlock),
+    lessons: (mod.lessons ?? []).filter((lesson) => !lesson.blockId).map(toBuilderLesson),
+  };
+}
+
+function normalizeSnapshotOrder(modules: SnapshotModule[]): NormalizedSnapshotModule[] {
+  return modules.map((mod, moduleIndex) => {
+    let nextLessonOrder = 0;
+    return {
+      ...mod,
+      order: moduleIndex,
+      blocks: mod.blocks.map((block, blockIndex) => ({
+        ...block,
+        order: blockIndex,
+        lessons: block.lessons.map((lesson) => ({
+          ...lesson,
+          order: nextLessonOrder++,
+          blockId: block.id,
+        })),
+      })),
+      lessons: mod.lessons.map((lesson) => ({
+        ...lesson,
+        order: nextLessonOrder++,
+        blockId: null,
+      })),
+    };
+  });
+}
+
+function assertSnapshotHasUniqueIds(modules: NormalizedSnapshotModule[]) {
+  const moduleIds = new Set<string>();
+  const blockIds = new Set<string>();
+  const lessonIds = new Set<string>();
+
+  for (const mod of modules) {
+    if (moduleIds.has(mod.id)) throw new ApiError("bad_request", "Модуль повторяется в снимке курса", 400);
+    moduleIds.add(mod.id);
+
+    for (const block of mod.blocks) {
+      if (blockIds.has(block.id)) throw new ApiError("bad_request", "Блок повторяется в снимке курса", 400);
+      blockIds.add(block.id);
+
+      for (const lesson of block.lessons) {
+        if (lessonIds.has(lesson.id)) throw new ApiError("bad_request", "Урок повторяется в снимке курса", 400);
+        lessonIds.add(lesson.id);
+      }
+    }
+
+    for (const lesson of mod.lessons) {
+      if (lessonIds.has(lesson.id)) throw new ApiError("bad_request", "Урок повторяется в снимке курса", 400);
+      lessonIds.add(lesson.id);
+    }
+  }
+}
+
+async function rewriteOrdersWithoutUniqueCollisions(
+  tx: Prisma.TransactionClient,
+  ids: string[],
+  updateOrder: (tx: Prisma.TransactionClient, id: string, order: number) => Promise<unknown>,
+) {
+  for (const [index, id] of ids.entries()) {
+    await updateOrder(tx, id, TEMP_ORDER_OFFSET + index);
+  }
+  for (const [index, id] of ids.entries()) {
+    await updateOrder(tx, id, index);
+  }
+}
+
+function toBuilderBlock(b: Record<string, unknown>): BuilderBlockDetail {
+  const block = b as {
+    id: string; order: number; title: string;
+    description?: string | null;
+    lessons: Array<Record<string, unknown>>;
+  };
+  return {
+    id: block.id,
+    order: block.order,
+    title: block.title,
+    description: block.description,
+    lessons: (block.lessons ?? []).map(toBuilderLesson),
   };
 }
 
@@ -109,6 +191,15 @@ export async function getCourseForBuilder(courseId: string, actorId: string): Pr
       modules: {
         orderBy: { order: "asc" },
         include: {
+          blocks: {
+            orderBy: { order: "asc" },
+            include: {
+              lessons: {
+                orderBy: { order: "asc" },
+                include: { quizzes: { include: { questions: true } }, assignments: true },
+              },
+            },
+          },
           lessons: {
             orderBy: { order: "asc" },
             include: { quizzes: { include: { questions: true } }, assignments: true },
@@ -136,6 +227,9 @@ export async function updateCourseSettings(
   actorId: string
 ) {
   await assertInstructorOfCourse(actorId, courseId);
+  if (input.status === "PUBLISHED") {
+    await assertCourseReadyToPublish(courseId, actorId);
+  }
   const statusDates =
     input.status === "PUBLISHED"
       ? { publishedAt: new Date(), archivedAt: null }
@@ -155,125 +249,185 @@ export async function updateCourseSettings(
   return course;
 }
 
-export async function createModule(
-  courseId: string,
-  input: { title: string; description?: string; order: number; recommendedDays: number },
-  actorId: string
-) {
+async function assertCourseReadyToPublish(courseId: string, actorId: string) {
+  const detail = await getCourseForBuilder(courseId, actorId);
+  const checks = getCourseBuilderPublishChecks(detail);
+  if (!isCourseBuilderReadyToPublish(detail)) {
+    throw new ApiError(
+      "bad_request",
+      `Курс не готов к публикации: ${checks.filter((check) => check.status === "failed").map((check) => check.label).join(", ")}`,
+      400,
+    );
+  }
+}
+
+export async function publishCourseFromBuilder(courseId: string, actorId: string) {
+  await assertCourseReadyToPublish(courseId, actorId);
+  const course = await prisma.course.update({
+    where: { id: courseId },
+    data: { status: CourseStatus.PUBLISHED, publishedAt: new Date(), archivedAt: null },
+  });
+  await logAudit({ actorId, action: "course.published", entity: "course", entityId: courseId });
+  return course;
+}
+
+export async function saveCourseBuilderSnapshot(courseId: string, input: CourseBuilderSnapshotInput, actorId: string) {
+  const parsed = courseBuilderSnapshotSchema.parse(input);
+  const normalizedModules = normalizeSnapshotOrder(parsed.modules);
+  assertSnapshotHasUniqueIds(normalizedModules);
   await assertInstructorOfCourse(actorId, courseId);
-  const mod = await prisma.module.create({
-    data: { courseId, title: input.title, description: input.description, order: input.order, recommendedDays: input.recommendedDays },
-  });
-  await logAudit({ actorId, action: "module.created", entity: "module", entityId: mod.id });
-  return mod;
-}
 
-export async function updateModule(
-  moduleId: string,
-  input: { title?: string; description?: string | null; order?: number; recommendedDays?: number; status?: "DRAFT" | "PUBLISHED" | "ARCHIVED" },
-  actorId: string
-) {
-  const mod = await prisma.module.findUnique({ where: { id: moduleId }, select: { courseId: true } });
-  if (!mod) throw new ApiError("not_found", "Модуль не найден", 404);
-  await assertInstructorOfCourse(actorId, mod.courseId);
-  const updated = await prisma.module.update({
-    where: { id: moduleId },
-    data: { ...input, status: input.status ? CourseStatus[input.status] : undefined },
+  const existing = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: {
+      id: true,
+      modules: {
+        select: {
+          id: true,
+          blocks: { select: { id: true, moduleId: true } },
+          lessons: { select: { id: true, moduleId: true } },
+        },
+      },
+    },
   });
-  await logAudit({ actorId, action: "module.updated", entity: "module", entityId: moduleId, metadata: input as Record<string, unknown> });
-  return updated;
-}
+  if (!existing) throw new ApiError("not_found", "Курс не найден", 404);
 
-export async function deleteModule(moduleId: string, actorId: string) {
-  const mod = await prisma.module.findUnique({ where: { id: moduleId }, select: { courseId: true } });
-  if (!mod) throw new ApiError("not_found", "Модуль не найден", 404);
-  await assertInstructorOfCourse(actorId, mod.courseId);
-  await prisma.module.delete({ where: { id: moduleId } });
-  await logAudit({ actorId, action: "module.deleted", entity: "module", entityId: moduleId });
+  const moduleIds = new Set(existing.modules.map((mod) => mod.id));
+  const blockModuleById = new Map(existing.modules.flatMap((mod) => mod.blocks.map((block) => [block.id, block.moduleId] as const)));
+  const lessonModuleById = new Map(existing.modules.flatMap((mod) => mod.lessons.map((lesson) => [lesson.id, lesson.moduleId] as const)));
+
+  for (const mod of normalizedModules) {
+    if (!moduleIds.has(mod.id)) {
+      throw new ApiError("forbidden", "Модуль не принадлежит этому курсу", 403);
+    }
+    for (const block of mod.blocks) {
+      if (blockModuleById.get(block.id) !== mod.id) {
+        throw new ApiError("forbidden", "Блок не принадлежит этому курсу", 403);
+      }
+      for (const lesson of block.lessons) {
+        if (lessonModuleById.get(lesson.id) !== mod.id) {
+          throw new ApiError("forbidden", "Урок не принадлежит этому курсу или модулю", 403);
+        }
+      }
+    }
+    for (const lesson of mod.lessons) {
+      if (lessonModuleById.get(lesson.id) !== mod.id) {
+        throw new ApiError("forbidden", "Урок не принадлежит этому курсу", 403);
+      }
+    }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.course.update({
+      where: { id: courseId },
+      data: {
+        title: parsed.title,
+        description: parsed.description,
+        goal: parsed.goal || null,
+        coverUrl: parsed.coverUrl || null,
+        durationHours: parsed.durationHours,
+        traversalMode: parsed.traversalMode,
+        completionThreshold: parsed.completionThreshold,
+      },
+    });
+
+    for (const [index, mod] of normalizedModules.entries()) {
+      await tx.module.update({ where: { id: mod.id }, data: { order: TEMP_ORDER_OFFSET + index } });
+    }
+
+    for (const mod of normalizedModules) {
+      for (const [index, block] of mod.blocks.entries()) {
+        await tx.block.update({ where: { id: block.id }, data: { order: TEMP_ORDER_OFFSET + index } });
+      }
+
+      const lessons = [...mod.blocks.flatMap((block) => block.lessons), ...mod.lessons];
+      for (const [index, lesson] of lessons.entries()) {
+        await tx.lesson.update({ where: { id: lesson.id }, data: { order: TEMP_ORDER_OFFSET + index } });
+      }
+    }
+
+    for (const mod of normalizedModules) {
+      await tx.module.update({
+        where: { id: mod.id },
+        data: {
+          title: mod.title,
+          description: mod.description ?? null,
+          order: mod.order,
+          recommendedDays: mod.recommendedDays,
+          status: mod.status ? CourseStatus[mod.status] : undefined,
+        },
+      });
+
+      for (const block of mod.blocks) {
+        await tx.block.update({
+          where: { id: block.id },
+          data: {
+            title: block.title,
+            description: block.description ?? null,
+            order: block.order,
+          },
+        });
+      }
+
+      for (const block of mod.blocks) {
+        for (const lesson of block.lessons) {
+          await tx.lesson.update({
+            where: { id: lesson.id },
+            data: {
+              title: lesson.title,
+              summary: lesson.summary ?? null,
+              order: lesson.order,
+              type: LessonType[lesson.type],
+              videoUrl: lesson.videoUrl || null,
+              durationMinutes: lesson.durationMinutes,
+              isRequired: lesson.isRequired,
+              blockId: block.id,
+            },
+          });
+        }
+      }
+
+      for (const lesson of mod.lessons) {
+        await tx.lesson.update({
+          where: { id: lesson.id },
+          data: {
+            title: lesson.title,
+            summary: lesson.summary ?? null,
+            order: lesson.order,
+            type: LessonType[lesson.type],
+            videoUrl: lesson.videoUrl || null,
+            durationMinutes: lesson.durationMinutes,
+            isRequired: lesson.isRequired,
+            blockId: null,
+          },
+        });
+      }
+    }
+  });
+
+  await logAudit({ actorId, action: "course.builder.snapshot_saved", entity: "course", entityId: courseId });
+  return getCourseForBuilder(courseId, actorId);
 }
 
 export async function reorderModules(courseId: string, moduleIds: string[], actorId: string) {
   await assertInstructorOfCourse(actorId, courseId);
-  await prisma.$transaction(moduleIds.map((id, index) => prisma.module.update({ where: { id }, data: { order: index } })));
+  await prisma.$transaction(async (tx) => {
+    await rewriteOrdersWithoutUniqueCollisions(tx, moduleIds, (client, id, order) =>
+      client.module.update({ where: { id }, data: { order } }),
+    );
+  });
   await logAudit({ actorId, action: "modules.reordered", entity: "course", entityId: courseId, metadata: { moduleIds } });
-}
-
-export async function createLesson(
-  moduleId: string,
-  input: {
-    title: string;
-    summary?: string | null;
-    order: number;
-    type: keyof typeof LessonType;
-    content?: Record<string, unknown>;
-    videoUrl?: string | null;
-    durationMinutes?: number;
-    isRequired?: boolean;
-  },
-  actorId: string
-) {
-  const courseModule = await prisma.module.findUnique({ where: { id: moduleId }, select: { courseId: true } });
-  if (!courseModule) throw new ApiError("not_found", "Модуль не найден", 404);
-  await assertInstructorOfCourse(actorId, courseModule.courseId);
-  const lesson = await prisma.lesson.create({
-    data: {
-      moduleId,
-      title: input.title,
-      summary: input.summary,
-      order: input.order,
-      type: LessonType[input.type],
-      content: toJsonValue(input.content ?? {}),
-      videoUrl: input.videoUrl,
-      durationMinutes: input.durationMinutes ?? 0,
-      isRequired: input.isRequired ?? true,
-    },
-  });
-  await logAudit({ actorId, action: "lesson.created", entity: "lesson", entityId: lesson.id });
-  return lesson;
-}
-
-export async function updateLesson(
-  lessonId: string,
-  input: {
-    title?: string;
-    summary?: string | null;
-    order?: number;
-    type?: keyof typeof LessonType;
-    content?: Record<string, unknown>;
-    videoUrl?: string | null;
-    durationMinutes?: number;
-    isRequired?: boolean;
-  },
-  actorId: string
-) {
-  const existing = await prisma.lesson.findUnique({ where: { id: lessonId }, include: { module: true } });
-  if (!existing) throw new ApiError("not_found", "Урок не найден", 404);
-  await assertInstructorOfCourse(actorId, existing.module.courseId);
-  const updated = await prisma.lesson.update({
-    where: { id: lessonId },
-    data: {
-      ...input,
-      type: input.type ? LessonType[input.type] : undefined,
-      content: input.content ? toJsonValue(input.content) : undefined,
-    },
-  });
-  await logAudit({ actorId, action: "lesson.updated", entity: "lesson", entityId: lessonId, metadata: input as Record<string, unknown> });
-  return updated;
-}
-
-export async function deleteLesson(lessonId: string, actorId: string) {
-  const existing = await prisma.lesson.findUnique({ where: { id: lessonId }, include: { module: true } });
-  if (!existing) throw new ApiError("not_found", "Урок не найден", 404);
-  await assertInstructorOfCourse(actorId, existing.module.courseId);
-  await prisma.lesson.delete({ where: { id: lessonId } });
-  await logAudit({ actorId, action: "lesson.deleted", entity: "lesson", entityId: lessonId });
 }
 
 export async function reorderLessons(moduleId: string, lessonIds: string[], actorId: string) {
   const mod = await prisma.module.findUnique({ where: { id: moduleId }, select: { courseId: true } });
   if (!mod) throw new ApiError("not_found", "Модуль не найден", 404);
   await assertInstructorOfCourse(actorId, mod.courseId);
-  await prisma.$transaction(lessonIds.map((id, index) => prisma.lesson.update({ where: { id }, data: { order: index } })));
+  await prisma.$transaction(async (tx) => {
+    await rewriteOrdersWithoutUniqueCollisions(tx, lessonIds, (client, id, order) =>
+      client.lesson.update({ where: { id }, data: { order } }),
+    );
+  });
   await logAudit({ actorId, action: "lessons.reordered", entity: "module", entityId: moduleId, metadata: { lessonIds } });
 }
 
@@ -289,6 +443,39 @@ export async function updateLessonBlocks(lessonId: string, blocks: ContentBlock[
   await logAudit({ actorId, action: "lesson.blocks.updated", entity: "lesson", entityId: lessonId });
 }
 
+async function assertLessonBelongsToCourse(lessonId: string, courseId: string, actorId: string) {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: lessonId },
+    select: { id: true, module: { select: { courseId: true } } },
+  });
+  if (!lesson) throw new ApiError("not_found", "Урок не найден", 404);
+  if (lesson.module.courseId !== courseId) {
+    throw new ApiError("forbidden", "Урок не принадлежит выбранному курсу", 403);
+  }
+  await assertInstructorOfCourse(actorId, courseId);
+}
+
+async function appendLessonContentBlock(lessonId: string, block: ContentBlock) {
+  const lesson = await prisma.lesson.findUnique({ where: { id: lessonId }, select: { content: true } });
+  if (!lesson) throw new ApiError("not_found", "Урок не найден", 404);
+  const content = (lesson.content as Record<string, unknown>) ?? {};
+  const blocks = Array.isArray(content.blocks) ? (content.blocks as ContentBlock[]) : [];
+  const alreadyLinked = blocks.some((existingBlock) => {
+    if (block.type === "quiz" && existingBlock.type === "quiz") {
+      return existingBlock.data.quizId === block.data.quizId;
+    }
+    if (block.type === "assignment" && existingBlock.type === "assignment") {
+      return existingBlock.data.assignmentId === block.data.assignmentId;
+    }
+    return false;
+  });
+  if (alreadyLinked) return;
+  await prisma.lesson.update({
+    where: { id: lessonId },
+    data: { content: toJsonValue({ ...content, blocks: [...blocks, block] }) },
+  });
+}
+
 export async function createQuizInline(
   lessonId: string,
   input: {
@@ -301,6 +488,7 @@ export async function createQuizInline(
   },
   actorId: string
 ) {
+  await assertLessonBelongsToCourse(lessonId, input.courseId, actorId);
   await assertInstructorOfCourse(actorId, input.courseId);
   const quiz = await prisma.quiz.create({
     data: {
@@ -323,6 +511,11 @@ export async function createQuizInline(
     },
     include: { questions: true },
   });
+  await appendLessonContentBlock(lessonId, {
+    id: randomUUID(),
+    type: "quiz",
+    data: { quizId: quiz.id },
+  });
   await logAudit({ actorId, action: "quiz.created", entity: "quiz", entityId: quiz.id });
   return quiz;
 }
@@ -339,6 +532,7 @@ export async function createAssignmentInline(
   },
   actorId: string
 ) {
+  await assertLessonBelongsToCourse(lessonId, input.courseId, actorId);
   await assertInstructorOfCourse(actorId, input.courseId);
   const assignment = await prisma.assignment.create({
     data: {
@@ -350,6 +544,11 @@ export async function createAssignmentInline(
       maxScore: input.maxScore,
       deadline: input.deadline ? new Date(input.deadline) : null,
     },
+  });
+  await appendLessonContentBlock(lessonId, {
+    id: randomUUID(),
+    type: "assignment",
+    data: { assignmentId: assignment.id },
   });
   await logAudit({ actorId, action: "assignment.created", entity: "assignment", entityId: assignment.id });
   return assignment;

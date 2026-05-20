@@ -1,74 +1,205 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Users, AlertTriangle, FileSpreadsheet, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Tabs } from "@/components/ui/tabs";
+import { BarChart } from "@/components/lms/bar-chart";
+import { DownloadReports } from "@/components/lms/download-reports";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
+import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getSuperCuratorReportData } from "@/server/actions/super-curator";
+import type { DashboardMetric } from "@/types/domain";
 
-const FORMATS = [
-  { id: "csv", label: "CSV", icon: FileText },
-  { id: "xlsx", label: "Excel", icon: FileSpreadsheet },
-  { id: "pdf", label: "PDF", icon: FileText },
-] as const;
-
-const REPORTS = [
-  {
-    id: "r1",
-    title: "Прогресс по потокам",
-    description: "Все зачисления и прогресс по потокам с группировкой, сводками и диаграммами.",
-    type: "progress",
-    icon: Users,
-    formats: ["csv", "xlsx", "pdf"],
-  },
-  {
-    id: "r2",
-    title: "Отчёт по рискам",
-    description: "Риски слушателей по всем потокам с цветовой индикацией уровней.",
-    type: "risk",
-    icon: AlertTriangle,
-    formats: ["csv", "xlsx", "pdf"],
-  },
-];
+export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorReportsPage() {
-  await requireRolePage(["super_curator"]);
+  await requireRolePage(["super_curator", "admin"]);
+  const data = await getSuperCuratorReportData();
+
+  const totalStudents = data.reduce((s, c) => s + c.totalStudents, 0);
+  const totalCompleted = data.reduce((s, c) => s + c.completed, 0);
+  const totalAtRisk = data.reduce((s, c) => s + (c.blocked + c.notStarted), 0);
+  const avgProgress = data.length > 0 ? Math.round(data.reduce((s, c) => s + c.avgProgress, 0) / data.length) : 0;
+  const activeCohorts = data.filter((c) => c.status === "active").length;
+  const problemCohorts = data.filter((c) => c.blocked + c.notStarted > 5 || c.avgProgress < 40).length;
+  const metrics = [
+    {
+      label: "Слушателей",
+      value: totalStudents,
+      tone: "primary",
+      detail: `${activeCohorts} активных потоков`,
+    },
+    {
+      label: "Завершили",
+      value: totalCompleted,
+      tone: "success",
+      detail: totalStudents > 0 ? `${Math.round((totalCompleted / totalStudents) * 100)}% от базы` : "Нет зачислений",
+    },
+    {
+      label: "Требуют внимания",
+      value: totalAtRisk,
+      tone: totalAtRisk > 0 ? "danger" : "success",
+      detail: `${problemCohorts} проблемных потоков`,
+      priority: totalAtRisk > 0 ? "elevated" : "normal",
+      href: "/super-curator/reports?tab=risks",
+    },
+    {
+      label: "Средний прогресс",
+      value: `${avgProgress}%`,
+      tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
+      detail: "По потокам зоны",
+      priority: avgProgress < 40 && totalStudents > 0 ? "elevated" : "normal",
+    },
+  ] satisfies DashboardMetric[];
 
   return (
     <AppShell role="super_curator">
-      <PageHeader title="Экспорт статистики" description="Скачать отчёты по потокам в CSV, Excel или PDF." />
-      <div className="grid gap-4 md:grid-cols-2">
-        {REPORTS.map((r) => {
-          const Icon = r.icon;
-          return (
-            <Card key={r.id} className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
-              <CardHeader>
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 mb-2">
-                  <Icon className="h-5 w-5 text-primary" />
-                </span>
-                <CardTitle>{r.title}</CardTitle>
-                <CardDescription>{r.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {FORMATS.filter((f) => r.formats.includes(f.id)).map((fmt) => {
-                    const FmtIcon = fmt.icon;
-                    return (
-                      <a
-                        key={fmt.id}
-                        href={`/api/v1/reports?type=${r.type}&format=${fmt.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30"
-                      >
-                        <FmtIcon className="h-3.5 w-3.5" />
-                        {fmt.label}
-                        <Download className="h-3 w-3 ml-0.5 text-muted-foreground" />
-                      </a>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <PageHeader
+        title="Отчёты"
+        description="Просмотр и экспорт статистики по потокам в CSV, Excel или PDF."
+      />
+
+      <div className="mb-6">
+        <MetricGrid metrics={metrics} />
       </div>
+
+      <Tabs
+        paramName="tab"
+        tabs={[
+          {
+            label: "Прогресс по потокам",
+            content: (
+              <div className="space-y-6">
+                {/* Chart — M3 */}
+                <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+                  <CardHeader>
+                    <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Прогресс по потокам</CardTitle>
+                    <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний процент завершения курсов по потокам</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <BarChart
+                      items={data.map((c) => ({
+                        label: c.cohortName,
+                        value: c.avgProgress,
+                        sublabel: c.courseTitle,
+                        color: c.avgProgress > 75 ? "#16a34a" : c.avgProgress > 40 ? "#ca8a04" : "#dc2626",
+                      }))}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Status breakdown per cohort — M3 */}
+                <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+                  <CardHeader>
+                    <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Статусы по потокам</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {data.map((c) => {
+                        const total = c.totalStudents || 1;
+                        return (
+                          <div key={c.cohortId} className="rounded-xl border border-m3-outline-variant bg-m3-surface-container-low p-4 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <p className="font-label-md text-label-md text-m3-on-surface">{c.cohortName}</p>
+                              <Badge variant={c.status === "active" ? "default" : "secondary"}>
+                                {c.status === "active" ? "Активен" : "Архив"}
+                              </Badge>
+                            </div>
+                            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">{c.courseTitle}</p>
+                            <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-m3-surface-variant">
+                              <div className="bg-m3-primary" style={{ width: `${(c.completed / total) * 100}%` }} title="Завершили" />
+                              <div className="bg-m3-tertiary" style={{ width: `${(c.inProgress / total) * 100}%` }} title="В процессе" />
+                              <div className="bg-m3-secondary" style={{ width: `${(c.notStarted / total) * 100}%` }} title="Не начали" />
+                              <div className="bg-m3-error" style={{ width: `${(c.blocked / total) * 100}%` }} title="Заблокированы" />
+                            </div>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 font-body-sm text-body-sm text-m3-on-surface-variant">
+                              <span><span className="inline-block w-2 h-2 rounded-full bg-m3-primary mr-1" />{c.completed} завершили</span>
+                              <span><span className="inline-block w-2 h-2 rounded-full bg-m3-tertiary mr-1" />{c.inProgress} в процессе</span>
+                              <span><span className="inline-block w-2 h-2 rounded-full bg-m3-secondary mr-1" />{c.notStarted} не начали</span>
+                              <span><span className="inline-block w-2 h-2 rounded-full bg-m3-error mr-1" />{c.blocked} заблокированы</span>
+                            </div>
+                            <div className="flex items-center justify-between font-body-sm text-body-sm text-m3-on-surface-variant pt-1">
+                              <span className="flex items-center gap-1"><Icon name="badge" className="text-[14px]" /> Кураторов: {c.curatorCount}</span>
+                              <span>Средний: {c.avgProgress}%</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Download */}
+                <DownloadReports reports={[
+                  {
+                    id: "progress",
+                    title: "Экспорт прогресса",
+                    desc: "Скачать отчёт по прогрессу",
+                    icon: "trending_up",
+                    owner: "Super curator",
+                    scope: "Только потоки, кураторы и слушатели в зоне ответственности",
+                    decision: "Какие потоки проседают и где нужна операционная поддержка.",
+                  },
+                  {
+                    id: "curator_workload",
+                    title: "Нагрузка кураторов",
+                    desc: "Очереди, риски и закрепления",
+                    icon: "group",
+                    owner: "Super curator",
+                    scope: "Только кураторы и потоки в зоне ответственности",
+                    decision: "Где перегрузка и кого нужно перераспределить.",
+                  },
+                ]} />
+              </div>
+            ),
+          },
+          {
+            label: "Риски",
+            content: (
+              <div className="space-y-6">
+                <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+                  <CardHeader>
+                    <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Риски по потокам</CardTitle>
+                    <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">Слушатели, требующие внимания кураторов</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <BarChart
+                      items={data.map((c) => ({
+                        label: c.cohortName,
+                        value: c.blocked + c.notStarted,
+                        sublabel: `${c.completed} завершили / ${c.inProgress} в процессе`,
+                        color: (c.blocked + c.notStarted) > 5 ? "#dc2626" : "#ca8a04",
+                      }))}
+                    />
+                  </CardContent>
+                </Card>
+
+                <DownloadReports reports={[
+                  {
+                    id: "risk",
+                    title: "Экспорт рисков",
+                    desc: "Скачать отчёт по рискам",
+                    icon: "warning",
+                    owner: "Super curator",
+                    scope: "Только потоки и слушатели в зоне ответственности",
+                    decision: "Какие риски нужно эскалировать или перераспределить.",
+                  },
+                  {
+                    id: "assignments",
+                    title: "Задания",
+                    desc: "Очередь проверки по зоне ответственности",
+                    icon: "checklist",
+                    owner: "Super curator",
+                    scope: "Только потоки и слушатели в зоне ответственности",
+                    decision: "Где копятся работы и какой куратор перегружен.",
+                  },
+                ]} />
+              </div>
+            ),
+          },
+        ]}
+      />
     </AppShell>
   );
 }

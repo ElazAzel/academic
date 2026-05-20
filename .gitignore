@@ -3,3 +3,26 @@
 ```markdown
 
 ```
+node_modules/
+.next/
+out/
+dist/
+coverage/
+playwright-report/
+test-results/
+.env
+.env*.local
+.vercel/
+.mcp.json
+!.env.example
+*.tsbuildinfo
+*.log
+.DS_Store
+Thumbs.db
+storage/
+tmp/
+.tmp/
+var/
+scratch/
+
+test-*.pdf

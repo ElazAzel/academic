@@ -1,13 +1,15 @@
+import { cache } from "react";
 import { CourseStatus, LessonType } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { toJsonValue } from "@/lib/json";
 import { slugify } from "@/lib/utils";
 import { logAudit } from "@/server/modules/audit/service";
+import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
-async function assertInstructorOfCourse(actorId: string, courseId: string) {
+export async function assertInstructorOfCourse(actorId: string, courseId: string) {
   const user = await prisma.user.findUnique({
     where: { id: actorId },
     include: { roles: { include: { role: { select: { key: true } } } } }
@@ -23,8 +25,9 @@ async function assertInstructorOfCourse(actorId: string, courseId: string) {
   }
 }
 
-export async function listCourses(status?: CourseStatus, instructorId?: string) {
+export const listCourses = cache(async (status?: CourseStatus, instructorId?: string) => {
   return prisma.course.findMany({
+    take: 50,
     where: {
       ...(status ? { status } : {}),
       ...(instructorId ? { instructors: { some: { userId: instructorId } } } : {})
@@ -38,23 +41,61 @@ export async function listCourses(status?: CourseStatus, instructorId?: string) 
       instructors: { include: { user: { select: { id: true, name: true, email: true } } } }
     }
   });
-}
+});
 
-export async function getCourse(courseId: string) {
+export const getCourse = cache(async (courseId: string) => {
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      goal: true,
+      coverUrl: true,
+      durationHours: true,
+      status: true,
+      traversalMode: true,
+      completionThreshold: true,
+      publishedAt: true,
+      archivedAt: true,
+      createdAt: true,
+      updatedAt: true,
       modules: {
         orderBy: { order: "asc" },
-        include: {
+        select: {
+          id: true,
+          order: true,
+          title: true,
+          description: true,
+          recommendedDays: true,
+          status: true,
           lessons: {
             orderBy: { order: "asc" },
-            include: { quizzes: true, assignments: true }
+            select: {
+              id: true,
+              order: true,
+              title: true,
+              type: true,
+              summary: true,
+              durationMinutes: true,
+              isRequired: true,
+              quizzes: true,
+              assignments: true
+            }
           },
           deadlines: true
         }
       },
-      cohorts: true,
+      cohorts: {
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          startsAt: true,
+          endsAt: true
+        }
+      },
       instructors: { include: { user: { select: { id: true, name: true, email: true } } } }
     }
   });
@@ -62,7 +103,7 @@ export async function getCourse(courseId: string) {
     throw new ApiError("not_found", "Курс не найден", 404);
   }
   return course;
-}
+});
 
 export async function createCourse(input: {
   title: string;
@@ -185,6 +226,7 @@ export async function createLesson(moduleId: string, input: {
   content: Record<string, unknown>;
   videoUrl?: string | null;
   durationMinutes: number;
+  isRequired?: boolean;
   blockId?: string | null;
 }, actorId: string) {
   const courseModule = await prisma.module.findUnique({ where: { id: moduleId } });
@@ -202,7 +244,8 @@ export async function createLesson(moduleId: string, input: {
       type: LessonType[input.type],
       content: toJsonValue(input.content),
       videoUrl: input.videoUrl,
-      durationMinutes: input.durationMinutes
+      durationMinutes: input.durationMinutes,
+      isRequired: input.isRequired ?? true
     }
   });
   await logAudit({ actorId, action: "lesson.created", entity: "lesson", entityId: lesson.id });
@@ -250,7 +293,7 @@ export async function deleteLesson(lessonId: string, actorId: string) {
   return deleted;
 }
 
-export async function getLesson(lessonId: string) {
+export async function getLesson(lessonId: string, stripAnswerKeys = true) {
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
     include: {
@@ -264,6 +307,16 @@ export async function getLesson(lessonId: string) {
   if (!lesson) {
     throw new ApiError("not_found", "Урок не найден", 404);
   }
+
+  // C2: Убираем correctAnswer по умолчанию (для студенческих запросов)
+  if (stripAnswerKeys && lesson.quizzes) {
+    lesson.quizzes = lesson.quizzes.map((quiz) => ({
+      ...quiz,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      questions: quiz.questions.map(({ correctAnswer, ...rest }) => rest),
+    })) as typeof lesson.quizzes;
+  }
+
   return lesson;
 }
 
@@ -346,8 +399,24 @@ export async function getBlock(blockId: string) {
   return block;
 }
 
-export async function listEnrollments() {
+export async function listEnrollments(userId: string, roleKeys: string[]) {
+  const isAdmin = roleKeys.includes("admin");
+  const isInstructor = roleKeys.includes("instructor");
+
+  const where: Record<string, unknown> = {};
+
+  if (!isAdmin) {
+    if (isInstructor) {
+      where.course = {
+        instructors: { some: { userId } }
+      };
+    } else {
+      where.userId = userId;
+    }
+  }
+
   return prisma.enrollment.findMany({
+    where,
     include: {
       user: { select: { id: true, name: true, email: true } },
       course: { select: { id: true, title: true, slug: true } },
@@ -379,6 +448,18 @@ export async function enrollStudent(input: {
     entity: "enrollment",
     entityId: enrollment.id,
     metadata: input
+  });
+  await createNotification({
+    userId: input.userId,
+    event: "access_granted",
+    refType: "enrollment",
+    refId: enrollment.id,
+    data: {
+      courseId: input.courseId,
+      cohortId: input.cohortId ?? null,
+      enrollmentId: enrollment.id,
+      link: `/student/courses/${input.courseId}`
+    }
   });
   return enrollment;
 }

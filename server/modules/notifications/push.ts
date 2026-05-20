@@ -1,46 +1,137 @@
+import webpush from "web-push";
 import { env } from "@/lib/env";
+import { getPrisma } from "@/lib/prisma";
 
-export type PushProvider = "none" | "firebase" | "telegram";
+const prisma = getPrisma();
+
+export interface WebPushSubscription {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
 
 interface PushPayload {
-  token: string;
   title: string;
   body: string;
+  url?: string;
+  tag?: string;
   data?: Record<string, string>;
 }
 
-let currentProvider: PushProvider = env.FEATURE_PUSH_NOTIFICATIONS ? "firebase" : "none";
+let vapidConfigured = false;
 
-export function getPushProvider(): PushProvider {
-  return currentProvider;
+function ensureVapidConfigured(): boolean {
+  if (vapidConfigured) return true;
+
+  const publicKey = env.VAPID_PUBLIC_KEY;
+  const privateKey = env.VAPID_PRIVATE_KEY;
+  const email = env.VAPID_EMAIL;
+
+  if (!publicKey || !privateKey) {
+    console.warn("[Push] VAPID keys not configured. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY env vars.");
+    console.warn("[Push] Generate keys with: npx web-push generate-vapid-keys");
+    return false;
+  }
+
+  webpush.setVapidDetails(
+    `mailto:${email || "admin@academy.local"}`,
+    publicKey,
+    privateKey,
+  );
+
+  vapidConfigured = true;
+  return true;
 }
 
-export function setPushProvider(provider: PushProvider) {
-  currentProvider = provider;
+/**
+ * Send a Web Push notification to a specific subscription.
+ *
+ * Uses the Web Push Protocol with VAPID authentication.
+ * Returns true if the push was sent successfully.
+ * Returns false and deactivates the subscription if it's expired (410 Gone).
+ */
+export async function sendPushToSubscription(
+  subscription: WebPushSubscription,
+  payload: PushPayload,
+): Promise<boolean> {
+  if (!env.FEATURE_PUSH_NOTIFICATIONS) return false;
+  if (!ensureVapidConfigured()) return false;
+
+  const pushSubscription: webpush.PushSubscription = {
+    endpoint: subscription.endpoint,
+    keys: {
+      p256dh: subscription.p256dh,
+      auth: subscription.auth,
+    },
+  };
+
+  const jsonPayload = JSON.stringify({
+    title: payload.title,
+    body: payload.body,
+    url: payload.url ?? "/",
+    tag: payload.tag,
+    ...payload.data,
+  });
+
+  try {
+    await webpush.sendNotification(pushSubscription, jsonPayload, {
+      TTL: 60 * 60, // 1 hour
+      urgency: "normal",
+    });
+    return true;
+  } catch (error) {
+    const statusCode = (error as { statusCode?: number }).statusCode;
+
+    if (statusCode === 410 || statusCode === 404) {
+      // Subscription expired or invalid — deactivate it
+      console.log(`[Push] Subscription expired (${statusCode}), deactivating: ${subscription.endpoint.slice(0, 60)}...`);
+      try {
+        await prisma.pushSubscription.updateMany({
+          where: { endpoint: subscription.endpoint },
+          data: { active: false },
+        });
+      } catch {
+        // Ignore DB errors during cleanup
+      }
+      return false;
+    }
+
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[Push] Send failed:", message);
+    return false;
+  }
 }
 
-export async function sendPushNotification(payload: PushPayload): Promise<boolean> {
-  if (currentProvider === "none") {
-    return false;
+/**
+ * Send push notification to all active subscriptions for a user.
+ */
+export async function sendPushToUser(
+  userId: string,
+  payload: PushPayload,
+): Promise<number> {
+  if (!env.FEATURE_PUSH_NOTIFICATIONS) return 0;
+
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { userId, active: true },
+  });
+
+  if (subscriptions.length === 0) return 0;
+
+  let sent = 0;
+  const results = await Promise.allSettled(
+    subscriptions.map((sub) =>
+      sendPushToSubscription(
+        { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+        payload,
+      ),
+    ),
+  );
+
+  for (const result of results) {
+    if (result.status === "fulfilled" && result.value) {
+      sent++;
+    }
   }
 
-  if (currentProvider === "firebase") {
-    // TODO: Integrate Firebase Admin SDK when push notifications are enabled
-    // const message = {
-    //   token: payload.token,
-    //   notification: { title: payload.title, body: payload.body },
-    //   data: payload.data,
-    // };
-    // await admin.messaging().send(message);
-    console.debug("Push notification (firebase) — not yet wired:", payload.title);
-    return false;
-  }
-
-  if (currentProvider === "telegram" && env.FEATURE_TELEGRAM_NOTIFICATIONS) {
-    // TODO: Integrate Telegram Bot API when configured
-    console.debug("Push notification (telegram) — not yet wired:", payload.title);
-    return false;
-  }
-
-  return false;
+  return sent;
 }

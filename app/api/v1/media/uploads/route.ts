@@ -1,11 +1,20 @@
 import { errorResponse, ok, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { createPresignedUploadUrl, buildStorageKey } from "@/lib/storage";
+import { UPLOAD } from "@/lib/constants";
 import { z } from "zod";
+
+const ALLOWED_CONTENT_TYPES = UPLOAD.ALLOWED_MIME_TYPES;
+
+const MAX_FILE_SIZE = UPLOAD.MAX_FILE_SIZE_BYTES;
 
 const schema = z.object({
   filename: z.string().min(1).max(255),
-  contentType: z.string().min(1),
+  contentType: z.string().min(1).refine(
+    (val) => ALLOWED_CONTENT_TYPES.includes(val as typeof ALLOWED_CONTENT_TYPES[number]),
+    { message: `Недопустимый тип файла. Разрешены: ${ALLOWED_CONTENT_TYPES.join(", ")}` }
+  ),
+  fileSize: z.number().int().min(1).max(MAX_FILE_SIZE).optional(),
   prefix: z.string().default("uploads"),
 });
 

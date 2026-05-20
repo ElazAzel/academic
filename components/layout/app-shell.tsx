@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { SiteHeader } from "@/components/layout/site-header";
-import { MobileNav } from "@/components/layout/mobile-nav";
-import { NAV_BY_ROLE, ICON_MAP } from "@/components/layout/navigation";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
+import { NavLinks } from "@/components/layout/nav-links";
+import { NAV_BY_ROLE } from "@/components/layout/navigation";
+import { PageTransition } from "@/components/lms/animations";
 import { cn } from "@/lib/utils";
 import type { RoleKey } from "@/types/domain";
 import { ROLE_LABELS } from "@/types/domain";
@@ -19,44 +20,48 @@ export function AppShell({
   const roleLabel = ROLE_LABELS[role];
 
   return (
-    <div className="min-h-screen">
+    <div className="page-container">
+      {/* Header on all sizes */}
       <SiteHeader />
-      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6">
-        <div className="flex items-center gap-3 lg:hidden mb-4">
-          <MobileNav links={links} role={role} />
-          <div>
-            <h2 className="text-sm font-medium">{roleLabel}</h2>
-            <p className="text-xs text-muted-foreground">Навигация по разделу</p>
-          </div>
-        </div>
-        <div className="lg:grid lg:grid-cols-[260px_1fr] lg:gap-6">
-          <aside className="hidden lg:block">
+
+      {/* Mobile bottom nav */}
+      <MobileBottomNav role={role} />
+
+      {/* Desktop sidebar layout */}
+      <div className="mx-auto w-full max-w-7xl px-0 md:px-6">
+        <div className="md:grid md:grid-cols-[260px_1fr] md:gap-6 md:py-6">
+          {/* Desktop sidebar — hidden on mobile */}
+          <aside className="hidden md:block">
             <nav
-              className="sticky top-24 space-y-1 rounded-2xl border bg-white/80 p-3 shadow-sm backdrop-blur-xl dark:bg-gray-950/80 dark:border-gray-800"
+              className="sticky top-24 flex flex-col rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest p-sm shadow-m3-soft"
               aria-label={`Кабинет: ${roleLabel}`}
             >
-              {links.map((item) => {
-                const Icon = ICON_MAP[item.icon];
-                return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  prefetch={false}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  {Icon && <Icon className="h-4 w-4 shrink-0" />}
-                  <span className="flex-1">{item.label}</span>
-                  {item.badge != null && item.badge > 0 ? (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-white">
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </Link>
-                );
-              })}
+              {/* Role label */}
+              <div className="mx-sm mb-xs border-b border-m3-outline-variant px-sm pb-xs">
+                <span className="font-label-md text-label-md uppercase tracking-wider text-m3-on-surface-variant">
+                  {roleLabel}
+                </span>
+              </div>
+
+              {/* Navigation items */}
+              <NavLinks links={links} />
+
+              {/* Spacer */}
+              <div className="mt-auto" />
             </nav>
           </aside>
-          <main className={cn("min-w-0", className)}>{children}</main>
+
+          {/* Main content */}
+          <main
+            id="main-content"
+            className={cn(
+              "min-w-0 outline-none animate-slide-up",
+              "px-4 md:px-0 pb-4 md:pb-8",
+              className
+            )}
+          >
+            <PageTransition>{children}</PageTransition>
+          </main>
         </div>
       </div>
     </div>

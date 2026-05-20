@@ -6,9 +6,22 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs } from "@/components/ui/tabs";
 import { Avatar } from "@/components/ui/avatar";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getProfile } from "@/server/modules/auth/service";
+import { updateProfileSettingsAction, updatePasswordAction, getNotificationPreferencesAction, updateNotificationPreferencesAction } from "@/server/actions/settings";
+
+const NOTIFICATION_CHANNELS = [
+  { key: "super_curator_applications", label: "Новые заявки кураторов", desc: "Уведомления о новых кандидатурах" },
+  { key: "super_curator_flow_reports", label: "Отчеты по потокам", desc: "Получать сводки о работе кураторов" },
+  { key: "super_curator_system_message", label: "Системные сообщения", desc: "Уведомления о технических обновлениях" },
+  { key: "super_curator_deadline_reminder", label: "Напоминания по дедлайнам", desc: "Напоминания о важных сроках" },
+];
 
 export default async function SuperCuratorSettingsPage() {
- await requireRolePage(["super_curator"]);
+  await requireRolePage(["super_curator"]);
+  const user = await getCurrentUser();
+  const profile = user ? await getProfile(user.id) : null;
+  const prefs = await getNotificationPreferencesAction();
 
  return (
   <AppShell role="super_curator">
@@ -18,99 +31,108 @@ export default async function SuperCuratorSettingsPage() {
      {
       label: "Профиль",
       content: (
-       <Card className="rounded-2xl">
-        <CardHeader>
-         <CardTitle className="text-base">Личные данные</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-         <div className="flex items-center gap-4">
-          <Avatar name="Супер-куратор" className="h-16 w-16 text-lg"/>
-          <div>
-           <p className="font-medium">Супер-куратор</p>
-           <p className="text-sm text-muted-foreground">supercurator@academy.local</p>
-          </div>
-         </div>
-         <Separator/>
-         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-           <label className="text-sm font-medium">Имя</label>
-           <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue="Супер-куратор"/>
-          </div>
-          <div>
-           <label className="text-sm font-medium">Email</label>
-           <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue="supercurator@academy.local" disabled/>
-          </div>
-          <div>
-           <label className="text-sm font-medium">Телефон</label>
-           <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="+7 (___) ___-__-__"/>
-          </div>
-          <div>
-           <label className="text-sm font-medium">Организация</label>
-           <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Название организации"/>
-          </div>
-         </div>
-         <div className="flex justify-end">
-          <Button>Сохранить</Button>
-         </div>
-        </CardContent>
-       </Card>
-      )
-     },
-     {
-      label: "Уведомления",
-      content: (
-       <Card className="rounded-2xl">
-        <CardHeader>
-         <CardTitle className="text-base">Настройки уведомлений</CardTitle>
-         <CardDescription>Выберите, какие уведомления вы хотите получать.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-         {[
-          { label: "Новые заявки кураторов", desc: "Уведомления о новых кандидатурах", checked: true },
-          { label: "Отчеты по потокам", desc: "Получать сводки о работе кураторов", checked: true },
-          { label: "Системные сообщения", desc: "Уведомления о технических обновлениях", checked: false },
-          { label: "Напоминания по дедлайнам", desc: "Напоминания о важных сроках", checked: true },
-         ].map((item) => (
-          <div key={item.label} className="flex items-center justify-between rounded-xl border p-4">
+       <form action={updateProfileSettingsAction}>
+        <Card className="rounded-2xl">
+         <CardHeader>
+          <CardTitle className="text-base">Личные данные</CardTitle>
+         </CardHeader>
+         <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+           <Avatar name={profile?.name ?? ""} className="h-16 w-16 text-lg"/>
            <div>
-            <p className="text-sm font-medium">{item.label}</p>
-            <p className="text-xs text-muted-foreground">{item.desc}</p>
+            <p className="font-medium">{profile?.name ?? "Супер-куратор"}</p>
+            <p className="text-sm text-muted-foreground">{profile?.email}</p>
            </div>
-           <label className="relative inline-flex cursor-pointer items-center">
-            <input type="checkbox" defaultChecked={item.checked} className="peer sr-only"/>
-            <div className="h-6 w-11 rounded-full bg-muted peer-checked:bg-primary transition-colors after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-5"/>
-           </label>
           </div>
-         ))}
-        </CardContent>
-       </Card>
+          <Separator/>
+          <div className="grid gap-4 sm:grid-cols-2">
+           <div>
+            <label className="text-sm font-medium">Имя</label>
+            <input name="name" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={profile?.name ?? ""}/>
+           </div>
+           <div>
+            <label className="text-sm font-medium">Email</label>
+            <input className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={profile?.email} disabled/>
+           </div>
+           <div>
+            <label className="text-sm font-medium">Телефон</label>
+            <input name="phone" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={profile?.phone ?? ""} placeholder="+7 (___) ___-__-__"/>
+           </div>
+           <div>
+            <label className="text-sm font-medium">Организация</label>
+            <input name="organization" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" defaultValue={profile?.organization ?? ""} placeholder="Название организации"/>
+           </div>
+          </div>
+          <div className="flex justify-end">
+           <Button type="submit">Сохранить</Button>
+          </div>
+         </CardContent>
+        </Card>
+       </form>
       )
      },
+{
+       label: "Уведомления",
+       content: (
+        <form action={updateNotificationPreferencesAction}>
+         <Card className="rounded-2xl">
+          <CardHeader>
+           <CardTitle className="text-base">Настройки уведомлений</CardTitle>
+           <CardDescription>Выберите, какие уведомления вы хотите получать.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+           {NOTIFICATION_CHANNELS.map((item) => (
+            <div key={item.key} className="flex items-center justify-between rounded-xl border p-4">
+             <div>
+              <p className="text-sm font-medium">{item.label}</p>
+              <p className="text-xs text-muted-foreground">{item.desc}</p>
+             </div>
+             <label className="relative inline-flex cursor-pointer items-center">
+              <input 
+                type="checkbox" 
+                name={`notification_${item.key}`} 
+                defaultChecked={prefs[item.key] !== false} 
+                value="true"
+                className="peer sr-only"/>
+              <div className="h-6 w-11 rounded-full bg-muted peer-checked:bg-primary transition-colors after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-5"/>
+             </label>
+            </div>
+           ))}
+           <div className="flex justify-end">
+            <Button type="submit">Сохранить</Button>
+           </div>
+          </CardContent>
+         </Card>
+        </form>
+       )
+      },
      {
       label: "Безопасность",
       content: (
-       <Card className="rounded-2xl">
-        <CardHeader>
-         <CardTitle className="text-base">Безопасность</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-         <div>
-          <label className="text-sm font-medium">Текущий пароль</label>
-          <input type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Текущий пароль"/>
-         </div>
-         <div>
-          <label className="text-sm font-medium">Новый пароль</label>
-          <input type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Мин. 10 символов"/>
-         </div>
-         <div>
-          <label className="text-sm font-medium">Повторите новый пароль</label>
-          <input type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Повторите пароль"/>
-         </div>
-         <div className="flex justify-end">
-          <Button>Изменить пароль</Button>
-         </div>
-        </CardContent>
-       </Card>
+       <form action={updatePasswordAction}>
+        <Card className="rounded-2xl">
+         <CardHeader>
+          <CardTitle className="text-base">Безопасность</CardTitle>
+         </CardHeader>
+         <CardContent className="space-y-4">
+          <div>
+           <label className="text-sm font-medium">Текущий пароль</label>
+           <input name="currentPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Текущий пароль" required/>
+          </div>
+          <div>
+           <label className="text-sm font-medium">Новый пароль</label>
+           <input name="newPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Мин. 10 символов" required minLength={10}/>
+          </div>
+          <div>
+           <label className="text-sm font-medium">Повторите новый пароль</label>
+           <input name="confirmPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Повторите пароль" required/>
+          </div>
+          <div className="flex justify-end">
+           <Button type="submit">Изменить пароль</Button>
+          </div>
+         </CardContent>
+        </Card>
+       </form>
       )
      }
     ]}

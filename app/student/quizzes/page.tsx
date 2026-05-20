@@ -1,22 +1,19 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
+import { StatusBadge } from "@/components/lms/status-badge";
+import { EmptyState } from "@/components/lms/empty-state";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, FileText } from "lucide-react";
+import Link from "next/link";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getStudentQuizAttemptsAction } from "@/server/actions/student";
 
 export const dynamic = "force-dynamic";
 
 export default async function StudentQuizzesPage() {
- const user = await requireRolePage(["student"]);
- const prisma = getPrisma();
- 
- const attempts = await prisma.quizAttempt.findMany({
-  where: { userId: user.id },
-  include: {
-   quiz: { include: { course: true, lesson: true } }
-  },
-  orderBy: { startedAt: "desc" }
- });
+ await requireRolePage(["student"]);
+ const attempts = await getStudentQuizAttemptsAction();
 
  return (
   <AppShell role="student">
@@ -28,23 +25,25 @@ export default async function StudentQuizzesPage() {
        <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
          <CardTitle className="text-base">{attempt.quiz.title}</CardTitle>
-         <span className={`text-xs font-medium px-2 py-1 rounded-full ${attempt.passed ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
-          {attempt.passed ? "Сдан" : "Не сдан"}
-         </span>
+         <StatusBadge status={attempt.passed ? "passed" : "failed"} />
         </div>
         <CardDescription>{attempt.quiz.course?.title} {attempt.quiz.lesson ? `· ${attempt.quiz.lesson.title}` : ""}</CardDescription>
        </CardHeader>
-       <CardContent className="text-sm">
-        Оценка: {attempt.score}% (Проходной: {attempt.quiz.passThreshold}%) · Дата: {new Date(attempt.startedAt).toLocaleDateString("ru-RU")}
+       <CardContent className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <span>
+         Оценка: {attempt.score}% (Проходной: {attempt.quiz.passThreshold}%) · Дата: {new Date(attempt.startedAt).toLocaleDateString("ru-RU")}
+        </span>
+        <Button asChild size="sm" variant="secondary" className="w-full sm:w-auto">
+         <Link href={attempt.quiz.lesson?.id ? `/student/lessons/${attempt.quiz.lesson.id}` : `/student/quizzes/${attempt.quiz.id}/result`}>
+          {attempt.quiz.lesson?.id ? "Открыть урок" : "Открыть результат"}
+          <ArrowRight className="h-4 w-4" />
+         </Link>
+        </Button>
        </CardContent>
       </Card>
      ))
     ) : (
-     <Card className="rounded-2xl">
-      <CardContent className="py-10 text-center text-muted-foreground">
-       Вы еще не проходили тестов.
-      </CardContent>
-     </Card>
+     <EmptyState icon={FileText} title="Вы ещё не проходили тестов" description="После прохождения теста в рамках урока он появится в этом списке." />
     )}
    </div>
   </AppShell>

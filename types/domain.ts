@@ -149,14 +149,124 @@ export interface LessonDetail extends LessonSummary {
   assignments: AssignmentSummary[];
 }
 
-// ── Блоки контента урока (PR 3) ─────────────────────────────────────
+// ── Блоки контента урока (Discriminated Union) ──────────────────────
 export type ContentBlockType = "video" | "text" | "file" | "quiz" | "assignment" | "rating" | "curator_question" | "completion";
 
-export interface ContentBlock {
-  id: string;
-  type: ContentBlockType;
-  data: Record<string, unknown>;
+export type VideoProvider = "youtube" | "bunny" | "mux" | "cloudflare" | "peertube";
+
+export interface LessonVideo {
+  provider: VideoProvider;
+  providerVideoId: string;
+  originalUrl?: string;
+  embedUrl?: string;
+  thumbnailUrl?: string;
+  durationSeconds?: number;
+  isPrivate: boolean;
 }
+
+export interface VideoBlockData {
+  /** Новая структурированная информация о видео */
+  video?: LessonVideo;
+  /** @deprecated Используйте `video` */
+  videoUrl?: string;
+  title?: string;
+  /** @deprecated Длительность в минутах (legacy) */
+  duration?: number;
+}
+
+export interface TextBlockData {
+  html: string;
+}
+
+export interface FileBlockData {
+  url: string;
+  filename?: string;
+  fileType?: string;
+}
+
+export interface QuizBlockData {
+  quizId: string;
+}
+
+export interface AssignmentBlockData {
+  assignmentId: string;
+}
+
+export interface RatingBlockData {
+  lessonId: string;
+}
+
+export interface CuratorQuestionBlockData {
+  lessonId: string;
+}
+
+export interface CompletionBlockData {
+  label?: string;
+}
+
+export type ContentBlockData =
+  | VideoBlockData
+  | TextBlockData
+  | FileBlockData
+  | QuizBlockData
+  | AssignmentBlockData
+  | RatingBlockData
+  | CuratorQuestionBlockData
+  | CompletionBlockData;
+
+export interface ContentBlockBase {
+  id: string;
+}
+
+export interface VideoContentBlock extends ContentBlockBase {
+  type: "video";
+  data: VideoBlockData;
+}
+
+export interface TextContentBlock extends ContentBlockBase {
+  type: "text";
+  data: TextBlockData;
+}
+
+export interface FileContentBlock extends ContentBlockBase {
+  type: "file";
+  data: FileBlockData;
+}
+
+export interface QuizContentBlock extends ContentBlockBase {
+  type: "quiz";
+  data: QuizBlockData;
+}
+
+export interface AssignmentContentBlock extends ContentBlockBase {
+  type: "assignment";
+  data: AssignmentBlockData;
+}
+
+export interface RatingContentBlock extends ContentBlockBase {
+  type: "rating";
+  data: RatingBlockData;
+}
+
+export interface CuratorQuestionContentBlock extends ContentBlockBase {
+  type: "curator_question";
+  data: CuratorQuestionBlockData;
+}
+
+export interface CompletionContentBlock extends ContentBlockBase {
+  type: "completion";
+  data: CompletionBlockData;
+}
+
+export type ContentBlock =
+  | VideoContentBlock
+  | TextContentBlock
+  | FileContentBlock
+  | QuizContentBlock
+  | AssignmentContentBlock
+  | RatingContentBlock
+  | CuratorQuestionContentBlock
+  | CompletionContentBlock;
 
 // ── Course Builder (PR 5) ──────────────────────────────────────────
 export interface BuilderLessonDetail {
@@ -181,6 +291,15 @@ export interface BuilderModuleDetail {
   description?: string | null;
   recommendedDays: number;
   status: CourseStatus;
+  blocks: BuilderBlockDetail[];
+  lessons: BuilderLessonDetail[]; // kept for backward compat
+}
+
+export interface BuilderBlockDetail {
+  id: string;
+  order: number;
+  title: string;
+  description?: string | null;
   lessons: BuilderLessonDetail[];
 }
 
@@ -204,6 +323,8 @@ export interface StudentLessonPlayerDetail {
   courseTree: ModulePlayerDetail[];
   quizDetails: StudentQuizDetail[];
   assignmentDetails: StudentAssignmentDetail[];
+  curatorId?: string;
+  curatorName?: string;
 }
 
 // ── Плеер курса (PR 2) ──────────────────────────────────────────────
@@ -272,7 +393,6 @@ export interface StudentLessonLearningDetail extends LessonDetail {
   courseId: string;
   prevLesson: { id: string; title: string } | null;
   nextLesson: { id: string; title: string; locked: boolean } | null;
-  myQuestions: LessonQuestionSummary[];
 }
 
 export interface StudentModuleLearningDetail extends ModuleLearningDetail {
@@ -454,6 +574,134 @@ export interface CuratorLoad {
   pendingReviews: number;
   avgResponseHours: number;
   riskStudents: number;
+  /** Количество отвеченных вопросов (всего) */
+  questionsAnswered: number;
+  /** Количество отправленных сообщений (всего) */
+  messagesSent: number;
+  /** Был ли онлайн за последние 5 минут */
+  isOnline: boolean;
+  /** Последний раз заходил */
+  lastSeenAt: string | null;
+}
+
+export type SuperCuratorWorkloadLevel = "normal" | "watch" | "overloaded" | "critical";
+
+export interface SuperCuratorWorkload extends CuratorLoad {
+  curatorEmail: string;
+  cohorts: string[];
+  activeRisks: number;
+  criticalRisks: number;
+  unreadMessages: number;
+  workloadScore: number;
+  workloadLevel: SuperCuratorWorkloadLevel;
+  nextActionLabel: string;
+  nextActionHref: string;
+}
+
+export interface SuperCuratorCohortOperation {
+  cohortId: string;
+  cohortName: string;
+  courseTitle: string;
+  status: string;
+  studentsCount: number;
+  curatorCount: number;
+  avgProgress: number;
+  openQuestions: number;
+  pendingReviews: number;
+  activeRisks: number;
+  criticalRisks: number;
+  overloadedCurators: number;
+  nextActionLabel: string;
+  nextActionHref: string;
+}
+
+export interface SuperCuratorProblemQuestion {
+  id: string;
+  text: string;
+  status: "OPEN" | "FORWARDED";
+  studentName: string;
+  studentEmail: string;
+  curatorId: string | null;
+  curatorName: string | null;
+  cohortId: string | null;
+  cohortName: string | null;
+  courseTitle: string;
+  moduleTitle: string;
+  lessonTitle: string;
+  createdAt: string;
+  ageHours: number;
+}
+
+export interface SuperCuratorRiskQueueItem {
+  id: string;
+  type: string;
+  severity: RiskSeverity;
+  studentName: string;
+  studentEmail: string;
+  curatorId: string | null;
+  curatorName: string | null;
+  cohortId: string | null;
+  cohortName: string | null;
+  courseTitle: string;
+  createdAt: string;
+  ageDays: number;
+}
+
+export interface CuratorStudentDeadline {
+  title: string;
+  dueAt: string;
+  daysLeft: number;
+  overdue: boolean;
+  scope: "course" | "module" | "block";
+}
+
+export interface CuratorStudentLastContext {
+  lessonId: string;
+  lessonTitle: string;
+  moduleTitle: string;
+  blockTitle?: string | null;
+  updatedAt: string;
+}
+
+export type CuratorNextActionKind =
+  | "risk"
+  | "question"
+  | "assignment"
+  | "chat"
+  | "deadline"
+  | "check_in"
+  | "monitor";
+
+export interface CuratorNextAction {
+  kind: CuratorNextActionKind;
+  label: string;
+  href: string;
+  tone: "primary" | "warning" | "danger" | "neutral";
+  reason: string;
+}
+
+export interface CuratorStudentOperation {
+  assignmentId: string;
+  studentId: string;
+  name: string;
+  email: string;
+  cohortId: string;
+  cohortName: string;
+  courseId: string | null;
+  courseTitle: string;
+  progressPercent: number;
+  progressStatus: ProgressStatus;
+  lastLoginAt: string | null;
+  daysSinceLogin: number | null;
+  lastContext: CuratorStudentLastContext | null;
+  nextDeadline: CuratorStudentDeadline | null;
+  openQuestions: number;
+  pendingAssignments: number;
+  activeRisks: number;
+  highestRiskSeverity: RiskSeverity | null;
+  unreadMessages: number;
+  lastMessageAt: string | null;
+  nextAction: CuratorNextAction;
 }
 
 // ── Сертификаты ─────────────────────────────────────────────────────
@@ -466,22 +714,14 @@ export interface CertificateSummary {
   verificationUrl: string;
 }
 
-// ── Инвайты ─────────────────────────────────────────────────────────
-export interface InviteLinkSummary {
-  id: string;
-  token: string;
-  courseTitle?: string;
-  cohortName?: string;
-  maxActivations: number;
-  activationCount: number;
-  expiresAt?: string | null;
-  status: string;
-}
-
 // ── Метрики дашборда ────────────────────────────────────────────────
 export interface DashboardMetric {
   label: string;
   value: string | number;
   change?: string;
-  tone: "primary" | "success" | "warning" | "danger" | "info";
+  description?: string;
+  detail?: string;
+  href?: string;
+  priority?: "normal" | "elevated" | "critical";
+  tone: "primary" | "success" | "warning" | "danger" | "info" | "neutral";
 }

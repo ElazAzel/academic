@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Filter, Download } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { useState } from "react";
 
 export function ListToolbar({
@@ -19,9 +19,9 @@ export function ListToolbar({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="relative flex-1 min-w-[200px] max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-m3-on-surface-variant" />
         <input
-          className="h-10 w-full rounded-xl border bg-white pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 dark:bg-gray-950"
+          className="h-10 w-full rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest pl-9 pr-3 text-body-md font-body-md text-m3-on-surface outline-none transition focus:border-m3-outline focus:ring-2 focus:ring-m3-outline-variant placeholder:text-m3-on-surface-variant/50"
           placeholder={searchPlaceholder}
           onChange={(e) => onSearch?.(e.target.value)}
         />
@@ -29,18 +29,18 @@ export function ListToolbar({
       {filters && filters.length > 0 && (
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="inline-flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm transition hover:bg-muted dark:bg-gray-950"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest px-3 text-body-md font-body-md text-m3-on-surface-variant transition hover:bg-m3-surface-container-high"
         >
-          <Filter className="h-4 w-4" />
+          <Icon name="filter_list" size={16} />
           Фильтры
         </button>
       )}
       {onExport && (
         <button
           onClick={onExport}
-          className="inline-flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm transition hover:bg-muted dark:bg-gray-950"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest px-3 text-body-md font-body-md text-m3-on-surface-variant transition hover:bg-m3-surface-container-high"
         >
-          <Download className="h-4 w-4" />
+          <Icon name="download" size={16} />
           Экспорт
         </button>
       )}
@@ -50,10 +50,10 @@ export function ListToolbar({
             <button
               key={f.value}
               onClick={f.onClick}
-              className={`inline-flex h-8 items-center rounded-full border px-3 text-xs transition ${
+              className={`inline-flex h-8 items-center rounded-full border px-3 text-label-sm font-label-sm transition ${
                 f.active
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "hover:bg-muted"
+                  ? "border-m3-outline bg-m3-secondary-container text-m3-secondary"
+                  : "border-m3-outline-variant text-m3-on-surface-variant hover:bg-m3-surface-container-high"
               }`}
             >
               {f.label}

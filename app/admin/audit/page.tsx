@@ -1,82 +1,206 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
-import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { listAuditLogs } from "@/server/modules/audit/service";
+import { getPrisma } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Activity } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Activity, ShieldCheck, Users, BookOpen, Award, FileText, Settings, Mail, MessageCircle, HelpCircle, ClipboardCheck } from "lucide-react";
+import Link from "next/link";
 
+const prisma = getPrisma();
 export const dynamic = "force-dynamic";
 
-export default async function AdminAuditPage() {
- await requireRolePage(["admin"]);
- const logs = await listAuditLogs();
+const ACTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  course: BookOpen,
+  lesson: BookOpen,
+  module: BookOpen,
+  quiz: HelpCircle,
+  assignment: ClipboardCheck,
+  enrollment: Users,
+  certificate: Award,
+  user: Users,
+  role: ShieldCheck,
+  invite: Mail,
+  question: HelpCircle,
+  notification: MessageCircle,
+  settings: Settings,
+  audit: FileText,
+  progress: Activity,
+};
 
- return (
-  <AppShell role="admin">
-   <PageHeader 
-    title="Логи аудита" 
-    description="История всех административных действий на платформе." 
-  />
+const ACTION_LABELS: Record<string, string> = {
+  "course.created": "Создан курс",
+  "course.updated": "Курс обновлён",
+  "course.deleted": "Курс удалён",
+  "lesson.created": "Создан урок",
+  "lesson.updated": "Урок обновлён",
+  "lesson.blocks.updated": "Блоки урока изменены",
+  "module.created": "Создан модуль",
+  "module.updated": "Модуль обновлён",
+  "enrollment.created": "Зачисление создано",
+  "enrollment.deleted": "Зачисление удалено",
+  "enrollment.paused": "Обучение приостановлено",
+  "enrollment.resumed": "Обучение возобновлено",
+  "certificate.issued": "Выдан сертификат",
+  "certificate.revoked": "Сертификат отозван",
+  "user.created": "Пользователь создан",
+  "user.updated": "Пользователь обновлён",
+  "user.deleted": "Пользователь удалён",
+  "role.assigned": "Роль назначена",
+  "quiz.created": "Тест создан",
+  "quiz.updated": "Тест обновлён",
+  "question.answered": "Ответ на вопрос",
+  "question.forwarded": "Вопрос переадресован",
+  "assignment.created": "Задание создано",
+  "assignment.reviewed": "Задание проверено",
+  "progress.lesson_marked": "Прогресс отмечен",
+  "settings.updated": "Настройки изменены",
+  "curator.assigned": "Куратор назначен",
+  "modules.reordered": "Порядок модулей изменён",
+  "lesson.question_created": "Задан вопрос",
+};
 
-   <div className="mt-6">
-    <Card className="rounded-3xl border-2 overflow-hidden">
-     <CardContent className="p-0">
-      <Table>
-       <TableHeader className="bg-muted/50">
-        <TableRow>
-         <TableHead className="w-[180px]">Дата</TableHead>
-         <TableHead>Действие</TableHead>
-         <TableHead>Кто</TableHead>
-         <TableHead>Объект</TableHead>
-         <TableHead className="text-right">ID Объекта</TableHead>
-        </TableRow>
-       </TableHeader>
-       <TableBody>
-        {logs.length > 0 ? logs.map((log) => (
-         <TableRow key={log.id} className="hover:bg-muted/30 transition-colors">
-          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-           {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true, locale: ru })}
-          </TableCell>
-          <TableCell className="font-medium text-sm">
-           <div className="flex items-center gap-2">
-            <Activity className="h-3 w-3 text-primary"/>
-            {log.action}
-           </div>
-          </TableCell>
-          <TableCell className="text-sm">
-           {log.actor ? (
-            <div>
-             <p>{log.actor.name || "Без имени"}</p>
-             <p className="text-[10px] text-muted-foreground">{log.actor.email}</p>
+function getActionMeta(action: string) {
+  const label = ACTION_LABELS[action] || action;
+  const parts = action.split(".");
+  const entity = parts[0] || "other";
+  const Icon = ACTION_ICONS[entity] || Activity;
+  return { label, Icon, entity };
+}
+
+export default async function AdminAuditPage(props: {
+  searchParams?: Promise<{ page?: string; limit?: string; search?: string }>;
+}) {
+  await requireRolePage(["admin"]);
+  const sp = await props.searchParams;
+  const page = Math.max(1, parseInt(sp?.page ?? "1", 10));
+  const limit = Math.min(100, Math.max(1, parseInt(sp?.limit ?? "25", 10)));
+  const search = (sp?.search ?? "").trim().toLowerCase();
+
+  const where = search
+    ? {
+        OR: [
+          { action: { contains: search, mode: "insensitive" as const } },
+          { entity: { contains: search, mode: "insensitive" as const } },
+          { actor: { name: { contains: search, mode: "insensitive" as const } } },
+          { actor: { email: { contains: search, mode: "insensitive" as const } } },
+          { entityId: { contains: search, mode: "insensitive" as const } },
+        ],
+      }
+    : {};
+
+  const [logs, total] = await Promise.all([
+    prisma.auditLog.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: { actor: { select: { id: true, email: true, name: true } } },
+    }),
+    prisma.auditLog.count({ where }),
+  ]);
+
+  const pages = Math.ceil(total / limit);
+
+  return (
+    <AppShell role="admin">
+      <PageHeader
+        title="Журнал аудита"
+        description={`${total} записей — все действия администраторов и системы`}
+      />
+
+      <div className="mt-6 space-y-4">
+        {/* Search */}
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <form>
+            <Input
+              name="search"
+              defaultValue={search}
+              placeholder="Поиск по действию, пользователю..."
+              className="pl-9 rounded-xl"
+            />
+          </form>
+        </div>
+
+        {/* Timeline */}
+        <div className="space-y-2">
+          {logs.map((log) => {
+            const { label, Icon, entity } = getActionMeta(log.action);
+            return (
+              <div
+                key={log.id}
+                className="flex items-start gap-4 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/30"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <Icon className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium">{label}</span>
+                    <Badge className="text-[10px] uppercase bg-secondary/50">{entity}</Badge>
+                    {log.entityId && (
+                      <code className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+                        #{log.entityId.slice(0, 8)}
+                      </code>
+                    )}
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>
+                      {log.actor ? (
+                        <>{log.actor.name || log.actor.email}</>
+                      ) : (
+                        "Система"
+                      )}
+                    </span>
+                    <span>·</span>
+                    <span title={log.createdAt.toISOString()}>
+                      {formatDistanceToNow(log.createdAt, { addSuffix: true, locale: ru })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {logs.length === 0 && (
+            <div className="py-20 text-center text-muted-foreground">
+              <Activity className="mx-auto h-8 w-8 mb-2 opacity-40" />
+              {search ? "Ничего не найдено" : "Логов пока нет"}
             </div>
-           ) : (
-            <span className="text-muted-foreground">Система / Гость</span>
-           )}
-          </TableCell>
-          <TableCell className="text-sm">
-           <span className="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-[10px] font-bold uppercase">
-            {log.entity}
-           </span>
-          </TableCell>
-          <TableCell className="text-right font-mono text-[10px] text-muted-foreground">
-           {log.entityId || "—"}
-          </TableCell>
-         </TableRow>
-        )) : (
-         <TableRow>
-          <TableCell colSpan={5} className="py-20 text-center text-muted-foreground">
-           Логов пока нет.
-          </TableCell>
-         </TableRow>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {pages > 1 && (
+          <div className="flex items-center justify-between pt-2">
+            <p className="text-sm text-muted-foreground">
+              Показано {logs.length} из {total} · Страница {page} из {pages}
+            </p>
+            <div className="flex items-center gap-2">
+              {page > 1 && (
+                <Button size="sm" variant="secondary" asChild>
+                  <Link href={`/admin/audit?page=${page - 1}&limit=${limit}${search ? `&search=${search}` : ""}`}>
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Назад
+                  </Link>
+                </Button>
+              )}
+              {page < pages && (
+                <Button size="sm" variant="secondary" asChild>
+                  <Link href={`/admin/audit?page=${page + 1}&limit=${limit}${search ? `&search=${search}` : ""}`}>
+                    Вперед
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </div>
         )}
-       </TableBody>
-      </Table>
-     </CardContent>
-    </Card>
-   </div>
-  </AppShell>
- );
+      </div>
+    </AppShell>
+  );
 }

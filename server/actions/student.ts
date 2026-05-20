@@ -2,11 +2,34 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/page-guards";
+import { getPrisma } from "@/lib/prisma";
 
 import { submitAssignment } from "@/server/modules/assignments/service";
 import { submitQuizAttempt } from "@/server/modules/quizzes/service";
 
+const prisma = getPrisma();
 
+export async function getStudentQuizAttemptsAction() {
+  const user = await requireRole(["student"]);
+  return prisma.quizAttempt.findMany({
+    where: { userId: user.id },
+    include: {
+      quiz: { include: { course: true, lesson: true } },
+    },
+    orderBy: { startedAt: "desc" },
+  });
+}
+
+export async function getStudentAssignmentSubmissionsAction() {
+  const user = await requireRole(["student"]);
+  return prisma.assignmentSubmission.findMany({
+    where: { userId: user.id },
+    include: {
+      assignment: { include: { course: true, lesson: true } },
+    },
+    orderBy: { submittedAt: "desc" },
+  });
+}
 
 export async function submitAssignmentAction(assignmentId: string, answerText?: string, fileUrl?: string) {
   const actor = await requireRole(["student"]);

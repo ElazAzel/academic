@@ -6,6 +6,20 @@ datasource db {
   provider = "postgresql"
 }
 
+model OutboxEvent {
+  id        String   @id @default(cuid())
+  eventType String   @map("event_type")
+  payload   Json     @default("{}")
+  status    String   @default("pending")
+  createdAt DateTime @default(now()) @map("created_at")
+  sentAt    DateTime? @map("sent_at")
+  error     String?  @db.Text
+
+  @@index([status, createdAt])
+  @@map("outbox_events")
+}
+
+
 enum RoleKey {
   admin
   instructor
@@ -100,50 +114,7 @@ enum QuestionStatus {
   CLOSED
 }
 
-model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  name            String?
-  image           String?
-  passwordHash    String?   @map("password_hash")
-  emailVerified   DateTime? @map("email_verified")
-  locale          String    @default("ru")
-  status          String    @default("active")
-  lastLoginAt     DateTime? @map("last_login_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-
-  accounts              Account[]
-  sessions              Session[]
-  roles                 UserRole[]
-  courseInstructors     CourseInstructor[]
-  enrollments           Enrollment[]
-  lessonProgress        LessonProgress[]
-  blockProgress         BlockProgress[]
-  moduleProgress        ModuleProgress[]
-  courseProgress        CourseProgress[]
-  quizAttempts          QuizAttempt[]
-  assignmentSubmissions AssignmentSubmission[]
-  reviewedSubmissions   AssignmentSubmission[] @relation("SubmissionReviewer")
-  certificates          Certificate[]
-
-  notifications         Notification[]
-  auditLogs             AuditLog[] @relation("AuditActor")
-  consentLogs           ConsentLog[]
-  createdInvites        InviteLink[] @relation("InviteCreator")
-  importJobs            ImportJob[] @relation("ImportCreator")
-  curatorAssignments    CuratorAssignment[] @relation("CuratorAssignments")
-  studentAssignments    CuratorAssignment[] @relation("StudentCuratorAssignments")
-  superCuratorLinks     CuratorAssignment[] @relation("SuperCuratorAssignments")
-  studentQuestions      LessonQuestion[] @relation("StudentQuestions")
-  curatorQuestions      LessonQuestion[] @relation("CuratorQuestions")
-  riskFlags             RiskFlag[]
-  activityLogs          ActivityLog[]
-
-  @@index([createdAt])
-  @@index([status])
-  @@map("users")
-}
+// ── NextAuth.js models (PrismaAdapter) ──────────────────────────────
 
 model Account {
   id                String  @id @default(cuid())
@@ -185,6 +156,8 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+// ── RBAC models ─────────────────────────────────────────────────────
+
 model Role {
   id          String   @id @default(cuid())
   key         RoleKey  @unique
@@ -219,6 +192,7 @@ model UserRole {
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
+  @@index([roleId], map: "idx_user_roles_role_id")
   @@map("user_roles")
 }
 
@@ -232,6 +206,65 @@ model RolePermission {
 
   @@id([roleId, permissionId])
   @@map("role_permissions")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  image           String?
+  passwordHash    String?   @map("password_hash")
+  emailVerified   DateTime? @map("email_verified")
+  totpSecret      String?   @map("totp_secret")
+  totpEnabled     Boolean   @default(false) @map("totp_enabled")
+  backupCodes     String?   @map("backup_codes") // JSON array of hashed backup codes
+  locale          String    @default("ru")
+  phone           String?
+  organization    String?
+  company         String?
+  position        String?
+  status          UserAccountStatus @default(ACTIVE)
+  lastLoginAt     DateTime? @map("last_login_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  accounts              Account[]
+  sessions              Session[]
+  roles                 UserRole[]
+  courseInstructors     CourseInstructor[]
+  enrollments           Enrollment[]
+  lessonProgress        LessonProgress[]
+  blockProgress         BlockProgress[]
+  moduleProgress        ModuleProgress[]
+  courseProgress        CourseProgress[]
+  quizAttempts          QuizAttempt[]
+  assignmentSubmissions AssignmentSubmission[]
+  reviewedSubmissions   AssignmentSubmission[] @relation("SubmissionReviewer")
+  certificates          Certificate[]
+
+  notifications              Notification[]
+  auditLogs                  AuditLog[] @relation("AuditActor")
+  consentLogs                ConsentLog[]
+  sentMessages               Message[] @relation("SentMessages")
+  receivedMessages           Message[] @relation("ReceivedMessages")
+  studentQuestions           LessonQuestion[] @relation("StudentQuestions")
+  curatorQuestions           LessonQuestion[] @relation("CuratorQuestions")
+  curatorAssignments         CuratorAssignment[] @relation("StudentCuratorAssignments")
+  curatorAssignmentsAsCurator CuratorAssignment[] @relation("CuratorAssignments")
+  superCuratorAssignments    CuratorAssignment[] @relation("SuperCuratorAssignments")
+  riskFlags                  RiskFlag[]
+  importJobsCreated          ImportJob[] @relation("ImportCreator")
+  observerProjects           ObserverProject[]
+  observerCohorts            ObserverCohort[]
+  notificationPreferences    NotificationPreference[]
+  lessonRatings              LessonRating[]
+  activityLogs               ActivityLog[]
+  createdPopups              AdminPopup[]
+  popupViews                 PopupView[]
+  pushSubscriptions          PushSubscription[]
+  learningPathEnrollments    LearningPathEnrollment[]
+
+  @@map("users")
 }
 
 model Client {
@@ -258,7 +291,7 @@ model Project {
   client      Client?      @relation(fields: [clientId], references: [id])
   cohorts     Cohort[]
   reports     Report[]
-  inviteLinks InviteLink[]
+  observerProjects ObserverProject[]
 
   @@map("projects")
 }
@@ -291,11 +324,13 @@ model Course {
   certificateTemplates CertificateTemplate[]
 
   reports        Report[]
-  inviteLinks    InviteLink[]
   riskFlags      RiskFlag[]
+  notificationPreferences NotificationPreference[]
+  learningPathCourses LearningPathCourse[]
 
   @@index([createdAt])
   @@index([status])
+  @@index([status, createdAt])
   @@map("courses")
 }
 
@@ -308,6 +343,7 @@ model CourseInstructor {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([courseId, userId])
+  @@index([userId])
   @@map("course_instructors")
 }
 
@@ -340,11 +376,13 @@ model Block {
   title           String
   description     String?      @db.Text
   status          CourseStatus @default(DRAFT)
+  recommendedDays Int          @default(7) @map("recommended_days")
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
 
   module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   lessons  Lesson[]
+  deadlines BlockCohortDeadline[]
   progress BlockProgress[]
 
   @@unique([moduleId, order])
@@ -394,8 +432,11 @@ model Lesson {
   assignments Assignment[]
   progress    LessonProgress[]
   questions   LessonQuestion[]
+  ratings     LessonRating[]
+  messages    Message[]
 
   @@unique([moduleId, order])
+  @@index([blockId, order], map: "idx_lessons_block_order")
   @@map("lessons")
 }
 
@@ -429,10 +470,11 @@ model Cohort {
   course      Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
   project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   deadlines   CohortDeadline[]
+  blockDeadlines BlockCohortDeadline[]
   enrollments Enrollment[]
   curatorAssignments CuratorAssignment[]
   riskFlags RiskFlag[]
-  inviteLinks InviteLink[]
+  observerCohorts ObserverCohort[]
 
   @@index([createdAt])
   @@index([status])
@@ -451,6 +493,20 @@ model CohortDeadline {
 
   @@unique([cohortId, moduleId])
   @@map("cohort_deadlines")
+}
+
+model BlockCohortDeadline {
+  id        String   @id @default(cuid())
+  cohortId  String   @map("cohort_id")
+  blockId   String   @map("block_id")
+  dueAt     DateTime @map("due_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  block  Block  @relation(fields: [blockId], references: [id], onDelete: Cascade)
+
+  @@unique([cohortId, blockId])
+  @@map("block_cohort_deadlines")
 }
 
 model Enrollment {
@@ -474,6 +530,10 @@ model Enrollment {
   certificates   Certificate[]
 
   @@unique([userId, courseId])
+  @@index([userId, status])
+  @@index([courseId, status], map: "idx_enrollments_course_status")
+  @@index([cohortId, status], map: "idx_enrollments_cohort_status")
+  @@index([status, createdAt], map: "idx_enrollments_status_created_at")
   @@map("enrollments")
 }
 
@@ -497,6 +557,8 @@ model LessonProgress {
   @@index([userId])
   @@index([lessonId])
   @@index([enrollmentId])
+  @@index([userId, updatedAt], map: "idx_lesson_progress_user_updated_at")
+  @@index([userId, status], map: "idx_lesson_progress_user_status")
   @@map("lesson_progress")
 }
 
@@ -518,6 +580,8 @@ model ModuleProgress {
   @@index([userId])
   @@index([moduleId])
   @@index([enrollmentId])
+  @@index([moduleId, status], map: "idx_module_progress_module_status")
+  @@index([userId, status, moduleId], map: "idx_module_progress_user_status_module")
   @@map("module_progress")
 }
 
@@ -539,6 +603,9 @@ model CourseProgress {
   @@index([userId])
   @@index([courseId])
   @@index([enrollmentId])
+  @@index([courseId, status], map: "idx_course_progress_course_status")
+  @@index([userId, updatedAt], map: "idx_course_progress_user_updated_at")
+  @@index([userId, status], map: "idx_course_progress_user_status")
   @@map("course_progress")
 }
 
@@ -558,6 +625,8 @@ model Quiz {
   questions QuizQuestion[]
   attempts  QuizAttempt[]
 
+  @@index([courseId], map: "idx_quizzes_course_id")
+  @@index([lessonId], map: "idx_quizzes_lesson_id")
   @@map("quizzes")
 }
 
@@ -591,6 +660,8 @@ model QuizAttempt {
 
   @@index([quizId])
   @@index([userId])
+  @@index([quizId, userId])
+  @@index([quizId, passed], map: "idx_quiz_attempts_quiz_passed")
   @@index([submittedAt])
   @@index([passed])
   @@map("quiz_attempts")
@@ -612,6 +683,8 @@ model Assignment {
   lesson      Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   submissions AssignmentSubmission[]
 
+  @@index([courseId], map: "idx_assignments_course_id")
+  @@index([lessonId], map: "idx_assignments_lesson_id")
   @@map("assignments")
 }
 
@@ -638,6 +711,8 @@ model AssignmentSubmission {
   @@index([assignmentId])
   @@index([userId])
   @@index([reviewedById])
+  @@index([userId, status, submittedAt], map: "idx_assignment_submissions_user_status_submitted_at")
+  @@index([status, submittedAt], map: "idx_assignment_submissions_status_submitted_at")
   @@map("assignment_submissions")
 }
 
@@ -666,7 +741,7 @@ model LessonQuestion {
   curatorId   String?  @map("curator_id")
   text        String   @db.Text
   answer      String?  @db.Text
-  status      String   @default("open")
+  status      QuestionStatus @default(OPEN)
   attachments Json     @default("[]")
   createdAt   DateTime @default(now()) @map("created_at")
   answeredAt  DateTime? @map("answered_at")
@@ -680,6 +755,9 @@ model LessonQuestion {
   @@index([curatorId])
   @@index([status])
   @@index([createdAt])
+  @@index([curatorId, status, createdAt], map: "idx_lesson_questions_curator_status_created_at")
+  @@index([studentId, status, createdAt], map: "idx_lesson_questions_student_status_created_at")
+  @@index([status, createdAt], map: "idx_lesson_questions_status_created_at")
   @@map("lesson_questions")
 }
 
@@ -699,8 +777,12 @@ model Certificate {
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   course     Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
   enrollment Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+  templateId String?     @map("template_id")
 
   @@index([issuedAt])
+  @@index([userId, issuedAt], map: "idx_certificates_user_issued_at")
+  @@index([courseId, issuedAt], map: "idx_certificates_course_issued_at")
+  @@index([enrollmentId], map: "idx_certificates_enrollment_id")
   @@map("certificates")
 }
 
@@ -728,6 +810,8 @@ model Notification {
   body      String             @db.Text
   status    NotificationStatus @default(QUEUED)
   data      Json               @default("{}")
+  refType   String?            @map("ref_type")
+  refId     String?            @map("ref_id")
   readAt    DateTime?          @map("read_at")
   createdAt DateTime           @default(now()) @map("created_at")
 
@@ -736,7 +820,48 @@ model Notification {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@index([userId, status, createdAt])
+  @@index([userId, createdAt])
+  @@index([userId, status])
+  @@index([userId, readAt, createdAt], map: "idx_notifications_user_read_at_created_at")
+  @@index([refType, refId])
   @@map("notifications")
+}
+
+// ── Admin Popups ──────────────────────────────────────────────────────
+model AdminPopup {
+  id          String   @id @default(cuid())
+  title       String
+  message     String   @db.Text
+  imageUrl    String?  @map("image_url")
+  linkUrl     String?  @map("link_url")
+  linkText    String?  @map("link_text")
+  targetRoles     String   @default("[]")  @map("target_roles") // JSON array of RoleKey
+  targetCohortIds String   @default("[]")  @map("target_cohort_ids") // JSON array of cohort IDs (only for student role)
+  isActive    Boolean  @default(true)  @map("is_active")
+  createdById String   @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  createdBy User   @relation(fields: [createdById], references: [id])
+  views     PopupView[]
+
+  @@index([isActive, createdAt])
+  @@map("admin_popups")
+}
+
+model PopupView {
+  id        String   @id @default(cuid())
+  popupId   String   @map("popup_id")
+  userId    String   @map("user_id")
+  viewedAt  DateTime @default(now()) @map("viewed_at")
+
+  popup AdminPopup @relation(fields: [popupId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([popupId, userId])
+  @@index([userId])
+  @@map("popup_views")
 }
 
 model AuditLog {
@@ -755,6 +880,7 @@ model AuditLog {
   @@index([actorId])
   @@index([entity])
   @@index([action])
+  @@index([entity, action, createdAt])
   @@index([createdAt])
   @@map("audit_logs")
 }
@@ -773,6 +899,7 @@ model ConsentLog {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, type, status], map: "idx_consent_logs_user_type_status")
   @@map("consent_logs")
 }
 
@@ -783,29 +910,6 @@ model AppSetting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("app_settings")
-}
-
-model InviteLink {
-  id             String   @id @default(cuid())
-  courseId       String?  @map("course_id")
-  cohortId       String?  @map("cohort_id")
-  projectId      String?  @map("project_id")
-  token          String   @unique
-  allowedEmails  Json     @default("[]") @map("allowed_emails")
-  maxActivations Int      @default(1) @map("max_activations")
-  activationCount Int     @default(0) @map("activation_count")
-  expiresAt      DateTime? @map("expires_at")
-  status         String   @default("active")
-  createdById    String?  @map("created_by_id")
-  createdAt      DateTime @default(now()) @map("created_at")
-
-  course    Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  cohort    Cohort?  @relation(fields: [cohortId], references: [id], onDelete: Cascade)
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdBy User?    @relation("InviteCreator", fields: [createdById], references: [id])
-
-  @@index([createdAt])
-  @@map("invite_links")
 }
 
 model CuratorAssignment {
@@ -823,6 +927,11 @@ model CuratorAssignment {
   superCurator User?  @relation("SuperCuratorAssignments", fields: [superCuratorId], references: [id])
 
   @@unique([cohortId, studentId])
+  @@index([curatorId, active])
+  @@index([studentId, active])
+  @@index([superCuratorId, active], map: "idx_curator_assignments_super_curator_active")
+  @@index([cohortId, active], map: "idx_curator_assignments_cohort_active")
+  @@index([active, assignedAt], map: "idx_curator_assignments_active_assigned_at")
   @@map("curator_assignments")
 }
 
@@ -846,6 +955,10 @@ model RiskFlag {
   @@index([cohortId])
   @@index([courseId])
   @@index([status])
+  @@index([userId, status, resolvedAt, createdAt], map: "idx_risk_flags_user_status_resolved_created_at")
+  @@index([status, resolvedAt, createdAt], map: "idx_risk_flags_status_resolved_created_at")
+  @@index([cohortId, status, resolvedAt], map: "idx_risk_flags_cohort_status_resolved")
+  @@index([courseId, status, resolvedAt], map: "idx_risk_flags_course_status_resolved")
   @@map("risk_flags")
 }
 
@@ -880,4 +993,200 @@ model ImportJob {
   createdBy User? @relation("ImportCreator", fields: [createdById], references: [id])
 
   @@map("import_jobs")
+}
+
+// ── Observer scope (PR-2) ───────────────────────────────────────────
+
+model ObserverProject {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  projectId String?  @map("project_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, projectId])
+  @@map("observer_projects")
+}
+
+model ObserverCohort {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  cohortId  String   @map("cohort_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cohortId])
+  @@map("observer_cohorts")
+}
+
+// ── Notification preferences (PR-2) ───────────────────────────────────
+
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  channel   String   @default("in_app")
+  courseId  String?  @map("course_id")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, channel, courseId])
+  @@map("notification_preferences")
+}
+
+// ── Lesson rating (PR-2) ─────────────────────────────────────────────
+
+model LessonRating {
+  id        String   @id @default(cuid())
+  lessonId  String   @map("lesson_id")
+  userId    String   @map("user_id")
+  score     Int      @default(0)
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, userId])
+  @@map("lesson_ratings")
+}
+
+model Message {
+  id            String    @id @default(cuid())
+  senderId      String    @map("sender_id")
+  receiverId    String?   @map("receiver_id")
+  text          String?   @db.Text
+  attachmentUrl String?   @map("attachment_url")
+  attachmentType String?  @map("attachment_type")
+  lessonId      String?   @map("lesson_id")
+  replyToId     String?   @map("reply_to_id")
+  readAt        DateTime? @map("read_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  sender   User    @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User?   @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: SetNull)
+  lesson   Lesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  replyTo  Message? @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies  Message[] @relation("MessageReplies")
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([lessonId])
+  @@index([replyToId])
+  @@index([senderId, receiverId])
+  @@index([createdAt])
+  @@index([senderId, createdAt], map: "idx_messages_sender_created_at")
+  @@index([receiverId, createdAt], map: "idx_messages_receiver_created_at")
+  @@index([senderId, receiverId, createdAt], map: "idx_messages_sender_receiver_created_at")
+  @@index([receiverId, senderId, createdAt], map: "idx_messages_receiver_sender_created_at")
+  @@index([receiverId, readAt, createdAt], map: "idx_messages_receiver_read_at_created_at")
+  @@index([senderId, lessonId, createdAt], map: "idx_messages_sender_lesson_created_at")
+  @@index([receiverId, lessonId, createdAt], map: "idx_messages_receiver_lesson_created_at")
+  @@map("messages")
+}
+
+model GlossaryEntry {
+  id        String   @id @default(cuid())
+  question  String   @db.Text
+  answer    String   @db.Text
+  category  String   @default("Общее")
+  direction String   @default("general") @map("direction")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([question])
+  @@index([category])
+  @@index([direction])
+  @@map("glossary_entries")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([endpoint])
+  @@map("push_subscriptions")
+}
+
+// ── Learning Paths (Учебные траектории) ─────────────────────────────
+
+enum LearningPathStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum LearningPathEnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
+}
+
+model LearningPath {
+  id          String             @id @default(cuid())
+  title       String
+  slug        String             @unique
+  description String             @db.Text
+  coverUrl    String?            @map("cover_url")
+  status      LearningPathStatus @default(DRAFT)
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  publishedAt DateTime?          @map("published_at")
+
+  courses     LearningPathCourse[]
+  enrollments LearningPathEnrollment[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("learning_paths")
+}
+
+model LearningPathCourse {
+  id             String       @id @default(cuid())
+  learningPathId String       @map("learning_path_id")
+  courseId        String       @map("course_id")
+  order          Int          @default(0)
+  isRequired     Boolean      @default(true) @map("is_required")
+
+  learningPath LearningPath @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
+  course       Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([learningPathId, courseId])
+  @@index([learningPathId])
+  @@index([courseId])
+  @@map("learning_path_courses")
+}
+
+model LearningPathEnrollment {
+  id             String                       @id @default(cuid())
+  userId         String                       @map("user_id")
+  learningPathId String                       @map("learning_path_id")
+  status         LearningPathEnrollmentStatus @default(ACTIVE)
+  progress       Float                        @default(0)
+  enrolledAt     DateTime                     @default(now()) @map("enrolled_at")
+  completedAt    DateTime?                    @map("completed_at")
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  learningPath LearningPath @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, learningPathId])
+  @@index([userId])
+  @@index([learningPathId])
+  @@map("learning_path_enrollments")
 }

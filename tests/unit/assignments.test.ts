@@ -10,6 +10,19 @@ const mockSubmissionFindUnique = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockCourseInstructorFindUnique = vi.hoisted(() => vi.fn());
 const mockCuratorAssignmentFindFirst = vi.hoisted(() => vi.fn());
+const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
+const mockNotificationCreate = vi.hoisted(() => vi.fn());
+const mockOutboxEventCreate = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/env", () => ({
+  env: {
+    FEATURE_EMAIL_NOTIFICATIONS: false,
+    FEATURE_PUSH_NOTIFICATIONS: false,
+    EMAIL_FROM: "noreply@academy.local",
+    SMTP_HOST: "localhost",
+    SMTP_PORT: 1025,
+  },
+}));
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
@@ -20,6 +33,9 @@ vi.mock("@/lib/prisma", () => ({
     user: { findUnique: mockUserFindUnique },
     courseInstructor: { findUnique: mockCourseInstructorFindUnique },
     curatorAssignment: { findFirst: mockCuratorAssignmentFindFirst },
+    notificationPreference: { findMany: mockNotificationPreferenceFindMany },
+    notification: { create: mockNotificationCreate },
+    outboxEvent: { create: mockOutboxEventCreate },
   }),
 }));
 
@@ -83,6 +99,8 @@ describe("submitAssignment", () => {
 
 describe("reviewSubmission", () => {
   beforeEach(() => {
+    mockNotificationPreferenceFindMany.mockResolvedValue([]);
+    mockNotificationCreate.mockResolvedValue({ id: "n1" });
     mockSubmissionFindUnique.mockResolvedValue({
       id: "sub1",
       userId: "student1",
@@ -100,6 +118,8 @@ describe("reviewSubmission", () => {
   it("sets ACCEPTED status when accepted is true", async () => {
     mockUpdate.mockResolvedValue({
       id: "sub1",
+      assignmentId: "a1",
+      userId: "student1",
       status: "ACCEPTED",
       score: 85,
       feedback: "Good job",
@@ -116,6 +136,8 @@ describe("reviewSubmission", () => {
   it("sets NEEDS_REVISION status when accepted is false", async () => {
     mockUpdate.mockResolvedValue({
       id: "sub1",
+      assignmentId: "a1",
+      userId: "student1",
       status: "NEEDS_REVISION",
       score: 40,
       feedback: "Please revise",
@@ -130,6 +152,8 @@ describe("reviewSubmission", () => {
   it("allows review without score or feedback", async () => {
     mockUpdate.mockResolvedValue({
       id: "sub1",
+      assignmentId: "a1",
+      userId: "student1",
       status: "ACCEPTED",
       reviewedById: "r1",
       reviewedAt: new Date(),
@@ -150,5 +174,34 @@ describe("reviewSubmission", () => {
     await expect(
       reviewSubmission({ submissionId: "sub1", reviewerId: "r2", accepted: true })
     ).rejects.toMatchObject({ code: "forbidden", status: 403 });
+  });
+
+  it("creates an in-app notification for the reviewed student", async () => {
+    mockUpdate.mockResolvedValue({
+      id: "sub1",
+      assignmentId: "a1",
+      userId: "student1",
+      status: "ACCEPTED",
+      score: 95,
+      reviewedById: "r1",
+      reviewedAt: new Date(),
+    });
+
+    await reviewSubmission({ submissionId: "sub1", reviewerId: "r1", accepted: true, score: 95 });
+
+    expect(mockOutboxEventCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          eventType: "notification.send",
+          payload: expect.objectContaining({
+            userId: "student1",
+            event: "assignment_reviewed",
+            channel: "in_app",
+            refType: "assignment_submission",
+            refId: "sub1",
+          }),
+        }),
+      }),
+    );
   });
 });

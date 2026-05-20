@@ -1,6 +1,7 @@
-import { EnrollmentStatus, Prisma, ProgressStatus } from "@prisma/client";
+import { EnrollmentStatus, Prisma, ProgressStatus, QuestionStatus } from "@prisma/client";
 import { ApiError } from "@/lib/http";
 import { getPrisma } from "@/lib/prisma";
+import { TRAVERSAL_MODES } from "@/lib/constants";
 import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
 import type {
@@ -9,8 +10,8 @@ import type {
   ContentBlock,
   ContinueLearning,
   LessonLearningSummary,
+  LessonVideo,
   LessonPlayerCard,
-  LessonQuestionSummary,
   ModuleLearningDetail,
   ModulePlayerDetail,
   StudentCourseLearningDetail,
@@ -82,7 +83,6 @@ const lessonDetailInclude = (userId: string) => ({
   media: true,
   quizzes: { include: { questions: { select: { id: true } } } },
   assignments: { include: { submissions: { where: { userId }, orderBy: { submittedAt: "desc" as const }, take: 1 } } },
-  questions: { where: { studentId: userId }, orderBy: { createdAt: "desc" as const } }
 }) satisfies Prisma.LessonInclude;
 
 function asRecord(value: Prisma.JsonValue): Record<string, unknown> {
@@ -108,7 +108,7 @@ function buildLessonAccessMap(enrollment: CourseEnrollment) {
   for (const lesson of orderedLessons) {
     const progress = getLessonProgress(lesson);
     const storedStatus = progress?.status ?? ProgressStatus.NOT_STARTED;
-    const locked = enrollment.course.traversalMode === "sequential" && previousRequiredLessonOpen;
+    const locked = enrollment.course.traversalMode === TRAVERSAL_MODES.SEQUENTIAL && previousRequiredLessonOpen;
     const progressStatus = locked ? ProgressStatus.BLOCKED : storedStatus;
 
     accessByLessonId.set(lesson.id, {
@@ -175,7 +175,7 @@ function buildCourseLearningDetail(enrollment: CourseEnrollment): StudentCourseL
     coverUrl: course.coverUrl,
     durationHours: course.durationHours,
     status: course.status,
-    traversalMode: course.traversalMode === "open" ? "open" : "sequential",
+    traversalMode: course.traversalMode === TRAVERSAL_MODES.OPEN ? TRAVERSAL_MODES.OPEN : TRAVERSAL_MODES.SEQUENTIAL,
     modulesCount: modules.length,
     lessonsCount: allLessons.length,
     instructors: course.instructors.map((entry) => ({
@@ -228,6 +228,7 @@ export async function getContinueLearning(userId: string): Promise<ContinueLearn
       continue;
     }
     const courseModule = course.modules.find((item) => item.id === nextLesson.moduleId);
+    const deadlineDate = courseModule?.deadlineDate ?? null;
     return {
       courseId: course.id,
       courseTitle: course.title,
@@ -236,7 +237,10 @@ export async function getContinueLearning(userId: string): Promise<ContinueLearn
       lessonTitle: nextLesson.title,
       coursePercent: course.coursePercent,
       modulePercent: courseModule?.progressPercent ?? 0,
-      deadlineDate: courseModule?.deadlineDate ?? null
+      deadlineDate,
+      deadlineDaysLeft: deadlineDate
+        ? Math.round((new Date(deadlineDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+        : null,
     };
   }
   return null;
@@ -272,7 +276,7 @@ function buildCoursePlayerDetail(enrollment: CoursePlayerEnrollment): StudentCou
 
   for (const lesson of orderedLessons) {
     const storedStatus = lesson.progress[0]?.status ?? ProgressStatus.NOT_STARTED;
-    const locked = course.traversalMode === "sequential" && previousRequiredLessonOpen;
+    const locked = course.traversalMode === TRAVERSAL_MODES.SEQUENTIAL && previousRequiredLessonOpen;
     const status: ProgressStatus = locked ? ProgressStatus.BLOCKED : storedStatus;
 
     accessByLessonId.set(lesson.id, {
@@ -341,7 +345,7 @@ function buildCoursePlayerDetail(enrollment: CoursePlayerEnrollment): StudentCou
       coverUrl: course.coverUrl,
       durationHours: course.durationHours,
       status: course.status,
-      traversalMode: course.traversalMode === "open" ? "open" : "sequential",
+      traversalMode: course.traversalMode === TRAVERSAL_MODES.OPEN ? TRAVERSAL_MODES.OPEN : TRAVERSAL_MODES.SEQUENTIAL,
       modulesCount: modules.length,
       lessonsCount: total,
       instructors: course.instructors.map((entry) => ({
@@ -366,7 +370,7 @@ export async function getStudentCoursePlayerDetail(userId: string, courseId: str
     where: { userId_courseId: { userId, courseId } },
     include: coursePlayerInclude(userId)
   });
-  if (!enrollment || enrollment.status === "CANCELLED") {
+  if (!enrollment || (enrollment.status !== "ACTIVE" && enrollment.status !== "COMPLETED")) {
     throw new ApiError("forbidden", "Нет доступа к этому курсу", 403);
   }
 
@@ -380,7 +384,7 @@ export async function getStudentCoursePlayerDetail(userId: string, courseId: str
     });
     if (assignment?.active && assignment.curator) {
       const unansweredCount = await prisma.lessonQuestion.count({
-        where: { studentId: userId, status: "open" }
+        where: { studentId: userId, status: QuestionStatus.OPEN }
       });
       detail.curator = { name: assignment.curator.name ?? "Куратор", unansweredCount };
     }
@@ -389,15 +393,43 @@ export async function getStudentCoursePlayerDetail(userId: string, courseId: str
   return detail;
 }
 
-function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
+const VALID_BLOCK_TYPES = new Set(["video", "text", "file", "quiz", "assignment", "rating", "curator_question", "completion"]);
+
+function parseContentBlock(block: Record<string, unknown>, legacyFallback: string): ContentBlock {
+  const type = VALID_BLOCK_TYPES.has(block.type as string) ? (block.type as ContentBlock["type"]) : "text";
+  const data = block.data as Record<string, unknown> ?? {};
+
+  switch (type) {
+    case "video": {
+      const videoData = data.video as Record<string, unknown> | undefined;
+      const hasStructuredVideo = videoData && typeof videoData.provider === "string" && typeof videoData.providerVideoId === "string";
+      if (hasStructuredVideo) {
+        return { id: (block.id as string) ?? crypto.randomUUID(), type: "video", data: { video: videoData as unknown as LessonVideo, title: data.title as string } };
+      }
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "video", data: { videoUrl: (data.videoUrl as string) ?? legacyFallback, title: data.title as string, duration: data.duration as number } };
+    }
+    case "text":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "text", data: { html: (data.html as string) ?? "" } };
+    case "file":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "file", data: { url: (data.url as string) ?? "", filename: data.filename as string, fileType: data.fileType as string } };
+    case "quiz":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "quiz", data: { quizId: (data.quizId as string) ?? "" } };
+    case "assignment":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "assignment", data: { assignmentId: (data.assignmentId as string) ?? "" } };
+    case "rating":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "rating", data: { lessonId: (data.lessonId as string) ?? "" } };
+    case "curator_question":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "curator_question", data: { lessonId: (data.lessonId as string) ?? "" } };
+    case "completion":
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "completion", data: { label: data.label as string | undefined } };
+    default:
+      return { id: (block.id as string) ?? crypto.randomUUID(), type: "text", data: { html: "" } };
+  }
+}
+
+export function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
   if (content && Array.isArray(content.blocks)) {
-    return (content.blocks as Array<{ id?: string; type: string; data?: Record<string, unknown> }>).map((block) => ({
-      id: block.id ?? crypto.randomUUID(),
-      type: (["video", "text", "file", "quiz", "assignment", "rating", "curator_question", "completion"].includes(block.type)
-        ? block.type
-        : "text") as ContentBlock["type"],
-      data: block.data ?? {}
-    }));
+    return (content.blocks as Array<Record<string, unknown>>).map((block) => parseContentBlock(block, ""));
   }
   // Legacy format: single text block
   const text = content && typeof content === "object" && "text" in content
@@ -410,18 +442,42 @@ function parseContentBlocks(content: Record<string, unknown>): ContentBlock[] {
 }
 
 export async function getStudentLessonPlayerDetail(userId: string, lessonId: string): Promise<StudentLessonPlayerDetail> {
-  const lesson = await getLessonForStudent(userId, lessonId);
-  const course = await getStudentCoursePlayerDetail(userId, lesson.courseId);
+  // 1. Быстро получаем courseId из урока (minimal query)
+  const lessonMeta = await prisma.lesson.findUnique({
+    where: { id: lessonId },
+    select: { id: true, module: { select: { courseId: true } } },
+  });
+  if (!lessonMeta) {
+    throw new ApiError("not_found", "Урок не найден", 404);
+  }
+  const courseId = lessonMeta.module.courseId;
+
+  // 2. Запускаем все независимые запросы параллельно
+  const [lesson, courseDetail, curatorAssignment] = await Promise.all([
+    getLessonForStudent(userId, lessonId),
+    getStudentCoursePlayerDetail(userId, courseId),
+    prisma.curatorAssignment.findFirst({
+      where: { studentId: userId, active: true },
+      include: { curator: { select: { id: true, name: true } } },
+    }),
+  ]);
+
   const blocks = parseContentBlocks(lesson.content);
 
-  const quizDetails = await Promise.all(
-    lesson.quizzes.map((q) => getQuizForStudent(userId, q.id))
-  );
-  const assignmentDetails = await Promise.all(
-    lesson.assignments.map((a) => getAssignmentForStudent(userId, a.id))
-  );
+  const [quizDetails, assignmentDetails] = await Promise.all([
+    Promise.all(lesson.quizzes.map((q) => getQuizForStudent(userId, q.id))),
+    Promise.all(lesson.assignments.map((a) => getAssignmentForStudent(userId, a.id))),
+  ]);
 
-  return { lesson, blocks, courseTree: course.modules, quizDetails, assignmentDetails };
+  return {
+    lesson,
+    blocks,
+    courseTree: courseDetail.modules,
+    quizDetails,
+    assignmentDetails,
+    curatorId: curatorAssignment?.curator.id,
+    curatorName: curatorAssignment?.curator.name ?? undefined,
+  };
 }
 
 export async function getModuleForStudent(userId: string, moduleId: string): Promise<StudentModuleLearningDetail> {
@@ -520,14 +576,6 @@ export async function getLessonForStudent(userId: string, lessonId: string): Pro
     courseId: course.id,
     prevLesson: prevLesson ? { id: prevLesson.id, title: prevLesson.title } : null,
     nextLesson: nextLesson ? { id: nextLesson.id, title: nextLesson.title, locked: nextLesson.locked } : null,
-    myQuestions: lesson.questions.map<LessonQuestionSummary>((question) => ({
-      id: question.id,
-      text: question.text,
-      status: question.status === "answered" ? "answered" : "open",
-      createdAt: question.createdAt.toISOString(),
-      answer: question.answer,
-      answeredAt: question.answeredAt?.toISOString() ?? null
-    }))
   };
 }
 
@@ -607,7 +655,9 @@ export async function getQuizForStudent(userId: string, quizId: string): Promise
       id: q.id,
       type: q.type,
       text: q.prompt,
-      options: Array.isArray(q.options) ? (q.options as string[]) : []
+      options: Array.isArray(q.options)
+        ? (q.options as Array<{ id?: string; label?: string }>).map((o) => o.label ?? o.id ?? String(o))
+        : []
     }))
   };
 }

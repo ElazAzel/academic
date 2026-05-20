@@ -1,71 +1,170 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Users, AlertTriangle, FileSpreadsheet, FileText } from "lucide-react";
+import { BarChart } from "@/components/lms/bar-chart";
+import { DownloadReports } from "@/components/lms/download-reports";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getPrisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth/session";
+import { QuestionStatus, SubmissionStatus } from "@prisma/client";
+import type { DashboardMetric } from "@/types/domain";
 
-const FORMATS = [
-  { id: "csv", label: "CSV", icon: FileText },
-  { id: "xlsx", label: "Excel", icon: FileSpreadsheet },
-  { id: "pdf", label: "PDF", icon: FileText },
-] as const;
+const prisma = getPrisma();
 
-const REPORTS = [
-  {
-    id: "progress",
-    title: "Прогресс слушателей",
-    description: "Прогресс по вашим курсам с группировкой и диаграммами.",
-    icon: Users,
-    formats: ["csv", "xlsx", "pdf"],
-  },
-  {
-    id: "risk",
-    title: "Риски слушателей",
-    description: "Риски по слушателям ваших курсов с цветовой индикацией уровней.",
-    icon: AlertTriangle,
-    formats: ["csv", "xlsx", "pdf"],
-  },
-];
+export const dynamic = "force-dynamic";
 
 export default async function InstructorReportsPage() {
-  await requireRolePage(["instructor"]);
+  await requireRolePage(["instructor", "admin"]);
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const courses = await prisma.course.findMany({
+    where: { instructors: { some: { userId: user.id } } },
+    select: {
+      id: true,
+      title: true,
+      _count: { select: { enrollments: true } },
+      courseProgress: { select: { percent: true, status: true } },
+    },
+  });
+
+  const courseIds = courses.map((course) => course.id);
+  const totalStudents = courses.reduce((s, c) => s + c._count.enrollments, 0);
+  const completed = courses.reduce((s, c) => s + c.courseProgress.filter((p) => p.status === "COMPLETED").length, 0);
+  const avgProgress = totalStudents > 0
+    ? Math.round(courses.reduce((s, c) => s + c.courseProgress.reduce((a, p) => a + p.percent, 0), 0) / totalStudents)
+    : 0;
+  const [forwardedQuestions, reviewBacklog, quizAttempts, passedQuizAttempts] = await Promise.all([
+    prisma.lessonQuestion.count({
+      where: {
+        lesson: { module: { courseId: { in: courseIds } } },
+        status: QuestionStatus.FORWARDED,
+      },
+    }),
+    prisma.assignmentSubmission.count({
+      where: {
+        status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.IN_REVIEW] },
+        assignment: {
+          OR: [
+            { courseId: { in: courseIds } },
+            { lesson: { module: { courseId: { in: courseIds } } } },
+          ],
+        },
+      },
+    }),
+    prisma.quizAttempt.count({ where: { quiz: { courseId: { in: courseIds } } } }),
+    prisma.quizAttempt.count({ where: { quiz: { courseId: { in: courseIds } }, passed: true } }),
+  ]);
+  const passRate = quizAttempts > 0 ? Math.round((passedQuizAttempts / quizAttempts) * 100) : 0;
+  const metrics = [
+    {
+      label: "Курсов",
+      value: courses.length,
+      tone: courses.length > 0 ? "primary" : "neutral",
+      detail: `${totalStudents} активных слушателей`,
+    },
+    {
+      label: "Завершили",
+      value: completed,
+      tone: "success",
+      detail: totalStudents > 0 ? `${Math.round((completed / totalStudents) * 100)}% завершений` : "Нет зачислений",
+    },
+    {
+      label: "Средний прогресс",
+      value: `${avgProgress}%`,
+      tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
+      detail: "По курсам преподавателя",
+    },
+    {
+      label: "Forwarded-вопросы",
+      value: forwardedQuestions,
+      tone: forwardedQuestions > 0 ? "warning" : "success",
+      detail: "Переданы от кураторов",
+      priority: forwardedQuestions > 0 ? "elevated" : "normal",
+      href: "/instructor/questions",
+    },
+    {
+      label: "Работы на проверке",
+      value: reviewBacklog,
+      tone: reviewBacklog > 0 ? "warning" : "success",
+      detail: `Quiz pass rate ${passRate}%`,
+      priority: reviewBacklog > 10 ? "critical" : reviewBacklog > 0 ? "elevated" : "normal",
+      href: "/instructor/assignments",
+    },
+  ] satisfies DashboardMetric[];
 
   return (
     <AppShell role="instructor">
-      <PageHeader title="Экспорт статистики" description="Скачать отчёты по вашим курсам в CSV, Excel или PDF." />
-      <div className="grid gap-4 md:grid-cols-2">
-        {REPORTS.map((r) => {
-          const Icon = r.icon;
-          return (
-            <Card key={r.id} className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
-              <CardHeader>
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 mb-2">
-                  <Icon className="h-5 w-5 text-primary" />
-                </span>
-                <CardTitle>{r.title}</CardTitle>
-                <CardDescription>{r.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {FORMATS.filter((f) => r.formats.includes(f.id)).map((fmt) => {
-                    const FmtIcon = fmt.icon;
-                    return (
-                      <a
-                        key={fmt.id}
-                        href={`/api/v1/reports?type=${r.id}&format=${fmt.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30">
-                        <FmtIcon className="h-3.5 w-3.5" />
-                        {fmt.label}
-                        <Download className="h-3 w-3 ml-0.5 text-muted-foreground" />
-                      </a>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <PageHeader title="Отчёты" description="Просмотр и экспорт статистики по вашим курсам." />
+
+      <div className="mb-6">
+        <MetricGrid metrics={metrics} />
       </div>
+
+      {courses.length > 0 && (
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft mb-6">
+          <CardHeader>
+            <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Прогресс по курсам</CardTitle>
+            <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний процент прохождения</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BarChart
+              items={courses.map((c) => {
+                const enrollments = c._count.enrollments || 1;
+                const avg = Math.round(c.courseProgress.reduce((s, p) => s + p.percent, 0) / enrollments);
+                const compl = c.courseProgress.filter((p) => p.status === "COMPLETED").length;
+                return {
+                  label: c.title,
+                  value: avg,
+                  sublabel: `${compl}/${c._count.enrollments} завершили`,
+                  color: avg > 75 ? "#16a34a" : avg > 40 ? "#ca8a04" : "#dc2626",
+                };
+              })}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Download reports */}
+      <DownloadReports reports={[
+        {
+          id: "progress",
+          title: "Прогресс слушателей",
+          desc: "Прогресс по вашим курсам",
+          icon: "group",
+          owner: "Instructor",
+          scope: "Только курсы преподавателя",
+          decision: "Какие группы и уроки проседают по образовательному результату.",
+        },
+        {
+          id: "risk",
+          title: "Риски слушателей",
+          desc: "Риски по вашим курсам",
+          icon: "warning",
+          owner: "Instructor",
+          scope: "Только курсы преподавателя",
+          decision: "Какие риски мешают завершению курса.",
+        },
+        {
+          id: "assignments",
+          title: "Задания",
+          desc: "Отправки и результаты по вашим курсам",
+          icon: "checklist",
+          owner: "Instructor",
+          scope: "Только курсы преподавателя",
+          decision: "Какие задания требуют методической проверки.",
+        },
+        {
+          id: "certificates",
+          title: "Сертификаты",
+          desc: "Сертификаты по вашим курсам",
+          icon: "verified",
+          owner: "Instructor",
+          scope: "Только курсы преподавателя",
+          decision: "Кто завершил курс и получил подтверждение.",
+        },
+      ]} />
     </AppShell>
   );
 }

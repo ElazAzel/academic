@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { VerifyEmailForm } from "@/components/auth/verify-email-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AUTH_ROUTES } from "@/lib/constants";
 
 export default async function VerifyEmailPage({
   searchParams
@@ -19,7 +20,7 @@ export default async function VerifyEmailPage({
         <CardContent>
           <VerifyEmailForm token={token} />
           <p className="mt-5 text-sm text-muted-foreground">
-            Email уже подтверждён? <Link className="font-medium text-primary" href="/login">Войти</Link>
+            Email уже подтверждён? <Link className="font-medium text-primary" href={AUTH_ROUTES.LOGIN}>Войти</Link>
           </p>
         </CardContent>
       </Card>

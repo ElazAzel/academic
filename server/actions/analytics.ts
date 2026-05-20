@@ -3,6 +3,7 @@
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
+import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -18,7 +19,7 @@ async function assertCuratorStudentAccess(actor: { id: string; roles: string[] }
     },
   });
   if (!assignment) {
-    throw new Error("Доступ запрещен: студент не закреплен за вами");
+    throw new ApiError("forbidden", "Доступ запрещен: студент не закреплен за вами", 403);
   }
 }
 
@@ -80,7 +81,7 @@ export async function resolveRiskFlagAction(flagId: string) {
     select: { id: true, userId: true }
   });
   if (!riskFlag) {
-    throw new Error("Флаг риска не найден");
+    throw new ApiError("not_found", "Флаг риска не найден", 404);
   }
 
   await assertCuratorStudentAccess(actor, riskFlag.userId);

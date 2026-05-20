@@ -1,82 +1,86 @@
-import { Download, Users, AlertTriangle, Award, FileSpreadsheet, FileText } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart } from "@/components/lms/bar-chart";
+import { DownloadReports } from "@/components/lms/download-reports";
+import { MetricGrid } from "@/components/lms/dashboard-widgets";
+import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getCustomerObserverDashboard } from "@/server/actions/dashboard";
 
-const FORMATS = [
-  { id: "csv", label: "CSV", icon: FileText },
-  { id: "xlsx", label: "Excel", icon: FileSpreadsheet },
-  { id: "pdf", label: "PDF", icon: FileText },
-] as const;
-
-const REPORTS = [
-  {
-    id: "progress",
-    title: "Прогресс по потокам",
-    description: "Все зачисления и прогресс по потокам с группировкой и сводками.",
-    type: "progress",
-    icon: Users,
-    formats: ["csv", "xlsx", "pdf"],
-  },
-  {
-    id: "risk",
-    title: "Риски слушателей",
-    description: "Неактивные и отстающие слушатели с индикацией уровней.",
-    type: "risk",
-    icon: AlertTriangle,
-    formats: ["csv", "xlsx", "pdf"],
-  },
-  {
-    id: "certificates",
-    title: "Выданные сертификаты",
-    description: "Все выпущенные сертификаты с номерами и датами.",
-    type: "certificates",
-    icon: Award,
-    formats: ["csv", "xlsx"],
-  },
-];
+export const dynamic = "force-dynamic";
 
 export default async function CustomerObserverReportsPage() {
   await requireRolePage(["customer_observer"]);
+  const data = await getCustomerObserverDashboard();
 
   return (
     <AppShell role="customer_observer">
-      <PageHeader title="Экспорт статистики" description="Скачать отчёты по доступным потокам в CSV, Excel или PDF." />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {REPORTS.map((r) => {
-          const Icon = r.icon;
-          return (
-            <Card key={r.id} className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
-              <CardHeader>
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 mb-2">
-                  <Icon className="h-5 w-5 text-primary" />
-                </span>
-                <CardTitle>{r.title}</CardTitle>
-                <CardDescription>{r.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {FORMATS.filter((f) => r.formats.includes(f.id)).map((fmt) => {
-                    const FmtIcon = fmt.icon;
-                    return (
-                      <a
-                        key={fmt.id}
-                        href={`/api/v1/reports?type=${r.type}&format=${fmt.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/5 hover:border-primary/30"
-                      >
-                        <FmtIcon className="h-3.5 w-3.5" />
-                        {fmt.label}
-                        <Download className="h-3 w-3 ml-0.5 text-muted-foreground" />
-                      </a>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <PageHeader title="Отчёты" description="Просмотр и экспорт статистики по доступным потокам." />
+
+      {data && data.cohorts.length > 0 ? (
+        <div className="space-y-6">
+          <MetricGrid metrics={data.metrics} />
+
+          {/* Chart — M3 */}
+          <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+            <CardHeader>
+              <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">Прогресс по потокам</CardTitle>
+              <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">Средний процент прохождения</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BarChart
+                items={data.cohorts.map((c) => ({
+                  label: c.name,
+                  value: c.avgProgress,
+                  sublabel: `${c.studentsCount} слушателей`,
+                  color: c.avgProgress > 75 ? "#16a34a" : c.avgProgress > 40 ? "#ca8a04" : "#dc2626",
+                }))}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft mb-6">
+          <CardContent className="py-10 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <Icon name="bar_chart" className="text-[40px] text-m3-on-surface-variant/40" />
+              <p className="font-body-md text-body-md text-m3-on-surface-variant">Нет данных для отображения.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Download reports */}
+      <DownloadReports reports={[
+        {
+          id: "progress",
+          title: "Прогресс по потокам",
+          desc: "Зачисления и прогресс",
+          icon: "group",
+          owner: "Customer observer",
+          scope: "Только разрешенные проекты и потоки",
+          decision: "Как идет обучение в доступной клиентской зоне.",
+        },
+        {
+          id: "risk",
+          title: "Риски слушателей",
+          desc: "Неактивные и отстающие",
+          icon: "warning",
+          owner: "Customer observer",
+          scope: "Только разрешенные проекты и потоки",
+          decision: "Где требуется управленческое внимание без права вмешательства.",
+        },
+        {
+          id: "certificates",
+          title: "Сертификаты",
+          desc: "Все выпущенные",
+          icon: "verified",
+          owner: "Customer observer",
+          scope: "Только разрешенные проекты и потоки",
+          decision: "Какие участники подтвердили завершение обучения.",
+        },
+      ]} />
     </AppShell>
   );
 }

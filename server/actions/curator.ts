@@ -6,6 +6,10 @@ import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
 import { markLessonProgress } from "@/server/modules/progress/service";
+import { ApiError } from "@/lib/http";
+import { NOTIFICATION_CHANNELS } from "@/lib/constants";
+import { answerForwardedQuestionSchema } from "@/lib/validation";
+import { QuestionStatus } from "@prisma/client";
 
 const prisma = getPrisma();
 
@@ -21,7 +25,7 @@ async function assertCuratorStudentAccess(actor: { id: string; roles: string[] }
     },
   });
   if (!assignment) {
-    throw new Error("Доступ запрещен: студент не закреплен за вами");
+    throw new ApiError("forbidden", "Доступ запрещен: студент не закреплен за вами", 403);
   }
 }
 
@@ -29,7 +33,7 @@ export async function answerQuestionAction(questionId: string, answer: string) {
   const actor = await requireRole(["curator", "super_curator", "admin"]);
   
   if (!answer.trim()) {
-    throw new Error("Ответ не может быть пустым");
+    throw new ApiError("bad_request", "Ответ не может быть пустым", 400);
   }
 
   const question = await prisma.lessonQuestion.findUnique({
@@ -37,7 +41,7 @@ export async function answerQuestionAction(questionId: string, answer: string) {
     select: { studentId: true, lessonId: true }
   });
   if (!question) {
-    throw new Error("Вопрос не найден");
+    throw new ApiError("not_found", "Вопрос не найден", 404);
   }
 
   await assertCuratorStudentAccess(actor, question.studentId);
@@ -46,7 +50,7 @@ export async function answerQuestionAction(questionId: string, answer: string) {
     where: { id: questionId },
     data: {
       answer,
-      status: "answered",
+      status: QuestionStatus.ANSWERED,
       answeredAt: new Date(),
       curatorId: actor.id
     }
@@ -64,7 +68,10 @@ export async function answerQuestionAction(questionId: string, answer: string) {
     await createNotification({
       userId: question.studentId,
       event: "question_answered",
-      channel: "in_app"
+      channel: NOTIFICATION_CHANNELS.IN_APP,
+      refType: "lesson_question",
+      refId: questionId,
+      data: { lessonId: question.lessonId, questionId },
     });
   }
 
@@ -88,7 +95,7 @@ export async function reviewSubmissionAction(submissionId: string, input: {
     select: { userId: true, assignment: { select: { lessonId: true } } }
   });
   if (!submission) {
-    throw new Error("Запись не найдена");
+    throw new ApiError("not_found", "Запись не найдена", 404);
   }
 
   await assertCuratorStudentAccess(actor, submission.userId);
@@ -116,7 +123,7 @@ export async function reviewSubmissionAction(submissionId: string, input: {
   await createNotification({
     userId: updated.userId,
     event: "assignment_reviewed",
-    channel: "in_app",
+    channel: NOTIFICATION_CHANNELS.IN_APP,
     data: { status: input.status, score: input.score }
   });
 
@@ -139,11 +146,26 @@ export async function forwardQuestionAction(questionId: string) {
 
   const question = await prisma.lessonQuestion.findUnique({
     where: { id: questionId },
-    include: { student: { select: { name: true } } }
+    include: {
+      student: { select: { name: true } },
+      lesson: {
+        select: {
+          module: {
+            select: {
+              course: {
+                select: {
+                  instructors: { select: { userId: true } },
+                },
+              },
+            },
+          },
+        },
+      },
+    }
   });
 
   if (!question) {
-    throw new Error("Вопрос не найден");
+    throw new ApiError("not_found", "Вопрос не найден", 404);
   }
 
   await assertCuratorStudentAccess(actor, question.studentId);
@@ -151,7 +173,7 @@ export async function forwardQuestionAction(questionId: string) {
   await prisma.lessonQuestion.update({
     where: { id: questionId },
     data: {
-      status: "forwarded"
+      status: QuestionStatus.FORWARDED
     }
   });
 
@@ -172,29 +194,56 @@ export async function forwardQuestionAction(questionId: string) {
     await createNotification({
       userId: question.studentId,
       event: "question_forwarded",
-      data: { lessonId: question.lessonId }
+      refType: "lesson_question",
+      refId: questionId,
+      data: { lessonId: question.lessonId, questionId, link: `/student/lessons/${question.lessonId}` }
     }).catch((e) => console.error("Failed to notify student:", e));
   }
   if (question?.curatorId) {
     await createNotification({
       userId: question.curatorId,
       event: "question_forwarded",
-      data: { lessonId: question.lessonId, studentName: question.student?.name }
+      refType: "lesson_question",
+      refId: questionId,
+      data: { lessonId: question.lessonId, questionId, studentName: question.student?.name, link: "/curator/questions" }
     }).catch((e) => console.error("Failed to notify curator:", e));
   }
+  const instructorIds = [
+    ...new Set(question.lesson.module.course.instructors.map((instructor) => instructor.userId)),
+  ].filter((instructorId) => instructorId !== actor.id);
+  await Promise.all(
+    instructorIds.map((instructorId) =>
+      createNotification({
+        userId: instructorId,
+        event: "question_forwarded",
+        refType: "lesson_question",
+        refId: questionId,
+        data: {
+          lessonId: question.lessonId,
+          questionId,
+          studentId: question.studentId,
+          studentName: question.student?.name,
+          link: "/instructor/questions",
+        },
+      }).catch((e) => console.error("Failed to notify instructor:", e)),
+    ),
+  );
 
   revalidatePath("/instructor");
   return { success: true };
 }
 
 export async function answerForwardedQuestionAction(formData: FormData) {
-  const questionId = formData.get("questionId") as string;
-  const answer = formData.get("answer") as string;
   const actor = await requireRole(["instructor", "admin"]);
 
-  if (!answer?.trim()) {
-    throw new Error("Ответ не может быть пустым");
+  const parsed = answerForwardedQuestionSchema.safeParse({
+    questionId: formData.get("questionId"),
+    answer: formData.get("answer"),
+  });
+  if (!parsed.success) {
+    throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные формы", 400);
   }
+  const { questionId, answer } = parsed.data;
 
   const question = await prisma.lessonQuestion.findUnique({
     where: { id: questionId },
@@ -203,8 +252,8 @@ export async function answerForwardedQuestionAction(formData: FormData) {
       lesson: { include: { module: { include: { course: { include: { instructors: { select: { userId: true } } } } } } } }
     }
   });
-  if (!question || question.status !== "forwarded") {
-    throw new Error("Вопрос не найден или не был переадресован");
+  if (!question || question.status !== QuestionStatus.FORWARDED) {
+    throw new ApiError("not_found", "Вопрос не найден или не был переадресован", 404);
   }
 
   if (!actor.roles.includes("admin")) {
@@ -212,7 +261,7 @@ export async function answerForwardedQuestionAction(formData: FormData) {
       (i) => i.userId === actor.id
     );
     if (!isInstructor) {
-      throw new Error("Доступ запрещен: вопрос относится к курсу, который вы не ведете");
+      throw new ApiError("forbidden", "Доступ запрещен: вопрос относится к курсу, который вы не ведете", 403);
     }
   }
 
@@ -220,7 +269,7 @@ export async function answerForwardedQuestionAction(formData: FormData) {
     where: { id: questionId },
     data: {
       answer,
-      status: "answered",
+      status: QuestionStatus.ANSWERED,
       answeredAt: new Date()
     }
   });
@@ -238,14 +287,18 @@ export async function answerForwardedQuestionAction(formData: FormData) {
     await createNotification({
       userId: question.studentId,
       event: "question_answered",
-      data: { lessonId: question.lessonId }
+      refType: "lesson_question",
+      refId: questionId,
+      data: { lessonId: question.lessonId, questionId, link: `/student/lessons/${question.lessonId}` }
     }).catch((e) => console.error("Failed to notify student:", e));
   }
   if (question?.curatorId) {
     await createNotification({
       userId: question.curatorId,
       event: "question_answered",
-      data: { lessonId: question.lessonId, studentName: question.student?.name }
+      refType: "lesson_question",
+      refId: questionId,
+      data: { lessonId: question.lessonId, questionId, studentName: question.student?.name, link: "/curator/questions" }
     }).catch((e) => console.error("Failed to notify curator:", e));
   }
 

@@ -1,6 +1,625 @@
 # Журнал обновлений AI Strategic Academy
 
-Правило: новые записи добавляются сверху. Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
+Правило: новые записи добавляются сверху.
+
+## 2026-05-19 — Локальная БД: PostgreSQL + .env + prisma db push + автозапуск
+
+- **Проблема**: на машине не было PostgreSQL, Docker отсутствовал, билд и дев-сервер не работали
+- **Установлен PostgreSQL 17.4** (portable) в `C:\Temp\opencode\pgsql\`
+- **Создан `.env`** с полными настройками для локальной разработки (DATABASE_URL, CRON_SECRET, NEXTAUTH_SECRET, etc.)
+- **`prisma db push`**: созданы все 54 таблицы в БД `academy`
+- **`prisma db seed`**: заполнены тестовые данные
+- **Скрипт автозапуска** (`scripts/start-db.ps1`): запускает PostgreSQL, если он не запущен; создаёт БД при первом запуске
+- **`package.json`**: `dev` скрипт обновлён на `powershell -ExecutionPolicy Bypass -File scripts/start-db.ps1 & next dev` — БД стартует автоматически при `npm run dev`
+- **typecheck**: passed ✅
+- **lint**: 0 errors, 0 warnings ✅
+- **tests**: 319/319 passed (57/57 test files) ✅
+- **build**: ✅ **80/80 страниц, 0 ошибок** (раньше падал без DATABASE_URL)
+
+## 2026-05-19 — MetricGrid: редизайн для ПК (сетка, акцент, hover)
+
+- **Проблема**: на ПК (`xl:grid-cols-4`, `2xl:grid-cols-6`) карточки метрик выглядели «стрёмно» — слишком растянутые, `2xl:6` в ряд некрасиво, `border-l-4` плохо читался на широких карточках
+- **Сетка**: `auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6` → `gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4` (макс. 4 колонки, без `auto-rows-fr`)
+- **Акцент**: `border-l-4` → верхняя градиентная полоса (`before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:to-transparent` + `TONE_TOP_ACCENT` Map)
+- **Иконка**: `rounded-lg` → `rounded-full` + `shadow-m3-soft`
+- **Hover**: добавлена `hover:shadow-m3-soft-hover` для подъёма карточки
+- **Отступы**: `p-4 md:p-5` → `px-5 py-4 md:px-6 md:py-5` (больше горизонтального воздуха на ПК)
+- **Защита от `twMerge`**: `text-display-lg` в `cn()` отбрасывался `tailwind-merge` из-за конфликта с `text-m3-error` — вернул template literal
+- **typecheck**: passed ✅
+- **tests**: 319/319 passed (57/57 test files) ✅
+
+## 2026-05-19 — Fix: Vercel build не падает на CRON_SECRET (env validation deferred)
+
+- **Проблема**: Vercel build падал на `Collecting page data` с ошибкой `CRON_SECRET обязателен в production`, потому что `lib/env.ts` валидирует production-секреты при импорте модуля, а Next.js подгружает все роуты (включая `/api/auth/[...nextauth]`), транзитивно импортирующие env
+- **Фикс** (`lib/env.ts`): production-проверки (C1 — dev-секрет, C4 — CRON_SECRET) обёрнуты в `if (process.env.NEXT_PHASE !== "phase-production-build")`, чтобы билд не падал
+- **Runtime**: cron-роуты (`outbox/process`, `reports/scheduled`) остаются fail-closed — при отсутствии `CRON_SECRET` в Vercel env возвращают 503 при запросе
+- **Итог**: деплой не блокируется. После деплоя нужно добавить `CRON_SECRET` в Vercel Project Environment Variables для работы cron
+- **typecheck**: passed ✅
+- **lint**: 0 errors, 0 warnings ✅
+- **tests**: 319/319 passed (57/57 test files) ✅
+- **build**: проходит мимо env-валидации, падает только на DATABASE_URL (проблема локального окружения)
+
+- **C1 (P1 High) — Production secret guard** (`lib/env.ts`):
+  - `NEXTAUTH_SECRET === "development-secret-change-me"` в production → `throw Error('Запрещённый dev-секрет в production')`
+  - `CRON_SECRET` теперь обязателен в production (был optional)
+- **C2 (P1 High) — Quiz answer key isolation**:
+  - `server/modules/quizzes/service.ts`: `listQuizzes()` деструктурирует `correctAnswer` из всех вопросов
+  - `server/modules/courses/service.ts`: `getLesson()` по умолчанию `stripAnswerKeys = true`
+  - `app/api/v1/quizzes/[quizId]/route.ts`: студентам без `correctAnswer`, elevated-ролям (admin, super_curator, curator, instructor) — с ответами
+  - `app/api/v1/lessons/[lessonId]/route.ts`: elevated-проверка роли для включения ответов
+- **C3 (P1 High) — Server-side progress verification** (`server/modules/progress/service.ts`):
+  - `markLessonProgress()` проверяет `quizAttempt.passed` и `assignmentSubmission.status === "ACCEPTED"`
+  - Без пройденного теста/принятого задания — макс. 99%, COMPLETED не ставится
+  - `effectivePercent` используется во всех расчётах (lesson → block → module → course)
+- **C4 (P2 Medium) — Stale JWT protection** (`lib/auth/session.ts`):
+  - `requireUser()` перепроверяет статус + роли в БД через `revalidateSession()` на каждый вызов
+  - Деактивированные пользователи получают 401
+- **C5 (P2 Medium) — Cron fail-closed**:
+  - `app/api/v1/outbox/process/route.ts` и `app/api/v1/reports/scheduled/route.ts`:
+  - Без `CRON_SECRET` → 503; иначе Bearer-проверка → 401
+  - Ранее были fail-open (пропускали запрос без секрета)
+- **ESLint**: исправлены 3 `@typescript-eslint/no-unused-vars` (деструктуризация `correctAnswer` в courses/service.ts, quizzes/service.ts)
+- **Тесты**: исправлены 7 тестов, сломавшихся после изменений:
+  - 5 тестов `progress-service.test.ts` — добавлены `moduleId`, `quizzes: []`, `assignments: []` в моки lesson + optional chaining в сервисе
+  - 1 тест `status-badge.test.tsx`: `text-rose-700` → `text-m3-error`, `text-amber-700` → `text-m3-secondary`
+  - 1 тест `metric-grid.test.tsx`: `text-emerald` → `text-m3-tertiary`
+- **`.env.example`**: добавлен закомментированный `CRON_SECRET`
+- **typecheck**: passed ✅
+- **lint**: 0 errors, 0 warnings ✅
+- **tests**: 319/319 passed (57/57 test files) ✅
+- **build**: compilation passed ✅ (Collecting page data требует DATABASE_URL — проблема среды, не кода) Старые записи не переписываются, кроме исправления явной опечатки. Каждая запись должна быть достаточно конкретной, чтобы следующий AI-агент или инженер понял, что изменилось и что проверено.
+
+## 2026-05-19 — Уведомления: исправлены «блоки» — группировка по дате, убран virtualizer, улучшен дизайн
+
+- **NotificationsList** (`components/lms/notifications-list.tsx`):
+  - Убран `<TanStack Virtualizer>` с абсолютным позиционированием — он вызывал наложение карточек друг на друга, т.к. `estimateSize: 96` не учитывал реальную высоту контента (длинные тексты, кнопки действий)
+  - Вместо виртуализации — обычный scroll с `space-y-2` между карточками, что исключает перекрытие
+  - **Группировка «блоков» по дате**: Today / Yesterday / This week / Earlier с заголовками секций, разделительной линией и счётчиком
+  - Unread-индикатор: точка у непрочитанных в заголовке группы + на каждой карточке
+  - `estimateSize` (96) → каждая карточка занимает ровно столько, сколько нужно
+  - Иконки, время, кнопка действия — всё как было, но в более читаемой структуре
+- Удалён неиспользуемый `NOTIFICATION_ICON_MAP`
+- Страницы всех ролей (`/student`, `/curator`, `/instructor`, `/super-curator`, `/admin`, `/notifications`) наследуют исправленный компонент — чинится везде
+- **typecheck**: passed ✅
+- **lint**: passed ✅
+
+## 2026-05-19 — Аудит дизайна: исправление цветов, типографики, иконок, замена raw-инпутов на компоненты
+
+- **StatusBadge** (`components/lms/status-badge.tsx`): хардкодные `emerald`/`amber`/`rose`/`sky` цвета заменены на M3-токены:
+  - `success` → `m3-tertiary` (teal-green), `warning` → `m3-secondary` (purple), `danger` → `m3-error`, `info` → `m3-primary`
+  - И light, и dark mode корректно отображаются через M3-палитру
+- **Dialog** (`components/ui/dialog.tsx`):
+  - `DialogTitle`: `text-lg font-bold` → `text-headline-sm font-headline-sm text-m3-on-surface`
+  - `DialogFooter`: `bg-muted/20` → `bg-m3-surface-container`
+  - `DialogContent`: `bg-card` → `bg-m3-surface-container-lowest`
+- **Login form** (`components/auth/login-form.tsx`): все `material-symbols-outlined` span заменены на компонент `<Icon>` (mail, lock, arrow_forward, login, code)
+- **DashboardWidgets** (`components/lms/dashboard-widgets.tsx`): `TONE_CLASSES`, `TONE_BG_CLASSES`, `TONE_BORDER_CLASSES` переведены с emerald/amber/sky на M3-токены (`m3-tertiary`, `m3-secondary`, `m3-on-surface-variant`)
+- **CuratorOperationsBoard** (`components/lms/curator-operations-board.tsx`): `ACTION_TONE_CLASSES` — `amber-200/800` заменены на `m3-secondary-fixed-dim/container`
+- **UserAccountNav** (`components/layout/user-account-nav.tsx`): Lucide-иконки (`LayoutDashboard`, `Settings`, `LogOut`) заменены на Material Symbols через `<Icon>` (dashboard, settings, logout); импорт lucide-react удалён
+- **AdminSettings** (`app/admin/settings/page.tsx`):
+  - Все raw `<input>` заменены на `<Input>`-компонент
+  - Hand-rolled toggle заменён на `<Switch>`-компонент из Radix
+  - Lucide-иконки (`Flag`, `Mail`, `Shield`, `RefreshCw`) заменены на `<Icon>` (flag, mail, verified, refresh)
+  - `CardTitle` исправлен с `text-base` на `text-headline-sm`
+  - `bg-muted/50` заменён на `bg-m3-surface-container-high`
+- **typecheck**: passed ✅
+- **lint**: passed ✅
+
+## 2026-05-19 — Чат: двухпанельный layout + установка superpowers + аудит дизайна
+
+- **Superpowers**: установлен plugin `obra/superpowers` в `opencode.json` (git+https)
+- **Чат: двухпанельный layout** (`app/curator/chat/chat-list.tsx`):
+  - Полностью переписан `CuratorChatList`: вместо списка карточек + Dialog-оверлея сделан split-pane layout
+  - Левая панель: список диалогов («папки») с поиском, unread-badge на каждой папке, сводка внизу
+  - Правая панель: активный диалог (ChatPanel) без наложения на список
+  - На мобильных: либо список, либо чат с кнопкой «Назад» (ChevronLeft)
+  - Пустое состояние: подсказка «Выберите диалог» с общим числом диалогов/непрочитанных
+- **ChatPanel** (`components/lms/chat-panel.tsx`): добавлен prop `fullHeight` — при включении компонент занимает всю высоту контейнера (h-full, max-h-none)
+- **Дизайн-аудит**:
+  - Исправлены 12 сломанных CSS-классов `text-m3-headline-md`, `text-m3-headline-sm`, `text-m3-label-lg` → `text-headline-md`, `text-headline-sm`, `text-label-lg` (эти классы не существовали в tailwind.config.ts)
+  - Файлы: `dashboard-widgets.tsx`, `super-curator-operations-board.tsx`, `curator-operations-board.tsx`, `course-builder-shell.tsx`
+- **typecheck**: passed ✅
+- **lint**: passed ✅
+
+## 2026-05-18 — Fix: reply-to-message на каждом сообщении + PWA: NAVIGATE handler, manifest, desktop install
+
+- **Кнопка «Ответить» на каждом сообщении** (`chat-panel.tsx`):
+  - Проблема: кнопка была внутри блока `isLastInGroup`, поэтому появлялась только на последнем сообщении в группе (когда куратор писал 2+ сообщения подряд — ответить можно было только на последнее)
+  - Фикс: кнопка вынесена наружу (после `isLastInGroup`), отображается на КАЖДОМ сообщении собеседника независимо от группировки
+  - Время/статус остались только у последнего в группе (визуальная группировка сохранена)
+  - `isMine ? "text-right" : "text-left"` упрощён до `text-left`
+
+- **PWA: NAVIGATE handler** (`pwa-register.tsx`):
+  - Проблема: при клике на push-уведомление SW отправлял `postMessage({ type: "NAVIGATE", url })` существующим окнам, но клиент не обрабатывал это сообщение — окно фокусировалось, но не переходило по URL
+  - Фикс: добавлен обработчик `event.data?.type === "NAVIGATE"` → `window.location.href = targetUrl`
+
+- **Manifest shortcut URL** (`public/manifest.json`):
+  - Шорткат «Дашборд» вёл на `/login` — исправлено на `/`
+
+- **Desktop Chrome PWA install** (`pwa-install-prompt.tsx`):
+  - Проблема: условие `showBanner` исключало `platform === "other"` (desktop), хотя Chrome/Edge/Opera на десктопе тоже поддерживают `beforeinstallprompt`
+  - Фикс: добавлено `(platform === "other" && installEvent)` — теперь баннер показывается и на десктопе
+
+- **build**: passed ✅
+- **tests**: 315/315 passed (54/54 test files) ✅
+
+- **Группировка сообщений** (`chat-panel.tsx`): consecutive сообщения от одного отправителя теперь склеиваются — только первый/последний имеют полные скругления, между ними нет отступа (mt-0.5 вместо mt-3), время отображается только у последнего в группе
+- **Ответ на сообщение** (`chat-panel.tsx` + `server/actions/chat.ts` + Prisma schema):
+  - Добавлено поле `replyToId` в модель `Message` (самореференс)
+  - При нажатии "Ответить" на сообщении куратора — над формой появляется плашка с текстом родителя
+  - При отправке `lessonId` наследуется от родительского сообщения (если не указан явно)
+  - В пузыре ответа отображается блок "В ответ на: {текст родителя}" (цитата)
+  - Для студентов: ответ куратора с `replyToId` → `lessonId` наследуется → показывается в нужном уроке
+  - Оптимистичные сообщения также содержат `replyTo`-контекст для мгновенного UI
+- **Наложение уведомлений** (`notification-toast.tsx`): убран `unstyled: true` → sonner нормально стыкует тосты с отступом
+- **`prisma db push`**: добавлена колонка `reply_to_id` в `messages`
+- **build**: passed ✅
+- **Последующие шаги**: UI для ответа на сообщения у студентов (чтобы они тоже могли отвечать на конкретное сообщение куратора), если потребуется
+
+## 2026-05-18 — Fix: redirect-target race condition (все роли попадали на /student)
+
+- **Проблема**: После логина `redirect-target` использовал `getServerSession(authOptions)`, который не успевал прочитать только что созданную сессионную куку. `requireUser()` кидал 401, клиент фолбечился на `/student` — **все роли видели меню слушателя**.
+- **Фикс**: Заменён `getServerSession` → `getToken` из `next-auth/jwt`. `getToken` читает JWT напрямую из Cookie без полного Session pipeline, что исключает race condition.
+- **build**: passed (ƒ Proxy (Middleware) — Next.js 16 корректно использует `proxy.ts` как middleware).
+
+## 2026-05-18 — Material 3 редизайн: все P0-P2 компоненты
+
+- **P0 (Foundation)**: Tailwind config + CSS-переменные M3 Deep Indigo (30+ токенов), M3-типографика (text-headline-lg/body-md/label-lg/mono-sm), M3-тени, Material Symbols + JetBrains Mono в layout.tsx
+- **P0 (Login)**: `login-screen.tsx` + `login-form.tsx` — центрированная M3-карта, blur-блобы, M3-инпуты/кнопки
+- **P1 (Navigation)**: `app-shell.tsx`, `nav-links.tsx` (active left border), `site-header.tsx`, `mobile-bottom-nav.tsx` — M3 surface/border/shadow/color токены
+- **P1 (Cards)**: shadcn `card.tsx` — `border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft`, page-header с M3-типографикой
+- **P2 (Lesson Player)**: `lesson-player-shell.tsx` — M3 top bar (backdrop-blur, M3 colors), progress bar в M3-стиле, блоки с M3-контейнерами, M3 badges/типографика
+- **P2 (Course Catalog)**: `module-accordion.tsx` — M3 карточки модулей, M3 progress, hover-эффекты; `lesson-card.tsx` — M3 card/shadow/border/icon container; `course-hero-card.tsx` — M3 cover gradient, M3 badge/text/colors; `course-contents-drawer.tsx` — M3 sheet/colors/active accent
+- **P2 (Content Blocks)**: `video-block.tsx` — M3 container/badge/border; `text-block.tsx` — M3 typography/colors; `file-block.tsx` — M3 card/shadow/icon; `quiz-block.tsx` — M3 card/options/progress/result/review; `assignment-block.tsx` — M3 card/status badges/forms; `lesson-navigation.tsx` — M3 button styling
+- **P2 (System)**: `status-badge.tsx` — M3 variant classes (tertiary/secondary/error/surface); `notifications-list.tsx` — M3 card/colors/typography; `chat-panel.tsx` — M3 bubble/input/header; `breadcrumbs.tsx`; `empty-state.tsx`; `list-toolbar.tsx`; `settings-forms.tsx` — M3 во всех
+- **type-check**: 0 ошибок | **tests**: 304/304 passed (53/53 test files)
+
+## 2026-05-18 — P3.1: Lucide → Material Symbols (core components) + Icon wrapper
+
+- **Создан** `components/ui/icon.tsx` — обёртка Material Symbols с поддержкой fontVariationSettings (`FILL`, `wght`, `GRAD`, `opsz`), кастомного размера и className
+- **Заменены Lucide → Icon** во всех M3-компонентах (30+ файлов):
+  - Layout: `site-header.tsx`, `nav-links.tsx`, `mobile-bottom-nav.tsx`, `navigation.ts`
+  - Lesson player: `lesson-player-shell.tsx`, `lesson-card.tsx`, `lesson-navigation.tsx`, `video-block.tsx`, `file-block.tsx`, `quiz-block.tsx`, `assignment-block.tsx`, `course-contents-drawer.tsx`
+  - Course catalog: `module-accordion.tsx`, `course-hero-card.tsx`, `breadcrumbs.tsx`
+  - System: `notifications-list.tsx`, `chat-panel.tsx`, `list-toolbar.tsx`, `settings-forms.tsx`, `empty-state.tsx`
+- `EmptyState` — type-safe: принимает как строку (Material Symbols name), так и LucideIcon для обратной совместимости
+- **type-check**: 0 ошибок | **tests**: 304/304 passed (53/53 test files)
+
+## 2026-05-18 — proxy.ts rate limiter unified with Vercel KV
+
+- **`proxy.ts`** больше не использует собственный in-memory rate limiter
+- Теперь использует `lib/rate-limit.ts` → `lib/cache.ts` → **Vercel KV (`@upstash/redis`)** при наличии `KV_URL` или `REDIS_URL`
+- Если KV не настроен — автоматический fallback на in-memory (поведение не изменилось)
+- **type-check**: 0 ошибок
+
+## 2026-05-18 — Tests fixed + k6 load test + FK indexes
+
+- **4 test files fixed**: `assignments.test.ts`, `courses-service.test.ts`, `certificates-service.test.ts`, `analytics-service.test.ts` — добавлен `outboxEvent: { create: vi.fn() }` в prisma mock
+- **Все 304 теста проходят** (53/53 test files)
+- **k6 smoke test** создан: `tests/load/smoke-test.js` — симуляция 2000 concurrent с ramp-up
+- **Созданы FK индексы** для внешних ключей, отмеченных Supabase advisor (INFO-level)
+- **RLS конфликт устранён**: удалён `deny_anon_all` policy с `messages` (там уже была легитимная policy "Users can subscribe to their messages")
+
+## 2026-05-18 — Full DB schema sync + RLS hardening
+
+- **29 missing tables created** в production: `oauth_accounts`, `sessions`, `verification_tokens`, `permissions`, `role_permissions`, `clients`, `projects`, `blocks`, `lesson_media`, `cohort_deadlines`, `block_cohort_deadlines`, `lesson_progress`, `quiz_attempts`, `assignment_submissions`, `activity_logs`, `lesson_questions`, `certificate_templates`, `audit_logs`, `consent_logs`, `app_settings`, `curator_assignments`, `risk_flags`, `reports`, `import_jobs`, `observer_projects`, `observer_cohorts`, `notification_preferences`, `lesson_ratings`, `glossary_entries`
+- **RLS включён** на 42 таблицах с `deny_anon_all` политикой (default-deny через анон-ключ). Приложение использует Prisma (service_role), так что полный defence-in-depth
+- **`certificates.enrollment_id`** + `verification_url` добавлены (колонки отсутствовали)
+- **Проверка**: `supabase_get_advisors` — CRITICAL `rls_disabled` больше нет (понижен до INFO)
+- **type-check**: 0 ошибок
+
+## 2026-05-18 — Fix: instructor chat 404 + push subscribe 500
+
+- **404 `/instructor/chat`**: создана страница `app/instructor/chat/page.tsx` (копирует паттерн curator chat)
+- **500 `POST /api/v1/push/subscribe`**: применена миграция `apply_push_subscriptions_and_tables_v2` — созданы таблицы `push_subscriptions`, `messages`, `admin_popups`, `outbox_events`, `learning_paths` и др.
+- **`getMyConversations`**: добавлена роль `instructor` в `requireRole` — теперь преподаватели могут видеть свои чаты
+
+## 2026-05-18 — Outbox-паттерн для асинхронного создания уведомлений
+
+- **`createNotification` переведён на outbox**: вместо синхронного создания уведомления (проверка предпочтений → DB insert → email → push) теперь пишет событие `notification.send` в `outbox_events` и возвращает управление
+- **Новый файл**: `server/modules/notifications/outbox-handler.ts` — `processNotificationEvents()` читает pending события и вызывает `createNotificationInternal` (старая логика) для каждого
+- **Новый endpoint**: `POST /api/v1/outbox/process` — универсальный cron-воркер, обрабатывает `report.generate` + `notification.send` за один вызов
+- **Сохранена обратная совместимость**: `POST /api/v1/reports/scheduled` продолжает работать, но в документации рекомендован unified endpoint
+- **Старая логика** переименована в `createNotificationInternal` — не экспортируется публично
+- **Тесты обновлены**: `notifications-service.test.ts` теперь проверяет запись в outbox, `auth-service-notifications.test.ts` мокает `outboxEvent.create`
+- **type-check**: 0 ошибок
+- **tests**: 8 passed (3 suites)
+
+## 2026-05-18 — Suspense boundaries для дашбордов (streaming)
+
+- **Все 6 ролевых дашбордов** переведены на streaming с Suspense:
+  - `app/student/page.tsx` — StudentDashboardPage → `<Suspense>` + `StudentDashboardContent`
+  - `app/curator/page.tsx` — CuratorDashboardPage → `<Suspense>` + `CuratorDashboardContent`
+  - `app/instructor/page.tsx` — InstructorDashboardPage → `<Suspense>` + `InstructorDashboardContent`
+  - `app/admin/page.tsx` — AdminDashboardPage → `<Suspense>` + `AdminDashboardContent`
+  - `app/super-curator/page.tsx` — SuperCuratorDashboardPage → `<Suspense>` + `SuperCuratorDashboardContent`
+  - `app/customer-observer/page.tsx` — CustomerObserverDashboardPage → `<Suspense>` + `CustomerObserverDashboardContent`
+- **Как работает**: страница больше не `async` — экспорт по умолчанию рендерит AppShell + PageHeader мгновенно, затем `<Suspense fallback={<PageSkeleton />}>` показывает скелет, пока inner async-компонент выполняет `requireRolePage()` + `getXDashboard()` и стримит готовый контент
+- **Переиспользован** существующий `PageSkeleton` из `components/lms/page-skeleton.tsx` (скелет с заголовком, 3 карточками метрик и блоком контента)
+- **type-check**: пройден (`npx tsc --noEmit` — 0 ошибок)
+
+## 2026-05-18 — ISR + proxy.ts rate limiting
+
+- Удалён `middleware.ts` (конфликт с `proxy.ts` в Next.js 16)
+- **Rate limiting** перенесён в `proxy.ts` — 120 запросов/мин для API-маршрутов
+- **ISR** добавлен на `/docs/[slug]`: `revalidate = 86400` (1 день), `generateStaticParams` для 3 документов
+- **ISR** добавлен на `/certificates/verify/[code]`: `revalidate = 3600` (1 час)
+- `/docs` добавлен в `PUBLIC_PATH_PREFIXES` в `middleware-guards.ts`
+
+## 2026-05-18 — Оптимизация производительности (масштабирование до 4k+ пользователей)
+
+- **Индексы БД**: добавлены 4 составных индекса в Prisma-схему:
+  - `consent_logs (user_id, type, status)` — проверка согласия
+  - `lesson_progress (user_id, status)` — проверка пройденных уроков
+  - `module_progress (user_id, status, module_id)` — дашборды
+  - `course_progress (user_id, status)` — дашборды
+- **Migration `add_performance_indexes_v2`** применена на Supabase (для существующих таблиц)
+- **Connection pooler**: `lib/prisma.ts` теперь автоматически определяет Supabase Supavisor (порт 6543) и устанавливает `max: 20`, добавляет `?pgbouncer=true`
+- **Rate Limiting**: создан `middleware.ts` с in-memory rate limiter (120 запросов/мин на IP), только для `/api/*`
+- **Notification polling**: `NotificationToast` снижен с 30с до 60с
+- **HTTP кэширование**: добавлены `Cache-Control` заголовки на:
+  - `GET /api/v1/notifications` — s-maxage=15, stale-while-revalidate=30
+  - `GET /api/v1/unread-counts` — s-maxage=10, stale-while-revalidate=20
+- Supabase-анализ показал: индексы на messages и notifications не используются — это нормально для низкой текущей нагрузки, при 4000 пользователях они начнут работать
+- **Остаётся**: RLS политики для таблиц в public схеме (отдельная задача безопасности)
+
+## 2026-05-18 — Фоновые анимации + всплывающие уведомления при входе
+
+- Добавлены новые анимации в `globals.css`: drift, morph, shimmer, fade-in-scale, notification-slide-in, notification-progress
+- Создан `components/lms/background-animations.tsx` — декоративные фигуры (круги, квадраты, блобы, кольца) с плавающими анимациями, отключены для пользователей с prefers-reduced-motion
+- Создан `components/lms/notification-toast.tsx` — всплывающие уведомления через sonner toast:
+  - При входе в аккаунт показываются все непрочитанные уведомления
+  - При появлении новых (polling 30с) — показываются только новые (по track ID)
+  - Разные цвета: синий (сообщения), зелёный (прогресс), янтарный (системные), основной (остальные)
+  - Прогресс-бар 5 секунд, ссылка ведёт на соответствующий раздел
+- `BackgroundAnimations` добавлен в `app/layout.tsx` (поверх контента, pointer-events: none)
+- `NotificationToast` добавлен в `components/providers.tsx`
+
+## 2026-05-18 — Consent popup для принятия юридических документов
+
+- Создан `server/modules/consent/service.ts` — модуль проверки и записи согласия (3 типа: privacy_policy, terms_of_use, cookie_notice, версия 1.0)
+- Создан `app/api/v1/consent/status/route.ts` — GET-эндпоинт проверки, дал ли пользователь согласие
+- Создан `app/api/v1/consent/accept/route.ts` — POST-эндпоинт для фиксации согласия (с ipAddress и userAgent)
+- Создан `components/lms/consent-modal.tsx` — модальное окно со списком документов (ссылки открываются в новом окне)
+- Модальное окно появляется при входе, если согласие ещё не дано; нельзя закрыть без принятия
+- При обновлении страницы без согласия — показывается снова
+- После принятия — фиксируется 3 записи в ConsentLog, модалка не показывается
+- Модальное окно интегрировано в `components/providers.tsx`
+
+## 2026-05-18 — Legal audit: 11 юридических документов для LMS
+
+Автор/agent: opencode
+Тип изменения: documentation / legal / compliance
+
+1. **Анализ последних 4 коммитов** (полный аудит представлен ниже).
+
+2. **Создан комплект из 11 юридических и операционных документов** для закрытой LMS-платформы AI Strategic Academy:
+
+   **Публичные:**
+   - `docs/privacy-policy.md` — Политика конфиденциальности (14 разделов: положения, категории данных, цели, источники, доступ, передача, cookie, хранение, защита, права, сертификаты, контакты, изменения)
+   - `docs/terms-of-use.md` — Пользовательское соглашение (13 разделов: положения, термины, доступ, правила, материалы, тесты/задания, коммуникация, сертификаты, ограничения, ответственность, внешние сервисы, изменения, контакты)
+   - `docs/cookie-notice.md` — Уведомление о cookie и технической статистике (8 разделов + 3 варианта текста для banner)
+
+   **Внутренние:**
+   - `docs/data-retention-policy.md` — Политика хранения и удаления данных (таблица категорий и сроков)
+   - `docs/staff-data-access-policy.md` — Регламент доступа сотрудников (матрица доступа по 6 ролям)
+   - `docs/user-data-request-policy.md` — Регламент обработки запросов пользователей (шаблоны ответов, процесс)
+   - `docs/incident-response-policy.md` — Регламент реагирования на инциденты (классификация, процесс, шаблоны)
+   - `docs/third-party-services-register.md` — Реестр внешних сервисов и подрядчиков (8 сервисов, чек-лист, статусы)
+
+   **Для сотрудников:**
+   - `docs/staff-confidentiality-agreement.md` — Соглашение о конфиденциальности (9 разделов, шаблон подписи)
+
+   **Для интерфейса:**
+   - `docs/legal-interface-copy.md` — Юридические тексты (14 элементов интерфейса)
+
+   **Индекс:**
+   - `docs/legal-documents-index.md` — Индекс документов (типы, владельцы, статусы, график пересмотра)
+
+3. **Ключевые особенности документов:**
+   - Русский язык, деловой стиль, без избыточного юридического языка
+   - Статус draft, указаны места для проверки юристом
+   - Все документы содержат пометку о необходимости юридической проверки
+   - Каждый документ содержит перечень мест, требующих проверки юриста
+   - Учтены все 6 ролей платформы (admin, instructor, curator, super_curator, student, customer_observer)
+   - Учтены технические сервисы (Vercel, Supabase, GitHub, YouTube, Sentry)
+   - Не создано отдельное «Согласие на обработку персональных данных» (требование соблюдено)
+   - Учтён существующий `ConsentLog` в Prisma-схеме
+
+4. **Проверки:** Документы созданы, прочитаны, соответствуют структуре спецификации.
+5. **Отсутствует отдельное «Согласие на обработку персональных данных».**
+
+6. **Заполнены реквизиты организации:**
+   - ТОО «DESWAY (ДИСВЭЙ)», БИН 221140019814
+   - Юридический адрес: г. Алматы, ул. Шолохова, д. 20
+   - Email: admin@aistrategicacademy.com
+   - Руководитель: Каримова Аружан Спартакқызы
+   - Дата документов: 01.03.2026
+   - Несовершеннолетние: нет
+   - Sentry / email / AI-провайдеры: не используются
+   - YouTube: не используется (статус Planned)
+   - Сроки хранения: 1 год для основных категорий
+   - DPA с Vercel и Supabase: отсутствуют
+
+## 2026-05-16 — Phase 3-4: Scheduled reports, security review, scale path
+
+Автор/agent: opencode
+Тип изменения: feature / infrastructure / documentation
+
+1. **Scheduled report export**: 
+   - Created `POST /api/v1/reports/scheduled` — защищён CRON_SECRET, обрабатывает до 50 outbox-задач за вызов
+   - Добавлен `CRON_SECRET` в `lib/env.ts`
+   - Совместим с Vercel Cron Jobs, cron-job.org, pg_cron, GitHub Actions
+   - Починен processor: `certificates` теперь поддерживает PDF
+
+2. **OWASP/WCAG Security Review**: `docs/security-review.md` — полный аудит:
+   - OWASP Top 10 (2021): 9/10 compliant, 1 recommendation (2FA for admin)
+   - WCAG 2.1 AA: 24/25 criteria met, 1 recommendation (skip-to-content link)
+   - 8 improvement recommendations с приоритетами
+
+3. **Scale Path**: `docs/scale-path.md` — архитектура для microservices extraction:
+   - 4 кандидата на выделение (notifications, reports, certificates, search)
+   - Message broker contract (outbox → consumer)
+   - Триггеры для начала extraction
+
+4. **Certificate PDF processor** — исправлен: теперь поддерживает PDF для сертификатов
+
+5. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings. Build: passed.**
+
+## 2026-05-16 — Phase 1 complete, Phase 2 production hardening
+
+Автор/agent: opencode
+Тип изменения: feature / infrastructure / documentation
+
+1. **Phase 1 complete**:
+   - Push notifications: `firebase-admin` installed, `PushSubscription` model in Prisma, `/api/v1/push/subscribe` endpoint, `pwa-register.tsx` subscribes after SW registration, `createNotification()` sends push via Firebase
+   - Assignment file upload: S3 presigned upload integrated into `assignment-view.tsx`
+   - Quiz result detail: per-question answer review with color-coded correct/incorrect display
+   - Course settings panel: detailed info (modules, lessons, cover, descriptions)
+
+2. **Phase 2 documentation**:
+   - `infra/backup/runbook.md` — full backup/restore procedures, retention policy, encryption, S3 off-site, emergency recovery
+   - `infra/deployment-check.md` — deployment validation checklist with smoke tests, performance checks, rollback plan
+
+3. **Existing production-ready infrastructure confirmed**:
+   - Email delivery (`sendEmail()`, SMTP transporter, forgot/reset/verify flows) — ✅
+   - Certificate production PDF (Cyrillic NotoSans, QR codes, verification URL) — ✅
+   - Rate limiting (Redis + memory fallback, applied to auth endpoints) — ✅
+
+4. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings. Build: passed.**
+
+## 2026-05-16 — Phase 1: Academy Operations — editor, quiz, assignments, settings
+
+Автор/agent: opencode
+Тип изменения: feature / ui / api
+
+1. **Course Settings Panel** (`course-settings-panel.tsx`): Добавлена детальная информация:
+   - Количество модулей и уроков
+   - Обложка курса (если есть)
+   - Описание модуля
+   - Summary урока
+   - Список тестов и заданий в уроке
+
+2. **Assignment file upload** (`assignment-view.tsx`): Интегрирована загрузка файлов через S3 presigned URL:
+   - Кнопка выбора файла → presigned URL → S3 upload
+   - Индикатор загрузки, отображение имени файла, возможность удалить
+   - Поддержка PDF, изображений, ZIP, DOC/DOCX
+   - URL файла передаётся в body запроса при отправке
+
+3. **Quiz result detail** (`result/page.tsx`): Добавлен детальный разбор ответов:
+   - По-вопросный разбор с цветовой индикацией (зелёный = верно, красный = неверно)
+   - Показ выбранного ответа и правильного ответа
+   - Сводка: всего/правильно/неправильно/попытка
+   - Все вопросы в одном скролле
+
+4. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings. Build: passed.**
+
+5. **Phase 1 remaining** (not started in this change):
+   - Drag-and-drop блоков контента (lesson-block-editor)
+   - Push notifications wiring (require firebase-admin install)
+   - PushManager.subscribe() in PWA register
+   - Curator assignment queue review (page exists, uses SubmissionsQueue)
+
+## 2026-05-15 — UI: Mobile-app adaptive theme, bottom nav, PWA enhancement
+
+Автор/agent: opencode
+Тип изменения: feature / design / pwa
+
+1. **Mobile-first adaptive UI**: Реализована смена парадигмы между мобильным устройством и ПК:
+   - Mobile (<768px): нижняя панель навигации (bottom tab bar) с иконками и активным индикатором (spring-анимация), скрытый десктопный сайдбар, компактный хедер (h-14)
+   - Desktop (>=768px): боковая панель навигации (260px, sticky, glass-эффект), полноценный хедер (h-16) с навигационными ссылками, hover-эффекты на карточках
+   - Bottom nav показывает первые 4-5 пунктов для каждой роли (admin, student, curator, super_curator, instructor, customer_observer)
+   - Боковая панель на десктопе содержит полный список ссылок с бейджами
+
+2. **Тёмная/светлая тема**: 
+   - Переключатель темы `ThemeToggle` теперь циклически переключает 3 режима: light → dark → system
+   - Анимация переключения через Framer Motion (rotate + scale)
+   - `theme-color` meta tags динамически меняются в зависимости от темы (light: #F8FAFC, dark: #0F172A)
+
+3. **Safe area & viewport**: 
+   - `env(safe-area-inset-*)` для notched-устройств
+   - `viewport-fit=cover` для Full-screen PWA
+   - Нижняя навигация корректно обрабатывает safe-area-bottom
+   - CSS-переменная `--nav-height: 64px`
+
+4. **PWA улучшения**:
+   - Обновлён `manifest.json`: maskable icons, shortcuts, orientation, scope, categories
+   - Service Worker v2: стратегия network-first для навигации, cache-first для статики, offline fallback
+   - Добавлена offline-страница `/offline` с кнопкой "Попробовать снова"
+   - Push-уведомления: вибрация, action buttons (Открыть/Закрыть)
+   - `PWARegister`: обработка `appinstalled` события с toast-уведомлением
+
+5. **UI компоненты**:
+   - `Button`: `min-h-[44px]` на мобильных (touch target), `active:scale-[0.97]` нажатие
+   - `Card`: `md:hover:shadow-card-hover` на десктопе, адаптивные отступы (p-4 md:p-5)
+   - `PageHeader`: меньшие отступы на мобильных
+
+6. **Удалён/заменён**: `components/layout/mobile-nav.tsx` → `components/layout/mobile-bottom-nav.tsx`
+
+7. **TypeScript**: 0 errors.
+
+## 2026-05-15 — Fix: chat notification routing for curators/instructors
+
+Автор/agent: opencode
+Тип изменения: bugfix
+
+1. **`server/actions/chat.ts` — инвертирована логика ссылки в уведомлении**:
+   - Было (bug): при отправке сообщения куратором ссылка вела на `/curator/chat` (т.е. куратору же), при отправке студентом — на `/student/lessons/:id` (студенту же)
+   - Стало: ссылка определяется **ролью получателя**, а не отправителя. Куратору → `/curator/chat`, студенту → `/student/lessons/:lessonId`
+   - `getMyConversations` теперь включает `lessonId` и `lessonTitle` — контекст урока, из которого пришло сообщение
+
+2. **`components/lms/notifications-dropdown.tsx` — исправлен fallback**:
+   - Убран хардкод `/student/lessons/:refId` в fallback-ссылке
+   - Теперь используется `data.link` из уведомления (корректно устанавливается сервером)
+   - Fallback: `/notifications` (безопасно для любой роли)
+
+3. **`app/curator/chat/chat-list.tsx` — добавлен контекст урока**:
+   - В карточке диалога показывается название урока, с которого начат чат (иконка BookOpen + название)
+   - `ChatPanel` в диалоге открывается с `lessonId` из первого сообщения диалога
+   - Куратор видит, из какого урока пришёл вопрос/сообщение
+
+4. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings.**
+
+## 2026-05-15 — Feat: curator reminder, super-curator leaderboard, admin cache-bust, chat history
+
+Автор/agent: opencode
+Тип изменения: feature
+
+1. **Полная история чата для куратора**:
+   - При открытии диалога в `/curator/chat` `ChatPanel` больше не фильтрует по `lessonId`
+   - Показываются ВСЕ сообщения между куратором и слушателем
+   - Контекст урока отображается как справочная информация (иконка 📖)
+
+2. **Напоминание о неотвеченных сообщениях (2 часа)**:
+   - Создан `server/actions/chat-reminder.ts` — проверяет диалоги, где последнее сообщение от студента, и куратор не ответил > 2 часов
+   - Дедупликация: повторное напоминание не ранее чем через 4 часа
+   - Добавлен тип уведомления `curator_response_reminder` в `NotificationEvent`
+   - Проверка вызывается при заходе на страницу `/curator/chat`
+
+3. **Лидерборд кураторов для супер-куратора**:
+   - Создан компонент `components/lms/curator-leaderboard.tsx` с сортировкой по: отвечено вопросов, скорость ответа, сообщений, слушателей, открытых вопросов
+   - Топ-3 с медалями (🥇🥈🥉), индикатор онлайн/офлайн
+   - Расширен тип `CuratorLoad`: `questionsAnswered`, `messagesSent`, `isOnline`, `lastSeenAt`
+   - Heartbeat API (`POST /api/v1/heartbeat`) обновляет `lastLoginAt` каждые 5 минут
+   - `Heartbeat` компонент встроен в корневой layout
+
+4. **Кнопка сброса кэша для админа**:
+   - В `/admin/settings` добавлена вкладка "Кэш" с текущей версией сборки
+   - `incrementBuildVersionAction` увеличивает `BUILD_VERSION` в `app_settings`
+   - API `GET /api/v1/build-version` для SW
+   - Service Worker v3 проверяет версию каждые 5 минут, при изменении сбрасывает все кэши и показывает toast "Платформа обновлена" с кнопкой "Обновить"
+   - Прогресс обучения и история чатов не затрагиваются (cache-only статика)
+
+5. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings.**
+
+## 2026-05-15 — Feat: PWA install prompt, user name security
+
+Автор/agent: opencode
+Тип изменения: feature / security
+
+1. **PWA установка — баннер + инструкция**:
+   - Создан `components/lms/pwa-install-prompt.tsx` — баннер установки с кнопкой
+   - iOS: модальное окно с 4-шаговой инструкцией (через Share → На экран «Домой»)
+   - Android: перехват `beforeinstallprompt`, нативная установка
+   - Авто-скрытие если приложение уже установлено
+   - Анимация появления/скрытия через Framer Motion
+   - Интегрирован в `Providers`
+
+2. **Безопасность имён пользователей**:
+   - Создан `lib/auth/mask-name.ts` — функция маскировки реальных имён
+   - `maskName(realName, viewerRoles, viewerId, ownerId)`:
+     - Админ видит реальные имена
+     - Своё имя — показывается полностью
+     - Для чужих — только имя (без фамилии)
+   - `deriveDisplayName(realName)` — берёт только первое слово
+   - `maskChatName(senderName, senderId, viewerRoles, viewerId)` — для чата
+
+3. **Chat — имена маскируются**:
+   - `getConversation()`: `senderName` теперь проходит через `maskChatName`
+   - `getMyConversations()`: `partnerName` маскируется для не-админов
+   - Уведомления о новых сообщениях: имя отправителя маскировано
+
+4. **Сертификаты — исключение**: реальное имя используется (не маскируется)
+
+5. **Созданные файлы**:
+   - `components/lms/pwa-install-prompt.tsx` — PWA баннер + iOS инструкция
+   - `lib/auth/mask-name.ts` — маскировка имён
+   - `app/api/v1/heartbeat/route.ts` (добавлен ранее)
+
+6. **TypeScript: 0 errors. ESLint: 0 errors, 0 warnings.**
+
+## 2026-05-15 — Fix: deadlineDaysLeft, complete Framer Motion animations, review last 9 commits
+
+Автор/agent: opencode
+Тип изменения: bugfix / animations / refactor
+
+1. **deadlineDaysLeft**: Исправлен серверный метод `getContinueLearning` — теперь возвращает `deadlineDaysLeft` (разница в днях между дедлайном и текущей датой). Ранее поле было в типе `ContinueLearning`, но не заполнялось сервером. Виджет `ContinueLearningCard` корректно отображает дедлайн.
+2. **Framer Motion animations**: Завершена интеграция анимаций на платформу. Добавлены `Stagger`, `FadeIn`, `CardHover` во все виджеты дашборда:
+   - `CourseProgressGrid` — карточки курсов обёрнуты в `FadeIn` + `CardHover`
+   - `ContinueLearningCard` — обёрнут в `FadeIn`
+   - `QuestionsQueue` — каждый вопрос обёрнут в `FadeIn` + `CardHover`
+   - `RisksList` — каждый риск обёрнут в `FadeIn` + `CardHover`
+   - `MetricGrid`, `CourseManageGrid` — уже были анимированы ранее
+   - `PageTransition` в `AppShell` оборачивает контент всех страниц
+3. **Review last 9 commits**: Проверены все изменения (animations, PWA, CSP, env, notification service, layout). Ошибок не найдено. CSP расширен для `localhost:*` и `127.0.0.1:*`. Notification service lazy-loads nodemailer.
+4. **TypeScript**: 0 errors. **Tests**: 217 passed, 40/40 test files.
+
+## 2026-05-15 — Fix chat/questions merge, manifest.json, MinIO, auto-issue certificates
+
+Автор/agent: opencode
+Тип изменения: bugfix / chat / certificates / manifest
+
+1. **Unified chat and questions**: Удалён компонент `AskCuratorQuestion` из `lesson-player-shell.tsx` (и из `student-lesson-view.tsx`). Единый интерфейс связи студента с куратором — `ChatPanel` (модель `Message`). Удалён `LessonQuestion` include из `lessonDetailInclude`. Убран `myQuestions` из типа `StudentLessonLearningDetail`.
+2. **Manifest.json Syntax Error**: Убрано свойство `manifest` из экспорта `metadata`, чтобы Next.js не генерировал route handler, конфликтующий со статическим `public/manifest.json`. Файл сервится напрямую.
+3. **Minio not running**: Диагностика — MinIO отключён на localhost:9000. Решение: запустить `docker compose up minio -d`.
+4. **Auto-issue certificates**: В `markLessonProgress` добавлена авто-выдача сертификата при достижении `CERTIFICATE_COMPLETION_THRESHOLD` (по умолчанию 85%). Проверяется отсутствие существующего сертификата. Ошибки выдачи логируются, не блокируют прогресс.
+5. **Tests**: Исправлен мок `prisma.certificate.findFirst` в `progress-service.test.ts`. Только 217 тестов проходят.
+
+## 2026-05-13 — Credentials login and CI e2e login stabilization
+
+Автор/agent: Codex
+Тип изменения: bugfix / auth
+Тип изменения: bugfix / auth / e2e
+
+Файлы/модули:
+
+- `server/auth/options.ts` — credentials and OAuth sign-in now use normalized active-status check instead of strict `"ACTIVE"`.
+- `lib/auth/user-status.ts` — added shared `isActiveUserStatus()` helper.
+- `tests/unit/user-status.test.ts` — added coverage for `active`, `ACTIVE`, inactive and missing statuses.
+- `tests/unit/auth-options.test.ts` — added regression coverage for credentials login with Prisma default `status = "active"`.
+- `components/auth/login-form.tsx` — submit button now stays disabled until client hydration, preventing native GET form submission during e2e.
+- `tests/e2e/roles.spec.ts` — role login helper waits for hydrated auth form and uses `127.0.0.1` consistently.
+- `.github/workflows/ci.yml` — e2e job now runs `db:push` and `db:seed` before Playwright.
+- `next.config.ts` — added `allowedDevOrigins` for `127.0.0.1` to avoid Next dev-server HMR origin warnings in Playwright.
+
+Summary:
+
+- Fixed production credentials login returning `401 Unauthorized` for valid issued users when database rows use the Prisma default `status = "active"`.
+- Fixed credentials login returning `401 Unauthorized` for valid issued users when database rows use the Prisma default `status = "active"`.
+- Kept compatibility with uppercase `"ACTIVE"` rows so existing data does not need an immediate migration.
+- Fixed CI e2e bootstrap so demo-role login tests have schema + seed data before Playwright starts.
+- Reduced e2e login flakiness caused by clicking the form before React hydration.
+
+Проверки:
+
+- `npm run lint` — passed
+- `npx vitest run tests/unit/auth-options.test.ts tests/unit/user-status.test.ts tests/integration/login.test.ts` — passed
+- `npm run test` — 104 passed, 23 test files
+- `npm run typecheck` — passed
+- `npm run verify` — passed (`eslint --max-warnings=0`, `tsc --noEmit`, Vitest 23 files / 104 tests, `next build`).
+- `npm run test:e2e` — local rerun no longer hits the native GET form-submit timeout, but still cannot pass against the current `.env` because it points at remote Supabase seed data; I did not run `db:push`/`db:seed` against that remote database. CI e2e now prepares its own localhost Postgres with `db:push` + `db:seed` before Playwright.
+
+Риски:
+
+- Production still returns 401 if the target user was not provisioned/seeded or has no password hash.
+- The Vercel deployment must be rebuilt before the deployed URL reflects this fix.
+- Local Playwright was not run against `.env` to avoid mutating a non-CI database with `db:push/db:seed`.
+
+Next steps:
+
+- Redeploy Vercel after merging/pushing this change.
+- If login still fails after redeploy, verify production DB contains the expected user and a non-empty `password_hash`.
+- Replace the incomplete initial migration with a full generated migration before relying on `prisma migrate deploy` for fresh environments.
 
 ## 2026-05-12 — 8-PR stabilization: build fix, seed/auth, notifications, progress, assignment/quiz access, student UX, reports scoping
 

@@ -2,11 +2,30 @@ import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { EnrollmentStatus } from "@prisma/client";
 import { logAudit } from "@/server/modules/audit/service";
+import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
-export async function listAssignments() {
+export async function listAssignments(userId: string, roleKeys: string[]) {
+  const isAdmin = roleKeys.includes("admin");
+  const isInstructor = roleKeys.includes("instructor");
+
+  const where: Record<string, unknown> = {};
+
+  if (!isAdmin) {
+    if (isInstructor) {
+      where.course = {
+        instructors: { some: { userId } }
+      };
+    } else {
+      where.course = {
+        enrollments: { some: { userId, status: { in: ["ACTIVE", "COMPLETED"] } } }
+      };
+    }
+  }
+
   return prisma.assignment.findMany({
+    where,
     include: {
       course: { select: { id: true, title: true } },
       lesson: { select: { id: true, title: true } },
@@ -137,6 +156,18 @@ export async function reviewSubmission(input: {
     entity: "assignment_submission",
     entityId: updated.id,
     metadata: { accepted: input.accepted, score: input.score }
+  });
+  await createNotification({
+    userId: updated.userId,
+    event: "assignment_reviewed",
+    refType: "assignment_submission",
+    refId: updated.id,
+    data: {
+      assignmentId: updated.assignmentId,
+      status: updated.status,
+      score: updated.score,
+      link: `/student/assignments/${updated.assignmentId}`
+    }
   });
   return updated;
 }

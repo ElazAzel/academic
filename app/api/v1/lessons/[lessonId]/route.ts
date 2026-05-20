@@ -9,9 +9,12 @@ const updateLessonSchema = lessonSchema.partial();
 
 export async function GET(_request: Request, context: Context) {
   try {
-    await requireUser("courses:read");
+    const user = await requireUser("courses:read");
     const { lessonId } = await context.params;
-    return ok(await getLesson(lessonId));
+    const userRoles = user.roles as string[];
+    const isElevated = userRoles.some((r) => ["admin", "super_curator", "curator", "instructor"].includes(r));
+    // C2: Студенты получают урок без correctAnswer; elevated роли — с ответами
+    return ok(await getLesson(lessonId, !isElevated));
   } catch (error) {
     return errorResponse(error);
   }

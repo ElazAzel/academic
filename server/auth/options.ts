@@ -7,6 +7,8 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import type { RoleKey } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
+import { isActiveUserStatus } from "@/lib/auth/user-status";
+import { AUTH_ROUTES } from "@/lib/constants";
 import { env } from "@/lib/env";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { getEnabledOAuthProviders } from "@/server/auth/provider-flags";
@@ -34,7 +36,7 @@ const providers: NonNullable<AuthOptions["providers"]> = [
         where: { email },
         include: { roles: { include: { role: true } } }
       });
-      if (!user?.passwordHash || user.status !== "active") {
+      if (!user?.passwordHash || !isActiveUserStatus(user.status)) {
         return null;
       }
       const valid = await verifyPassword(user.passwordHash, password);
@@ -85,7 +87,7 @@ export const authOptions: AuthOptions = {
     strategy: "jwt"
   },
   pages: {
-    signIn: "/login"
+    signIn: AUTH_ROUTES.LOGIN
   },
   providers,
   callbacks: {
@@ -97,7 +99,7 @@ export const authOptions: AuthOptions = {
           where: { email },
           select: { id: true, status: true }
         });
-        if (!user || user.status !== "active") return false;
+        if (!user || !isActiveUserStatus(user.status)) return false;
       }
       return true;
     },
@@ -115,6 +117,7 @@ export const authOptions: AuthOptions = {
             token.email = dbUser.email;
             token.name = dbUser.name;
             token.picture = dbUser.image;
+            token.requires2fa = dbUser.totpEnabled === true;
           }
         }
       }
@@ -127,6 +130,7 @@ export const authOptions: AuthOptions = {
         session.user.email = token.email as string;
         session.user.name = token.name as string | null;
         session.user.image = token.picture as string | null;
+        session.requires2fa = token.requires2fa as boolean | undefined;
       }
       return session;
     }

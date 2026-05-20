@@ -1,3 +1,4 @@
+import { UserAccountStatus } from "@prisma/client";
 import { getPrisma } from "../lib/prisma";
 import { hashPassword } from "../lib/auth/password";
 
@@ -16,7 +17,7 @@ async function main() {
         where: { id: user.id },
         data: {
           passwordHash: newHash,
-          status: "active"
+          status: UserAccountStatus.ACTIVE
         }
       });
       console.log(`✅ Обновлен: ${user.email}`);

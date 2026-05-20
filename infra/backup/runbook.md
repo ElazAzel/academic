@@ -1,54 +1,179 @@
-# PostgreSQL Database Backup and Restore Runbook
+# Database Backup & Restore Runbook
 
-This guide covers the procedures for backing up and restoring the `academy-postgres` database.
+> AI Strategic Academy — PostgreSQL backup procedures
 
-## 1. Backups
+## Prerequisites
 
-The backup script `backup.sh` uses `pg_dump` to create compressed, optionally encrypted database backups. It also cleans up backups older than a specified retention period (default 30 days).
+- `pg_dump` and `pg_restore` installed (PostgreSQL client tools)
+- Database connection details in `.env` or environment variables
+- Sufficient disk space (estimate: DB size × 2 for dump + compressed archive)
 
-### Automated Setup (Cron)
+## Environment Variables
 
-Set up a daily cron job (e.g., at 2:00 AM) to run the backup script:
+| Variable | Description | Required |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string | ✅ Yes |
+| `BACKUP_DIR` | Directory for backup files (default: `./backups`) | ❌ No |
 
-```bash
-# Edit crontab
-crontab -e
+## Backup Procedures
 
-# Add the following line
-0 2 * * * DB_URL="postgresql://user:password@host:port/dbname" ENCRYPTION_PASSPHRASE="your-secret-passphrase" /path/to/infra/backup/backup.sh >> /var/log/academy-backup.log 2>&1
-```
-
-## 2. Restore Procedure
-
-The restore script `restore.sh` accepts a backup file and a target database connection string.
-
-### Prerequisites
-1. Ensure the target database exists. The backup script drops and recreates schema objects, but the database itself must be present.
-2. If the backup is encrypted (`.gpg`), you need the `ENCRYPTION_PASSPHRASE`.
-
-### Steps
-1. Stop application traffic to prevent inconsistent states.
-2. Execute the restore script:
+### 1. Manual Full Backup
 
 ```bash
-# For an encrypted backup
-ENCRYPTION_PASSPHRASE="your-secret-passphrase" ./restore.sh /path/to/backup.sql.gz.gpg "postgresql://user:password@host:port/dbname"
+# Set variables
+BACKUP_DIR="./backups"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+DB_NAME="academy"
+DB_URL="postgresql://user:password@localhost:5432/academy"
 
-# For an unencrypted backup
-./restore.sh /path/to/backup.sql.gz "postgresql://user:password@host:port/dbname"
+# Create backup directory
+mkdir -p "$BACKUP_DIR"
+
+# Full database dump (custom format, compressed)
+pg_dump "$DB_URL" \
+  --format=custom \
+  --compress=9 \
+  --file="$BACKUP_DIR/academy_full_$TIMESTAMP.dump"
+
+# Optional: plain SQL dump (more portable, larger)
+pg_dump "$DB_URL" \
+  --format=plain \
+  --no-owner \
+  --file="$BACKUP_DIR/academy_sql_$TIMESTAMP.sql"
+
+# Compress SQL dump
+gzip "$BACKUP_DIR/academy_sql_$TIMESTAMP.sql"
+
+echo "Backup created: academy_full_$TIMESTAMP.dump"
 ```
 
-## 3. Disaster Recovery: Restore Rehearsal Checklist
+### 2. Scheduled Automated Backup
 
-It is critical to regularly test backups to ensure data integrity and team readiness. Perform this checklist **at least once per quarter** or before a major production cohort launch.
+Create `/etc/cron.daily/academy-backup` or use systemd timer:
 
-- [ ] **Provision a Staging/Test DB**: Create a temporary PostgreSQL instance separate from production.
-- [ ] **Locate Backup**: Identify and download the latest automated backup from storage.
-- [ ] **Verify Encryption (if applicable)**: Successfully decrypt the backup using the stored passphrase from the secrets manager.
-- [ ] **Run Restore**: Execute `restore.sh` against the staging DB and monitor logs for any import errors.
-- [ ] **Data Validation**:
-  - Connect to the test DB and count records in critical tables (e.g., `User`, `Enrollment`, `Certificate`).
-  - Compare these counts with metrics from production around the time of the backup.
-- [ ] **Application Smoke Test**: Point a staging instance of the AI Strategic Academy app to the restored database and verify user login and course access.
-- [ ] **Teardown**: Destroy the staging database to prevent accidental data leaks or usage.
-- [ ] **Sign-off**: Document the date, duration, and outcome of the restore rehearsal.
+```bash
+#!/bin/bash
+# /usr/local/bin/academy-backup.sh
+
+BACKUP_DIR="/var/backups/academy"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+DB_URL="${DATABASE_URL}"
+RETENTION_DAYS=30
+
+mkdir -p "$BACKUP_DIR"
+
+# Dump
+pg_dump "$DB_URL" --format=custom --compress=9 --file="$BACKUP_DIR/academy_$TIMESTAMP.dump"
+
+# Remove backups older than retention period
+find "$BACKUP_DIR" -name "academy_*.dump" -mtime +$RETENTION_DAYS -delete
+
+# Log
+echo "[$(date)] Backup created, retained $RETENTION_DAYS days" >> "$BACKUP_DIR/backup.log"
+```
+
+### 3. Encrypted Backup (Production)
+
+For production environments, encrypt backups before storing off-site:
+
+```bash
+# Generate encryption key (first time only)
+openssl rand -base64 32 > /etc/backup-keys/academy.key
+
+# Encrypt dump
+gpg --symmetric --cipher-algo AES256 \
+  --passphrase-file /etc/backup-keys/academy.key \
+  --output "academy_$TIMESTAMP.dump.gpg" \
+  "academy_$TIMESTAMP.dump"
+```
+
+### 4. Off-site Backup (S3-Compatible)
+
+```bash
+# Upload encrypted backup to S3
+aws s3 cp "academy_$TIMESTAMP.dump.gpg" "s3://academy-backups/database/"
+
+# Or with MinIO client
+mc cp "academy_$TIMESTAMP.dump.gpg" "myminio/academy-backups/"
+```
+
+## Restore Procedures
+
+### 1. Restore from Custom Format Dump
+
+```bash
+# Warning: This will DROP and recreate the database
+pg_restore --dbname=academy \
+  --clean \
+  --if-exists \
+  --no-owner \
+  --verbose \
+  "academy_full_20260516_120000.dump"
+```
+
+### 2. Restore from Plain SQL Dump
+
+```bash
+# Drop and recreate target database first
+dropdb --if-exists academy
+createdb academy
+
+# Restore from SQL
+gunzip -c "academy_sql_20260516_120000.sql.gz" | psql academy
+```
+
+### 3. Restore to a Different Database (for testing)
+
+```bash
+createdb academy_restore_test
+pg_restore --dbname=academy_restore_test \
+  "academy_full_20260516_120000.dump"
+```
+
+## Restore Rehearsal Checklist
+
+Run this checklist before every production restore:
+
+- [ ] Back up current database before attempting restore
+- [ ] Verify dump file integrity: `pg_restore --list academy.dump | head -20`
+- [ ] Check disk space: `df -h`
+- [ ] Stop application: `docker compose stop app`
+- [ ] Notify users of maintenance window
+- [ ] Create a restore test database first
+- [ ] Run `npx prisma migrate deploy` after restore to ensure migrations match
+- [ ] Run `npm run seed` if lookup data needs re-initialization
+- [ ] Verify key metrics: user count, enrollment count, certificates
+- [ ] Start application: `docker compose start app`
+- [ ] Monitor logs for errors: `docker compose logs --tail=100 app`
+
+## Retention Policy
+
+| Environment | Retention | Frequency | Off-site |
+|---|---|---|---|
+| Development | 7 days | Daily | No |
+| Staging | 14 days | Daily | Optional |
+| Production | 30 days | Daily | ✅ Required |
+
+## Emergency Recovery
+
+If no backup is available but the database files exist:
+
+```bash
+# 1. Stop PostgreSQL
+pg_ctl stop -D /var/lib/postgresql/data
+
+# 2. Copy data directory
+cp -a /var/lib/postgresql/data /var/lib/postgresql/data.backup
+
+# 3. Start PostgreSQL in single-user mode
+postgres --single -D /var/lib/postgresql/data academy
+
+# 4. Dump data manually
+pg_dump academy > emergency_recovery.sql
+```
+
+## Monitoring
+
+- Check backup logs: `cat /var/backups/academy/backup.log`
+- Verify dump file sizes: `ls -lh /var/backups/academy/`
+- Test restore monthly in staging environment

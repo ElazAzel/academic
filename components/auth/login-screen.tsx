@@ -1,61 +1,51 @@
-import Link from "next/link";
-import { GraduationCap } from "lucide-react";
+"use client";
+
 import { LoginForm } from "@/components/auth/login-form";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
 
+/**
+ * Login screen — centered card with abstract background blobs (M3 design)
+ */
 export function LoginScreen({ oauthProviders }: { oauthProviders: OAuthProviderFlags }) {
   return (
-    <main className="relative flex min-h-screen">
-      {/* Brand panel */}
-      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-indigo-900 p-12 text-white lg:flex">
-        <div className="relative z-10 flex items-center gap-3 text-xl font-semibold">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-            <GraduationCap className="h-6 w-6" />
-          </span>
-          AI Strategic Academy
-        </div>
-        <div className="relative z-10 flex items-center justify-center">
-          <div className="relative h-72 w-72">
-            <div className="animate-float-slow absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl" />
-            <div className="animate-float absolute left-8 top-6 h-20 w-20 rounded-2xl bg-white/5 blur-lg" />
-            <div className="animate-float-delayed absolute bottom-12 right-6 h-16 w-16 rounded-full bg-white/8 blur-xl" />
-            <div className="animate-pulse-glow absolute bottom-20 left-10 h-10 w-10 rounded-full bg-white/10 blur-md" />
-            <div className="animate-float absolute right-12 top-16 h-8 w-8 rounded-lg bg-white/5 blur-md" style={{ animationDelay: "-2s" }} />
-          </div>
-        </div>
-        <div className="relative z-10 text-sm text-white/50" suppressHydrationWarning>
-          &copy; {new Date().getFullYear()} AI Strategic Academy
-        </div>
-        {/* Decorative circles */}
-        <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-white/5" />
-        <div className="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-white/5" />
-        <div className="absolute bottom-40 -left-10 h-48 w-48 rounded-full bg-white/[0.03]" />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-m3-background selection:bg-m3-primary/20 selection:text-m3-primary">
+      {/* Abstract background blobs */}
+      <div className="pointer-events-none absolute left-0 top-0 z-0 h-full w-full overflow-hidden">
+        <div className="absolute -left-[10%] -top-[20%] h-[50%] w-[50%] rounded-full bg-m3-primary-fixed/30 opacity-70 blur-[120px]" />
+        <div className="absolute -right-[10%] top-[60%] h-[60%] w-[40%] rounded-full bg-m3-secondary-fixed/20 opacity-60 blur-[150px]" />
       </div>
 
-      {/* Form panel */}
-      <div className="flex w-full items-center justify-center px-6 lg:w-1/2">
-        <div className="w-full max-w-sm animate-slide-up">
-          {/* Mobile logo */}
-          <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-              <GraduationCap className="h-6 w-6" />
-            </span>
-            <span className="text-xl font-semibold">AI Strategic Academy</span>
+      {/* Login container */}
+      <div className="z-10 flex w-full max-w-[440px] flex-col items-center px-margin-mobile md:px-0">
+        {/* Card */}
+        <div className="flex w-full flex-col gap-lg rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest p-lg shadow-m3-soft backdrop-blur-sm md:p-xl">
+          {/* Header */}
+          <div className="flex flex-col items-center gap-sm border-b border-m3-surface-container-high pb-md text-center">
+            <div className="mb-sm flex h-12 w-12 items-center justify-center rounded-lg border border-m3-outline-variant/50 bg-m3-surface-container">
+              <span className="material-symbols-outlined text-[28px] text-m3-primary" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
+                school
+              </span>
+            </div>
+            <h1 className="text-headline-lg-mobile font-headline-lg-mobile text-m3-primary md:text-headline-lg md:font-headline-lg">
+              AI Strategic Academy
+            </h1>
+            <p className="text-body-md font-body-md text-m3-on-surface-variant">
+              Закрытая образовательная платформа
+            </p>
           </div>
 
-          <h1 className="text-2xl font-bold">Вход в академию</h1>
-          <p className="mt-1 mb-8 text-sm text-muted-foreground">
-            Используйте логин и пароль, выданные администратором.
-          </p>
-
+          {/* Form */}
           <LoginForm oauthProviders={oauthProviders} />
-
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <Link href="/forgot-password" className="transition-colors hover:text-foreground">
-              Забыли пароль?
-            </Link>
-          </div>
         </div>
+
+        {/* Footer */}
+        <footer className="mt-lg flex flex-wrap justify-center gap-x-md gap-y-xs text-body-sm font-body-sm text-m3-on-surface-variant/80">
+          <a href="#" className="transition-colors hover:text-m3-primary hover:underline">Политика конфиденциальности</a>
+          <span className="hidden text-m3-outline-variant md:inline">•</span>
+          <a href="#" className="transition-colors hover:text-m3-primary hover:underline">Условия использования</a>
+          <span className="hidden text-m3-outline-variant md:inline">•</span>
+          <a href="#" className="transition-colors hover:text-m3-primary hover:underline">Файлы Cookie</a>
+        </footer>
       </div>
     </main>
   );

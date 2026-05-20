@@ -1,16 +1,17 @@
 import { redirect } from "next/navigation";
 import type { RoleKey } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
+import { AUTH_ROUTES, FORBIDDEN_ROUTE } from "@/lib/constants";
 
 export async function requireRolePage(allowedRoles: RoleKey[]) {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect("/login");
+    redirect(AUTH_ROUTES.LOGIN);
   }
 
   if (!allowedRoles.some((role) => user.roles.includes(role))) {
-    redirect("/403");
+    redirect(FORBIDDEN_ROUTE);
   }
 
   return user;
