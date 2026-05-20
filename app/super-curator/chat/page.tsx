@@ -2,6 +2,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
+import { buildMessagePreview } from "@/lib/chat/utils";
 import { QUERY_LIMITS } from "@/lib/query-limits";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle } from "lucide-react";
@@ -45,7 +46,7 @@ export default async function SuperCuratorChatPage() {
             ],
           },
           orderBy: { createdAt: "desc" },
-          select: { text: true, createdAt: true, senderId: true, receiverId: true },
+          select: { text: true, createdAt: true, senderId: true, receiverId: true, attachmentUrl: true },
           take: QUERY_LIMITS.reportRows,
         }),
         prisma.message.groupBy({
@@ -90,7 +91,7 @@ export default async function SuperCuratorChatPage() {
       curatorName: assignment.curator.name ?? assignment.curator.email,
       studentId: assignment.studentId,
       studentName: assignment.student.name ?? assignment.student.email,
-      lastMessage: lastMsg?.text ?? null,
+      lastMessage: lastMsg ? buildMessagePreview(lastMsg.text ?? "", Boolean(lastMsg.attachmentUrl)) : null,
       lastDate: lastMsg?.createdAt?.toISOString() ?? null,
       lastSenderId: lastMsg?.senderId ?? null,
       unread: unreadByPair.get(key) ?? 0,
