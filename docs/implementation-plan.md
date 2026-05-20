@@ -18,7 +18,7 @@
   - C3: server-side verification прогресса (тесты/задания)
   - C4: revalidateSession на каждый requireUser()
   - C5: cron endpoints fail-closed
-- Все 62 role sub-pages реализованы, все дашборды на реальных данных
+- Все 63 role sub-pages реализованы (добавлен `/student/reports`), все дашборды на реальных данных
 
 - Создан runnable Next.js modular monolith: App Router, TypeScript strict, Prisma/PostgreSQL, Auth.js, Tailwind, REST API, GraphQL scaffold.
 - Созданы основные страницы ролей: публичная зона, слушатель, куратор, супер-куратор, преподаватель, администратор, заказчик-наблюдатель.
@@ -75,7 +75,7 @@
 | Invite access | InviteLink model, admin invite UX, `invites:manage` permission | done | Доступ выдаётся через инвайт-ссылки, не через оплату |
 | Billing compatibility | Checkout/webhook routes return typed `410 Gone`; Stripe dependency removed | done | Старые маршруты не падают `500` и явно документируют invite-only профиль |
 | Analytics | Admin overview metrics | done | API возвращает users, enrollments, completion, invite metrics и backward-compatible zero revenue |
-| Analytics | Export-ready reports CSV/PDF/XLSX | planned | Admin/customer observer скачивает отчёты |
+| Analytics | Export-ready reports CSV/PDF/XLSX | done | Admin/customer observer/student скачивает отчёты через DownloadReports |
 | Search | PostgreSQL full-text boundary | done | Search service ищет courses, lessons, users |
 | Notifications | In-app notification templates/events | done | Notification service хранит русские templates |
 | Notifications | Email provider and push provider production wiring | planned | SMTP/provider отправка и retry policy |

@@ -6,12 +6,14 @@ import { DownloadReports } from "@/components/lms/download-reports";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getCustomerObserverDashboard } from "@/server/actions/dashboard";
+import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 
 export const dynamic = "force-dynamic";
 
 export default async function CustomerObserverReportsPage() {
-  await requireRolePage(["customer_observer"]);
+  const user = await requireRolePage(["customer_observer"]);
   const data = await getCustomerObserverDashboard();
 
   return (
@@ -52,35 +54,7 @@ export default async function CustomerObserverReportsPage() {
       )}
 
       {/* Download reports */}
-      <DownloadReports reports={[
-        {
-          id: "progress",
-          title: "Прогресс по потокам",
-          desc: "Зачисления и прогресс",
-          icon: "group",
-          owner: "Customer observer",
-          scope: "Только разрешенные проекты и потоки",
-          decision: "Как идет обучение в доступной клиентской зоне.",
-        },
-        {
-          id: "risk",
-          title: "Риски слушателей",
-          desc: "Неактивные и отстающие",
-          icon: "warning",
-          owner: "Customer observer",
-          scope: "Только разрешенные проекты и потоки",
-          decision: "Где требуется управленческое внимание без права вмешательства.",
-        },
-        {
-          id: "certificates",
-          title: "Сертификаты",
-          desc: "Все выпущенные",
-          icon: "verified",
-          owner: "Customer observer",
-          scope: "Только разрешенные проекты и потоки",
-          decision: "Какие участники подтвердили завершение обучения.",
-        },
-      ]} />
+      <DownloadReports reports={getDisplayReportsForRole(user.roles)} />
     </AppShell>
   );
 }

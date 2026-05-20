@@ -8,13 +8,15 @@ import { DownloadReports } from "@/components/lms/download-reports";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getSuperCuratorReportData } from "@/server/actions/super-curator";
+import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 import type { DashboardMetric } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorReportsPage() {
-  await requireRolePage(["super_curator", "admin"]);
+  const user = await requireRolePage(["super_curator", "admin"]);
   const data = await getSuperCuratorReportData();
 
   const totalStudents = data.reduce((s, c) => s + c.totalStudents, 0);
@@ -131,26 +133,7 @@ export default async function SuperCuratorReportsPage() {
                 </Card>
 
                 {/* Download */}
-                <DownloadReports reports={[
-                  {
-                    id: "progress",
-                    title: "Экспорт прогресса",
-                    desc: "Скачать отчёт по прогрессу",
-                    icon: "trending_up",
-                    owner: "Super curator",
-                    scope: "Только потоки, кураторы и слушатели в зоне ответственности",
-                    decision: "Какие потоки проседают и где нужна операционная поддержка.",
-                  },
-                  {
-                    id: "curator_workload",
-                    title: "Нагрузка кураторов",
-                    desc: "Очереди, риски и закрепления",
-                    icon: "group",
-                    owner: "Super curator",
-                    scope: "Только кураторы и потоки в зоне ответственности",
-                    decision: "Где перегрузка и кого нужно перераспределить.",
-                  },
-                ]} />
+                <DownloadReports reports={getDisplayReportsForRole(user.roles).filter((r) => ["progress", "curator_workload"].includes(r.id))} />
               </div>
             ),
           },
@@ -175,26 +158,7 @@ export default async function SuperCuratorReportsPage() {
                   </CardContent>
                 </Card>
 
-                <DownloadReports reports={[
-                  {
-                    id: "risk",
-                    title: "Экспорт рисков",
-                    desc: "Скачать отчёт по рискам",
-                    icon: "warning",
-                    owner: "Super curator",
-                    scope: "Только потоки и слушатели в зоне ответственности",
-                    decision: "Какие риски нужно эскалировать или перераспределить.",
-                  },
-                  {
-                    id: "assignments",
-                    title: "Задания",
-                    desc: "Очередь проверки по зоне ответственности",
-                    icon: "checklist",
-                    owner: "Super curator",
-                    scope: "Только потоки и слушатели в зоне ответственности",
-                    decision: "Где копятся работы и какой куратор перегружен.",
-                  },
-                ]} />
+                <DownloadReports reports={getDisplayReportsForRole(user.roles).filter((r) => ["risk", "assignments"].includes(r.id))} />
               </div>
             ),
           },

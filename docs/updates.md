@@ -2,6 +2,36 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-20 — LearningPath прогресс UI + LessonRating в аналитике
+
+- **m1: LearningPath прогресс UI**:
+  - Создан `server/modules/learning/learning-path-service.ts` — `getUserLearningPaths(userId)` с расчетом среднего прогресса по курсам трека, запись в `LearningPathEnrollment.progress`
+  - `getStudentDashboard` расширен: возвращает `learningPaths[]`
+  - На дашборде студента (`app/student/page.tsx`) добавлен блок "Мои треки обучения" с карточками: прогресс-бар, счетчик завершенных курсов, описание
+- **m2: LessonRating в аналитике**:
+  - `getInstructorAnalytics` теперь включает `avgRatingResult` (средняя оценка уроков 1-4 + количество)
+  - На странице `/instructor/analytics` добавлена метрика "Оценка уроков" (например, "3.5/4")
+- **typecheck**: passed ✅
+- **tests**: 354/354 passed (60/60 test files) ✅
+
+## 2026-05-20 — Student reports, XLSX/PDF тесты, completionThreshold
+
+- **C1: Страница отчетов студента**
+  - Создана `app/student/reports/page.tsx` — MetricGrid, BarChart, DownloadReports
+  - Добавлен `/student/reports` в навигацию student
+- **C1: API отчетов для student**: student scope + allowedRoles + getAvailableReportsForRoles
+- **C2: completionThreshold в detectLearnerRisks**: опциональный параметр, дефолт 85
+- **M2: Тесты XLSX и PDF**: xlsx-generator (10), pdf-generator (10), risks расширен (8)
+- **M1: Динамические отчеты (централизованная конфигурация)**:
+  - `ReportDefinition.desc`, `ReportDefinition.icon` — base display метаданные
+  - `REPORT_ROLE_META` — owner/scope по ролям
+  - `getDisplayReportsForRole(roles)` — единый источник для DownloadReports
+  - 6 страниц отчетов обновлены: admin, instructor, curator, customer-observer, super-curator (2 tabs), student
+  - Больше нет хардкодных списков — изменения allowedRoles в БД автоматом отражаются в UI
+- **m3: redundant normalizeRole check**: убран лишний вызов в resolveReportScope
+- **typecheck**: passed ✅
+- **tests**: 354/354 passed (60/60 test files) ✅
+
 ## 2026-05-20 — Дедлайны блоков, попапы кураторов, исправление ошибок
 
 **Тип изменения**: feature / bugfix
@@ -57,7 +87,7 @@
 - **4 medium** (P2): popups/diag endpoint раскрывал enrollmentIds → заменён на count(); DynamicWatermark рендерил email в DOM → убран; hardcoded dev passwords → env-переменные; CSP endpoints добавлены в PUBLIC_PATH_PREFIXES
 - PWA fixes (chat reply on every message, NAVIGATE handler, desktop install manifest) завершены
 
-**Проверки**:
+ **Проверки**:
 - `npx tsc --noEmit` — passed
 - `npm run build` — passed (80/80 pages, 0 errors)
 - `npx vitest run` — 319/319 passed (57/57 test files)

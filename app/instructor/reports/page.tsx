@@ -5,8 +5,9 @@ import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getPrisma } from "@/lib/prisma";
+import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 import { QuestionStatus, SubmissionStatus } from "@prisma/client";
 import type { DashboardMetric } from "@/types/domain";
 
@@ -127,44 +128,7 @@ export default async function InstructorReportsPage() {
       )}
 
       {/* Download reports */}
-      <DownloadReports reports={[
-        {
-          id: "progress",
-          title: "Прогресс слушателей",
-          desc: "Прогресс по вашим курсам",
-          icon: "group",
-          owner: "Instructor",
-          scope: "Только курсы преподавателя",
-          decision: "Какие группы и уроки проседают по образовательному результату.",
-        },
-        {
-          id: "risk",
-          title: "Риски слушателей",
-          desc: "Риски по вашим курсам",
-          icon: "warning",
-          owner: "Instructor",
-          scope: "Только курсы преподавателя",
-          decision: "Какие риски мешают завершению курса.",
-        },
-        {
-          id: "assignments",
-          title: "Задания",
-          desc: "Отправки и результаты по вашим курсам",
-          icon: "checklist",
-          owner: "Instructor",
-          scope: "Только курсы преподавателя",
-          decision: "Какие задания требуют методической проверки.",
-        },
-        {
-          id: "certificates",
-          title: "Сертификаты",
-          desc: "Сертификаты по вашим курсам",
-          icon: "verified",
-          owner: "Instructor",
-          scope: "Только курсы преподавателя",
-          decision: "Кто завершил курс и получил подтверждение.",
-        },
-      ]} />
+      <DownloadReports reports={getDisplayReportsForRole(user.roles)} />
     </AppShell>
   );
 }

@@ -77,6 +77,8 @@ export interface ReportDefinition {
   type: ReportType;
   title: string;
   filenameBase: string;
+  desc: string;
+  icon: string;
   owner: string;
   decision: string;
   allowedRoles: DomainRoleKey[];
@@ -87,14 +89,18 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     type: "progress",
     title: "Прогресс обучения",
     filenameBase: "progress_report",
+    desc: "Прогресс слушателей по курсам",
+    icon: "trending_up",
     owner: "Academic operations",
     decision: "Кто проходит курс, где есть отставание и какой поток требует внимания.",
-    allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
+    allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer", "student"],
   },
   risk: {
     type: "risk",
     title: "Риски слушателей",
     filenameBase: "risk_report",
+    desc: "Риски и проблемные зоны",
+    icon: "warning",
     owner: "Curator operations",
     decision: "Какие риски нужно разобрать до потери темпа обучения.",
     allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
@@ -103,22 +109,28 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     type: "assignments",
     title: "Задания",
     filenameBase: "assignments_report",
+    desc: "Отправки, статусы проверки и баллы",
+    icon: "checklist",
     owner: "Review operations",
     decision: "Какие работы ждут проверки, где нужна доработка и кто проверяет.",
-    allowedRoles: ["admin", "instructor", "curator", "super_curator"],
+    allowedRoles: ["admin", "instructor", "curator", "super_curator", "student"],
   },
   certificates: {
     type: "certificates",
     title: "Сертификаты",
     filenameBase: "certificates_report",
+    desc: "Выпущенные сертификаты",
+    icon: "verified",
     owner: "Certification",
     decision: "Какие сертификаты выпущены в разрешенном scope.",
-    allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
+    allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer", "student"],
   },
   curator_workload: {
     type: "curator_workload",
     title: "Нагрузка кураторов",
     filenameBase: "curator_workload_report",
+    desc: "Очереди, риски и закрепленные слушатели",
+    icon: "group",
     owner: "Super curator operations",
     decision: "Где перегрузка кураторов и какие очереди нужно перераспределить.",
     allowedRoles: ["admin", "super_curator"],
@@ -182,8 +194,16 @@ async function getCourseIdsForCohorts(cohortIds: string[]) {
 
 async function resolveReportScope(user: Pick<AppSessionUser, "id" | "roles">): Promise<ReportAccessContext> {
   const actorRole = pickActorRole(user.roles);
-  if (!actorRole || actorRole === "student") {
+  if (!actorRole) {
     throw new ApiError("forbidden", "Недостаточно прав для отчетов", 403);
+  }
+
+  if (actorRole === "student") {
+    return {
+      actorRole,
+      scope: { studentIds: [user.id] },
+      scopeLabel: "Только мои данные",
+    };
   }
 
   if (actorRole === "admin") {
@@ -237,8 +257,7 @@ async function resolveReportScope(user: Pick<AppSessionUser, "id" | "roles">): P
     };
   }
 
-  const role = normalizeRole(actorRole);
-  if (role === "customer_observer") {
+  if (actorRole === "customer_observer") {
     const [observerScope, scopedStudentIds] = await Promise.all([
       getObserverScope(user.id),
       getScopedStudentIdsForObserver(user.id),
@@ -344,8 +363,59 @@ async function renderReport(type: ReportType, format: ReportFormat, rows: Awaite
 
 export function getAvailableReportsForRoles(roles: string[]) {
   const actorRole = pickActorRole(roles);
-  if (!actorRole || actorRole === "student") return [];
+  if (!actorRole) return [];
   return Object.values(REPORT_DEFINITIONS).filter((definition) => definition.allowedRoles.includes(actorRole));
+}
+
+// ── Display config for DownloadReports component ──────────────────────
+
+const REPORT_ROLE_META: Record<DomainRoleKey, { owner: string; scope: string }> = {
+  admin: { owner: "Admin", scope: "Вся академия" },
+  super_curator: { owner: "Super curator", scope: "Зона ответственности" },
+  curator: { owner: "Curator", scope: "Только закрепленные слушатели" },
+  instructor: { owner: "Instructor", scope: "Только курсы преподавателя" },
+  customer_observer: { owner: "Customer observer", scope: "Только разрешенные проекты" },
+  student: { owner: "Student", scope: "Только мои данные" },
+};
+
+function getReportTypeAlias(role: DomainRoleKey, type: ReportType): string | undefined {
+  if (role === "curator") {
+    if (type === "progress") return "curator_progress";
+    if (type === "risk") return "curator_risk";
+  }
+  return undefined;
+}
+
+export interface DisplayReportItem {
+  id: string;
+  title: string;
+  desc: string;
+  icon: string;
+  typeId?: string;
+  formats?: ("csv" | "xlsx" | "pdf")[];
+  owner: string;
+  scope: string;
+  decision: string;
+}
+
+/** Build display-ready report list for DownloadReports component */
+export function getDisplayReportsForRole(roles: string[]): DisplayReportItem[] {
+  const actorRole = pickActorRole(roles);
+  if (!actorRole) return [];
+
+  const available = getAvailableReportsForRoles(roles);
+  const meta = REPORT_ROLE_META[actorRole];
+
+  return available.map((def) => ({
+    id: def.type,
+    title: def.title,
+    desc: def.desc,
+    icon: def.icon,
+    typeId: getReportTypeAlias(actorRole, def.type),
+    owner: meta.owner,
+    scope: meta.scope,
+    decision: def.decision,
+  }));
 }
 
 export async function generateReportDownload(input: {

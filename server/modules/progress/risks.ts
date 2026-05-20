@@ -5,6 +5,7 @@ export type LearnerRiskInput = {
   moduleProgressPercent: number;
   courseProgressPercent: number;
   finalAssignmentAccepted: boolean;
+  completionThreshold?: number;
   now?: Date;
 };
 
@@ -44,7 +45,8 @@ export function detectLearnerRisks(input: LearnerRiskInput): LearnerRisk[] {
     }
   }
 
-  if (input.courseProgressPercent < 85 || !input.finalAssignmentAccepted) {
+  const threshold = input.completionThreshold ?? 85;
+  if (input.courseProgressPercent < threshold || !input.finalAssignmentAccepted) {
     risks.push({ type: "certificate_at_risk", severity: "high", title: "Сертификат под угрозой" });
   }
 

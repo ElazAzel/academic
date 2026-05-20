@@ -5,11 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getContinueLearning, getStudentCourseCards } from "@/server/modules/learning/service";
+import { getUserLearningPaths } from "@/server/modules/learning/learning-path-service";
 import type {
   DashboardMetric,
   QuestionFromStudent,
   CohortDeadline,
 } from "@/types/domain";
+import type { UserLearningPath } from "@/server/modules/learning/learning-path-service";
 
 export async function getStudentDashboard() {
   await requireRole(["student"]);
@@ -17,7 +19,7 @@ export async function getStudentDashboard() {
   if (!user) return null;
 
   return withQueryFallback(async () => {
-    const [enrollments, coursesProgress, continueLearning, questions, certificatesCount] = await Promise.all([
+    const [enrollments, coursesProgress, continueLearning, questions, certificatesCount, learningPaths] = await Promise.all([
       prisma.enrollment.findMany({
         where: { userId: user.id, status: "ACTIVE" },
         include: {
@@ -36,7 +38,8 @@ export async function getStudentDashboard() {
           lesson: { include: { module: { include: { course: true } } } },
         },
       }),
-      prisma.certificate.count({ where: { userId: user.id } })
+      prisma.certificate.count({ where: { userId: user.id } }),
+      getUserLearningPaths(user.id),
     ]);
 
     const formattedQuestions: QuestionFromStudent[] = questions.map((q) => ({
@@ -115,8 +118,10 @@ export async function getStudentDashboard() {
       },
     ];
 
-    return { metrics, coursesProgress, continueLearning, questions: formattedQuestions, deadlines };
+    return { metrics, coursesProgress, continueLearning, questions: formattedQuestions, deadlines, learningPaths };
   }, null);
 }
+
+export type { UserLearningPath };
 
 // Note: getEnrollmentData was moved to admin.ts — it's an admin-only function
