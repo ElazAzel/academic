@@ -38,7 +38,7 @@ async function subscribeToPush(registration: ServiceWorkerRegistration) {
   try {
     // Check notification permission
     if (Notification.permission === "denied") {
-      console.log("[PWA] Notification permission denied by user");
+      console.debug("[PWA] Notification permission denied by user");
       return;
     }
 
@@ -46,7 +46,7 @@ async function subscribeToPush(registration: ServiceWorkerRegistration) {
     if (Notification.permission === "default") {
       const result = await Notification.requestPermission();
       if (result !== "granted") {
-        console.log("[PWA] Notification permission not granted:", result);
+        console.debug("[PWA] Notification permission not granted:", result);
         return;
       }
     }

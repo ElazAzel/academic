@@ -65,7 +65,7 @@ async function StudentDashboardContent() {
      <div className="flex items-center justify-between mb-4">
       <h2 className="text-lg font-semibold">Мои курсы</h2>
       <Button asChild variant="ghost" size="sm">
-       <Link href="/student/courses">
+        <Link href="/student/my-courses">
         Все курсы <ArrowRight className="ml-1 h-4 w-4"/>
        </Link>
       </Button>
