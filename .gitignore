@@ -1,17 +1,5 @@
-node_modules/
-.next/
-out/
-dist/
-coverage/
-playwright-report/
-test-results/
-.env
-.env*.local
-!.env.example
-*.tsbuildinfo
-*.log
-.DS_Store
-Thumbs.db
-storage/
-tmp/
-var/
+(docs/DEVELOPER_GUIDE.md is a documentation file, which is a source/config file, so no ignores needed)
+
+```markdown
+
+```
