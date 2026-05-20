@@ -9,6 +9,7 @@ import { ArrowLeft, Users, Calendar } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { EditCohortForm } from "./edit-cohort-form";
+import { DeadlineManager } from "./deadline-manager";
 
 const prisma = getPrisma();
 
@@ -80,10 +81,15 @@ export default async function EditCohortPage({ params }: { params: Promise<{ coh
          {cohort.endsAt ? ` — ${cohort.endsAt.toISOString().slice(0, 10)}` : ""}
         </p>
         <StatusBadge status={cohort.status === "active" ? "ACTIVE" : "ARCHIVED"} label={cohort.status === "active" ? "Активен" : "Архив"} />
+        </div>
        </div>
-      </div>
-     </CardContent>
-    </Card>
+      </CardContent>
+     </Card>
+    </div>
+
+   {/* Deadline Manager */}
+   <div className="mt-6">
+    <DeadlineManager cohortId={cohort.id} cohortName={cohort.name} />
    </div>
   </AppShell>
  );

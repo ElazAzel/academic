@@ -7,14 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, FileText } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getStudentAssignmentSubmissionsAction } from "@/server/actions/student";
 
 export const dynamic = "force-dynamic";
 
 export default async function StudentAssignmentsPage() {
- await requireRolePage(["student"]);
- const submissions = await getStudentAssignmentSubmissionsAction();
+ const user = await requireRolePage(["student"]).catch(() => null);
+ if (!user) return redirect("/login");
+
+ let submissions: Awaited<ReturnType<typeof getStudentAssignmentSubmissionsAction>> = [];
+ try {
+  submissions = await getStudentAssignmentSubmissionsAction();
+ } catch {
+  // Silently handle — show empty list on error
+ }
 
  return (
   <AppShell role="student">

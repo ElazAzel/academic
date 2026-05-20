@@ -11,6 +11,7 @@ import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 import { PageHeader } from "@/components/lms/page-header";
 import { PageSkeleton } from "@/components/lms/page-skeleton";
 import { Tabs } from "@/components/ui/tabs";
+import { DeadlineAlerts } from "@/components/lms/deadline-alerts";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { getCuratorDashboard } from "@/server/actions/dashboard";
@@ -50,6 +51,7 @@ async function CuratorDashboardContent() {
   return (
     <div className="space-y-6">
       <MetricGrid metrics={metrics} />
+      <DeadlineAlerts />
       <CuratorOperationsBoard students={students} />
 
       <Tabs
