@@ -23,20 +23,15 @@ export async function GET() {
     // Test 3: Notifications table
     const notifCount = await prisma.notification.count({ where: { userId: user.id } });
 
-    // Test 4: Enrollments
-    const enrollments = await prisma.enrollment.findMany({
-      where: { userId: user.id },
-      select: { id: true, cohortId: true },
-      take: 3,
-    });
+    // Test 4: Enrollments (count only, no PII exposure)
+    const enrollmentCount = await prisma.enrollment.count({ where: { userId: user.id } });
 
     return ok({
       userFound: !!dbUser,
       userRoles: dbUser?.roles.map((r) => r.role.key) ?? [],
       popupCount,
       notifCount,
-      enrollmentCount: enrollments.length,
-      enrollmentSample: enrollments,
+      enrollmentCount,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

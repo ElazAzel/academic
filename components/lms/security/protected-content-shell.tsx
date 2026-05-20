@@ -165,7 +165,6 @@ export function ProtectedContentShell({
         {settings.watermarkEnabled && (
           <DynamicWatermark
             userName={user.name}
-            userEmail={user.email}
             userId={user.id}
             courseId={courseId}
             lessonId={lessonId}

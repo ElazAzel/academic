@@ -8,7 +8,6 @@ type WatermarkPosition = (typeof CONTENT_PROTECTION.WATERMARK_POSITIONS)[number]
 
 interface DynamicWatermarkProps {
   userName?: string | null;
-  userEmail: string;
   userId: string;
   courseId?: string;
   lessonId?: string;
@@ -26,12 +25,11 @@ function generateShortHash(userId: string): string {
 
 function buildWatermarkText(
   userName: string | null | undefined,
-  userEmail: string,
   userId: string,
 ): string {
   const shortHash = generateShortHash(userId);
   const name = userName && userName.trim() ? userName : null;
-  const identifier = name ?? userEmail;
+  const identifier = name ?? `User ${shortHash}`;
   return `${identifier} • ${shortHash}`;
 }
 
@@ -45,7 +43,6 @@ const positionClasses: Record<WatermarkPosition, string> = {
 
 export function DynamicWatermark({
   userName,
-  userEmail,
   userId,
   courseId,
   lessonId,
@@ -55,8 +52,8 @@ export function DynamicWatermark({
   const [dateTime, setDateTime] = useState<string>("");
 
   const watermarkText = useMemo(
-    () => buildWatermarkText(userName, userEmail, userId),
-    [userName, userEmail, userId],
+    () => buildWatermarkText(userName, userId),
+    [userName, userId],
   );
 
   const cyclePosition = useCallback(() => {

@@ -26,9 +26,9 @@ export async function POST(req: Request) {
       );
     }
 
-    await enable2fa(user.id, secret);
+    const { backupCodes } = await enable2fa(user.id, secret);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, backupCodes });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal error";
     return NextResponse.json({ error: message }, { status: 403 });

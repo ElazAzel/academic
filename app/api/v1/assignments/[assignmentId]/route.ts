@@ -19,7 +19,18 @@ export async function GET(_request: Request, context: Context) {
     await requireUser("courses:read");
     const { assignmentId } = await context.params;
     const assignment = await prisma.assignment.findUnique({
-      where: { id: assignmentId }
+      where: { id: assignmentId },
+      select: {
+        id: true,
+        title: true,
+        instructions: true,
+        maxScore: true,
+        maxAttempts: true,
+        courseId: true,
+        lessonId: true,
+        createdAt: true,
+        updatedAt: true,
+      }
     });
     if (!assignment) throw new ApiError("not_found", "Задание не найдено", 404);
     return ok(assignment);
@@ -59,7 +70,18 @@ export async function PATCH(request: Request, context: Context) {
 
     const updated = await prisma.assignment.update({
       where: { id: assignmentId },
-      data: input
+      data: input,
+      select: {
+        id: true,
+        title: true,
+        instructions: true,
+        maxScore: true,
+        maxAttempts: true,
+        courseId: true,
+        lessonId: true,
+        createdAt: true,
+        updatedAt: true,
+      }
     });
     
     return ok(updated);

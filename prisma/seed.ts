@@ -34,7 +34,8 @@ const rolePermissions: Record<RoleKey, string[]> = {
 };
 
 async function upsertUser(email: string, name: string, role: RoleKey) {
-  const passwordHash = await hashPassword("Password123!");
+  const seedPassword = process.env.SEED_DEFAULT_PASSWORD ?? "Password123!";
+  const passwordHash = await hashPassword(seedPassword);
   const user = await prisma.user.upsert({
     where: { email },
     update: { name, passwordHash },

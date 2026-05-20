@@ -33,12 +33,33 @@ export const listCourses = cache(async (status?: CourseStatus, instructorId?: st
       ...(instructorId ? { instructors: { some: { userId: instructorId } } } : {})
     },
     orderBy: { createdAt: "desc" },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      description: true,
+      coverUrl: true,
+      durationHours: true,
+      status: true,
+      traversalMode: true,
+      completionThreshold: true,
+      publishedAt: true,
+      archivedAt: true,
+      createdAt: true,
       modules: {
         orderBy: { order: "asc" },
-        include: { lessons: { orderBy: { order: "asc" } } }
+        select: {
+          id: true,
+          order: true,
+          title: true,
+          status: true,
+          lessons: {
+            orderBy: { order: "asc" },
+            select: { id: true, order: true, title: true, type: true, isRequired: true }
+          }
+        }
       },
-      instructors: { include: { user: { select: { id: true, name: true, email: true } } } }
+      instructors: { select: { user: { select: { id: true, name: true, email: true } } } }
     }
   });
 });
@@ -420,7 +441,7 @@ export async function listEnrollments(userId: string, roleKeys: string[]) {
     include: {
       user: { select: { id: true, name: true, email: true } },
       course: { select: { id: true, title: true, slug: true } },
-      cohort: true
+      cohort: { select: { id: true, name: true, status: true, startsAt: true, endsAt: true } }
     },
     orderBy: { createdAt: "desc" },
     take: 200

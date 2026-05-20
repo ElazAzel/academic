@@ -4,7 +4,10 @@ import { hashPassword } from "../lib/auth/password";
 
 const prisma = getPrisma();
 
-const SEED_PASSWORD = "Password123!";
+const SEED_PASSWORD = process.env.SEED_PASSWORD || process.env.SEED_ADMIN_TOKEN || "Password123!";
+if (!process.env.SEED_PASSWORD && !process.env.SEED_ADMIN_TOKEN) {
+  console.warn("WARNING: Using default SEED_PASSWORD. Set SEED_PASSWORD or SEED_ADMIN_TOKEN env var.");
+}
 
 const USERS: Array<{ email: string; name: string; role: RoleKey }> = [
   { email: "admin@academy.local", name: "Администратор", role: "admin" },
