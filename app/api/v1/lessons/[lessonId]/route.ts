@@ -11,7 +11,7 @@ export async function GET(_request: Request, context: Context) {
   try {
     const user = await requireUser("courses:read");
     const { lessonId } = await context.params;
-    return ok(await getLesson(lessonId, true, user));
+    return ok(await getLesson(lessonId, true));
   } catch (error) {
     return errorResponse(error);
   }
