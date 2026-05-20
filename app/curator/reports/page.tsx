@@ -6,13 +6,15 @@ import { DownloadReports } from "@/components/lms/download-reports";
 import { Icon } from "@/components/ui/icon";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getCuratorReportData } from "@/server/actions/curator-enhanced";
+import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 import type { DashboardMetric } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
 export default async function CuratorReportsPage() {
-  await requireRolePage(["curator"]);
+  const user = await requireRolePage(["curator"]);
   const data = await getCuratorReportData();
 
   return (
@@ -85,44 +87,7 @@ export default async function CuratorReportsPage() {
           )}
 
           {/* Download reports */}
-          <DownloadReports reports={[
-            {
-              id: "curator_progress",
-              title: "Прогресс слушателей",
-              desc: "Успеваемость ваших слушателей",
-              icon: "trending_up",
-              owner: "Curator",
-              scope: "Только закрепленные слушатели и потоки",
-              decision: "Кому нужен контакт или поддержка в обучении.",
-            },
-            {
-              id: "curator_risk",
-              title: "Риски слушателей",
-              desc: "Кто требует внимания",
-              icon: "warning",
-              owner: "Curator",
-              scope: "Только закрепленные слушатели и потоки",
-              decision: "Какие риски разобрать в первую очередь.",
-            },
-            {
-              id: "assignments",
-              title: "Задания",
-              desc: "Работы закрепленных слушателей",
-              icon: "checklist",
-              owner: "Curator",
-              scope: "Только закрепленные слушатели и потоки",
-              decision: "Какие работы нужно проверить или вернуть на доработку.",
-            },
-            {
-              id: "certificates",
-              title: "Сертификаты",
-              desc: "Сертификаты закрепленных слушателей",
-              icon: "verified",
-              owner: "Curator",
-              scope: "Только закрепленные слушатели и потоки",
-              decision: "Кто дошел до результата в зоне ответственности.",
-            },
-          ]} />
+          <DownloadReports reports={getDisplayReportsForRole(user.roles)} />
         </div>
       ) : (
         <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">

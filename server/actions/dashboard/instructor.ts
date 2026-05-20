@@ -155,7 +155,7 @@ export async function getInstructorAnalytics() {
 
     const courseIds = courses.map(c => c.id);
 
-    const [totalEnrollments, avgProgressResult, completedCount, avgQuizScore] = await Promise.all([
+    const [totalEnrollments, avgProgressResult, completedCount, avgQuizScore, avgRatingResult] = await Promise.all([
       prisma.enrollment.count({ where: { courseId: { in: courseIds } } }),
       prisma.courseProgress.aggregate({
         where: { courseId: { in: courseIds } },
@@ -167,7 +167,12 @@ export async function getInstructorAnalytics() {
       prisma.quizAttempt.aggregate({
         where: { quiz: { courseId: { in: courseIds } } },
         _avg: { score: true }
-      })
+      }),
+      prisma.lessonRating.aggregate({
+        where: { lesson: { module: { courseId: { in: courseIds } } } },
+        _avg: { score: true },
+        _count: { _all: true },
+      }),
     ]);
 
     const moduleIds = courses.flatMap(c => c.modules.map(m => m.id));
@@ -262,6 +267,12 @@ export async function getInstructorAnalytics() {
         value: `${Math.round(avgQuizScore._avg.score ?? 0)}%`,
         tone: Math.round(avgQuizScore._avg.score ?? 0) >= 80 ? "success" : "warning",
         detail: `${quizStats.reduce((sum, quiz) => sum + quiz.totalAttempts, 0)} попыток`,
+      },
+      {
+        label: "Оценка уроков",
+        value: `${(avgRatingResult._avg.score ?? 0).toFixed(1)}/4`,
+        tone: (avgRatingResult._avg.score ?? 0) >= 3.5 ? "success" : (avgRatingResult._avg.score ?? 0) >= 2.5 ? "warning" : "danger",
+        detail: `${avgRatingResult._count._all} оценок`,
       },
     ];
 

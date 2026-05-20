@@ -6,9 +6,10 @@ import { PageHeader } from "@/components/lms/page-header";
 import { EmptyState } from "@/components/lms/empty-state";
 import { StatusBadge } from "@/components/lms/status-badge";
 import { PageSkeleton } from "@/components/lms/page-skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Clock, MessageCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Clock, MessageCircle, School } from "lucide-react";
 import { getStudentDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import type { BadgeStatus } from "@/components/lms/status-badge";
@@ -41,10 +42,11 @@ async function StudentDashboardContent() {
   );
  }
  
- const coursesProgress = data.coursesProgress ?? [];
- const metrics = data.metrics ?? [];
- const continueLearning = data.continueLearning ?? null;
- const questions = data.questions ?? [];
+  const coursesProgress = data.coursesProgress ?? [];
+  const metrics = data.metrics ?? [];
+  const continueLearning = data.continueLearning ?? null;
+  const questions = data.questions ?? [];
+  const learningPaths = data.learningPaths ?? [];
 
  return (
   <div className="space-y-6">
@@ -72,7 +74,57 @@ async function StudentDashboardContent() {
     </section>
    )}
 
-   {/* Блок: вопросы */}
+    {/* Блок: треки обучения (Learning Paths) */}
+    {learningPaths.length > 0 && (
+     <section>
+      <div className="flex items-center justify-between mb-4">
+       <h2 className="text-lg font-semibold">Мои треки обучения</h2>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+       {learningPaths.map((lp) => (
+        <Card key={lp.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+         <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+           <div className="flex items-center gap-2">
+            <School className="h-5 w-5 text-m3-primary" />
+            <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">
+             {lp.title}
+            </CardTitle>
+           </div>
+           <Badge variant="secondary" className="text-[10px]">
+            {lp.courseCount} курсов
+           </Badge>
+          </div>
+          {lp.description && (
+           <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant mt-1">
+            {lp.description.length > 100 ? lp.description.slice(0, 100) + "…" : lp.description}
+           </CardDescription>
+          )}
+         </CardHeader>
+         <CardContent>
+          <div className="space-y-2">
+           <div className="flex items-center justify-between font-body-sm text-body-sm text-m3-on-surface-variant">
+            <span>Прогресс трека</span>
+            <span className="font-label-md text-label-md text-m3-on-surface">{lp.progress}%</span>
+           </div>
+           <div className="h-2 rounded-full overflow-hidden bg-m3-surface-variant">
+            <div
+             className="h-full rounded-full transition-all bg-m3-primary"
+             style={{ width: `${lp.progress}%` }}
+            />
+           </div>
+           <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
+            {lp.completedCourses} из {lp.courseCount} курсов завершено
+           </p>
+          </div>
+         </CardContent>
+        </Card>
+       ))}
+      </div>
+     </section>
+    )}
+
+    {/* Блок: вопросы */}
    <section>
     <div className="flex items-center justify-between mb-4">
      <h2 className="text-lg font-semibold">Мои вопросы</h2>

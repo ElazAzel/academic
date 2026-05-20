@@ -6,8 +6,10 @@ import { DownloadReports } from "@/components/lms/download-reports";
 import { ReportDesigner } from "@/components/lms/report-designer";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
+import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 import { CourseStatus, ProgressStatus, SubmissionStatus } from "@prisma/client";
 import type { DashboardMetric } from "@/types/domain";
 
@@ -16,7 +18,7 @@ const prisma = getPrisma();
 export const dynamic = "force-dynamic";
 
 export default async function AdminReportsPage() {
-  await requireRolePage(["admin"]);
+  const user = await requireRolePage(["admin"]);
 
   const [
     totalUsers,
@@ -132,53 +134,7 @@ export default async function AdminReportsPage() {
       </div>
 
       {/* Quick download */}
-      <DownloadReports reports={[
-        {
-          id: "progress",
-          title: "Прогресс по курсам",
-          desc: "Все зачисления и прогресс слушателей",
-          icon: "group",
-          owner: "Admin",
-          scope: "Вся академия",
-          decision: "Где отстает обучение и какие курсы требуют внимания.",
-        },
-        {
-          id: "risk",
-          title: "Риски слушателей",
-          desc: "Неактивные, просроченные, отстающие",
-          icon: "warning",
-          owner: "Admin",
-          scope: "Вся академия",
-          decision: "Какие риски нужно разобрать по потокам и курсам.",
-        },
-        {
-          id: "assignments",
-          title: "Задания",
-          desc: "Отправки, статусы проверки и баллы",
-          icon: "checklist",
-          owner: "Admin",
-          scope: "Вся академия",
-          decision: "Где накапливается очередь проверки.",
-        },
-        {
-          id: "certificates",
-          title: "Сертификаты",
-          desc: "Все выпущенные сертификаты",
-          icon: "verified",
-          owner: "Admin",
-          scope: "Вся академия",
-          decision: "Какие сертификаты выпущены и по каким курсам.",
-        },
-        {
-          id: "curator_workload",
-          title: "Нагрузка кураторов",
-          desc: "Очереди, риски и закрепленные слушатели",
-          icon: "trending_up",
-          owner: "Super curator operations",
-          scope: "Вся академия",
-          decision: "Где перегрузка и кого нужно перераспределить.",
-        },
-      ]} />
+      <DownloadReports reports={getDisplayReportsForRole(user.roles)} />
     </AppShell>
   );
 }
