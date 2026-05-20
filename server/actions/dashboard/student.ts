@@ -122,6 +122,4 @@ export async function getStudentDashboard() {
   }, null);
 }
 
-export type { UserLearningPath };
-
 // Note: getEnrollmentData was moved to admin.ts — it's an admin-only function
