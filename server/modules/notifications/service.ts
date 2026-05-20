@@ -212,12 +212,38 @@ export async function listNotifications(userId: string) {
     where: { userId },
     orderBy: { createdAt: "desc" },
     take: 100,
+    select: {
+      id: true,
+      type: true,
+      channel: true,
+      title: true,
+      body: true,
+      data: true,
+      refType: true,
+      refId: true,
+      status: true,
+      readAt: true,
+      createdAt: true,
+    },
   });
 }
 
 export async function getNotificationById(id: string, userId: string) {
   return prisma.notification.findFirst({
     where: { id, userId },
+    select: {
+      id: true,
+      type: true,
+      channel: true,
+      title: true,
+      body: true,
+      data: true,
+      refType: true,
+      refId: true,
+      status: true,
+      readAt: true,
+      createdAt: true,
+    },
   });
 }
 

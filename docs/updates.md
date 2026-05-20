@@ -2,6 +2,46 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-20 — Security audit: data leakage prevention (Prisma select, 2FA, middleware, passwords)
+
+**Тип изменения**: security / bugfix
+
+**Файлы/модули**:
+- `server/modules/auth/service.ts` — updateProfile: добавлен select, исключающий passwordHash/totpSecret
+- `server/modules/2fa/service.ts` — enable2fa возвращает backupCodes из crypto.randomBytes() (не Math.random())
+- `app/api/v1/auth/2fa/verify/route.ts` — возвращает backupCodes от сервера
+- `components/admin/two-factor-setup.tsx` — убран Math.random(), TOTP secret очищается после verify
+- `lib/auth/middleware-guards.ts` — PUBLIC_PATH_PREFIXES расширен: cron (outbox, reports/scheduled), seed, build-version, heartbeat, CSP endpoints (sw.js, manifest.json)
+- `server/modules/courses/service.ts` — listCourses: explicit select (без email); listEnrollments: explicit cohort select
+- `app/api/v1/assignments/[assignmentId]/route.ts` — GET/PATCH: explicit select
+- `server/actions/student.ts` — getStudentQuizAttemptsAction/getStudentAssignmentSubmissionsAction: select-based queries
+- `server/modules/notifications/service.ts` — listNotifications/getNotificationById: explicit select
+- `app/api/v1/popups/diag/route.ts` — findMany → count() (не раскрывает enrollmentId)
+- `components/lms/security/dynamic-watermark.tsx` — email заменён на short hash; ProtectedContentShell обновлён
+- `components/lms/security/protected-content-shell.tsx` — DynamicWatermark без userEmail
+- `scripts/create-users.ts` — SEED_PASSWORD из env, SEED_ADMIN_TOKEN с предупреждением на дефолт
+- `prisma/seed.ts` — SEED_DEFAULT_PASSWORD из env вместо хардкода
+- `app/admin/courses/page.tsx` — instructor mapping с email
+- `app/instructor/courses/page.tsx` — instructor mapping с email
+
+**Summary**:
+- Проведён полный security-аудит на data leakage (Prisma over-fetching, DOM, middleware, dev passwords)
+- **3 critical** (P0): updateProfile раскрывал passwordHash/totpSecret в ответе; middleware не пропускал cron-воркеры; 2FA backup codes генерились клиентским Math.random() + TOTP secret оставался в DOM
+- **5 high** (P1): listCourses раскрывал email инструкторов; assignments GET/PATCH без select; student server actions over-fetching; listEnrollments без select; listNotifications без select — все переведены на explicit Prisma select
+- **4 medium** (P2): popups/diag endpoint раскрывал enrollmentIds → заменён на count(); DynamicWatermark рендерил email в DOM → убран; hardcoded dev passwords → env-переменные; CSP endpoints добавлены в PUBLIC_PATH_PREFIXES
+- PWA fixes (chat reply on every message, NAVIGATE handler, desktop install manifest) завершены
+
+**Проверки**:
+- `npx tsc --noEmit` — passed
+- `npm run build` — passed (80/80 pages, 0 errors)
+- `npx vitest run` — 319/319 passed (57/57 test files)
+
+**Риски**:
+- `__dbcheck.mjs` в git history содержит live production credentials — требуется git purge + force-push (решение за командой)
+- CSP `unsafe-eval`/`unsafe-inline` остаются — Next.js требует их для dev mode и CSS injection
+- Cron-воркеры (outbox, reports) теперь проходят middleware, но для отправки push-уведомлений нужен реальный триггер (Vercel Cron / pg_cron)
+- Web Push требует `FEATURE_PUSH_NOTIFICATIONS=true` + VAPID keys
+
 ## 2026-05-19 — Локальная БД: PostgreSQL + .env + prisma db push + автозапуск
 
 - **Проблема**: на машине не было PostgreSQL, Docker отсутствовал, билд и дев-сервер не работали

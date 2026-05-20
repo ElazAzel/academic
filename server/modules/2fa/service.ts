@@ -88,8 +88,8 @@ export async function verifyAndConsumeBackupCode(
 export async function enable2fa(
   userId: string,
   secret: string,
-): Promise<void> {
-  const { hashed } = generateBackupCodes();
+): Promise<{ backupCodes: string[] }> {
+  const { plain, hashed } = generateBackupCodes();
   await prisma.user.update({
     where: { id: userId },
     data: {
@@ -98,6 +98,7 @@ export async function enable2fa(
       backupCodes: JSON.stringify(hashed),
     },
   });
+  return { backupCodes: plain };
 }
 
 /**

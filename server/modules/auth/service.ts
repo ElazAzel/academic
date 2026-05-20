@@ -90,7 +90,16 @@ export async function updateProfile(
       organization: data.organization ?? null,
       company: data.company ?? null,
       position: data.position ?? null,
-    }
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      organization: true,
+      company: true,
+      position: true,
+    },
   });
 }
 

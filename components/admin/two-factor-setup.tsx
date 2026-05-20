@@ -63,21 +63,16 @@ export default function TwoFactorSetup() {
         body: JSON.stringify({ secret, token }),
       });
       if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Неверный код");
+        const err = await res.json();
+        setError(err.error || "Неверный код");
         return;
       }
-      // Generate backup codes client-side (same algorithm)
-      const codes: string[] = [];
-      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-      for (let i = 0; i < 8; i++) {
-        let code = "";
-        for (let j = 0; j < 8; j++) {
-          code += chars[Math.floor(Math.random() * chars.length)];
-        }
-        codes.push(code);
-      }
-      setBackupCodes(codes);
+      // Use server-generated backup codes (cryptographically secure)
+      const verifyResult = await res.json();
+      setBackupCodes(verifyResult.backupCodes ?? []);
+      // Clear TOTP secret from state — больше не нужен
+      setSecret("");
+      setOtpauthUrl("");
       setStep("backup-codes");
     } catch {
       setError("Ошибка сети");
