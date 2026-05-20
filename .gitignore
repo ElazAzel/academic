@@ -1,3 +1,8 @@
+(docs/DEVELOPER_GUIDE.md is a documentation file, which is a source/config file, so no ignores needed)
+
+```markdown
+
+```
 node_modules/
 .next/
 out/
