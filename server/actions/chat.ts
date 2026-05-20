@@ -1,5 +1,7 @@
 "use server";
 
+import { buildMessagePreview } from "@/lib/chat/utils";
+
 import { revalidatePath } from "next/cache";
 import { EnrollmentStatus } from "@prisma/client";
 import { requireRole } from "@/lib/auth/page-guards";
@@ -13,7 +15,7 @@ import type { RoleKey } from "@/types/domain";
 
 const prisma = getPrisma();
 const MAX_CHAT_MESSAGE_LENGTH = 10_000;
-const MESSAGE_PREVIEW_LENGTH = 160;
+
 
 const ALLOWED_ATTACHMENT_TYPES = new Set([
   "image/png",
@@ -34,10 +36,6 @@ function getRoleKeys(user: { roles?: Array<{ role: { key: RoleKey } }> } | null 
   return user?.roles?.map((entry) => entry.role.key) ?? [];
 }
 
-function buildMessagePreview(text: string, hasAttachment: boolean) {
-  const source = text.trim().replace(/\s+/g, " ") || (hasAttachment ? "Вложение" : "Сообщение");
-  return source.length > MESSAGE_PREVIEW_LENGTH ? `${source.slice(0, MESSAGE_PREVIEW_LENGTH)}…` : source;
-}
 
 async function getLessonContextForStudent(studentId: string, lessonId: string) {
   const lesson = await prisma.lesson.findFirst({
