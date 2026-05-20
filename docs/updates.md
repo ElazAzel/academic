@@ -2,7 +2,33 @@
 
 Правило: новые записи добавляются сверху.
 
-## 2026-05-20 — Security audit: data leakage prevention (Prisma select, 2FA, middleware, passwords)
+## 2026-05-20 — Дедлайны блоков, попапы кураторов, исправление ошибок
+
+**Тип изменения**: feature / bugfix
+
+**Файлы/модули**:
+
+### Исправление ошибок
+- `app/api/v1/push/subscribe/route.ts` — 403: route теперь обрабатывает неавторизованных пользователей без ошибки (PWA регистрируется на всех страницах, включая логин)
+- `app/api/v1/auth/redirect-target/route.ts` — 401: при отсутствии токена возвращается путь по умолчанию `/student` вместо ошибки (гонка сессии после логина)
+- `app/student/assignments/page.tsx` — 503: добавлена обработка ошибок при загрузке списка заданий, добавлен `redirect` при отсутствии пользователя
+
+### Система дедлайнов блоков
+- `server/modules/deadlines/service.ts` — новый модуль: getCohortBlockDeadlines, setBlockDeadlines, getCuratorDeadlineAlerts
+- `app/api/v1/cohorts/[cohortId]/block-deadlines/route.ts` — GET/POST для управления дедлайнами
+- `app/admin/cohorts/[cohortId]/deadline-manager.tsx` — UI компонент управления дедлайнами для админа
+- `app/instructor/deadlines/page.tsx`, `client.tsx` — страница преподавателя для управления дедлайнами
+- `app/api/v1/deadline-alerts/route.ts` — API для получения напоминаний куратору
+- `components/lms/deadline-alerts.tsx` — виджет дедлайн-напоминаний на дашборде куратора
+- `components/layout/navigation.ts` — добавлены ссылки "Дедлайны" (instructor) и "Уведомить" (curator)
+
+### Система попапов для кураторов
+- `prisma/schema.prisma` — добавлено поле `targetUserIds` в модель AdminPopup
+- `server/modules/popups/service.ts` — createPopup/getActivePopupsForUser/listPopups поддерживают targetUserIds
+- `app/api/v1/popups/route.ts` — расширен createPopupSchema, разрешено создание для кураторов
+- `app/curator/popups/page.tsx`, `client.tsx` — страница куратора для отправки уведомлений слушателям
+
+**Проверки**: lint (0 errors), typecheck (0 errors), test (319 passed, 57 files)
 
 **Тип изменения**: security / bugfix
 

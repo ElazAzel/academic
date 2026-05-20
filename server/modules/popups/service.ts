@@ -13,6 +13,7 @@ export interface CreatePopupInput {
   linkText?: string | null;
   targetRoles: RoleKey[];
   targetCohortIds?: string[];
+  targetUserIds?: string[];
   isActive?: boolean;
 }
 
@@ -37,6 +38,7 @@ export interface PopupWithStatus {
  */
 export async function createPopup(input: CreatePopupInput, createdById: string) {
   const cohortIds = input.targetCohortIds ?? [];
+  const targetUserIds = input.targetUserIds ?? [];
 
   const popup = await prisma.adminPopup.create({
     data: {
@@ -47,6 +49,7 @@ export async function createPopup(input: CreatePopupInput, createdById: string) 
       linkText: input.linkText ?? null,
       targetRoles: JSON.stringify(input.targetRoles),
       targetCohortIds: JSON.stringify(cohortIds),
+      targetUserIds: JSON.stringify(targetUserIds),
       isActive: input.isActive ?? true,
       createdById,
     },
@@ -54,36 +57,44 @@ export async function createPopup(input: CreatePopupInput, createdById: string) 
 
   // Create notification duplicates for all target users
   if (popup.isActive) {
-    const hasStudentRole = input.targetRoles.includes("student" as RoleKey);
-    const hasCohortFilter = cohortIds.length > 0;
+    let targetUserIdsSet: string[] = [];
 
-    // Build query for target users
-    const targetUsers = await prisma.user.findMany({
-      where: {
-        roles: {
-          some: {
-            role: {
-              key: { in: input.targetRoles },
+    if (targetUserIds.length > 0) {
+      // Specific user targeting (curator popup) — no role/cohort filter
+      targetUserIdsSet = targetUserIds;
+    } else {
+      // Role + cohort-based targeting (admin popup)
+      const hasStudentRole = input.targetRoles.includes("student" as RoleKey);
+      const hasCohortFilter = cohortIds.length > 0;
+
+      const targetUsers = await prisma.user.findMany({
+        where: {
+          roles: {
+            some: {
+              role: {
+                key: { in: input.targetRoles },
+              },
             },
           },
-        },
-        ...(hasStudentRole && hasCohortFilter
-          ? {
-              enrollments: {
-                some: {
-                  cohortId: { in: cohortIds },
-                  status: { in: ["ACTIVE", "INVITED"] },
+          ...(hasStudentRole && hasCohortFilter
+            ? {
+                enrollments: {
+                  some: {
+                    cohortId: { in: cohortIds },
+                    status: { in: ["ACTIVE", "INVITED"] },
+                  },
                 },
-              },
-            }
-          : {}),
-      },
-      select: { id: true },
-    });
+              }
+            : {}),
+        },
+        select: { id: true },
+      });
+      targetUserIdsSet = targetUsers.map((u) => u.id);
+    }
 
-    for (const user of targetUsers) {
+    for (const userId of targetUserIdsSet) {
       await createNotification({
-        userId: user.id,
+        userId,
         event: "popup",
         title: input.title,
         body: input.message.length > 200 ? input.message.substring(0, 200) + "…" : input.message,
@@ -132,10 +143,17 @@ export async function getActivePopupsForUser(userId: string): Promise<PopupWithS
     orderBy: { createdAt: "desc" },
   });
 
-  // Filter by target roles + cohort restrictions
+  // Filter by target roles + cohort restrictions + individual user targeting
   const filteredPopups = popups.filter((p) => {
     try {
       const roles: string[] = JSON.parse(p.targetRoles || "[]");
+      const targetUserIds: string[] = JSON.parse(p.targetUserIds || "[]");
+
+      // If popup targets specific users, check if current user is one of them
+      if (targetUserIds.length > 0) {
+        return targetUserIds.includes(userId);
+      }
+
       if (roles.length === 0) return false;
       if (!roles.some((r) => userRoleKeys.includes(r as RoleKey))) return false;
 
@@ -233,6 +251,9 @@ export async function listPopups(includeInactive = false) {
     orderBy: { createdAt: "desc" },
     include: {
       createdBy: { select: { id: true, name: true, email: true } },
+      views: {
+        select: { userId: true, viewedAt: true },
+      },
     },
   });
 
@@ -240,6 +261,7 @@ export async function listPopups(includeInactive = false) {
     ...p,
     targetRoles: JSON.parse(p.targetRoles),
     targetCohortIds: JSON.parse(p.targetCohortIds),
+    targetUserIds: JSON.parse(p.targetUserIds),
   }));
 }
 

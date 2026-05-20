@@ -17,7 +17,12 @@ const subscriptionSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requireUser();
+    const user = await requireUser().catch(() => null);
+    if (!user) {
+      // Not authenticated — skip silently (PWA registers on every page including login)
+      return NextResponse.json({ success: false, reason: "unauthenticated" });
+    }
+
     const rl = await checkRateLimit(`push-subscribe:${user.id}`);
     if (!rl.allowed) {
       return NextResponse.json({ error: "Слишком много запросов" }, { status: 429 });
@@ -49,7 +54,11 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const user = await requireUser();
+    const user = await requireUser().catch(() => null);
+    if (!user) {
+      return NextResponse.json({ success: false, reason: "unauthenticated" });
+    }
+
     const body = await request.json().catch(() => ({ endpoint: "" }));
     const endpoint = body.endpoint;
 

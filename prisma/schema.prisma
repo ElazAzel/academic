@@ -838,6 +838,7 @@ model AdminPopup {
   linkText    String?  @map("link_text")
   targetRoles     String   @default("[]")  @map("target_roles") // JSON array of RoleKey
   targetCohortIds String   @default("[]")  @map("target_cohort_ids") // JSON array of cohort IDs (only for student role)
+  targetUserIds   String   @default("[]")  @map("target_user_ids") // JSON array of specific user IDs (for curator popups)
   isActive    Boolean  @default(true)  @map("is_active")
   createdById String   @map("created_by_id")
   createdAt   DateTime @default(now()) @map("created_at")

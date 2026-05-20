@@ -29,6 +29,7 @@ export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
   curator: [
     { href: "/curator", label: "Дашборд", icon: "dashboard" },
     { href: "/curator/students", label: "Слушатели", icon: "group" },
+    { href: "/curator/popups", label: "Уведомить", icon: "notifications_active" },
     { href: "/curator/chat", label: "Чат", icon: "chat" },
     { href: "/curator/notifications", label: "Уведомления", icon: "notifications" },
     { href: "/curator/glossary", label: "Глоссарий", icon: "description" },
@@ -52,6 +53,7 @@ export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
   instructor: [
     { href: "/instructor", label: "Дашборд", icon: "dashboard" },
     { href: "/instructor/courses", label: "Мои курсы", icon: "menu_book" },
+    { href: "/instructor/deadlines", label: "Дедлайны", icon: "calendar_today" },
     { href: "/instructor/students", label: "Слушатели", icon: "group" },
     { href: "/instructor/chat", label: "Сообщения", icon: "chat" },
     { href: "/instructor/notifications", label: "Уведомления", icon: "notifications" },

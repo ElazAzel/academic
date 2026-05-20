@@ -46,7 +46,9 @@
 | Bootstrap | Репозиторий, базовый Next.js app, docs, schema, REST, tests, infra templates | done |
 | MVP hardening | Подключение реальной БД, миграций, seed, базового auth flow, роли и данные demo | done |
 | Learning core | Полный UX курсов, модулей, уроков, тестов, заданий и прогресса | in_progress |
-| Academy operations | Потоки, кураторы, риски, вопросы, отчёты, аудит, согласия | planned |
+| Academy operations | Потоки, кураторы, риски, вопросы, отчёты, аудит, согласия | in_progress |
+| Deadline management | Дедлайны блоков для потоков (admin/instructor), напоминания кураторам | in_progress |
+| Curator popups | Попапы для кураторов для уведомления конкретных слушателей с фиксацией просмотра | in_progress |
 | Invite access and certificates | Инвайт-доступ, disabled payment endpoints, PDF certificates, verification URL | in_progress |
 | Production readiness | Observability, backup/restore, rate limit, security review, deployment validation | planned |
 | Scale path | Outbox, event contracts, extraction-ready services, reporting projections | planned |
