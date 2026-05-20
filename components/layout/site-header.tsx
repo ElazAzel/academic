@@ -20,7 +20,8 @@ const HEADER_LINKS_COUNT: Record<string, number> = {
 
 function getHeaderLinks(roles: string[]) {
   const rolePriority: RoleKey[] = ["admin", "super_curator", "curator", "instructor", "customer_observer", "student"];
-  const primaryRole = rolePriority.find((r) => roles.includes(r)) ?? "student";
+  const primaryRole = rolePriority.find((r) => roles.includes(r));
+  if (!primaryRole) return { links: [], primaryRole: null };
   const links = NAV_BY_ROLE[primaryRole];
   const count = HEADER_LINKS_COUNT[primaryRole] ?? 3;
   return { links: links.slice(0, count), primaryRole };
@@ -42,18 +43,20 @@ export async function SiteHeader() {
         </Link>
 
         {/* Desktop nav links — hidden on mobile (bottom nav handles it) */}
-        {user && (
-          <nav className="hidden md:flex items-center gap-1" aria-label="Основная навигация">
-            {(() => {
-              const { links } = getHeaderLinks(user.roles);
-              return links.map((item) => (
+        {(() => {
+          if (!user) return null;
+          const { links } = getHeaderLinks(user.roles);
+          if (links.length === 0) return null;
+          return (
+            <nav className="hidden md:flex items-center gap-1" aria-label="Основная навигация">
+              {links.map((item) => (
                 <Button key={item.href} asChild variant="ghost" size="sm">
                   <Link href={item.href}>{item.label}</Link>
                 </Button>
-              ));
-            })()}
-          </nav>
-        )}
+              ))}
+            </nav>
+          );
+        })()}
 
         {/* Right actions */}
         <div className="flex items-center gap-1 md:gap-2">
