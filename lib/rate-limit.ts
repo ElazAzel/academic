@@ -76,7 +76,7 @@ export async function rateLimit(
     }
     return memoryRateLimit(identifier, limit, windowSeconds);
   } catch {
-    // On error, allow the request (fail open)
-    return { success: true, remaining: 999, reset: Date.now() + 60000 };
+    // On error, tight rate limit as fallback (fail-restricted)
+    return { success: true, remaining: 1, reset: Date.now() + 60000 };
   }
 }

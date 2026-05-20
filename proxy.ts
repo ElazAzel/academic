@@ -9,10 +9,54 @@ import {
 import { AUTH_ROUTES, FORBIDDEN_ROUTE } from "@/lib/constants";
 import { rateLimit } from "@/lib/rate-limit";
 
+// ── CSRF origin check ───────────────────────────────────────────────────
+
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function checkCsrfOrigin(req: NextRequest): NextResponse | null {
+  const method = req.method.toUpperCase();
+  if (!MUTATING_METHODS.has(method)) return null;
+
+  const origin = req.headers.get("origin");
+  const referer = req.headers.get("referer");
+  const source = origin ?? referer;
+  if (!source) {
+    return NextResponse.json(
+      { error: { code: "forbidden", message: "CSRF: missing origin header" } },
+      { status: 403 }
+    );
+  }
+
+  try {
+    const allowedOrigin = process.env.APP_URL || "http://localhost:3000";
+    const sourceUrl = new URL(source);
+    const allowedUrl = new URL(allowedOrigin);
+    if (sourceUrl.hostname !== allowedUrl.hostname || sourceUrl.port !== allowedUrl.port) {
+      return NextResponse.json(
+        { error: { code: "forbidden", message: "CSRF: origin mismatch" } },
+        { status: 403 }
+      );
+    }
+  } catch {
+    return NextResponse.json(
+      { error: { code: "forbidden", message: "CSRF: invalid origin" } },
+      { status: 403 }
+    );
+  }
+
+  return null;
+}
+
 // ── Main proxy handler ─────────────────────────────────────────────────
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // CSRF check for mutating API requests (POST/PUT/PATCH/DELETE)
+  if (pathname.startsWith("/api/") && !isPublicRoute(pathname)) {
+    const csrfError = checkCsrfOrigin(req);
+    if (csrfError) return csrfError;
+  }
 
   // Rate limiting for API routes
   if (pathname.startsWith("/api/")) {

@@ -84,7 +84,9 @@ export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   secret: env.NEXTAUTH_SECRET,
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 7 * 24 * 60 * 60, // 7 days — JWT expires
+    updateAge: 24 * 60 * 60,   // refresh session once per day
   },
   pages: {
     signIn: AUTH_ROUTES.LOGIN
@@ -103,7 +105,17 @@ export const authOptions: AuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // Validate token age: reject tokens older than maxAge (for backward compat with sessions created before maxAge was set)
+      if (trigger === "update" && token.iat) {
+        const now = Math.floor(Date.now() / 1000);
+        const maxAgeSec = 7 * 24 * 60 * 60;
+        const iat = Number(token.iat);
+        if (now - iat > maxAgeSec) {
+          return {};
+        }
+      }
+
       if (user) {
         const userId = user.id ?? token.sub;
         if (userId) {
