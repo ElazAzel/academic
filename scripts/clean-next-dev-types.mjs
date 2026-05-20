@@ -12,3 +12,13 @@ if (relativeTarget.startsWith("..") || isAbsolute(relativeTarget)) {
 if (existsSync(target)) {
   rmSync(target, { recursive: true, force: true });
 }
+
+// Next.js 16 uses proxy.ts instead of middleware.ts.
+// If both exist, the build fails. Remove middleware.ts if proxy.ts is present.
+const proxyPath = resolve(workspace, "proxy.ts");
+const middlewarePath = resolve(workspace, "middleware.ts");
+if (existsSync(proxyPath) && existsSync(middlewarePath)) {
+  rmSync(middlewarePath, { force: true });
+  console.log("[clean] Removed middleware.ts (Next.js 16 uses proxy.ts)");
+}
+
