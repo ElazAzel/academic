@@ -76,14 +76,14 @@ export async function generateProgressXlsx(rows: ProgressRow[], fields?: string[
     { header: "Риски", key: "riskCount", width: 10 },
   ];
 
-  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key)) : ws.columns;
+  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key!)) : ws.columns;
   ws.columns = filteredCols;
 
   styleHeader(ws);
   applyAutoFilter(ws, ws.columns.length);
   freezeHeader(ws);
 
-  const colKeys = ws.columns.map(c => c.key);
+  const colKeys = ws.columns.map(c => c.key).filter((k): k is string => k != null);
   const progressIdx = colKeys.indexOf("progressPercent") + 1;
 
   for (const r of rows) {
@@ -203,14 +203,14 @@ export async function generateRiskXlsx(rows: RiskRow[], fields?: string[]): Prom
     { header: "Статус", key: "status", width: 14 },
   ];
 
-  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key)) : ws.columns;
+  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key!)) : ws.columns;
   ws.columns = filteredCols;
 
   styleHeader(ws);
   applyAutoFilter(ws, ws.columns.length);
   freezeHeader(ws);
 
-  const colKeys = ws.columns.map(c => c.key);
+  const colKeys = ws.columns.map(c => c.key).filter((k): k is string => k != null);
 
   for (const r of rows) {
     const values: Record<string, unknown> = {
@@ -280,14 +280,14 @@ export async function generateCertificateXlsx(rows: CertificateRow[], fields?: s
     { header: "Дата выдачи", key: "issuedAt", width: 16 },
   ];
 
-  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key)) : ws.columns;
+  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key!)) : ws.columns;
   ws.columns = filteredCols;
 
   styleHeader(ws);
   applyAutoFilter(ws, ws.columns.length);
   freezeHeader(ws);
 
-  const colKeys = ws.columns.map(c => c.key);
+  const colKeys = ws.columns.map(c => c.key).filter((k): k is string => k != null);
 
   for (const r of rows) {
     const values: Record<string, unknown> = {
@@ -353,14 +353,14 @@ export async function generateAssignmentXlsx(rows: AssignmentRow[], fields?: str
     { header: "Проверяющий", key: "reviewerName", width: 24 },
   ];
 
-  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key)) : ws.columns;
+  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key!)) : ws.columns;
   ws.columns = filteredCols;
 
   styleHeader(ws);
   applyAutoFilter(ws, ws.columns.length);
   freezeHeader(ws);
 
-  const colKeys = ws.columns.map(c => c.key);
+  const colKeys = ws.columns.map(c => c.key).filter((k): k is string => k != null);
 
   for (const r of rows) {
     const values: Record<string, unknown> = {
@@ -428,14 +428,14 @@ export async function generateCuratorWorkloadXlsx(rows: CuratorWorkloadRow[], fi
     { header: "Критические риски", key: "criticalRisks", width: 18 },
   ];
 
-  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key)) : ws.columns;
+  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key!)) : ws.columns;
   ws.columns = filteredCols;
 
   styleHeader(ws);
   applyAutoFilter(ws, ws.columns.length);
   freezeHeader(ws);
 
-  const colKeys = ws.columns.map(c => c.key);
+  const colKeys = ws.columns.map(c => c.key).filter((k): k is string => k != null);
 
   for (const r of rows) {
     const values: Record<string, unknown> = {
