@@ -1,6 +1,6 @@
 import { RoleKey } from "@prisma/client";
 import { ApiError } from "@/lib/http";
-import { reportCache } from "@/lib/cache";
+import { cacheGet, cacheSet } from "@/lib/cache";
 import { getPrisma } from "@/lib/prisma";
 import {
   fetchAssignmentData,
@@ -33,14 +33,9 @@ import {
 import { getObserverScope, getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
 import type {
-  AssignmentRow,
-  CertificateRow,
-  CuratorWorkloadRow,
-  ProgressRow,
   ReportDataScope,
   ReportFormat,
   ReportType,
-  RiskRow,
 } from "@/lib/reports/types";
 import type { AppSessionUser, RoleKey as DomainRoleKey } from "@/types/domain";
 
@@ -156,10 +151,6 @@ interface RenderedReport {
   content: string | Buffer | Uint8Array;
   format: ReportFormat;
   fallbackReason?: string;
-}
-
-function normalizeRole(role: string): DomainRoleKey | null {
-  return ROLE_PRIORITY.includes(role as DomainRoleKey) ? (role as DomainRoleKey) : null;
 }
 
 function pickActorRole(roles: string[]): DomainRoleKey | null {
@@ -292,73 +283,127 @@ function scopeCacheKey(access: ReportAccessContext) {
   ].join(":");
 }
 
-async function fetchRows(type: ReportType, scope: ReportDataScope) {
-  switch (type) {
-    case "progress":
-      return fetchProgressData(scope);
-    case "risk":
-      return fetchRiskData(scope);
-    case "assignments":
-      return fetchAssignmentData(scope);
-    case "certificates":
-      return fetchCertificateData(scope);
-    case "curator_workload":
-      return fetchCuratorWorkloadData(scope);
-  }
-}
-
-async function renderReport(type: ReportType, format: ReportFormat, rows: Awaited<ReturnType<typeof fetchRows>>): Promise<RenderedReport> {
-  if (format === "csv") {
+async function countRows(type: ReportType, scope: ReportDataScope): Promise<number> {
+  const rows = await (async () => {
     switch (type) {
       case "progress":
-        return { content: generateProgressCsv(rows as ProgressRow[]), format };
+        return fetchProgressData(scope);
       case "risk":
-        return { content: generateRiskCsv(rows as RiskRow[]), format };
+        return fetchRiskData(scope);
       case "assignments":
-        return { content: generateAssignmentCsv(rows as AssignmentRow[]), format };
+        return fetchAssignmentData(scope);
       case "certificates":
-        return { content: generateCertificateCsv(rows as CertificateRow[]), format };
+        return fetchCertificateData(scope);
       case "curator_workload":
-        return { content: generateCuratorWorkloadCsv(rows as CuratorWorkloadRow[]), format };
+        return fetchCuratorWorkloadData(scope);
+    }
+  })();
+  return (rows as unknown[]).length;
+}
+
+async function renderReport(type: ReportType, format: ReportFormat, scope: ReportDataScope, fields?: string[]): Promise<RenderedReport> {
+  if (format === "csv") {
+    switch (type) {
+      case "progress": {
+        const rows = await fetchProgressData(scope);
+        return { content: generateProgressCsv(rows, fields), format };
+      }
+      case "risk": {
+        const rows = await fetchRiskData(scope);
+        return { content: generateRiskCsv(rows, fields), format };
+      }
+      case "assignments": {
+        const rows = await fetchAssignmentData(scope);
+        return { content: generateAssignmentCsv(rows, fields), format };
+      }
+      case "certificates": {
+        const rows = await fetchCertificateData(scope);
+        return { content: generateCertificateCsv(rows, fields), format };
+      }
+      case "curator_workload": {
+        const rows = await fetchCuratorWorkloadData(scope);
+        return { content: generateCuratorWorkloadCsv(rows, fields), format };
+      }
+    }
+  }
+
+  // Row-count guardrails: fail early instead of silent OOM/timeout.
+  if (format === "pdf") {
+    const rowCount = await countRows(type, scope);
+    if (rowCount > 2000) {
+      console.warn(`[Reports] PDF limit exceeded: ${rowCount} rows, falling back to CSV`);
+      const fallback: RenderedReport = await renderReport(type, "csv", scope, fields);
+      return { ...fallback, fallbackReason: `PDF поддерживает до 2000 строк. CSV сгенерирован (${rowCount} строк)` };
+    }
+  }
+  if (format === "xlsx") {
+    const rowCount = await countRows(type, scope);
+    if (rowCount > 50000) {
+      console.warn(`[Reports] XLSX limit exceeded: ${rowCount} rows, falling back to CSV`);
+      const fallback: RenderedReport = await renderReport(type, "csv", scope, fields);
+      return { ...fallback, fallbackReason: `XLSX поддерживает до 50 000 строк. CSV сгенерирован (${rowCount} строк)` };
     }
   }
 
   try {
     if (format === "xlsx") {
       switch (type) {
-        case "progress":
-          return { content: await generateProgressXlsx(rows as ProgressRow[]), format };
-        case "risk":
-          return { content: await generateRiskXlsx(rows as RiskRow[]), format };
-        case "assignments":
-          return { content: await generateAssignmentXlsx(rows as AssignmentRow[]), format };
-        case "certificates":
-          return { content: await generateCertificateXlsx(rows as CertificateRow[]), format };
-        case "curator_workload":
-          return { content: await generateCuratorWorkloadXlsx(rows as CuratorWorkloadRow[]), format };
+        case "progress": {
+          const rows = await fetchProgressData(scope);
+          return { content: await generateProgressXlsx(rows, fields), format };
+        }
+        case "risk": {
+          const rows = await fetchRiskData(scope);
+          return { content: await generateRiskXlsx(rows, fields), format };
+        }
+        case "assignments": {
+          const rows = await fetchAssignmentData(scope);
+          return { content: await generateAssignmentXlsx(rows, fields), format };
+        }
+        case "certificates": {
+          const rows = await fetchCertificateData(scope);
+          return { content: await generateCertificateXlsx(rows, fields), format };
+        }
+        case "curator_workload": {
+          const rows = await fetchCuratorWorkloadData(scope);
+          return { content: await generateCuratorWorkloadXlsx(rows, fields), format };
+        }
       }
     }
 
     switch (type) {
-      case "progress":
-        return { content: await generateProgressPdf(rows as ProgressRow[]), format };
-      case "risk":
-        return { content: await generateRiskPdf(rows as RiskRow[]), format };
-      case "assignments":
-        return { content: await generateAssignmentPdf(rows as AssignmentRow[]), format };
-      case "certificates":
-        return { content: await generateCertificatePdf(rows as CertificateRow[]), format };
-      case "curator_workload":
-        return { content: await generateCuratorWorkloadPdf(rows as CuratorWorkloadRow[]), format };
+      case "progress": {
+        const rows = await fetchProgressData(scope);
+        return { content: await generateProgressPdf(rows, fields), format };
+      }
+      case "risk": {
+        const rows = await fetchRiskData(scope);
+        return { content: await generateRiskPdf(rows, fields), format };
+      }
+      case "assignments": {
+        const rows = await fetchAssignmentData(scope);
+        return { content: await generateAssignmentPdf(rows, fields), format };
+      }
+      case "certificates": {
+        const rows = await fetchCertificateData(scope);
+        return { content: await generateCertificatePdf(rows, fields), format };
+      }
+      case "curator_workload": {
+        const rows = await fetchCuratorWorkloadData(scope);
+        return { content: await generateCuratorWorkloadPdf(rows, fields), format };
+      }
     }
   } catch (error) {
     console.warn(`[Reports] ${format} generation failed, falling back to CSV:`, error);
-    const fallback: RenderedReport = await renderReport(type, "csv", rows);
+    const fallback: RenderedReport = await renderReport(type, "csv", scope, fields);
     return {
       ...fallback,
       fallbackReason: `${format} generation failed, CSV provided instead`,
     };
   }
+
+  // Unreachable — all types/formats handled above
+  throw new Error(`Unhandled report type/format: ${type}/${format}`);
 }
 
 export function getAvailableReportsForRoles(roles: string[]) {
@@ -422,6 +467,7 @@ export async function generateReportDownload(input: {
   user: Pick<AppSessionUser, "id" | "roles">;
   type: string | null;
   format: ReportFormat;
+  fields?: string[];
 }): Promise<ReportDownload> {
   const type = normalizeReportType(input.type);
   const definition = REPORT_DEFINITIONS[type];
@@ -429,11 +475,10 @@ export async function generateReportDownload(input: {
   assertReportAllowed(definition, access.actorRole);
 
   const cacheKey = `report:${type}:${input.format}:${input.user.id}:${scopeCacheKey(access)}`;
-  const cached = reportCache.get<ReportDownload>(cacheKey);
+  const cached = await cacheGet<ReportDownload>(cacheKey);
   if (cached) return cached;
 
-  const rows = await fetchRows(type, access.scope);
-  const rendered = await renderReport(type, input.format, rows);
+  const rendered = await renderReport(type, input.format, access.scope, input.fields);
   const filename = `${definition.filenameBase}${EXT[rendered.format]}`;
 
   const download: ReportDownload = {
@@ -445,16 +490,16 @@ export async function generateReportDownload(input: {
     fallbackReason: rendered.fallbackReason,
   };
 
-  reportCache.set(cacheKey, download);
+  await cacheSet(cacheKey, download, 300);
   return download;
 }
 
 export async function getReportUser(userId: string): Promise<Pick<AppSessionUser, "id" | "roles"> | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, roles: { include: { role: { select: { key: true } } } } },
+    select: { id: true, status: true, roles: { include: { role: { select: { key: true } } } } },
   });
-  if (!user) return null;
+  if (!user || user.status !== "ACTIVE") return null;
   return {
     id: user.id,
     roles: user.roles.map((entry) => entry.role.key as RoleKey) as DomainRoleKey[],

@@ -140,6 +140,50 @@ describe("quiz grading", () => {
     expect(result.score).toBe(100);
     expect(result.passed).toBe(true);
   });
+
+  it("handles direct string indexes from inline quiz creator (Format A)", () => {
+    const result = gradeObjectiveQuiz(
+      [{ id: "q1", type: "SINGLE_CHOICE", points: 1, correctAnswer: "0", options: ["a", "b", "c"] }],
+      { q1: "a" },
+      100
+    );
+    expect(result.earned).toBe(1);
+    expect(result.score).toBe(100);
+    expect(result.passed).toBe(true);
+  });
+
+  it("handles direct number indexes (Format A numeric)", () => {
+    const result = gradeObjectiveQuiz(
+      [{ id: "q1", type: "SINGLE_CHOICE", points: 1, correctAnswer: 1, options: ["a", "b", "c"] }],
+      { q1: "b" },
+      100
+    );
+    expect(result.earned).toBe(1);
+    expect(result.score).toBe(100);
+    expect(result.passed).toBe(true);
+  });
+
+  it("handles direct arrays of index strings", () => {
+    const result = gradeObjectiveQuiz(
+      [{ id: "q1", type: "MULTIPLE_CHOICE", points: 2, correctAnswer: ["0", "2"], options: ["a", "b", "c"] }],
+      { q1: ["c", "a"] },
+      100
+    );
+    expect(result.earned).toBe(2);
+    expect(result.score).toBe(100);
+    expect(result.passed).toBe(true);
+  });
+
+  it("handles direct text correctAnswer for short answer type", () => {
+    const result = gradeObjectiveQuiz(
+      [{ id: "q1", type: "TEXT", points: 1, correctAnswer: "Paris" }],
+      { q1: "Paris" },
+      100
+    );
+    expect(result.earned).toBe(1);
+    expect(result.score).toBe(100);
+    expect(result.passed).toBe(true);
+  });
 });
 
 describe("quiz read API shaping", () => {

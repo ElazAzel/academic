@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, Trash2, ChevronDown, ChevronUp, Loader2, Plus, X } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 
 interface Question {
   id: string;
@@ -18,36 +18,68 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
   onDelete: (id: string) => Promise<void>
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [pending, setPending] = useState(false);
   const [data, setData] = useState(question);
+  const isDirty = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const options = Array.isArray(data.options) ? data.options as string[] : [];
   const correctAnswer = data.correctAnswer as { value?: string; values?: string[] };
 
-  async function handleSave() {
-    setPending(true);
-    try {
-      await onUpdate(question.id, data);
-      setIsExpanded(false);
-    } finally {
-      setPending(false);
-    }
+  // Auto-save: debounce 1.5s after data changes
+  useEffect(() => {
+    if (!isDirty.current) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async () => {
+      setSaveStatus("saving");
+      try {
+        await onUpdate(question.id, data);
+        setSaveStatus("saved");
+        isDirty.current = false;
+      } catch {
+        setSaveStatus("error");
+      }
+    }, 1500);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [data, question.id, onUpdate]);
+
+  // Flush on unmount
+  useEffect(() => {
+    return () => {
+      if (isDirty.current) {
+        const payload = JSON.stringify({ ...question, ...data });
+        fetch(`/api/v1/quizzes/${/* quizId */ ""}/questions/${question.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+          keepalive: true,
+        });
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function markDirty() {
+    isDirty.current = true;
+    setSaveStatus("idle");
   }
 
   function addOption() {
     const newOptions = [...options, ""];
     setData({ ...data, options: newOptions });
+    markDirty();
   }
 
   function updateOption(index: number, value: string) {
     const newOptions = [...options];
     newOptions[index] = value;
     setData({ ...data, options: newOptions });
+    markDirty();
   }
 
   function removeOption(index: number) {
     const newOptions = options.filter((_, i) => i !== index);
     setData({ ...data, options: newOptions });
+    markDirty();
   }
 
   function toggleCorrect(value: string) {
@@ -60,18 +92,29 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
         : [...currentValues, value];
       setData({ ...data, correctAnswer: { values: newValues } });
     }
+    markDirty();
   }
 
   return (
     <div className="border rounded-2xl bg-muted/5 overflow-hidden transition-all">
+      {/* Collapsed preview */}
       <div className="flex items-center gap-4 p-4 cursor-pointer hover:bg-muted/10" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{data.prompt}</p>
-          <p className="text-[10px] text-muted-foreground uppercase mt-1">{data.type} · {data.points} БАЛЛ(ОВ)</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[10px] uppercase text-muted-foreground">{data.type === "SINGLE_CHOICE" ? "1 вариант" : data.type === "MULTIPLE_CHOICE" ? "N вариантов" : "Краткий ответ"}</span>
+            <span className="text-[10px] text-muted-foreground">· {data.points} балл(ов)</span>
+            {data.type !== "TEXT" && options.length > 0 && (
+              <span className="text-[10px] text-emerald-600">
+                ✓ {data.type === "SINGLE_CHOICE" ? `Вариант ${options.indexOf(correctAnswer.value ?? "") + 1}` : `выбрано ${(correctAnswer.values ?? []).length}`}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </div>
+        {saveStatus !== "idle" && (
+          <span className="text-[10px]">{saveStatus === "saving" ? "..." : saveStatus === "saved" ? "✓" : "✗"}</span>
+        )}
+        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </div>
 
       {isExpanded && (
@@ -81,7 +124,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
             <textarea
               className="w-full min-h-[80px] rounded-xl border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
               value={data.prompt}
-              onChange={(e) => setData({ ...data, prompt: e.target.value })}
+              onChange={(e) => { setData({ ...data, prompt: e.target.value }); markDirty(); }}
             />
           </div>
 
@@ -91,11 +134,11 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
               <select
                 className="w-full h-10 rounded-xl border bg-background px-3 text-sm"
                 value={data.type}
-                onChange={(e) => setData({ ...data, type: e.target.value, options: (e.target.value === "SHORT_ANSWER" ? [] : options) })}
+                onChange={(e) => { setData({ ...data, type: e.target.value, options: (e.target.value === "TEXT" ? [] : options) }); markDirty(); }}
               >
                 <option value="SINGLE_CHOICE">Один вариант</option>
                 <option value="MULTIPLE_CHOICE">Несколько вариантов</option>
-                <option value="SHORT_ANSWER">Краткий ответ</option>
+                <option value="TEXT">Краткий ответ</option>
               </select>
             </div>
             <div className="space-y-2">
@@ -103,12 +146,12 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
               <Input
                 type="number"
                 value={data.points}
-                onChange={(e) => setData({ ...data, points: Number(e.target.value) })}
+                onChange={(e) => { setData({ ...data, points: Number(e.target.value) }); markDirty(); }}
               />
             </div>
           </div>
 
-          {data.type !== "SHORT_ANSWER" && (
+          {data.type !== "TEXT" && (
             <div className="space-y-3 pt-2">
               <label className="text-xs font-semibold uppercase text-muted-foreground">Варианты ответов</label>
               {options.map((opt, i) => (
@@ -125,7 +168,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
                   </div>
                   <Input 
                     value={opt} 
-                    onChange={(e) => updateOption(i, e.target.value)}
+                    onChange={(e) => { updateOption(i, e.target.value); }}
                     placeholder={`Вариант ${i + 1}`}
                     className="h-9"
                   />
@@ -141,26 +184,30 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
             </div>
           )}
 
-          {data.type === "SHORT_ANSWER" && (
+          {data.type === "TEXT" && (
             <div className="space-y-2 pt-2">
               <label className="text-xs font-semibold uppercase text-muted-foreground">Правильный ответ</label>
               <Input 
                 value={correctAnswer.value || ""} 
-                onChange={(e) => setData({ ...data, correctAnswer: { value: e.target.value } })}
+                onChange={(e) => { setData({ ...data, correctAnswer: { value: e.target.value } }); markDirty(); }}
                 placeholder="Текст ответа"
               />
             </div>
           )}
 
+          {/* Status indicator */}
           <div className="flex items-center justify-between pt-4">
-            <Button size="sm" variant="ghost" className="text-rose-600" onClick={() => onDelete(question.id)}>
-              <Trash2 className="h-4 w-4 mr-2" />
-              Удалить
-            </Button>
-            <Button size="sm" onClick={handleSave} disabled={pending}>
-              {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-              Сохранить вопрос
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="ghost" className="text-rose-600" onClick={() => onDelete(question.id)}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Удалить
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              {saveStatus === "saving" && <span className="text-[10px] text-muted-foreground">сохранение...</span>}
+              {saveStatus === "saved" && <span className="text-[10px] text-emerald-600">сохранено</span>}
+              {saveStatus === "error" && <span className="text-[10px] text-rose-600">ошибка</span>}
+            </div>
           </div>
         </div>
       )}

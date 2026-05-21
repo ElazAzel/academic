@@ -1,7 +1,7 @@
 import { errorResponse, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
-import { EnrollmentStatus } from "@prisma/client";
+import { EnrollmentStatus, ProgressStatus } from "@prisma/client";
 import { getSupabaseStorageSignedUrlAsync, createSignedDownloadUrl } from "@/lib/storage";
 import {
   logSignedUrlIssued,
@@ -10,8 +10,9 @@ import {
   detectRepeatedSignedUrlRequests,
   getContentProtectionSettings,
 } from "@/server/modules/security/content-protection-server";
-import { CONTENT_PROTECTION } from "@/lib/constants";
+import { CONTENT_PROTECTION, TRAVERSAL_MODES } from "@/lib/constants";
 import { env } from "@/lib/env";
+import { logLockedLessonAccessAttempt } from "@/server/modules/security/content-protection-server";
 
 const prisma = getPrisma();
 
@@ -24,7 +25,7 @@ export async function GET(_request: Request, context: Context) {
 
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
-      select: { id: true, module: { select: { courseId: true } } },
+      select: { id: true, moduleId: true, module: { select: { courseId: true, course: { select: { traversalMode: true } } } } },
     });
 
     if (!lesson) {
@@ -51,6 +52,39 @@ export async function GET(_request: Request, context: Context) {
         reason: "No active enrollment",
       });
       return errorResponse(new Error("Нет доступа к этому уроку"));
+    }
+
+    if (lesson.module.course.traversalMode === TRAVERSAL_MODES.SEQUENTIAL) {
+      const orderedLessons = await prisma.lesson.findMany({
+        where: { moduleId: lesson.moduleId },
+        orderBy: { order: "asc" },
+        select: { id: true, isRequired: true },
+      });
+
+      const currentIndex = orderedLessons.findIndex((l) => l.id === lessonId);
+      const previousRequiredLessons = orderedLessons
+        .slice(0, Math.max(currentIndex, 0))
+        .filter((l) => l.isRequired);
+
+      if (previousRequiredLessons.length > 0) {
+        const completedCount = await prisma.lessonProgress.count({
+          where: {
+            userId: user.id,
+            lessonId: { in: previousRequiredLessons.map((l) => l.id) },
+            status: ProgressStatus.COMPLETED,
+          },
+        });
+
+        if (completedCount < previousRequiredLessons.length) {
+          await logLockedLessonAccessAttempt({
+            userId: user.id,
+            lessonId,
+            courseId,
+            reason: "Sequential lock: previous required lessons not completed",
+          });
+          return errorResponse(new Error("Сначала завершите предыдущие обязательные уроки"));
+        }
+      }
     }
 
     const media = await prisma.lessonMedia.findUnique({

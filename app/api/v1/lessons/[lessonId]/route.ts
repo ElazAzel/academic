@@ -1,7 +1,11 @@
-import { errorResponse, ok, parseJson } from "@/lib/http";
+import { errorResponse, ok, parseJson, ApiError } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { lessonSchema } from "@/lib/validation";
 import { updateLesson, deleteLesson, getLesson } from "@/server/modules/courses/service";
+import { getPrisma } from "@/lib/prisma";
+import { EnrollmentStatus } from "@prisma/client";
+
+const prisma = getPrisma();
 
 type Context = { params: Promise<{ lessonId: string }> };
 
@@ -11,6 +15,29 @@ export async function GET(_request: Request, context: Context) {
   try {
     const user = await requireUser("courses:read");
     const { lessonId } = await context.params;
+
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      select: { id: true, module: { select: { courseId: true } } },
+    });
+
+    if (!lesson) {
+      return errorResponse(new ApiError("not_found", "Урок не найден", 404));
+    }
+
+    const isBuilder = user.roles.includes("instructor") || user.roles.includes("admin") || user.roles.includes("super_curator");
+    if (!isBuilder) {
+      const enrollment = await prisma.enrollment.findUnique({
+        where: {
+          userId_courseId: { userId: user.id, courseId: lesson.module.courseId },
+        },
+      });
+
+      if (!enrollment || enrollment.status !== EnrollmentStatus.ACTIVE) {
+        return errorResponse(new ApiError("forbidden", "Нет доступа к этому уроку", 403));
+      }
+    }
+
     return ok(await getLesson(lessonId, true));
   } catch (error) {
     return errorResponse(error);

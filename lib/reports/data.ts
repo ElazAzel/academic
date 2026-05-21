@@ -1,6 +1,6 @@
 import { getPrisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
-import { QuestionStatus, type Prisma } from "@prisma/client";
+import { Prisma, QuestionStatus } from "@prisma/client";
 import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, ReportDataScope, RiskRow } from "./types";
 
 const prisma = getPrisma();
@@ -105,21 +105,26 @@ export async function fetchProgressData(input?: ReportDataScope | string[]) {
 
   const progressMap = new Map(latestProgressList.map((lp) => [lp.userId, lp]));
 
-  // Avg lesson time
-  const allLessonProgress = await prisma.lessonProgress.findMany({
-    where: {
-      userId: { in: userIds },
-      ...(scope.courseIds ? { lesson: { module: { courseId: { in: scope.courseIds } } } } : {}),
-    },
-    select: { userId: true, lesson: { select: { durationMinutes: true } } },
-    take: QUERY_LIMITS.reportDetailRows,
-  });
+  // Avg lesson time — aggregate in DB instead of fetching 50K rows to Node.js
+  let timeSql = Prisma.sql`
+    SELECT lp."userId", CAST(COUNT(*) AS INTEGER) AS count, CAST(SUM(l."durationMinutes") AS INTEGER) AS total
+    FROM "LessonProgress" lp
+    INNER JOIN "Lesson" l ON lp."lessonId" = l."id"
+    INNER JOIN "Module" m ON l."moduleId" = m."id"
+    WHERE lp."userId" IN (${Prisma.join(userIds)})
+  `;
+  if (scope.courseIds) {
+    timeSql = Prisma.sql`
+      ${timeSql} AND m."courseId" IN (${Prisma.join(scope.courseIds)})
+    `;
+  }
+  timeSql = Prisma.sql`${timeSql} GROUP BY lp."userId"`;
+
+  type TimeRow = { userId: string; count: number; total: number | null };
+  const timeResults = await prisma.$queryRaw<TimeRow[]>(timeSql);
   const timeMap = new Map<string, { count: number; total: number }>();
-  for (const lp of allLessonProgress) {
-    const cur = timeMap.get(lp.userId) ?? { count: 0, total: 0 };
-    cur.count++;
-    cur.total += lp.lesson.durationMinutes;
-    timeMap.set(lp.userId, cur);
+  for (const row of timeResults) {
+    timeMap.set(row.userId, { count: row.count, total: row.total ?? 0 });
   }
 
   // Risk counts

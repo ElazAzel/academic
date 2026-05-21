@@ -11,6 +11,28 @@ import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
+/**
+ * Module-level cache for static image assets read from disk.
+ * Avoids repeated fs reads on every PDF generation call.
+ * Maps asset absolute path → raw bytes.
+ */
+const imageAssetCache = new Map<string, Buffer>();
+
+async function readAssetCached(assetPath: string): Promise<Buffer | null> {
+  const cached = imageAssetCache.get(assetPath);
+  if (cached) return cached;
+  try {
+    if (fs.existsSync(assetPath)) {
+      const bytes = fs.readFileSync(assetPath);
+      imageAssetCache.set(assetPath, bytes);
+      return bytes;
+    }
+  } catch {
+    // not found or unreadable
+  }
+  return null;
+}
+
 export function generateCertificateNumber() {
   const year = new Date().getFullYear();
   return `ASA-${year}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
@@ -143,17 +165,24 @@ export async function revokeCertificate(certificateId: string, actorId: string) 
 }
 
 export async function listCertificates(filter?: { userId?: string; userIds?: string[] }) {
-  let where: Record<string, unknown> | undefined;
+  const where: Record<string, unknown> = {};
   if (filter?.userId) {
-    where = { userId: filter.userId };
+    where.userId = filter.userId;
   } else if (filter?.userIds) {
-    where = { userId: { in: filter.userIds } };
+    where.userId = { in: filter.userIds };
   }
   return prisma.certificate.findMany({
-    where,
-    include: {
+    where: Object.keys(where).length > 0 ? where : undefined,
+    select: {
+      id: true,
+      number: true,
+      userId: true,
+      courseId: true,
+      verificationUrl: true,
+      issuedAt: true,
+      revokedAt: true,
       user: { select: { id: true, name: true, email: true, organization: true } },
-      course: { select: { id: true, title: true } }
+      course: { select: { id: true, title: true } },
     },
     orderBy: { issuedAt: "desc" }
   });
@@ -247,7 +276,16 @@ async function embedImageSafely(pdf: PDFDocument, bytes: Buffer) {
 export async function generateCertificatePdf(certificateId: string) {
   const certificate = await prisma.certificate.findUnique({
     where: { id: certificateId },
-    include: { user: true, course: true }
+    select: {
+      id: true,
+      number: true,
+      verificationCode: true,
+      verificationUrl: true,
+      issuedAt: true,
+      revokedAt: true,
+      user: { select: { name: true, email: true, organization: true } },
+      course: { select: { title: true } },
+    },
   });
   if (!certificate) {
     throw new ApiError("not_found", "Сертификат не найден", 404);
@@ -264,18 +302,17 @@ export async function generateCertificatePdf(certificateId: string) {
   const qrPng = await QRCode.toDataURL(certificate.verificationUrl);
   const qrImage = await pdf.embedPng(qrPng);
 
-  // Load assets safely
+  // Load assets safely (with module-level file caching)
   const assetsDir = path.join(process.cwd(), "public/assets/certificates");
 
-  try {
-    const borderPath = path.join(assetsDir, "border.png");
-    if (fs.existsSync(borderPath)) {
-      const borderBytes = fs.readFileSync(borderPath);
+  const borderBytes = await readAssetCached(path.join(assetsDir, "border.png"));
+  if (borderBytes) {
+    try {
       const borderImage = await embedImageSafely(pdf, borderBytes);
       page.drawImage(borderImage, { x: 0, y: 0, width: pageWidth, height: pageHeight });
+    } catch (e) {
+      console.error("Failed to embed border asset:", e);
     }
-  } catch (e) {
-    console.error("Failed to load border asset:", e);
   }
 
   // Fallback border if image not available or as a supplementary frame
@@ -319,29 +356,27 @@ export async function generateCertificatePdf(certificateId: string) {
   page.drawText(textNumber, { x: (pageWidth - numberWidth) / 2, y: 240, size: 14, font: bold, color: rgb(0.85, 0.73, 0.35) });
 
   // Signatures and Seals
-  try {
-    const signaturePath = path.join(assetsDir, "signature.png");
-    if (fs.existsSync(signaturePath)) {
-      const signatureBytes = fs.readFileSync(signaturePath);
+  const signatureBytes = await readAssetCached(path.join(assetsDir, "signature.png"));
+  if (signatureBytes) {
+    try {
       const signatureImage = await embedImageSafely(pdf, signatureBytes);
       page.drawImage(signatureImage, { x: 150, y: 130, width: 120, height: 40 });
+    } catch (e) {
+      console.error("Failed to embed signature asset:", e);
     }
-  } catch (e) {
-    console.error("Failed to load signature asset:", e);
   }
 
   page.drawLine({ start: { x: 120, y: 120 }, end: { x: 300, y: 120 }, thickness: 1, color: rgb(0.5, 0.5, 0.5) });
   page.drawText("Уполномоченное лицо", { x: 160, y: 100, size: 12, font, color: rgb(0.3, 0.3, 0.3) });
 
-  try {
-    const sealPath = path.join(assetsDir, "seal.png");
-    if (fs.existsSync(sealPath)) {
-      const sealBytes = fs.readFileSync(sealPath);
+  const sealBytes = await readAssetCached(path.join(assetsDir, "seal.png"));
+  if (sealBytes) {
+    try {
       const sealImage = await embedImageSafely(pdf, sealBytes);
       page.drawImage(sealImage, { x: 360, y: 100, width: 120, height: 120 });
+    } catch (e) {
+      console.error("Failed to embed seal asset:", e);
     }
-  } catch (e) {
-    console.error("Failed to load seal asset:", e);
   }
 
   // QR Code and Details

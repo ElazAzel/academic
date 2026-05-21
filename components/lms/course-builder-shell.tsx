@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -445,12 +445,44 @@ export function CourseBuilderShell({
                     </div>
                     <div className="space-y-2">
                       <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Обложка</label>
-                      <input
-                        className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
-                        value={detail.coverUrl ?? ""}
-                        onChange={(event) => { setDetail((current) => ({ ...current, coverUrl: event.target.value ? event.target.value.trim() || null : null })); setDirty(true); }}
-                        placeholder="https://example.com/images/cover.jpg"
-                      />
+                      {detail.coverUrl && (
+                        <div className="relative mb-2 overflow-hidden rounded-lg">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={detail.coverUrl} alt="Обложка курса" className="h-32 w-full object-cover" />
+                          <button
+                            onClick={() => { setDetail((current) => ({ ...current, coverUrl: null })); setDirty(true); }}
+                            className="absolute right-2 top-2 rounded-full bg-background/80 p-1 text-muted-foreground hover:text-destructive"
+                          >
+                            <Icon name="delete" className="text-[16px]" />
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="secondary" onClick={() => document.getElementById("cover-upload")?.click()}>
+                          <Icon name="upload" className="text-[16px] mr-1" />
+                          Загрузить обложку
+                        </Button>
+                        <input
+                          id="cover-upload"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const formData = new FormData();
+                            formData.append("file", file);
+                            formData.append("prefix", "covers");
+                            const res = await fetch("/api/v1/media/uploads", { method: "POST", body: formData });
+                            if (res.ok) {
+                              const result = await res.json();
+                              const data = result.data ?? result;
+                              setDetail((current) => ({ ...current, coverUrl: data.url ?? data.fileUrl }));
+                              setDirty(true);
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

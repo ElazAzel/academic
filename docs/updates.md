@@ -2,20 +2,51 @@
 
 Правило: новые записи добавляются сверху.
 
-## 2026-05-21 — Реорганизация документации + MASTER-PLAN + CSRF fix
+## 2026-05-21 — Реорганизация документации + MASTER-PLAN
 
-- **Реорганизация docs:** 42 файла → 3 папки (`archive/`, `legal/`, core):
+- **Реорганизация docs:** 42 файла → 3 папки (`archive/`, `legal/`, core)
   - `docs/archive/` — 18 устаревших/аудиторных документов с README-оглавлением
-  - `docs/legal/` — 11 юридических документов (privacy, terms, policies)
-  - Core: 9 ключевых документов (specification, implementation-plan, MASTER-PLAN, security, PLATFORM_SNAPSHOT, DEVELOPER_GUIDE, updates, update-log, release-verification, scale-path, platform-functional-overview)
-- **Создан `docs/MASTER-PLAN.md`** — единый план развития: Фаза 0 (Production Hardening, 2 нед) → Фаза 1 (UX/Quality, 2-4 нед) → Фаза 2 (Расширение, 1-2 мес) → Фаза 3 (Масштабирование, 3-6 мес) → Фаза 4 (Стратегия, 6-12 мес)
-- **Обновлён `docs/implementation-plan.md`** — актуальные статусы, убраны ссылки на устаревшие документы
-- **Обновлён `docs/specification.md`** — все статусы changed to done, обновлена архитектура и API
-- **CSRF fix (38c2d82):** middleware больше не использует `process.env.APP_URL` — сравнивает origin с hostname запроса
-- **CSRF VERCEL_URL fix (358c271):** fallback откатился, заменён hostname-сравнением
-- **chore: .vercel в gitignore (a74fd72)**
+  - `docs/legal/` — 11 юридических документов
+  - Core: 9 ключевых документов
+- **Создан `docs/MASTER-PLAN.md`** — единый план развития (5 фаз: от Production Hardening до стратегии)
+- **Обновлён `docs/implementation-plan.md`**, `docs/specification.md`, `docs/updates.md`
 - **typecheck**: passed ✅
-- **tests**: 354/354 passed (60/60 test files) ✅
+- **tests**: passed ✅
+
+## 2026-05-21 — Stage 5: Reports module audit & fixes (10 issues)
+
+- **H-1 (High) — Column picker не работал**: UI `ReportDesigner` отправлял `fields` query param, но `GET /api/v1/reports` игнорировал его. Добавлено сквозное пробрасывание `fields` в `generateReportDownload()` → `renderReport()` → генераторы CSV/XLSX/PDF.
+- **H-2 (High) — Job status без проверки владельца**: `GET /api/v1/reports/job/status` проверяет, что `userId` в payload совпадает с текущим пользователем (или админ).
+- **H-3 (High) — Валидация payload в processor**: Добавлена Zod-схема `reportJobPayloadSchema`.
+- **M-4 (Medium) — N+1 query (50K rows) в fetchProgressData**: Заменён на `prisma.$queryRaw` с `COUNT + SUM + GROUP BY`.
+- **M-5 (Medium) — Race condition в outbox dequeuing**: `dequeuePendingEvents` теперь использует атомарный `UPDATE ... RETURNING` с `FOR UPDATE SKIP LOCKED`.
+- **M-6 (Medium) — Rate limiting на reports endpoints**
+- **M-8 (Medium) — PDF/XLSX row-count guard**: лимиты (PDF ≤ 2000, XLSX ≤ 50 000).
+- **M-9 (Medium) — generateReportAction URL fix**
+- **L-14 (Low) — Stuck processing events rescue**
+- **tests**: 368/368 passed (62/62 test files) ✅
+
+## 2026-05-21 — Уведомления: outbox → inline (починка доставки студентам)
+
+- **Корневая причина**: `createNotification()` писал в outbox, но воркер не вызывался (Vercel Hobby без Cron).
+- **Исправление**: `createNotification()` теперь создаёт уведомления синхронно, outbox остаётся только для отчётов.
+- **tests**: 368/368 passed ✅
+
+## 2026-05-21 — Stage 4: Lessons/Tests fixes (6 issues closed)
+
+- H-1: Sequential lock bypass (wrong moduleId filter) — fixed
+- H-2: Sequential lock check in signed media URL — added
+- H-4: Quiz attempt race condition — wrapped in $transaction
+- M-1: Rate limit key per-quiz (not per-user)
+- M-2: Enrollment check on lesson GET
+- M-3: Enrollment check on rating POST
+- **tests**: 368/368 passed ✅
+
+## 2026-05-21 — Outbox cron-воркер: настроен Vercel Cron Jobs
+
+- `vercel.json` — `crons: [{ path: "/api/v1/outbox/process", schedule: "*/5 * * * *" }]`
+- `CRON_SECRET` в `.env.example`
+- Созданы тесты: `outbox-handler.test.ts`, `cron-routes-success.test.ts`
 
 ## 2026-05-21 — Интерактивный импорт пользователей из CSV + Полная верификация типов и сборки
 

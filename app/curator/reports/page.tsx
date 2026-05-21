@@ -6,7 +6,6 @@ import { DownloadReports } from "@/components/lms/download-reports";
 import { Icon } from "@/components/ui/icon";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getCurrentUser } from "@/lib/auth/session";
 import { getCuratorReportData } from "@/server/actions/curator-enhanced";
 import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 import type { DashboardMetric } from "@/types/domain";

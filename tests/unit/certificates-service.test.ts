@@ -79,17 +79,14 @@ describe("certificate notification and audit events", () => {
         }),
       }),
     );
-    expect(mockOutboxEventCreate).toHaveBeenCalledWith(
+    expect(mockNotificationCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          eventType: "notification.send",
-          payload: expect.objectContaining({
-            userId: "student-1",
-            event: "certificate_available",
-            channel: "in_app",
-            refType: "certificate",
-            refId: "certificate-1",
-          }),
+          userId: "student-1",
+          type: "certificate_available",
+          channel: "in_app",
+          refType: "certificate",
+          refId: "certificate-1",
         }),
       }),
     );
@@ -149,17 +146,14 @@ describe("certificate notification and audit events", () => {
         }),
       }),
     );
-    expect(mockOutboxEventCreate).toHaveBeenCalledWith(
+    expect(mockNotificationCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          eventType: "notification.send",
-          payload: expect.objectContaining({
-            userId: "student-1",
-            event: "certificate_revoked",
-            channel: "in_app",
-            refType: "certificate",
-            refId: "certificate-1",
-          }),
+          userId: "student-1",
+          type: "certificate_revoked",
+          channel: "in_app",
+          refType: "certificate",
+          refId: "certificate-1",
         }),
       }),
     );

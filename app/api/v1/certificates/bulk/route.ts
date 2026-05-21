@@ -4,6 +4,7 @@ import { getPrisma } from "@/lib/prisma";
 import { errorResponse, ApiError, parseJson } from "@/lib/http";
 import { generateCertificatePdf } from "@/server/modules/certificates/service";
 import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 import archiver from "archiver";
 import { z } from "zod";
 
@@ -19,6 +20,12 @@ export async function POST(request: Request) {
     const isObserver = user.roles.includes("customer_observer");
     if (!isAdmin && !isObserver) {
       throw new ApiError("forbidden", "Только администратор или заказчик может скачивать сертификаты массово", 403);
+    }
+
+    // Rate limit: 5 bulk downloads per user per window
+    const rl = await checkRateLimit(`certificates-bulk:${user.id}`);
+    if (!rl.allowed) {
+      throw new ApiError("too_many_requests", "Слишком много запросов. Попробуйте позже.", 429);
     }
 
     const body = await parseJson(request, bulkSchema);

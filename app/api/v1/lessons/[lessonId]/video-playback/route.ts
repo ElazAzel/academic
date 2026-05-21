@@ -66,7 +66,7 @@ export async function GET(_request: Request, context: Context) {
 
     if (lesson.module.course.traversalMode === TRAVERSAL_MODES.SEQUENTIAL) {
       const orderedLessons = await prisma.lesson.findMany({
-        where: { moduleId: lesson.module.courseId },
+        where: { moduleId: lesson.moduleId },
         orderBy: { order: "asc" },
         select: { id: true, isRequired: true },
       });

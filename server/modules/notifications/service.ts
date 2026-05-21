@@ -1,7 +1,6 @@
 import { getPrisma } from "@/lib/prisma";
 import { toJsonValue } from "@/lib/json";
 import { env } from "@/lib/env";
-import { writeOutboxEvent } from "@/server/modules/outbox/service";
 import { getUserNotificationPreferences } from "@/server/modules/notifications/preferences";
 import { NOTIFICATION_CHANNELS } from "@/lib/constants";
 
@@ -98,13 +97,15 @@ export function normalizeNotificationChannel(channel?: string): NotificationDeli
 }
 
 /**
- * Отправляет уведомление через outbox (асинхронно).
+ * Создаёт уведомление синхронно (без outbox).
  *
- * Пишет событие `notification.send` в outbox-таблицу и возвращает управление.
- * Фактическая проверка предпочтений, создание записи и отправка email/push
- * выполняются фоновым процессом (outbox handler).
+ * In-app уведомления создаются непосредственно в БД, email/push отправляются
+ * сразу (если настроены). Outbox не используется, потому что платформа
+ * работает на Vercel Hobby tier без поддержки cron-воркеров.
  *
- * Возвращает ID события outbox.
+ * Если пользователь отключил этот тип уведомлений в настройках — пропускает.
+ *
+ * Возвращает ID созданного уведомления (или пустую строку, если пропущено).
  */
 export async function createNotification(input: {
   userId: string;
@@ -116,16 +117,22 @@ export async function createNotification(input: {
   refType?: string;
   refId?: string;
 }): Promise<{ id: string }> {
-  return writeOutboxEvent("notification.send", {
+  const notification = await createNotificationInternal({
     userId: input.userId,
     event: input.event,
     channel: input.channel ?? "in_app",
-    title: input.title ?? null,
-    body: input.body ?? null,
-    data: input.data ?? {},
-    refType: input.refType ?? null,
-    refId: input.refId ?? null,
+    title: input.title,
+    body: input.body,
+    data: input.data,
+    refType: input.refType,
+    refId: input.refId,
   });
+
+  if (notification) {
+    return { id: notification.id };
+  }
+
+  return { id: "" };
 }
 
 /**

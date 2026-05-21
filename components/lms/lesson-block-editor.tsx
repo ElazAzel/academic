@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { Plus, Trash2, GripVertical, Video, FileText, HelpCircle, CheckSquare, Star, MessageSquare, CheckCircle } from "lucide-react";
+import { Plus, Trash2, GripVertical, Video as VideoIcon, FileText, HelpCircle, CheckSquare, Star, MessageSquare, CheckCircle, Upload, Eye, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { RichTextEditor } from "@/components/lms/rich-text-editor";
 import type { AssignmentSummary, ContentBlock, ContentBlockType, QuizSummary } from "@/types/domain";
 
 /** Block editor uses generic data shape for mutable editing */
@@ -26,7 +27,7 @@ const BLOCK_LABELS: Record<ContentBlockType, string> = {
 };
 
 const BLOCK_ICONS: Record<ContentBlockType, React.ComponentType<{ className?: string }>> = {
-  video: Video,
+  video: VideoIcon,
   text: FileText,
   file: FileText,
   quiz: HelpCircle,
@@ -45,6 +46,57 @@ function defaultBlockData(type: ContentBlockType, lessonId: string): Record<stri
   if (type === "rating") return { lessonId };
   if (type === "curator_question") return { lessonId };
   return { label: "Завершить урок" };
+}
+
+// ── VideoPreview component ──────────────────────────────────────────
+function VideoPreview({ url }: { url: string }) {
+  const embedUrl = url
+    .replace(/^.*(?:youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/watch\?v=)/, "https://www.youtube.com/embed/$1")
+    .replace(/^.*vimeo\.com\/(\d+)/, "https://player.vimeo.com/video/$1");
+
+  if (!url.match(/youtube|youtu\.be|vimeo/i)) {
+    return (
+      <div className="rounded-lg bg-muted/30 p-3 text-xs text-muted-foreground">
+        {url.startsWith("http") ? "Внешнее видео (вставить embed)" : "Введите URL видео"}
+      </div>
+    );
+  }
+
+  return (
+    <div className="aspect-video rounded-lg overflow-hidden">
+      <iframe
+        src={embedUrl}
+        className="w-full h-full"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    </div>
+  );
+}
+
+// ── BlockPreview component ──────────────────────────────────────────
+function BlockPreview({ block }: { block: BlockItem }) {
+  switch (block.type) {
+    case "text":
+      return (
+        <div className="prose prose-sm max-w-none text-sm" dangerouslySetInnerHTML={{ __html: (block.data.html as string) ?? "" }} />
+      );
+    case "video":
+      return block.data.videoUrl ? (
+        <div className="rounded-lg bg-muted p-2">
+          <VideoIcon className="h-4 w-4 inline mr-1 text-muted-foreground" />
+          <a href={block.data.videoUrl as string} target="_blank" rel="noopener noreferrer" className="text-xs text-primary">{block.data.videoUrl as string}</a>
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">Видео не указано</p>
+      );
+    case "quiz":
+      return <p className="text-xs text-muted-foreground"><HelpCircle className="h-3 w-3 inline mr-1" />Тест: {block.data.quizId as string}</p>;
+    case "assignment":
+      return <p className="text-xs text-muted-foreground"><CheckSquare className="h-3 w-3 inline mr-1" />Задание: {block.data.assignmentId as string}</p>;
+    default:
+      return <p className="text-xs text-muted-foreground">{BLOCK_LABELS[block.type]}</p>;
+  }
 }
 
 export function LessonBlockEditor({
@@ -68,6 +120,8 @@ export function LessonBlockEditor({
   );
   const [savingBlocks, setSavingBlocks] = useState(false);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [previewBlocks, setPreviewBlocks] = useState<Set<string>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addBlock = useCallback((type: ContentBlockType, index: number) => {
     const newBlock: BlockItem = { id: crypto.randomUUID(), type, data: defaultBlockData(type, lessonId) };
@@ -162,9 +216,55 @@ export function LessonBlockEditor({
 
   return (
     <div className="space-y-3">
+      {/* Hidden file input for uploads */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,video/mp4,video/webm,audio/mpeg,audio/webm,application/zip"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("prefix", "course-builder");
+          try {
+            const res = await fetch("/api/v1/media/uploads", {
+              method: "POST",
+              body: formData,
+            });
+            if (res.ok) {
+              const result = await res.json();
+              const data = result.data ?? result;
+              // Find the first file block that doesn't have a url and prefill it
+              setBlocks((prev) => {
+                const fileBlockIndex = prev.findIndex((b) => b.type === "file" && !b.data.url);
+                if (fileBlockIndex === -1) return prev;
+                const next = [...prev];
+                next[fileBlockIndex] = {
+                  ...next[fileBlockIndex],
+                  data: {
+                    ...next[fileBlockIndex].data,
+                    url: data.url ?? data.fileUrl,
+                    filename: file.name,
+                  },
+                };
+                return next;
+              });
+              toast.success("Файл загружен");
+            } else {
+              toast.error("Ошибка загрузки");
+            }
+          } catch {
+            toast.error("Сетевая ошибка");
+          }
+        }}
+      />
+
       {blocks.map((block, index) => {
         const Icon = BLOCK_ICONS[block.type];
         const isDragOver = dragOverIndex === index;
+        const isPreview = previewBlocks.has(block.id);
         return (
           <div
             key={block.id}
@@ -185,6 +285,21 @@ export function LessonBlockEditor({
               <Icon className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs font-medium text-muted-foreground uppercase">{BLOCK_LABELS[block.type]}</span>
               <div className="flex-1" />
+              {/* Toggle edit/preview */}
+              <button
+                onClick={() => {
+                  setPreviewBlocks((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(block.id)) next.delete(block.id);
+                    else next.add(block.id);
+                    return next;
+                  });
+                }}
+                className={`p-1 rounded ${isPreview ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                title={isPreview ? "Редактировать" : "Просмотр"}
+              >
+                {isPreview ? <Edit3 className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              </button>
               <select
                 className="h-7 rounded-lg border bg-background px-2 text-xs"
                 value={block.type}
@@ -199,75 +314,97 @@ export function LessonBlockEditor({
               </button>
             </div>
 
-            {/* Block-specific editors */}
-            {block.type === "text" && (
-              <textarea
-                className="w-full min-h-[80px] rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="HTML-содержимое..."
-                value={(block.data.html as string) ?? ""}
-                onChange={(e) => updateBlockData(block.id, { ...block.data, html: e.target.value })}
-              />
-            )}
+            {isPreview ? (
+              <BlockPreview block={block} />
+            ) : (
+              <>
+                {/* Block-specific editors */}
+                {block.type === "text" && (
+                  <RichTextEditor
+                    value={(block.data.html as string) ?? ""}
+                    onChange={(html) => updateBlockData(block.id, { ...block.data, html })}
+                    placeholder="HTML-содержимое..."
+                  />
+                )}
 
-            {block.type === "video" && (
-              <input
-                className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="Ссылка на видео (YouTube embed)"
-                value={(block.data.videoUrl as string) ?? ""}
-                onChange={(e) => updateBlockData(block.id, { ...block.data, videoUrl: e.target.value })}
-              />
-            )}
+                {block.type === "video" && (
+                  <>
+                    <input
+                      className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="Ссылка на видео (YouTube embed)"
+                      value={(block.data.videoUrl as string) ?? ""}
+                      onChange={(e) => updateBlockData(block.id, { ...block.data, videoUrl: e.target.value })}
+                    />
+                    {block.data.videoUrl && (
+                      <VideoPreview url={block.data.videoUrl as string} />
+                    )}
+                  </>
+                )}
 
-            {block.type === "file" && (
-              <div className="grid gap-2 md:grid-cols-2">
-                <input
-                  className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="URL файла"
-                  value={(block.data.url as string) ?? ""}
-                  onChange={(e) => updateBlockData(block.id, { ...block.data, url: e.target.value })}
-                />
-                <input
-                  className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Название файла"
-                  value={(block.data.filename as string) ?? ""}
-                  onChange={(e) => updateBlockData(block.id, { ...block.data, filename: e.target.value })}
-                />
-              </div>
-            )}
+                {block.type === "file" && (
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <div>
+                      <input
+                        className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        placeholder="URL файла"
+                        value={(block.data.url as string) ?? ""}
+                        onChange={(e) => updateBlockData(block.id, { ...block.data, url: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        className="flex-1 rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        placeholder="Название файла"
+                        value={(block.data.filename as string) ?? ""}
+                        onChange={(e) => updateBlockData(block.id, { ...block.data, filename: e.target.value })}
+                      />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-3.5 w-3.5 mr-1" />
+                        Загрузить
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
-            {block.type === "quiz" && (
-              <select
-                className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                value={(block.data.quizId as string) ?? ""}
-                onChange={(e) => updateBlockData(block.id, { ...block.data, quizId: e.target.value })}
-              >
-                <option value="">Выберите тест из урока</option>
-                {quizzes.map((quiz) => (
-                  <option key={quiz.id} value={quiz.id}>{quiz.title}</option>
-                ))}
-              </select>
-            )}
+                {block.type === "quiz" && (
+                  <select
+                    className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    value={(block.data.quizId as string) ?? ""}
+                    onChange={(e) => updateBlockData(block.id, { ...block.data, quizId: e.target.value })}
+                  >
+                    <option value="">Выберите тест из урока</option>
+                    {quizzes.map((quiz) => (
+                      <option key={quiz.id} value={quiz.id}>{quiz.title}</option>
+                    ))}
+                  </select>
+                )}
 
-            {block.type === "assignment" && (
-              <select
-                className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                value={(block.data.assignmentId as string) ?? ""}
-                onChange={(e) => updateBlockData(block.id, { ...block.data, assignmentId: e.target.value })}
-              >
-                <option value="">Выберите задание из урока</option>
-                {assignments.map((assignment) => (
-                  <option key={assignment.id} value={assignment.id}>{assignment.title}</option>
-                ))}
-              </select>
-            )}
+                {block.type === "assignment" && (
+                  <select
+                    className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    value={(block.data.assignmentId as string) ?? ""}
+                    onChange={(e) => updateBlockData(block.id, { ...block.data, assignmentId: e.target.value })}
+                  >
+                    <option value="">Выберите задание из урока</option>
+                    {assignments.map((assignment) => (
+                      <option key={assignment.id} value={assignment.id}>{assignment.title}</option>
+                    ))}
+                  </select>
+                )}
 
-            {block.type === "completion" && (
-              <input
-                className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="Текст кнопки завершения"
-                value={(block.data.label as string) ?? ""}
-                onChange={(e) => updateBlockData(block.id, { ...block.data, label: e.target.value })}
-              />
+                {block.type === "completion" && (
+                  <input
+                    className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="Текст кнопки завершения"
+                    value={(block.data.label as string) ?? ""}
+                    onChange={(e) => updateBlockData(block.id, { ...block.data, label: e.target.value })}
+                  />
+                )}
+              </>
             )}
 
             {/* Move buttons for keyboard accessibility */}

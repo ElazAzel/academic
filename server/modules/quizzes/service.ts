@@ -1,6 +1,8 @@
+import { randomUUID } from "node:crypto";
 import type { Prisma, QuizQuestion, EnrollmentStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
+import { toJsonValue } from "@/lib/json";
 import { logAudit } from "@/server/modules/audit/service";
 import { markLessonProgress } from "@/server/modules/progress/service";
 import {
@@ -27,25 +29,52 @@ export function gradeObjectiveQuiz(
 ) {
   const total = questions.reduce((sum, question) => sum + question.points, 0);
   const earned = questions.reduce((sum, question) => {
-    const correct = question.correctAnswer as { value?: unknown; values?: unknown[]; index?: number };
-    let expected = correct.values ?? correct.value;
+    const correct = question.correctAnswer;
+    let expected: unknown = undefined;
 
-    // Handle legacy index-based correct answers
-    if (expected === undefined && typeof correct.index === "number" && Array.isArray(question.options)) {
-      expected = question.options[correct.index];
-    }
+    // Helper to resolve an individual answer (either an index or a label/ID) to its string representation
+    const resolveOption = (val: unknown): unknown => {
+      if (val === null || val === undefined) return val;
+      if (Array.isArray(question.options)) {
+        // If options are objects like [{id, label}, ...]
+        if (question.options.length > 0 && typeof question.options[0] === "object" && question.options[0] !== null) {
+          const firstOpt = question.options[0] as Record<string, unknown>;
+          if ("id" in firstOpt) {
+            const matched = (question.options as Array<{ id?: string; label?: string }>).find(
+              (o) => String(o.id) === String(val)
+            );
+            if (matched) return matched.label ?? matched.id;
+          }
+        }
 
-    // If correctAnswer.value is an ID (like "a") and options are [{id,label},...],
-    // resolve the ID to the matching label so it can be compared against the student's answer
-    if (typeof expected === "string" && Array.isArray(question.options) && question.options.length > 0) {
-      const firstOpt = question.options[0];
-      if (typeof firstOpt === "object" && firstOpt !== null && "id" in firstOpt) {
-        const matched = (question.options as Array<{ id?: string; label?: string }>).find((o) => o.id === expected);
-        if (matched) expected = matched.label ?? matched.id;
-      } else if (typeof expected === "string" && expected.length <= 3 && Array.isArray(question.options)) {
-        const idx = parseInt(expected, 10);
-        if (!isNaN(idx) && idx >= 0 && idx < question.options.length) {
-          expected = question.options[idx];
+        // Otherwise check if it is a numeric index
+        const strVal = String(val);
+        const idx = parseInt(strVal, 10);
+        if (!isNaN(idx) && idx >= 0 && idx < question.options.length && String(idx) === strVal) {
+          return question.options[idx];
+        }
+      }
+      return val;
+    };
+
+    if (correct !== null && correct !== undefined) {
+      if (typeof correct === "object" && !Array.isArray(correct)) {
+        const correctObj = correct as Record<string, unknown>;
+        if ("values" in correctObj && Array.isArray(correctObj.values)) {
+          expected = correctObj.values.map(resolveOption);
+        } else if ("value" in correctObj) {
+          expected = resolveOption(correctObj.value);
+        } else if ("index" in correctObj) {
+          const idx = typeof correctObj.index === "number" ? correctObj.index : parseInt(String(correctObj.index), 10);
+          if (!isNaN(idx) && Array.isArray(question.options) && idx >= 0 && idx < question.options.length) {
+            expected = question.options[idx];
+          }
+        }
+      } else {
+        if (Array.isArray(correct)) {
+          expected = correct.map(resolveOption);
+        } else {
+          expected = resolveOption(correct);
         }
       }
     }
@@ -125,6 +154,50 @@ export async function getQuizForActor(actor: CourseAccessActor, quizId: string) 
   return quiz;
 }
 
+export async function importQuestions(quizId: string, questionIds: string[], actorId: string) {
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: quizId },
+    include: { course: { select: { id: true } } },
+  });
+  if (!quiz) throw new ApiError("not_found", "Тест не найден", 404);
+  if (!quiz.course) throw new ApiError("bad_request", "Тест не привязан к курсу", 400);
+
+  const { assertInstructorOfCourse } = await import("@/server/modules/course-builder/service");
+  await assertInstructorOfCourse(actorId, quiz.course.id);
+
+  const sourceQuestions = await prisma.quizQuestion.findMany({
+    where: { id: { in: questionIds } },
+  });
+
+  if (sourceQuestions.length === 0) throw new ApiError("bad_request", "Вопросы не найдены", 400);
+
+  const maxOrder = await prisma.quizQuestion.aggregate({
+    where: { quizId },
+    _max: { order: true },
+  });
+
+  let order = (maxOrder._max.order ?? -1) + 1;
+
+  const created = await prisma.$transaction(
+    sourceQuestions.map((q) =>
+      prisma.quizQuestion.create({
+        data: {
+          id: randomUUID(),
+          quizId,
+          type: q.type,
+          prompt: q.prompt,
+          options: toJsonValue(q.options),
+          correctAnswer: toJsonValue(q.correctAnswer),
+          points: q.points,
+          order: order++,
+        },
+      })
+    )
+  );
+
+  return created;
+}
+
 export async function submitQuizAttempt(quizId: string, userId: string, answers: Record<string, unknown>, skipLimit = false) {
   const quiz = await prisma.quiz.findUnique({
     where: { id: quizId },
@@ -147,22 +220,26 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
   if (!enrollment || enrollment.status !== ("ACTIVE" as EnrollmentStatus)) {
     throw new ApiError("forbidden", "Нет доступа к тесту: вы не зачислены на курс", 403);
   }
-  if (!skipLimit) {
-    const attempts = await prisma.quizAttempt.count({ where: { quizId, userId } });
-    if (attempts >= quiz.maxAttempts) {
-      throw new ApiError("forbidden", "Лимит попыток исчерпан", 403);
-    }
-  }
   const result = gradeObjectiveQuiz(quiz.questions, answers, quiz.passThreshold);
-  const attempt = await prisma.quizAttempt.create({
-    data: {
-      quizId,
-      userId,
-      answers: answers as Prisma.InputJsonValue,
-      score: result.score,
-      passed: result.passed,
-      submittedAt: new Date()
+
+  const attempt = await prisma.$transaction(async (tx) => {
+    if (!skipLimit) {
+      const attempts = await tx.quizAttempt.count({ where: { quizId, userId } });
+      if (attempts >= quiz.maxAttempts) {
+        throw new ApiError("forbidden", "Лимит попыток исчерпан", 403);
+      }
     }
+
+    return tx.quizAttempt.create({
+      data: {
+        quizId,
+        userId,
+        answers: answers as Prisma.InputJsonValue,
+        score: result.score,
+        passed: result.passed,
+        submittedAt: new Date()
+      }
+    });
   });
   await logAudit({
     actorId: userId,

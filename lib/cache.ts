@@ -41,7 +41,10 @@ function memorySet<T>(key: string, value: T, ttlSeconds: number): void {
 type KvClient = {
   get: (key: string) => Promise<string | null>;
   set: (key: string, value: string, options?: { ex: number }) => Promise<unknown>;
-  del?: (key: string) => Promise<unknown>;
+  del: (...keys: string[]) => Promise<number>;
+  sadd: (key: string, ...members: string[]) => Promise<number>;
+  smembers: (key: string) => Promise<string[]>;
+  srem: (key: string, ...members: string[]) => Promise<number>;
 };
 
 let kv: KvClient | null = null;
@@ -62,6 +65,17 @@ async function getKv(): Promise<KvClient | null> {
   return kv;
 }
 
+// ── Track cache keys by userId for pattern invalidation ────────────
+
+const userKeys = new Map<string, Set<string>>();
+
+function extractUserId(key: string): string | null {
+  // key pattern: report:{type}:{format}:{userId}:{scopeHash}
+  const parts = key.split(":");
+  if (parts[0] === "report" && parts.length >= 4) return parts[3];
+  return null;
+}
+
 // ── Public API ───────────────────────────────────────────────────────
 
 export async function cacheGet<T>(key: string): Promise<T | null> {
@@ -80,10 +94,25 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
 
 export async function cacheSet<T>(key: string, value: T, ttlSeconds = 60): Promise<void> {
   try {
+    const uid = extractUserId(key);
     const client = await getKv();
+
     if (client) {
+      if (uid) {
+        // Track key in Redis Set for cross-instance invalidation
+        const setKey = `report:user:keys:${uid}`;
+        await client.sadd(setKey, key).catch(() => {});
+        // Set a TTL on the tracking set as well (max 1h)
+        await client.set(`__ttl:${setKey}`, "1", { ex: 3600 }).catch(() => {});
+      }
       await client.set(key, JSON.stringify(value), { ex: ttlSeconds });
       return;
+    }
+
+    // In-memory fallback
+    if (uid) {
+      if (!userKeys.has(uid)) userKeys.set(uid, new Set());
+      userKeys.get(uid)!.add(key);
     }
     memorySet(key, value, ttlSeconds);
   } catch {
@@ -91,17 +120,35 @@ export async function cacheSet<T>(key: string, value: T, ttlSeconds = 60): Promi
   }
 }
 
-export async function cacheDelete(key: string): Promise<void> {
+/**
+ * Invalidate all cached values for a given user.
+ * Useful when report scope changes (course assignment, observer link, etc.).
+ * Uses Redis Set for cross-instance key tracking; in-memory Map for dev.
+ */
+export async function cacheDeleteByUser(userId: string): Promise<void> {
+  const setKey = `report:user:keys:${userId}`;
   try {
     const client = await getKv();
     if (client) {
-      // Upstash Redis supports .del()
-      if ("del" in client) {
-        await (client as unknown as { del: (key: string) => Promise<void> }).del(key);
+      const keys = await client.smembers(setKey).catch(() => [] as string[]);
+      if (keys.length > 0) {
+        await client.del(...keys).catch(() => {});
+        await client.del(setKey).catch(() => {});
+        await client.del(`__ttl:${setKey}`).catch(() => {});
       }
       return;
     }
-    memoryStore.delete(key);
+  } catch {
+    // fallback below
+  }
+
+  // In-memory fallback (dev/local)
+  try {
+    const keys = userKeys.get(userId);
+    if (keys) {
+      for (const key of keys) memoryStore.delete(key);
+      userKeys.delete(userId);
+    }
   } catch {
     // non-critical
   }

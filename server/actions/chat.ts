@@ -245,7 +245,7 @@ export async function getMyConversations() {
 }
 
 export async function sendMessageAction(formData: FormData) {
-  const user = await requireRole(["student", "curator", "super_curator", "admin"]);
+  const user = await requireRole(["student", "curator", "super_curator", "admin", "instructor"]);
   const roles = user.roles as RoleKey[];
   const text = String(formData.get("text") ?? "").trim();
   const lessonId = String(formData.get("lessonId") ?? "").trim();
@@ -380,7 +380,7 @@ export async function getUploadUrl() {
 }
 
 export async function getUploadUrlForFile(filename: string, contentType: string) {
-  const user = await requireRole(["student", "curator", "super_curator", "admin"]);
+  const user = await requireRole(["student", "curator", "super_curator", "admin", "instructor"]);
   const safeFilename = filename.trim() || "attachment";
   const safeContentType = contentType.trim();
 

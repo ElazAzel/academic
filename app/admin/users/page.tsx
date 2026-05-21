@@ -6,7 +6,6 @@ import { Avatar } from "@/components/ui/avatar";
 import { StatusBadge } from "@/components/lms/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { UserAccountStatus } from "@prisma/client";

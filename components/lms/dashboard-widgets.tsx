@@ -19,10 +19,6 @@ const AnswerQuestionModal = dynamic(
   { ssr: false },
 );
 
-const ReviewSubmissionModal = dynamic(
-  () => import("./curator-modals").then((m) => ({ default: m.ReviewSubmissionModal })),
-  { ssr: false },
-);
 import type {
   ContinueLearning,
   CourseSummary,
@@ -324,16 +320,13 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
 
 // ── Очередь заданий на проверку ─────────────────────────────────────
 export function SubmissionsQueue({ submissions }: { submissions: SubmissionForReview[] }) {
-  const [selectedSubmission, setSelectedSubmission] = useState<SubmissionForReview | null>(null);
-
   if (submissions.length === 0) {
     return (
       <EmptyState icon="assignment" title="Нет заданий на проверку" description="Все отправленные задания проверены. Новые появятся здесь автоматически." />
     );
   }
   return (
-    <>
-      <div className="overflow-x-auto rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+    <div className="overflow-x-auto rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
       <Table>
         <TableHeader className="bg-m3-surface-container">
           <TableRow>
@@ -361,23 +354,18 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
                 <SubmissionBadge status={s.status} />
               </TableCell>
               <TableCell className="text-right">
-                <Button size="sm" onClick={() => setSelectedSubmission(s)} aria-label="Проверить задание">
-                  <Icon name="rate_review" className="text-[18px]" />
-                  Проверить
-                </Button>
+                <Link href={`/curator/assignments/${s.id}`}>
+                  <Button size="sm" aria-label="Проверить задание">
+                    <Icon name="rate_review" className="text-[18px]" />
+                    Проверить
+                  </Button>
+                </Link>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-      </div>
-      {selectedSubmission && (
-        <ReviewSubmissionModal 
-          submission={selectedSubmission} 
-          onClose={() => setSelectedSubmission(null)} 
-        />
-      )}
-    </>
+    </div>
   );
 }
 

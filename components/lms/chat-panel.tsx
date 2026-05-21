@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Icon } from "@/components/ui/icon";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendMessageAction, getConversation, markAsRead, getUploadUrlForFile } from "@/server/actions/chat";
-import { getSupabaseClient } from "@/lib/supabase-client";
 import { toast } from "sonner";
 
 const COMMON_EMOJIS = ["😊", "👍", "❤️", "🎉", "🔥", "👏", "😄", "🚀", "⭐", "🙏", "💪", "😎", "✨"];
@@ -67,7 +66,7 @@ export function ChatPanel({
   const formRef = useRef<HTMLFormElement>(null);
   const isSendingRef = useRef(false);
 
-  const { data: messages = [] } = useQuery({
+  const { data: messages = [], isLoading } = useQuery({
     queryKey,
     queryFn: () => getConversation(studentId, lessonId),
     refetchInterval: 30_000,
@@ -75,48 +74,10 @@ export function ChatPanel({
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
   });
 
-  useEffect(() => {
-    const supabase = getSupabaseClient();
-    if (!supabase) return;
-
-    const channelKey = `${studentId}-${lessonId ?? "all"}`;
-    const invalidateChat = () => {
-      queryClient.invalidateQueries({ queryKey });
-    };
-
-    const incomingChannel = supabase
-      .channel(`chat-messages-in-${channelKey}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `receiver_id=eq.${studentId}`,
-        },
-        invalidateChat
-      )
-      .subscribe();
-
-    const outgoingChannel = supabase
-      .channel(`chat-messages-out-${channelKey}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `sender_id=eq.${studentId}`,
-        },
-        invalidateChat
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(incomingChannel);
-      supabase.removeChannel(outgoingChannel);
-    };
-  }, [studentId, lessonId, queryClient, queryKey]);
+  // Note: Supabase Realtime subscription was removed because the app uses
+  // NextAuth (not Supabase Auth). Client-side realtime with the anon key
+  // would have no RLS enforcement. 30s polling via server actions is the
+  // secure fallback — optimistic updates hide the latency for sent messages.
 
   useEffect(() => {
     const container = chatContainerRef.current;
@@ -257,11 +218,15 @@ export function ChatPanel({
     ];
     const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `chat-${date.replace(/\./g, "-")}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `chat-${date.replace(/\./g, "-")}.txt`;
+      a.click();
+    } finally {
+      // Ensure cleanup even if click fails (e.g. popup blocked)
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
   }
 
   async function handleFileUpload(file: File) {
@@ -287,25 +252,6 @@ export function ChatPanel({
       formData.set("receiverId", receiverId);
       sendMutation.mutate(formData);
     } catch {
-      // Fallback: для маленьких изображений используем base64
-      if (file.type.startsWith("image/") && file.size < 500 * 1024) {
-        try {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const formData = new FormData();
-            formData.set("text", `[Изображение]`);
-            formData.set("attachmentUrl", reader.result as string);
-            formData.set("attachmentType", file.type);
-            if (messageLessonId) formData.set("lessonId", messageLessonId);
-            formData.set("receiverId", receiverId);
-            sendMutation.mutate(formData);
-          };
-          reader.readAsDataURL(file);
-          return;
-        } catch {
-          // ignore, fall through to error
-        }
-      }
       toast.error("Ошибка загрузки файла. Хранилище недоступно.");
     } finally {
       setUploading(false);
@@ -324,7 +270,16 @@ export function ChatPanel({
         )}
       </div>
       <div ref={chatContainerRef} className={`flex-1 overflow-auto px-4 pb-3 ${fullHeight ? 'max-h-none' : 'max-h-[400px]'} min-h-[200px]`}>
-        {messages.length === 0 && (
+        {isLoading && (
+          <div className="flex flex-col gap-3 py-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
+                <div className={`h-12 w-3/5 animate-pulse rounded-2xl bg-m3-surface-container-high ${i % 2 === 0 ? "rounded-br-sm" : "rounded-bl-sm"}`} />
+              </div>
+            ))}
+          </div>
+        )}
+        {!isLoading && messages.length === 0 && (
           <p className="text-center text-body-md font-body-md text-m3-on-surface-variant py-8">{emptyState}</p>
         )}
         {messages.map((m, index) => {

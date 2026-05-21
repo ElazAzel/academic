@@ -7,7 +7,7 @@ const prisma = getPrisma();
 
 export async function GET(request: NextRequest) {
   try {
-    await requireUser();
+    const user = await requireUser();
     const jobId = request.nextUrl.searchParams.get("jobId");
 
     if (!jobId) {
@@ -23,6 +23,14 @@ export async function GET(request: NextRequest) {
       throw new ApiError("not_found", "Задача не найдена", 404);
     }
 
+    const payload = event.payload as Record<string, unknown> | null;
+    const eventUserId = payload?.userId as string | undefined;
+
+    // Ownership check: only the owner or an admin may poll a job
+    if (eventUserId && eventUserId !== user.id && !user.roles.includes("admin")) {
+      throw new ApiError("forbidden", "Доступ к задаче запрещен", 403);
+    }
+
     const statusMap: Record<string, string> = {
       pending: "pending",
       processing: "processing",
@@ -30,7 +38,6 @@ export async function GET(request: NextRequest) {
       failed: "failed",
     };
 
-    const payload = event.payload as Record<string, unknown> | null;
     const downloadUrl = event.status === "sent" ? (payload?.downloadUrl as string | undefined) : undefined;
 
     return NextResponse.json({

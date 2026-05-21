@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { Plus, ChevronRight, ChevronDown, FileText, Video, HelpCircle, CheckSquare, Trash2, FolderOpen } from "lucide-react";
+import { Plus, ChevronRight, ChevronDown, FileText, Video, HelpCircle, CheckSquare, Trash2, FolderOpen, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { BuilderModuleDetail, BuilderBlockDetail } from "@/types/domain";
 
@@ -37,8 +37,54 @@ export function CourseOutline({
   onModulesChange: (modules: BuilderModuleDetail[]) => void;
 }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const dragItem = useRef<{ type: "module" | "block" | "lesson"; moduleIndex: number; blockIndex?: number; lessonIndex?: number } | null>(null);
-  void dragItem; // used for future drag-and-drop
+  const [renaming, setRenaming] = useState<{ type: "module" | "block" | "lesson"; id: string; currentTitle: string } | null>(null);
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Drag state for module reorder ──────────────────────────────────
+  const dragModuleId = useRef<string | null>(null);
+  const dragOverModuleIndex = useRef<number | null>(null);
+  const debouncedReorder = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const commitReorder = useCallback((orderedModules: BuilderModuleDetail[]) => {
+    if (debouncedReorder.current) clearTimeout(debouncedReorder.current);
+    debouncedReorder.current = setTimeout(async () => {
+      const ids = orderedModules.map((m) => m.id);
+      await fetch(`/api/v1/courses/${courseId}/modules/reorder`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ moduleIds: ids }),
+      });
+    }, 500);
+  }, [courseId]);
+
+  const handleModuleDrop = useCallback((dropIndex: number) => {
+    const fromId = dragModuleId.current;
+    if (!fromId) return;
+    const fromIndex = modules.findIndex((m) => m.id === fromId);
+    if (fromIndex === -1 || fromIndex === dropIndex) return;
+    const next = [...modules];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(dropIndex, 0, moved);
+    onModulesChange(next);
+    commitReorder(next);
+    dragModuleId.current = null;
+    dragOverModuleIndex.current = null;
+  }, [modules, onModulesChange, commitReorder]);
+
+  // ── Rename ─────────────────────────────────────────────────────────
+  const commitRename = useCallback(async (type: string, id: string, title: string) => {
+    let path = "";
+    if (type === "module") path = `/api/v1/modules/${id}`;
+    else if (type === "block") path = `/api/v1/blocks/${id}`;
+    else if (type === "lesson") path = `/api/v1/lessons/${id}`;
+    try {
+      await fetch(path, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      });
+    } catch { /* optimistic update already applied */ }
+  }, []);
 
   const toggleCollapse = useCallback((id: string) => {
     setCollapsed((prev) => {
@@ -191,11 +237,44 @@ export function CourseOutline({
         Курс
       </button>
 
+      {/* Collapse/Expand header */}
+      <div className="flex items-center justify-between px-3 pt-1 pb-1">
+        <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Структура</span>
+        <div className="flex gap-1">
+          <button
+            onClick={() => {
+              const allIds = new Set<string>();
+              modules.forEach((m) => {
+                allIds.add(m.id);
+                m.blocks.forEach((b) => allIds.add(`block-${b.id}`));
+              });
+              setCollapsed(allIds);
+            }}
+            className="text-[10px] text-muted-foreground hover:text-foreground px-1"
+            title="Свернуть всё"
+          >
+            −
+          </button>
+          <button
+            onClick={() => setCollapsed(new Set())}
+            className="text-[10px] text-muted-foreground hover:text-foreground px-1"
+            title="Развернуть всё"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
       {/* Modules */}
       {modules.map((mod, mi) => (
         <div key={mod.id} className="ml-2">
-          {/* Module header */}
+          {/* Module header — draggable */}
           <div
+            draggable
+            onDragStart={() => { dragModuleId.current = mod.id; }}
+            onDragOver={(e) => { e.preventDefault(); dragOverModuleIndex.current = mi; }}
+            onDrop={(e) => { e.preventDefault(); handleModuleDrop(mi); }}
+            onDragEnd={() => { dragModuleId.current = null; dragOverModuleIndex.current = null; }}
             className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm transition-colors ${
               selected.type === "module" && selected.moduleId === mod.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
             }`}
@@ -203,11 +282,55 @@ export function CourseOutline({
             <button onClick={() => toggleCollapse(mod.id)} className="p-0.5">
               {collapsed.has(mod.id) ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
             </button>
+            {renaming?.id === mod.id ? (
+              <input
+                ref={renameInputRef}
+                className="flex-1 min-w-0 rounded border px-1 py-0 text-xs"
+                value={renaming.currentTitle}
+                onChange={(e) => setRenaming((r) => r ? { ...r, currentTitle: e.target.value } : null)}
+                onBlur={() => {
+                  if (renaming) {
+                    const updated = modules.map((m) => m.id === renaming.id ? { ...m, title: renaming.currentTitle } : m);
+                    onModulesChange(updated);
+                    commitRename(renaming.type, renaming.id, renaming.currentTitle);
+                  }
+                  setRenaming(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                  if (e.key === "Escape") { setRenaming(null); }
+                }}
+              />
+            ) : (
+              <button
+                onClick={() => onSelect({ type: "module", moduleId: mod.id })}
+                onDoubleClick={() => {
+                  setRenaming({ type: "module", id: mod.id, currentTitle: mod.title });
+                  setTimeout(() => renameInputRef.current?.focus(), 50);
+                }}
+                className="flex-1 text-left truncate font-medium"
+              >
+                {mod.title}
+              </button>
+            )}
+            {/* Clone button */}
             <button
-              onClick={() => onSelect({ type: "module", moduleId: mod.id })}
-              className="flex-1 text-left truncate font-medium"
+              onClick={async (e) => {
+                e.stopPropagation();
+                const res = await fetch(`/api/v1/modules/${mod.id}/clone`, { method: "POST" });
+                if (res.ok) {
+                  const newModule = await res.json();
+                  const updated = [...modules];
+                  const idx = updated.findIndex((m) => m.id === mod.id);
+                  updated.splice(idx + 1, 0, newModule.data ?? newModule);
+                  onModulesChange(updated);
+                  onSelect({ type: "module", moduleId: (newModule.data ?? newModule).id });
+                }
+              }}
+              className="p-0.5 text-muted-foreground hover:text-primary"
+              title="Копировать модуль"
             >
-              {mod.title}
+              <Copy className="h-3 w-3" />
             </button>
             <button onClick={(e) => deleteModule(mod.id, e)} className="p-0.5 text-muted-foreground hover:text-destructive" title="Удалить модуль">
               <Trash2 className="h-3 w-3" />
@@ -228,12 +351,40 @@ export function CourseOutline({
                       {collapsed.has(`block-${block.id}`) ? <ChevronRight className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                     </button>
                     <FolderOpen className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <button
-                      onClick={() => onSelect({ type: "block", moduleId: mod.id, blockId: block.id })}
-                      className="flex-1 text-left truncate text-xs"
-                    >
-                      {block.title}
-                    </button>
+                    {renaming?.id === block.id ? (
+                      <input
+                        ref={renameInputRef}
+                        className="flex-1 min-w-0 rounded border px-1 py-0 text-xs"
+                        value={renaming.currentTitle}
+                        onChange={(e) => setRenaming((r) => r ? { ...r, currentTitle: e.target.value } : null)}
+                        onBlur={() => {
+                          if (renaming) {
+                            const updated = modules.map((m) => ({
+                              ...m,
+                              blocks: m.blocks.map((b) => b.id === renaming.id ? { ...b, title: renaming.currentTitle } : b),
+                            }));
+                            onModulesChange(updated);
+                            commitRename(renaming.type, renaming.id, renaming.currentTitle);
+                          }
+                          setRenaming(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                          if (e.key === "Escape") { setRenaming(null); }
+                        }}
+                      />
+                    ) : (
+                      <button
+                        onClick={() => onSelect({ type: "block", moduleId: mod.id, blockId: block.id })}
+                        onDoubleClick={() => {
+                          setRenaming({ type: "block", id: block.id, currentTitle: block.title });
+                          setTimeout(() => renameInputRef.current?.focus(), 50);
+                        }}
+                        className="flex-1 text-left truncate text-xs"
+                      >
+                        {block.title}
+                      </button>
+                    )}
                     <button onClick={(e) => deleteBlock(mi, block.id, e)} className="p-0.5 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" title="Удалить блок">
                       <Trash2 className="h-2.5 w-2.5" />
                     </button>
@@ -250,14 +401,48 @@ export function CourseOutline({
                           >
                             <button
                               onClick={() => onSelect({ type: "lesson", moduleId: mod.id, blockId: block.id, lessonId: lesson.id })}
+                              onDoubleClick={() => {
+                                setRenaming({ type: "lesson", id: lesson.id, currentTitle: lesson.title });
+                                setTimeout(() => renameInputRef.current?.focus(), 50);
+                              }}
                               className={`flex items-center gap-1.5 flex-1 text-xs py-0.5 ${
                                 selected.type === "lesson" && selected.lessonId === lesson.id
                                   ? "text-primary font-medium"
                                   : "text-muted-foreground hover:text-foreground"
                               }`}
                             >
-                              <Icon className="h-3 w-3 shrink-0" />
-                              <span className="truncate">{lesson.title}</span>
+                              {renaming?.id === lesson.id ? (
+                                <input
+                                  ref={renameInputRef}
+                                  className="flex-1 min-w-0 rounded border px-1 py-0 text-xs"
+                                  value={renaming.currentTitle}
+                                  onChange={(e) => setRenaming((r) => r ? { ...r, currentTitle: e.target.value } : null)}
+                                  onBlur={() => {
+                                    if (renaming) {
+                                      const updateTitle = (items: BuilderModuleDetail[]) => items.map((m) => ({
+                                        ...m,
+                                        blocks: m.blocks.map((b) => ({
+                                          ...b,
+                                          lessons: b.lessons.map((l) => l.id === renaming.id ? { ...l, title: renaming.currentTitle } : l),
+                                        })),
+                                        lessons: m.lessons.map((l) => l.id === renaming.id ? { ...l, title: renaming.currentTitle } : l),
+                                      }));
+                                      onModulesChange(updateTitle(modules));
+                                      commitRename(renaming.type, renaming.id, renaming.currentTitle);
+                                    }
+                                    setRenaming(null);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                                    if (e.key === "Escape") { setRenaming(null); }
+                                  }}
+                                />
+                              ) : (
+                                <>
+                                  <Icon className="h-3 w-3 shrink-0" />
+                                  <span className="truncate">{lesson.title}</span>
+                                </>
+                              )}
                             </button>
                             <button onClick={(e) => deleteLesson(lesson.id, mi, block.id, e)} className="p-0.5 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" title="Удалить урок">
                               <Trash2 className="h-2.5 w-2.5" />
@@ -295,14 +480,44 @@ export function CourseOutline({
                   <div key={lesson.id} className="flex items-center gap-1 rounded-lg px-2 py-0.5 transition-colors group">
                     <button
                       onClick={() => onSelect({ type: "lesson", moduleId: mod.id, lessonId: lesson.id })}
+                      onDoubleClick={() => {
+                        setRenaming({ type: "lesson", id: lesson.id, currentTitle: lesson.title });
+                        setTimeout(() => renameInputRef.current?.focus(), 50);
+                      }}
                       className={`flex items-center gap-1.5 flex-1 text-xs py-0.5 ${
                         selected.type === "lesson" && selected.lessonId === lesson.id
                           ? "text-primary font-medium"
                           : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      <Icon className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{lesson.title}</span>
+                      {renaming?.id === lesson.id ? (
+                        <input
+                          ref={renameInputRef}
+                          className="flex-1 min-w-0 rounded border px-1 py-0 text-xs"
+                          value={renaming.currentTitle}
+                          onChange={(e) => setRenaming((r) => r ? { ...r, currentTitle: e.target.value } : null)}
+                          onBlur={() => {
+                            if (renaming) {
+                              const updateTitle = (items: BuilderModuleDetail[]) => items.map((m) => ({
+                                ...m,
+                                lessons: m.lessons.map((l) => l.id === renaming.id ? { ...l, title: renaming.currentTitle } : l),
+                              }));
+                              onModulesChange(updateTitle(modules));
+                              commitRename(renaming.type, renaming.id, renaming.currentTitle);
+                            }
+                            setRenaming(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                            if (e.key === "Escape") { setRenaming(null); }
+                          }}
+                        />
+                      ) : (
+                        <>
+                          <Icon className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{lesson.title}</span>
+                        </>
+                      )}
                     </button>
                     <button onClick={(e) => deleteLesson(lesson.id, mi, undefined, e)} className="p-0.5 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" title="Удалить урок">
                       <Trash2 className="h-2.5 w-2.5" />

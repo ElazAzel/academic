@@ -12,12 +12,13 @@ export async function POST(request: Request, context: Context) {
     const user = await requireUser("progress:write");
     const skipLimit = user.roles.includes("instructor") || user.roles.includes("admin") || user.roles.includes("super_curator") || user.roles.includes("curator");
 
-    const rl = await checkRateLimit(`quiz-attempt:${user.id}`);
+    const { quizId } = await context.params;
+
+    const rl = await checkRateLimit(`quiz-attempt:${user.id}:${quizId}`);
     if (!rl.allowed) {
       return errorResponse(new ApiError("too_many_requests", "Слишком много попыток. Подождите.", 429));
     }
 
-    const { quizId } = await context.params;
     const input = await parseJson(request, quizAttemptSchema);
     return created(await submitQuizAttempt(quizId, user.id, input.answers, skipLimit));
   } catch (error) {

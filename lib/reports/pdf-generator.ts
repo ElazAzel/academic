@@ -235,7 +235,7 @@ function drawTable(
 
 // ── Progress report ──────────────────────────────────────────────────
 
-export async function generateProgressPdf(rows: ProgressRow[]): Promise<Uint8Array> {
+export async function generateProgressPdf(rows: ProgressRow[], fields?: string[]): Promise<Uint8Array> {
   const { regular, bold } = getFonts();
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
@@ -292,6 +292,7 @@ export async function generateProgressPdf(rows: ProgressRow[]): Promise<Uint8Arr
     { header: "Урок", key: "currentLesson", width: 95 },
     { header: "Риски", key: "riskCount", width: 26, align: "center" },
   ];
+  const activeCols = fields ? columns.filter((c) => fields.includes(c.key)) : columns;
 
   const grouped = groupByCourse(rows);
   for (const [course, courseRows] of grouped) {
@@ -305,7 +306,7 @@ export async function generateProgressPdf(rows: ProgressRow[]): Promise<Uint8Arr
       riskCount: r.riskCount ?? 0,
     }));
 
-    y = drawTable(doc, pages, columns, tableRows, font, boldFont, y, course);
+    y = drawTable(doc, pages, activeCols, tableRows, font, boldFont, y, course);
     y -= 12;
   }
 
@@ -320,7 +321,7 @@ export async function generateProgressPdf(rows: ProgressRow[]): Promise<Uint8Arr
 
 // ── Risk report ──────────────────────────────────────────────────────
 
-export async function generateRiskPdf(rows: RiskRow[]): Promise<Uint8Array> {
+export async function generateRiskPdf(rows: RiskRow[], fields?: string[]): Promise<Uint8Array> {
   const { regular, bold } = getFonts();
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
@@ -374,6 +375,7 @@ export async function generateRiskPdf(rows: RiskRow[]): Promise<Uint8Array> {
     { header: "Уровень", key: "severity", width: 45, align: "center" },
     { header: "Статус", key: "status", width: 45, align: "center" },
   ];
+  const activeCols = fields ? columns.filter((c) => fields.includes(c.key)) : columns;
 
   const tableRows = rows.map((r) => ({
     studentName: r.studentName,
@@ -384,7 +386,7 @@ export async function generateRiskPdf(rows: RiskRow[]): Promise<Uint8Array> {
     status: r.status,
   }));
 
-  drawTable(doc, pages, columns, tableRows, font, boldFont, y);
+  drawTable(doc, pages, activeCols, tableRows, font, boldFont, y);
 
   const totalPages = pages.length;
   for (let i = 0; i < totalPages; i++) {
@@ -396,7 +398,7 @@ export async function generateRiskPdf(rows: RiskRow[]): Promise<Uint8Array> {
 
 // ── Certificate report (PDF) ─────────────────────────────────────────
 
-export async function generateCertificatePdf(rows: CertificateRow[]): Promise<Uint8Array> {
+export async function generateCertificatePdf(rows: CertificateRow[], fields?: string[]): Promise<Uint8Array> {
   const { regular, bold } = getFonts();
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
@@ -441,6 +443,7 @@ export async function generateCertificatePdf(rows: CertificateRow[]): Promise<Ui
     { header: "Курс", key: "course", width: 120 },
     { header: "Дата", key: "issuedAt", width: 56, align: "center" },
   ];
+  const activeCols = fields ? columns.filter((c) => fields.includes(c.key)) : columns;
 
   const tableRows = rows.map((r) => ({
     number: r.number,
@@ -450,7 +453,7 @@ export async function generateCertificatePdf(rows: CertificateRow[]): Promise<Ui
     issuedAt: r.issuedAt,
   }));
 
-  drawTable(doc, pages, columns, tableRows, font, boldFont, y);
+  drawTable(doc, pages, activeCols, tableRows, font, boldFont, y);
 
   const totalPages = pages.length;
   for (let i = 0; i < totalPages; i++) {
@@ -462,7 +465,7 @@ export async function generateCertificatePdf(rows: CertificateRow[]): Promise<Ui
 
 // ── Assignment report (PDF) ──────────────────────────────────────────
 
-export async function generateAssignmentPdf(rows: AssignmentRow[]): Promise<Uint8Array> {
+export async function generateAssignmentPdf(rows: AssignmentRow[], fields?: string[]): Promise<Uint8Array> {
   const { regular, bold } = getFonts();
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
@@ -494,17 +497,20 @@ export async function generateAssignmentPdf(rows: AssignmentRow[]): Promise<Uint
   }
   y -= 8;
 
+  const columns: TableColumn[] = [
+    { header: "Слушатель", key: "studentName", width: 95 },
+    { header: "Курс", key: "course", width: 100 },
+    { header: "Задание", key: "assignment", width: 115 },
+    { header: "Статус", key: "status", width: 55 },
+    { header: "Балл", key: "score", width: 30, align: "center" },
+    { header: "Дата", key: "submittedAt", width: 58, align: "center" },
+  ];
+  const activeCols = fields ? columns.filter((c) => fields.includes(c.key)) : columns;
+
   drawTable(
     doc,
     pages,
-    [
-      { header: "Слушатель", key: "studentName", width: 95 },
-      { header: "Курс", key: "course", width: 100 },
-      { header: "Задание", key: "assignment", width: 115 },
-      { header: "Статус", key: "status", width: 55 },
-      { header: "Балл", key: "score", width: 30, align: "center" },
-      { header: "Дата", key: "submittedAt", width: 58, align: "center" },
-    ],
+    activeCols,
     rows.map((row) => ({
       studentName: row.studentName,
       course: row.course,
@@ -528,7 +534,7 @@ export async function generateAssignmentPdf(rows: AssignmentRow[]): Promise<Uint
 
 // ── Curator workload report (PDF) ────────────────────────────────────
 
-export async function generateCuratorWorkloadPdf(rows: CuratorWorkloadRow[]): Promise<Uint8Array> {
+export async function generateCuratorWorkloadPdf(rows: CuratorWorkloadRow[], fields?: string[]): Promise<Uint8Array> {
   const { regular, bold } = getFonts();
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
@@ -561,19 +567,22 @@ export async function generateCuratorWorkloadPdf(rows: CuratorWorkloadRow[]): Pr
   }
   y -= 8;
 
+  const columns: TableColumn[] = [
+    { header: "Куратор", key: "curatorName", width: 100 },
+    { header: "Слуш.", key: "studentsCount", width: 35, align: "center" },
+    { header: "%", key: "avgProgress", width: 30, align: "center" },
+    { header: "Вопр.", key: "openQuestions", width: 38, align: "center" },
+    { header: "Зад.", key: "pendingAssignments", width: 38, align: "center" },
+    { header: "Риски", key: "activeRisks", width: 38, align: "center" },
+    { header: "Крит.", key: "criticalRisks", width: 38, align: "center" },
+    { header: "Потоки", key: "cohorts", width: 120 },
+  ];
+  const activeCols = fields ? columns.filter((c) => fields.includes(c.key)) : columns;
+
   drawTable(
     doc,
     pages,
-    [
-      { header: "Куратор", key: "curatorName", width: 100 },
-      { header: "Слуш.", key: "studentsCount", width: 35, align: "center" },
-      { header: "%", key: "avgProgress", width: 30, align: "center" },
-      { header: "Вопр.", key: "openQuestions", width: 38, align: "center" },
-      { header: "Зад.", key: "pendingAssignments", width: 38, align: "center" },
-      { header: "Риски", key: "activeRisks", width: 38, align: "center" },
-      { header: "Крит.", key: "criticalRisks", width: 38, align: "center" },
-      { header: "Потоки", key: "cohorts", width: 120 },
-    ],
+    activeCols,
     rows.map((row) => ({
       curatorName: row.curatorName,
       studentsCount: row.studentsCount,

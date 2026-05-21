@@ -7,10 +7,12 @@ const mockRiskFlagFindMany = vi.hoisted(() => vi.fn());
 const mockCertificateFindMany = vi.hoisted(() => vi.fn());
 const mockLessonProgressFindMany = vi.hoisted(() => vi.fn());
 const mockRiskFlagGroupBy = vi.hoisted(() => vi.fn());
+const mockQueryRaw = vi.hoisted(() => vi.fn());
 const mockAuditCreate = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
+    $queryRaw: mockQueryRaw,
     enrollment: { findMany: mockEnrollmentFindMany },
     riskFlag: { findMany: mockRiskFlagFindMany, groupBy: mockRiskFlagGroupBy },
     certificate: { findMany: mockCertificateFindMany },
@@ -139,6 +141,7 @@ describe("fetchProgressData", () => {
       },
     ]);
     mockLessonProgressFindMany.mockResolvedValue([]);
+    mockQueryRaw.mockResolvedValue([]);
     mockRiskFlagGroupBy.mockResolvedValue([]);
 
     const rows = await fetchProgressData();
@@ -160,6 +163,7 @@ describe("fetchProgressData", () => {
   it("filters by studentIds when provided", async () => {
     mockEnrollmentFindMany.mockResolvedValue([]);
     mockLessonProgressFindMany.mockResolvedValue([]);
+    mockQueryRaw.mockResolvedValue([]);
     mockRiskFlagGroupBy.mockResolvedValue([]);
     await fetchProgressData(["u1"]);
     expect(mockEnrollmentFindMany).toHaveBeenCalledWith(

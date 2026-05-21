@@ -1,8 +1,15 @@
 import { getPrisma } from "@/lib/prisma";
 import { dequeuePendingEvents, markFailed } from "@/server/modules/outbox/service";
 import { generateReportDownload, getReportUser, parseReportFormat } from "@/server/modules/reports/service";
+import { z } from "zod";
 
 const prisma = getPrisma();
+
+const reportJobPayloadSchema = z.object({
+  reportType: z.string(),
+  format: z.string(),
+  userId: z.string(),
+});
 
 function byteLength(content: string | Buffer | Uint8Array) {
   if (typeof content === "string") return new TextEncoder().encode(content).byteLength;
@@ -15,14 +22,14 @@ export async function processReportJobs(batchSize = 10) {
 
   for (const event of reportEvents) {
     try {
-      const payload = event.payload as { reportType?: string; format?: string; userId?: string };
-      const reportType = payload?.reportType;
-      const userId = payload?.userId;
-
-      if (!reportType || !payload?.format || !userId) {
-        await markFailed(event.id, "Invalid payload: missing reportType, format, or userId");
+      const parsed = reportJobPayloadSchema.safeParse(event.payload);
+      if (!parsed.success) {
+        await markFailed(event.id, `Invalid payload: ${parsed.error.message}`);
         continue;
       }
+
+      const { reportType, format: rawFormat, userId } = parsed.data;
+      const format = parseReportFormat(rawFormat);
 
       const user = await getReportUser(userId);
       if (!user) {
@@ -33,7 +40,7 @@ export async function processReportJobs(batchSize = 10) {
       const report = await generateReportDownload({
         user,
         type: reportType,
-        format: parseReportFormat(payload.format),
+        format,
       });
 
       const downloadUrl = `/api/v1/reports?type=${report.definition.type}&format=${report.format}`;
@@ -44,9 +51,9 @@ export async function processReportJobs(batchSize = 10) {
           status: "sent",
           sentAt: new Date(),
           payload: {
-            ...payload,
             reportType: report.definition.type,
             format: report.format,
+            userId,
             owner: report.definition.owner,
             scope: report.access.scopeLabel,
             downloadUrl,

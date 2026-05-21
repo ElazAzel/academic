@@ -13,7 +13,7 @@ interface QuestionForm {
   type: string;
   prompt: string;
   options: string[];
-  correctAnswer: string;
+  correctAnswer: string | string[];
   points: number;
 }
 
@@ -148,6 +148,7 @@ export function QuizCreator({
               >
                 <option value="single">Один вариант</option>
                 <option value="multiple">Несколько вариантов</option>
+                <option value="text">Свободный ответ</option>
               </select>
               <input
                 type="number"
@@ -157,28 +158,39 @@ export function QuizCreator({
                 placeholder="Баллы"
               />
             </div>
-            <div className="space-y-1">
-              {q.options.map((opt, oi) => (
-                <div key={oi} className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name={`correct-${qi}`}
-                    checked={q.correctAnswer === String(oi)}
-                    onChange={() => updateQuestion(qi, { correctAnswer: String(oi) })}
-                    className="shrink-0"
-                  />
-                  <input
-                    className="flex-1 rounded-lg border px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-primary/20"
-                    value={opt}
-                    onChange={(e) => updateOption(qi, oi, e.target.value)}
-                    placeholder={`Вариант ${oi + 1}`}
-                  />
-                </div>
-              ))}
-              <Button size="sm" variant="ghost" className="text-xs" onClick={() => addOption(qi)}>
-                <Plus className="h-3 w-3 mr-1" /> Вариант
-              </Button>
-            </div>
+            {q.type === "text" ? (
+              <div className="space-y-1">
+                <input
+                  className="w-full rounded-lg border px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-primary/20"
+                  value={Array.isArray(q.correctAnswer) ? q.correctAnswer[0] || "" : q.correctAnswer as string}
+                  onChange={(e) => updateQuestion(qi, { correctAnswer: e.target.value })}
+                  placeholder="Правильный ответ"
+                />
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {q.options.map((opt, oi) => (
+                  <div key={oi} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name={`correct-${qi}`}
+                      checked={q.correctAnswer === String(oi)}
+                      onChange={() => updateQuestion(qi, { correctAnswer: String(oi) })}
+                      className="shrink-0"
+                    />
+                    <input
+                      className="flex-1 rounded-lg border px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-primary/20"
+                      value={opt}
+                      onChange={(e) => updateOption(qi, oi, e.target.value)}
+                      placeholder={`Вариант ${oi + 1}`}
+                    />
+                  </div>
+                ))}
+                <Button size="sm" variant="ghost" className="text-xs" onClick={() => addOption(qi)}>
+                  <Plus className="h-3 w-3 mr-1" /> Вариант
+                </Button>
+              </div>
+            )}
           </div>
         ))}
         <Button size="sm" variant="ghost" onClick={addQuestion} className="w-full">

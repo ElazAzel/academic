@@ -31,7 +31,7 @@ export async function generateReportAction(projectId: string, type: string) {
       projectId,
       type,
       status: "ready",
-      url: `/api/v1/reports/download?id=${crypto.randomUUID()}` // Mock URL
+      url: `/api/v1/reports?type=${type}&format=csv`
     }
   });
 

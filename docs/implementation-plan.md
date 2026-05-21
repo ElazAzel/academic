@@ -11,11 +11,19 @@
 
 ### Core Metrics
 - **Build:** 81/81 страниц, 0 ошибок ✅
-- **Tests:** 354/354 passed (60/60 test files) ✅
+- **Tests:** 368/368 passed (62 test files) ✅
 - **Deployment:** Vercel auto-deploy на push в main ✅
 - **Security scan:** Все C1-C5 findings закрыты ✅
 - **CSRF:** Исправлен (origin vs hostname) ✅
 - **Session resilience:** try/catch revalidateSession, fallback на JWT роли ✅
+
+### Последние изменения (Stage 4)
+- H-1: Sequential lock bypass — исправлен wrong moduleId filter
+- H-2: Secure media signed-URL — sequential lock check added
+- H-4: Quiz attempt race condition — wrapped in $transaction
+- M-1: Rate limit key per-quiz (not per-user)
+- M-2: Enrollment check on lesson GET
+- M-3: Enrollment check on rating POST
 
 ### Выполненные домены
 
