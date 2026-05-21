@@ -46,6 +46,10 @@ export async function POST(request: Request) {
       startedAt: session.startedAt.toISOString(),
     });
   } catch (error) {
+    console.error("[POST /api/v1/sessions/start]", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return errorResponse(error);
   }
 }
