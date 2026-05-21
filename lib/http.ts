@@ -83,9 +83,6 @@ export function getSearchParam(request: Request, key: string, fallback = "") {
 export function verifyCsrf(request: Request) {
   const origin = request.headers.get("origin");
   const referer = request.headers.get("referer");
-  const allowedOrigin = process.env.APP_URL
-    || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
-    || "http://localhost:3000";
 
   const source = origin ?? referer;
   if (!source) {
@@ -94,9 +91,9 @@ export function verifyCsrf(request: Request) {
 
   try {
     const sourceUrl = new URL(source);
-    const allowedUrl = new URL(allowedOrigin);
+    const requestUrl = new URL(request.url);
 
-    if (sourceUrl.hostname !== allowedUrl.hostname || sourceUrl.port !== allowedUrl.port) {
+    if (sourceUrl.hostname !== requestUrl.hostname || sourceUrl.port !== requestUrl.port) {
       throw new ApiError("forbidden", "CSRF: origin mismatch", 403);
     }
   } catch {
