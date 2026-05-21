@@ -21,3 +21,4 @@ var/
 scratch/
 
 test-*.pdf
+.vercel
