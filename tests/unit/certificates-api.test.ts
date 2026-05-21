@@ -6,6 +6,7 @@ const mockIssueCertificate = vi.hoisted(() => vi.fn());
 const mockGenerateCertificatePdf = vi.hoisted(() => vi.fn());
 const mockGetScopedStudentIdsForObserver = vi.hoisted(() => vi.fn());
 const mockCertificateFindMany = vi.hoisted(() => vi.fn());
+const mockCheckRateLimit = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth/session", () => ({ requireUser: mockRequireUser }));
 vi.mock("@/server/modules/observer/scope", () => ({
@@ -15,6 +16,9 @@ vi.mock("@/server/modules/certificates/service", () => ({
   listCertificates: mockListCertificates,
   issueCertificate: mockIssueCertificate,
   generateCertificatePdf: mockGenerateCertificatePdf,
+}));
+vi.mock("@/lib/security/rate-limit", () => ({
+  checkRateLimit: mockCheckRateLimit,
 }));
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
@@ -40,6 +44,7 @@ beforeEach(() => {
   mockGenerateCertificatePdf.mockResolvedValue(new Uint8Array([1, 2, 3]));
   mockGetScopedStudentIdsForObserver.mockResolvedValue(["student-allowed"]);
   mockCertificateFindMany.mockResolvedValue([]);
+  mockCheckRateLimit.mockResolvedValue({ allowed: true, remaining: 99, resetAt: Date.now() + 60000 });
 });
 
 describe("certificates API scope", () => {
@@ -125,5 +130,16 @@ describe("certificates API scope", () => {
       }),
     );
     expect(mockGetScopedStudentIdsForObserver).not.toHaveBeenCalled();
+  });
+
+  it("rejects bulk download when rate limited", async () => {
+    mockRequireUser.mockResolvedValue({ id: "admin1", roles: ["admin"] });
+    mockCheckRateLimit.mockResolvedValue({ allowed: false, remaining: 0, resetAt: Date.now() + 60000 });
+
+    const response = await bulkRoute.POST(jsonRequest({ certificateIds: ["cert-1"] }));
+
+    expect(response.status).toBe(429);
+    expect(mockCertificateFindMany).not.toHaveBeenCalled();
+    expect(mockGenerateCertificatePdf).not.toHaveBeenCalled();
   });
 });
