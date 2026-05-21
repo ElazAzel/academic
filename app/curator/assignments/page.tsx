@@ -6,6 +6,7 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
 import type { SubmissionForReview } from "@/types/domain";
+import { CuratorAssignmentsFilter } from "@/components/curator/assignments-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -78,48 +79,10 @@ export default async function CuratorAssignmentsPage({
 
       {/* Filters — M3 */}
       <div className="flex flex-wrap items-center gap-3 mt-4 mb-6">
-        <form className="flex flex-wrap items-center gap-3">
-          <select
-            name="status"
-            defaultValue={params.status ?? ""}
-            onChange={(e) => {
-              const url = new URL(window.location.href);
-              if (e.target.value) url.searchParams.set("status", e.target.value);
-              else url.searchParams.delete("status");
-              window.location.href = url.toString();
-            }}
-            className="h-10 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
-          >
-            <option value="">Все статусы</option>
-            <option value="SUBMITTED">Отправлено</option>
-            <option value="IN_REVIEW">На проверке</option>
-            <option value="NEEDS_REVISION">На доработку</option>
-          </select>
-
-          <input
-            name="student"
-            defaultValue={params.student ?? ""}
-            placeholder="Поиск по слушателю..."
-            className="h-10 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 font-body-md text-body-md text-m3-on-surface outline-none w-48 focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all placeholder:text-m3-on-surface-variant"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const url = new URL(window.location.href);
-                if (e.currentTarget.value) url.searchParams.set("student", e.currentTarget.value);
-                else url.searchParams.delete("student");
-                window.location.href = url.toString();
-              }
-            }}
-          />
-
-          {(params.status || params.student) && (
-            <a
-              href="/curator/assignments"
-              className="font-body-sm text-body-sm text-m3-primary hover:text-m3-primary/80 underline underline-offset-2 transition-colors"
-            >
-              Сбросить фильтры
-            </a>
-          )}
-        </form>
+        <CuratorAssignmentsFilter
+          initialStatus={params.status}
+          initialStudent={params.student}
+        />
 
         <span className="font-body-sm text-body-sm text-m3-on-surface-variant ml-auto inline-flex items-center gap-1">
           <Icon name="assignment" className="text-[16px]" />
