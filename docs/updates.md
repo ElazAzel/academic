@@ -1378,3 +1378,10 @@ Next steps:
 
 - Добавить логирование исходящих писем в аудит, если это необходимо.
 - Проверить доставку на реальном SMTP (SendGrid/Resend).
+
+## 2026-05-21 — Фикс: CSRF origin mismatch на Vercel (403 на builder snapshot)
+
+- **Проблема**: На Vercel мутирующие API-запросы (PATCH/POST/DELETE) возвращали 403 с сообщением "CSRF: origin mismatch". Причина: `proxy.ts` сравнивает `origin` заголовок запроса с `APP_URL`, но на Vercel `APP_URL` не была задана, и fallback был `http://localhost:3000`, который не совпадает с `https://academic-silk-ten.vercel.app`.
+- **Фикс**: В `checkCsrfOrigin` (proxy.ts) и `verifyCsrf` (lib/http.ts) добавлен fallback на `VERCEL_URL` — переменную, автоматически устанавливаемую Vercel для каждого деплоя (`https://${VERCEL_URL}`).
+- **Затронутые файлы**: `proxy.ts`, `lib/http.ts`
+- **Коммит**: `358c271`
