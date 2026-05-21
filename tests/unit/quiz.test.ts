@@ -176,7 +176,7 @@ describe("quiz grading", () => {
 
   it("handles direct text correctAnswer for short answer type", () => {
     const result = gradeObjectiveQuiz(
-      [{ id: "q1", type: "SHORT_ANSWER", points: 1, correctAnswer: "Paris" }],
+      [{ id: "q1", type: "TEXT", points: 1, correctAnswer: "Paris" }],
       { q1: "Paris" },
       100
     );

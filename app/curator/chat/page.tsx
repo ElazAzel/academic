@@ -10,15 +10,22 @@ export default async function CuratorChatPage() {
   await requireRolePage(["curator", "super_curator", "admin"]);
 
   let conversations: Awaited<ReturnType<typeof getMyConversations>> = [];
+  let hasError = false;
   try {
     conversations = await getMyConversations();
-  } catch {
-    // graceful fallback — пустой список диалогов
+  } catch (e) {
+    hasError = true;
+    console.error("[CuratorChat] Failed to fetch conversations:", e);
   }
 
   return (
     <AppShell role="curator">
       <PageHeader title="Сообщения" description="Диалоги со слушателями." />
+      {hasError && (
+        <div className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+          Не удалось загрузить диалоги. Проверьте подключение к базе данных.
+        </div>
+      )}
       <CuratorChatList conversations={conversations} />
     </AppShell>
   );

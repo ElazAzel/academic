@@ -53,36 +53,53 @@ export async function checkUnansweredMessages() {
 
   let reminded = 0;
 
-  for (const convo of conversations) {
-    // Пропускаем, если сообщение слишком свежее
-    if (convo.last_msg_at > remindThreshold) continue;
+  // Filter stale conversations in-memory, then batch-check curator replies + reminders
+  const staleConversations = conversations.filter((c) => c.last_msg_at <= remindThreshold);
+  if (staleConversations.length === 0) return { reminded };
 
-    // Проверяем, не отвечал ли куратор ПОСЛЕ этого сообщения
-    const curatorReply = await prisma.message.findFirst({
-      where: {
-        senderId: user.id,
-        receiverId: convo.student_id,
-        createdAt: { gt: convo.last_msg_at },
-      },
-      select: { id: true },
-    });
+  // Batch 1: find which stale conversations have NO curator reply after the student message
+  const replyChecks = await Promise.all(
+    staleConversations.map((c) =>
+      prisma.message
+        .findFirst({
+          where: {
+            senderId: user.id,
+            receiverId: c.student_id,
+            createdAt: { gt: c.last_msg_at },
+          },
+          select: { id: true },
+        })
+        .then((reply) => ({ studentId: c.student_id, hasLaterReply: !!reply }))
+    )
+  );
 
-    if (curatorReply) continue; // куратор уже ответил
+  const unrespondedIds = replyChecks
+    .filter((r) => !r.hasLaterReply)
+    .map((r) => r.studentId);
 
-    // Дедупликация: не отправлять повторное напоминание раньше cooldown
-    const recentReminder = await prisma.notification.findFirst({
+  // Batch 2: exclude those with a recent reminder (cooldown)
+  let studentIdsToRemind = unrespondedIds;
+  if (unrespondedIds.length > 0) {
+    const recentReminders = await prisma.notification.findMany({
       where: {
         userId: user.id,
         type: "curator_response_reminder",
-        refId: convo.student_id,
+        refId: { in: unrespondedIds },
         createdAt: { gt: cooldownThreshold },
       },
-      select: { id: true },
+      select: { refId: true },
     });
 
-    if (recentReminder) continue;
+    const remindedRecently = new Set(recentReminders.map((r) => r.refId));
+    studentIdsToRemind = unrespondedIds.filter((id) => !remindedRecently.has(id));
+  }
 
-    // Создаём напоминание
+  // Batch 3: create notifications for all conversations needing reminders
+  const convoMap = new Map(staleConversations.map((c) => [c.student_id, c]));
+  for (const studentId of studentIdsToRemind) {
+    const convo = convoMap.get(studentId);
+    if (!convo) continue;
+
     await createNotification({
       userId: user.id,
       event: "curator_response_reminder",
