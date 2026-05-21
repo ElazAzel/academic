@@ -307,53 +307,66 @@ async function fetchRows(type: ReportType, scope: ReportDataScope) {
   }
 }
 
-async function renderReport(type: ReportType, format: ReportFormat, rows: Awaited<ReturnType<typeof fetchRows>>): Promise<RenderedReport> {
+async function renderReport(type: ReportType, format: ReportFormat, rows: Awaited<ReturnType<typeof fetchRows>>, fields?: string[]): Promise<RenderedReport> {
   if (format === "csv") {
     switch (type) {
       case "progress":
-        return { content: generateProgressCsv(rows as ProgressRow[]), format };
+        return { content: generateProgressCsv(rows as ProgressRow[], fields), format };
       case "risk":
-        return { content: generateRiskCsv(rows as RiskRow[]), format };
+        return { content: generateRiskCsv(rows as RiskRow[], fields), format };
       case "assignments":
-        return { content: generateAssignmentCsv(rows as AssignmentRow[]), format };
+        return { content: generateAssignmentCsv(rows as AssignmentRow[], fields), format };
       case "certificates":
-        return { content: generateCertificateCsv(rows as CertificateRow[]), format };
+        return { content: generateCertificateCsv(rows as CertificateRow[], fields), format };
       case "curator_workload":
-        return { content: generateCuratorWorkloadCsv(rows as CuratorWorkloadRow[]), format };
+        return { content: generateCuratorWorkloadCsv(rows as CuratorWorkloadRow[], fields), format };
     }
+  }
+
+  // Row-count guardrails: fail early with a clear message instead of
+  // silently timing out or OOM-ing on large datasets.
+  if (format === "pdf" && rows.length > 2000) {
+    console.warn(`[Reports] PDF limit exceeded: ${rows.length} rows, falling back to CSV`);
+    const fallback: RenderedReport = await renderReport(type, "csv", rows, fields);
+    return { ...fallback, fallbackReason: `PDF supports max 2000 строк. CSV сгенерирован (${rows.length} строк)` };
+  }
+  if (format === "xlsx" && rows.length > 50000) {
+    console.warn(`[Reports] XLSX limit exceeded: ${rows.length} rows, falling back to CSV`);
+    const fallback: RenderedReport = await renderReport(type, "csv", rows, fields);
+    return { ...fallback, fallbackReason: `XLSX supports max 50 000 строк. CSV сгенерирован (${rows.length} строк)` };
   }
 
   try {
     if (format === "xlsx") {
       switch (type) {
         case "progress":
-          return { content: await generateProgressXlsx(rows as ProgressRow[]), format };
+          return { content: await generateProgressXlsx(rows as ProgressRow[], fields), format };
         case "risk":
-          return { content: await generateRiskXlsx(rows as RiskRow[]), format };
+          return { content: await generateRiskXlsx(rows as RiskRow[], fields), format };
         case "assignments":
-          return { content: await generateAssignmentXlsx(rows as AssignmentRow[]), format };
+          return { content: await generateAssignmentXlsx(rows as AssignmentRow[], fields), format };
         case "certificates":
-          return { content: await generateCertificateXlsx(rows as CertificateRow[]), format };
+          return { content: await generateCertificateXlsx(rows as CertificateRow[], fields), format };
         case "curator_workload":
-          return { content: await generateCuratorWorkloadXlsx(rows as CuratorWorkloadRow[]), format };
+          return { content: await generateCuratorWorkloadXlsx(rows as CuratorWorkloadRow[], fields), format };
       }
     }
 
     switch (type) {
       case "progress":
-        return { content: await generateProgressPdf(rows as ProgressRow[]), format };
+        return { content: await generateProgressPdf(rows as ProgressRow[], fields), format };
       case "risk":
-        return { content: await generateRiskPdf(rows as RiskRow[]), format };
+        return { content: await generateRiskPdf(rows as RiskRow[], fields), format };
       case "assignments":
-        return { content: await generateAssignmentPdf(rows as AssignmentRow[]), format };
+        return { content: await generateAssignmentPdf(rows as AssignmentRow[], fields), format };
       case "certificates":
-        return { content: await generateCertificatePdf(rows as CertificateRow[]), format };
+        return { content: await generateCertificatePdf(rows as CertificateRow[], fields), format };
       case "curator_workload":
-        return { content: await generateCuratorWorkloadPdf(rows as CuratorWorkloadRow[]), format };
+        return { content: await generateCuratorWorkloadPdf(rows as CuratorWorkloadRow[], fields), format };
     }
   } catch (error) {
     console.warn(`[Reports] ${format} generation failed, falling back to CSV:`, error);
-    const fallback: RenderedReport = await renderReport(type, "csv", rows);
+    const fallback: RenderedReport = await renderReport(type, "csv", rows, fields);
     return {
       ...fallback,
       fallbackReason: `${format} generation failed, CSV provided instead`,
@@ -422,6 +435,7 @@ export async function generateReportDownload(input: {
   user: Pick<AppSessionUser, "id" | "roles">;
   type: string | null;
   format: ReportFormat;
+  fields?: string[];
 }): Promise<ReportDownload> {
   const type = normalizeReportType(input.type);
   const definition = REPORT_DEFINITIONS[type];
@@ -433,7 +447,7 @@ export async function generateReportDownload(input: {
   if (cached) return cached;
 
   const rows = await fetchRows(type, access.scope);
-  const rendered = await renderReport(type, input.format, rows);
+  const rendered = await renderReport(type, input.format, rows, input.fields);
   const filename = `${definition.filenameBase}${EXT[rendered.format]}`;
 
   const download: ReportDownload = {

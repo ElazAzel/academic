@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { errorResponse } from "@/lib/http";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 import { generateReportDownload, getAvailableReportsForRoles, parseReportFormat } from "@/server/modules/reports/service";
 import type { ReportFormat } from "@/lib/reports/types";
 
@@ -48,6 +49,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const format = parseReportFormat(searchParams.get("format"));
 
+    const rl = await checkRateLimit(`reports:download:${user.id}`);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Слишком много запросов. Попробуйте позже." }, { status: 429 });
+    }
+
     if (searchParams.get("meta") === "1") {
       return NextResponse.json({
         data: getAvailableReportsForRoles(user.roles).map((report) => ({
@@ -60,10 +66,13 @@ export async function GET(request: Request) {
       });
     }
 
+    const clientFields = searchParams.get("fields")?.split(",").filter(Boolean);
+
     const download = await generateReportDownload({
       user,
       type: searchParams.get("type"),
       format,
+      fields: clientFields,
     });
 
     const response = respond(download.content, download.format, download.filename);

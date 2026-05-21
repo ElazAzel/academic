@@ -10,6 +10,7 @@
  * outbox и возвращаем ответ. Отправка происходит асинхронно.
  */
 
+import { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { toJsonValue } from "@/lib/json";
 
@@ -41,29 +42,50 @@ export async function markSent(ids: string[]): Promise<void> {
 
 /**
  * Dequeue pending events, mark them as processing, return them.
- * Used by a background worker/cron.
+ *
+ * Uses atomic UPDATE … RETURNING with FOR UPDATE SKIP LOCKED so
+ * concurrent workers never claim the same row. Also rescues events
+ * stuck in "processing" for more than 10 minutes (crashed worker).
  */
 export async function dequeuePendingEvents(batchSize = 50) {
-  const now = new Date();
+  const cutoff = new Date(Date.now() - 10 * 60 * 1000);
 
-  // Optimistic lock: try to claim events
-  const events = await prisma.outboxEvent.findMany({
-    where: {
-      status: "pending",
-      createdAt: { lte: now },
-    },
-    orderBy: { createdAt: "asc" },
-    take: batchSize,
-  });
+  const rows = await prisma.$queryRaw<
+    Array<{
+      id: string;
+      event_type: string;
+      eventType?: string;
+      payload: unknown;
+      status: string;
+      error: string | null;
+      created_at: Date;
+      sent_at: Date | null;
+    }>
+  >(
+    Prisma.sql`
+      UPDATE "outbox_event"
+      SET "status" = 'processing'
+      WHERE "id" IN (
+        SELECT "id" FROM "outbox_event"
+        WHERE "status" = 'pending'
+           OR ("status" = 'processing' AND "sent_at" IS NULL AND "created_at" < ${cutoff})
+        ORDER BY "created_at" ASC
+        LIMIT ${batchSize}
+        FOR UPDATE SKIP LOCKED
+      )
+      RETURNING *
+    `,
+  );
 
-  if (events.length === 0) return [];
-
-  await prisma.outboxEvent.updateMany({
-    where: { id: { in: events.map((e) => e.id) }, status: "pending" },
-    data: { status: "processing" },
-  });
-
-  return events;
+  return rows.map((row) => ({
+    id: row.id,
+    eventType: row.event_type ?? row.eventType ?? "",
+    payload: row.payload,
+    status: "processing",
+    error: row.error,
+    createdAt: row.created_at,
+    sentAt: row.sent_at,
+  }));
 }
 
 /**

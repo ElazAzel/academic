@@ -2,6 +2,20 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-21 — Stage 5: Reports module audit & fixes (10 issues)
+
+- **H-1 (High) — Column picker не работал**: UI `ReportDesigner` отправлял `fields` query param, но `GET /api/v1/reports` игнорировал его. Добавлено сквозное пробрасывание `fields` в `generateReportDownload()` → `renderReport()` → генераторы CSV/XLSX/PDF. Теперь выбор колонок в конструкторе отчётов реально фильтрует вывод.
+- **H-2 (High) — Job status без проверки владельца**: `GET /api/v1/reports/job/status` проверяет, что `userId` в payload совпадает с текущим пользователем (или у пользователя роль admin). Ранее любой аутентифицированный пользователь мог смотреть статус чужих задач по UUID.
+- **H-3 (High) — Валидация payload в processor**: Добавлена Zod-схема `reportJobPayloadSchema` в `processor.ts`. Ранее payload воркера кастовался через `as`, без рантайм-валидации.
+- **M-4 (Medium) — N+1 query (50K rows) в fetchProgressData**: Заменён `lessonProgress.findMany({take: 50000})` + JS-агрегация на `prisma.$queryRaw` с `COUNT + SUM + GROUP BY`. Агрегация среднего времени урока теперь выполняется в базе данных.
+- **M-5 (Medium) — Race condition в outbox dequeuing**: `dequeuePendingEvents` теперь использует атомарный `UPDATE ... RETURNING` с `FOR UPDATE SKIP LOCKED`. Ранее read-then-update (findMany + updateMany) позволял двум воркерам одновременно прочитать и обработать одно событие.
+- **M-6 (Medium) — Rate limiting добавлен**: `checkRateLimit` на `GET /api/v1/reports` и `POST /api/v1/reports/job`. Ранее генерация отчётов не была защищена от DoS.
+- **M-8 (Medium) — PDF/XLSX row-count guard**: Добавлены лимиты: PDF ≤ 2000 строк, XLSX ≤ 50 000 строк. При превышении — понятное сообщение о падбэке на CSV вместо молчаливого OOM/timeout.
+- **M-9 (Medium) — generateReportAction URL fix**: URL заменён с `/api/v1/reports/download?id=...` (404) на `/api/v1/reports?type=...&format=csv` (рабочий).
+- **L-14 (Low) — Stuck processing events**: В `dequeuePendingEvents` добавлен rescue для событий, застрявших в статусе "processing" более 10 минут.
+- **typecheck**: passed ✅
+- **tests**: 368/368 passed (62/62 test files) — 0 regressions
+
 ## 2026-05-21 — Уведомления: outbox → inline (починка доставки студентам)
 
 - **Проблема**: Уведомления от куратора (и любые другие) не доходили до студентов, потому что все уведомления писались в `outbox_events`, но outbox-воркер никогда не вызывался (Vercel Hobby tier не поддерживает Cron Jobs).
