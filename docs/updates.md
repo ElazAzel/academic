@@ -2,6 +2,18 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-21 — Outbox cron-воркер: настроен Vercel Cron Jobs для доставки уведомлений
+
+- **Проблема (P0)**: Система уведомлений писала события в `outbox_events`, но cron-триггер не был настроен. Все уведомления (`certificate_available`, `new_message`, `assignment_reviewed` и др.) не доставлялись пользователям.
+- **Исправление**:
+  - `vercel.json` — добавлен `crons: [{ path: "/api/v1/outbox/process", schedule: "*/5 * * * *" }]`
+  - `.env.example` — `CRON_SECRET` теперь раскомментирован с явным значением-заглушкой
+  - Создан `tests/unit/outbox-handler.test.ts` — 6 тестов на `processNotificationEvents` (успешная обработка, фильтрация не-norification событий, invalid payload, ошибка БД, пустая очередь, кастомные title/body)
+  - Создан `tests/unit/cron-routes-success.test.ts` — 3 теста на авторизованный вызов cron-роута (успех, неверный CRON_SECRET, без заголовка)
+  - `docs/vercel-supabase-deployment.md` — добавлен раздел про Vercel Cron Jobs и CRON_SECRET
+- **typecheck**: pending
+- **tests**: pending
+
 ## 2026-05-21 — Интерактивный импорт пользователей из CSV + Полная верификация типов и сборки
 
 - **m1: Интерактивный пакетный импортер (Admin Batch Importer)**:

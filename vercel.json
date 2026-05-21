@@ -3,6 +3,12 @@
   "buildCommand": "npm run build",
   "installCommand": "npm ci",
   "regions": ["fra1"],
+  "crons": [
+    {
+      "path": "/api/v1/outbox/process",
+      "schedule": "*/5 * * * *"
+    }
+  ],
   "env": {
     "NEXT_OUTPUT_MODE": ""
   }
