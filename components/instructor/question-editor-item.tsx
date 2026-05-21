@@ -91,11 +91,11 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
               <select
                 className="w-full h-10 rounded-xl border bg-background px-3 text-sm"
                 value={data.type}
-                onChange={(e) => setData({ ...data, type: e.target.value, options: (e.target.value === "SHORT_ANSWER" ? [] : options) })}
+                onChange={(e) => setData({ ...data, type: e.target.value, options: (e.target.value === "TEXT" ? [] : options) })}
               >
                 <option value="SINGLE_CHOICE">Один вариант</option>
                 <option value="MULTIPLE_CHOICE">Несколько вариантов</option>
-                <option value="SHORT_ANSWER">Краткий ответ</option>
+                <option value="TEXT">Краткий ответ</option>
               </select>
             </div>
             <div className="space-y-2">
@@ -108,7 +108,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
             </div>
           </div>
 
-          {data.type !== "SHORT_ANSWER" && (
+          {data.type !== "TEXT" && (
             <div className="space-y-3 pt-2">
               <label className="text-xs font-semibold uppercase text-muted-foreground">Варианты ответов</label>
               {options.map((opt, i) => (
@@ -141,7 +141,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
             </div>
           )}
 
-          {data.type === "SHORT_ANSWER" && (
+          {data.type === "TEXT" && (
             <div className="space-y-2 pt-2">
               <label className="text-xs font-semibold uppercase text-muted-foreground">Правильный ответ</label>
               <Input 
