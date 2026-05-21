@@ -357,6 +357,30 @@ export async function getModule(moduleId: string) {
   return courseModule;
 }
 
+export async function listCourseQuestions(courseId: string) {
+  const quizzes = await prisma.quiz.findMany({
+    where: { courseId },
+    include: {
+      questions: {
+        orderBy: { order: "asc" },
+        select: { id: true, prompt: true, type: true, points: true, order: true },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return quizzes.flatMap((quiz) =>
+    quiz.questions.map((q) => ({
+      id: q.id,
+      prompt: q.prompt,
+      type: q.type,
+      points: q.points,
+      quizId: quiz.id,
+      quizTitle: quiz.title,
+    }))
+  );
+}
+
 // ── Block CRUD ───────────────────────────────────────────────────────
 
 export async function createBlock(moduleId: string, input: {

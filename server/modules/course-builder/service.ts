@@ -409,6 +409,124 @@ export async function saveCourseBuilderSnapshot(courseId: string, input: CourseB
   return getCourseForBuilder(courseId, actorId);
 }
 
+export async function cloneModule(moduleId: string, actorId: string): Promise<BuilderModuleDetail> {
+  const source = await prisma.module.findUnique({
+    where: { id: moduleId },
+    include: {
+      blocks: { include: { lessons: true } },
+      lessons: true,
+      course: { select: { id: true } },
+    },
+  });
+  if (!source) throw new ApiError("not_found", "Модуль не найден", 404);
+  await assertInstructorOfCourse(actorId, source.course.id);
+
+  const newModuleId = randomUUID();
+  const now = new Date();
+
+  await prisma.$transaction(async (tx) => {
+    // Create module
+    await tx.module.create({
+      data: {
+        id: newModuleId,
+        courseId: source.course.id,
+        title: `${source.title} (копия)`,
+        description: source.description,
+        order: source.order + 1,
+        recommendedDays: source.recommendedDays,
+        status: source.status,
+        createdAt: now,
+        updatedAt: now,
+      },
+    });
+
+    // Clone blocks (if any) with their lessons
+    for (const block of source.blocks) {
+      const newBlockId = randomUUID();
+      await tx.block.create({
+        data: {
+          id: newBlockId,
+          moduleId: newModuleId,
+          title: block.title,
+          description: block.description,
+          order: block.order,
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
+
+      for (const lesson of block.lessons) {
+        const newLessonId = randomUUID();
+        await tx.lesson.create({
+          data: {
+            id: newLessonId,
+            moduleId: newModuleId,
+            blockId: newBlockId,
+            title: lesson.title,
+            summary: lesson.summary,
+            type: lesson.type,
+            order: lesson.order,
+            durationMinutes: lesson.durationMinutes,
+            isRequired: lesson.isRequired,
+            videoUrl: lesson.videoUrl,
+            content: lesson.content ?? {},
+            createdAt: now,
+            updatedAt: now,
+          },
+        });
+      }
+    }
+
+    // Clone root-level lessons (without block)
+    for (const lesson of source.lessons) {
+      const newLessonId = randomUUID();
+      await tx.lesson.create({
+        data: {
+          id: newLessonId,
+          moduleId: newModuleId,
+          title: lesson.title,
+          summary: lesson.summary,
+          type: lesson.type,
+          order: lesson.order,
+          durationMinutes: lesson.durationMinutes,
+          isRequired: lesson.isRequired,
+          videoUrl: lesson.videoUrl,
+          content: lesson.content ?? {},
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
+    }
+  });
+
+  // Shift orders of subsequent modules in the same course
+  await prisma.$transaction(async (tx) => {
+    const siblings = await tx.module.findMany({
+      where: { courseId: source.course.id, id: { not: source.id } },
+      orderBy: { order: "asc" },
+      select: { id: true, order: true },
+    });
+    let order = 0;
+    for (const sib of siblings) {
+      if (sib.order > source.order) {
+        await tx.module.update({ where: { id: sib.id }, data: { order: ++order + source.order } });
+      }
+    }
+  });
+
+  await logAudit({ actorId, action: "module.cloned", entity: "module", entityId: newModuleId, metadata: { sourceId: moduleId, courseId: source.course.id } });
+
+  // Fetch and return the new module as BuilderModuleDetail
+  const result = await prisma.module.findUnique({
+    where: { id: newModuleId },
+    include: {
+      blocks: { orderBy: { order: "asc" }, include: { lessons: { orderBy: { order: "asc" } } } },
+      lessons: { orderBy: { order: "asc" }, where: { blockId: null } },
+    },
+  });
+  return toBuilderModule(result as unknown as Record<string, unknown>);
+}
+
 export async function reorderModules(courseId: string, moduleIds: string[], actorId: string) {
   await assertInstructorOfCourse(actorId, courseId);
   await prisma.$transaction(async (tx) => {

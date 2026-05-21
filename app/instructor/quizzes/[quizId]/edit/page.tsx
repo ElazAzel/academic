@@ -12,12 +12,12 @@ export default async function InstructorEditQuizPage({ params }: { params: Promi
  const { quizId } = await params;
  const prisma = getPrisma();
 
- const quiz = await prisma.quiz.findUnique({
-  where: { id: quizId },
-  include: { questions: { orderBy: { order: "asc" } } }
- });
+  const quiz = await prisma.quiz.findUnique({
+   where: { id: quizId },
+   include: { questions: { orderBy: { order: "asc" } }, course: { select: { id: true } } }
+  });
 
- if (!quiz) notFound();
+  if (!quiz || !quiz.course) notFound();
 
  return (
   <AppShell role="instructor">
@@ -27,7 +27,7 @@ export default async function InstructorEditQuizPage({ params }: { params: Promi
   />
 
    <div className="mt-8">
-    <QuizEditForm quiz={quiz as unknown as Parameters<typeof QuizEditForm>[0]["quiz"]}/>
+    <QuizEditForm quiz={quiz as unknown as Parameters<typeof QuizEditForm>[0]["quiz"]} courseId={quiz.course.id}/>
    </div>
   </AppShell>
  );
