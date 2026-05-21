@@ -48,7 +48,7 @@ function renderMarkdown(md: string): string {
 }
 
 export default function TermsPage() {
-  const filePath = path.join(process.cwd(), "docs", "terms-of-use.md");
+  const filePath = path.join(process.cwd(), "docs", "legal", "terms-of-use.md");
   const content = fs.readFileSync(filePath, "utf-8");
   const html = renderMarkdown(content);
 
