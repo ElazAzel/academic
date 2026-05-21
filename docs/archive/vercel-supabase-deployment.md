@@ -40,6 +40,14 @@ NEXT_PUBLIC_SUPABASE_URL="https://[project].supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="[anon-key]"
 ```
 
+### Required (Cron Jobs)
+
+```env
+# === Cron / Scheduled Jobs (мин. 16 символов) ===
+# Без CRON_SECRET фоновые задачи (outbox-уведомления, отчёты) не выполняются.
+CRON_SECRET="[generate: openssl rand -base64 32]"
+```
+
 ### Optional (feature flags)
 
 ```env
@@ -159,6 +167,30 @@ Private files use Supabase signed URLs (generate via server-side).
 - Max file size: 100MB (consider reducing to 20MB)
 - Video is NOT uploaded — only YouTube URLs
 
+### Vercel Cron Jobs / Outbox Processor
+
+Проект использует паттерн Transactional Outbox для асинхронной доставки уведомлений и генерации отчётов. `POST /api/v1/outbox/process` читает pending события из `outbox_events` и обрабатывает их.
+
+**Vercel Deploy**: Cron Job настроен в `vercel.json`:
+```json
+{
+  "crons": [
+    {
+      "path": "/api/v1/outbox/process",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
+```
+
+**Self-hosted Deploy**: Настройте внешний cron-сервис (cron-job.org, GitHub Actions, pg_cron) для вызова:
+```bash
+curl -X POST https://your-domain.com/api/v1/outbox/process \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
+
+**Безопасность**: Эндпоинт защищён `CRON_SECRET` (мин. 16 символов). Без него возвращает 503.
+
 ### Missing / Needs Attention
 
 - [ ] **20MB limit**: Spec says 20MB, code allows 100MB — align
@@ -166,6 +198,7 @@ Private files use Supabase signed URLs (generate via server-side).
 - [ ] **YouTube URL normalizer**: Check if `/server/modules/` has YouTube URL processing
 - [ ] **Env vars documentation**: This document needs to be kept in sync with `lib/env.ts`
 - [ ] **CI deploy**: Add GitHub Action for `prisma migrate deploy` on production push
+- [ ] **CRON_SECRET**: Убедитесь, что `CRON_SECRET` установлен в Vercel Project Settings → Environment Variables
 
 ---
 

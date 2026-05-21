@@ -2,20 +2,17 @@
 
 Правило: новые записи добавляются сверху.
 
-## 2026-05-21 — Реорганизация документации + MASTER-PLAN + CSRF fix
+## 2026-05-21 — Outbox cron-воркер: настроен Vercel Cron Jobs для доставки уведомлений
 
-- **Реорганизация docs:** 42 файла → 3 папки (`archive/`, `legal/`, core):
-  - `docs/archive/` — 18 устаревших/аудиторных документов с README-оглавлением
-  - `docs/legal/` — 11 юридических документов (privacy, terms, policies)
-  - Core: 9 ключевых документов (specification, implementation-plan, MASTER-PLAN, security, PLATFORM_SNAPSHOT, DEVELOPER_GUIDE, updates, update-log, release-verification, scale-path, platform-functional-overview)
-- **Создан `docs/MASTER-PLAN.md`** — единый план развития: Фаза 0 (Production Hardening, 2 нед) → Фаза 1 (UX/Quality, 2-4 нед) → Фаза 2 (Расширение, 1-2 мес) → Фаза 3 (Масштабирование, 3-6 мес) → Фаза 4 (Стратегия, 6-12 мес)
-- **Обновлён `docs/implementation-plan.md`** — актуальные статусы, убраны ссылки на устаревшие документы
-- **Обновлён `docs/specification.md`** — все статусы changed to done, обновлена архитектура и API
-- **CSRF fix (38c2d82):** middleware больше не использует `process.env.APP_URL` — сравнивает origin с hostname запроса
-- **CSRF VERCEL_URL fix (358c271):** fallback откатился, заменён hostname-сравнением
-- **chore: .vercel в gitignore (a74fd72)**
-- **typecheck**: passed ✅
-- **tests**: 354/354 passed (60/60 test files) ✅
+- **Проблема (P0)**: Система уведомлений писала события в `outbox_events`, но cron-триггер не был настроен. Все уведомления (`certificate_available`, `new_message`, `assignment_reviewed` и др.) не доставлялись пользователям.
+- **Исправление**:
+  - `vercel.json` — добавлен `crons: [{ path: "/api/v1/outbox/process", schedule: "*/5 * * * *" }]`
+  - `.env.example` — `CRON_SECRET` теперь раскомментирован с явным значением-заглушкой
+  - Создан `tests/unit/outbox-handler.test.ts` — 6 тестов на `processNotificationEvents` (успешная обработка, фильтрация не-norification событий, invalid payload, ошибка БД, пустая очередь, кастомные title/body)
+  - Создан `tests/unit/cron-routes-success.test.ts` — 3 теста на авторизованный вызов cron-роута (успех, неверный CRON_SECRET, без заголовка)
+  - `docs/vercel-supabase-deployment.md` — добавлен раздел про Vercel Cron Jobs и CRON_SECRET
+- **typecheck**: pending
+- **tests**: pending
 
 ## 2026-05-21 — Интерактивный импорт пользователей из CSV + Полная верификация типов и сборки
 
