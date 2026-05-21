@@ -27,25 +27,52 @@ export function gradeObjectiveQuiz(
 ) {
   const total = questions.reduce((sum, question) => sum + question.points, 0);
   const earned = questions.reduce((sum, question) => {
-    const correct = question.correctAnswer as { value?: unknown; values?: unknown[]; index?: number };
-    let expected = correct.values ?? correct.value;
+    const correct = question.correctAnswer;
+    let expected: unknown = undefined;
 
-    // Handle legacy index-based correct answers
-    if (expected === undefined && typeof correct.index === "number" && Array.isArray(question.options)) {
-      expected = question.options[correct.index];
-    }
+    // Helper to resolve an individual answer (either an index or a label/ID) to its string representation
+    const resolveOption = (val: unknown): unknown => {
+      if (val === null || val === undefined) return val;
+      if (Array.isArray(question.options)) {
+        // If options are objects like [{id, label}, ...]
+        if (question.options.length > 0 && typeof question.options[0] === "object" && question.options[0] !== null) {
+          const firstOpt = question.options[0] as Record<string, unknown>;
+          if ("id" in firstOpt) {
+            const matched = (question.options as Array<{ id?: string; label?: string }>).find(
+              (o) => String(o.id) === String(val)
+            );
+            if (matched) return matched.label ?? matched.id;
+          }
+        }
 
-    // If correctAnswer.value is an ID (like "a") and options are [{id,label},...],
-    // resolve the ID to the matching label so it can be compared against the student's answer
-    if (typeof expected === "string" && Array.isArray(question.options) && question.options.length > 0) {
-      const firstOpt = question.options[0];
-      if (typeof firstOpt === "object" && firstOpt !== null && "id" in firstOpt) {
-        const matched = (question.options as Array<{ id?: string; label?: string }>).find((o) => o.id === expected);
-        if (matched) expected = matched.label ?? matched.id;
-      } else if (typeof expected === "string" && expected.length <= 3 && Array.isArray(question.options)) {
-        const idx = parseInt(expected, 10);
-        if (!isNaN(idx) && idx >= 0 && idx < question.options.length) {
-          expected = question.options[idx];
+        // Otherwise check if it is a numeric index
+        const strVal = String(val);
+        const idx = parseInt(strVal, 10);
+        if (!isNaN(idx) && idx >= 0 && idx < question.options.length && String(idx) === strVal) {
+          return question.options[idx];
+        }
+      }
+      return val;
+    };
+
+    if (correct !== null && correct !== undefined) {
+      if (typeof correct === "object" && !Array.isArray(correct)) {
+        const correctObj = correct as Record<string, unknown>;
+        if ("values" in correctObj && Array.isArray(correctObj.values)) {
+          expected = correctObj.values.map(resolveOption);
+        } else if ("value" in correctObj) {
+          expected = resolveOption(correctObj.value);
+        } else if ("index" in correctObj) {
+          const idx = typeof correctObj.index === "number" ? correctObj.index : parseInt(String(correctObj.index), 10);
+          if (!isNaN(idx) && Array.isArray(question.options) && idx >= 0 && idx < question.options.length) {
+            expected = question.options[idx];
+          }
+        }
+      } else {
+        if (Array.isArray(correct)) {
+          expected = correct.map(resolveOption);
+        } else {
+          expected = resolveOption(correct);
         }
       }
     }
