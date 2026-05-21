@@ -141,6 +141,106 @@ export async function reviewSubmissionAction(submissionId: string, input: {
   return { success: true };
 }
 
+export async function markSubmissionInReview(submissionId: string) {
+  const actor = await requireRole(["curator", "super_curator", "admin"]);
+
+  const submission = await prisma.assignmentSubmission.findUnique({
+    where: { id: submissionId },
+    select: { userId: true, status: true },
+  });
+  if (!submission) {
+    throw new ApiError("not_found", "Запись не найдена", 404);
+  }
+
+  await assertCuratorStudentAccess(actor, submission.userId);
+
+  // Only transition from SUBMITTED to IN_REVIEW
+  if (submission.status === "SUBMITTED") {
+    await prisma.assignmentSubmission.update({
+      where: { id: submissionId },
+      data: { status: "IN_REVIEW" },
+    });
+    revalidatePath("/curator");
+    revalidatePath("/curator/assignments");
+  }
+
+  return { success: true };
+}
+
+export async function getSubmissionDetail(submissionId: string) {
+  const actor = await requireRole(["curator", "super_curator", "admin"]);
+
+  const submission = await prisma.assignmentSubmission.findUnique({
+    where: { id: submissionId },
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      reviewedBy: { select: { id: true, name: true } },
+      assignment: {
+        include: {
+          course: { select: { id: true, title: true } },
+          lesson: { select: { id: true, title: true } },
+        },
+      },
+    },
+  });
+
+  if (!submission) {
+    throw new ApiError("not_found", "Запись не найдена", 404);
+  }
+
+  await assertCuratorStudentAccess(actor, submission.userId);
+
+  // Fetch previous attempts for this student+assignment
+  const previousAttempts = await prisma.assignmentSubmission.findMany({
+    where: {
+      assignmentId: submission.assignmentId,
+      userId: submission.userId,
+      id: { not: submissionId },
+    },
+    orderBy: { submittedAt: "desc" },
+    take: 10,
+    select: {
+      id: true,
+      status: true,
+      score: true,
+      submittedAt: true,
+      reviewedAt: true,
+    },
+  });
+
+  return {
+    submission: {
+      id: submission.id,
+      status: submission.status,
+      answerText: submission.answerText,
+      fileUrl: submission.fileUrl,
+      score: submission.score,
+      feedback: submission.feedback,
+      attemptNumber: submission.attemptNumber,
+      submittedAt: submission.submittedAt.toISOString(),
+      reviewedAt: submission.reviewedAt?.toISOString() ?? null,
+      student: submission.user,
+      reviewedBy: submission.reviewedBy,
+      assignment: {
+        title: submission.assignment.title,
+        instructions: submission.assignment.instructions,
+        maxScore: submission.assignment.maxScore,
+        maxAttempts: submission.assignment.maxAttempts,
+        deadline: submission.assignment.deadline?.toISOString() ?? null,
+        course: submission.assignment.course,
+        lesson: submission.assignment.lesson,
+      },
+      previousAttempts: previousAttempts.map((a) => ({
+        id: a.id,
+        status: a.status,
+        score: a.score,
+        submittedAt: a.submittedAt.toISOString(),
+        reviewedAt: a.reviewedAt?.toISOString() ?? null,
+      })),
+    },
+  };
+}
+
 export async function forwardQuestionAction(questionId: string) {
   const actor = await requireRole(["curator", "super_curator", "admin"]);
 

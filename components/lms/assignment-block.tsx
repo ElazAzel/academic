@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
@@ -13,12 +13,66 @@ import type { StudentAssignmentDetail } from "@/types/domain";
 
 export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentDetail }) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [answerText, setAnswerText] = useState(assignment.submission?.answerText ?? "");
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [submitted, setSubmitted] = useState(!!assignment.submission);
-  const [fileUrl, setFileUrl] = useState(assignment.submission?.fileUrl ?? "");
+  const [fileUrl, setFileUrl] = useState<string | null>(assignment.submission?.fileUrl ?? null);
+  const [fileName, setFileName] = useState<string | null>(null);
 
   const attemptsUsed = assignment.submission ? 1 : 0;
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const presignRes = await fetch("/api/v1/media/uploads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+          fileSize: file.size,
+        }),
+      });
+
+      if (!presignRes.ok) {
+        const err = await presignRes.json().catch(() => ({}));
+        toast.error(err.error?.message || "Ошибка при подготовке загрузки");
+        return;
+      }
+
+      const { url, publicUrl } = await presignRes.json();
+
+      const uploadRes = await fetch(url, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+
+      if (!uploadRes.ok) {
+        toast.error("Ошибка при загрузке файла");
+        return;
+      }
+
+      setFileUrl(publicUrl);
+      setFileName(file.name);
+      toast.success("Файл загружен");
+    } catch {
+      toast.error("Ошибка сети при загрузке файла");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removeFile() {
+    setFileUrl(null);
+    setFileName(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
 
   const handleSubmit = useCallback(async () => {
     if (submitting || (!answerText.trim() && !fileUrl)) return;
@@ -62,6 +116,20 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
           <div className="rounded-xl bg-m3-surface-container-high p-3">
             <p className="text-label-sm font-label-sm text-m3-on-surface-variant mb-1">Ваш ответ:</p>
             <p className="text-body-md font-body-md text-m3-on-surface whitespace-pre-wrap">{sub.answerText}</p>
+          </div>
+        )}
+
+        {sub.fileUrl && (
+          <div className="flex items-center gap-2 rounded-xl border border-m3-outline-variant bg-m3-surface-container-high p-3">
+            <Icon name="description" className="text-m3-primary" size={20} />
+            <a
+              href={sub.fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-body-md font-body-md text-m3-primary hover:underline"
+            >
+              Открыть/Скачать файл
+            </a>
           </div>
         )}
 
@@ -125,18 +193,41 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
         onChange={(e) => setAnswerText(e.target.value)}
       />
 
-      {/* File URL input (placeholder — actual file upload TBD) */}
-      <div className="flex items-center gap-2">
-        <input
-          className="flex-1 rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface outline-none focus:ring-2 focus:ring-m3-outline placeholder:text-m3-on-surface-variant/50"
-          placeholder="Ссылка на файл (необязательно)"
-          value={fileUrl}
-          onChange={(e) => setFileUrl(e.target.value)}
-        />
-        <Button size="sm" variant="secondary" disabled>
-          <Icon name="upload_file" size={16} />
-        </Button>
+      {/* File upload zone */}
+      <div
+        className="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-m3-outline-variant bg-m3-surface-container-lowest/50 p-4 transition-colors hover:border-m3-primary/30 hover:bg-m3-primary/5"
+        onClick={() => fileInputRef.current?.click()}
+      >
+        {uploading ? (
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-m3-primary border-t-transparent" />
+            <span className="text-body-sm text-m3-on-surface-variant">Загрузка...</span>
+          </div>
+        ) : fileUrl ? (
+          <div className="flex items-center gap-2">
+            <Icon name="description" className="text-m3-primary" size={20} />
+            <span className="text-body-sm font-medium text-m3-on-surface">{fileName ?? "Файл прикреплён"}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); removeFile(); }}
+              className="ml-2 rounded-full p-1 text-m3-on-surface-variant hover:bg-m3-surface-container-high"
+            >
+              <Icon name="close" size={16} />
+            </button>
+          </div>
+        ) : (
+          <div className="text-center">
+            <Icon name="upload_file" className="mx-auto mb-1 text-m3-on-surface-variant/40" size={24} />
+            <p className="text-body-sm text-m3-on-surface-variant">Нажмите, чтобы загрузить файл (PDF, изображение)</p>
+          </div>
+        )}
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.zip,.doc,.docx"
+        onChange={handleFileUpload}
+      />
 
       <div className="flex justify-end">
         <Button

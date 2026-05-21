@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { answerQuestionAction, forwardQuestionAction, reviewSubmissionAction } from "@/server/actions/curator";
-import { Loader2, CheckCircle2, XCircle, RotateCcw, Share2 } from "lucide-react";
+import { answerQuestionAction, forwardQuestionAction, reviewSubmissionAction, markSubmissionInReview } from "@/server/actions/curator";
+import { Loader2, CheckCircle2, XCircle, RotateCcw, Share2, File } from "lucide-react";
 import { toast } from "sonner";
 
 // --- Модалка ответа на вопрос ---
@@ -83,12 +83,19 @@ export function ReviewSubmissionModal({
   submission, 
   onClose 
 }: { 
-  submission: { id: string; studentName: string; assignmentTitle: string; answerText?: string | null }; 
+  submission: { id: string; studentName: string; assignmentTitle: string; answerText?: string | null; fileUrl?: string | null; lessonTitle?: string; courseTitle?: string }; 
   onClose: () => void 
 }) {
   const [feedback, setFeedback] = useState("");
   const [score, setScore] = useState(100);
   const [pending, setPending] = useState(false);
+
+  // Mark as IN_REVIEW when modal opens
+  useEffect(() => {
+    markSubmissionInReview(submission.id).catch(() => {
+      // Silently fail — non-critical status update
+    });
+  }, [submission.id]);
 
   async function handleReview(status: "ACCEPTED" | "REJECTED" | "NEEDS_REVISION") {
     setPending(true);
@@ -109,6 +116,9 @@ export function ReviewSubmissionModal({
           <div>
             <h3 className="text-lg font-bold">Проверка задания</h3>
             <p className="text-sm text-muted-foreground">{submission.studentName} · {submission.assignmentTitle}</p>
+            {submission.courseTitle && (
+              <p className="text-xs text-muted-foreground mt-0.5">{submission.courseTitle}{submission.lessonTitle ? ` → ${submission.lessonTitle}` : ""}</p>
+            )}
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">×</button>
         </div>
@@ -119,17 +129,32 @@ export function ReviewSubmissionModal({
               {submission.answerText || "Текст ответа отсутствует"}
             </div>
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Балл (0-100)</label>
-              <Input 
-                type="number" 
-                value={score} 
-                onChange={(e) => setScore(Number(e.target.value))} 
-                min={0} max={100}
-              />
+
+          {submission.fileUrl ? (
+            <div className="rounded-xl border bg-muted/20 p-4">
+              <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Прикреплённый файл:</p>
+              <div className="flex items-center gap-2">
+                <File className="h-5 w-5 text-primary" />
+                <a
+                  href={submission.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Открыть/Скачать файл
+                </a>
+              </div>
             </div>
+          ) : null}
+          
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase text-muted-foreground">Балл (0-100)</label>
+            <Input 
+              type="number" 
+              value={score} 
+              onChange={(e) => setScore(Number(e.target.value))} 
+              min={0} max={100}
+            />
           </div>
 
           <div className="space-y-2">
