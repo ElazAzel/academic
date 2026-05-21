@@ -2,6 +2,7 @@ import { errorResponse, ok, parseJson, ApiError } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { z } from "zod";
 import { getPrisma } from "@/lib/prisma";
+import { EnrollmentStatus } from "@prisma/client";
 
 const prisma = getPrisma();
 
@@ -20,11 +21,21 @@ export async function POST(request: Request, context: Context) {
 
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
-      select: { id: true },
+      select: { id: true, module: { select: { courseId: true } } },
     });
 
     if (!lesson) {
       return errorResponse(new ApiError("not_found", "Урок не найден", 404));
+    }
+
+    const enrollment = await prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: { userId: user.id, courseId: lesson.module.courseId },
+      },
+    });
+
+    if (!enrollment || enrollment.status !== EnrollmentStatus.ACTIVE) {
+      return errorResponse(new ApiError("forbidden", "Нет доступа: вы не зачислены на курс", 403));
     }
 
     const rating = await prisma.lessonRating.upsert({

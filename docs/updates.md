@@ -2,6 +2,18 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-21 — Stage 4: Lessons/Tests fixes (6 issues closed)
+
+- **H-1 (High) — Sequential lock bypass в video-playback route**: Исправлен баг фильтра — `moduleId: lesson.module.courseId` заменён на `moduleId: lesson.moduleId`. Ранее запрос искал уроки по `Module.id === Course.id`, что возвращал пустой результат и пропускал sequential lock check.
+- **H-2 (High) — Sequential lock check в signed media URL endpoint**: Добавлена проверка sequential lock в `GET /api/v1/lessons/[lessonId]/media/[mediaId]/signed-url`. Ранее endpoint проверял только enrollment, но не sequential lock, что позволяло получать прямые ссылки на медиафайлы заблокированных уроков.
+- **H-4 (High) — Race condition quiz attempts**: `submitQuizAttempt` обёрнут в `prisma.$transaction`. Ранее count+create были раздельными запросами — два параллельных запроса могли оба пройти проверку лимита попыток и создать лишние attempt-записи.
+- **H-5 (High) — verifyCsrf не вызывался**: Обнаружено, что CSRF-защита уже реализована глобально в `proxy.ts` через `checkCsrfOrigin()` для всех мутирующих API-запросов. Функция `verifyCsrf` в `lib/http.ts` является дублирующим dead code. H-5 закрыт как already-done.
+- **M-1 (Medium) — Rate limit key per-quiz**: Ключ rate limiting изменён с `quiz-attempt:${user.id}` на `quiz-attempt:${user.id}:${quizId}`, чтобы разные тесты одного пользователя не конкурировали за один bucket.
+- **M-2 (Medium) — Enrollment check в lesson GET**: Добавлена проверка active enrollment в `GET /api/v1/lessons/[lessonId]` для студентов. Преподаватели/админы/супер-кураторы пропускают проверку (builder access).
+- **M-3 (Medium) — Enrollment check в rating POST**: Добавлена проверка active enrollment в `POST /api/v1/lessons/[lessonId]/rating`.
+- **typecheck**: passed ✅
+- **tests**: 368/368 passed (62/62 test files) — 0 regressions
+
 ## 2026-05-21 — Outbox cron-воркер: настроен Vercel Cron Jobs для доставки уведомлений
 
 - **Проблема (P0)**: Система уведомлений писала события в `outbox_events`, но cron-триггер не был настроен. Все уведомления (`certificate_available`, `new_message`, `assignment_reviewed` и др.) не доставлялись пользователям.

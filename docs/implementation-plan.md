@@ -1,7 +1,7 @@
 # План реализации AI Strategic Academy
 
-Дата актуализации: 2026-05-21  
-Статус документа: operational source of truth для реализации.
+Дата актуализации: 2026-05-21 (Stage 4 lessons/tests fixes)  
+Статус документа: operational source of truth для реализации и контроля изменений.
 
 ## Цель проекта
 
@@ -9,13 +9,25 @@
 
 ## Текущее состояние на 2026-05-21
 
-### Core Metrics
-- **Build:** 81/81 страниц, 0 ошибок ✅
-- **Tests:** 354/354 passed (60/60 test files) ✅
-- **Deployment:** Vercel auto-deploy на push в main ✅
-- **Security scan:** Все C1-C5 findings закрыты ✅
-- **CSRF:** Исправлен (origin vs hostname) ✅
-- **Session resilience:** try/catch revalidateSession, fallback на JWT роли ✅
+- Фазы 1-2 завершены: Academy Operations + Production Readiness
+- Фаза 3: Scheduled report export реализован, data-connected dashboards уже работают
+- Фаза 4: Security review, scale path документированы
+- Security hardening C1–C5: закрыты 5 findings security-скана (3x P1, 2x P2)
+  - C1: production guard на NEXTAUTH_SECRET + CRON_SECRET
+  - C2: quiz answer keys изолированы от студентов
+  - C3: server-side verification прогресса (тесты/задания)
+  - C4: revalidateSession на каждый requireUser()
+  - C5: cron endpoints fail-closed
+- Stage 4 (Lessons/Tests fixes): 6 issues закрыты:
+  - H-1: Sequential lock bypass fixed (wrong moduleId filter)
+  - H-2: Secure media signed-URL — sequential lock check added
+  - H-4: Quiz attempt race condition — wrapped in $transaction
+  - H-5: CSRF protection confirmed active via proxy.ts (already done)
+  - M-1: Rate limit key per-quiz (not per-user)
+  - M-2: Enrollment check on lesson GET
+  - M-3: Enrollment check on rating POST
+- Все 63 role sub-pages реализованы (добавлен `/student/reports`), все дашборды на реальных данных
+- Все tests: 368/368 passed (62 test files)
 
 ### Выполненные домены
 
