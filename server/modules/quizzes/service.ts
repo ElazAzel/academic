@@ -174,22 +174,26 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
   if (!enrollment || enrollment.status !== ("ACTIVE" as EnrollmentStatus)) {
     throw new ApiError("forbidden", "Нет доступа к тесту: вы не зачислены на курс", 403);
   }
-  if (!skipLimit) {
-    const attempts = await prisma.quizAttempt.count({ where: { quizId, userId } });
-    if (attempts >= quiz.maxAttempts) {
-      throw new ApiError("forbidden", "Лимит попыток исчерпан", 403);
-    }
-  }
   const result = gradeObjectiveQuiz(quiz.questions, answers, quiz.passThreshold);
-  const attempt = await prisma.quizAttempt.create({
-    data: {
-      quizId,
-      userId,
-      answers: answers as Prisma.InputJsonValue,
-      score: result.score,
-      passed: result.passed,
-      submittedAt: new Date()
+
+  const attempt = await prisma.$transaction(async (tx) => {
+    if (!skipLimit) {
+      const attempts = await tx.quizAttempt.count({ where: { quizId, userId } });
+      if (attempts >= quiz.maxAttempts) {
+        throw new ApiError("forbidden", "Лимит попыток исчерпан", 403);
+      }
     }
+
+    return tx.quizAttempt.create({
+      data: {
+        quizId,
+        userId,
+        answers: answers as Prisma.InputJsonValue,
+        score: result.score,
+        passed: result.passed,
+        submittedAt: new Date()
+      }
+    });
   });
   await logAudit({
     actorId: userId,
