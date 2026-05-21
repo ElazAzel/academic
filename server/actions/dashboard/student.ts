@@ -11,7 +11,6 @@ import type {
   QuestionFromStudent,
   CohortDeadline,
 } from "@/types/domain";
-import type { UserLearningPath } from "@/server/modules/learning/learning-path-service";
 
 export async function getStudentDashboard() {
   await requireRole(["student"]);

@@ -6,7 +6,6 @@ import { DownloadReports } from "@/components/lms/download-reports";
 import { ReportDesigner } from "@/components/lms/report-designer";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getCurrentUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
 import { getDisplayReportsForRole } from "@/server/modules/reports/service";

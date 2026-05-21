@@ -1,6 +1,6 @@
 import { getPrisma } from "../lib/prisma";
 import { issueCertificate, generateCertificatePdf } from "../server/modules/certificates/service";
-import { CourseStatus, LessonType, RoleKey } from "@prisma/client";
+import { CourseStatus, LessonType } from "@prisma/client";
 import fs from "fs";
 
 async function main() {

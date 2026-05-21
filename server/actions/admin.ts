@@ -590,7 +590,6 @@ export async function importUsersAction(
           });
 
           // Enroll if cohort provided and roles include student
-          let enrolled = false;
           if (cohortId && roleKeys.includes(RoleKey.student)) {
             const course = await prisma.cohort.findUnique({
               where: { id: cohortId },
@@ -615,7 +614,6 @@ export async function importUsersAction(
                 metadata: { cohortId, courseId: course.courseId, source: "bulk_import" }
               });
 
-              enrolled = true;
             }
           }
 

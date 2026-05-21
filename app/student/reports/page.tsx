@@ -6,7 +6,6 @@ import { DownloadReports } from "@/components/lms/download-reports";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { EmptyState } from "@/components/lms/empty-state";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getCurrentUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 import { BarChart3 } from "lucide-react";
