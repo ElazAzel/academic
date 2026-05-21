@@ -45,12 +45,11 @@ async function upsertUser(email: string, name: string, role: RoleKey) {
       passwordHash,
       emailVerified: new Date(),
       consentLogs: {
-        create: {
-          type: "personal_data_processing",
-          status: "ACCEPTED",
-          version: "2026-05-07",
-          acceptedAt: new Date()
-        }
+        create: [
+          { type: "privacy_policy", status: "ACCEPTED", version: "2026-05-01", acceptedAt: new Date() },
+          { type: "terms_of_use", status: "ACCEPTED", version: "2026-05-01", acceptedAt: new Date() },
+          { type: "cookie_notice", status: "ACCEPTED", version: "2026-05-01", acceptedAt: new Date() },
+        ]
       }
     }
   });

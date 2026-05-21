@@ -26,7 +26,6 @@ export const PUBLIC_ROUTES = new Set([
   FORBIDDEN_ROUTE,
   "/privacy",
   "/terms",
-  "/consent",
 ]);
 
 export const PUBLIC_PATH_PREFIXES = [

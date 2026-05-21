@@ -19,6 +19,7 @@ export function CuratorAssignmentsFilter({
     } else {
       params.delete("status");
     }
+    params.delete("page");
     router.push(`/curator/assignments?${params.toString()}`);
   }
 
@@ -29,6 +30,7 @@ export function CuratorAssignmentsFilter({
     } else {
       params.delete("student");
     }
+    params.delete("page");
     router.push(`/curator/assignments?${params.toString()}`);
   }
 
