@@ -1,6 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
+import { EmptyState } from "@/components/lms/empty-state";
 import type { DashboardMetric, StudentAnalyticsDetail } from "@/types/domain";
 
 function getAgeDays(dateStr?: string | null): number | null {
@@ -19,9 +20,7 @@ function daysSince(dateStr: string): string {
 export function StudentAnalyticsTable({ students }: { students: StudentAnalyticsDetail[] }) {
   if (students.length === 0) {
     return (
-      <div className="py-10 text-center text-muted-foreground">
-        Нет данных по слушателям
-      </div>
+      <EmptyState icon="group" title="Нет данных по слушателям" description="В данной выборке пока нет зарегистрированных слушателей." />
     );
   }
 

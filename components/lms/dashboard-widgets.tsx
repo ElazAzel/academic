@@ -10,6 +10,7 @@ import type { BadgeStatus } from "@/components/lms/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar } from "@/components/ui/avatar";
 import { Stagger, CardHover, FadeIn } from "@/components/lms/animations";
+import { EmptyState } from "@/components/lms/empty-state";
 import { Icon } from "@/components/ui/icon";
 import dynamic from "next/dynamic";
 
@@ -279,12 +280,7 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
 
   if (questions.length === 0) {
     return (
-      <Card className="border-m3-outline-variant bg-m3-surface-container-lowest rounded-xl">
-        <CardContent className="py-10 text-center text-m3-on-surface-variant">
-          <Icon name="forum" className="mx-auto h-8 w-8 mb-2 opacity-40" />
-          <p className="font-body-md text-body-md">Нет открытых вопросов</p>
-        </CardContent>
-      </Card>
+      <EmptyState icon="forum" title="Нет открытых вопросов" description="Когда слушатели зададут вопросы в уроках, они появятся здесь." />
     );
   }
   return (
@@ -332,12 +328,7 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
 
   if (submissions.length === 0) {
     return (
-      <Card className="border-m3-outline-variant bg-m3-surface-container-lowest rounded-xl">
-        <CardContent className="py-10 text-center text-m3-on-surface-variant">
-          <Icon name="assignment" className="mx-auto h-8 w-8 mb-2 opacity-40" />
-          <p className="font-body-md text-body-md">Нет заданий на проверку</p>
-        </CardContent>
-      </Card>
+      <EmptyState icon="assignment" title="Нет заданий на проверку" description="Все отправленные задания проверены. Новые появятся здесь автоматически." />
     );
   }
   return (
@@ -398,12 +389,7 @@ function SubmissionBadge({ status }: { status: SubmissionForReview["status"] }) 
 export function RisksList({ risks }: { risks: RiskItem[] }) {
   if (risks.length === 0) {
     return (
-      <Card className="border-m3-outline-variant bg-m3-surface-container-lowest rounded-xl">
-        <CardContent className="py-10 text-center text-m3-on-surface-variant">
-          <Icon name="check_circle" className="mx-auto h-8 w-8 mb-2 opacity-40" />
-          <p className="font-body-md text-body-md">Нет открытых рисков</p>
-        </CardContent>
-      </Card>
+      <EmptyState icon="check_circle" title="Нет открытых рисков" description="У ваших слушателей нет активных рисков. Отличная работа!" />
     );
   }
   return (

@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/lms/status-badge";
 import { Plus, Users, Calendar } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
+import { EmptyState } from "@/components/lms/empty-state";
 import { DeleteCohortButton } from "./delete-cohort-button";
 
 const prisma = getPrisma();
@@ -34,12 +35,9 @@ export default async function AdminCohortsPage() {
    </div>
    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
     {cohorts.length === 0 ? (
-     <Card className="md:col-span-2 lg:col-span-3">
-      <CardContent className="py-10 text-center text-muted-foreground">
-       <Users className="mx-auto h-8 w-8 mb-2 opacity-40" />
-       <p>Нет потоков. Создайте первый поток.</p>
-      </CardContent>
-     </Card>
+     <div className="md:col-span-2 lg:col-span-3">
+      <EmptyState icon={Users} title="Нет потоков" description="Создайте первый поток, чтобы зачислять слушателей." />
+     </div>
     ) : cohorts.map((c) => (
      <Card key={c.id} className="transition-all duration-200 hover:shadow-lg">
       <CardHeader className="pb-3">

@@ -154,12 +154,11 @@ async function StudentDashboardContent() {
       ))}
      </div>
     ) : (
-     <Card className="rounded-2xl">
-      <CardContent className="py-10 text-center text-muted-foreground">
-       <MessageCircle className="mx-auto h-8 w-8 mb-2 opacity-40" />
-       У вас пока нет вопросов.
-      </CardContent>
-     </Card>
+     <EmptyState
+      icon={MessageCircle}
+      title="У вас пока нет вопросов"
+      description="Вы можете задать вопрос куратору прямо внутри любого урока."
+     />
     )}
    </section>
   </div>

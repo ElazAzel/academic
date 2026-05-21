@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Search, FolderOpen } from "lucide-react";
 import { createGlossaryEntryAction, updateGlossaryEntryAction, deleteGlossaryEntryAction } from "@/server/actions/glossary";
 import { DIRECTIONS, getDirectionLabel } from "@/lib/glossary/labels";
+import { EmptyState } from "@/components/lms/empty-state";
 import { toast } from "sonner";
 
 type Entry = { id: string; question: string; answer: string; category: string; direction: string };
@@ -116,11 +117,7 @@ export function GlossaryEditor({
       )}
 
       {Object.keys(groupedByDirection).length === 0 ? (
-        <Card className="rounded-2xl">
-          <CardContent className="py-10 text-center text-muted-foreground">
-            <p className="text-sm">Глоссарий пуст.</p>
-          </CardContent>
-        </Card>
+        <EmptyState icon="menu_book" title="Глоссарий пуст" description="Добавьте первый термин в глоссарий для быстрых ответов." />
       ) : Object.entries(groupedByDirection).map(([dir, categories]) => (
         <section key={dir} className="space-y-3">
           <h2 className="flex items-center gap-2 text-base font-semibold text-primary border-b pb-2">

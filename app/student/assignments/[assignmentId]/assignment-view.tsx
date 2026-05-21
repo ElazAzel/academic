@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { readApiErrorMessage } from "@/lib/api-client";
 import { toast } from "sonner";
+import { StatusBadge } from "@/components/lms/status-badge";
+import type { BadgeStatus } from "@/components/lms/status-badge";
 import type { StudentAssignmentDetail } from "@/types/domain";
 
 export function AssignmentView({ assignment }: { assignment: StudentAssignmentDetail }) {
@@ -119,11 +121,9 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
             {assignment.instructions}
           </div>
           <div className="flex flex-wrap gap-3">
-            <Badge className="border-sky-200 bg-sky-50 text-sky-700">Попыток: {assignment.maxAttempts}</Badge>
+            <StatusBadge status="open" label={`Попыток: ${assignment.maxAttempts}`} />
             {assignment.deadline ? (
-              <Badge className="border-amber-200 bg-amber-50 text-amber-700">
-                Дедлайн: {new Date(assignment.deadline).toLocaleDateString("ru-RU")}
-              </Badge>
+              <StatusBadge status="upcoming" label={`Дедлайн: ${new Date(assignment.deadline).toLocaleDateString("ru-RU")}`} />
             ) : null}
           </div>
         </CardContent>
@@ -211,25 +211,28 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <Badge
-                className={
-                  submission.status === "ACCEPTED"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : submission.status === "NEEDS_REVISION"
-                      ? "border-amber-200 bg-amber-50 text-amber-700"
-                      : "border-sky-200 bg-sky-50 text-sky-700"
-                }
-              >
-                {submission.status === "ACCEPTED"
-                  ? "Принято"
-                  : submission.status === "NEEDS_REVISION"
-                    ? "Требует доработки"
-                    : submission.status === "SUBMITTED"
-                      ? "На проверке"
-                      : "В работе"}
-              </Badge>
+              <StatusBadge status={submission.status as BadgeStatus} />
               {submission.score !== null ? <span className="text-sm font-semibold">Оценка: {submission.score}</span> : null}
             </div>
+
+            {submission.fileUrl ? (
+              <div className="rounded-xl border border-m3-outline-variant bg-m3-surface-container-low p-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Прикреплённый файл:
+                </p>
+                <div className="flex items-center gap-2">
+                  <File className="h-5 w-5 text-primary" />
+                  <a
+                    href={submission.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    Открыть/Скачать файл
+                  </a>
+                </div>
+              </div>
+            ) : null}
 
             {submission.feedback ? (
               <div className="rounded-xl bg-muted/50 p-4">
