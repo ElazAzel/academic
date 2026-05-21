@@ -4,8 +4,9 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, ArrowLeft, Plus, GripVertical, Eye, EyeOff, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Plus, GripVertical, Eye, EyeOff, ChevronDown, ChevronUp, Database } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -20,9 +21,10 @@ export interface QuizEditFormProps {
     maxAttempts: number;
     questions: { id: string; prompt: string; type: string; points: number; options: unknown; correctAnswer: unknown }[];
   };
+  courseId: string;
 }
 
-export function QuizEditForm({ quiz }: QuizEditFormProps) {
+export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(true);
@@ -90,6 +92,12 @@ export function QuizEditForm({ quiz }: QuizEditFormProps) {
       setPending(false);
     }
   }
+
+  // ── Question bank state ─────────────────────────────────────────
+  const [bankOpen, setBankOpen] = useState(false);
+  const [bankQuestions, setBankQuestions] = useState<Array<{ id: string; prompt: string; type: string; points: number; quizTitle: string }>>([]);
+  const [selectedQs, setSelectedQs] = useState<Set<string>>(new Set());
+  const [loadingBank, setLoadingBank] = useState(false);
 
   // Drag & drop handlers
   const handleDragStart = (index: number) => { dragItem.current = index; };
@@ -265,6 +273,88 @@ export function QuizEditForm({ quiz }: QuizEditFormProps) {
                   <Plus className="h-4 w-4 mr-2" />
                   Добавить вопрос
                 </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="w-full mt-2"
+                  onClick={async () => {
+                    setBankOpen(true);
+                    setLoadingBank(true);
+                    try {
+                      const res = await fetch(`/api/v1/courses/${courseId}/questions`);
+                      if (res.ok) {
+                        const data = await res.json();
+                        setBankQuestions(data.data ?? []);
+                      }
+                    } finally {
+                      setLoadingBank(false);
+                    }
+                  }}
+                >
+                  <Database className="h-4 w-4 mr-2" />
+                  Из банка вопросов
+                </Button>
+                {/* Question Bank Dialog */}
+                <Dialog open={bankOpen} onOpenChange={setBankOpen}>
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Банк вопросов курса</DialogTitle>
+                    </DialogHeader>
+                    {loadingBank ? (
+                      <div className="py-8 text-center text-sm text-muted-foreground">Загрузка...</div>
+                    ) : bankQuestions.length === 0 ? (
+                      <div className="py-8 text-center text-sm text-muted-foreground">Вопросов в курсе пока нет</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {bankQuestions.map((q) => (
+                          <label key={q.id} className="flex items-start gap-3 rounded-xl border p-3 cursor-pointer hover:bg-muted/30">
+                            <input
+                              type="checkbox"
+                              checked={selectedQs.has(q.id)}
+                              onChange={() => {
+                                const next = new Set(selectedQs);
+                                if (next.has(q.id)) next.delete(q.id);
+                                else next.add(q.id);
+                                setSelectedQs(next);
+                              }}
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{q.prompt}</p>
+                              <p className="text-[10px] text-muted-foreground">{q.type} · {q.points} баллов · из теста «{q.quizTitle}»</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    <DialogFooter>
+                      <Button size="sm" variant="secondary" onClick={() => setBankOpen(false)}>Отмена</Button>
+                      <Button
+                        size="sm"
+                        disabled={selectedQs.size === 0}
+                        onClick={async () => {
+                          const res = await fetch(`/api/v1/quizzes/${quiz.id}/questions/import`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ questionIds: Array.from(selectedQs) }),
+                          });
+                          if (res.ok) {
+                            const newQs = await res.json();
+                            const raw = (newQs.data ?? newQs) as Array<{ id: string; prompt: string; type: string; points: number }>;
+                            const imported = raw.map((q) => ({ ...q, options: null, correctAnswer: null }));
+                            setQuestions([...questions, ...imported]);
+                            setSelectedQs(new Set());
+                            setBankOpen(false);
+                            router.refresh();
+                          }
+                        }}
+                      >
+                        Добавить ({selectedQs.size})
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </CardContent>
             </Card>
           </div>

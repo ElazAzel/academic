@@ -1,6 +1,8 @@
+import { randomUUID } from "node:crypto";
 import type { Prisma, QuizQuestion, EnrollmentStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
+import { toJsonValue } from "@/lib/json";
 import { logAudit } from "@/server/modules/audit/service";
 import { markLessonProgress } from "@/server/modules/progress/service";
 import {
@@ -150,6 +152,50 @@ export async function getQuizForActor(actor: CourseAccessActor, quizId: string) 
   }
 
   return quiz;
+}
+
+export async function importQuestions(quizId: string, questionIds: string[], actorId: string) {
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: quizId },
+    include: { course: { select: { id: true } } },
+  });
+  if (!quiz) throw new ApiError("not_found", "Тест не найден", 404);
+  if (!quiz.course) throw new ApiError("bad_request", "Тест не привязан к курсу", 400);
+
+  const { assertInstructorOfCourse } = await import("@/server/modules/course-builder/service");
+  await assertInstructorOfCourse(actorId, quiz.course.id);
+
+  const sourceQuestions = await prisma.quizQuestion.findMany({
+    where: { id: { in: questionIds } },
+  });
+
+  if (sourceQuestions.length === 0) throw new ApiError("bad_request", "Вопросы не найдены", 400);
+
+  const maxOrder = await prisma.quizQuestion.aggregate({
+    where: { quizId },
+    _max: { order: true },
+  });
+
+  let order = (maxOrder._max.order ?? -1) + 1;
+
+  const created = await prisma.$transaction(
+    sourceQuestions.map((q) =>
+      prisma.quizQuestion.create({
+        data: {
+          id: randomUUID(),
+          quizId,
+          type: q.type,
+          prompt: q.prompt,
+          options: toJsonValue(q.options),
+          correctAnswer: toJsonValue(q.correctAnswer),
+          points: q.points,
+          order: order++,
+        },
+      })
+    )
+  );
+
+  return created;
 }
 
 export async function submitQuizAttempt(quizId: string, userId: string, answers: Record<string, unknown>, skipLimit = false) {

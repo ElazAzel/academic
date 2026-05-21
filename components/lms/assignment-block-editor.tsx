@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ASSIGNMENT } from "@/lib/constants";
+import { RichTextEditor } from "@/components/lms/rich-text-editor";
 
 export function AssignmentBlockEditor({
   value,
@@ -28,10 +29,11 @@ export function AssignmentBlockEditor({
       </div>
       <div>
         <label className="text-xs text-muted-foreground">Инструкция</label>
-        <textarea
-          className="w-full min-h-[100px] rounded-lg border bg-background px-3 py-1.5 text-sm"
+        <RichTextEditor
           value={instructions}
-          onChange={(e) => { setInstructions(e.target.value); updateParent(); }}
+          onChange={(html) => { setInstructions(html); updateParent(); }}
+          placeholder="Инструкция к заданию..."
+          minHeight="100px"
         />
       </div>
       <div className="grid grid-cols-3 gap-3">
