@@ -28,7 +28,9 @@ function checkCsrfOrigin(req: NextRequest): NextResponse | null {
   }
 
   try {
-    const allowedOrigin = process.env.APP_URL || "http://localhost:3000";
+    const allowedOrigin = process.env.APP_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+      || "http://localhost:3000";
     const sourceUrl = new URL(source);
     const allowedUrl = new URL(allowedOrigin);
     if (sourceUrl.hostname !== allowedUrl.hostname || sourceUrl.port !== allowedUrl.port) {
