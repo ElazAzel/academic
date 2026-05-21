@@ -1,6 +1,6 @@
 import { RoleKey } from "@prisma/client";
 import { ApiError } from "@/lib/http";
-import { cacheGet, cacheSet, cacheDelete } from "@/lib/cache";
+import { cacheGet, cacheSet } from "@/lib/cache";
 import { getPrisma } from "@/lib/prisma";
 import {
   fetchAssignmentData,
