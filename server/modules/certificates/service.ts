@@ -229,6 +229,21 @@ async function loadCyrillicFonts(pdf: PDFDocument): Promise<{
   return { regular, bold, italic };
 }
 
+async function embedImageSafely(pdf: PDFDocument, bytes: Buffer) {
+  const hex = bytes.slice(0, 4).toString("hex");
+  if (hex === "89504e47") {
+    return pdf.embedPng(bytes);
+  } else if (hex.startsWith("ffd8")) {
+    return pdf.embedJpg(bytes);
+  }
+  // Fallback
+  try {
+    return await pdf.embedPng(bytes);
+  } catch {
+    return await pdf.embedJpg(bytes);
+  }
+}
+
 export async function generateCertificatePdf(certificateId: string) {
   const certificate = await prisma.certificate.findUnique({
     where: { id: certificateId },
@@ -256,7 +271,7 @@ export async function generateCertificatePdf(certificateId: string) {
     const borderPath = path.join(assetsDir, "border.png");
     if (fs.existsSync(borderPath)) {
       const borderBytes = fs.readFileSync(borderPath);
-      const borderImage = await pdf.embedPng(borderBytes);
+      const borderImage = await embedImageSafely(pdf, borderBytes);
       page.drawImage(borderImage, { x: 0, y: 0, width: pageWidth, height: pageHeight });
     }
   } catch (e) {
@@ -298,12 +313,17 @@ export async function generateCertificatePdf(certificateId: string) {
   const courseWidth = bold.widthOfTextAtSize(courseTitle, 24);
   page.drawText(courseTitle, { x: (pageWidth - courseWidth) / 2, y: 280, size: 24, font: bold, color: rgb(0.1, 0.1, 0.1) });
 
+  // Отображаем уникальный номер сертификата по центру золотым шрифтом
+  const textNumber = `Сертификат № ${certificate.number}`;
+  const numberWidth = bold.widthOfTextAtSize(textNumber, 14);
+  page.drawText(textNumber, { x: (pageWidth - numberWidth) / 2, y: 240, size: 14, font: bold, color: rgb(0.85, 0.73, 0.35) });
+
   // Signatures and Seals
   try {
     const signaturePath = path.join(assetsDir, "signature.png");
     if (fs.existsSync(signaturePath)) {
       const signatureBytes = fs.readFileSync(signaturePath);
-      const signatureImage = await pdf.embedPng(signatureBytes);
+      const signatureImage = await embedImageSafely(pdf, signatureBytes);
       page.drawImage(signatureImage, { x: 150, y: 130, width: 120, height: 40 });
     }
   } catch (e) {
@@ -317,7 +337,7 @@ export async function generateCertificatePdf(certificateId: string) {
     const sealPath = path.join(assetsDir, "seal.png");
     if (fs.existsSync(sealPath)) {
       const sealBytes = fs.readFileSync(sealPath);
-      const sealImage = await pdf.embedPng(sealBytes);
+      const sealImage = await embedImageSafely(pdf, sealBytes);
       page.drawImage(sealImage, { x: 360, y: 100, width: 120, height: 120 });
     }
   } catch (e) {
