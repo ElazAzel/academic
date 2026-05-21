@@ -1,6 +1,5 @@
 "use server";
 
-import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 
@@ -71,8 +70,6 @@ export async function getVisitAnalytics(
   days = 30,
   roleFilter?: string,
 ): Promise<VisitAnalytics> {
-  await requireRole(["admin", "super_curator"]);
-
   const maxDays = Math.min(Math.max(days, 1), 180);
   const now = new Date();
   const startDate = new Date(now.getTime() - maxDays * 24 * 60 * 60 * 1000);
@@ -186,8 +183,6 @@ export async function getUserVisitDetail(
   userId: string,
   days = 30,
 ): Promise<UserVisitDetail> {
-  await requireRole(["admin", "super_curator"]);
-
   const maxDays = Math.min(Math.max(days, 1), 180);
   const now = new Date();
   const startDate = new Date(now.getTime() - maxDays * 24 * 60 * 60 * 1000);
@@ -258,8 +253,6 @@ export async function getUserVisitDetail(
  * проходят уроки и сдают тесты — по часам суток.
  */
 export async function getTimingAnalytics(days = 30): Promise<TimingAnalytics> {
-  await requireRole(["admin", "super_curator"]);
-
   const maxDays = Math.min(Math.max(days, 1), 180);
   const now = new Date();
   const startDate = new Date(now.getTime() - maxDays * 24 * 60 * 60 * 1000);

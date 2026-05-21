@@ -1,7 +1,7 @@
 import { BarChart } from "@/components/lms/bar-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
-import { getVisitAnalytics, getTimingAnalytics } from "@/server/actions/visit-analytics";
+import { getVisitAnalytics, getTimingAnalytics, type VisitAnalytics, type TimingAnalytics } from "@/server/actions/visit-analytics";
 import { PerUserVisitTable } from "@/components/admin/per-user-visit-table";
 import type { DashboardMetric } from "@/types/domain";
 
@@ -60,10 +60,34 @@ export async function VisitAnalyticsBlock({
   days?: number;
   roleFilter?: string;
 }) {
-  const [visitData, timingData] = await Promise.all([
-    getVisitAnalytics(days, roleFilter),
-    getTimingAnalytics(days),
-  ]);
+  let visitData: VisitAnalytics | null = null;
+  let timingData: TimingAnalytics | null = null;
+  let loadError: string | null = null;
+
+  try {
+    const [vd, td] = await Promise.all([
+      getVisitAnalytics(days, roleFilter),
+      getTimingAnalytics(days),
+    ]);
+    visitData = vd;
+    timingData = td;
+  } catch (error) {
+    loadError = error instanceof Error ? error.message : "Неизвестная ошибка";
+    console.error("[VisitAnalyticsBlock] Failed to load analytics:", error);
+  }
+
+  if (loadError || !visitData || !timingData) {
+    return (
+      <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <CardContent className="py-10 text-center">
+          <p className="font-label-lg text-label-lg text-m3-error mb-2">Не удалось загрузить данные посещаемости</p>
+          <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
+            {loadError ?? "Попробуйте обновить страницу"}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const metrics: DashboardMetric[] = [
     {
