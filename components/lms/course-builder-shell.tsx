@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -122,6 +122,16 @@ export function CourseBuilderShell({
   const [dirty, setDirty] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [mode, setMode] = useState<"edit" | "preview">("edit");
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState<"outline" | "editor" | "settings">("editor");
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   useBeforeUnload(dirty);
 
@@ -287,10 +297,10 @@ export function CourseBuilderShell({
   }, [selectedLesson?.assignments, selectedLesson?.content, updateSelectedLesson]);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col bg-m3-surface">
+    <div className="flex h-[calc(100dvh-4rem)] flex-col bg-m3-surface">
       {/* Top bar — M3 */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-m3-outline-variant px-4 py-3 lg:px-6 bg-m3-surface-container-lowest">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-m3-outline-variant px-3 py-2 md:px-6 md:py-3 bg-m3-surface-container-lowest">
+        <div className="flex min-w-0 items-center gap-2 md:gap-3">
           <Button size="icon" variant="ghost" asChild>
             <Link href={backHref} aria-label="Назад к курсам">
               <Icon name="arrow_back" className="text-[20px]" />
@@ -298,205 +308,238 @@ export function CourseBuilderShell({
           </Button>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="max-w-[42vw] truncate text-headline-sm text-m3-on-surface">{detail.title}</h1>
+              <h1 className="max-w-[30vw] md:max-w-[42vw] truncate text-title-md md:text-headline-sm text-m3-on-surface">{detail.title}</h1>
               <Badge variant={detail.status === "PUBLISHED" ? "default" : "secondary"}>{statusLabel(detail.status)}</Badge>
             </div>
-            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
+            <p className="hidden md:block font-body-sm text-body-sm text-m3-on-surface-variant">
               Course → Module → Block → Lesson · единый builder
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1 md:gap-2">
           <Button size="sm" variant={mode === "edit" ? "primary" : "secondary"} onClick={() => setMode("edit")}>
-            <Icon name="edit" className="text-[18px]" />
-            Редактор
+            <Icon name="edit" className="text-[16px] md:text-[18px]" />
+            <span className="hidden md:inline">Редактор</span>
           </Button>
           <Button size="sm" variant={mode === "preview" ? "primary" : "secondary"} onClick={() => setMode("preview")}>
-            <Icon name="visibility" className="text-[18px]" />
-            Предпросмотр
+            <Icon name="visibility" className="text-[16px] md:text-[18px]" />
+            <span className="hidden md:inline">Предпросмотр</span>
           </Button>
           <Button size="sm" variant="secondary" onClick={handleSave} disabled={!dirty || saving}>
-            <Icon name={saving ? "hourglass_top" : "save"} className="text-[18px]" />
-            {saving ? "Сохраняем..." : "Сохранить"}
+            <Icon name={saving ? "hourglass_top" : "save"} className="text-[16px] md:text-[18px]" />
           </Button>
           {detail.status === "PUBLISHED" ? (
             <Button size="sm" variant="secondary" onClick={handleUnpublish} disabled={publishing}>
-              Вернуть в черновик
+              <span className="hidden md:inline">В черновик</span>
+              <Icon name="unpublished" className="text-[16px] md:hidden" />
             </Button>
           ) : (
             <Button size="sm" onClick={handlePublish} disabled={!readyToPublish || publishing}>
-              <Icon name="rocket_launch" className="text-[18px]" />
-              Опубликовать
+              <Icon name="rocket_launch" className="text-[16px] md:text-[18px]" />
             </Button>
           )}
         </div>
       </div>
 
+      {/* Mobile panel tabs */}
+      {isMobile && (
+        <div className="flex border-b border-m3-outline-variant bg-m3-surface-container-lowest">
+          {(["outline", "editor", "settings"] as const).map((panel) => (
+            <button
+              key={panel}
+              onClick={() => setMobilePanel(panel)}
+              className={`flex-1 py-2 text-center text-label-md font-label-md transition-colors ${
+                mobilePanel === panel
+                  ? "border-b-2 border-m3-primary text-m3-primary"
+                  : "text-m3-on-surface-variant hover:text-m3-on-surface"
+              }`}
+            >
+              {panel === "outline" ? "Структура" : panel === "editor" ? "Редактор" : "Свойства"}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* 3-column layout — M3 */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Course Outline */}
-        <div className="w-72 shrink-0 overflow-y-auto border-r border-m3-outline-variant bg-m3-surface-container-low">
-          <CourseOutline
-            modules={detail.modules}
-            selected={selected}
-            onSelect={setSelected}
-            courseId={detail.id}
-            onModulesChange={(modules) => {
-              setDetail((current) => ({ ...current, modules }));
-              setDirty(true);
-            }}
-          />
-        </div>
+        {/* Left: Course Outline — hidden on mobile unless selected */}
+        {(!isMobile || mobilePanel === "outline") && (
+          <div className={`${isMobile ? "w-full" : "w-72 shrink-0"} overflow-y-auto border-r border-m3-outline-variant bg-m3-surface-container-low`}>
+            <CourseOutline
+              modules={detail.modules}
+              selected={selected}
+              onSelect={(node) => { setSelected(node); if (isMobile) setMobilePanel("editor"); }}
+              courseId={detail.id}
+              onModulesChange={(modules) => {
+                setDetail((current) => ({ ...current, modules }));
+                setDirty(true);
+              }}
+            />
+          </div>
+        )}
 
-        {/* Center: Editor Canvas */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-m3-surface">
-          {mode === "preview" ? (
-            <CourseBuilderPreview detail={detail} lesson={selectedLesson} />
-          ) : (
-            <>
-              {selected.type === "course" && (
-                <div className="mx-auto max-w-3xl space-y-6">
-                  <div className="space-y-2">
-                    <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название курса</label>
-                    <input
-                      className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
-                      value={detail.title}
-                      onChange={(event) => { setDetail((current) => ({ ...current, title: event.target.value })); setDirty(true); }}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
-                    <textarea
-                      className="min-h-[120px] w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
-                      value={detail.description}
-                      onChange={(event) => { setDetail((current) => ({ ...current, description: event.target.value })); setDirty(true); }}
-                    />
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-2">
+        {/* Center: Editor Canvas — hidden on mobile unless selected */}
+        {(!isMobile || mobilePanel === "editor") && (
+          <div className="flex-1 overflow-y-auto p-3 md:p-6 bg-m3-surface">
+            {mode === "preview" ? (
+              <CourseBuilderPreview detail={detail} lesson={selectedLesson} />
+            ) : (
+              <>
+                {selected.type === "course" && (
+                  <div className="mx-auto max-w-3xl space-y-4 md:space-y-6">
                     <div className="space-y-2">
-                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Цель</label>
+                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название курса</label>
                       <input
                         className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
-                        value={detail.goal ?? ""}
-                        onChange={(event) => { setDetail((current) => ({ ...current, goal: event.target.value })); setDirty(true); }}
+                        value={detail.title}
+                        onChange={(event) => { setDetail((current) => ({ ...current, title: event.target.value })); setDirty(true); }}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Длительность, часов</label>
+                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
+                      <textarea
+                        className="min-h-[100px] md:min-h-[120px] w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
+                        value={detail.description}
+                        onChange={(event) => { setDetail((current) => ({ ...current, description: event.target.value })); setDirty(true); }}
+                      />
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Цель</label>
+                        <input
+                          className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
+                          value={detail.goal ?? ""}
+                          onChange={(event) => { setDetail((current) => ({ ...current, goal: event.target.value })); setDirty(true); }}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Длительность, часов</label>
+                        <input
+                          type="number"
+                          className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
+                          value={detail.durationHours}
+                          onChange={(event) => { setDetail((current) => ({ ...current, durationHours: Number(event.target.value) })); setDirty(true); }}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Режим прохождения</label>
+                        <select
+                          className="h-10 w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
+                          value={detail.traversalMode}
+                          onChange={(event) => { setDetail((current) => ({ ...current, traversalMode: event.target.value as "sequential" | "open" })); setDirty(true); }}
+                        >
+                          <option value="sequential">Последовательный</option>
+                          <option value="open">Свободный</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Порог завершения, %</label>
+                        <input
+                          type="number"
+                          className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
+                          value={detail.completionThreshold}
+                          onChange={(event) => { setDetail((current) => ({ ...current, completionThreshold: Number(event.target.value) })); setDirty(true); }}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Обложка</label>
                       <input
-                        type="number"
                         className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
-                        value={detail.durationHours}
-                        onChange={(event) => { setDetail((current) => ({ ...current, durationHours: Number(event.target.value) })); setDirty(true); }}
+                        value={detail.coverUrl ?? ""}
+                        onChange={(event) => { setDetail((current) => ({ ...current, coverUrl: event.target.value ? event.target.value.trim() || null : null })); setDirty(true); }}
+                        placeholder="https://example.com/images/cover.jpg"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {selected.type === "module" && selectedModule && (
+                  <ModuleEditor
+                    module={selectedModule}
+                    onChange={(updates) => {
+                      setDetail((current) => ({
+                        ...current,
+                        modules: current.modules.map((mod) => (mod.id === selectedModule.id ? { ...mod, ...updates } : mod)),
+                      }));
+                      setDirty(true);
+                    }}
+                  />
+                )}
+
+                {selected.type === "block" && selectedBlock && (
+                  <div className="mx-auto max-w-2xl space-y-6">
+                    <div className="space-y-2">
+                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название блока</label>
+                      <input
+                        className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
+                        value={selectedBlock.title}
+                        onChange={(event) => {
+                          setDetail((current) => ({
+                            ...current,
+                            modules: current.modules.map((mod) =>
+                              mod.id === selected.moduleId
+                                ? { ...mod, blocks: mod.blocks.map((block) => (block.id === selectedBlock.id ? { ...block, title: event.target.value } : block)) }
+                                : mod,
+                            ),
+                          }));
+                          setDirty(true);
+                        }}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Режим прохождения</label>
-                      <select
-                        className="h-10 w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
-                        value={detail.traversalMode}
-                        onChange={(event) => { setDetail((current) => ({ ...current, traversalMode: event.target.value as "sequential" | "open" })); setDirty(true); }}
-                      >
-                        <option value="sequential">Последовательный</option>
-                        <option value="open">Свободный</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Порог завершения, %</label>
-                      <input
-                        type="number"
-                        className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
-                        value={detail.completionThreshold}
-                        onChange={(event) => { setDetail((current) => ({ ...current, completionThreshold: Number(event.target.value) })); setDirty(true); }}
+                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
+                      <textarea
+                        className="min-h-[80px] w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
+                        value={selectedBlock.description ?? ""}
+                        onChange={(event) => {
+                          setDetail((current) => ({
+                            ...current,
+                            modules: current.modules.map((mod) =>
+                              mod.id === selected.moduleId
+                                ? { ...mod, blocks: mod.blocks.map((block) => (block.id === selectedBlock.id ? { ...block, description: event.target.value } : block)) }
+                                : mod,
+                            ),
+                          }));
+                          setDirty(true);
+                        }}
                       />
                     </div>
+                    <div className="rounded-xl bg-m3-surface-container-low p-4 font-body-md text-body-md text-m3-on-surface-variant">
+                      Уроков в блоке: {selectedBlock.lessons.length}
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Обложка</label>
-                    <input
-                      className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
-                      value={detail.coverUrl ?? ""}
-                      onChange={(event) => { setDetail((current) => ({ ...current, coverUrl: event.target.value || null })); setDirty(true); }}
-                      placeholder="https://..."
-                    />
-                  </div>
-                </div>
-              )}
+                )}
 
-              {selected.type === "module" && selectedModule && (
-                <ModuleEditor
-                  module={selectedModule}
-                  onChange={(updates) => {
-                    setDetail((current) => ({
-                      ...current,
-                      modules: current.modules.map((mod) => (mod.id === selectedModule.id ? { ...mod, ...updates } : mod)),
-                    }));
-                    setDirty(true);
-                  }}
-                />
-              )}
+                {selected.type === "lesson" && selectedLesson && (
+                  <LessonEditor
+                    lesson={selectedLesson}
+                    courseId={detail.id}
+                    onChange={updateSelectedLesson}
+                    onQuizCreated={appendQuiz}
+                    onAssignmentCreated={appendAssignment}
+                  />
+                )}
+              </>
+            )}
+          </div>
+        )}
 
-              {selected.type === "block" && selectedBlock && (
-                <div className="mx-auto max-w-2xl space-y-6">
-                  <div className="space-y-2">
-                    <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название блока</label>
-                    <input
-                      className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
-                      value={selectedBlock.title}
-                      onChange={(event) => {
-                        setDetail((current) => ({
-                          ...current,
-                          modules: current.modules.map((mod) =>
-                            mod.id === selected.moduleId
-                              ? { ...mod, blocks: mod.blocks.map((block) => (block.id === selectedBlock.id ? { ...block, title: event.target.value } : block)) }
-                              : mod,
-                          ),
-                        }));
-                        setDirty(true);
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
-                    <textarea
-                      className="min-h-[80px] w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
-                      value={selectedBlock.description ?? ""}
-                      onChange={(event) => {
-                        setDetail((current) => ({
-                          ...current,
-                          modules: current.modules.map((mod) =>
-                            mod.id === selected.moduleId
-                              ? { ...mod, blocks: mod.blocks.map((block) => (block.id === selectedBlock.id ? { ...block, description: event.target.value } : block)) }
-                              : mod,
-                          ),
-                        }));
-                        setDirty(true);
-                      }}
-                    />
-                  </div>
-                  <div className="rounded-xl bg-m3-surface-container-low p-4 font-body-md text-body-md text-m3-on-surface-variant">
-                    Уроков в блоке: {selectedBlock.lessons.length}
-                  </div>
-                </div>
-              )}
-
-              {selected.type === "lesson" && selectedLesson && (
-                <LessonEditor
-                  lesson={selectedLesson}
-                  courseId={detail.id}
-                  onChange={updateSelectedLesson}
-                  onQuizCreated={appendQuiz}
-                  onAssignmentCreated={appendAssignment}
-                />
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Right: Settings Panel */}
-        {settingsOpen && (
+        {/* Right: Settings Panel — hidden on mobile unless selected */}
+        {!isMobile && settingsOpen && (
           <div className="w-80 shrink-0 overflow-y-auto border-l border-m3-outline-variant bg-m3-surface-container-low p-5">
+            <CourseSettingsPanel
+              selected={selected}
+              detail={detail}
+              module={selectedModule}
+              lesson={selectedLesson}
+              publishChecks={publishChecks}
+            />
+          </div>
+        )}
+        {isMobile && mobilePanel === "settings" && (
+          <div className="w-full overflow-y-auto bg-m3-surface-container-low p-4">
             <CourseSettingsPanel
               selected={selected}
               detail={detail}
@@ -509,13 +552,21 @@ export function CourseBuilderShell({
       </div>
 
       {/* Footer status bar — M3 */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-m3-outline-variant px-4 py-2 font-body-sm text-body-sm text-m3-on-surface-variant lg:px-6 bg-m3-surface-container-lowest">
+      <div className="hidden md:flex flex-wrap items-center justify-between gap-2 border-t border-m3-outline-variant px-4 py-2 font-body-sm text-body-sm text-m3-on-surface-variant lg:px-6 bg-m3-surface-container-lowest">
         <span>{dirty ? "Есть несохраненные изменения" : "Все изменения сохранены"}</span>
         <span className="inline-flex items-center gap-2">
           <Icon name={readyToPublish ? "check_circle" : "warning"} className={readyToPublish ? "text-emerald-600" : "text-amber-600"} />
           {readyToPublish ? "Курс готов к публикации" : "Публикация требует доработки"}
         </span>
         <span>Ctrl+S — сохранить · Esc — панель свойств</span>
+      </div>
+      {/* Mobile footer — compact */}
+      <div className="md:hidden flex items-center justify-between border-t border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface-variant bg-m3-surface-container-lowest">
+        <span className="truncate max-w-[50%]">{dirty ? "Есть изменения" : "Сохранено"}</span>
+        <span className="inline-flex items-center gap-1 shrink-0">
+          <Icon name={readyToPublish ? "check_circle" : "warning"} className={readyToPublish ? "text-emerald-600" : "text-amber-600"} size={14} />
+          <span>{readyToPublish ? "Готово" : "Требует доработки"}</span>
+        </span>
       </div>
     </div>
   );
