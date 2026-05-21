@@ -32,37 +32,39 @@ vi.mock("@/lib/prisma", () => ({
 
 const { createNotification, createNotificationInternal, normalizeNotificationChannel } = await import("@/server/modules/notifications/service");
 
-describe("createNotification (outbox path)", () => {
+describe("createNotification (inline)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockOutboxEventCreate.mockResolvedValue({ id: "outbox-event-1" });
+    mockNotificationPreferenceFindMany.mockResolvedValue([]);
+    mockNotificationCreate.mockResolvedValue({ id: "notification-1" });
+    mockUserFindUnique.mockResolvedValue({ email: "student@academy.local" });
   });
 
-  it("writes a notification.send outbox event", async () => {
+  it("creates a notification record directly (no outbox)", async () => {
     await createNotification({ userId: "student-1", event: "access_granted" });
 
-    expect(mockOutboxEventCreate).toHaveBeenCalledWith(
+    expect(mockNotificationCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          eventType: "notification.send",
-          status: "pending",
+          userId: "student-1",
+          type: "access_granted",
+          channel: "in_app",
         }),
       }),
     );
   });
 
-  it("includes normalized channel in payload", async () => {
+  it("includes normalized channel in notification", async () => {
     await createNotification({ userId: "student-1", event: "access_granted" });
 
-    const callArgs = mockOutboxEventCreate.mock.calls[0][0];
-    const payload = callArgs.data.payload;
-    expect(payload.channel).toBe("in_app");
+    const callArgs = mockNotificationCreate.mock.calls[0][0];
+    expect(callArgs.data.channel).toBe("in_app");
   });
 
-  it("returns outbox event id", async () => {
+  it("returns notification id", async () => {
     const result = await createNotification({ userId: "student-1", event: "access_granted" });
 
-    expect(result).toEqual({ id: "outbox-event-1" });
+    expect(result).toEqual({ id: "notification-1" });
   });
 });
 

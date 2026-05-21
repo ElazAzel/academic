@@ -2,6 +2,19 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-21 — Уведомления: outbox → inline (починка доставки студентам)
+
+- **Проблема**: Уведомления от куратора (и любые другие) не доходили до студентов, потому что все уведомления писались в `outbox_events`, но outbox-воркер никогда не вызывался (Vercel Hobby tier не поддерживает Cron Jobs).
+- **Корневая причина**: `createNotification()` в `server/modules/notifications/service.ts` писал событие в outbox через `writeOutboxEvent()`. Функция `processNotificationEvents()` должна была обрабатывать эти события, но не имела триггера (Vercel cron удалён ранее).
+- **Исправление**:
+  - `createNotification()` теперь вызывает `createNotificationInternal()` напрямую, минуя outbox. Уведомления создаются синхронно в таблице `notifications`.
+  - Вызов `writeOutboxEvent()` удалён из `createNotification()`. Outbox остаётся только для отчётов (`report.generate`).
+  - Создан `scripts/flush-notifications.ts` — одноразовый скрипт для обработки накопившихся outbox-событий (запуск: `npx tsx scripts/flush-notifications.ts`).
+  - `writeOutboxEvent` импорт удалён из `notifications/service.ts`.
+- **Тесты обновлены**: 5 файлов (notifications-service, assignments, courses-service, certificates-service, auth-service-notifications) — все проверки `mockOutboxEventCreate` заменены на `mockNotificationCreate`.
+- **typecheck**: passed ✅
+- **tests**: 368/368 passed (62/62 test files) ✅
+
 ## 2026-05-21 — Stage 4: Lessons/Tests fixes (6 issues closed)
 
 - **H-1 (High) — Sequential lock bypass в video-playback route**: Исправлен баг фильтра — `moduleId: lesson.module.courseId` заменён на `moduleId: lesson.moduleId`. Ранее запрос искал уроки по `Module.id === Course.id`, что возвращал пустой результат и пропускал sequential lock check.

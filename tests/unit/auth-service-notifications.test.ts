@@ -73,16 +73,14 @@ describe("password reset notification and audit events", () => {
         }),
       }),
     );
-    expect(mockOutboxEventCreate).toHaveBeenCalledWith(
+    expect(mockNotificationCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          eventType: "notification.send",
-          payload: expect.objectContaining({
-            event: "password_changed",
-            channel: "in_app",
-            refType: "user",
-            refId: "student-1",
-          }),
+          userId: "student-1",
+          type: "password_changed",
+          channel: "in_app",
+          refType: "user",
+          refId: "student-1",
         }),
       }),
     );
