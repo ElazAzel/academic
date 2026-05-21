@@ -38,6 +38,33 @@ export function NavLinks({ links }: { links: NavItem[] }) {
     return () => clearInterval(interval);
   }, [fetchCounts]);
 
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const checkInstallability = () => {
+      const ua = navigator.userAgent.toLowerCase();
+      const isIOS = /iphone|ipad|ipod/.test(ua);
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (navigator as any).standalone === true;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const hasDeferred = !!(window as any).deferredPrompt;
+      setIsInstallable(!isStandalone && (hasDeferred || isIOS));
+    };
+
+    checkInstallability();
+
+    window.addEventListener("pwa-installable", checkInstallability);
+    window.addEventListener("appinstalled", checkInstallability);
+
+    return () => {
+      window.removeEventListener("pwa-installable", checkInstallability);
+      window.removeEventListener("appinstalled", checkInstallability);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col gap-unit">
       {links.map((item) => {
@@ -76,6 +103,25 @@ export function NavLinks({ links }: { links: NavItem[] }) {
           </Link>
         );
       })}
+
+      {isInstallable && (
+        <button
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent("pwa-trigger-install"));
+          }}
+          className={cn(
+            "group flex items-center gap-md rounded-lg px-md py-sm text-label-lg font-label-lg transition-all duration-200 ease-in-out text-left mt-2",
+            "border-l-4 border-transparent text-m3-primary bg-m3-primary-container/10 hover:bg-m3-primary-container/20"
+          )}
+        >
+          <Icon
+            name="download"
+            size={20}
+            className="shrink-0 text-m3-primary group-hover:scale-110 transition-transform"
+          />
+          <span className="flex-1 font-semibold">Установить приложение</span>
+        </button>
+      )}
     </div>
   );
 }

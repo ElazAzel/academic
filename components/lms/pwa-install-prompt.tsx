@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X, Download, Share2, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,9 +51,55 @@ export function PWAInstallPrompt() {
     const handler = (e: Event) => {
       e.preventDefault();
       setInstallEvent(e);
+      if (typeof window !== "undefined") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).deferredPrompt = e;
+        window.dispatchEvent(new CustomEvent("pwa-installable"));
+      }
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = useCallback(async () => {
+    if (platform === "ios") {
+      setShowIOSInstructions(true);
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ev = installEvent || (typeof window !== "undefined" && (window as any).deferredPrompt);
+    if (!ev) return;
+    const e = ev as BeforeInstallPromptEvent;
+    e.prompt();
+    const result = await e.userChoice;
+    if (result.outcome === "accepted") {
+      setInstallEvent(null);
+      if (typeof window !== "undefined") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).deferredPrompt = null;
+      }
+    }
+    setDismissed(true);
+  }, [installEvent, platform]);
+
+  useEffect(() => {
+    const handleTrigger = () => {
+      handleInstall();
+    };
+    window.addEventListener("pwa-trigger-install", handleTrigger);
+    return () => window.removeEventListener("pwa-trigger-install", handleTrigger);
+  }, [handleInstall]);
+
+  useEffect(() => {
+    const handleAppInstalled = () => {
+      setInstallEvent(null);
+      if (typeof window !== "undefined") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).deferredPrompt = null;
+      }
+    };
+    window.addEventListener("appinstalled", handleAppInstalled);
+    return () => window.removeEventListener("appinstalled", handleAppInstalled);
   }, []);
 
   if (!mounted) return null;
@@ -66,21 +112,6 @@ export function PWAInstallPrompt() {
     (platform === "other" && installEvent) ||
     platform === "ios"
   );
-
-  const handleInstall = async () => {
-    if (platform === "ios") {
-      setShowIOSInstructions(true);
-      return;
-    }
-    if (!installEvent) return;
-    const e = installEvent as BeforeInstallPromptEvent;
-    e.prompt();
-    const result = await e.userChoice;
-    if (result.outcome === "accepted") {
-      setInstallEvent(null);
-    }
-    setDismissed(true);
-  };
 
   if (!showBanner && !showIOSInstructions) return null;
 

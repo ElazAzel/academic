@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getGlossaryEntries, getGlossaryCategories } from "@/server/actions/glossary";
+import { EmptyState } from "@/components/lms/empty-state";
 
 export const dynamic = "force-dynamic";
 
@@ -52,11 +53,7 @@ export default async function CuratorGlossaryPage(props: {
 
       {/* Entries */}
       {Object.keys(grouped).length === 0 ? (
-        <Card className="rounded-2xl">
-          <CardContent className="py-10 text-center text-muted-foreground">
-            <p className="text-sm">Глоссарий пока пуст.</p>
-          </CardContent>
-        </Card>
+        <EmptyState icon="menu_book" title="Глоссарий пока пуст" description="Здесь появятся частые термины после их добавления администратором." />
       ) : (
         <div className="space-y-6">
           {Object.entries(grouped).map(([category, catEntries]) => (

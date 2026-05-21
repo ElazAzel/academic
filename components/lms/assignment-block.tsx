@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { StatusBadge } from "@/components/lms/status-badge";
+import type { BadgeStatus } from "@/components/lms/status-badge";
 import type { StudentAssignmentDetail } from "@/types/domain";
 
 export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentDetail }) {
@@ -48,20 +50,12 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
   // ── After submission ──────────────────────────────────────────────
   if (submitted && assignment.submission) {
     const sub = assignment.submission;
-    const statusLabel: Record<string, { label: string; cls: string }> = {
-      SUBMITTED: { label: "Отправлено", cls: "border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed text-m3-tertiary" },
-      IN_REVIEW: { label: "На проверке", cls: "border-m3-secondary-fixed-dim bg-m3-secondary-fixed text-m3-secondary" },
-      ACCEPTED: { label: "Зачтено", cls: "border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed text-m3-tertiary" },
-      REJECTED: { label: "Отклонено", cls: "border-m3-error-fixed-dim bg-m3-error-fixed text-m3-error" },
-      NEEDS_REVISION: { label: "На доработку", cls: "border-m3-secondary-fixed-dim bg-m3-secondary-fixed text-m3-secondary" },
-    };
-    const sb = statusLabel[sub.status] ?? statusLabel.SUBMITTED;
 
     return (
       <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-body-md font-body-md text-m3-on-surface">{assignment.title}</p>
-          <Badge className={sb.cls}>{sb.label}</Badge>
+          <StatusBadge status={sub.status as BadgeStatus} />
         </div>
 
         {sub.answerText && (
@@ -108,7 +102,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
             <p className="text-label-sm font-label-sm text-m3-on-surface-variant mt-0.5">Дедлайн: {assignment.deadline.slice(0, 10)}</p>
           )}
         </div>
-        <Badge className="border-m3-secondary-fixed-dim bg-m3-secondary-fixed text-m3-secondary">Задание</Badge>
+        <StatusBadge status="upcoming" label="Задание" />
       </div>
 
       {/* Instructions */}

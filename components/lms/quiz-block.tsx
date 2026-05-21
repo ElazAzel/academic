@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { StatusBadge } from "@/components/lms/status-badge";
 import type { StudentQuizDetail } from "@/types/domain";
 
 type QuizPhase = "idle" | "active" | "result" | "review";
@@ -66,7 +67,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
             <p className="text-body-md font-body-md text-m3-on-surface">{quiz.title}</p>
             <p className="text-label-sm font-label-sm text-m3-on-surface-variant mt-0.5">{quiz.questionsCount} вопросов · порог {quiz.passThreshold}% · {quiz.maxAttempts} попытки</p>
           </div>
-          <Badge className="border-m3-secondary-fixed-dim bg-m3-secondary-fixed text-m3-secondary">Тест</Badge>
+          <StatusBadge status="upcoming" label="Тест" />
         </div>
         <Button onClick={() => setPhase("active")} size="sm">
           Начать тест
@@ -178,15 +179,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
         </div>
         <div>
           <p className="text-headline-lg font-headline-lg text-m3-on-surface">{result?.score ?? 0}%</p>
-          <Badge
-            className={
-              result?.passed
-                ? "border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed text-m3-tertiary mt-2"
-                : "border-m3-error-fixed-dim bg-m3-error-fixed text-m3-error mt-2"
-            }
-          >
-            {result?.passed ? "Пройден" : "Не пройден"}
-          </Badge>
+          <StatusBadge status={result?.passed ? "passed" : "failed"} className="mt-2" />
         </div>
         <div className="flex items-center justify-center gap-2 pt-2">
           <Button size="sm" onClick={() => setPhase("review")}>

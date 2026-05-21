@@ -10,6 +10,7 @@ import { getInstructorDashboard, getForwardedQuestions } from "@/server/actions/
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
+import { EmptyState } from "@/components/lms/empty-state";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +90,7 @@ async function InstructorDashboardContent() {
         )}
        </div>
       ) : (
-       <Card><CardContent className="py-10 text-center text-muted-foreground">Нет переданных вопросов от кураторов.</CardContent></Card>
+       <EmptyState icon="forum" title="Вопросов пока нет" description="Нет переданных вопросов от кураторов." />
       ),
      },
    ]}/>
