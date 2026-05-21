@@ -28,12 +28,10 @@ function checkCsrfOrigin(req: NextRequest): NextResponse | null {
   }
 
   try {
-    const allowedOrigin = process.env.APP_URL
-      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
-      || "http://localhost:3000";
     const sourceUrl = new URL(source);
-    const allowedUrl = new URL(allowedOrigin);
-    if (sourceUrl.hostname !== allowedUrl.hostname || sourceUrl.port !== allowedUrl.port) {
+    // Compare origin against the request's own hostname — works on any domain,
+    // preview deployment, custom domain, and localhost without env vars
+    if (sourceUrl.hostname !== req.nextUrl.hostname || sourceUrl.port !== req.nextUrl.port) {
       return NextResponse.json(
         { error: { code: "forbidden", message: "CSRF: origin mismatch" } },
         { status: 403 }
