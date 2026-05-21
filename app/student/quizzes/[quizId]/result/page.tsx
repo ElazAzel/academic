@@ -10,10 +10,67 @@ import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-function normalizeAnswer(ans: unknown): string {
-  if (typeof ans === "string") return ans;
-  if (ans && typeof ans === "object" && "value" in (ans as object)) return (ans as { value: string }).value;
-  return String(ans ?? "");
+function resolveCorrectAnswer(correct: unknown, options: unknown): string | string[] {
+  const resolveOption = (val: unknown): string => {
+    if (val === null || val === undefined) return "";
+    if (Array.isArray(options)) {
+      if (options.length > 0 && typeof options[0] === "object" && options[0] !== null) {
+        const firstOpt = options[0] as Record<string, unknown>;
+        if ("id" in firstOpt) {
+          const matched = (options as Array<{ id?: string; label?: string }>).find(
+            (o) => String(o.id) === String(val)
+          );
+          if (matched) return String(matched.label ?? matched.id ?? "");
+        }
+      }
+
+      const strVal = String(val);
+      const idx = parseInt(strVal, 10);
+      if (!isNaN(idx) && idx >= 0 && idx < options.length && String(idx) === strVal) {
+        return String(options[idx] ?? "");
+      }
+    }
+    return String(val);
+  };
+
+  if (correct === null || correct === undefined) return "";
+
+  if (typeof correct === "object" && !Array.isArray(correct)) {
+    const correctObj = correct as Record<string, unknown>;
+    if ("values" in correctObj && Array.isArray(correctObj.values)) {
+      return correctObj.values.map(resolveOption);
+    } else if ("value" in correctObj) {
+      return resolveOption(correctObj.value);
+    } else if ("index" in correctObj) {
+      const idx = typeof correctObj.index === "number" ? correctObj.index : parseInt(String(correctObj.index), 10);
+      if (!isNaN(idx) && Array.isArray(options) && idx >= 0 && idx < options.length) {
+        return String(options[idx] ?? "");
+      }
+    }
+  } else {
+    if (Array.isArray(correct)) {
+      return correct.map(resolveOption);
+    } else {
+      return resolveOption(correct);
+    }
+  }
+
+  return String(correct);
+}
+
+function isAnswerCorrect(studentAns: unknown, resolvedCorrect: string | string[]): boolean {
+  const normalize = (val: unknown): string[] => {
+    if (Array.isArray(val)) {
+      return val.map(String).sort();
+    }
+    return [String(val ?? "")];
+  };
+
+  const studentNorm = normalize(studentAns);
+  const correctNorm = normalize(resolvedCorrect);
+
+  if (studentNorm.length !== correctNorm.length) return false;
+  return studentNorm.every((val, index) => val === correctNorm[index]);
 }
 
 export default async function QuizResultPage({ params }: { params: Promise<{ quizId: string }> }) {
@@ -56,8 +113,8 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
   const answers = attempt.answers as Record<string, string>;
   const correctCount = quiz.questions.filter((q) => {
     const studentAnswer = answers[q.id];
-    const correctAnswer = normalizeAnswer(q.correctAnswer);
-    return studentAnswer === correctAnswer;
+    const resolvedCorrect = resolveCorrectAnswer(q.correctAnswer, q.options);
+    return isAnswerCorrect(studentAnswer, resolvedCorrect);
   }).length;
   const totalQuestions = quiz.questions.length;
 
@@ -142,7 +199,6 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
             </div>
           </CardContent>
         </Card>
-
         {/* Detailed answer review */}
         <Card className="rounded-2xl">
           <CardHeader>
@@ -154,9 +210,17 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
           <CardContent className="space-y-4">
             {quiz.questions.map((q, i) => {
               const studentAnswer = answers[q.id];
-              const correctAnswer = normalizeAnswer(q.correctAnswer);
-              const isCorrect = studentAnswer === correctAnswer;
-              const options = q.options as string[];
+              const resolvedCorrect = resolveCorrectAnswer(q.correctAnswer, q.options);
+              const isCorrect = isAnswerCorrect(studentAnswer, resolvedCorrect);
+              
+              const rawOptions = Array.isArray(q.options) ? q.options : [];
+              const options = rawOptions.map((o) => {
+                if (o && typeof o === "object") {
+                  const obj = o as Record<string, unknown>;
+                  return String(obj.label ?? obj.id ?? JSON.stringify(o));
+                }
+                return String(o);
+              });
 
               return (
                 <div
@@ -184,8 +248,12 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
                       {options.length > 0 && (
                         <div className="space-y-1">
                           {options.map((opt) => {
-                            const isSelected = studentAnswer === opt;
-                            const isCorrectOpt = correctAnswer === opt;
+                            const isSelected = Array.isArray(studentAnswer)
+                              ? studentAnswer.includes(opt)
+                              : studentAnswer === opt;
+                            const isCorrectOpt = Array.isArray(resolvedCorrect)
+                              ? resolvedCorrect.includes(opt)
+                              : resolvedCorrect === opt;
                             let optClass = "border-muted bg-card text-muted-foreground";
 
                             if (isSelected && isCorrectOpt) {
@@ -221,7 +289,7 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
                           </p>
                           {!isCorrect && (
                             <p className="text-emerald-600">
-                              Правильный ответ: <span className="font-medium">{correctAnswer}</span>
+                              Правильный ответ: <span className="font-medium">{Array.isArray(resolvedCorrect) ? resolvedCorrect.join(", ") : resolvedCorrect}</span>
                             </p>
                           )}
                         </div>
