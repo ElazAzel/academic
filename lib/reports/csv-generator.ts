@@ -26,7 +26,7 @@ function separator(): string {
 
 // ── Progress report ──────────────────────────────────────────────────
 
-export function generateProgressCsv(rows: ProgressRow[]): string {
+export function generateProgressCsv(rows: ProgressRow[], fields?: string[]): string {
   const lines: string[] = [];
 
   lines.push(...headerBlock("ОТЧЁТ ПО ПРОГРЕССУ СЛУШАТЕЛЕЙ"));
@@ -50,6 +50,20 @@ export function generateProgressCsv(rows: ProgressRow[]): string {
   lines.push("");
 
   const grouped = groupByCourse(rows);
+
+  const COLS = [
+    { key: "studentName", label: "Слушатель", get: (r: ProgressRow) => esc(r.studentName) },
+    { key: "email", label: "Email", get: (r: ProgressRow) => esc(r.email) },
+    { key: "cohort", label: "Поток", get: (r: ProgressRow) => esc(r.cohort) },
+    { key: "progressPercent", label: "Прогресс %", get: (r: ProgressRow) => `${r.progressPercent}%` },
+    { key: "currentModule", label: "Модуль", get: (r: ProgressRow) => esc(r.currentModule ?? "") },
+    { key: "currentBlock", label: "Блок", get: (r: ProgressRow) => esc(r.currentBlock ?? "") },
+    { key: "currentLesson", label: "Урок", get: (r: ProgressRow) => esc(r.currentLesson ?? "") },
+    { key: "lastLoginAt", label: "Последний вход", get: (r: ProgressRow) => r.lastLoginAt ? new Date(r.lastLoginAt).toLocaleDateString("ru-RU") : "" },
+    { key: "avgLessonMinutes", label: "Ср. мин/урок", get: (r: ProgressRow) => String(r.avgLessonMinutes ?? 0) },
+    { key: "riskCount", label: "Риски", get: (r: ProgressRow) => String(r.riskCount ?? 0) },
+  ];
+  const activeCols = fields ? COLS.filter(c => fields!.includes(c.key)) : COLS;
 
   for (const [course, courseRows] of grouped) {
     const cTotal = courseRows.length;
@@ -75,17 +89,10 @@ export function generateProgressCsv(rows: ProgressRow[]): string {
     }
     lines.push("");
 
-    lines.push("Слушатель,Email,Поток,Прогресс %,Модуль,Блок,Урок,Последний вход,Ср. мин/урок,Риски");
+    lines.push(activeCols.map(c => c.label).join(","));
 
     for (const r of courseRows) {
-      const lastLogin = r.lastLoginAt
-        ? new Date(r.lastLoginAt).toLocaleDateString("ru-RU")
-        : "";
-      lines.push([
-        esc(r.studentName), esc(r.email), esc(r.cohort), `${r.progressPercent}%`,
-        esc(r.currentModule ?? ""), esc(r.currentBlock ?? ""), esc(r.currentLesson ?? ""),
-        esc(lastLogin), r.avgLessonMinutes ?? 0, r.riskCount ?? 0,
-      ].join(","));
+      lines.push(activeCols.map(c => c.get(r)).join(","));
     }
     lines.push("");
   }
@@ -103,7 +110,7 @@ export function generateProgressCsv(rows: ProgressRow[]): string {
 
 // ── Risk report ──────────────────────────────────────────────────────
 
-export function generateRiskCsv(rows: RiskRow[]): string {
+export function generateRiskCsv(rows: RiskRow[], fields?: string[]): string {
   const lines: string[] = [];
 
   lines.push(...headerBlock("ОТЧЁТ ПО РИСКАМ СЛУШАТЕЛЕЙ"));
@@ -123,13 +130,21 @@ export function generateRiskCsv(rows: RiskRow[]): string {
   lines.push(`Открытых,${open}`);
   lines.push("");
   lines.push(separator());
-  lines.push("Слушатель,Email,Курс,Тип риска,Уровень,Статус");
+
+  const COLS = [
+    { key: "studentName", label: "Слушатель", get: (r: RiskRow) => esc(r.studentName) },
+    { key: "email", label: "Email", get: (r: RiskRow) => esc(r.email) },
+    { key: "course", label: "Курс", get: (r: RiskRow) => esc(r.course) },
+    { key: "type", label: "Тип риска", get: (r: RiskRow) => esc(r.type) },
+    { key: "severity", label: "Уровень", get: (r: RiskRow) => esc(r.severity) },
+    { key: "status", label: "Статус", get: (r: RiskRow) => esc(r.status) },
+  ];
+  const activeCols = fields ? COLS.filter(c => fields!.includes(c.key)) : COLS;
+
+  lines.push(activeCols.map(c => c.label).join(","));
 
   for (const r of rows) {
-    lines.push([
-      esc(r.studentName), esc(r.email), esc(r.course),
-      esc(r.type), esc(r.severity), esc(r.status),
-    ].join(","));
+    lines.push(activeCols.map(c => c.get(r)).join(","));
   }
 
   return lines.join("\n");
@@ -137,7 +152,7 @@ export function generateRiskCsv(rows: RiskRow[]): string {
 
 // ── Certificate report ───────────────────────────────────────────────
 
-export function generateCertificateCsv(rows: CertificateRow[]): string {
+export function generateCertificateCsv(rows: CertificateRow[], fields?: string[]): string {
   const lines: string[] = [];
 
   lines.push(...headerBlock("ОТЧЁТ ПО СЕРТИФИКАТАМ"));
@@ -149,13 +164,20 @@ export function generateCertificateCsv(rows: CertificateRow[]): string {
   lines.push(`По курсам,${uniqueCourses}`);
   lines.push("");
   lines.push(separator());
-  lines.push("Номер,Слушатель,Email,Курс,Дата выдачи");
+
+  const COLS = [
+    { key: "number", label: "Номер", get: (r: CertificateRow) => esc(r.number) },
+    { key: "studentName", label: "Слушатель", get: (r: CertificateRow) => esc(r.studentName) },
+    { key: "email", label: "Email", get: (r: CertificateRow) => esc(r.email) },
+    { key: "course", label: "Курс", get: (r: CertificateRow) => esc(r.course) },
+    { key: "issuedAt", label: "Дата выдачи", get: (r: CertificateRow) => r.issuedAt },
+  ];
+  const activeCols = fields ? COLS.filter(c => fields!.includes(c.key)) : COLS;
+
+  lines.push(activeCols.map(c => c.label).join(","));
 
   for (const r of rows) {
-    lines.push([
-      esc(r.number), esc(r.studentName), esc(r.email),
-      esc(r.course), r.issuedAt,
-    ].join(","));
+    lines.push(activeCols.map(c => c.get(r)).join(","));
   }
 
   return lines.join("\n");
@@ -163,7 +185,7 @@ export function generateCertificateCsv(rows: CertificateRow[]): string {
 
 // ── Assignment report ────────────────────────────────────────────────
 
-export function generateAssignmentCsv(rows: AssignmentRow[]): string {
+export function generateAssignmentCsv(rows: AssignmentRow[], fields?: string[]): string {
   const lines: string[] = [];
 
   lines.push(...headerBlock("ОТЧЁТ ПО ЗАДАНИЯМ"));
@@ -179,21 +201,25 @@ export function generateAssignmentCsv(rows: AssignmentRow[]): string {
   lines.push(`Нужна доработка,${needsRevision}`);
   lines.push("");
   lines.push(separator());
-  lines.push("Слушатель,Email,Курс,Урок,Задание,Статус,Балл,Отправлено,Проверено,Проверяющий");
+
+  const COLS = [
+    { key: "studentName", label: "Слушатель", get: (r: AssignmentRow) => esc(r.studentName) },
+    { key: "email", label: "Email", get: (r: AssignmentRow) => esc(r.email) },
+    { key: "course", label: "Курс", get: (r: AssignmentRow) => esc(r.course) },
+    { key: "lesson", label: "Урок", get: (r: AssignmentRow) => esc(r.lesson ?? "") },
+    { key: "assignment", label: "Задание", get: (r: AssignmentRow) => esc(r.assignment) },
+    { key: "status", label: "Статус", get: (r: AssignmentRow) => esc(r.status) },
+    { key: "score", label: "Балл", get: (r: AssignmentRow) => r.score ?? "" },
+    { key: "submittedAt", label: "Отправлено", get: (r: AssignmentRow) => r.submittedAt },
+    { key: "reviewedAt", label: "Проверено", get: (r: AssignmentRow) => r.reviewedAt ?? "" },
+    { key: "reviewerName", label: "Проверяющий", get: (r: AssignmentRow) => esc(r.reviewerName ?? "") },
+  ];
+  const activeCols = fields ? COLS.filter(c => fields!.includes(c.key)) : COLS;
+
+  lines.push(activeCols.map(c => c.label).join(","));
 
   for (const r of rows) {
-    lines.push([
-      esc(r.studentName),
-      esc(r.email),
-      esc(r.course),
-      esc(r.lesson ?? ""),
-      esc(r.assignment),
-      esc(r.status),
-      r.score ?? "",
-      r.submittedAt,
-      r.reviewedAt ?? "",
-      esc(r.reviewerName ?? ""),
-    ].join(","));
+    lines.push(activeCols.map(c => c.get(r)).join(","));
   }
 
   return lines.join("\n");
@@ -201,7 +227,7 @@ export function generateAssignmentCsv(rows: AssignmentRow[]): string {
 
 // ── Curator workload report ──────────────────────────────────────────
 
-export function generateCuratorWorkloadCsv(rows: CuratorWorkloadRow[]): string {
+export function generateCuratorWorkloadCsv(rows: CuratorWorkloadRow[], fields?: string[]): string {
   const lines: string[] = [];
 
   lines.push(...headerBlock("ОТЧЁТ ПО НАГРУЗКЕ КУРАТОРОВ"));
@@ -216,20 +242,24 @@ export function generateCuratorWorkloadCsv(rows: CuratorWorkloadRow[]): string {
   lines.push(`Перегружены,${overloaded}`);
   lines.push("");
   lines.push(separator());
-  lines.push("Куратор,Email,Потоки,Слушателей,Средний прогресс %,Открытые вопросы,Задания на проверке,Активные риски,Критические риски");
+
+  const COLS = [
+    { key: "curatorName", label: "Куратор", get: (r: CuratorWorkloadRow) => esc(r.curatorName) },
+    { key: "curatorEmail", label: "Email", get: (r: CuratorWorkloadRow) => esc(r.curatorEmail) },
+    { key: "cohorts", label: "Потоки", get: (r: CuratorWorkloadRow) => esc(r.cohorts) },
+    { key: "studentsCount", label: "Слушателей", get: (r: CuratorWorkloadRow) => String(r.studentsCount) },
+    { key: "avgProgress", label: "Средний прогресс %", get: (r: CuratorWorkloadRow) => `${r.avgProgress}%` },
+    { key: "openQuestions", label: "Открытые вопросы", get: (r: CuratorWorkloadRow) => String(r.openQuestions) },
+    { key: "pendingAssignments", label: "Задания на проверке", get: (r: CuratorWorkloadRow) => String(r.pendingAssignments) },
+    { key: "activeRisks", label: "Активные риски", get: (r: CuratorWorkloadRow) => String(r.activeRisks) },
+    { key: "criticalRisks", label: "Критические риски", get: (r: CuratorWorkloadRow) => String(r.criticalRisks) },
+  ];
+  const activeCols = fields ? COLS.filter(c => fields!.includes(c.key)) : COLS;
+
+  lines.push(activeCols.map(c => c.label).join(","));
 
   for (const r of rows) {
-    lines.push([
-      esc(r.curatorName),
-      esc(r.curatorEmail),
-      esc(r.cohorts),
-      r.studentsCount,
-      `${r.avgProgress}%`,
-      r.openQuestions,
-      r.pendingAssignments,
-      r.activeRisks,
-      r.criticalRisks,
-    ].join(","));
+    lines.push(activeCols.map(c => c.get(r)).join(","));
   }
 
   return lines.join("\n");

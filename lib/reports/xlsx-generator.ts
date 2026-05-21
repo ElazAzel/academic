@@ -54,7 +54,7 @@ const SEVERITY_FILLS: Record<string, ExcelJS.Fill> = {
 
 // ── Progress report ──────────────────────────────────────────────────
 
-export async function generateProgressXlsx(rows: ProgressRow[]): Promise<Buffer> {
+export async function generateProgressXlsx(rows: ProgressRow[], fields?: string[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "AI Strategic Academy";
   wb.created = new Date();
@@ -76,30 +76,42 @@ export async function generateProgressXlsx(rows: ProgressRow[]): Promise<Buffer>
     { header: "Риски", key: "riskCount", width: 10 },
   ];
 
+  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key)) : ws.columns;
+  ws.columns = filteredCols;
+
   styleHeader(ws);
-  applyAutoFilter(ws, 11);
+  applyAutoFilter(ws, ws.columns.length);
   freezeHeader(ws);
 
-  // Data (already ordered by course → cohort → name from fetchProgressData)
+  const colKeys = ws.columns.map(c => c.key);
+  const progressIdx = colKeys.indexOf("progressPercent") + 1;
+
   for (const r of rows) {
     const lastLogin = r.lastLoginAt
       ? new Date(r.lastLoginAt).toLocaleDateString("ru-RU")
       : "";
-    const row = ws.addRow([
-      r.studentName, r.email, r.course, r.cohort,
-      r.progressPercent,
-      r.currentModule ?? "", r.currentBlock ?? "", r.currentLesson ?? "",
-      lastLogin, r.avgLessonMinutes ?? 0, r.riskCount ?? 0,
-    ]);
+    const values: Record<string, unknown> = {
+      studentName: r.studentName,
+      email: r.email,
+      course: r.course,
+      cohort: r.cohort,
+      progressPercent: r.progressPercent / 100,
+      currentModule: r.currentModule ?? "",
+      currentBlock: r.currentBlock ?? "",
+      currentLesson: r.currentLesson ?? "",
+      lastLoginAt: lastLogin,
+      avgLessonMinutes: r.avgLessonMinutes ?? 0,
+      riskCount: r.riskCount ?? 0,
+    };
+    const row = ws.addRow(colKeys.map(key => values[key]));
 
-    // Progress cell as percentage
-    const pctCell = row.getCell(5);
-    pctCell.numFmt = "0%";
-    pctCell.value = r.progressPercent / 100;
-    pctCell.alignment = { horizontal: "center" };
-    styleDataCell(pctCell);
+    if (progressIdx > 0) {
+      const pctCell = row.getCell(progressIdx);
+      pctCell.numFmt = "0%";
+      pctCell.alignment = { horizontal: "center" };
+      styleDataCell(pctCell);
+    }
 
-    // Color by completion
     let rowFill: ExcelJS.Fill | undefined;
     if (r.progressPercent >= 100) {
       rowFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCFCE7" } };
@@ -108,7 +120,7 @@ export async function generateProgressXlsx(rows: ProgressRow[]): Promise<Buffer>
     }
 
     row.eachCell((cell, colNum) => {
-      if (colNum !== 5) {
+      if (colNum !== progressIdx) {
         if (rowFill) cell.fill = rowFill;
         styleDataCell(cell);
       }
@@ -174,7 +186,7 @@ export async function generateProgressXlsx(rows: ProgressRow[]): Promise<Buffer>
 
 // ── Risk report ──────────────────────────────────────────────────────
 
-export async function generateRiskXlsx(rows: RiskRow[]): Promise<Buffer> {
+export async function generateRiskXlsx(rows: RiskRow[], fields?: string[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "AI Strategic Academy";
   wb.created = new Date();
@@ -191,12 +203,25 @@ export async function generateRiskXlsx(rows: RiskRow[]): Promise<Buffer> {
     { header: "Статус", key: "status", width: 14 },
   ];
 
+  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key)) : ws.columns;
+  ws.columns = filteredCols;
+
   styleHeader(ws);
-  applyAutoFilter(ws, 6);
+  applyAutoFilter(ws, ws.columns.length);
   freezeHeader(ws);
 
+  const colKeys = ws.columns.map(c => c.key);
+
   for (const r of rows) {
-    const row = ws.addRow([r.studentName, r.email, r.course, r.type, r.severity, r.status]);
+    const values: Record<string, unknown> = {
+      studentName: r.studentName,
+      email: r.email,
+      course: r.course,
+      type: r.type,
+      severity: r.severity,
+      status: r.status,
+    };
+    const row = ws.addRow(colKeys.map(key => values[key]));
     const fill = SEVERITY_FILLS[r.severity];
     row.eachCell((cell) => {
       if (fill) cell.fill = fill;
@@ -239,7 +264,7 @@ export async function generateRiskXlsx(rows: RiskRow[]): Promise<Buffer> {
 
 // ── Certificate report ───────────────────────────────────────────────
 
-export async function generateCertificateXlsx(rows: CertificateRow[]): Promise<Buffer> {
+export async function generateCertificateXlsx(rows: CertificateRow[], fields?: string[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "AI Strategic Academy";
   wb.created = new Date();
@@ -255,12 +280,24 @@ export async function generateCertificateXlsx(rows: CertificateRow[]): Promise<B
     { header: "Дата выдачи", key: "issuedAt", width: 16 },
   ];
 
+  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key)) : ws.columns;
+  ws.columns = filteredCols;
+
   styleHeader(ws);
-  applyAutoFilter(ws, 5);
+  applyAutoFilter(ws, ws.columns.length);
   freezeHeader(ws);
 
+  const colKeys = ws.columns.map(c => c.key);
+
   for (const r of rows) {
-    const row = ws.addRow([r.number, r.studentName, r.email, r.course, r.issuedAt]);
+    const values: Record<string, unknown> = {
+      number: r.number,
+      studentName: r.studentName,
+      email: r.email,
+      course: r.course,
+      issuedAt: r.issuedAt,
+    };
+    const row = ws.addRow(colKeys.map(key => values[key]));
     row.eachCell((cell) => {
       cell.border = BORDER;
       cell.alignment = { vertical: "middle" };
@@ -296,7 +333,7 @@ export async function generateCertificateXlsx(rows: CertificateRow[]): Promise<B
 
 // ── Assignment report ────────────────────────────────────────────────
 
-export async function generateAssignmentXlsx(rows: AssignmentRow[]): Promise<Buffer> {
+export async function generateAssignmentXlsx(rows: AssignmentRow[], fields?: string[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "AI Strategic Academy";
   wb.created = new Date();
@@ -316,23 +353,29 @@ export async function generateAssignmentXlsx(rows: AssignmentRow[]): Promise<Buf
     { header: "Проверяющий", key: "reviewerName", width: 24 },
   ];
 
+  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key)) : ws.columns;
+  ws.columns = filteredCols;
+
   styleHeader(ws);
-  applyAutoFilter(ws, 10);
+  applyAutoFilter(ws, ws.columns.length);
   freezeHeader(ws);
 
+  const colKeys = ws.columns.map(c => c.key);
+
   for (const r of rows) {
-    const row = ws.addRow([
-      r.studentName,
-      r.email,
-      r.course,
-      r.lesson ?? "",
-      r.assignment,
-      r.status,
-      r.score ?? "",
-      r.submittedAt,
-      r.reviewedAt ?? "",
-      r.reviewerName ?? "",
-    ]);
+    const values: Record<string, unknown> = {
+      studentName: r.studentName,
+      email: r.email,
+      course: r.course,
+      lesson: r.lesson ?? "",
+      assignment: r.assignment,
+      status: r.status,
+      score: r.score ?? "",
+      submittedAt: r.submittedAt,
+      reviewedAt: r.reviewedAt ?? "",
+      reviewerName: r.reviewerName ?? "",
+    };
+    const row = ws.addRow(colKeys.map(key => values[key]));
     row.eachCell((cell) => {
       cell.border = BORDER;
       cell.alignment = { vertical: "middle" };
@@ -366,7 +409,7 @@ export async function generateAssignmentXlsx(rows: AssignmentRow[]): Promise<Buf
 
 // ── Curator workload report ──────────────────────────────────────────
 
-export async function generateCuratorWorkloadXlsx(rows: CuratorWorkloadRow[]): Promise<Buffer> {
+export async function generateCuratorWorkloadXlsx(rows: CuratorWorkloadRow[], fields?: string[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "AI Strategic Academy";
   wb.created = new Date();
@@ -385,22 +428,28 @@ export async function generateCuratorWorkloadXlsx(rows: CuratorWorkloadRow[]): P
     { header: "Критические риски", key: "criticalRisks", width: 18 },
   ];
 
+  const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key)) : ws.columns;
+  ws.columns = filteredCols;
+
   styleHeader(ws);
-  applyAutoFilter(ws, 9);
+  applyAutoFilter(ws, ws.columns.length);
   freezeHeader(ws);
 
+  const colKeys = ws.columns.map(c => c.key);
+
   for (const r of rows) {
-    const row = ws.addRow([
-      r.curatorName,
-      r.curatorEmail,
-      r.cohorts,
-      r.studentsCount,
-      r.avgProgress,
-      r.openQuestions,
-      r.pendingAssignments,
-      r.activeRisks,
-      r.criticalRisks,
-    ]);
+    const values: Record<string, unknown> = {
+      curatorName: r.curatorName,
+      curatorEmail: r.curatorEmail,
+      cohorts: r.cohorts,
+      studentsCount: r.studentsCount,
+      avgProgress: r.avgProgress,
+      openQuestions: r.openQuestions,
+      pendingAssignments: r.pendingAssignments,
+      activeRisks: r.activeRisks,
+      criticalRisks: r.criticalRisks,
+    };
+    const row = ws.addRow(colKeys.map(key => values[key]));
     row.eachCell((cell) => {
       cell.border = BORDER;
       cell.alignment = { vertical: "middle" };
