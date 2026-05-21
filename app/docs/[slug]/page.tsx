@@ -60,9 +60,21 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
     notFound();
   }
 
-  const filePath = path.join(process.cwd(), "docs", `${slug}.md`);
+  const dirsToCheck = [
+    path.join(process.cwd(), "docs", "legal"),
+    path.join(process.cwd(), "docs"),
+  ];
 
-  if (!fs.existsSync(filePath)) {
+  let filePath: string | null = null;
+  for (const dir of dirsToCheck) {
+    const candidate = path.join(dir, `${slug}.md`);
+    if (fs.existsSync(candidate)) {
+      filePath = candidate;
+      break;
+    }
+  }
+
+  if (!filePath) {
     notFound();
   }
 

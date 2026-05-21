@@ -48,7 +48,7 @@ function renderMarkdown(md: string): string {
 }
 
 export default function PrivacyPage() {
-  const filePath = path.join(process.cwd(), "docs", "privacy-policy.md");
+  const filePath = path.join(process.cwd(), "docs", "legal", "privacy-policy.md");
   const content = fs.readFileSync(filePath, "utf-8");
   const html = renderMarkdown(content);
 
