@@ -9,6 +9,7 @@ import { PopupModal } from "@/components/lms/popup-modal";
 import { ConsentModal } from "@/components/lms/consent-modal";
 import { NotificationToast } from "@/components/lms/notification-toast";
 import { PWAInstallPrompt } from "@/components/lms/pwa-install-prompt";
+import { VisitTracker } from "@/components/lms/visit-tracker";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -34,6 +35,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <ConsentModal />
           <NotificationToast />
           <PWAInstallPrompt />
+          <VisitTracker />
         </ThemeProvider>
       </QueryClientProvider>
     </SessionProvider>

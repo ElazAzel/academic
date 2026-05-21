@@ -259,6 +259,7 @@ model User {
   notificationPreferences    NotificationPreference[]
   lessonRatings              LessonRating[]
   activityLogs               ActivityLog[]
+  userSessions               UserSession[]
   createdPopups              AdminPopup[]
   popupViews                 PopupView[]
   pushSubscriptions          PushSubscription[]
@@ -724,14 +725,39 @@ model ActivityLog {
   resourceId String? @map("resource_id")
   metadata  Json     @default("{}")
   ipAddress String?  @map("ip_address")
+  sessionId String?  @map("session_id")
   createdAt DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session UserSession? @relation(fields: [sessionId], references: [id])
 
   @@index([userId])
   @@index([createdAt])
   @@index([action])
+  @@index([sessionId])
   @@map("activity_logs")
+}
+
+// ── User session tracking ───────────────────────────────────────────
+
+model UserSession {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  role        String    @map("role")
+  startedAt   DateTime  @default(now()) @map("started_at")
+  endedAt     DateTime? @map("ended_at")
+  durationSec Int?      @map("duration_sec")
+  ipAddress   String?   @map("ip_address")
+  userAgent   String?   @map("user_agent")
+  source      String    @default("web") @map("source")
+
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activities ActivityLog[]
+
+  @@index([userId, startedAt])
+  @@index([role, startedAt])
+  @@index([startedAt])
+  @@map("user_sessions")
 }
 
 model LessonQuestion {

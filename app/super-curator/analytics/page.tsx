@@ -8,6 +8,7 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getSuperCuratorStudentAnalytics } from "@/server/actions/dashboard";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
+import { VisitAnalyticsBlock } from "@/components/admin/visit-analytics-block";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,11 @@ export default async function SuperCuratorAnalyticsPage() {
           </a>
         </div>
         <StudentAnalyticsTable students={students} />
+
+        <div className="pt-6">
+          <h2 className="font-label-lg text-label-lg text-m3-on-surface mb-4">Посещаемость слушателей</h2>
+          <VisitAnalyticsBlock days={30} roleFilter="student" />
+        </div>
       </div>
     </AppShell>
   );

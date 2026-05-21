@@ -14,6 +14,7 @@ import { getPrisma } from "@/lib/prisma";
 import { getAdminStudentAnalytics } from "@/server/actions/dashboard";
 import { getActivityAnalytics } from "@/server/actions/activity-analytics";
 import { ActivityFilters } from "@/components/admin/activity-filters";
+import { VisitAnalyticsBlock } from "@/components/admin/visit-analytics-block";
 
 export const dynamic = "force-dynamic";
 
@@ -111,6 +112,13 @@ async function ActivityTab(props: { searchParams?: Promise<{ days?: string; coho
       </Card>
     </div>
   );
+}
+
+async function VisitTab(props: { searchParams?: Promise<{ days?: string; roleFilter?: string }> }) {
+  const sp = await props.searchParams;
+  const days = Math.min(Math.max(parseInt(sp?.days ?? "30", 10) || 30, 1), 180);
+  const roleFilter = sp?.roleFilter || undefined;
+  return <VisitAnalyticsBlock days={days} roleFilter={roleFilter} />;
 }
 
 export default async function AdminAnalyticsPage(props: { searchParams?: Promise<{ days?: string; cohortId?: string; courseId?: string }> }) {
@@ -344,6 +352,10 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
           {
             label: "По слушателям",
             content: <StudentAnalyticsTab />,
+          },
+          {
+            label: "Посещения",
+            content: <VisitTab searchParams={props.searchParams as Promise<{ days?: string; roleFilter?: string }>} />,
           },
           {
             label: "Активность",
