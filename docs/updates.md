@@ -2,6 +2,21 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-21 — Реорганизация документации + MASTER-PLAN + CSRF fix
+
+- **Реорганизация docs:** 42 файла → 3 папки (`archive/`, `legal/`, core):
+  - `docs/archive/` — 18 устаревших/аудиторных документов с README-оглавлением
+  - `docs/legal/` — 11 юридических документов (privacy, terms, policies)
+  - Core: 9 ключевых документов (specification, implementation-plan, MASTER-PLAN, security, PLATFORM_SNAPSHOT, DEVELOPER_GUIDE, updates, update-log, release-verification, scale-path, platform-functional-overview)
+- **Создан `docs/MASTER-PLAN.md`** — единый план развития: Фаза 0 (Production Hardening, 2 нед) → Фаза 1 (UX/Quality, 2-4 нед) → Фаза 2 (Расширение, 1-2 мес) → Фаза 3 (Масштабирование, 3-6 мес) → Фаза 4 (Стратегия, 6-12 мес)
+- **Обновлён `docs/implementation-plan.md`** — актуальные статусы, убраны ссылки на устаревшие документы
+- **Обновлён `docs/specification.md`** — все статусы changed to done, обновлена архитектура и API
+- **CSRF fix (38c2d82):** middleware больше не использует `process.env.APP_URL` — сравнивает origin с hostname запроса
+- **CSRF VERCEL_URL fix (358c271):** fallback откатился, заменён hostname-сравнением
+- **chore: .vercel в gitignore (a74fd72)**
+- **typecheck**: passed ✅
+- **tests**: 354/354 passed (60/60 test files) ✅
+
 ## 2026-05-21 — Интерактивный импорт пользователей из CSV + Полная верификация типов и сборки
 
 - **m1: Интерактивный пакетный импортер (Admin Batch Importer)**:
