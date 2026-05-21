@@ -146,17 +146,14 @@ describe("enrollStudent", () => {
 
     await enrollStudent({ userId: "u3", courseId: "c3", cohortId: "coh1" }, "actor1");
 
-    expect(mockOutboxEventCreate).toHaveBeenCalledWith(
+    expect(mockNotificationCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          eventType: "notification.send",
-          payload: expect.objectContaining({
-            userId: "u3",
-            event: "access_granted",
-            channel: "in_app",
-            refType: "enrollment",
-            refId: "e3",
-          }),
+          userId: "u3",
+          type: "access_granted",
+          channel: "in_app",
+          refType: "enrollment",
+          refId: "e3",
         }),
       }),
     );

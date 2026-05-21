@@ -189,17 +189,14 @@ describe("reviewSubmission", () => {
 
     await reviewSubmission({ submissionId: "sub1", reviewerId: "r1", accepted: true, score: 95 });
 
-    expect(mockOutboxEventCreate).toHaveBeenCalledWith(
+    expect(mockNotificationCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          eventType: "notification.send",
-          payload: expect.objectContaining({
-            userId: "student1",
-            event: "assignment_reviewed",
-            channel: "in_app",
-            refType: "assignment_submission",
-            refId: "sub1",
-          }),
+          userId: "student1",
+          type: "assignment_reviewed",
+          channel: "in_app",
+          refType: "assignment_submission",
+          refId: "sub1",
         }),
       }),
     );
