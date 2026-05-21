@@ -29,7 +29,7 @@
 
 - Add SCORM/xAPI/cmi5 import and launch support after MVP.
 - Add advanced video hosting, subtitles workflow, attendance analytics, and private livestream chat persistence.
-- Add Excel import preview UI and background job processing for very large cohorts.
+- [done] Add CSV import preview UI with interactive table validation, default roles, cohort auto-enrollment, and credentials download.
 - Add advanced report designer and scheduled export delivery.
 
 ## Microservices
