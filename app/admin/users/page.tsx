@@ -16,6 +16,8 @@ import { ROLE_LABELS, type RoleKey } from "@/types/domain";
 import { UserManagementToolbar } from "@/components/admin/user-management-toolbar";
 import { EditUserDialog, DeleteUserButton } from "@/components/admin/edit-user-dialog";
 import { UserFilters } from "@/components/admin/user-filters";
+import { UserBatchImporter } from "@/components/admin/user-batch-importer";
+import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +41,13 @@ export default async function AdminUsersPage(props: {
   ]);
   const totalPages = Math.ceil(totalUsers / PAGE_SIZE);
   const assignableRoles = getAssignableRolesForActor(actor.roles);
+
+  const prisma = getPrisma();
+  const cohorts = await prisma.cohort.findMany({
+    where: { status: "active" },
+    select: { id: true, name: true, course: { select: { title: true } } },
+    orderBy: { createdAt: "desc" }
+  });
 
   return (
     <AppShell role={actor.roles.includes("admin") ? "admin" : "super_curator"}>
@@ -112,17 +121,7 @@ export default async function AdminUsersPage(props: {
         }, {
           label: "Импорт",
           content: (
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-base">Импорт пользователей</CardTitle>
-                <CardDescription>Массовое создание через CSV</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/30 p-10 text-center text-sm text-muted-foreground">
-                  Сейчас массовое создание выполняется через защищенный скрипт `npm run users:provision`.
-                </div>
-              </CardContent>
-            </Card>
+            <UserBatchImporter assignableRoles={assignableRoles} cohorts={cohorts} />
           ),
         }]} />
         {totalPages > 1 && (

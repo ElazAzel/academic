@@ -8,6 +8,7 @@ import { logAudit } from "@/server/modules/audit/service";
 import { RoleKey, UserAccountStatus } from "@prisma/client";
 import { ApiError } from "@/lib/http";
 import { enrollStudentSchema, assignCuratorSchema } from "@/lib/validation";
+import { hashPassword } from "@/lib/auth/password";
 import {
   getSuperCuratorScope,
   isCohortInSuperCuratorScope,
@@ -465,6 +466,178 @@ export async function deleteUserAction(userId: string) {
 
     revalidatePath("/admin/users");
     return { success: true };
+  } catch (error) {
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+  }
+}
+
+function generateTempPassword(length = 12): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+  let pass = "";
+  for (let i = 0; i < length; i++) {
+    const r = Math.floor(Math.random() * chars.length);
+    pass += chars[r];
+  }
+  return pass;
+}
+
+export async function importUsersAction(
+  usersList: Array<{ email: string; name?: string; roleKeys: RoleKey[] }>,
+  cohortId?: string
+) {
+  try {
+    const actor = await requireRole(["admin", "super_curator"]);
+    
+    // Fetch all roles from DB to get their IDs
+    const dbRoles = await prisma.role.findMany();
+    const rolesMap = dbRoles.reduce((acc, r) => {
+      acc[r.key as RoleKey] = r.id;
+      return acc;
+    }, {} as Record<RoleKey, string>);
+
+    const results = [];
+
+    for (const item of usersList) {
+      const email = item.email.toLowerCase().trim();
+      const name = item.name?.trim() || null;
+      const roleKeys = item.roleKeys;
+
+      if (!email) {
+        results.push({ email: "N/A", name: name || "", status: "failed" as const, error: "Email отсутствует" });
+        continue;
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        results.push({ email, name: name || "", status: "failed" as const, error: "Некорректный формат email" });
+        continue;
+      }
+
+      try {
+        // Check if user exists
+        const existingUser = await prisma.user.findUnique({
+          where: { email },
+          include: { roles: { include: { role: true } } }
+        });
+
+        if (existingUser) {
+          let enrolled = false;
+          
+          // If student role and cohort is provided, enroll them
+          if (cohortId && (roleKeys.includes(RoleKey.student) || existingUser.roles.some(r => r.role.key === RoleKey.student))) {
+            const course = await prisma.cohort.findUnique({
+              where: { id: cohortId },
+              select: { courseId: true }
+            });
+
+            if (course) {
+              const existingEnrollment = await prisma.enrollment.findFirst({
+                where: { userId: existingUser.id, cohortId }
+              });
+
+              if (!existingEnrollment) {
+                await prisma.enrollment.create({
+                  data: {
+                    userId: existingUser.id,
+                    courseId: course.courseId || "",
+                    cohortId,
+                    status: "ACTIVE"
+                  }
+                });
+
+                await logAudit({
+                  actorId: actor.id,
+                  action: "enrollment.created",
+                  entity: "enrollment",
+                  entityId: existingUser.id,
+                  metadata: { cohortId, courseId: course.courseId, source: "bulk_import" }
+                });
+
+                enrolled = true;
+              }
+            }
+          }
+
+          results.push({
+            email,
+            name: existingUser.name || name || "",
+            status: enrolled ? ("enrolled" as const) : ("skipped" as const),
+            error: enrolled ? undefined : "Пользователь уже существует"
+          });
+        } else {
+          // Create new user
+          const tempPassword = generateTempPassword();
+          const passwordHash = await hashPassword(tempPassword);
+
+          const newUser = await prisma.user.create({
+            data: {
+              email,
+              name,
+              passwordHash,
+              emailVerified: new Date(),
+              status: UserAccountStatus.ACTIVE,
+              roles: {
+                create: roleKeys.map(role => ({ roleId: rolesMap[role] }))
+              }
+            }
+          });
+
+          await logAudit({
+            actorId: actor.id,
+            action: "user.created",
+            entity: "user",
+            entityId: newUser.id,
+            metadata: { email, roles: roleKeys, source: "bulk_import" }
+          });
+
+          // Enroll if cohort provided and roles include student
+          let enrolled = false;
+          if (cohortId && roleKeys.includes(RoleKey.student)) {
+            const course = await prisma.cohort.findUnique({
+              where: { id: cohortId },
+              select: { courseId: true }
+            });
+
+            if (course) {
+              await prisma.enrollment.create({
+                data: {
+                  userId: newUser.id,
+                  courseId: course.courseId || "",
+                  cohortId,
+                  status: "ACTIVE"
+                }
+              });
+
+              await logAudit({
+                actorId: actor.id,
+                action: "enrollment.created",
+                entity: "enrollment",
+                entityId: newUser.id,
+                metadata: { cohortId, courseId: course.courseId, source: "bulk_import" }
+              });
+
+              enrolled = true;
+            }
+          }
+
+          results.push({
+            email,
+            name: name || "",
+            status: "created" as const,
+            tempPassword
+          });
+        }
+      } catch (err) {
+        results.push({
+          email,
+          name: name || "",
+          status: "failed" as const,
+          error: err instanceof Error ? err.message : "Неизвестная ошибка при создании"
+        });
+      }
+    }
+
+    revalidatePath("/admin/users");
+    return { success: true, results };
   } catch (error) {
     throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
   }
