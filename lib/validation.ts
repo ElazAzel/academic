@@ -6,7 +6,7 @@ export const courseSchema = z.object({
   title: z.string().min(COURSE.TITLE_MIN_LENGTH).max(COURSE.TITLE_MAX_LENGTH),
   description: z.string().min(10),
   goal: z.string().max(COURSE.GOAL_MAX_LENGTH).optional(),
-  coverUrl: z.string().url().optional(),
+  coverUrl: z.string().url({ message: "Обложка: введите полный URL (https://example.com/image.jpg)" }).trim().optional().or(z.literal("")),
   durationHours: z.number().int().min(COURSE.MIN_DURATION_HOURS).max(COURSE.MAX_DURATION_HOURS).default(0),
   traversalMode: z.enum([TRAVERSAL_MODES.SEQUENTIAL, TRAVERSAL_MODES.OPEN]).default(TRAVERSAL_MODES.SEQUENTIAL)
 });
@@ -87,7 +87,7 @@ export const courseBuilderSettingsSchema = z.object({
   title: z.string().min(COURSE.TITLE_MIN_LENGTH).max(COURSE.TITLE_MAX_LENGTH).optional(),
   description: z.string().optional(),
   goal: z.string().max(COURSE.GOAL_MAX_LENGTH).nullish(),
-  coverUrl: z.string().url().nullish().or(z.literal("")),
+  coverUrl: z.string().url({ message: "Введите полный URL, например https://example.com/image.jpg" }).trim().nullish().or(z.literal("")),
   durationHours: z.number().int().min(COURSE.MIN_DURATION_HOURS).max(COURSE.MAX_DURATION_HOURS).optional(),
   traversalMode: z.enum([TRAVERSAL_MODES.SEQUENTIAL, TRAVERSAL_MODES.OPEN]).optional(),
   completionThreshold: z.number().int().min(COURSE.MIN_COMPLETION_THRESHOLD).max(COURSE.MAX_COMPLETION_THRESHOLD).optional(),
