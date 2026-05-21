@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { writeOutboxEvent } from "@/server/modules/outbox/service";
-import { errorResponse, parseJson } from "@/lib/http";
+import { errorResponse, parseJson, ApiError } from "@/lib/http";
 import { checkRateLimit } from "@/lib/security/rate-limit";
+import { getAvailableReportsForRoles } from "@/server/modules/reports/service";
 import { z } from "zod";
 
 const createJobSchema = z.object({
@@ -20,6 +21,12 @@ export async function POST(request: Request) {
     }
 
     const payload = await parseJson(request, createJobSchema);
+
+    // Early validation: fail fast if this report type isn't allowed for the user's role
+    const allowedTypes = getAvailableReportsForRoles(user.roles).map((r) => r.type);
+    if (!allowedTypes.includes(payload.type)) {
+      throw new ApiError("forbidden", "Этот тип отчёта недоступен для вашей роли", 403);
+    }
 
     const event = await writeOutboxEvent("report.generate", {
       reportType: payload.type,

@@ -233,18 +233,15 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
           <div className="flex gap-2">
             {FORMATS.map((f) => {
               const FmtIcon = f.icon;
-              const isPdfUnsupported = false;
               return (
                 <button
                   key={f.id}
                   onClick={() => setFormat(f.id)}
-                  disabled={f.id === "pdf" && isPdfUnsupported}
                   className={cn(
                     "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all",
                     format === f.id
                       ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
-                      : "border-border hover:border-primary/30 hover:bg-muted/50",
-                    f.id === "pdf" && isPdfUnsupported && "opacity-40 cursor-not-allowed"
+                      : "border-border hover:border-primary/30 hover:bg-muted/50"
                   )}
                 >
                   <FmtIcon className="h-4 w-4" />
