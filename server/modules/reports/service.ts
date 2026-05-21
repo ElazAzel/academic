@@ -33,14 +33,9 @@ import {
 import { getObserverScope, getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
 import type {
-  AssignmentRow,
-  CertificateRow,
-  CuratorWorkloadRow,
-  ProgressRow,
   ReportDataScope,
   ReportFormat,
   ReportType,
-  RiskRow,
 } from "@/lib/reports/types";
 import type { AppSessionUser, RoleKey as DomainRoleKey } from "@/types/domain";
 
@@ -156,10 +151,6 @@ interface RenderedReport {
   content: string | Buffer | Uint8Array;
   format: ReportFormat;
   fallbackReason?: string;
-}
-
-function normalizeRole(role: string): DomainRoleKey | null {
-  return ROLE_PRIORITY.includes(role as DomainRoleKey) ? (role as DomainRoleKey) : null;
 }
 
 function pickActorRole(roles: string[]): DomainRoleKey | null {

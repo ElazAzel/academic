@@ -14,7 +14,7 @@ interface RichTextEditorProps {
   minHeight?: string;
 }
 
-export function RichTextEditor({ value, onChange, placeholder, minHeight = "120px" }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, minHeight = "120px" }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({

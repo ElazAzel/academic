@@ -3,12 +3,10 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getSubmissionDetail } from "@/server/actions/curator";
 import { ReviewSubmissionForm } from "@/components/curator/review-submission-form";
-import type { SubmissionStatus } from "@prisma/client";
 
 const STATUS_LABELS: Record<string, string> = {
   SUBMITTED: "Отправлено",
@@ -39,7 +37,7 @@ export default async function SubmissionDetailPage({
 }: {
   params: Promise<{ submissionId: string }>;
 }) {
-  const user = await requireRolePage(["curator", "super_curator"]);
+  await requireRolePage(["curator", "super_curator"]);
   const { submissionId } = await params;
 
   let data;

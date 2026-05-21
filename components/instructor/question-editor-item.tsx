@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, Trash2, ChevronDown, ChevronUp, Loader2, Plus, X } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 
 interface Question {
   id: string;

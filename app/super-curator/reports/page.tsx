@@ -8,7 +8,6 @@ import { DownloadReports } from "@/components/lms/download-reports";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getCurrentUser } from "@/lib/auth/session";
 import { getSuperCuratorReportData } from "@/server/actions/super-curator";
 import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 import type { DashboardMetric } from "@/types/domain";

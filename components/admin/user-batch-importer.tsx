@@ -9,7 +9,6 @@ import { RoleKey } from "@prisma/client";
 import { ROLE_LABELS } from "@/types/domain";
 import { 
   Upload, 
-  FileText, 
   CheckCircle, 
   AlertCircle, 
   Download, 
@@ -209,7 +208,7 @@ export function UserBatchImporter({
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => setStep((prev) => (prev - 1) as any)}
+              onClick={() => setStep((prev) => (prev - 1) as 1 | 2 | 3)}
               disabled={loading}
               className="rounded-xl"
             >
