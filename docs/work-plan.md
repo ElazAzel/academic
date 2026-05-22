@@ -118,6 +118,7 @@
 | 7.4 | Обновить `vercel-supabase-deployment.md` — 100MB→20MB, PostgreSQL 15→17 | ✅ |
 | 7.5 | Обновить `platform-functional-overview.md` — `/student/modules/[moduleId]` помечен как удалённый | ✅ |
 | 7.6 | Чат: `max-w-5xl mx-auto` для стандартной ширины окна чата | ✅ |
+| 7.7 | Чат: адаптивная и настраиваемая высота окна чата в `ChatPanel` для предотвращения переполнения на мобильных и в модальных окнах | ✅ |
 
 ---
 

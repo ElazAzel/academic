@@ -40,6 +40,7 @@ export function ChatPanel({
   otherParticipantName = "Куратор",
   showResponseState = false,
   fullHeight = false,
+  className,
 }: {
   lessonId?: string;
   replyLessonId?: string;
@@ -51,6 +52,7 @@ export function ChatPanel({
   otherParticipantName?: string;
   showResponseState?: boolean;
   fullHeight?: boolean;
+  className?: string;
 }) {
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => ["chat", studentId, lessonId], [studentId, lessonId]);
@@ -281,7 +283,7 @@ export function ChatPanel({
   }
 
   return (
-    <div className={`flex flex-col rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft ${fullHeight ? 'h-full' : 'h-[520px]'}`}>
+    <div className={`flex flex-col rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft ${fullHeight ? 'h-full' : (className || 'h-[480px] sm:h-[520px] md:h-[560px] lg:h-[600px] max-h-[60vh] sm:max-h-[70vh] lg:max-h-[75vh] min-h-[350px]')}`}>
       <div className="flex items-center justify-between px-4 pt-3 pb-1 shrink-0">
         <span className="text-label-lg font-label-lg text-m3-on-surface">{conversationTitle}</span>
         {messages.length > 0 && (

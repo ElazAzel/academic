@@ -10,67 +10,69 @@ import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-function resolveCorrectAnswer(correct: unknown, options: unknown): string | string[] {
-  const resolveOption = (val: unknown): string => {
-    if (val === null || val === undefined) return "";
-    if (Array.isArray(options)) {
-      if (options.length > 0 && typeof options[0] === "object" && options[0] !== null) {
-        const firstOpt = options[0] as Record<string, unknown>;
-        if ("id" in firstOpt) {
-          const matched = (options as Array<{ id?: string; label?: string }>).find(
-            (o) => String(o.id) === String(val)
-          );
-          if (matched) return String(matched.label ?? matched.id ?? "");
-        }
-      }
+function resolveOptionLabel(val: unknown, options: unknown[]): string {
+  if (val === null || val === undefined) return "";
+  const strVal = String(val);
 
-      const strVal = String(val);
-      const idx = parseInt(strVal, 10);
-      if (!isNaN(idx) && idx >= 0 && idx < options.length && String(idx) === strVal) {
-        return String(options[idx] ?? "");
+  if (Array.isArray(options) && options.length > 0) {
+    // Numeric index → option
+    const idx = parseInt(strVal, 10);
+    if (!isNaN(idx) && idx >= 0 && idx < options.length && String(idx) === strVal) {
+      const opt = options[idx];
+      if (typeof opt === "object" && opt !== null) {
+        const o = opt as Record<string, unknown>;
+        return String(o.label ?? o.id ?? strVal);
       }
+      return String(opt);
     }
-    return String(val);
-  };
 
-  if (correct === null || correct === undefined) return "";
-
-  if (typeof correct === "object" && !Array.isArray(correct)) {
-    const correctObj = correct as Record<string, unknown>;
-    if ("values" in correctObj && Array.isArray(correctObj.values)) {
-      return correctObj.values.map(resolveOption);
-    } else if ("value" in correctObj) {
-      return resolveOption(correctObj.value);
-    } else if ("index" in correctObj) {
-      const idx = typeof correctObj.index === "number" ? correctObj.index : parseInt(String(correctObj.index), 10);
-      if (!isNaN(idx) && Array.isArray(options) && idx >= 0 && idx < options.length) {
-        return String(options[idx] ?? "");
+    // ID match on object options
+    if (typeof options[0] === "object" && options[0] !== null) {
+      const firstOpt = options[0] as Record<string, unknown>;
+      if ("id" in firstOpt) {
+        const matched = (options as Array<Record<string, unknown>>).find(
+          (o) => String(o.id) === strVal
+        );
+        if (matched) return String(matched.label ?? matched.id);
       }
-    }
-  } else {
-    if (Array.isArray(correct)) {
-      return correct.map(resolveOption);
-    } else {
-      return resolveOption(correct);
     }
   }
 
-  return String(correct);
+  return strVal;
 }
 
-function isAnswerCorrect(studentAns: unknown, resolvedCorrect: string | string[]): boolean {
-  const normalize = (val: unknown): string[] => {
-    if (Array.isArray(val)) {
-      return val.map(String).sort();
+function resolveCorrectAnswer(correct: unknown, options: unknown[]): string[] {
+  if (correct === null || correct === undefined) return [];
+
+  let rawExpected: unknown;
+  if (typeof correct === "object" && !Array.isArray(correct)) {
+    const obj = correct as Record<string, unknown>;
+    if ("values" in obj) {
+      rawExpected = obj.values;
+    } else if ("value" in obj) {
+      rawExpected = obj.value;
+    } else if ("index" in obj) {
+      rawExpected = obj.index;
+    } else {
+      rawExpected = correct;
     }
-    return [String(val ?? "")];
-  };
+  } else {
+    rawExpected = correct;
+  }
 
-  const studentNorm = normalize(studentAns);
-  const correctNorm = normalize(resolvedCorrect);
+  const vals = Array.isArray(rawExpected) ? rawExpected : [rawExpected];
+  return vals.map((v) => resolveOptionLabel(v, options)).sort();
+}
 
-  if (studentNorm.length !== correctNorm.length) return false;
-  return studentNorm.every((val, index) => val === correctNorm[index]);
+function resolveStudentAnswer(actual: unknown, options: unknown[]): string[] {
+  if (actual === null || actual === undefined) return [];
+  const vals = Array.isArray(actual) ? actual : [actual];
+  return vals.map((v) => resolveOptionLabel(v, options)).sort();
+}
+
+function isAnswerCorrect(studentAnsStrs: string[], correctStrs: string[]): boolean {
+  if (studentAnsStrs.length !== correctStrs.length) return false;
+  return studentAnsStrs.every((val, index) => val === correctStrs[index]);
 }
 
 export default async function QuizResultPage({
@@ -122,11 +124,12 @@ export default async function QuizResultPage({
   const passed = attempt.score >= quiz.passThreshold;
   const courseHref = quiz.courseId ? `/student/courses/${quiz.courseId}` : "/student/my-courses";
   const lessonHref = quiz.lessonId ? `/student/lessons/${quiz.lessonId}` : courseHref;
-  const answers = attempt.answers as Record<string, string>;
+  const answers = (attempt.answers ?? {}) as Record<string, unknown>;
   const correctCount = quiz.questions.filter((q) => {
-    const studentAnswer = answers[q.id];
-    const resolvedCorrect = resolveCorrectAnswer(q.correctAnswer, q.options);
-    return isAnswerCorrect(studentAnswer, resolvedCorrect);
+    const opts = Array.isArray(q.options) ? q.options : [];
+    const studentStrs = resolveStudentAnswer(answers[q.id], opts);
+    const correctStrs = resolveCorrectAnswer(q.correctAnswer, opts);
+    return isAnswerCorrect(studentStrs, correctStrs);
   }).length;
   const totalQuestions = quiz.questions.length;
 
@@ -222,8 +225,10 @@ export default async function QuizResultPage({
           <CardContent className="space-y-4">
             {quiz.questions.map((q, i) => {
               const studentAnswer = answers[q.id];
-              const resolvedCorrect = resolveCorrectAnswer(q.correctAnswer, q.options);
-              const isCorrect = isAnswerCorrect(studentAnswer, resolvedCorrect);
+              const opts = Array.isArray(q.options) ? q.options : [];
+              const studentAnswerStrs = resolveStudentAnswer(studentAnswer, opts);
+              const correctStrs = resolveCorrectAnswer(q.correctAnswer, opts);
+              const isCorrect = isAnswerCorrect(studentAnswerStrs, correctStrs);
               
               const rawOptions = Array.isArray(q.options) ? q.options : [];
               const options = rawOptions.map((o) => {
@@ -260,12 +265,8 @@ export default async function QuizResultPage({
                       {options.length > 0 && (
                         <div className="space-y-1">
                           {options.map((opt) => {
-                            const isSelected = Array.isArray(studentAnswer)
-                              ? studentAnswer.includes(opt)
-                              : studentAnswer === opt;
-                            const isCorrectOpt = Array.isArray(resolvedCorrect)
-                              ? resolvedCorrect.includes(opt)
-                              : resolvedCorrect === opt;
+                            const isSelected = studentAnswerStrs.includes(opt);
+                            const isCorrectOpt = correctStrs.includes(opt);
                             let optClass = "border-muted bg-card text-muted-foreground";
 
                             if (isSelected && isCorrectOpt) {
@@ -297,11 +298,11 @@ export default async function QuizResultPage({
                       {q.type === "TEXT" && (
                         <div className="space-y-1 text-xs">
                           <p className="text-muted-foreground">
-                            Ваш ответ: <span className={isCorrect ? "text-emerald-600 font-medium" : "text-rose-600 font-medium"}>{studentAnswer ?? "—"}</span>
+                            Ваш ответ: <span className={isCorrect ? "text-emerald-600 font-medium" : "text-rose-600 font-medium"}>{studentAnswerStrs.join(", ") || "—"}</span>
                           </p>
                           {!isCorrect && (
                             <p className="text-emerald-600">
-                              Правильный ответ: <span className="font-medium">{Array.isArray(resolvedCorrect) ? resolvedCorrect.join(", ") : resolvedCorrect}</span>
+                              Правильный ответ: <span className="font-medium">{correctStrs.join(", ") || "—"}</span>
                             </p>
                           )}
                         </div>
