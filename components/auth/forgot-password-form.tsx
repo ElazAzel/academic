@@ -37,10 +37,10 @@ export function ForgotPasswordForm() {
           <Mail className="h-6 w-6 text-primary" />
         </div>
         <p className="text-sm text-muted-foreground">
-          Заявка на восстановление пароля отправлена администратору.
+          Если аккаунт с таким email существует, мы отправили на него ссылку для восстановления пароля.
         </p>
         <p className="text-sm text-muted-foreground">
-          Ожидайте ответа на указанный email или свяжитесь с администратором напрямую.
+          Проверьте почту. Если письмо не пришло в течение 5 минут, проверьте папку «Спам».
         </p>
       </div>
     );
@@ -48,16 +48,12 @@ export function ForgotPasswordForm() {
 
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
-      <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
-        <p className="font-medium mb-1">Самостоятельное восстановление недоступно</p>
-        <p>
-          Для восстановления пароля отправьте заявку — администратор рассмотрит её
-          и свяжется с вами по email.
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Введите email, привязанный к вашему аккаунту. Мы отправим ссылку для сброса пароля.
+      </p>
 
       <label className="block text-sm font-medium">
-        Ваш email (для связи)
+        Email
         <Input
           className="mt-2"
           name="email"
@@ -74,7 +70,7 @@ export function ForgotPasswordForm() {
         ) : (
           <>
             <Send className="h-4 w-4 mr-2" />
-            Отправить заявку
+            Отправить ссылку
           </>
         )}
       </Button>

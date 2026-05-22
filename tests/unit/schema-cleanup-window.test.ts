@@ -33,7 +33,7 @@ describe("schema cleanup window", () => {
   });
 
   it("documents a backup-first downtime path and migration-history reconciliation", () => {
-    const runbook = readProjectFile("docs/schema-cleanup-window.md");
+    const runbook = readProjectFile("docs/archive/schema-cleanup-window.md");
 
     expect(runbook).toContain("Create a verified database backup");
     expect(runbook).toContain("npx prisma migrate status");

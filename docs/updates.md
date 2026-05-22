@@ -2,6 +2,27 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-22 — Phase 0: Email verification & password recovery fix + docs reorganization fixes
+
+- **Fix forgot-password API**: заменён workaround (уведомление админу) на вызов `requestPasswordReset()` — создаёт токен и отправляет email со ссылкой сброса
+- **Fix forgot-password form UI**: убрано сообщение «самостоятельное восстановление недоступно», теперь стандартный flow «введите email → проверьте почту»
+- **Fix schema-cleanup-window test**: исправлен путь `docs/schema-cleanup-window.md` → `docs/archive/schema-cleanup-window.md` (после реорганизации docs)
+- **Fix build crash (3 файла)**: `/privacy`, `/terms`, `/docs/[slug]` — обновлены пути на `docs/legal/` после реорганизации
+- **Install missing @tiptap packages**: `@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-link`, `dompurify` (отсутствовали после merge)
+- **Build**: 83/83 ✅
+- **Tests**: 368/368 passed (62/62 test files) ✅
+
+## 2026-05-21 — Реорганизация документации + MASTER-PLAN
+
+- **Реорганизация docs:** 42 файла → 3 папки (`archive/`, `legal/`, core)
+  - `docs/archive/` — 18 устаревших/аудиторных документов с README-оглавлением
+  - `docs/legal/` — 11 юридических документов
+  - Core: 9 ключевых документов
+- **Создан `docs/MASTER-PLAN.md`** — единый план развития (5 фаз: от Production Hardening до стратегии)
+- **Обновлён `docs/implementation-plan.md`**, `docs/specification.md`, `docs/updates.md`
+- **typecheck**: passed ✅
+- **tests**: passed ✅
+
 ## 2026-05-21 — Stage 5: Reports module audit & fixes (10 issues)
 
 - **H-1 (High) — Column picker не работал**: UI `ReportDesigner` отправлял `fields` query param, но `GET /api/v1/reports` игнорировал его. Добавлено сквозное пробрасывание `fields` в `generateReportDownload()` → `renderReport()` → генераторы CSV/XLSX/PDF. Теперь выбор колонок в конструкторе отчётов реально фильтрует вывод.
