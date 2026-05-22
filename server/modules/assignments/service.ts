@@ -1,6 +1,6 @@
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
-import { EnrollmentStatus } from "@prisma/client";
+import { Prisma, EnrollmentStatus } from "@prisma/client";
 import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
 
@@ -29,7 +29,9 @@ export async function listAssignments(userId: string, roleKeys: string[]) {
     include: {
       course: { select: { id: true, title: true } },
       lesson: { select: { id: true, title: true } },
-      submissions: { take: 5, orderBy: { submittedAt: "desc" } }
+      ...(isAdmin || isInstructor
+        ? { submissions: { take: 5, orderBy: { submittedAt: "desc" } } }
+        : { submissions: { where: { userId }, take: 5, orderBy: { submittedAt: "desc" } } })
     },
     orderBy: { createdAt: "desc" }
   });
@@ -61,22 +63,28 @@ export async function submitAssignment(input: {
     throw new ApiError("forbidden", "Вы не зачислены на этот курс", 403);
   }
 
-  const attemptNumber =
-    (await prisma.assignmentSubmission.count({
-      where: { assignmentId: input.assignmentId, userId: input.userId }
-    })) + 1;
-  if (attemptNumber > assignment.maxAttempts) {
-    throw new ApiError("forbidden", "Лимит отправок задания исчерпан", 403);
-  }
-  const submission = await prisma.assignmentSubmission.create({
-    data: {
-      assignmentId: input.assignmentId,
-      userId: input.userId,
-      answerText: input.answerText,
-      fileUrl: input.fileUrl,
-      attemptNumber,
-      status: "SUBMITTED"
+  const submission = await prisma.$transaction(async (tx) => {
+    // FOR UPDATE на enrollment — mutex per-user-per-course против race condition
+    await tx.$queryRaw(
+      Prisma.sql`SELECT 1 FROM "enrollment" WHERE "user_id" = ${input.userId} AND "course_id" = ${courseId} FOR UPDATE`
+    );
+    const attemptNumber =
+      (await tx.assignmentSubmission.count({
+        where: { assignmentId: input.assignmentId, userId: input.userId }
+      })) + 1;
+    if (attemptNumber > assignment.maxAttempts) {
+      throw new ApiError("forbidden", "Лимит отправок задания исчерпан", 403);
     }
+    return tx.assignmentSubmission.create({
+      data: {
+        assignmentId: input.assignmentId,
+        userId: input.userId,
+        answerText: input.answerText,
+        fileUrl: input.fileUrl,
+        attemptNumber,
+        status: "SUBMITTED"
+      }
+    });
   });
   await logAudit({
     actorId: input.userId,

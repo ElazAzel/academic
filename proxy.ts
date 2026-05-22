@@ -31,7 +31,12 @@ function checkCsrfOrigin(req: NextRequest): NextResponse | null {
     const sourceUrl = new URL(source);
     // Compare origin against the request's own hostname — works on any domain,
     // preview deployment, custom domain, and localhost without env vars
-    if (sourceUrl.hostname !== req.nextUrl.hostname || sourceUrl.port !== req.nextUrl.port) {
+    // Также сверяем схему (http vs https) для защиты от cross-scheme атак
+    if (
+      sourceUrl.protocol !== req.nextUrl.protocol ||
+      sourceUrl.hostname !== req.nextUrl.hostname ||
+      sourceUrl.port !== req.nextUrl.port
+    ) {
       return NextResponse.json(
         { error: { code: "forbidden", message: "CSRF: origin mismatch" } },
         { status: 403 }
@@ -53,17 +58,20 @@ export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // CSRF check for mutating API requests (POST/PUT/PATCH/DELETE)
-  if (pathname.startsWith("/api/") && !isPublicRoute(pathname)) {
+  // Исключаем webhooks и cron — у них нет browser origin
+  const CSRF_BYPASS_PREFIXES = ["/api/v1/webhooks/stripe", "/api/v1/outbox/process", "/api/v1/reports/scheduled"];
+  const isCsrfBypass = CSRF_BYPASS_PREFIXES.some((p) => pathname.startsWith(p));
+  if (pathname.startsWith("/api/") && !isCsrfBypass) {
     const csrfError = checkCsrfOrigin(req);
     if (csrfError) return csrfError;
   }
 
-  // Rate limiting for API routes
+  // Rate limiting for API routes — глобальный per-IP (не per-path)
   if (pathname.startsWith("/api/")) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       ?? req.headers.get("x-real-ip")
       ?? "anonymous";
-    const result = await rateLimit(`${ip}:${pathname}`, 120, 60);
+    const result = await rateLimit(`ratelimit:ip:${ip}`, 120, 60);
     if (!result.success) {
       return NextResponse.json(
         { error: { code: "too_many_requests", message: "Слишком много запросов. Попробуйте позже." } },

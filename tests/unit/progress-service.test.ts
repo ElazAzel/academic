@@ -36,9 +36,12 @@ vi.mock("@/lib/env", () => ({
   },
 }));
 
+const mock$queryRaw = vi.hoisted(() => vi.fn());
+
 const mock$transaction = vi.hoisted(() => vi.fn(async (arg: unknown) => {
   if (typeof arg === "function") {
     return (arg as (tx: Record<string, unknown>) => unknown)({
+      $queryRaw: mock$queryRaw,
       lessonProgress: { findUnique: mockTxLessonProgressFindUnique, upsert: mockTxLessonProgressUpsert, count: mockTxLessonProgressCount },
       blockProgress: { findUnique: mockTxBlockProgressFindUnique, upsert: mockTxBlockProgressUpsert },
       moduleProgress: { findUnique: mockTxModuleProgressFindUnique, upsert: mockTxModuleProgressUpsert },

@@ -5,6 +5,7 @@ const mockCourseFindUniqueOrThrow = vi.hoisted(() => vi.fn());
 const mockAssignmentSubmissionFindFirst = vi.hoisted(() => vi.fn());
 const mockLessonProgressCount = vi.hoisted(() => vi.fn());
 const mockCertificateCreate = vi.hoisted(() => vi.fn());
+const mockCertificateFindFirst = vi.hoisted(() => vi.fn());
 const mockCertificateFindUnique = vi.hoisted(() => vi.fn());
 const mockCertificateUpdate = vi.hoisted(() => vi.fn());
 const mockAuditLogCreate = vi.hoisted(() => vi.fn());
@@ -33,6 +34,7 @@ vi.mock("@/lib/prisma", () => ({
     lessonProgress: { count: mockLessonProgressCount },
     certificate: {
       create: mockCertificateCreate,
+      findFirst: mockCertificateFindFirst,
       findUnique: mockCertificateFindUnique,
       update: mockCertificateUpdate,
     },
@@ -54,6 +56,7 @@ describe("certificate notification and audit events", () => {
     mockUserFindUnique.mockResolvedValue({ email: "student@academy.local" });
     mockAuditLogCreate.mockResolvedValue({ id: "audit-1" });
     mockLessonProgressCount.mockResolvedValue(0);
+    mockCertificateFindFirst.mockResolvedValue(null);
   });
 
   it("creates audit and in-app notification when certificate is issued", async () => {

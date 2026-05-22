@@ -59,16 +59,17 @@ export async function dequeuePendingEvents(batchSize = 50) {
       status: string;
       error: string | null;
       created_at: Date;
+      updated_at: Date;
       sent_at: Date | null;
     }>
   >(
     Prisma.sql`
       UPDATE "outbox_event"
-      SET "status" = 'processing'
+      SET "status" = 'processing', "updated_at" = NOW()
       WHERE "id" IN (
         SELECT "id" FROM "outbox_event"
         WHERE "status" = 'pending'
-           OR ("status" = 'processing' AND "sent_at" IS NULL AND "created_at" < ${cutoff})
+           OR ("status" = 'processing' AND "sent_at" IS NULL AND "updated_at" < ${cutoff})
         ORDER BY "created_at" ASC
         LIMIT ${batchSize}
         FOR UPDATE SKIP LOCKED

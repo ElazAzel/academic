@@ -47,7 +47,7 @@ describe("password reset notification and audit events", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockHashPassword.mockResolvedValue("hashed-password");
-    mockVerificationTokenFindUnique.mockResolvedValue({
+    mockVerificationTokenDelete.mockResolvedValue({
       token: "reset-token",
       identifier: "reset:student@academy.local",
       expires: new Date(Date.now() + 60_000),

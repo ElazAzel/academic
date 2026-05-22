@@ -41,6 +41,8 @@ function memorySet<T>(key: string, value: T, ttlSeconds: number): void {
 type KvClient = {
   get: (key: string) => Promise<string | null>;
   set: (key: string, value: string, options?: { ex: number }) => Promise<unknown>;
+  incr: (key: string) => Promise<number>;
+  expire: (key: string, seconds: number) => Promise<number>;
   del: (...keys: string[]) => Promise<number>;
   sadd: (key: string, ...members: string[]) => Promise<number>;
   smembers: (key: string) => Promise<string[]>;
@@ -118,6 +120,35 @@ export async function cacheSet<T>(key: string, value: T, ttlSeconds = 60): Promi
   } catch {
     // non-critical — cache miss is fine
   }
+}
+
+/**
+ * Атомарный INCR. Для Vercel KV использует Redis INCR, для in-memory — read-then-write.
+ * Возвращает новое значение после инкремента.
+ */
+export async function cacheIncr(key: string, ttlSeconds: number): Promise<number> {
+  try {
+    const client = await getKv();
+    if (client) {
+      const val = await client.incr(key);
+      if (val === 1) {
+        await client.expire(key, ttlSeconds).catch(() => {});
+      }
+      return val;
+    }
+  } catch {
+    // fallback to memory
+  }
+  // In-memory fallback
+  const now = Date.now();
+  const entry = memoryStore.get(key);
+  if (!entry || now > entry.expiresAt) {
+    memorySet(key, 2, ttlSeconds);
+    return 1;
+  }
+  const next = (entry.value as number) + 1;
+  memorySet(key, next, ttlSeconds);
+  return next;
 }
 
 /**

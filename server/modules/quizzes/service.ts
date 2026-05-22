@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import type { Prisma, QuizQuestion, EnrollmentStatus } from "@prisma/client";
+import type { QuizQuestion, EnrollmentStatus } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { toJsonValue } from "@/lib/json";
@@ -15,11 +16,55 @@ const prisma = getPrisma();
 
 export type ObjectiveQuestion = Pick<QuizQuestion, "id" | "type" | "correctAnswer" | "points">;
 
-function normalizeAnswer(value: unknown) {
-  if (Array.isArray(value)) {
-    return value.map(String).sort();
+/**
+ * Resolve a value through the options array to get a comparable label.
+ *
+ * Handles:
+ * - Numeric index → option label/value at that index
+ * - String ID on object options → matching label
+ * - Plain value → returned as-is
+ */
+function resolveOptionLabel(val: unknown, options: unknown[]): string {
+  if (val === null || val === undefined) return "";
+  const strVal = String(val);
+
+  if (Array.isArray(options) && options.length > 0) {
+    // Numeric index → option
+    const idx = parseInt(strVal, 10);
+    if (!isNaN(idx) && idx >= 0 && idx < options.length && String(idx) === strVal) {
+      const opt = options[idx];
+      if (typeof opt === "object" && opt !== null) {
+        const o = opt as Record<string, unknown>;
+        return String(o.label ?? o.id ?? strVal);
+      }
+      return String(opt);
+    }
+
+    // ID match on object options
+    if (typeof options[0] === "object" && options[0] !== null) {
+      const firstOpt = options[0] as Record<string, unknown>;
+      if ("id" in firstOpt) {
+        const matched = (options as Array<Record<string, unknown>>).find(
+          (o) => String(o.id) === strVal
+        );
+        if (matched) return String(matched.label ?? matched.id);
+      }
+    }
   }
-  return String(value);
+
+  return strVal;
+}
+
+/**
+ * Normalise a value or array of values to a sorted array of strings
+ * for comparison. Unlike resolveOptionLabel, this is used for comparison
+ * and does NOT resolve through options — it just stringifies.
+ */
+function toComparableStrings(value: unknown, options: unknown[]): string[] {
+  if (value === null || value === undefined) return [];
+
+  const vals = Array.isArray(value) ? value : [value];
+  return vals.map((v) => resolveOptionLabel(v, options)).sort();
 }
 
 export function gradeObjectiveQuiz(
@@ -30,57 +75,34 @@ export function gradeObjectiveQuiz(
   const total = questions.reduce((sum, question) => sum + question.points, 0);
   const earned = questions.reduce((sum, question) => {
     const correct = question.correctAnswer;
-    let expected: unknown = undefined;
+    const opts = Array.isArray(question.options) ? question.options : [];
 
-    // Helper to resolve an individual answer (either an index or a label/ID) to its string representation
-    const resolveOption = (val: unknown): unknown => {
-      if (val === null || val === undefined) return val;
-      if (Array.isArray(question.options)) {
-        // If options are objects like [{id, label}, ...]
-        if (question.options.length > 0 && typeof question.options[0] === "object" && question.options[0] !== null) {
-          const firstOpt = question.options[0] as Record<string, unknown>;
-          if ("id" in firstOpt) {
-            const matched = (question.options as Array<{ id?: string; label?: string }>).find(
-              (o) => String(o.id) === String(val)
-            );
-            if (matched) return matched.label ?? matched.id;
-          }
-        }
-
-        // Otherwise check if it is a numeric index
-        const strVal = String(val);
-        const idx = parseInt(strVal, 10);
-        if (!isNaN(idx) && idx >= 0 && idx < question.options.length && String(idx) === strVal) {
-          return question.options[idx];
-        }
-      }
-      return val;
-    };
-
+    // Extract raw expected value(s) from correctAnswer (handles all formats)
+    let rawExpected: unknown;
     if (correct !== null && correct !== undefined) {
       if (typeof correct === "object" && !Array.isArray(correct)) {
-        const correctObj = correct as Record<string, unknown>;
-        if ("values" in correctObj && Array.isArray(correctObj.values)) {
-          expected = correctObj.values.map(resolveOption);
-        } else if ("value" in correctObj) {
-          expected = resolveOption(correctObj.value);
-        } else if ("index" in correctObj) {
-          const idx = typeof correctObj.index === "number" ? correctObj.index : parseInt(String(correctObj.index), 10);
-          if (!isNaN(idx) && Array.isArray(question.options) && idx >= 0 && idx < question.options.length) {
-            expected = question.options[idx];
-          }
+        const obj = correct as Record<string, unknown>;
+        if ("values" in obj) {
+          rawExpected = obj.values;
+        } else if ("value" in obj) {
+          rawExpected = obj.value;
+        } else if ("index" in obj) {
+          rawExpected = obj.index;
+        } else {
+          rawExpected = correct;
         }
       } else {
-        if (Array.isArray(correct)) {
-          expected = correct.map(resolveOption);
-        } else {
-          expected = resolveOption(correct);
-        }
+        rawExpected = correct;
       }
     }
 
     const actual = answers[question.id];
-    const match = JSON.stringify(normalizeAnswer(expected)) === JSON.stringify(normalizeAnswer(actual));
+    const expectedStrs = toComparableStrings(rawExpected, opts);
+    const actualStrs = toComparableStrings(actual, opts);
+    const match =
+      expectedStrs.length === actualStrs.length &&
+      expectedStrs.every((v, i) => v === actualStrs[i]);
+
     return sum + (match ? question.points : 0);
   }, 0);
   const score = total === 0 ? 0 : Math.round((earned / total) * 100);
@@ -224,6 +246,12 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
 
   const attempt = await prisma.$transaction(async (tx) => {
     if (!skipLimit) {
+      // Блокируем enrollment per-user-per-course как mutex для сериализации
+      // проверки лимита попыток (FOR UPDATE гарантирует, что второй concurrent
+      // запрос дождётся коммита первого)
+      await tx.$queryRaw(
+        Prisma.sql`SELECT 1 FROM "enrollment" WHERE "user_id" = ${userId} AND "course_id" = ${resolvedCourseId} FOR UPDATE`
+      );
       const attempts = await tx.quizAttempt.count({ where: { quizId, userId } });
       if (attempts >= quiz.maxAttempts) {
         throw new ApiError("forbidden", "Лимит попыток исчерпан", 403);

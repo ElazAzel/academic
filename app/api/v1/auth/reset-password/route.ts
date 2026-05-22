@@ -1,34 +1,11 @@
-import { z } from "zod";
-import { ApiError, errorResponse, ok, parseJson } from "@/lib/http";
-import { resetPassword } from "@/server/modules/auth/service";
-import { checkRateLimit } from "@/lib/security/rate-limit";
+import { errorResponse, ApiError } from "@/lib/http";
 
-const schema = z.object({
-  token: z.string().min(1),
-  password: z.string().min(10).max(128)
-});
-
-function getClientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-  const realIp = request.headers.get("x-real-ip");
-  if (realIp) return realIp;
-  return "unknown";
+/**
+ * Самостоятельный сброс пароля отключён.
+ * Для восстановления доступа необходимо написать на admin@aistrategic.kz.
+ */
+export async function POST() {
+  return errorResponse(
+    new ApiError("gone", "Самостоятельный сброс пароля отключён. Напишите на admin@aistrategic.kz для восстановления доступа.", 410)
+  );
 }
-
-export async function POST(request: Request) {
-  try {
-    const ip = getClientIp(request);
-    const rl = await checkRateLimit(`reset-password:${ip}`);
-    if (!rl.allowed) {
-      return errorResponse(new ApiError("too_many_requests", "Слишком много запросов. Попробуйте позже.", 429));
-    }
-    const input = await parseJson(request, schema);
-    return ok(await resetPassword(input.token, input.password));
-  } catch (error) {
-    return errorResponse(error);
-  }
-}
-

@@ -14,6 +14,10 @@ const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockOutboxEventCreate = vi.hoisted(() => vi.fn());
 
+const mockTx$queryRaw = vi.hoisted(() => vi.fn());
+const mockTxCount = vi.hoisted(() => vi.fn());
+const mockTxCreate = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/env", () => ({
   env: {
     FEATURE_EMAIL_NOTIFICATIONS: false,
@@ -36,6 +40,16 @@ vi.mock("@/lib/prisma", () => ({
     notificationPreference: { findMany: mockNotificationPreferenceFindMany },
     notification: { create: mockNotificationCreate },
     outboxEvent: { create: mockOutboxEventCreate },
+    $transaction: vi.fn(async (arg: unknown) => {
+      if (typeof arg === "function") {
+        return (arg as (tx: Record<string, unknown>) => unknown)({
+          $queryRaw: mockTx$queryRaw,
+          assignmentSubmission: { count: mockTxCount, create: mockTxCreate },
+        });
+      }
+      if (Array.isArray(arg)) return Promise.all(arg);
+      return undefined;
+    }),
   }),
 }));
 
@@ -53,7 +67,7 @@ describe("submitAssignment", () => {
   it("throws 403 when attempt limit exceeded", async () => {
     mockFindUnique.mockResolvedValue({ id: "a1", maxAttempts: 2, courseId: "c1" });
     mockEnrollmentFindUnique.mockResolvedValue({ status: "ACTIVE" });
-    mockCount.mockResolvedValue(2);
+    mockTxCount.mockResolvedValue(2);
 
     await expect(
       submitAssignment({ assignmentId: "a1", userId: "u1", answerText: "hello" })
@@ -63,8 +77,8 @@ describe("submitAssignment", () => {
   it("allows first attempt when maxAttempts is 1", async () => {
     mockFindUnique.mockResolvedValue({ id: "a1", maxAttempts: 1, courseId: "c1" });
     mockEnrollmentFindUnique.mockResolvedValue({ status: "ACTIVE" });
-    mockCount.mockResolvedValue(0);
-    mockCreate.mockResolvedValue({
+    mockTxCount.mockResolvedValue(0);
+    mockTxCreate.mockResolvedValue({
       id: "sub1",
       assignmentId: "a1",
       userId: "u1",
@@ -81,8 +95,8 @@ describe("submitAssignment", () => {
   it("creates submission with fileUrl", async () => {
     mockFindUnique.mockResolvedValue({ id: "a1", maxAttempts: 3, courseId: "c1" });
     mockEnrollmentFindUnique.mockResolvedValue({ status: "ACTIVE" });
-    mockCount.mockResolvedValue(0);
-    mockCreate.mockResolvedValue({
+    mockTxCount.mockResolvedValue(0);
+    mockTxCreate.mockResolvedValue({
       id: "sub2",
       assignmentId: "a1",
       userId: "u1",

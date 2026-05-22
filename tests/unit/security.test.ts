@@ -60,9 +60,10 @@ describe("RBAC", () => {
     expect(hasPermission(["student"], "settings:manage")).toBe(false);
   });
 
-  it("defaults to student permissions for empty roles", () => {
-    expect(hasPermission([], "courses:read")).toBe(true);
+  it("denies all permissions for empty roles", () => {
+    expect(hasPermission([], "courses:read")).toBe(false);
     expect(hasPermission([], "settings:manage")).toBe(false);
+    expect(hasPermission([], "progress:write")).toBe(false);
   });
 });
 

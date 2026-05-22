@@ -94,6 +94,14 @@ export async function issueCertificate(input: { userId: string; courseId: string
     }
   }
 
+  // Защита от race condition: проверяем, не выдан ли уже сертификат
+  const existingCert = await prisma.certificate.findFirst({
+    where: { userId: input.userId, courseId: input.courseId }
+  });
+  if (existingCert) {
+    throw new ApiError("conflict", "Сертификат уже выдан", 409);
+  }
+
   const number = generateCertificateNumber();
   const verificationCode = crypto.randomUUID();
   const verificationUrl = `${env.APP_URL}/certificates/verify/${verificationCode}`;

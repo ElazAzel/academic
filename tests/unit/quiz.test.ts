@@ -184,6 +184,118 @@ describe("quiz grading", () => {
     expect(result.score).toBe(100);
     expect(result.passed).toBe(true);
   });
+
+  it("handles object options with id/label — student sends index", () => {
+    const result = gradeObjectiveQuiz(
+      [{
+        id: "q1", type: "SINGLE_CHOICE", points: 1, correctAnswer: 0,
+        options: [{ id: "paris", label: "Paris" }, { id: "london", label: "London" }]
+      }],
+      { q1: 0 },
+      50
+    );
+    expect(result.earned).toBe(1);
+    expect(result.score).toBe(100);
+    expect(result.passed).toBe(true);
+  });
+
+  it("handles object options with id/label — student sends label", () => {
+    const result = gradeObjectiveQuiz(
+      [{
+        id: "q1", type: "SINGLE_CHOICE", points: 1, correctAnswer: 0,
+        options: [{ id: "paris", label: "Paris" }, { id: "london", label: "London" }]
+      }],
+      { q1: "Paris" },
+      50
+    );
+    expect(result.earned).toBe(1);
+    expect(result.score).toBe(100);
+    expect(result.passed).toBe(true);
+  });
+
+  it("handles object options with id/label — student sends id", () => {
+    const result = gradeObjectiveQuiz(
+      [{
+        id: "q1", type: "SINGLE_CHOICE", points: 1, correctAnswer: 0,
+        options: [{ id: "paris", label: "Paris" }, { id: "london", label: "London" }]
+      }],
+      { q1: "paris" },
+      50
+    );
+    expect(result.earned).toBe(1);
+    expect(result.score).toBe(100);
+    expect(result.passed).toBe(true);
+  });
+
+  it("handles object options with {index} correctAnswer format", () => {
+    const result = gradeObjectiveQuiz(
+      [{
+        id: "q1", type: "SINGLE_CHOICE", points: 1, correctAnswer: { index: 0 },
+        options: [{ id: "paris", label: "Paris" }, { id: "london", label: "London" }]
+      }],
+      { q1: "Paris" },
+      50
+    );
+    expect(result.earned).toBe(1);
+    expect(result.score).toBe(100);
+    expect(result.passed).toBe(true);
+  });
+
+  it("handles object options — student sends wrong index", () => {
+    const result = gradeObjectiveQuiz(
+      [{
+        id: "q1", type: "SINGLE_CHOICE", points: 1, correctAnswer: 0,
+        options: [{ id: "paris", label: "Paris" }, { id: "london", label: "London" }]
+      }],
+      { q1: 1 },
+      50
+    );
+    expect(result.earned).toBe(0);
+    expect(result.score).toBe(0);
+    expect(result.passed).toBe(false);
+  });
+
+  it("handles object options multi-choice — student sends labels", () => {
+    const result = gradeObjectiveQuiz(
+      [{
+        id: "q1", type: "MULTIPLE_CHOICE", points: 2, correctAnswer: { values: [0, 1] },
+        options: [{ id: "a", label: "A" }, { id: "b", label: "B" }, { id: "c", label: "C" }]
+      }],
+      { q1: ["A", "B"] },
+      50
+    );
+    expect(result.earned).toBe(2);
+    expect(result.score).toBe(100);
+    expect(result.passed).toBe(true);
+  });
+
+  it("handles object options multi-choice — student sends ids", () => {
+    const result = gradeObjectiveQuiz(
+      [{
+        id: "q1", type: "MULTIPLE_CHOICE", points: 2, correctAnswer: { values: ["a", "b"] },
+        options: [{ id: "a", label: "A" }, { id: "b", label: "B" }, { id: "c", label: "C" }]
+      }],
+      { q1: ["b", "a"] },
+      50
+    );
+    expect(result.earned).toBe(2);
+    expect(result.score).toBe(100);
+    expect(result.passed).toBe(true);
+  });
+
+  it("rejects wrong multi-choice answer", () => {
+    const result = gradeObjectiveQuiz(
+      [{
+        id: "q1", type: "MULTIPLE_CHOICE", points: 2, correctAnswer: { values: [0, 1] },
+        options: [{ id: "a", label: "A" }, { id: "b", label: "B" }, { id: "c", label: "C" }]
+      }],
+      { q1: ["A", "C"] },
+      50
+    );
+    expect(result.earned).toBe(0);
+    expect(result.score).toBe(0);
+    expect(result.passed).toBe(false);
+  });
 });
 
 describe("quiz read API shaping", () => {

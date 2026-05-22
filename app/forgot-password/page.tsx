@@ -1,26 +1,29 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
-import { ArrowLeft } from "lucide-react";
+import { MailQuestion, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AUTH_ROUTES } from "@/lib/constants";
 
 export default function ForgotPasswordPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Восстановление пароля</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <ForgotPasswordForm />
-          <div className="text-center text-sm text-muted-foreground">
-            <Link href={AUTH_ROUTES.LOGIN} className="inline-flex items-center gap-1 text-primary hover:underline">
-              <ArrowLeft className="h-3 w-3" />
-              Вернуться ко входу
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="w-full max-w-md space-y-6 rounded-xl border bg-card p-8 text-center shadow-sm">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <MailQuestion className="h-7 w-7 text-primary" />
+        </div>
+        <h1 className="text-2xl font-semibold tracking-tight">Восстановление пароля</h1>
+        <p className="text-muted-foreground">
+          Самостоятельный сброс пароля отключён. Для восстановления доступа напишите на почту{" "}
+          <a href="mailto:admin@aistrategic.kz" className="font-medium text-primary underline underline-offset-4">
+            admin@aistrategic.kz
+          </a>
+          , указав свои ФИО. Мы поможем восстановить доступ.
+        </p>
+        <div className="pt-2 text-center text-sm text-muted-foreground">
+          <Link href={AUTH_ROUTES.LOGIN} className="inline-flex items-center gap-1 text-primary hover:underline">
+            <ArrowLeft className="h-3 w-3" />
+            Вернуться ко входу
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }
