@@ -66,8 +66,8 @@ export function CourseContentsDrawer({
             </div>
           ))}
           <div className="pt-3 text-label-sm font-label-sm text-m3-on-surface-variant text-center border-t border-m3-outline-variant">
-            {modules.reduce((sum, m) => sum + m.lessons.filter((l) => l.status === "COMPLETED").length, 0)}/
-            {modules.reduce((sum, m) => sum + m.lessons.length, 0)} уроков
+            {modules.reduce((sum, m) => sum + (m.lessons ?? []).filter((l) => l.status === "COMPLETED").length, 0)}/
+            {modules.reduce((sum, m) => sum + (m.lessons ?? []).length, 0)} уроков
           </div>
         </div>
       </SheetContent>

@@ -94,7 +94,7 @@ export function CourseBuilderPreview({
                   <p className="mt-1 break-all text-xs text-muted-foreground">{lesson.videoUrl}</p>
                 </div>
               )}
-              {blocks.length === 0 && lesson.quizzes.length === 0 && lesson.assignments.length === 0 ? (
+              {blocks.length === 0 && (lesson.quizzes?.length ?? 0) === 0 && (lesson.assignments?.length ?? 0) === 0 ? (
                 <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
                   В уроке пока нет материалов, тестов или заданий.
                 </p>
@@ -137,7 +137,7 @@ export function CourseBuilderPreview({
           <div key={mod.id} className="rounded-xl bg-muted/40 p-3">
             <p className="text-sm font-medium">{mod.title}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {mod.blocks.length} блоков · {mod.lessons.length + mod.blocks.flatMap((block) => block.lessons).length} уроков
+              {(mod.blocks?.length ?? 0)} блоков · {(mod.lessons?.length ?? 0) + (mod.blocks ?? []).reduce((sum, block) => sum + (block.lessons?.length ?? 0), 0)} уроков
             </p>
           </div>
         ))}

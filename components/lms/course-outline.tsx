@@ -26,7 +26,7 @@ const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
 function getNextLessonOrder(moduleItem?: BuilderModuleDetail) {
   const orders = [
     ...(moduleItem?.lessons ?? []).map((lesson) => lesson.order),
-    ...(moduleItem?.blocks ?? []).flatMap((block) => block.lessons.map((lesson) => lesson.order)),
+    ...(moduleItem?.blocks ?? []).flatMap((block) => (block.lessons ?? []).map((lesson) => lesson.order)),
   ];
   return orders.length === 0 ? 0 : Math.max(...orders) + 1;
 }
@@ -159,7 +159,7 @@ export function CourseOutline({
 
     const blocks = modules[moduleIndex]?.blocks ?? [];
     const block = blockId ? blocks.find((b) => b.id === blockId) : null;
-    const lessonsInTarget = block ? block.lessons : (modules[moduleIndex]?.lessons ?? []);
+    const lessonsInTarget = block ? (block.lessons ?? []) : (modules[moduleIndex]?.lessons ?? []);
     const nextModuleOrder = getNextLessonOrder(modules[moduleIndex]);
     const title = `Урок ${lessonsInTarget.length + 1}`;
     setPendingLessonTarget(targetKey);
@@ -267,7 +267,7 @@ export function CourseOutline({
               const allIds = new Set<string>();
               modules.forEach((m) => {
                 allIds.add(m.id);
-                m.blocks.forEach((b) => allIds.add(`block-${b.id}`));
+                (m.blocks ?? []).forEach((b) => allIds.add(`block-${b.id}`));
               });
               setCollapsed(allIds);
             }}

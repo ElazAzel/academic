@@ -1,5 +1,18 @@
 # Project Update Log
 
+## 2026-05-22 - Defensive Data Normalization for Builder Render Loop
+
+- **Author:** Development Agent
+- **Scope:** Eliminate `Cannot read properties of undefined (reading 'length')` runtime crash in course builder render path.
+- **Root cause:** Some code paths (clone, API responses, state updates) could leave `modules[].blocks`, `modules[].lessons`, `block.lessons`, or `lesson.quizzes`/`assignments` as `undefined` instead of `[]`. Render-phase `.length` accesses on undefined caused React infinite re-render loop (i4/us/up reconciliation). 
+- **Fixed:**
+  - Added `normalizeModules()` that recursively ensures all arrays are present; applied at initial state, `onModulesChange`, and `replaceDetail` in `course-builder-shell.tsx`.
+  - Defensive guards (`?.length ?? 0`, `?? []`) in `course-settings-panel.tsx` (lines 50, 97), `course-builder-preview.tsx` (lines 97, 140), `course-outline.tsx` (lines 29, 162, 270), `course-builder-readiness.ts` (hasLessonContent, getAllLessons, emptyModules), `module-editor.tsx`, `lesson-editor.tsx`, `course-contents-drawer.tsx`, and `course-builder-shell.tsx` (updateSelectedLesson).
+- **Tests added:**
+  - `course-builder-readiness.test.ts`: 3 new tests — undefined blocks/lessons, undefined block lessons, corrupt module course.
+- **Validation:** lint ✅, typecheck ✅, 377/377 tests ✅, build 84/84 pages ✅.
+- **Status:** green.
+
 ## 2026-05-22 - Builder Lesson Append and Error Boundary Repair
 
 - **Author:** Codex

@@ -11,8 +11,8 @@ export interface CourseBuilderPublishCheck {
 
 function getAllLessons(detail: CourseBuilderDetail): BuilderLessonDetail[] {
   return detail.modules.flatMap((mod) => [
-    ...mod.lessons,
-    ...mod.blocks.flatMap((block) => block.lessons),
+    ...(mod.lessons ?? []),
+    ...(mod.blocks ?? []).flatMap((block) => block.lessons ?? []),
   ]);
 }
 
@@ -21,15 +21,15 @@ function hasLessonContent(lesson: BuilderLessonDetail) {
   return Boolean(
     lesson.videoUrl ||
       blocks.length > 0 ||
-      lesson.quizzes.length > 0 ||
-      lesson.assignments.length > 0,
+      (lesson.quizzes?.length ?? 0) > 0 ||
+      (lesson.assignments?.length ?? 0) > 0,
   );
 }
 
 export function getCourseBuilderPublishChecks(detail: CourseBuilderDetail): CourseBuilderPublishCheck[] {
   const lessons = getAllLessons(detail);
   const requiredLessons = lessons.filter((lesson) => lesson.isRequired);
-  const emptyModules = detail.modules.filter((mod) => mod.lessons.length + mod.blocks.flatMap((block) => block.lessons).length === 0);
+  const emptyModules = detail.modules.filter((mod) => (mod.lessons?.length ?? 0) + (mod.blocks ?? []).reduce((sum, block) => sum + (block.lessons?.length ?? 0), 0) === 0);
   const emptyLessons = lessons.filter((lesson) => !hasLessonContent(lesson));
 
   return [
