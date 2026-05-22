@@ -52,7 +52,7 @@ export function getCourseBuilderPublishChecks(detail: CourseBuilderDetail): Cour
   
   const emptyLessons = lessons.filter((lesson) => !hasLessonContent(lesson));
 
-  const checks: CourseBuilderPublishCheck[] = [
+  const checks: Omit<CourseBuilderPublishCheck, "passed">[] = [
     {
       id: "course-basics",
       label: "Карточка курса заполнена",
