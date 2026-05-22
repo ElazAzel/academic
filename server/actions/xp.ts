@@ -61,4 +61,3 @@ export async function getLeaderboard(limit = 10) {
   });
 }
 
-export { XP_LEVELS, getLevel } from "@/lib/xp-utils";
