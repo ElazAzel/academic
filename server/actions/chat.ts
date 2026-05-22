@@ -389,7 +389,11 @@ export async function getUploadUrlForFile(filename: string, contentType: string)
   }
 
   const key = buildStorageKey(`chat/${user.id}`, safeFilename);
-  return createPresignedUploadUrl(key, safeContentType);
+  const result = await createPresignedUploadUrl(key, safeContentType);
+  if (!result) {
+    throw new ApiError("service_unavailable", "Хранилище S3 недоступно. Используйте /api/v1/chat/upload для загрузки через Supabase.", 503);
+  }
+  return result;
 }
 
 export async function markAsRead(messageIds: string[]) {

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Icon } from "@/components/ui/icon";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { sendMessageAction, getConversation, markAsRead, getUploadUrlForFile } from "@/server/actions/chat";
+import { sendMessageAction, getConversation, markAsRead } from "@/server/actions/chat";
 import { toast } from "sonner";
 
 const COMMON_EMOJIS = ["😊", "👍", "❤️", "🎉", "🔥", "👏", "😄", "🚀", "⭐", "🙏", "💪", "😎", "✨"];
@@ -240,14 +240,17 @@ export function ChatPanel({
     }
     setUploading(true);
     try {
-      const { url, publicUrl } = await getUploadUrlForFile(file.name, file.type);
-      const uploadResponse = await fetch(url, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
-      if (!uploadResponse.ok) {
-        throw new Error("Upload failed");
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/v1/chat/upload", { method: "POST", body });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Upload failed");
       }
+      const { publicUrl, attachmentType } = await res.json();
       const formData = new FormData();
       formData.set("attachmentUrl", publicUrl);
-      formData.set("attachmentType", file.type);
+      formData.set("attachmentType", attachmentType ?? file.type);
       if (messageLessonId) formData.set("lessonId", messageLessonId);
       formData.set("receiverId", receiverId);
       sendMutation.mutate(formData);

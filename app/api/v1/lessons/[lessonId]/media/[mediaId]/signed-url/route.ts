@@ -2,7 +2,7 @@ import { errorResponse, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { EnrollmentStatus, ProgressStatus } from "@prisma/client";
-import { getSupabaseStorageSignedUrlAsync, createSignedDownloadUrl } from "@/lib/storage";
+import { getSupabaseStorageSignedUrl, createSignedDownloadUrl } from "@/lib/storage";
 import {
   logSignedUrlIssued,
   logForbiddenMediaAccess,
@@ -122,7 +122,7 @@ export async function GET(_request: Request, context: Context) {
     let signedUrl: string | null = null;
 
     if (media.storageKey) {
-      signedUrl = await getSupabaseStorageSignedUrlAsync(
+      signedUrl = await getSupabaseStorageSignedUrl(
         env.S3_BUCKET,
         media.storageKey,
         ttl,
