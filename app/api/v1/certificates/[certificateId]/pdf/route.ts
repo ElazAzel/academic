@@ -40,10 +40,11 @@ export async function GET(_request: Request, context: Context) {
     const pdf = await generateCertificatePdf(certificateId);
     const studentName = certificate.user.name ?? "student";
     const safeFilename = `Сертификат_${certificate.number}_${studentName.replace(/[^a-zA-Zа-яА-Я0-9_-]/g, "")}.pdf`;
+    const encodedFilename = encodeURIComponent(safeFilename);
     return new NextResponse(Buffer.from(pdf), {
       headers: {
         "content-type": "application/pdf",
-        "content-disposition": `attachment; filename="${safeFilename}"`
+        "content-disposition": `attachment; filename="${encodedFilename}"; filename*=UTF-8''${encodedFilename}`
       }
     });
   } catch (error) {
