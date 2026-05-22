@@ -12,10 +12,7 @@ import {
   AlertCircle, 
   Check, 
   X,
-  FileText,
   User,
-  BookOpen,
-  Filter,
   ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -160,8 +157,9 @@ export function CertificatesDashboard({
         setSuccess(null);
       }, 2000);
 
-    } catch (err: any) {
-      setError(err.message || "Не удалось выпустить сертификат");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Не удалось выпустить сертификат";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -193,8 +191,9 @@ export function CertificatesDashboard({
 
       setSuccess("Сертификат успешно отозван.");
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || "Не удалось отозвать сертификат");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Не удалось отозвать сертификат";
+      setError(message);
     } finally {
       setRevokingId(null);
     }

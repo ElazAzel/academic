@@ -84,7 +84,7 @@ export default async function AdminCertificatesPage() {
           studentName: c.user.organization ?? c.user.name ?? c.user.email,
           studentEmail: c.user.email,
           courseTitle: c.course.title,
-          forced: (c.metadata as any)?.forced === true
+          forced: !!(c.metadata as Record<string, unknown>)?.forced
         }))}
       />
     </AppShell>
