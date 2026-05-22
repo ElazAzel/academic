@@ -1,6 +1,5 @@
 "use client";
 
-import { AppShell } from "@/components/layout/app-shell";
 import { PageError } from "@/components/lms/page-error";
 
 export default function Error({
@@ -11,8 +10,8 @@ export default function Error({
   reset: () => void;
 }) {
   return (
-    <AppShell>
+    <main className="min-h-dvh bg-m3-surface px-4 py-10">
       <PageError error={error} reset={reset} />
-    </AppShell>
+    </main>
   );
 }

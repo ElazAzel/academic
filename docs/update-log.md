@@ -1,5 +1,24 @@
 # Project Update Log
 
+## 2026-05-22 - Builder Lesson Append and Error Boundary Repair
+
+- **Author:** Codex
+- **Scope:** Repair course-builder lesson creation failures and the client error-boundary path that masked route failures with React error `#482`.
+- **Checked:**
+  - Active demo module `cmovifjuc000wju045tlhz418` contains lesson orders shared across block and root lessons, so duplicate client append orders hit `@@unique([moduleId, order])`.
+  - Role `error.tsx` files were client boundaries importing `AppShell`, which renders async server `SiteHeader`.
+- **Fixed / Added:**
+  - Lesson creation retries Prisma order collisions and appends at the next module-level order instead of returning a raw `500` for builder duplicate/concurrent append requests.
+  - Course outline append computes next order from the current maximum order, uses the order returned by the API and disables duplicate add clicks while the target request is pending.
+  - Role error boundaries now render `PageError` without importing async `AppShell`; a contract test prevents reintroducing that client/server boundary break.
+- **Validation:**
+  - Focused `courses-service` and `security` tests passed.
+  - `npm run lint -- --max-warnings=0`, `npm run typecheck`, `npm run test`, `npx prisma validate` and `npm run build` passed.
+  - Browser plugin navigation to the local dev target was blocked in this session, so the rendered builder loop still needs a local browser smoke after deploy/runtime refresh.
+- **Status:** yellow until the active runtime is refreshed and the builder interaction is rechecked there.
+
+---
+
 ## 2026-05-22 - Demo Access Repair for Active DB
 
 - **Author:** Codex
