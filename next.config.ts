@@ -16,9 +16,13 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react", "framer-motion", "date-fns", "recharts", "@radix-ui/react-*"],
   },
   outputFileTracingIncludes: {
-    "/api/v1/certificates/**/*": [
-      "public/assets/fonts/**/*",
-      "public/assets/certificates/**/*"
+    "app/api/v1/certificates/[certificateId]/pdf/route": [
+      "public/assets/fonts/NotoSans-Regular.ttf",
+      "public/assets/fonts/NotoSans-Bold.ttf",
+      "public/assets/fonts/NotoSans-Italic.ttf",
+      "public/assets/certificates/border.png",
+      "public/assets/certificates/signature.png",
+      "public/assets/certificates/seal.png"
     ]
   },
   async headers() {
