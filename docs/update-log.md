@@ -1,5 +1,21 @@
 # Project Update Log
 
+## 2026-05-22 - Cloud Fallback Upload Integration (Supabase Storage)
+
+- **Author:** Antigravity
+- **Scope:** Enable media uploads locally without requiring a running Docker/MinIO local container.
+- **Checked:**
+  - Standard client-side uploads post-process compressed images and perform a PUT binary request.
+  - S3/MinIO client connection throws errors locally due to Docker not being present.
+- **Fixed / Added:**
+  - Expanded `uploadFileToSupabase` in `lib/storage.ts` to accept server-side `Buffer` and `ArrayBuffer` binaries as well as custom `contentType` arguments.
+  - Implemented S3 down check inside `POST /api/v1/media/uploads`. If S3 connection fails, the handler generates a local API proxy endpoint (`/api/v1/media/upload-fallback`) and returns the public Supabase bucket path.
+  - Created a high-performance proxy route `app/api/v1/media/upload-fallback/route.ts` that receives client binary uploads via `PUT`, reads the body into a memory `Buffer`, and sends it straight to Supabase Storage.
+- **Validation:**
+  - Type safety maintained across all modified files.
+  - Project builds and runs correctly.
+- **Status:** green.
+
 ## 2026-05-22 - Defensive Data Normalization for Builder Render Loop
 
 - **Author:** Development Agent
