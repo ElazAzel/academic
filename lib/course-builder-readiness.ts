@@ -7,6 +7,7 @@ export interface CourseBuilderPublishCheck {
   label: string;
   description: string;
   status: CourseBuilderPublishCheckStatus;
+  passed: boolean;
   target?: {
     type: "course" | "module" | "block" | "lesson";
     moduleId?: string;
@@ -128,7 +129,10 @@ export function getCourseBuilderPublishChecks(detail: CourseBuilderDetail): Cour
     });
   }
 
-  return checks;
+  return checks.map((c) => ({
+    ...c,
+    passed: c.status === "passed",
+  }));
 }
 
 export function isCourseBuilderReadyToPublish(detail: CourseBuilderDetail) {
