@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, XCircle, RotateCcw, HelpCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, RotateCcw, HelpCircle, Clock, History } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,9 +73,16 @@ function isAnswerCorrect(studentAns: unknown, resolvedCorrect: string | string[]
   return studentNorm.every((val, index) => val === correctNorm[index]);
 }
 
-export default async function QuizResultPage({ params }: { params: Promise<{ quizId: string }> }) {
+export default async function QuizResultPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ quizId: string }>;
+  searchParams?: Promise<{ attemptId?: string }>;
+}) {
   const user = await requireRolePage(["student"]);
   const { quizId } = await params;
+  const sp = await searchParams;
   const prisma = getPrisma();
 
   const quiz = await prisma.quiz.findUnique({
@@ -89,10 +96,14 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
 
   if (!quiz) notFound();
 
-  const attempt = await prisma.quizAttempt.findFirst({
+  const allAttempts = await prisma.quizAttempt.findMany({
     where: { quizId, userId: user.id },
     orderBy: { startedAt: "desc" },
   });
+
+  const attempt = sp?.attemptId
+    ? allAttempts.find((a) => a.id === sp.attemptId) ?? allAttempts[0] ?? null
+    : allAttempts[0] ?? null;
 
   if (!attempt) {
     return (
@@ -107,6 +118,7 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
     );
   }
 
+  const currentAttemptNumber = allAttempts.length;
   const passed = attempt.score >= quiz.passThreshold;
   const courseHref = quiz.courseId ? `/student/courses/${quiz.courseId}` : "/student/my-courses";
   const lessonHref = quiz.lessonId ? `/student/lessons/${quiz.lessonId}` : courseHref;
@@ -179,7 +191,7 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Попытка:</span>
-                <span>1</span>
+                <span>{currentAttemptNumber}</span>
               </div>
             </div>
 
@@ -301,6 +313,72 @@ export default async function QuizResultPage({ params }: { params: Promise<{ qui
             })}
           </CardContent>
         </Card>
+
+        {/* Attempt history */}
+        {allAttempts.length > 1 && (
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <History className="h-4 w-4 text-muted-foreground" />
+                История попыток
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {allAttempts.map((att, idx) => {
+                  const attemptNum = allAttempts.length - idx;
+                  return (
+                    <div
+                      key={att.id}
+                      className={`flex items-center justify-between rounded-xl border p-3 transition-colors ${
+                        att.id === attempt.id ? "border-primary/30 bg-primary/5" : "border-muted"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`shrink-0 rounded-full p-1.5 ${(att.score ?? 0) >= quiz.passThreshold ? "bg-emerald-100" : "bg-rose-100"}`}>
+                          {(att.score ?? 0) >= quiz.passThreshold ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-rose-600" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">Попытка #{attemptNum}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {att.submittedAt
+                              ? new Date(att.submittedAt).toLocaleDateString("ru-RU", {
+                                  day: "numeric",
+                                  month: "long",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : new Date(att.startedAt).toLocaleDateString("ru-RU", {
+                                  day: "numeric",
+                                  month: "long",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className={`text-sm font-bold ${(att.score ?? 0) >= quiz.passThreshold ? "text-emerald-600" : "text-rose-600"}`}>
+                          {att.score}%
+                        </span>
+                        {att.id !== attempt.id && (
+                          <Button asChild size="sm" variant="ghost" className="h-8">
+                            <Link href={`/student/quizzes/${quizId}/result?attemptId=${att.id}`}>Просмотр</Link>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AppShell>
   );

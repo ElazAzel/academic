@@ -2,6 +2,16 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-22 — Phase 0: Attempt history UI + Quiz builder/builder audit
+
+- **Attempt history UI**: 
+  - Исправлен хардкод "Попытка: 1" на реальное количество попыток
+  - Добавлена "История попыток" — список всех попыток с датами, скором, статусом (пройден/не пройден)
+  - Поддержка `?attemptId=` — можно просмотреть детали любой прошлой попытки
+- **Аудит Phase 0**: Builder publish checklist ✅, Quiz builder UI ✅, Block deadlines ✅, Curator popups ✅ — уже реализованы
+- **Build**: 83/83 ✅
+- **Tests**: 368/368 passed (62/62 test files) ✅
+
 ## 2026-05-22 — Phase 0: Email verification & password recovery fix + docs reorganization fixes
 
 - **Fix forgot-password API**: заменён workaround (уведомление админу) на вызов `requestPasswordReset()` — создаёт токен и отправляет email со ссылкой сброса
