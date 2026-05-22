@@ -101,7 +101,8 @@ export async function createSignedDownloadUrl(
  */
 export async function uploadFileToSupabase(
   path: string,
-  file: File | Blob,
+  file: File | Blob | Buffer | ArrayBuffer,
+  contentType?: string,
 ): Promise<string | null> {
   try {
     const client = getStorageClient();
@@ -110,8 +111,10 @@ export async function uploadFileToSupabase(
       return null;
     }
 
+    const resolvedContentType = contentType || (file as any).type || "application/octet-stream";
+
     const { data, error } = await client.storage.from(BUCKET).upload(path, file, {
-      contentType: file.type || "application/octet-stream",
+      contentType: resolvedContentType,
       upsert: true,
     });
 

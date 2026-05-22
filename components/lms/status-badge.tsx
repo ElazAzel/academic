@@ -91,20 +91,32 @@ export function StatusBadge({
   status,
   label,
   className = "",
+  ...props
 }: {
   status: BadgeStatus;
   /** Кастомный label вместо стандартного */
   label?: string;
   className?: string;
-}) {
+} & React.HTMLAttributes<HTMLSpanElement>) {
   const config = STATUS_CONFIG[status];
   if (!config) {
-    return <Badge className={className}>{status}</Badge>;
+    return (
+      <Badge className={className} aria-label={`Статус: ${status}`} {...props}>
+        {status}
+      </Badge>
+    );
   }
 
+  const finalLabel = label ?? config.label;
+  const ariaLabel = props["aria-label"] || `Статус: ${finalLabel}`;
+
   return (
-    <Badge className={`${VARIANT_CLASSES[config.variant]} ${className}`}>
-      {label ?? config.label}
+    <Badge 
+      className={`${VARIANT_CLASSES[config.variant]} ${className}`}
+      aria-label={ariaLabel}
+      {...props}
+    >
+      {finalLabel}
     </Badge>
   );
 }

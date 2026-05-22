@@ -2,6 +2,7 @@ import { errorResponse, ok, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { createPresignedUploadUrl, buildStorageKey } from "@/lib/storage";
 import { UPLOAD } from "@/lib/constants";
+import { env } from "@/lib/env";
 import { z } from "zod";
 
 const ALLOWED_CONTENT_TYPES = UPLOAD.ALLOWED_MIME_TYPES;
@@ -26,7 +27,14 @@ export async function POST(request: Request) {
     const result = await createPresignedUploadUrl(storageKey, input.contentType);
 
     if (!result) {
-      return errorResponse(new Error("Хранилище S3 недоступно"));
+      // S3 (MinIO) is not available locally or in prod.
+      // Generate fallback URL pointing to our local API proxy which will upload to Supabase.
+      const supabaseUrl = env.STORAGE_SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || "https://jqltcnuxpmeckezoypfm.supabase.co";
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/academy-media/${storageKey}`;
+      const fallbackUploadUrl = `/api/v1/media/upload-fallback?key=${encodeURIComponent(storageKey)}&contentType=${encodeURIComponent(input.contentType)}`;
+      
+      console.log(`[Storage Fallback] S3 offline. Using cloud proxy fallback. Key: ${storageKey}`);
+      return ok({ url: fallbackUploadUrl, publicUrl, key: storageKey });
     }
 
     return ok({ url: result.url, publicUrl: result.publicUrl, key: storageKey });

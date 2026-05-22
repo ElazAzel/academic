@@ -126,9 +126,9 @@
 
 ## Recommendations
 
-### High Priority
-1. **Add `skip-to-content` link** — currently only relies on `#main-content` anchor
-2. **Improve badge accessibility** — add `aria-label` to color-coded status badges
+### Completed / Done ✅
+1. **Add `skip-to-content` link** — Completed. Standard keyboard shortcut and visible skip link wired from root layout directly bypasses dynamic LMS page shells to the main focus container `#main-content`.
+2. **Improve badge accessibility** — Completed. Custom `aria-label` status mapping added dynamically to status-badges to ensure screen readers read status state correctly rather than just plain text or relying solely on badge background colors.
 
 ### Medium Priority
 3. **Add 2FA for admin accounts**
