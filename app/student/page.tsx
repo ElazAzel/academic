@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { AppShell } from "@/components/layout/app-shell";
-import { ContinueLearningCard, CourseProgressGrid, MetricGrid } from "@/components/lms/dashboard-widgets";
+import { ContinueLearningCard, MetricGrid } from "@/components/lms/dashboard-widgets";
+import { StudentCourseDashboardGrid } from "@/components/lms/student-course-dashboard-grid";
 import { XpDisplay } from "@/components/lms/xp-display";
 import { PageHeader } from "@/components/lms/page-header";
 import { EmptyState } from "@/components/lms/empty-state";
@@ -75,7 +76,7 @@ async function StudentDashboardContent() {
        </Link>
       </Button>
      </div>
-     <CourseProgressGrid courses={coursesProgress} />
+     <StudentCourseDashboardGrid courses={coursesProgress} />
     </section>
    )}
 

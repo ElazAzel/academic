@@ -41,6 +41,7 @@ export function ChatPanel({
   showResponseState = false,
   fullHeight = false,
   className,
+  initialText = "",
 }: {
   lessonId?: string;
   replyLessonId?: string;
@@ -53,12 +54,20 @@ export function ChatPanel({
   showResponseState?: boolean;
   fullHeight?: boolean;
   className?: string;
+  initialText?: string;
 }) {
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => ["chat", studentId, lessonId], [studentId, lessonId]);
   const messageLessonId = lessonId ?? replyLessonId;
   const receiverId = curatorId ?? studentId;
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
+
+  useEffect(() => {
+    if (initialText) {
+      setText(initialText);
+    }
+  }, [initialText]);
+
   const [uploading, setUploading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [replyToId, setReplyToId] = useState<string | null>(null);
