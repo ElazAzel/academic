@@ -70,6 +70,7 @@ export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
     { href: "/admin/analytics", label: "Аналитика", icon: "bar_chart" },
     { href: "/admin/reports", label: "Отчёты", icon: "bar_chart" },
     { href: "/admin/notifications", label: "Уведомления", icon: "notifications" },
+    { href: "/admin/certificates", label: "Сертификаты", icon: "verified_user" },
     { href: "/admin/audit", label: "Аудит", icon: "description" },
     { href: "/admin/glossary", label: "Глоссарий", icon: "description" },
     { href: "/admin/popups", label: "Попапы", icon: "notifications" },
