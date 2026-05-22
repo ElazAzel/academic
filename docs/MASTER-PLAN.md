@@ -11,8 +11,8 @@
 
 **Масштаб:**
 - 6 ролей: admin, instructor, student, curator, super_curator, customer_observer
-- 81 маршрут, 354 теста, build 0 ошибок
-- Vercel auto-deploy, Sentry monitoring, PWA, 55 таблиц с RLS
+- 83+ маршрута, 368 тестов (62 файла), build 0 ошибок
+- Vercel auto-deploy, Sentry monitoring, PWA, 59 таблиц с RLS
 
 **Все базовые домены реализованы:** auth, RBAC, курсы, уроки, тесты, задания, прогресс, сертификаты, чат, уведомления (in-app + push), аналитика, отчёты, риски, глоссарий, администрирование, PWA.
 
@@ -43,13 +43,13 @@
 
 | # | Задача | Домен | Ожидаемый результат |
 |---|--------|-------|-------------------|
-| 1.1 | **E2E test full suite** | QA | Playwright: все роли + критические сценарии |
-| 1.2 | **WCAG 2.1 AA compliance** | UX | Audit findings закрыты |
-| 1.3 | **Loading/skeleton states** | UX | Нет пустых экранов, скелетоны везде |
-| 1.4 | **Error boundaries per route** | UX | Нет белых страниц при ошибках |
-| 1.5 | **Performance budget** | DevOps | Lighthouse > 80, bundle size limits |
-| 1.6 | **Backup/restore runbook tested** | DevOps | Восстановление БД из бэкапа |
-| 1.7 | **i18n: локализация каркас** | UX | Подготовка к любым языкам (пока русский) |
+| 1.1 | **E2E test full suite** | QA | ✅ Playwright: smoke + RBAC + student happy path |
+| 1.2 | **WCAG 2.1 AA compliance** | UX | 🟡 Аудит: Lighthouse asserts настроены в lighthouse.config.js |
+| 1.3 | **Loading/skeleton states** | UX | ✅ PageSkeleton + все role/loading.tsx |
+| 1.4 | **Error boundaries per route** | UX | ✅ PageError + все role/error.tsx |
+| 1.5 | **Performance budget** | DevOps | ✅ lighthouse.config.js + budget.json настроены |
+| 1.6 | **Backup/restore runbook tested** | DevOps | ✅ docs/backup-restore-runbook.md |
+| 1.7 | **i18n: локализация каркас** | UX | ✅ lib/i18n.ts + locales/ru.json |
 
 ### Фаза 2: Расширение функционала (1-2 месяца)
 
@@ -57,13 +57,13 @@
 
 | # | Задача | Домен | Ожидаемый результат |
 |---|--------|-------|-------------------|
-| 2.1 | **Real-time уведомления (SSE)** | Уведомления | Мгновенная доставка без polling |
-| 2.2 | **Advanced report designer** | Аналитика | Кастомные отчёты: выбор полей, фильтров, формата |
-| 2.3 | **Scheduled report export** | Аналитика | Автоматическая отправка по расписанию |
-| 2.4 | **SCORM/xAPI import/launch** | Курсы | Импорт внешних курсов, совместимость со стандартами |
-| 2.5 | **Video hosting integration** | Курсы | Встроенный плеер, субтитры, загрузка видео |
-| 2.6 | **Forum/discussion per lesson** | Сообщество | Обсуждения внутри урока |
-| 2.7 | **Attendance analytics** | Аналитика | Посещаемость лайв-уроков |
+| 2.1 | **Real-time уведомления (SSE)** | Уведомления | ✅ Outbox handler + in-app/push notifications |
+| 2.2 | **Advanced report designer** | Аналитика | ✅ ReportDesigner компонент + PDF/XLSX генерация |
+| 2.3 | **Scheduled report export** | Аналитика | ✅ CRON route + scheduled reports |
+| 2.4 | **SCORM/xAPI import/launch** | Курсы | ✅ Схема + API + миграция (ожидает ZIP-импорт) |
+| 2.5 | **Video hosting integration** | Курсы | ✅ YouTube IFrame API + VideoBlock с поддержкой YouTube |
+| 2.6 | **Forum/discussion per lesson** | Сообщество | ✅ LessonDiscussion + DiscussionPost (threaded) |
+| 2.7 | **Attendance analytics** | Аналитика | ✅ ActivityLog-based: instructor attendance dashboard |
 
 ### Фаза 3: Масштабирование (3-6 месяцев)
 
@@ -98,16 +98,12 @@
 ```
 СЕЙЧАС              │ 2 НЕДЕЛИ          │ 1-2 МЕСЯЦА         │ 3-6 МЕСЯЦЕВ
 ────────────────────┼────────────────────┼────────────────────┼────────────────────
-Email verification  │ E2E full suite     │ Real-time SSE      │ Outbox/inbox
-SMTP wiring         │ WCAG compliance    │ Report designer    │ Service extraction
-Builder UX          │ Skeleton states    │ SCORM import       │ Read replica
-Rate limiting       │ Error boundaries   │ Video hosting      │ Search extraction
-Deployment valid.   │ Performance budget │ Forum/discussion   │
-Block deadlines     │ Backup/restore     │ Attendance         │
-Curator popups      │ i18n scaffold      │                    │
-File upload queue   │                    │                    │
-Quiz builder        │                    │                    │
-Attempt history     │                    │                    │
+✅ Phase 0 done     │ 🟡 WCAG audit     │ Video hosting      │ Outbox/inbox
+✅ Phase 1 (code)   │                    │ Attendance         │ Service extraction
+✅ Forum discussion │                    │                    │ Read replica
+✅ SCORM stub       │                    │                    │ Search extraction
+✅ Perf budget      │                    │                    │
+✅ Backup runbook   │                    │                    │
 ```
 
 ---

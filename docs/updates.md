@@ -2,6 +2,53 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-22 — Vimeo video hosting as alternative provider
+
+- **Phase 2.5 — Vimeo as video hosting option**:
+  - `extractVimeoId()` — определяет ID из vimeo.com / player.vimeo.com URL
+  - `normalizeVimeoUrl()` — преобразует в `https://player.vimeo.com/video/{id}`
+  - `resolveEmbedUrl()` — добавлен `provider === "vimeo"` кейс
+  - `VideoProvider` тип — добавлен `"vimeo"`
+  - CSP: `frame-src` добавлен `https://player.vimeo.com`
+  - Поддержка Vimeo URL как `videoUrl` (raw URL) и как `video.provider === "vimeo"` (структурированные данные)
+- **Typecheck**: ✅ | Tests: 368/368 ✅
+
+## 2026-05-22 — Free features: Attendance, Gamification (XP), WCAG
+
+- **Phase 2.7 — Attendance analytics**:
+  - `server/actions/attendance.ts` — серверные функции для получения посещаемости по курсу/уроку
+  - API: `GET /api/v1/courses/:id/attendance`, `GET /api/v1/lessons/:id/attendance`
+  - `app/instructor/attendance/page.tsx` + интерактивный клиентский компонент
+  - Навигация: добавлен пункт «Посещаемость» для инструктора
+  - Использует существующие `activity_logs` — никаких платных сервисов
+- **Phase 4.6 — Gamification: XP system**:
+  - `xp` поле в модели User (миграция `20260522000002_add_user_xp`)
+  - `server/actions/xp.ts` — awardXp, getUserXp, getLevel, leaderboard (6 уровней)
+  - XP начисляется при завершении урока (через progress API)
+  - `components/lms/xp-display.tsx` — карточка уровня на студенческом дашборде
+- **WCAG**: Skip-to-content link ✅ (уже существовал), aria labels в навигации
+- **Typecheck**: ✅ | Tests: 368/368 ✅
+
+## 2026-05-22 — Phase 1+2: Performance budget, backup runbook, forum, SCORM
+
+- **Phase 1.5 — Performance budget**:
+  - `lighthouse.config.js` — CI-конфиг с порогами: Performance ≥ 80, Accessibility ≥ 90, Best Practices ≥ 90
+  - `budget.json` — Webpack budget: JS ≤ 400KB, total ≤ 800KB, LCP ≤ 3s, CLS ≤ 0.1
+  - `next.config.ts` — добавлен `@radix-ui/react-*` в `optimizePackageImports`
+- **Phase 1.6 — Backup/restore runbook**: `docs/backup-restore-runbook.md` — pg_dump, Supabase PITR, восстановление после неудачной миграции
+- **Phase 2.6 — Forum/discussion per lesson**:
+  - Модели: `LessonDiscussion` + `DiscussionPost` (threaded, parent_id)
+  - Миграция: `20260522000000_add_lesson_discussion`
+  - API: `GET/POST /api/v1/lessons/:id/discussion`, `DELETE /api/v1/lessons/:id/discussion/posts`
+  - Компонент: `LessonDiscussion` с деревом постов, reply-inline, удалением, ролевыми бейджами
+  - Интегрирован в `LessonPlayerShell`
+- **Phase 2.4 — SCORM/xAPI import**:
+  - Модели: `ScormPackage` + `ScormLaunch`, enum для статусов
+  - Миграция: `20260522000001_add_scorm_package`
+  - API: `POST /api/v1/lessons/:id/scorm/launch` + `server/modules/scorm/service.ts`
+  - Готов к приёму ZIP-пакетов и SCORM API Bridge
+- **Build**: typecheck ✅, 368/368 tests ✅
+
 ## 2026-05-22 — Phase 0: Attempt history UI + Quiz builder/builder audit
 
 - **Attempt history UI**: 

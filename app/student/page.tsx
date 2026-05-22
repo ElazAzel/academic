@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { ContinueLearningCard, CourseProgressGrid, MetricGrid } from "@/components/lms/dashboard-widgets";
+import { XpDisplay } from "@/components/lms/xp-display";
 import { PageHeader } from "@/components/lms/page-header";
 import { EmptyState } from "@/components/lms/empty-state";
 import { StatusBadge } from "@/components/lms/status-badge";
@@ -50,6 +51,10 @@ async function StudentDashboardContent() {
 
  return (
   <div className="space-y-6">
+
+   <Suspense fallback={<div className="h-20 animate-pulse rounded-xl bg-muted" />}>
+    <XpDisplay userId={data.userId} />
+   </Suspense>
 
    {continueLearning ? (
     <ContinueLearningCard data={continueLearning}/>

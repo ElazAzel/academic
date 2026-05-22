@@ -152,7 +152,7 @@ export interface LessonDetail extends LessonSummary {
 // ── Блоки контента урока (Discriminated Union) ──────────────────────
 export type ContentBlockType = "video" | "text" | "file" | "quiz" | "assignment" | "rating" | "curator_question" | "completion";
 
-export type VideoProvider = "youtube" | "bunny" | "mux" | "cloudflare" | "peertube";
+export type VideoProvider = "youtube" | "vimeo" | "bunny" | "mux" | "cloudflare" | "peertube";
 
 export interface LessonVideo {
   provider: VideoProvider;

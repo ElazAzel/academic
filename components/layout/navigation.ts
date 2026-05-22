@@ -56,6 +56,7 @@ export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
     { href: "/instructor/courses", label: "Мои курсы", icon: "menu_book" },
     { href: "/instructor/deadlines", label: "Дедлайны", icon: "calendar_today" },
     { href: "/instructor/students", label: "Слушатели", icon: "group" },
+    { href: "/instructor/attendance", label: "Посещаемость", icon: "fact_check" },
     { href: "/instructor/chat", label: "Сообщения", icon: "chat" },
     { href: "/instructor/notifications", label: "Уведомления", icon: "notifications" },
     { href: "/instructor/analytics", label: "Аналитика", icon: "bar_chart" },

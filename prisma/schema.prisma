@@ -225,6 +225,7 @@ model User {
   position        String?
   status          UserAccountStatus @default(ACTIVE)
   lastLoginAt     DateTime? @map("last_login_at")
+  xp              Int       @default(0)
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -264,6 +265,8 @@ model User {
   popupViews                 PopupView[]
   pushSubscriptions          PushSubscription[]
   learningPathEnrollments    LearningPathEnrollment[]
+  discussionPosts            DiscussionPost[]
+  scormLaunches              ScormLaunch[]
 
   @@map("users")
 }
@@ -435,6 +438,9 @@ model Lesson {
   questions   LessonQuestion[]
   ratings     LessonRating[]
   messages    Message[]
+  discussion  LessonDiscussion?
+  scormPackage ScormPackage?
+  scormLaunches ScormLaunch[]
 
   @@unique([moduleId, order])
   @@index([blockId, order], map: "idx_lessons_block_order")
@@ -1216,4 +1222,96 @@ model LearningPathEnrollment {
   @@index([userId])
   @@index([learningPathId])
   @@map("learning_path_enrollments")
+}
+
+// ── Lesson discussion / forum (PR-2.6) ────────────────────────────────
+
+model LessonDiscussion {
+  id        String   @id @default(cuid())
+  lessonId  String   @unique @map("lesson_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  lesson Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  posts  DiscussionPost[]
+
+  @@map("lesson_discussions")
+}
+
+model DiscussionPost {
+  id           String   @id @default(cuid())
+  discussionId String   @map("discussion_id")
+  userId       String   @map("user_id")
+  text         String   @db.Text
+  parentId     String?  @map("parent_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  discussion LessonDiscussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent     DiscussionPost?  @relation("PostReplies", fields: [parentId], references: [id])
+  replies    DiscussionPost[] @relation("PostReplies")
+
+  @@index([discussionId, createdAt])
+  @@index([userId])
+  @@index([parentId])
+  @@map("discussion_posts")
+}
+
+// ── SCORM/xAPI import (Phase 2.4) ─────────────────────────────────────
+
+model ScormPackage {
+  id          String          @id @default(cuid())
+  lessonId    String          @unique @map("lesson_id")
+  title       String
+  scormVersion String         @default("1.2") @map("scorm_version")
+  manifest    Json            @default("{}")
+  storageKey  String          @map("storage_key")
+  entryUrl    String?         @map("entry_url")
+  status      ScormPackageStatus @default(IMPORTED)
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  lesson  Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  launches ScormLaunch[]
+
+  @@index([lessonId])
+  @@map("scorm_packages")
+}
+
+model ScormLaunch {
+  id          String         @id @default(cuid())
+  packageId   String         @map("package_id")
+  userId      String         @map("user_id")
+  lessonId    String         @map("lesson_id")
+  status      ScormLaunchStatus @default(LAUNCHED)
+  suspendData String?        @map("suspend_data")
+  score       Float?
+  maxScore    Float?         @map("max_score")
+  completion  String?        @default("unknown")
+  success     String?        @default("unknown")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  package ScormPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson  Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([packageId, userId])
+  @@index([lessonId, userId])
+  @@map("scorm_launches")
+}
+
+enum ScormPackageStatus {
+  IMPORTED
+  VALID
+  INVALID
+  ERROR
+}
+
+enum ScormLaunchStatus {
+  LAUNCHED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
 }
