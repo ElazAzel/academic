@@ -15,6 +15,7 @@ import { CourseBuilderPreview } from "@/components/lms/course-builder-preview";
 import { useBeforeUnload } from "@/components/lms/use-before-unload";
 import { uploadMedia } from "@/lib/upload-with-compress";
 import { getCourseBuilderPublishChecks, isCourseBuilderReadyToPublish } from "@/lib/course-builder-readiness";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import type {
   AssignmentSummary,
   BuilderBlockDetail,
@@ -90,10 +91,6 @@ function snapshotPayload(detail: CourseBuilderDetail) {
   };
 }
 
-/**
- * Гарантирует, что все модули, блоки и уроки имеют массивы, а не undefined.
- * Предотвращает "Cannot read properties of undefined (reading 'length')" в render-пути.
- */
 function normalizeModules(modules: BuilderModuleDetail[]): BuilderModuleDetail[] {
   return modules.map((m) => ({
     ...m,
@@ -140,6 +137,7 @@ export function CourseBuilderShell({
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [isMobile, setIsMobile] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<"outline" | "editor" | "settings">("editor");
+  const [isChecklistOpen, setIsChecklistOpen] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -202,9 +200,29 @@ export function CourseBuilderShell({
     }
   }, [detail, replaceDetail, router]);
 
+  const handleChecklistNavigation = useCallback((target?: { type: "course" | "module" | "block" | "lesson"; moduleId?: string; blockId?: string; lessonId?: string }) => {
+    if (!target) return;
+    if (target.type === "course") {
+      setSelected({ type: "course" });
+    } else if (target.type === "module" && target.moduleId) {
+      setSelected({ type: "module", moduleId: target.moduleId });
+    } else if (target.type === "lesson" && target.moduleId && target.lessonId) {
+      setSelected({
+        type: "lesson",
+        moduleId: target.moduleId,
+        lessonId: target.lessonId,
+        blockId: target.blockId,
+      });
+    }
+    setIsChecklistOpen(false);
+    if (isMobile) {
+      setMobilePanel("editor");
+    }
+  }, [isMobile]);
+
   const handlePublish = useCallback(async () => {
     if (!readyToPublish) {
-      toast.error("Закройте пункты checklist перед публикацией");
+      setIsChecklistOpen(true);
       return;
     }
     setPublishing(true);
@@ -351,14 +369,13 @@ export function CourseBuilderShell({
               <Icon name="unpublished" className="text-[16px] md:hidden" />
             </Button>
           ) : (
-            <Button size="sm" onClick={handlePublish} disabled={!readyToPublish || publishing}>
+            <Button size="sm" onClick={handlePublish} disabled={publishing}>
               <Icon name="rocket_launch" className="text-[16px] md:text-[18px]" />
             </Button>
           )}
         </div>
       </div>
 
-      {/* Mobile panel tabs */}
       {isMobile && (
         <div className="flex border-b border-m3-outline-variant bg-m3-surface-container-lowest">
           {(["outline", "editor", "settings"] as const).map((panel) => (
@@ -614,6 +631,43 @@ export function CourseBuilderShell({
           <span>{readyToPublish ? "Готово" : "Требует доработки"}</span>
         </span>
       </div>
+
+      {/* Checklist Dialog for non-ready publication attempts */}
+      <Dialog open={isChecklistOpen} onOpenChange={setIsChecklistOpen}>
+        <DialogContent className="max-w-md bg-m3-surface-container-lowest text-m3-on-surface">
+          <DialogHeader>
+            <DialogTitle className="text-title-lg font-headline-sm">Требования для публикации</DialogTitle>
+            <DialogDescription className="text-body-md text-m3-on-surface-variant">
+              Пожалуйста, исправьте следующие замечания, чтобы опубликовать курс:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 space-y-3 max-h-[60vh] overflow-y-auto">
+            {publishChecks.map((check, idx) => (
+              <div
+                key={idx}
+                onClick={() => handleChecklistNavigation(check.target)}
+                className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                  check.passed
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20"
+                    : "bg-rose-500/10 border-rose-500/20 text-rose-800 dark:text-rose-300 hover:bg-rose-500/20"
+                }`}
+              >
+                <Icon
+                  name={check.passed ? "check_circle" : "error"}
+                  className={`mt-0.5 shrink-0 text-[18px] ${check.passed ? "text-emerald-600" : "text-rose-600"}`}
+                />
+                <div className="space-y-0.5">
+                  <p className="font-title-sm text-title-sm">{check.label}</p>
+                  <p className="text-body-sm text-m3-on-surface-variant/80">{check.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 flex justify-end">
+            <Button onClick={() => setIsChecklistOpen(false)}>Понятно</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

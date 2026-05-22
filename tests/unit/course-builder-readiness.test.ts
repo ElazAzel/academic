@@ -72,7 +72,7 @@ const readyCourse: CourseBuilderDetail = {
 describe("course builder readiness", () => {
   it("passes when course has basics, structure, required lesson, and content", () => {
     expect(isCourseBuilderReadyToPublish(readyCourse)).toBe(true);
-    expect(getCourseBuilderPublishChecks(readyCourse).every((check) => check.status === "passed")).toBe(true);
+    expect(getCourseBuilderPublishChecks(readyCourse).every((check) => check.passed)).toBe(true);
   });
 
   it("fails when lessons have no content", () => {
@@ -89,7 +89,27 @@ describe("course builder readiness", () => {
     const checks = getCourseBuilderPublishChecks(course);
 
     expect(isCourseBuilderReadyToPublish(course)).toBe(false);
-    expect(checks.find((check) => check.id === "lesson-content")?.status).toBe("failed");
+    expect(checks.find((check) => check.id === "lesson-content")?.passed).toBe(false);
+  });
+
+  it("returns targets for failed checks", () => {
+    const course: CourseBuilderDetail = {
+      ...readyCourse,
+      modules: [
+        {
+          ...readyCourse.modules[0],
+          lessons: [{ ...readyCourse.modules[0].lessons[0], content: {}, quizzes: [], assignments: [], videoUrl: null }],
+        },
+      ],
+    };
+
+    const checks = getCourseBuilderPublishChecks(course);
+    const emptyLessonCheck = checks.find((check) => check.id.startsWith("lesson-empty-"));
+    expect(emptyLessonCheck).toBeDefined();
+    expect(emptyLessonCheck?.passed).toBe(false);
+    expect(emptyLessonCheck?.target?.type).toBe("lesson");
+    expect(emptyLessonCheck?.target?.lessonId).toBe("l1");
+    expect(emptyLessonCheck?.target?.moduleId).toBe("m1");
   });
 
   it("handles modules with missing blocks/lessons arrays gracefully", () => {
@@ -110,3 +130,4 @@ describe("course builder readiness", () => {
     expect(() => isCourseBuilderReadyToPublish(course)).not.toThrow();
   });
 });
+
