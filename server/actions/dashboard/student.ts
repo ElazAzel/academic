@@ -117,7 +117,7 @@ export async function getStudentDashboard() {
       },
     ];
 
-    return { metrics, coursesProgress, continueLearning, questions: formattedQuestions, deadlines, learningPaths };
+    return { userId: user.id, metrics, coursesProgress, continueLearning, questions: formattedQuestions, deadlines, learningPaths };
   }, null);
 }
 

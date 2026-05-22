@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     ]
   },
   experimental: {
-    optimizePackageImports: ["lucide-react", "framer-motion", "date-fns"],
+    optimizePackageImports: ["lucide-react", "framer-motion", "date-fns", "recharts", "@radix-ui/react-*"],
   },
   async headers() {
     return [
@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; frame-src https://www.youtube.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; frame-src https://www.youtube.com https://player.vimeo.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
           }
         ]
       }

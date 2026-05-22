@@ -31,15 +31,37 @@ function extractYouTubeId(url: string): string | null {
   return null;
 }
 
+function extractVimeoId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname === "vimeo.com" || u.hostname === "player.vimeo.com") {
+      // /123456789 or /123456789?param=val
+      return u.pathname.replace(/^\/|\/.*$/g, "") || null;
+    }
+  } catch {
+    /* ignore invalid URLs */
+  }
+  return null;
+}
+
 function normalizeYouTubeUrl(url: string): string {
   const id = extractYouTubeId(url);
   if (!id) return url;
   return `https://www.youtube.com/embed/${id}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1`;
 }
 
+function normalizeVimeoUrl(url: string): string {
+  const id = extractVimeoId(url);
+  if (!id) return url;
+  return `https://player.vimeo.com/video/${id}?autoplay=1&dnt=1`;
+}
+
 function resolveEmbedUrl(video: LessonVideo): string | null {
   if (video.provider === "youtube") {
     return `https://www.youtube.com/embed/${video.providerVideoId}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1`;
+  }
+  if (video.provider === "vimeo") {
+    return `https://player.vimeo.com/video/${video.providerVideoId}?dnt=1`;
   }
   return video.embedUrl ?? null;
 }
@@ -191,6 +213,7 @@ export function VideoBlock({ video, videoUrl, title, duration, onProgress, showW
     video?.provider && video?.providerVideoId ? video : null;
 
   const isYouTube = resolvedVideo?.provider === "youtube";
+  const isVimeo = resolvedVideo?.provider === "vimeo";
   const youTubeVideoId = isYouTube ? resolvedVideo!.providerVideoId : null;
 
   const useIFrameAPI = isYouTube && !!onProgress;
@@ -199,7 +222,9 @@ export function VideoBlock({ video, videoUrl, title, duration, onProgress, showW
     ? resolvedVideo
       ? resolveEmbedUrl(resolvedVideo)
       : videoUrl
-        ? normalizeYouTubeUrl(videoUrl)
+        ? extractVimeoId(videoUrl)
+          ? normalizeVimeoUrl(videoUrl)
+          : normalizeYouTubeUrl(videoUrl)
         : null
     : null;
 

@@ -226,3 +226,10 @@ export const assignCuratorSchema = z.object({
   curatorId: fromFormData(z.string().min(1, "ID куратора обязателен")),
   cohortId: fromFormData(z.string().min(1, "ID потока обязателен")),
 });
+
+// ── Lesson discussion / forum ─────────────────────────────────────────
+
+export const createDiscussionPostSchema = z.object({
+  text: z.string().min(1, "Текст сообщения обязателен").max(5000, "Максимум 5000 символов"),
+  parentId: z.string().optional(),
+});
