@@ -4,20 +4,28 @@ import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 
 let s3Client: S3Client | null = null;
+let supabaseStorageClient: ReturnType<typeof createClient> | null = null;
+let supabaseStorageChecked = false;
 
 const BUCKET = "academy-media";
 
 function getStorageClient() {
+  if (supabaseStorageChecked) return supabaseStorageClient;
+
   const supabaseUrl = env.STORAGE_SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || process.env.storage_SUPABASE_URL;
   const supabaseServiceKey = env.STORAGE_SUPABASE_SERVICE_ROLE_KEY || process.env.STORAGE_SUPABASE_SERVICE_ROLE_KEY || process.env.storage_SUPABASE_SERVICE_ROLE_KEY;
 
+  supabaseStorageChecked = true;
+
   if (!supabaseUrl || !supabaseServiceKey) {
+    console.warn("[Storage] Supabase Storage credentials not configured (STORAGE_SUPABASE_URL / STORAGE_SUPABASE_SERVICE_ROLE_KEY)");
     return null;
   }
 
-  return createClient(supabaseUrl, supabaseServiceKey, {
+  supabaseStorageClient = createClient(supabaseUrl, supabaseServiceKey, {
     auth: { persistSession: false },
   });
+  return supabaseStorageClient;
 }
 
 // ─── S3 (MinIO) — fallback ─────────────────────────────────────────────
@@ -97,18 +105,30 @@ export async function uploadFileToSupabase(
 ): Promise<string | null> {
   try {
     const client = getStorageClient();
-    if (!client) return null;
+    if (!client) {
+      console.error("[Storage] Supabase Storage client not available — upload skipped");
+      return null;
+    }
 
     const { data, error } = await client.storage.from(BUCKET).upload(path, file, {
       contentType: file.type || "application/octet-stream",
       upsert: true,
     });
 
-    if (error || !data?.path) return null;
+    if (error) {
+      console.error("[Storage] Supabase upload error:", error.message, error);
+      return null;
+    }
+
+    if (!data?.path) {
+      console.error("[Storage] Supabase upload returned no path");
+      return null;
+    }
 
     const supabaseUrl = env.STORAGE_SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || process.env.storage_SUPABASE_URL;
     return `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${data.path}`;
-  } catch {
+  } catch (err) {
+    console.error("[Storage] Supabase upload exception:", err);
     return null;
   }
 }
@@ -126,10 +146,15 @@ export async function getSupabaseStorageSignedUrl(
     if (!client) return null;
 
     const { data, error } = await client.storage.from(bucket).createSignedUrl(path, expiresInSeconds);
-    if (error || !data?.signedUrl) return null;
+    if (error) {
+      console.error("[Storage] Supabase signed URL error:", error.message);
+      return null;
+    }
+    if (!data?.signedUrl) return null;
 
     return data.signedUrl;
-  } catch {
+  } catch (err) {
+    console.error("[Storage] Supabase signed URL exception:", err);
     return null;
   }
 }

@@ -120,9 +120,9 @@ export function CuratorChatList({
       </div>
 
       {/* Основная панель — активный диалог */}
-      <div className={`flex-1 min-w-0 ${!selectedPartner ? 'hidden lg:flex lg:items-center lg:justify-center' : 'flex'}`}>
+      <div className={`flex-1 min-w-0 min-h-0 ${!selectedPartner ? 'hidden lg:flex lg:items-center lg:justify-center' : 'flex'}`}>
         {selectedPartner ? (
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0 h-full">
             {/* Шапка на мобильных */}
             <div className="flex items-center gap-3 p-3 border-b border-border/60 lg:hidden">
               <button
@@ -143,7 +143,7 @@ export function CuratorChatList({
                 )}
               </div>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-h-0 h-full">
               <ChatPanel
                 studentId={selectedPartner.id}
                 replyLessonId={selectedPartner.lessonId}
