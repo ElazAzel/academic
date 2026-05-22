@@ -2,7 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "sonner";
 import { CommandPalette } from "@/components/lms/command-palette";
 import { PopupModal } from "@/components/lms/popup-modal";
@@ -11,8 +11,31 @@ import { NotificationToast } from "@/components/lms/notification-toast";
 import { PWAInstallPrompt } from "@/components/lms/pwa-install-prompt";
 import { VisitTracker } from "@/components/lms/visit-tracker";
 
+/**
+ * Глобальный перехватчик необработанных ошибок для production-диагностики.
+ * Логирует component stack в консоль — помогает идентифицировать источник
+ * ошибок вида "Cannot read properties of undefined (reading 'length')",
+ * которые возникают вне React-дерева (setTimeout, Promise).
+ */
+function useGlobalErrorHandler() {
+  useEffect(() => {
+    const handler = (event: ErrorEvent) => {
+      console.error("[Global Error]", {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        stack: event.error?.stack,
+      });
+    };
+    window.addEventListener("error", handler);
+    return () => window.removeEventListener("error", handler);
+  }, []);
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
+  useGlobalErrorHandler();
   return (
     <SessionProvider refetchOnWindowFocus={false}>
       <QueryClientProvider client={queryClient}>
