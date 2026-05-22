@@ -107,24 +107,24 @@ export async function fetchProgressData(input?: ReportDataScope | string[]) {
 
   // Avg lesson time — aggregate in DB instead of fetching 50K rows to Node.js
   let timeSql = Prisma.sql`
-    SELECT lp."userId", CAST(COUNT(*) AS INTEGER) AS count, CAST(SUM(l."durationMinutes") AS INTEGER) AS total
-    FROM "LessonProgress" lp
-    INNER JOIN "Lesson" l ON lp."lessonId" = l."id"
-    INNER JOIN "Module" m ON l."moduleId" = m."id"
-    WHERE lp."userId" IN (${Prisma.join(userIds)})
+    SELECT lp."user_id", CAST(COUNT(*) AS INTEGER) AS count, CAST(SUM(l."duration_minutes") AS INTEGER) AS total
+    FROM "lesson_progress" lp
+    INNER JOIN "lessons" l ON lp."lesson_id" = l."id"
+    INNER JOIN "modules" m ON l."module_id" = m."id"
+    WHERE lp."user_id" IN (${Prisma.join(userIds)})
   `;
   if (scope.courseIds) {
     timeSql = Prisma.sql`
-      ${timeSql} AND m."courseId" IN (${Prisma.join(scope.courseIds)})
+      ${timeSql} AND m."course_id" IN (${Prisma.join(scope.courseIds)})
     `;
   }
-  timeSql = Prisma.sql`${timeSql} GROUP BY lp."userId"`;
+  timeSql = Prisma.sql`${timeSql} GROUP BY lp."user_id"`;
 
-  type TimeRow = { userId: string; count: number; total: number | null };
+  type TimeRow = { user_id: string; count: number; total: number | null };
   const timeResults = await prisma.$queryRaw<TimeRow[]>(timeSql);
   const timeMap = new Map<string, { count: number; total: number }>();
   for (const row of timeResults) {
-    timeMap.set(row.userId, { count: row.count, total: row.total ?? 0 });
+    timeMap.set(row.user_id, { count: row.count, total: row.total ?? 0 });
   }
 
   // Risk counts
