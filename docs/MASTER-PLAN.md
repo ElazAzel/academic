@@ -28,14 +28,12 @@
 |---|--------|-------|-------------------|
 | 0.1 | **Email verification + password recovery UI** | Auth | Полный цикл: запрос → ссылка → сброс; email через SMTP |
 | 0.2 | **Builder publish checklist UX** | Курсы | Понятный UI: что мешает публикации, подсветка проблем |
-| 0.3 | **SMTP email wiring** | Уведомления | Реальный провайдер (SendGrid/Resend), retry policy |
-| 0.4 | **Redis rate limiting — все endpoints** | Безопасность | Rate limit на quiz attempts, push, media upload, API |
-| 0.5 | **Production deployment validation** | DevOps | `npm run verify:release` проходит на staging |
-| 0.6 | **Block deadlines for cohorts** | Курсы | Admin/instructor задаёт дедлайны блоков, студент видит |
-| 0.7 | **Curator popup notifications** | Уведомления | Попапы с текстом, фиксация просмотра |
-| 0.8 | **File upload signing + review queue UI** | Задания | Curator видит очередь, S3 presigned upload |
-| 0.9 | **Quiz builder UI** | Тесты | Instructor создаёт тесты в builder |
-| 0.10 | **Attempt history UI** | Тесты | Student видит свои попытки |
+| 0.3 | **Production deployment validation** | DevOps | `npm run verify:release` проходит на staging |
+| 0.4 | **Block deadlines for cohorts** | Курсы | Admin/instructor задаёт дедлайны блоков, студент видит |
+| 0.5 | **Curator popup notifications** | Уведомления | Попапы с текстом, фиксация просмотра |
+| 0.6 | **File upload signing + review queue UI** | Задания | Curator видит очередь, S3 presigned upload |
+| 0.7 | **Quiz builder UI** | Тесты | Instructor создаёт тесты в builder |
+| 0.8 | **Attempt history UI** | Тесты | Student видит свои попытки |
 
 ### Фаза 1: UX & Quality (2-4 недели)
 

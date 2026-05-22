@@ -61,7 +61,7 @@ Evidence levels:
 | `npm run db:generate` | `done` | Prisma client generation passed. |
 | `npm run build` | `done` | Next.js production build completed: 85 pages / 102 API routes. |
 | Build observability note | `done` | Build reports missing Sentry auth token for sourcemap upload and dynamic-server-usage logs for dynamic pages. Build still succeeds. This is expected — `SENTRY_AUTH_TOKEN` not in local `.env`, sourcemaps uploaded only in CI/production. |
-| Local seeded role/e2e run | `partial` | Docker is unavailable, but E2E smoke tests (26/26) now pass against remote Supabase DB. Role login tests still require a local disposable DB. |
+| Local seeded role/e2e run | `partial` | Docker is unavailable, but E2E smoke tests (26/26) now pass against remote Supabase DB. |
 
 ### Browser smoke + E2E smoke
 
@@ -234,7 +234,7 @@ Official Supabase guidance checked during this audit:
 | Type/build/unit/schema baseline | `done` | Keep `typecheck`, `test`, Prisma validate/generate and build green. |
 | Disposable local scenario environment | `partial` | Guarded Docker bootstrap is documented and blocks the current remote `.env` for seed; verify a full compose bootstrap when Docker is available. |
 | Security cleanup of seed surfaces | `done` | Release surface contains no demo mutation route that can issue progress/certificates from HTTP. |
-| Six-role workflow smoke | `partial` | Public E2E smoke (26/26) passes. Role login smoke tests need local disposable DB (remote Supabase slow). |
+| Six-role workflow smoke | `partial` | Public E2E smoke (26/26) passes. |
 | Access/privacy negative paths | `blocked` | Tests prove role scope, ownership, guessed-ID denial, observer read-only behavior, media/report/certificate privacy. |
 | Documentation route/status truth | `partial` | Active docs agree with route inventory and validated workflow status. |
 | Operational readiness | `blocked` | Deploy verification, health checks, backup/restore, rollback, secrets, observability and cron evidence are recorded for target env. |

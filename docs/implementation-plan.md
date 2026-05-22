@@ -48,9 +48,6 @@
 
 | Область | Задача | Приоритет | Статус | Примечание |
 |---------|--------|-----------|--------|------------|
-| Auth | Password recovery (email-based) | P1 | ✅ code done | Ждёт SMTP-провайдера |
-| Auth | Email verification flow | P1 | 🟡 code done | Ждёт SMTP-провайдера |
-| Безопасность | Redis-backed rate limiting for all endpoints | P2 | 🟡 | In-memory есть, Redis нет инфраструктурно |
 | DevOps | Production deployment validation runbook | P2 | ✅ | `verify:release` выполнен 2026-05-22 (статический гейт зелёный, e2e требует staging) |
 | Безопасность | CSP hardening (unsafe-eval в production) | P2 | ✅ | `unsafe-eval` удалён из production CSP. `unsafe-inline` остаётся (Next.js hydration). |
 | Инфра | MinIO/S3 uploads локально | P3 | ❌ | Требует Docker (не установлен) — upload падает с ERR_CONNECTION_REFUSED |
