@@ -28,7 +28,7 @@ export function CuratorChatList({
   );
 
   return (
-    <div className="flex gap-4 h-[calc(100vh-220px)] min-h-[500px]">
+    <div className="flex gap-4 h-[calc(100vh-220px)] min-h-[500px] max-w-5xl mx-auto">
       {/* Sidebar — список диалогов (папок) */}
       <div className={`w-80 shrink-0 flex flex-col rounded-2xl border bg-card overflow-hidden ${selectedPartner ? 'hidden lg:flex' : 'flex'}`}>
         <div className="p-3 border-b border-border/60">

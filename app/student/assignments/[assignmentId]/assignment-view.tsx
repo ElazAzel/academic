@@ -7,6 +7,7 @@ import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, RotateCcw, Send, Upload,
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { readApiErrorMessage } from "@/lib/api-client";
+import { uploadMedia } from "@/lib/upload-with-compress";
 import { toast } from "sonner";
 import { StatusBadge } from "@/components/lms/status-badge";
 import type { BadgeStatus } from "@/components/lms/status-badge";
@@ -27,42 +28,12 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
 
     setUploading(true);
     try {
-      // Get presigned URL
-      const presignRes = await fetch("/api/v1/media/uploads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: file.name,
-          contentType: file.type,
-          fileSize: file.size,
-        }),
-      });
-
-      if (!presignRes.ok) {
-        const err = await presignRes.json().catch(() => ({}));
-        toast.error(err.error?.message || "Ошибка при подготовке загрузки");
-        return;
-      }
-
-      const { url, publicUrl } = await presignRes.json();
-
-      // Upload to S3
-      const uploadRes = await fetch(url, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-
-      if (!uploadRes.ok) {
-        toast.error("Ошибка при загрузке файла");
-        return;
-      }
-
-      setFileUrl(publicUrl);
-      setFileName(file.name);
+      const result = await uploadMedia(file, "submissions");
+      setFileUrl(result.publicUrl);
+      setFileName(result.fileName);
       toast.success("Файл загружен");
-    } catch {
-      toast.error("Ошибка сети при загрузке файла");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка сети при загрузке файла");
     } finally {
       setUploading(false);
     }

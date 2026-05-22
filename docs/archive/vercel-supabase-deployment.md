@@ -1,6 +1,6 @@
 # Vercel + Supabase Deployment Guide
 
-**Дата:** 2026-05-16
+**Дата:** 2026-05-16 (updated 2026-05-22 — upload limit aligned with code)
 **Статус:** Reference document
 
 ---
@@ -14,7 +14,7 @@ GitHub ──► Vercel (Next.js 16, App Router)
               ├── Server Actions
               └── Pages / Components
                      │
-              Supabase ──► PostgreSQL 15
+               Supabase ──► PostgreSQL 17
                            ├── Prisma ORM
                            ├── Storage (PDF, images, files ≤20MB)
                            └── Realtime (future)
@@ -127,7 +127,7 @@ NOT used for:
 
 **Upload restrictions** (enforced in `app/api/v1/media/uploads/route.ts`):
 - MIME types: `image/jpeg`, `image/png`, `image/gif`, `image/webp`, `application/pdf`, `video/mp4`, `video/webm`, `video/mpeg`, `application/zip`
-- Max size: 100MB (may be reduced to 20MB per spec)
+- Max size: 20MB (configured in `lib/constants.ts` — `UPLOAD.MAX_FILE_SIZE_MB`)
 
 ### Storage Buckets
 
@@ -155,13 +155,14 @@ Private files use Supabase signed URLs (generate via server-side).
 - `sslmode` handling for Supabase certificates
 
 ### ✅ Upload limits
-- MIME type allowlist: 9 types
-- Max file size: 100MB (consider reducing to 20MB)
+- MIME type allowlist: 9 types (defined in `lib/constants.ts`)
+- Max file size: 20MB (`UPLOAD.MAX_FILE_SIZE_BYTES` in `lib/constants.ts`)
+- Chat uploads: 15MB (separate limit in `app/api/v1/chat/upload/route.ts`)
 - Video is NOT uploaded — only YouTube URLs
 
 ### Missing / Needs Attention
 
-- [ ] **20MB limit**: Spec says 20MB, code allows 100MB — align
+- [x] **20MB limit**: Aligned — code enforces 20MB via `lib/constants.ts`
 - [ ] **Supabase Storage signed URLs**: Verify signed URL generation works for private files
 - [ ] **YouTube URL normalizer**: Check if `/server/modules/` has YouTube URL processing
 - [ ] **Env vars documentation**: This document needs to be kept in sync with `lib/env.ts`

@@ -1,6 +1,6 @@
 # Full Project Audit: AI Strategic Academy
 
-Date: 2026-05-22  
+Date: 2026-05-22 (updated 2026-05-22 — post-fix audit refresh)  
 Scope: local repository, local build/test gates, non-mutating Browser smoke, active and archived documentation.  
 Readiness target: full roadmap readiness, with release blockers separated from later strategic work.
 
@@ -16,8 +16,9 @@ That is not the same as a fully working platform. The audit found:
 - the safe local seeded scenario environment is blocked on this machine;
 - active documentation disagrees about readiness;
 - active audit and work-plan documents were missing before this audit;
-- route truth still drifts from functional truth for `/student/modules/[moduleId]` and `/admin/invites`; `/consent` was restored in the P0 follow-up;
+- route truth still drifts from functional truth for `/student/modules/[moduleId]`; `/admin/invites` has been created as a placeholder; `/consent` was restored in the P0 follow-up;
 - a demo certificate seed route existed in the application surface at audit start and was removed in the P0 follow-up;
+- 6 critical bug-fix batches were completed (forgot-password, schema sync, quiz grading, rate limiter, CSRF, race conditions); `_prisma_migrations` table created on Supabase;
 - several server pages and API handlers need boundary/access/validation review before they can be claimed production-hardened;
 - end-to-end role scenarios, file privacy, notification email opt-in, exports, real certificate issuance, revoke visibility, backup/restore, and external Supabase policy state were not proven by this local audit.
 
@@ -55,10 +56,10 @@ Evidence levels:
 |---|---|---|
 | `npm run lint -- --max-warnings=0` | `done` | Initial audit run failed on SCORM/attendance/video lint debt. P0 follow-up fixed it and reran the zero-warning gate successfully. |
 | `npx tsc --noEmit --incremental false` | `done` | TypeScript check passed. |
-| `npm run test` | `done` | 62 Vitest files and 368 tests passed. |
+| `npm run test` | `done` | 63 Vitest files and 385 tests passed. 8 new tests added for quiz grading edge cases. |
 | `npx prisma validate` | `done` | Prisma schema validation passed. |
 | `npm run db:generate` | `done` | Prisma client generation passed. |
-| `npm run build` | `done` | Next.js production build completed and emitted the route inventory. |
+| `npm run build` | `done` | Next.js production build completed: 85 pages / 102 API routes. |
 | Build observability note | `partial` | Build reports missing Sentry auth token for sourcemap upload and dynamic-server-usage logs for dynamic pages. Build still succeeds. |
 | Local seeded role/e2e run | `blocked` | Docker is unavailable on this audit machine, `scripts/start-db.ps1` expects a hardcoded PostgreSQL binary path that is absent, and local `.env` points at an external Supabase pooler rather than a safe disposable database. |
 
@@ -123,9 +124,9 @@ Documents inspected:
 
 | Role | Repository route evidence | Workflow evidence in this audit | Status | Drift/gaps |
 |---|---|---|---|---|
-| Admin | Dashboard, courses, builder, users, roles, cohorts, enrollments, analytics, reports, audit, settings and compatibility pages exist. | Unauth redirect checked only. | `partial` | `/admin/invites` is in product route truth but not in page inventory. Admin certificate issuance/report export/audit actions need seeded smoke. |
+| Admin | Dashboard, courses, builder, users, roles, cohorts, enrollments, invites, analytics, reports, audit, settings and compatibility pages exist. | Unauth redirect checked only. | `partial` | `/admin/invites` now exists as a placeholder. Admin certificate issuance/report export/audit actions need seeded smoke. |
 | Instructor | Dashboard, courses/new/builder/edit/curriculum, module/lesson edit, quizzes, assignments, questions, reports, analytics, settings and extra attendance/chat/deadlines routes exist. | Not role-smoked. | `partial` | Active implementation plan still calls out builder publish checklist, quiz builder UI, and related hardening. |
-| Student | Dashboard, my-courses, course page, lesson player, assignments, quizzes, notifications, certificates, settings and reports exist. | Unauth redirect checked only. | `partial` | `/student/modules/[moduleId]` compatibility route is in product truth but not in page inventory. Unified lesson flow needs seeded proof. |
+| Student | Dashboard, my-courses, course page, lesson player, assignments, quizzes, notifications, certificates, settings and reports exist. | Unauth redirect checked only. | `partial` | `/student/modules/[moduleId]` was intentionally removed (merged into course page per UX spec). Unified lesson flow needs seeded proof. |
 | Curator | Dashboard, students, questions, assignments, risks, reports, analytics, settings and extra chat/popups/glossary routes exist. | Not role-smoked. | `partial` | Review, answer, forward, notify, and risk-resolution scenarios need seeded proof and scope checks. |
 | Super Curator | Dashboard, curators, distribution, users, questions, risks, reports, analytics, settings and extra cohorts/chat/notifications routes exist. | Not role-smoked. | `partial` | Workload/distribution scope needs scenario proof. |
 | Customer Observer | Dashboard, reports, certificates, settings exist. | Unauth redirect checked; observer-scope module inspected. | `partial` | Read-only mutation checks and scoped report/certificate UI need role smoke. |
@@ -166,7 +167,7 @@ Documents inspected:
 | Business/domain modules and role actions exist. | `server/modules/**` and `server/actions/**` inventory. | `done` | Modular-monolith direction is visible in code. |
 | Several server pages and at least one component acquire Prisma directly from `app`/`components`. | Grep found admin analytics/reports/audit/cohorts/users, instructor reports/quizzes/assignments, student reports/quiz result, curator/super-curator pages and `components/admin/per-user-visit-table.tsx`. | `partial` | This is an architecture-boundary drift from "business logic in server/modules"; audit did not prove client-side Prisma leakage. |
 | API mutation surfaces mix strong and weak-looking entry guards. | Many handlers require named permissions and Zod schemas, while course-builder quiz/assignment handlers call `requireUser()` without a permission at handler boundary. | `partial` | Service-level checks may exist, but mutation routes need a permission/ownership/validation review before production claims. |
-| Lint debt remains in SCORM and attendance/video files. | Lint gate output. | `broken` | Release quality gate cannot be green. |
+| Lint debt was fixed in P0 follow-up. | Lint gate — 0 errors, 0 warnings. | `done` | `npm run lint -- --max-warnings=0` passes. |
 
 ## Security and Privacy Review
 
@@ -219,8 +220,8 @@ Official Supabase guidance checked during this audit:
 |---|---|---|
 | Active docs disagree on readiness status. | `partial` | Make this audit and work plan the current finishing baseline; update status docs after each validated package. |
 | Route truth listed `/consent` without confirmed implementation at audit start. | `done` | Public route and guard were restored in the P0 follow-up. |
-| Route truth lists `/student/modules/[moduleId]` but route inventory lacks it. | `missing` | Decide compatibility redirect, dedicated page, or documented removal. |
-| Route truth lists `/admin/invites` but route inventory lacks it. | `missing` | Decide invite UX route ownership and update access docs. |
+| Route truth listed `/student/modules/[moduleId]` but route inventory lacked it. | `done` | Intentionally removed (merged into course page per `docs/archive/ux-student-course-player.md`). |
+| Route truth listed `/admin/invites` but route inventory lacked it. | `done` | Created as placeholder page linking to Users, Enrollments, Cohorts and CLI provision script. |
 | Extra role/chat/popups/glossary/attendance/offline/docs pages are not consistently reflected in product truth. | `partial` | Classify as core, compatibility, internal, or deferred. |
 | Archived audits are historical only. | `done` | Keep archive references but do not treat them as green evidence. |
 
