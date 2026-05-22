@@ -49,7 +49,7 @@ export default async function StudentCertificatesPage() {
             </Link>
            </Button>
            <Button size="sm" variant="secondary" asChild aria-label="Проверить сертификат онлайн">
-            <Link href={cert.verificationUrl} target="_blank">
+            <Link href={`/certificates/verify/${cert.verificationCode}`} target="_blank">
              <ExternalLink className="h-3.5 w-3.5 mr-1"/> Проверить
             </Link>
            </Button>
