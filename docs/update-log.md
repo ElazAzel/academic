@@ -1,5 +1,22 @@
 # Project Update Log
 
+## 2026-05-22 - Demo Access Repair for Active DB
+
+- **Author:** Codex
+- **Scope:** Restore demo account access after the active database drifted behind the current Prisma schema and `/api/v1/sessions/start` returned `500`.
+- **Checked:**
+  - `scripts/check-demo-users.ts` initially failed because the active database did not have the current `users.xp` column.
+  - `npx prisma migrate status` showed the active database migration history behind the repository migrations, including the user-session and XP changes.
+- **Fixed / Added:**
+  - Ran the guarded remote repair explicitly with `ALLOW_REMOTE_DATABASE_MUTATION=true`: `npm run db:push` and `npm run db:seed`.
+  - Rechecked all demo accounts with `npx tsx scripts/check-demo-users.ts`; admin, instructor, curator, super-curator, student and observer demo users are active and the documented demo password verifies.
+  - Browser login smoke with the demo admin reached `/admin`; the smoke did not reproduce the automatic session-start console failure after the schema sync.
+- **Remaining risk:**
+  - The repair synchronized schema state but did not reconcile Prisma migration history. `npx prisma migrate status` still reports pending migrations for the active database and that drift must be resolved before release/deploy migration proof is green.
+- **Status:** yellow.
+
+---
+
 Living-документ для фиксации всех изменений, решений, проверок и известных проблем в проекте AI Strategic Academy LMS.
 
 Этот файл обновляется после каждого значимого PR, аудита, smoke-теста или production/debug-сессии.
