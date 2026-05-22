@@ -262,7 +262,7 @@ export function ChatPanel({
   }
 
   return (
-    <div className={`flex flex-col rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft ${fullHeight ? 'h-full' : ''}`}>
+    <div className={`flex flex-col rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft ${fullHeight ? 'h-full' : 'h-[520px]'}`}>
       <div className="flex items-center justify-between px-4 pt-3 pb-1 shrink-0">
         <span className="text-label-lg font-label-lg text-m3-on-surface">{conversationTitle}</span>
         {messages.length > 0 && (
@@ -272,7 +272,7 @@ export function ChatPanel({
           </Button>
         )}
       </div>
-      <div ref={chatContainerRef} className={`flex-1 overflow-auto px-4 pb-3 ${fullHeight ? 'max-h-none' : 'max-h-[400px]'} min-h-[200px]`}>
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 pb-3 min-h-0">
         {isLoading && (
           <div className="flex flex-col gap-3 py-8">
             {[1, 2, 3].map((i) => (
