@@ -306,7 +306,7 @@ export function LessonDiscussion({ lessonId }: { lessonId: string }) {
           </div>
         )}
 
-        {discussion && discussion.posts.length === 0 && (
+        {discussion?.posts?.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-8 text-center text-body-md font-body-md text-m3-on-surface-variant">
             <Icon name="forum" size={32} className="text-m3-on-surface-variant/40" />
             <p>В этом уроке пока нет обсуждений.</p>
@@ -314,7 +314,7 @@ export function LessonDiscussion({ lessonId }: { lessonId: string }) {
           </div>
         )}
 
-        {discussion?.posts.map((post) => (
+        {discussion?.posts?.map((post) => (
           <PostCard
             key={post.id}
             post={post}
