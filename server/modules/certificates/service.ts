@@ -336,8 +336,16 @@ export async function generateCertificatePdf(certificateId: string) {
   // Загружаем шрифты (с кириллицей, если доступны)
   const { regular: font, bold, italic } = await loadCyrillicFonts(pdf);
 
-  const qrPng = await QRCode.toDataURL(certificate.verificationUrl);
-  const qrImage = await pdf.embedPng(qrPng);
+  // Динамически исправляем localhost в URL верификации для QR-кода на продакшене
+  let qrUrl = certificate.verificationUrl;
+  if (process.env.VERCEL_URL && qrUrl.includes("localhost")) {
+    qrUrl = `https://${process.env.VERCEL_URL}/certificates/verify/${certificate.verificationCode}`;
+  } else if (env.APP_URL && !env.APP_URL.includes("localhost") && qrUrl.includes("localhost")) {
+    qrUrl = `${env.APP_URL}/certificates/verify/${certificate.verificationCode}`;
+  }
+
+  const qrPngBuffer = await QRCode.toBuffer(qrUrl, { type: "png" });
+  const qrImage = await pdf.embedPng(qrPngBuffer);
 
   // Load assets safely (with module-level file caching)
   const assetsDir = path.join(process.cwd(), "public/assets/certificates");

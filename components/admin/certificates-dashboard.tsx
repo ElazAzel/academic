@@ -364,7 +364,7 @@ export function CertificatesDashboard({
                                   </Link>
                                 </Button>
                                 <Button size="sm" variant="secondary" asChild title="Верификация QR">
-                                  <Link href={cert.verificationUrl} target="_blank">
+                                  <Link href={`/certificates/verify/${cert.verificationCode}`} target="_blank">
                                     <ExternalLink className="h-3.5 w-3.5" />
                                   </Link>
                                 </Button>
