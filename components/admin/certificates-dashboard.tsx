@@ -358,19 +358,19 @@ export function CertificatesDashboard({
                           <div className="flex items-center justify-end gap-1.5">
                             {!cert.revokedAt && (
                               <>
-                                <Button size="sm" variant="outline" asChild title="Скачать PDF">
+                                <Button size="sm" variant="secondary" asChild title="Скачать PDF">
                                   <Link href={`/api/v1/certificates/${cert.id}/pdf`} target="_blank">
                                     <Download className="h-3.5 w-3.5" />
                                   </Link>
                                 </Button>
-                                <Button size="sm" variant="outline" asChild title="Верификация QR">
+                                <Button size="sm" variant="secondary" asChild title="Верификация QR">
                                   <Link href={cert.verificationUrl} target="_blank">
                                     <ExternalLink className="h-3.5 w-3.5" />
                                   </Link>
                                 </Button>
                                 <Button 
                                   size="sm" 
-                                  variant="outline" 
+                                  variant="secondary" 
                                   onClick={() => handleRevoke(cert.id)} 
                                   disabled={revokingId === cert.id}
                                   title="Отозвать сертификат"
