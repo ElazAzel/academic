@@ -49,7 +49,7 @@ export function ModuleEditor({
       </div>
       <div className="rounded-xl bg-muted/30 p-4">
         <p className="text-xs text-muted-foreground">
-          Уроков: {mod.lessons.length} · Статус: {mod.status === "DRAFT" ? "Черновик" : "Опубликован"}
+          Уроков: {mod.lessons?.length ?? 0} · Статус: {mod.status === "DRAFT" ? "Черновик" : "Опубликован"}
         </p>
       </div>
     </div>

@@ -89,6 +89,21 @@ function snapshotPayload(detail: CourseBuilderDetail) {
   };
 }
 
+/**
+ * Гарантирует, что все модули, блоки и уроки имеют массивы, а не undefined.
+ * Предотвращает "Cannot read properties of undefined (reading 'length')" в render-пути.
+ */
+function normalizeModules(modules: BuilderModuleDetail[]): BuilderModuleDetail[] {
+  return modules.map((m) => ({
+    ...m,
+    blocks: (m.blocks ?? []).map((b) => ({
+      ...b,
+      lessons: b.lessons ?? [],
+    })),
+    lessons: m.lessons ?? [],
+  }));
+}
+
 function createContentBlockId(prefix: string) {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -115,7 +130,7 @@ export function CourseBuilderShell({
   initialSelected?: CourseBuilderSelectedNode;
 }) {
   const router = useRouter();
-  const [detail, setDetail] = useState<CourseBuilderDetail>(initial);
+  const [detail, setDetail] = useState<CourseBuilderDetail>({ ...initial, modules: normalizeModules(initial.modules) });
   const [selected, setSelected] = useState<CourseBuilderSelectedNode>(initialSelected ?? { type: "course" });
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -157,7 +172,7 @@ export function CourseBuilderShell({
       : undefined;
 
   const replaceDetail = useCallback((next: CourseBuilderDetail) => {
-    setDetail(next);
+    setDetail({ ...next, modules: normalizeModules(next.modules) });
     setDirty(false);
   }, []);
 
@@ -258,16 +273,16 @@ export function CourseBuilderShell({
         if (selected.blockId) {
           return {
             ...mod,
-            blocks: mod.blocks.map((block) =>
+            blocks: (mod.blocks ?? []).map((block) =>
               block.id === selected.blockId
-                ? { ...block, lessons: block.lessons.map((lesson) => (lesson.id === selected.lessonId ? { ...lesson, ...updates } : lesson)) }
+                ? { ...block, lessons: (block.lessons ?? []).map((lesson) => (lesson.id === selected.lessonId ? { ...lesson, ...updates } : lesson)) }
                 : block,
             ),
           };
         }
         return {
           ...mod,
-          lessons: mod.lessons.map((lesson) => (lesson.id === selected.lessonId ? { ...lesson, ...updates } : lesson)),
+          lessons: (mod.lessons ?? []).map((lesson) => (lesson.id === selected.lessonId ? { ...lesson, ...updates } : lesson)),
         };
       }),
     }));
@@ -372,7 +387,7 @@ export function CourseBuilderShell({
               onSelect={(node) => { setSelected(node); if (isMobile) setMobilePanel("editor"); }}
               courseId={detail.id}
               onModulesChange={(modules) => {
-                setDetail((current) => ({ ...current, modules }));
+                setDetail((current) => ({ ...current, modules: normalizeModules(modules) }));
                 setDirty(true);
               }}
             />
@@ -539,7 +554,7 @@ export function CourseBuilderShell({
                       />
                     </div>
                     <div className="rounded-xl bg-m3-surface-container-low p-4 font-body-md text-body-md text-m3-on-surface-variant">
-                      Уроков в блоке: {selectedBlock.lessons.length}
+                      Уроков в блоке: {selectedBlock.lessons?.length ?? 0}
                     </div>
                   </div>
                 )}

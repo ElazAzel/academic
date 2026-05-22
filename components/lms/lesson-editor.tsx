@@ -92,17 +92,17 @@ export function LessonEditor({
 
       {/* Quiz / Assignment toolbar */}
       <div className="flex flex-wrap gap-2 border-t pt-4">
-        {lesson.quizzes.length > 0 && (
+        {(lesson.quizzes?.length ?? 0) > 0 && (
           <div className="w-full mb-2">
-            <p className="text-xs text-muted-foreground mb-1">Тесты в уроке: {lesson.quizzes.map((q) => q.title).join(", ")}</p>
+            <p className="text-xs text-muted-foreground mb-1">Тесты в уроке: {(lesson.quizzes ?? []).map((q) => q.title).join(", ")}</p>
           </div>
         )}
         <Button size="sm" variant="secondary" onClick={() => setShowQuizCreator(!showQuizCreator)}>
           {showQuizCreator ? "Закрыть" : "Добавить тест"}
         </Button>
-        {lesson.assignments.length > 0 && (
+        {(lesson.assignments?.length ?? 0) > 0 && (
           <div className="w-full mb-2">
-            <p className="text-xs text-muted-foreground mb-1">Задания в уроке: {lesson.assignments.map((a) => a.title).join(", ")}</p>
+            <p className="text-xs text-muted-foreground mb-1">Задания в уроке: {(lesson.assignments ?? []).map((a) => a.title).join(", ")}</p>
           </div>
         )}
         <Button size="sm" variant="secondary" onClick={() => setShowAssignmentCreator(!showAssignmentCreator)}>

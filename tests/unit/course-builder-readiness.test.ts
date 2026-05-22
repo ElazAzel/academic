@@ -1,6 +1,33 @@
 import { describe, expect, it } from "vitest";
 import { getCourseBuilderPublishChecks, isCourseBuilderReadyToPublish } from "@/lib/course-builder-readiness";
-import type { CourseBuilderDetail } from "@/types/domain";
+import type { CourseBuilderDetail, BuilderModuleDetail } from "@/types/domain";
+
+/** Возвращает курс, у которого у одного модуля отсутствуют поля blocks/lessons. */
+function corruptModuleCourse(): CourseBuilderDetail {
+  const mod = {
+    id: "m1",
+    order: 0,
+    title: "Module 1",
+    description: null,
+    recommendedDays: 7,
+    status: "DRAFT" as const,
+  } as BuilderModuleDetail;
+  // mod.blocks и mod.lesson — undefined
+
+  return {
+    id: "c1",
+    slug: "course",
+    title: "AI Strategy",
+    description: "Long enough course description",
+    goal: null,
+    coverUrl: null,
+    durationHours: 12,
+    status: "DRAFT",
+    traversalMode: "sequential",
+    completionThreshold: 85,
+    modules: [mod],
+  };
+}
 
 const readyCourse: CourseBuilderDetail = {
   id: "c1",
@@ -63,5 +90,23 @@ describe("course builder readiness", () => {
 
     expect(isCourseBuilderReadyToPublish(course)).toBe(false);
     expect(checks.find((check) => check.id === "lesson-content")?.status).toBe("failed");
+  });
+
+  it("handles modules with missing blocks/lessons arrays gracefully", () => {
+    const course = corruptModuleCourse();
+    expect(() => getCourseBuilderPublishChecks(course)).not.toThrow();
+    expect(() => isCourseBuilderReadyToPublish(course)).not.toThrow();
+  });
+
+  it("handles modules with blocks but missing lesson arrays gracefully", () => {
+    const course = corruptModuleCourse();
+    course.modules[0] = {
+      ...course.modules[0],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      blocks: [{ id: "b1", order: 0, title: "Block 1", description: null }] as any,
+    };
+    // После as any — block.lessons undefined
+    expect(() => getCourseBuilderPublishChecks(course)).not.toThrow();
+    expect(() => isCourseBuilderReadyToPublish(course)).not.toThrow();
   });
 });

@@ -47,7 +47,11 @@ export function CourseSettingsPanel({
         <div className="space-y-2">
           <label className="text-xs text-muted-foreground">Всего уроков</label>
           <p className="text-sm font-medium">
-            {detail.modules.reduce((sum, mod) => sum + mod.lessons.length + mod.blocks.flatMap((block) => block.lessons).length, 0)}
+            {detail.modules.reduce((sum, mod) => {
+              const rootLessons = mod.lessons?.length ?? 0;
+              const blockLessons = (mod.blocks ?? []).reduce((bs, block) => bs + (block.lessons?.length ?? 0), 0);
+              return sum + rootLessons + blockLessons;
+            }, 0)}
           </p>
         </div>
         <div className="space-y-3 rounded-xl border bg-background p-3">
@@ -90,7 +94,7 @@ export function CourseSettingsPanel({
         </div>
         <div className="space-y-2">
           <label className="text-xs text-muted-foreground">Уроков</label>
-          <p className="text-sm font-medium">{mod.lessons.length + mod.blocks.flatMap((block) => block.lessons).length}</p>
+          <p className="text-sm font-medium">{(mod.lessons?.length ?? 0) + (mod.blocks ?? []).reduce((sum, block) => sum + (block.lessons?.length ?? 0), 0)}</p>
         </div>
         <div className="space-y-2">
           <label className="text-xs text-muted-foreground">Описание</label>
