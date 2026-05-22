@@ -1,39 +1,66 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { env } from "@/lib/env";
 import { createClient } from "@supabase/supabase-js";
+import { env } from "@/lib/env";
 
 let s3Client: S3Client | null = null;
 
-export function getS3Client(): S3Client {
-  if (!s3Client) {
-    s3Client = new S3Client({
-      endpoint: env.S3_ENDPOINT,
-      region: env.S3_REGION,
-      credentials: {
-        accessKeyId: env.S3_ACCESS_KEY,
-        secretAccessKey: env.S3_SECRET_KEY,
-      },
-      forcePathStyle: env.S3_FORCE_PATH_STYLE,
-    });
+const BUCKET = "academy-media";
+
+function getStorageClient() {
+  const supabaseUrl = env.STORAGE_SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || process.env.storage_SUPABASE_URL;
+  const supabaseServiceKey = env.STORAGE_SUPABASE_SERVICE_ROLE_KEY || process.env.STORAGE_SUPABASE_SERVICE_ROLE_KEY || process.env.storage_SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return null;
   }
-  return s3Client;
+
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false },
+  });
+}
+
+// ─── S3 (MinIO) — fallback ─────────────────────────────────────────────
+
+export function getS3Client(): S3Client | null {
+  try {
+    if (!s3Client) {
+      s3Client = new S3Client({
+        endpoint: env.S3_ENDPOINT,
+        region: env.S3_REGION,
+        credentials: {
+          accessKeyId: env.S3_ACCESS_KEY,
+          secretAccessKey: env.S3_SECRET_KEY,
+        },
+        forcePathStyle: env.S3_FORCE_PATH_STYLE,
+        requestHandler: { requestTimeout: 3_000 },
+      });
+    }
+    return s3Client;
+  } catch {
+    return null;
+  }
 }
 
 export async function createPresignedUploadUrl(
   key: string,
   contentType: string,
   expiresInSeconds = 300,
-): Promise<{ url: string; publicUrl: string }> {
-  const client = getS3Client();
-  const command = new PutObjectCommand({
-    Bucket: env.S3_BUCKET,
-    Key: key,
-    ContentType: contentType,
-  });
-  const url = await getSignedUrl(client, command, { expiresIn: expiresInSeconds });
-  const publicUrl = `${env.S3_ENDPOINT}/${env.S3_BUCKET}/${key}`;
-  return { url, publicUrl };
+): Promise<{ url: string; publicUrl: string } | null> {
+  try {
+    const client = getS3Client();
+    if (!client) return null;
+    const command = new PutObjectCommand({
+      Bucket: env.S3_BUCKET,
+      Key: key,
+      ContentType: contentType,
+    });
+    const url = await getSignedUrl(client, command, { expiresIn: expiresInSeconds });
+    const publicUrl = `${env.S3_ENDPOINT}/${env.S3_BUCKET}/${key}`;
+    return { url, publicUrl };
+  } catch {
+    return null;
+  }
 }
 
 export function buildStorageKey(prefix: string, filename: string): string {
@@ -45,55 +72,64 @@ export function buildStorageKey(prefix: string, filename: string): string {
 export async function createSignedDownloadUrl(
   key: string,
   expiresInSeconds = 900,
-): Promise<string> {
-  const client = getS3Client();
-  const command = new GetObjectCommand({
-    Bucket: env.S3_BUCKET,
-    Key: key,
-  });
-  return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
+): Promise<string | null> {
+  try {
+    const client = getS3Client();
+    if (!client) return null;
+    const command = new GetObjectCommand({
+      Bucket: env.S3_BUCKET,
+      Key: key,
+    });
+    return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
+  } catch {
+    return null;
+  }
 }
 
+// ─── Supabase Storage — основной провайдер ─────────────────────────────
+
+/**
+ * Загружает файл в Supabase Storage, возвращает публичный URL.
+ */
+export async function uploadFileToSupabase(
+  path: string,
+  file: File | Blob,
+): Promise<string | null> {
+  try {
+    const client = getStorageClient();
+    if (!client) return null;
+
+    const { data, error } = await client.storage.from(BUCKET).upload(path, file, {
+      contentType: file.type || "application/octet-stream",
+      upsert: true,
+    });
+
+    if (error || !data?.path) return null;
+
+    const supabaseUrl = env.STORAGE_SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || process.env.storage_SUPABASE_URL;
+    return `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${data.path}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Создаёт подписанную ссылку на скачивание (Supabase Storage).
+ */
 export async function getSupabaseStorageSignedUrl(
   bucket: string,
   path: string,
   expiresInSeconds = 900,
 ): Promise<string | null> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  try {
+    const client = getStorageClient();
+    if (!client) return null;
 
-  if (!supabaseUrl || !supabaseServiceKey) {
+    const { data, error } = await client.storage.from(bucket).createSignedUrl(path, expiresInSeconds);
+    if (error || !data?.signedUrl) return null;
+
+    return data.signedUrl;
+  } catch {
     return null;
   }
-
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresInSeconds);
-
-  if (error || !data?.signedUrl) {
-    return null;
-  }
-
-  return data.signedUrl;
-}
-
-export async function getSupabaseStorageSignedUrlAsync(
-  bucket: string,
-  path: string,
-  expiresInSeconds = 900,
-): Promise<string | null> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return null;
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresInSeconds);
-
-  if (error || !data?.signedUrl) {
-    return null;
-  }
-
-  return data.signedUrl;
 }

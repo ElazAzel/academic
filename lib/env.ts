@@ -65,6 +65,10 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
 
+  // Supabase Storage (отдельный проект для медиа-файлов)
+  STORAGE_SUPABASE_URL: z.string().optional(),
+  STORAGE_SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+
   // Monitoring
   SENTRY_DSN: z.string().optional(),
 

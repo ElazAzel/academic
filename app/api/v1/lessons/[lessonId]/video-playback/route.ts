@@ -2,7 +2,7 @@ import { errorResponse, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { EnrollmentStatus, ProgressStatus } from "@prisma/client";
-import { getSupabaseStorageSignedUrlAsync, createSignedDownloadUrl } from "@/lib/storage";
+import { getSupabaseStorageSignedUrl, createSignedDownloadUrl } from "@/lib/storage";
 import {
   logVideoPlaybackIssued,
   logForbiddenMediaAccess,
@@ -125,7 +125,7 @@ export async function GET(_request: Request, context: Context) {
         const storageKey = videoUrl.replace("storageKey:", "").replace("/storage/", "");
         provider = "supabase_storage";
 
-        playbackUrl = await getSupabaseStorageSignedUrlAsync(
+        playbackUrl = await getSupabaseStorageSignedUrl(
           env.S3_BUCKET,
           storageKey,
           ttl,

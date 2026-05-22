@@ -2,6 +2,22 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-22 — Chat attachments migrated from MinIO/S3 to Supabase Storage
+
+- **MinIO/S3 → Supabase Storage for chat uploads**:
+  - `app/api/v1/chat/upload/route.ts` — новый API route (POST) для загрузки файлов напрямую в Supabase Storage через service role key
+  - `lib/storage.ts` — рефакторинг: убран дубликат `getSupabaseStorageSignedUrlAsync`, S3-функции теперь возвращают null при недоступности MinIO вместо throw, добавлена `uploadFileToSupabase()`, исправлен `getSupabaseStorageSignedUrl()` с корректными env vars
+  - `components/lms/chat-panel.tsx` — `handleFileUpload` переписан: вместо S3 presigned URL → POST file в `/api/v1/chat/upload`
+  - `server/actions/chat.ts` — `getUploadUrlForFile()` теперь выбрасывает понятную ошибку при недоступности S3
+  - `lib/env.ts` — добавлены `STORAGE_SUPABASE_URL` и `STORAGE_SUPABASE_SERVICE_ROLE_KEY`
+  - `.env` — добавлены алиасы `STORAGE_SUPABASE_*` для единообразного доступа
+  - `storage.buckets` — создан bucket `academy-media` (public, 15MB лимит)
+  - `app/api/v1/lessons/[lessonId]/media/[mediaId]/signed-url/route.ts` — исправлен импорт (getSupabaseStorageSignedUrlAsync → getSupabaseStorageSignedUrl)
+  - `app/api/v1/lessons/[lessonId]/video-playback/route.ts` — исправлен импорт
+  - `app/api/v1/media/uploads/route.ts` — исправлена обработка null от createPresignedUploadUrl
+- **Heartbeat 404**: роут `/api/v1/sessions/heartbeat` существует в origin/main (коммит ca323c2), присутствует в билде. 404 на проде — вероятно из-за устаревшего деплоя.
+- **Valdiation**: typecheck ✅ | Tests 377/377 ✅ | Build ✅ (85 pages, 102 API routes)
+
 ## 2026-05-22 — Vimeo video hosting as alternative provider
 
 - **Phase 2.5 — Vimeo as video hosting option**:

@@ -23,9 +23,13 @@ export async function POST(request: Request) {
     await requireUser("courses:write");
     const input = await parseJson(request, schema);
     const storageKey = buildStorageKey(input.prefix ?? "uploads", input.filename);
-    const { url, publicUrl } = await createPresignedUploadUrl(storageKey, input.contentType);
+    const result = await createPresignedUploadUrl(storageKey, input.contentType);
 
-    return ok({ url, publicUrl, key: storageKey });
+    if (!result) {
+      return errorResponse(new Error("Хранилище S3 недоступно"));
+    }
+
+    return ok({ url: result.url, publicUrl: result.publicUrl, key: storageKey });
   } catch (error) {
     return errorResponse(error);
   }
