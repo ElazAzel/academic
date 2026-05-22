@@ -10,6 +10,7 @@
 **Платформа:** Next.js 16 modular monolith · TypeScript strict · Prisma 7.8 / PostgreSQL 17 (Supabase) · Auth.js 4 · Tailwind / shadcn · Framer Motion
 
 **Масштаб:**
+
 - 6 ролей: admin, instructor, student, curator, super_curator, customer_observer
 - 83+ маршрута, 368 тестов (62 файла), build 0 ошибок
 - Vercel auto-deploy, Sentry monitoring, PWA, 59 таблиц с RLS
@@ -25,7 +26,7 @@
 > Закрыть оставшиеся P0-P2 задачи, стабилизировать платформу для production-эксплуатации.
 
 | # | Задача | Домен | Ожидаемый результат |
-|---|--------|-------|-------------------|
+| --- | -------- | ------- | ------------------- |
 | 0.1 | **Email verification + password recovery UI** | Auth | Полный цикл: запрос → ссылка → сброс; email через SMTP |
 | 0.2 | **Builder publish checklist UX** | Курсы | Понятный UI: что мешает публикации, подсветка проблем |
 | 0.3 | **Production deployment validation** | DevOps | `npm run verify:release` проходит на staging |
@@ -40,7 +41,7 @@
 > Полировка UI/UX, accessibility, производительность, full E2E coverage.
 
 | # | Задача | Домен | Ожидаемый результат |
-|---|--------|-------|-------------------|
+| --- | -------- | ------- | ------------------- |
 | 1.1 | **E2E test full suite** | QA | ✅ Playwright: smoke + RBAC + student happy path |
 | 1.2 | **WCAG 2.1 AA compliance** | UX | 🟡 Аудит: Lighthouse asserts настроены в lighthouse.config.js |
 | 1.3 | **Loading/skeleton states** | UX | ✅ PageSkeleton + все role/loading.tsx |
@@ -54,7 +55,7 @@
 > Новые возможности для ключевых ролей.
 
 | # | Задача | Домен | Ожидаемый результат |
-|---|--------|-------|-------------------|
+| --- | -------- | ------- | ------------------- |
 | 2.1 | **Real-time уведомления (SSE)** | Уведомления | ✅ Outbox handler + in-app/push notifications |
 | 2.2 | **Advanced report designer** | Аналитика | ✅ ReportDesigner компонент + PDF/XLSX генерация |
 | 2.3 | **Scheduled report export** | Аналитика | ✅ CRON route + scheduled reports |
@@ -68,7 +69,7 @@
 > Выделение сервисов, подготовка к росту.
 
 | # | Задача | Домен | Ожидаемый результат |
-|---|--------|-------|-------------------|
+| --- | -------- | ------- | ------------------- |
 | 3.1 | **Outbox/inbox pattern + message broker** | Инфра | Redis Streams / RabbitMQ для async событий |
 | 3.2 | **Notification service extraction** | Инфра | Выделенный сервис, отдельная БД или Redis |
 | 3.3 | **Report generation service extraction** | Инфра | Фоновый worker для PDF/XLSX, S3 storage |
@@ -81,7 +82,7 @@
 > AI-рекомендации, продвинутая аналитика, новая функциональность.
 
 | # | Задача | Домен | Ожидаемый результат |
-|---|--------|-------|-------------------|
+| --- | -------- | ------- | ------------------- |
 | 4.1 | **AI recommendations engine** | ML | Персональные рекомендации курсов на основе прогресса |
 | 4.2 | **Adaptive learning paths** | ML | Автоматическая корректировка траектории |
 | 4.3 | **NLP curator assistant** | AI | Авто-ответы на типовые вопросы, проверка заданий |
@@ -93,7 +94,7 @@
 
 ## Часть III. Приоритеты выполнения
 
-```
+```text
 СЕЙЧАС              │ 2 НЕДЕЛИ          │ 1-2 МЕСЯЦА         │ 3-6 МЕСЯЦЕВ
 ────────────────────┼────────────────────┼────────────────────┼────────────────────
 ✅ Phase 0 done     │ 🟡 WCAG audit     │ Video hosting      │ Outbox/inbox
@@ -109,7 +110,7 @@
 ## Часть IV. Матрица ответственности
 
 | Домен | Архитектор | Разработчик | QA | Документация |
-|-------|-----------|-------------|-----|-------------|
+| ------- | ----------- | ------------- | ----- | ------------- |
 | Auth/сессии | principal-architect | backend-next-prisma | qa-release | technical-writer |
 | Курсы/уроки | principal-architect | backend-next-prisma | qa-release | technical-writer |
 | Тесты/задания | principal-architect | backend-next-prisma | qa-release | technical-writer |
