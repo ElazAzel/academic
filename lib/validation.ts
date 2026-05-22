@@ -65,7 +65,8 @@ export const roleAssignmentSchema = z.object({
 
 export const certificateIssueSchema = z.object({
   userId: z.string().min(1),
-  courseId: z.string().min(1)
+  courseId: z.string().min(1),
+  force: z.boolean().optional()
 });
 
 export const profileSchema = z.object({

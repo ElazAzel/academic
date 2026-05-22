@@ -119,7 +119,8 @@ async function main() {
   const courseTitles = [
     ["ai-strategy-fundamentals", "AI Strategy Fundamentals"],
     ["prompt-engineering-for-leaders", "Prompt Engineering for Leaders"],
-    ["ai-governance-and-risk", "AI Governance and Risk"]
+    ["ai-governance-and-risk", "AI Governance and Risk"],
+    ["strategic-thinking-masterclass", "Стратегическое мышление и управление: Мастер-курс"]
   ] as const;
 
   for (const [slug, title] of courseTitles) {

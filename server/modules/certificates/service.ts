@@ -43,54 +43,83 @@ function completionBasis<T extends { isRequired: boolean | null }>(lessons: T[])
   return required.length > 0 ? required : lessons;
 }
 
-export async function issueCertificate(input: { userId: string; courseId: string }, actorId: string) {
-  const progress = await prisma.courseProgress.findUnique({
+export async function issueCertificate(input: { userId: string; courseId: string; force?: boolean }, actorId: string) {
+  let progress = await prisma.courseProgress.findUnique({
     where: { userId_courseId: { userId: input.userId, courseId: input.courseId } }
   });
-  if (!progress || progress.percent < env.CERTIFICATE_COMPLETION_THRESHOLD) {
-    throw new ApiError("forbidden", "Условия выдачи сертификата не выполнены", 403, {
-      requiredPercent: env.CERTIFICATE_COMPLETION_THRESHOLD,
-      actualPercent: progress?.percent ?? 0
-    });
-  }
-  const course = await prisma.course.findUniqueOrThrow({
-    where: { id: input.courseId },
-    include: {
-      modules: {
-        include: {
-          lessons: {
-            include: {
-              quizzes: { select: { id: true } },
-              assignments: { select: { id: true } },
+
+  let enrollment = await prisma.enrollment.findUnique({
+    where: { userId_courseId: { userId: input.userId, courseId: input.courseId } }
+  });
+
+  if (input.force) {
+    if (!enrollment) {
+      enrollment = await prisma.enrollment.create({
+        data: {
+          userId: input.userId,
+          courseId: input.courseId,
+          status: "ACTIVE"
+        }
+      });
+    }
+    if (!progress) {
+      progress = await prisma.courseProgress.create({
+        data: {
+          userId: input.userId,
+          courseId: input.courseId,
+          enrollmentId: enrollment.id,
+          percent: 100,
+          status: "COMPLETED",
+          completedAt: new Date()
+        }
+      });
+    }
+  } else {
+    if (!progress || progress.percent < env.CERTIFICATE_COMPLETION_THRESHOLD) {
+      throw new ApiError("forbidden", "Условия выдачи сертификата не выполнены", 403, {
+        requiredPercent: env.CERTIFICATE_COMPLETION_THRESHOLD,
+        actualPercent: progress?.percent ?? 0
+      });
+    }
+    const course = await prisma.course.findUniqueOrThrow({
+      where: { id: input.courseId },
+      include: {
+        modules: {
+          include: {
+            lessons: {
+              include: {
+                quizzes: { select: { id: true } },
+                assignments: { select: { id: true } },
+              },
             },
           },
         },
       },
-    },
-  });
-
-  const gatedLessons = completionBasis(course.modules.flatMap((module) => module.lessons)).filter(
-    (lesson) => lesson.quizzes.length > 0 || lesson.assignments.length > 0,
-  );
-  if (gatedLessons.length > 0) {
-    const completedGatedLessons = await prisma.lessonProgress.count({
-      where: {
-        userId: input.userId,
-        lessonId: { in: gatedLessons.map((lesson) => lesson.id) },
-        status: "COMPLETED",
-      },
     });
-    if (completedGatedLessons !== gatedLessons.length) {
-      throw new ApiError("forbidden", "Тесты и задания курса должны быть завершены перед выдачей сертификата", 403);
+
+    const gatedLessons = completionBasis(course.modules.flatMap((module) => module.lessons)).filter(
+      (lesson) => lesson.quizzes.length > 0 || lesson.assignments.length > 0,
+    );
+    if (gatedLessons.length > 0) {
+      const completedGatedLessons = await prisma.lessonProgress.count({
+        where: {
+          userId: input.userId,
+          lessonId: { in: gatedLessons.map((lesson) => lesson.id) },
+          status: "COMPLETED",
+        },
+      });
+      if (completedGatedLessons !== gatedLessons.length) {
+        throw new ApiError("forbidden", "Тесты и задания курса должны быть завершены перед выдачей сертификата", 403);
+      }
     }
-  }
 
-  if (course.finalAssignmentId) {
-    const accepted = await prisma.assignmentSubmission.findFirst({
-      where: { userId: input.userId, assignmentId: course.finalAssignmentId, status: "ACCEPTED" }
-    });
-    if (!accepted) {
-      throw new ApiError("forbidden", "Финальное задание должно быть зачтено", 403);
+    if (course.finalAssignmentId) {
+      const accepted = await prisma.assignmentSubmission.findFirst({
+        where: { userId: input.userId, assignmentId: course.finalAssignmentId, status: "ACCEPTED" }
+      });
+      if (!accepted) {
+        throw new ApiError("forbidden", "Финальное задание должно быть зачтено", 403);
+      }
     }
   }
 
@@ -109,11 +138,11 @@ export async function issueCertificate(input: { userId: string; courseId: string
     data: {
       userId: input.userId,
       courseId: input.courseId,
-      enrollmentId: progress.enrollmentId,
+      enrollmentId: progress?.enrollmentId ?? enrollment?.id ?? null,
       number,
       verificationCode,
       verificationUrl,
-      metadata: { issuedBy: actorId }
+      metadata: { issuedBy: actorId, forced: !!input.force }
     }
   });
   await logAudit({ actorId, action: "certificate.issued", entity: "certificate", entityId: certificate.id });
