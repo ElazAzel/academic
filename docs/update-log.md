@@ -1,5 +1,20 @@
 # Project Update Log
 
+## 2026-05-22 - Interactive Publish Checklist (Material 3 Glassmorphism)
+
+- **Author:** Antigravity
+- **Scope:** Implement an interactive checklist dialog for course publishing, replacing standard alerts with beautiful, navigatable M3-style checks.
+- **Fixed / Added:**
+  - Upgraded `getCourseBuilderPublishChecks` in `lib/course-builder-readiness.ts` to return precise target paths for failed checks (e.g. module, block, lesson details).
+  - Redesigned publish requirements payload to use typed `passed: boolean` flag.
+  - Implemented `PublishChecklist` Dialog inside `course-builder-shell.tsx` with premium Glassmorphic styling, distinct visual tags for passed/failed conditions, and micro-animations.
+  - Added `handleChecklistNavigation` callback to automatically route active editor node state to the exact problematic block or lesson, closing the feedback loop.
+  - Updated all unit tests in `tests/unit/course-builder-readiness.test.ts` to fully pass with the updated readiness data model.
+- **Validation:**
+  - TypeScript types successfully validated.
+  - Tested readiness module and checklist state targets.
+- **Status:** green.
+
 ## 2026-05-22 - Cloud Fallback Upload Integration (Supabase Storage)
 
 - **Author:** Antigravity
