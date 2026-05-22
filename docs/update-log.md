@@ -16,7 +16,7 @@
     - Designed and built the interactive diagnostic modal `RiskDiagnosticDialog` providing deep metric analysis of student risks (attendance, deadline delays, start progress rate).
     - Integrated one-click customizable intervention messaging templates ("Reminder", "Support", "Praise") that auto-populate and trigger the curator-student chat workspace seamlessly.
 - **Validation:**
-  - Type-safe integration across all files. All components configured with full React state/prop safety.
+  - Type-safe integration across all files. Exposed both `status: 'passed' | 'failed'` and `passed: boolean` on `CourseBuilderPublishCheck` to ensure complete compatibility with legacy sidebars and new interactive panels.
 - **Status:** green.
 
 ## 2026-05-22 - Interactive Publish Checklist (Material 3 Glassmorphism)
