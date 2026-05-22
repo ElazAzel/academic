@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockCourseCreate = vi.hoisted(() => vi.fn());
 const mockCourseFindUnique = vi.hoisted(() => vi.fn());
+const mockModuleFindUnique = vi.hoisted(() => vi.fn());
+const mockLessonCreate = vi.hoisted(() => vi.fn());
+const mockLessonFindFirst = vi.hoisted(() => vi.fn());
 const mockEnrollmentUpsert = vi.hoisted(() => vi.fn());
 const mockAuditLogCreate = vi.hoisted(() => vi.fn());
 const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
@@ -25,6 +28,13 @@ vi.mock("@/lib/prisma", () => ({
       create: mockCourseCreate,
       findUnique: mockCourseFindUnique,
     },
+    module: {
+      findUnique: mockModuleFindUnique,
+    },
+    lesson: {
+      create: mockLessonCreate,
+      findFirst: mockLessonFindFirst,
+    },
     enrollment: {
       upsert: mockEnrollmentUpsert,
     },
@@ -38,7 +48,7 @@ vi.mock("@/lib/prisma", () => ({
   }),
 }));
 
-const { createCourse, getCourse, enrollStudent } = await import("@/server/modules/courses/service");
+const { createCourse, createLesson, getCourse, enrollStudent } = await import("@/server/modules/courses/service");
 
 describe("createCourse", () => {
   it("creates a course with a generated slug", async () => {
@@ -97,6 +107,47 @@ describe("getCourse", () => {
     mockCourseFindUnique.mockResolvedValue(null);
 
     await expect(getCourse("missing-id")).rejects.toMatchObject({ code: "not_found", status: 404 });
+  });
+});
+
+describe("createLesson", () => {
+  it("appends at the next module order after a lesson order collision", async () => {
+    mockModuleFindUnique.mockResolvedValue({ id: "m1", courseId: "c1" });
+    mockNotificationUserFindUnique.mockResolvedValue({
+      id: "actor1",
+      roles: [{ role: { key: "admin" } }],
+    });
+    mockLessonFindFirst.mockResolvedValue({ order: 2 });
+    mockLessonCreate
+      .mockRejectedValueOnce({ code: "P2002" })
+      .mockResolvedValueOnce({ id: "l3", order: 3 });
+
+    const lesson = await createLesson(
+      "m1",
+      {
+        title: "New lesson",
+        order: 2,
+        type: "MIXED",
+        content: {},
+        durationMinutes: 30,
+      },
+      "actor1",
+    );
+
+    expect(lesson.order).toBe(3);
+    expect(mockLessonCreate).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ data: expect.objectContaining({ moduleId: "m1", order: 2 }) }),
+    );
+    expect(mockLessonFindFirst).toHaveBeenCalledWith({
+      where: { moduleId: "m1" },
+      orderBy: { order: "desc" },
+      select: { order: true },
+    });
+    expect(mockLessonCreate).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ data: expect.objectContaining({ moduleId: "m1", order: 3 }) }),
+    );
   });
 });
 

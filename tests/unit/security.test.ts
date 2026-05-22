@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { hasPermission } from "@/lib/auth/rbac";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { verifyCsrf } from "@/lib/http";
@@ -165,5 +165,22 @@ describe("Public asset middleware exemptions", () => {
 describe("Demo seed surface", () => {
   it("does not expose certificate issuance as an app route", () => {
     expect(existsSync("app/api/seed-certificate/route.ts")).toBe(false);
+  });
+});
+
+describe("Client role error boundaries", () => {
+  it("do not render the async app shell from client error boundaries", () => {
+    const roleErrorBoundaries = [
+      "app/admin/error.tsx",
+      "app/instructor/error.tsx",
+      "app/student/error.tsx",
+      "app/curator/error.tsx",
+      "app/super-curator/error.tsx",
+      "app/customer-observer/error.tsx",
+    ];
+
+    for (const path of roleErrorBoundaries) {
+      expect(readFileSync(path, "utf8")).not.toContain("@/components/layout/app-shell");
+    }
   });
 });

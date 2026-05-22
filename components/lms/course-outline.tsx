@@ -23,6 +23,18 @@ const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   MIXED: FileText,
 };
 
+function getNextLessonOrder(moduleItem?: BuilderModuleDetail) {
+  const orders = [
+    ...(moduleItem?.lessons ?? []).map((lesson) => lesson.order),
+    ...(moduleItem?.blocks ?? []).flatMap((block) => block.lessons.map((lesson) => lesson.order)),
+  ];
+  return orders.length === 0 ? 0 : Math.max(...orders) + 1;
+}
+
+function lessonTargetKey(moduleId: string, blockId?: string) {
+  return blockId ? `${moduleId}:${blockId}` : `${moduleId}:root`;
+}
+
 export function CourseOutline({
   modules,
   selected,
@@ -38,6 +50,7 @@ export function CourseOutline({
 }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [renaming, setRenaming] = useState<{ type: "module" | "block" | "lesson"; id: string; currentTitle: string } | null>(null);
+  const [pendingLessonTarget, setPendingLessonTarget] = useState<string | null>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
 
   // ── Drag state for module reorder ──────────────────────────────────
@@ -141,11 +154,15 @@ export function CourseOutline({
   }, [modules, onModulesChange]);
 
   const addLesson = useCallback(async (moduleId: string, moduleIndex: number, blockId?: string) => {
+    const targetKey = lessonTargetKey(moduleId, blockId);
+    if (pendingLessonTarget === targetKey) return;
+
     const blocks = modules[moduleIndex]?.blocks ?? [];
     const block = blockId ? blocks.find((b) => b.id === blockId) : null;
     const lessonsInTarget = block ? block.lessons : (modules[moduleIndex]?.lessons ?? []);
-    const nextModuleOrder = blocks.reduce((sum, item) => sum + item.lessons.length, 0) + (modules[moduleIndex]?.lessons ?? []).length;
+    const nextModuleOrder = getNextLessonOrder(modules[moduleIndex]);
     const title = `Урок ${lessonsInTarget.length + 1}`;
+    setPendingLessonTarget(targetKey);
     try {
       const res = await fetch(`/api/v1/modules/${moduleId}/lessons`, {
         method: "POST",
@@ -157,8 +174,10 @@ export function CourseOutline({
       });
       if (res.ok) {
         const data = await res.json();
+        const createdLesson = data.data ?? data;
+        const createdOrder = typeof createdLesson.order === "number" ? createdLesson.order : nextModuleOrder;
         const newLesson = {
-          id: data.data?.id ?? data.id, order: nextModuleOrder, title,
+          id: createdLesson.id, order: createdOrder, title: createdLesson.title ?? title,
           type: "MIXED" as const, summary: null, durationMinutes: 30, isRequired: true,
           content: {}, videoUrl: null, quizzes: [], assignments: [], blockId: blockId ?? null,
         };
@@ -177,8 +196,10 @@ export function CourseOutline({
         }
         onModulesChange(updated);
       }
-    } catch {}
-  }, [modules, onModulesChange]);
+    } catch {} finally {
+      setPendingLessonTarget((current) => (current === targetKey ? null : current));
+    }
+  }, [modules, onModulesChange, pendingLessonTarget]);
 
   const deleteModule = useCallback(async (moduleId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -454,6 +475,7 @@ export function CourseOutline({
                         size="sm" variant="ghost"
                         className="w-full justify-start text-[10px] text-muted-foreground h-6"
                         onClick={() => addLesson(mod.id, mi, block.id)}
+                        disabled={pendingLessonTarget === lessonTargetKey(mod.id, block.id)}
                       >
                         <Plus className="h-2.5 w-2.5 mr-1" />
                         Урок в блок
@@ -531,6 +553,7 @@ export function CourseOutline({
                 size="sm" variant="ghost"
                 className="w-full justify-start text-[10px] text-muted-foreground h-6"
                 onClick={() => addLesson(mod.id, mi)}
+                disabled={pendingLessonTarget === lessonTargetKey(mod.id)}
               >
                 <Plus className="h-2.5 w-2.5 mr-1" />
                 Урок (без блока)

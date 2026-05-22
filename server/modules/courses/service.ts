@@ -8,6 +8,25 @@ import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
+const LESSON_ORDER_CREATE_ATTEMPTS = 3;
+
+function isUniqueConstraintError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2002"
+  );
+}
+
+async function getNextLessonOrder(moduleId: string) {
+  const latestLesson = await prisma.lesson.findFirst({
+    where: { moduleId },
+    orderBy: { order: "desc" },
+    select: { order: true },
+  });
+  return (latestLesson?.order ?? -1) + 1;
+}
 
 export async function assertInstructorOfCourse(actorId: string, courseId: string) {
   const user = await prisma.user.findUnique({
@@ -256,22 +275,40 @@ export async function createLesson(moduleId: string, input: {
     throw new ApiError("not_found", "Модуль не найден", 404);
   }
   await assertInstructorOfCourse(actorId, courseModule.courseId);
-  const lesson = await prisma.lesson.create({
-    data: {
-      moduleId,
-      blockId: input.blockId ?? null,
-      title: input.title,
-      summary: input.summary,
-      order: input.order,
-      type: LessonType[input.type],
-      content: toJsonValue(input.content),
-      videoUrl: input.videoUrl,
-      durationMinutes: input.durationMinutes,
-      isRequired: input.isRequired ?? true
+  let order = input.order;
+
+  for (let attempt = 0; attempt < LESSON_ORDER_CREATE_ATTEMPTS; attempt += 1) {
+    try {
+      const lesson = await prisma.lesson.create({
+        data: {
+          moduleId,
+          blockId: input.blockId ?? null,
+          title: input.title,
+          summary: input.summary,
+          order,
+          type: LessonType[input.type],
+          content: toJsonValue(input.content),
+          videoUrl: input.videoUrl,
+          durationMinutes: input.durationMinutes,
+          isRequired: input.isRequired ?? true
+        }
+      });
+      await logAudit({ actorId, action: "lesson.created", entity: "lesson", entityId: lesson.id });
+      return lesson;
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) {
+        throw error;
+      }
+
+      if (attempt === LESSON_ORDER_CREATE_ATTEMPTS - 1) {
+        throw new ApiError("conflict", "Не удалось зарезервировать порядок нового урока. Повторите действие.", 409);
+      }
+
+      order = await getNextLessonOrder(moduleId);
     }
-  });
-  await logAudit({ actorId, action: "lesson.created", entity: "lesson", entityId: lesson.id });
-  return lesson;
+  }
+
+  throw new ApiError("conflict", "Не удалось создать урок. Повторите действие.", 409);
 }
 
 export async function updateLesson(lessonId: string, input: {
