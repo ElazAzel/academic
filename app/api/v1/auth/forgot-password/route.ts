@@ -1,18 +1,15 @@
 import { z } from "zod";
 import { ApiError, errorResponse, ok, parseJson } from "@/lib/http";
-import { getPrisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/security/rate-limit";
-
-const prisma = getPrisma();
+import { requestPasswordReset } from "@/server/modules/auth/service";
 
 const schema = z.object({ email: z.string().email() });
 
 /**
  * Обрабатывает заявку на восстановление пароля.
  *
- * Вместо отправки email с токеном (самостоятельное восстановление отключено),
- * создаёт уведомление администратору о заявке пользователя.
- * Администратор свяжется с пользователем по email вручную.
+ * Создаёт токен сброса и отправляет email со ссылкой для восстановления.
+ * Всегда возвращает успех, чтобы не раскрывать наличие email в системе.
  */
 export async function POST(request: Request) {
   try {
@@ -22,33 +19,9 @@ export async function POST(request: Request) {
       return errorResponse(new ApiError("too_many_requests", "Слишком много запросов. Попробуйте позже.", 429));
     }
 
-    // Проверяем, есть ли пользователь с таким email
-    const user = await prisma.user.findUnique({
-      where: { email: input.email.toLowerCase().trim() },
-      select: { id: true, email: true, name: true },
-    });
-
-    if (user) {
-      // Создаём уведомление для администраторов
-      const admins = await prisma.user.findMany({
-        where: { roles: { some: { role: { name: "admin" } } } },
-        select: { id: true },
-      });
-
-      for (const admin of admins) {
-        await prisma.notification.create({
-          data: {
-            userId: admin.id,
-            type: "password_change_request",
-            channel: "in_app",
-            title: "Заявка на восстановление пароля",
-            body: `Пользователь ${user.name || user.email} (${user.email}) запросил восстановление пароля.`,
-            status: "SENT",
-            data: { userEmail: user.email, userName: user.name },
-          },
-        }).catch(() => { /* silent */ });
-      }
-    }
+    // requestPasswordReset сам проверяет наличие пользователя,
+    // создаёт токен, отправляет email и логирует аудит
+    await requestPasswordReset(input.email);
 
     // Всегда возвращаем успех — не раскрываем наличие email в системе
     return ok({ accepted: true });

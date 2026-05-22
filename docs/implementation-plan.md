@@ -7,10 +7,10 @@
 
 Закрытая LMS одной академии для управления курсами, потоками, кураторами, заданиями, тестами, сертификатами, инвайт-доступом, аналитикой и отчётностью. Production-minded: безопасная, расширяемая, документированная.
 
-## Текущее состояние на 2026-05-21
+## Текущее состояние на 2026-05-22
 
 ### Core Metrics
-- **Build:** 81/81 страниц, 0 ошибок ✅
+- **Build:** 83/83 страниц, 0 ошибок ✅
 - **Tests:** 368/368 passed (62 test files) ✅
 - **Deployment:** Vercel auto-deploy на push в main ✅
 - **Security scan:** Все C1-C5 findings закрыты ✅
@@ -45,19 +45,23 @@
 | PWA (manifest, SW, push, Apple Web App) | done | Custom install prompts |
 | Студент (dashboard, learning paths, settings, deadlines) | done | Settings page, StatusBadge |
 
-### Что осталось (фаза Production Readiness)
+### Что осталось (фаза Production Hardening — Phase 0)
 
-| Область | Задача | Приоритет |
-|---------|--------|-----------|
-| Auth | Email verification full UI flow + password recovery delivery | P1 |
-| Курсы | Builder: publish checklist UX, preview mode | P1 |
-| Тесты | Quiz builder UI (instructor), attempt history (student) | P2 |
-| Задания | File upload signing, review queue UI (curator) | P2 |
-| Уведомления | SMTP email wiring (production), retry policy | P2 |
-| Безопасность | Redis-backed rate limiting for all endpoints | P2 |
-| DevOps | Production deployment validation runbook | P2 |
-| Деадлайны | Block deadlines for cohorts, curator reminders | P2 |
-| Попапы кураторов | Notification popups with read confirmation | P2 |
+| Область | Задача | Приоритет | Статус |
+|---------|--------|-----------|--------|
+| Auth | Password recovery (email-based) | P1 | ✅ code done, ждёт SMTP |
+| Auth | Email verification flow | P1 | 🟡 code done, ждёт SMTP |
+| Курсы | Builder: publish checklist UX, preview mode | P1 | ❌ |
+| Тесты | Quiz builder UI (instructor) | P2 | ❌ |
+| Тесты | Attempt history (student) | P2 | ❌ |
+| Задания | File upload signing, review queue UI (curator) | P2 | ❌ |
+| Безопасность | Redis-backed rate limiting for all endpoints | P2 | 🟡 in-memory есть, Redis нет |
+| DevOps | Production deployment validation runbook | P2 | 🟡 verify:release существует |
+
+### Уже реализовано (Phase 0)
+- ✅ Block deadlines for cohorts (admin + instructor UI)
+- ✅ Curator popup notifications (create + acknowledge)
+- ✅ Password recovery: API (`requestPasswordReset`), UI (`forgot-password-form`)
 
 ## Связанные документы
 
