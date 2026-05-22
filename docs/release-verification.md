@@ -1,6 +1,6 @@
 # Release Verification Runbook
 
-Date: 2026-05-18
+Date: 2026-05-22
 
 This runbook is the release gate for AI Strategic Academy. A release is not green until the full command succeeds on a prepared environment.
 
@@ -40,6 +40,20 @@ The release E2E gate must cover:
 - student dashboard, my courses, and settings smoke.
 
 If E2E cannot run locally because the database or browser runtime is unavailable, the static gate may still be run with `npm run verify`, but the release remains blocked until `npm run verify:release` passes in staging.
+
+## Current Status (2026-05-22)
+
+| Step | Result | Notes |
+|------|--------|-------|
+| `lint --max-warnings=0` | ✅ Pass | 0 warnings |
+| `typecheck` | ✅ Pass | tsc --noEmit clean |
+| `test` | ✅ Pass | 396 тестов, 64 файла — всё зелёное |
+| `prisma validate` | ✅ Pass | Schema valid |
+| `db:generate` | ✅ Pass | Prisma Client generated |
+| `build` | ✅ Build | Next.js 16 production build successful |
+| `test:e2e` | ⏳ Staging only | Требует staging DB с seed-данными + Playwright browsers |
+
+**Статический гейт (первые 6 шагов) — зелёный.** Для полного E2E требуется staging-окружение.
 
 ## Rollback Rule
 

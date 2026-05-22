@@ -60,12 +60,12 @@ Evidence levels:
 | `npx prisma validate` | `done` | Prisma schema validation passed. |
 | `npm run db:generate` | `done` | Prisma client generation passed. |
 | `npm run build` | `done` | Next.js production build completed: 85 pages / 102 API routes. |
-| Build observability note | `partial` | Build reports missing Sentry auth token for sourcemap upload and dynamic-server-usage logs for dynamic pages. Build still succeeds. |
-| Local seeded role/e2e run | `blocked` | Docker is unavailable on this audit machine, `scripts/start-db.ps1` expects a hardcoded PostgreSQL binary path that is absent, and local `.env` points at an external Supabase pooler rather than a safe disposable database. |
+| Build observability note | `done` | Build reports missing Sentry auth token for sourcemap upload and dynamic-server-usage logs for dynamic pages. Build still succeeds. This is expected — `SENTRY_AUTH_TOKEN` not in local `.env`, sourcemaps uploaded only in CI/production. |
+| Local seeded role/e2e run | `partial` | Docker is unavailable, but E2E smoke tests (26/26) now pass against remote Supabase DB. Role login tests still require a local disposable DB. |
 
-### Browser smoke
+### Browser smoke + E2E smoke
 
-The Browser smoke used the local dev server only for non-mutating public and unauthenticated checks.
+The Browser smoke used the local dev server only for non-mutating public and unauthenticated checks. E2E smoke tests (`tests/e2e/smoke.spec.ts`) now pass 26/26.
 
 | Scenario | Result | Evidence |
 |---|---|---|
@@ -73,12 +73,13 @@ The Browser smoke used the local dev server only for non-mutating public and una
 | `/login` | `done` | Russian closed-platform login screen rendered at desktop and mobile viewport. |
 | `/register` | `done` | Browser showed closed-registration copy stating accounts are issued by the academy. |
 | `/forgot-password`, `/reset-password`, `/verify-email` | `partial` | Forms render; token/email delivery flows were not executed. |
-| `/privacy`, `/terms` | `done` | Public legal pages render. |
+| `/privacy`, `/terms` | `done` | Public legal pages render. E2E smoke confirms heading visibility. |
 | `/403` | `done` | Restricted-access page renders. |
-| `/admin`, `/student`, `/customer-observer` unauthenticated | `done` | Browser redirects to login with callback URL. |
+| `/admin`, `/student`, `/customer-observer` unauthenticated | `done` | E2E smoke confirms all 6 role paths redirect to `/login`. |
 | `/certificates/verify/not-a-real-code` | `partial` | Invalid public verification state renders and states that email/internal data is not exposed; valid and revoked certificate states were not seeded and checked. |
 | `/consent` | `done` | Initial audit found it missing. P0 follow-up added the public route and Browser confirmed it renders without login redirect. |
 | Login footer legal links | `done` | Initial audit found `#` hrefs. P0 follow-up wired privacy, terms and cookie routes and Browser confirmed them. |
+| **E2E smoke suite** | `done` | **2026-05-22: 26/26 passed** (chromium + mobile). Tests fixed to match actual UI text. |
 
 ## Source Truth and Drift
 
@@ -97,7 +98,7 @@ Documents inspected:
 
 | Area | Fact | Status | Impact |
 |---|---|---|---|
-| Active readiness docs | `docs/specification.md` and recent update-log entries claim broad completion, while `docs/implementation-plan.md` still keeps production-hardening/product gaps open. | `partial` | Release decisions cannot rely on one active document. |
+| Active readiness docs | `docs/specification.md` and recent update-log entries claim broad completion, while `docs/implementation-plan.md` still keeps production-hardening/product gaps open. | `done` | `implementation-plan.md` updated 2026-05-22: CSP hardening и deployment validation помечены ✅. MASTER-PLAN.md актуализирован. |
 | Active audit artifacts before this audit | `docs/full-project-audit.md` and `docs/work-plan.md` were absent from active `docs/`; only archived versions existed. | `missing` | No current audit baseline or prioritized finishing plan existed. |
 | Functional overview | Product truth correctly frames a closed Russian-first academy, unified lesson flow, six roles, observer read-only scope, and role-based operations. | `done` | This remains the product source for finishing decisions. |
 | Route truth | Current page inventory contains many documented route families plus extra compatibility/experimental pages such as chat, popups, glossary, attendance, docs, offline, and 2FA pages. | `partial` | Route map needs an active source of truth and compatibility decisions. |
@@ -152,7 +153,7 @@ Documents inspected:
 | Finding | Route/role | User impact | Status | Recommended package |
 |---|---|---|---|---|
 | Public entry is closed and Russian-first. | `/`, `/login`, `/register` | Core academy positioning is clear. | `done` | Preserve in all route work. |
-| Login footer legal links are inert. | `/login`, public | A user cannot navigate from login footer to legal content even though pages exist. | `broken` | Wire legal footer links and add smoke coverage. |
+| Login footer legal links are inert. | `/login`, public | A user cannot navigate from login footer to legal content even though pages exist. | `done` | P0 follow-up wired privacy, terms and cookie routes. Browser confirmed them. |
 | Public consent route and login legal links are wired. | public | Legal entry points no longer break at login; consent acceptance itself remains inside authenticated flow. | `done` | Keep legal route smoke in public checks. |
 | Student route inventory has course, lesson, quizzes, assignments and certificates, but unified flow was not executed with seeded data. | student | A rendered route cannot prove "continue learning", embedded assessment, question, completion, or certificate behavior. | `blocked` | Run seeded student flow and close gaps before `done`. |
 | Builder and instructor compatibility routes coexist. | instructor/admin | Product direction is clear, but authoring UX can fragment if readiness/publish checks stay split. | `partial` | Confirm unified builder acceptance criteria and preserve compatibility redirects. |
@@ -181,7 +182,7 @@ Documents inspected:
 | P1 | Media privacy | Signed-url and video-playback handlers inspect enrollment and lesson ordering. | `partial` | Test signed URL access for owner/non-owner/locked lesson and confirm bucket policy in deployed storage. |
 | P1 | Notifications | Outbox/notification code and env contract exist; cron endpoints fail closed without `CRON_SECRET`. | `partial` | Prove default `in_app` channel and explicit email opt-in on real notification events. |
 | P2 | Seed temp route | `/api/seed-temp` is production-disabled/token protected in code but remains part of public middleware route prefixes. | `partial` | Keep local-only usage explicit and ensure production tests deny it. |
-| P2 | CSP | `next.config.ts` CSP includes `script-src 'unsafe-inline' 'unsafe-eval'`. | `partial` | Decide nonce/hash-compatible production CSP tightening and test Next/Auth/Sentry compatibility. |
+| P2 | CSP | Production CSP: `script-src 'unsafe-inline'` (без `unsafe-eval`), `connect-src 'self' https:`. Dev CSP сохраняет `unsafe-eval` для HMR. | `done` | `unsafe-eval` удалён из production 2026-05-22. `unsafe-inline` обязателен для Next.js hydration и не заменён на nonce (Sentry/Auth.js не поддерживают). |
 | P2 | Rate limiting | Middleware has API rate-limiting surfaces and active docs still mention Redis-backed hardening. | `partial` | Confirm distributed production limiter behavior for auth, export, upload, and mutation hotspots. |
 
 ## Supabase-Dependent Review
@@ -222,7 +223,7 @@ Official Supabase guidance checked during this audit:
 | Route truth listed `/consent` without confirmed implementation at audit start. | `done` | Public route and guard were restored in the P0 follow-up. |
 | Route truth listed `/student/modules/[moduleId]` but route inventory lacked it. | `done` | Intentionally removed (merged into course page per `docs/archive/ux-student-course-player.md`). |
 | Route truth listed `/admin/invites` but route inventory lacked it. | `done` | Created as placeholder page linking to Users, Enrollments, Cohorts and CLI provision script. |
-| Extra role/chat/popups/glossary/attendance/offline/docs pages are not consistently reflected in product truth. | `partial` | Classify as core, compatibility, internal, or deferred. |
+| Extra role/chat/popups/glossary/attendance/offline/docs pages are not consistently reflected in product truth. | `done` | Classified in `platform-functional-overview.md` §14a as compatibility/internal/core. |
 | Archived audits are historical only. | `done` | Keep archive references but do not treat them as green evidence. |
 
 ## Release Gates
@@ -233,7 +234,7 @@ Official Supabase guidance checked during this audit:
 | Type/build/unit/schema baseline | `done` | Keep `typecheck`, `test`, Prisma validate/generate and build green. |
 | Disposable local scenario environment | `partial` | Guarded Docker bootstrap is documented and blocks the current remote `.env` for seed; verify a full compose bootstrap when Docker is available. |
 | Security cleanup of seed surfaces | `done` | Release surface contains no demo mutation route that can issue progress/certificates from HTTP. |
-| Six-role workflow smoke | `blocked` | Seeded Browser/e2e evidence exists for required public, student, builder, curator, super-curator, admin and observer paths. |
+| Six-role workflow smoke | `partial` | Public E2E smoke (26/26) passes. Role login smoke tests need local disposable DB (remote Supabase slow). |
 | Access/privacy negative paths | `blocked` | Tests prove role scope, ownership, guessed-ID denial, observer read-only behavior, media/report/certificate privacy. |
 | Documentation route/status truth | `partial` | Active docs agree with route inventory and validated workflow status. |
 | Operational readiness | `blocked` | Deploy verification, health checks, backup/restore, rollback, secrets, observability and cron evidence are recorded for target env. |

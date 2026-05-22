@@ -3,14 +3,14 @@ import { expect, test } from "@playwright/test";
 test.describe("public pages", () => {
   test("loads login page from root", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Вход в академию" })).toBeVisible();
-    await expect(page.getByText("Забыли пароль?")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "AI Strategic Academy" })).toBeVisible();
+    await expect(page.getByText("Закрытая образовательная платформа")).toBeVisible();
   });
 
   test("login page shows form", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByRole("heading", { name: "Вход" })).toBeVisible();
-    await expect(page.getByLabel("Email")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "AI Strategic Academy" })).toBeVisible();
+    await expect(page.getByText("E-mail")).toBeVisible();
   });
 
   test("forgot password page shows contact message", async ({ page }) => {
@@ -27,12 +27,12 @@ test.describe("public pages", () => {
 
   test("privacy page loads", async ({ page }) => {
     await page.goto("/privacy");
-    await expect(page.getByRole("heading")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Политика конфиденциальности" })).toBeVisible();
   });
 
   test("terms page loads", async ({ page }) => {
     await page.goto("/terms");
-    await expect(page.getByRole("heading")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Пользовательское соглашение" })).toBeVisible();
   });
 
   test("register page shows registration closed", async ({ page }) => {

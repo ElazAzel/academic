@@ -1,34 +1,56 @@
 # Backup / Restore Runbook
 
-> Дата: 2026-05-22
+> **Единый источник истины для всех процедур бэкапа.**
+> Дата: 2026-05-22 (унифицирован)
 > Статус: ✅ Проверено на staging
+
+Связанные файлы:
+- Скрипты автоматизации: `infra/backup/scripts/daily-backup.sh`, `infra/backup/backup.sh`, `infra/backup/restore.sh`
+- S3-конфигурация: `infra/s3-config.md`
+
+---
 
 ## 1. Обзор
 
-Для PostgreSQL на Supabase используется штатный механизм бэкапов:
-- Supabase Pro автоматически создаёт ежедневные бэкапы (Point-in-Time Recovery)
-- Ручные бэкапы: через `pg_dump` или Supabase Dashboard
+Production работает на **Supabase PostgreSQL** (автоматические бэкапы + PITR).
+Для ручных операций — `pg_dump` / Supabase Dashboard.
+Для автоматизации (Linux-серверы) — bash-скрипты в `infra/backup/scripts/`.
+
+### Политика хранения (единая)
+
+| Уровень | Частота | Retention | Куда |
+|---------|---------|-----------|------|
+| Supabase авто | Ежедневно | 7 дней | Инфраструктура Supabase |
+| PITR | Непрерывно | до 30 дней (если включён) | Supabase |
+| Ручной pre-release | Перед каждым релизом | До следующего релиза | Локально |
+| S3 off-site | Еженедельно | 4 недели | S3-совместимое хранилище |
+| S3 monthly | 1-го числа | 12 месяцев | S3-совместимое хранилище |
+
+---
 
 ## 2. Резервное копирование
 
-### 2.1 Автоматические бэкапы (Supabase)
+### 2.1 Автоматические бэкапы (Supabase Pro)
 
 Supabase Pro включает:
 - **Ежедневные полные бэкапы** — retention 7 дней
-- **Point-in-Time Recovery** — до 30 дней при включённом PITR
+- **Point-in-Time Recovery** — до 30 дней при включённом PITR (рекомендуется включить в Production)
 - Бэкапы хранятся в инфраструктуре Supabase
 
-Проверка статуса бэкапов:
+Проверка статуса:
 ```bash
-# Supabase CLI
+# Supabase CLI (Linux/macOS)
 supabase projects backups list --project-ref <PROJECT_REF>
+
+# Supabase Dashboard
+# https://supabase.com/dashboard/project/<ref>/database/backups
 ```
 
-### 2.2 Ручной бэкап (pg_dump)
+### 2.2 Ручной бэкап (pg_dump) — Windows (PowerShell)
 
 Перед каждым релизом со schema change:
 
-```bash
+```powershell
 # 1. Установить переменные окружения
 $env:PGHOST="<host>"
 $env:PGPORT="5432"
@@ -36,7 +58,7 @@ $env:PGUSER="postgres"
 $env:PGPASSWORD="<password>"
 $env:PGDATABASE="postgres"
 
-# 2. Полный дамп БД (без данных сессий)
+# 2. Полный дамп БД (без данных сессий и сообщений — они не критичны для восстановления)
 pg_dump `
   --no-owner `
   --no-acl `
@@ -46,21 +68,51 @@ pg_dump `
   --file="backup-$(Get-Date -Format 'yyyy-MM-dd-HHmm').sql"
 ```
 
-### 2.3 Supabase Dashboard
+### 2.3 Ручной бэкап (pg_dump) — Linux / CI
+
+```bash
+pg_dump "$DATABASE_URL" \
+  --no-owner \
+  --compress=9 \
+  --exclude-table-data='user_sessions' \
+  --exclude-table-data='session' \
+  --exclude-table-data='message' \
+  --file="backup-$(date +%F-%H%M).sql.gz"
+```
+
+### 2.4 Supabase Dashboard
 
 1. Войти в [database.new](https://database.new)
 2. Выбрать проект → **Database** → **Backups**
 3. Нажать **Download Backup** для скачивания `.sql`
 
-## 3. Восстановление
+### 2.5 Автоматизированный бэкап (Linux cron)
 
-### 3.1 Восстановление из Supabase бэкапа
+Скрипты в `infra/backup/scripts/`:
+- `daily-backup.sh` — ежедневный дамп, retention 7 дней, опциональная загрузка в S3
+- `backup.sh` — расширенная версия с GPG-шифрованием
+- Настройка: `0 3 * * * /path/to/infra/backup/scripts/daily-backup.sh`
+
+### 2.6 S3 Media Backup
 
 ```bash
-# 1. Скачать бэкап из Dashboard (см. 2.3)
+# Backup media files
+aws s3 sync s3://academy-media/ ./backup-media-$(date +%F)/ \
+  --endpoint-url "$S3_ENDPOINT" \
+  --profile academy
+```
 
-# 2. Восстановить в staging/локальную БД
-psql -h localhost -U postgres -d ai_academy_dev -f backup-2026-05-22-1200.sql
+---
+
+## 3. Восстановление
+
+### 3.1 Из Supabase бэкапа
+
+1. Supabase Dashboard → Database → Backups
+2. Download нужного бэкапа
+3. Восстановить:
+```bash
+psql "$DATABASE_URL" -f backup-2026-05-22-1200.sql
 ```
 
 ### 3.2 Point-in-Time Recovery (Supabase)
@@ -70,13 +122,16 @@ psql -h localhost -U postgres -d ai_academy_dev -f backup-2026-05-22-1200.sql
 3. Указать время (с точностью до минуты)
 4. Подтвердить — Supabase создаст новую БД из PITR
 
-### 3.3 Восстановление после неудачной миграции
-
-Если `prisma migrate deploy` сломал production:
+### 3.3 Из custom-format dump (Linux)
 
 ```bash
-# 1. Откатить версию приложения на Vercel
-#    (Redeploy previous deployment)
+pg_restore --clean --if-exists --no-owner --dbname="$DATABASE_URL" academy_20260516.dump
+```
+
+### 3.4 После неудачной миграции
+
+```bash
+# 1. Откатить версию приложения на Vercel (Redeploy previous deployment)
 
 # 2. Восстановить БД из бэкапа
 psql "$DATABASE_URL" -f backup-2026-05-22-1200.sql
@@ -88,24 +143,34 @@ npx prisma migrate resolve --rolled-back "<migration_name>"
 npm run users:check-demo
 ```
 
+### 3.5 S3 Media Restore
+
+```bash
+aws s3 sync ./backup-media-2026-05-13/ s3://academy-media/ \
+  --endpoint-url "$S3_ENDPOINT" \
+  --profile academy
+```
+
+---
+
 ## 4. Проверка восстановления
 
 После restore обязательно проверить:
 
 ```bash
-# 1. Проверить demo пользователей
-npm run users:check-demo
+# 1. Health check
+curl http://localhost:3000/api/healthz
 
-# 2. Проверить demo курс
-npm run course:create-demo
-npm run users:check-demo  # Снова — должны быть данные
+# 2. Demo пользователи
+npm run users:check-demo
 
 # 3. Smoke-тесты
 npm run verify
 
-# 4. E2E smoke
-npm run test:e2e -- --grep "public pages"
+# 4. Login smoke
 ```
+
+---
 
 ## 5. Recovery Drills
 
@@ -116,10 +181,13 @@ npm run test:e2e -- --grep "public pages"
 | 2026-05-22 | pg_dump → local restore | ✅ Успешно |
 | — | Supabase PITR | 🟡 Не тестировалось |
 
+---
+
 ## 6. Troubleshooting
 
 | Проблема | Решение |
 |----------|---------|
-| `role "postgres" does not exist` | `$env:PGUSER="<supabase_user>"` (см. Dashboard → Database → Connection params) |
-| `ERROR: relation "migrations" does not exist` | Prisma ещё не инициализирован — запусти `npx prisma migrate dev` |
-| pg_dump зависает | Добавить `--no-sync` или увеличить `PGHOST` timeout |
+| `role "postgres" does not exist` | Указать правильного пользователя из Supabase Dashboard → Database → Connection params |
+| `ERROR: relation "_prisma_migrations" does not exist` | Таблица отсутствует — выполнить скрипт создания (см. schema-cleanup-preflight.ts) |
+| pg_dump зависает | Добавить `--no-sync` или проверить сетевой доступ к Supabase pooler |
+| `_prisma_migrations` not in dump | Нормально — таблица создаётся Prisma при первом `migrate deploy` |
