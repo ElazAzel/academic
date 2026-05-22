@@ -10,6 +10,7 @@
 - Database access stays inside repositories/services, not UI components.
 - The current academy profile is invite-only: payment checkout and Stripe webhook routes are explicit `410 Gone` compatibility endpoints.
 - Secrets live only in environment variables. `.env` is ignored and `.env.example` contains placeholders.
+- ⚠️ **Инцидент:** `__dbcheck.mjs` (добавлен `0e20419`, удалён `907e98f`) содержал хардкодный Supabase password. Пароль скомпрометирован в git history. Рекомендуется ротация.
 
 ## Risks And Mitigations
 
@@ -25,6 +26,7 @@
 | Accidental billing reactivation | Payment routes return typed `410 Gone`; any future billing restore must add signed webhook verification, idempotency, and access reconciliation before launch |
 | Overbroad admin actions | Audit logs for privileged actions |
 | PII over-retention | Consent log, export/delete documentation, configurable retention policy |
+| Credentials in git history | `__dbcheck.mjs` содержал хардкодный Supabase connection string с паролем (`NFM3KJJzS2DxmIg6`). Файл удалён (`907e98f`), но пароль виден в истории. **Требуется ротация пароля Supabase.** |
 | Abuse of public endpoints | Rate-limit scaffold, validation, audit trail |
 
 ## Checklist
