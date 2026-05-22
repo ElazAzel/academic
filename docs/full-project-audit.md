@@ -29,7 +29,7 @@ Current overall status: `partial`.
 Statuses used in this document:
 
 | Status | Meaning |
-|---|---|
+| --- | --- |
 | `done` | Confirmed by code and a relevant local check for this audit scope. |
 | `partial` | Implementation or evidence exists, but a required workflow, guard, state, or test proof is missing. |
 | `missing` | Product truth expects it and route/code evidence was not found. |
@@ -41,7 +41,7 @@ Statuses used in this document:
 Evidence levels:
 
 | Evidence | Meaning |
-|---|---|
+| --- | --- |
 | Browser verified | Non-mutating UI behavior was checked in the local Browser session. |
 | Gate verified | A command was run during this audit. |
 | Code verified | Source/schema/config was inspected during this audit. |
@@ -53,7 +53,7 @@ Evidence levels:
 ### Commands and gates
 
 | Check | Result | Evidence |
-|---|---|---|
+| --- | --- | --- |
 | `npm run lint -- --max-warnings=0` | `done` | Initial audit run failed on SCORM/attendance/video lint debt. P0 follow-up fixed it and reran the zero-warning gate successfully. |
 | `npx tsc --noEmit --incremental false` | `done` | TypeScript check passed. |
 | `npm run test` | `done` | 63 Vitest files and 385 tests passed. 8 new tests added for quiz grading edge cases. |
@@ -68,7 +68,7 @@ Evidence levels:
 The Browser smoke used the local dev server only for non-mutating public and unauthenticated checks. E2E smoke tests (`tests/e2e/smoke.spec.ts`) now pass 26/26.
 
 | Scenario | Result | Evidence |
-|---|---|---|
+| --- | --- | --- |
 | `/` root | `done` | Browser redirects to `/login?callbackUrl=%2F`. |
 | `/login` | `done` | Russian closed-platform login screen rendered at desktop and mobile viewport. |
 | `/register` | `done` | Browser showed closed-registration copy stating accounts are issued by the academy. |
@@ -97,7 +97,7 @@ Documents inspected:
 - repository route tree, Prisma schema, server modules/actions, API route handlers, infrastructure configs.
 
 | Area | Fact | Status | Impact |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Active readiness docs | `docs/specification.md` and recent update-log entries claim broad completion, while `docs/implementation-plan.md` still keeps production-hardening/product gaps open. | `done` | `implementation-plan.md` updated 2026-05-22: CSP hardening и deployment validation помечены ✅. MASTER-PLAN.md актуализирован. |
 | Active audit artifacts before this audit | `docs/full-project-audit.md` and `docs/work-plan.md` were absent from active `docs/`; only archived versions existed. | `missing` | No current audit baseline or prioritized finishing plan existed. |
 | Functional overview | Product truth correctly frames a closed Russian-first academy, unified lesson flow, six roles, observer read-only scope, and role-based operations. | `done` | This remains the product source for finishing decisions. |
@@ -109,7 +109,7 @@ Documents inspected:
 ### Public route truth
 
 | Product route | Repository/browser evidence | Status | Notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `/` | Page exists and redirects to login locally. | `done` | Closed root is consistent with product truth. |
 | `/login` | Page exists and renders. | `done` | Main entry point. |
 | `/register` | Page exists and shows closed registration. | `done` | No free self-registration UX was observed. |
@@ -124,7 +124,7 @@ Documents inspected:
 ### Role route truth
 
 | Role | Repository route evidence | Workflow evidence in this audit | Status | Drift/gaps |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Admin | Dashboard, courses, builder, users, roles, cohorts, enrollments, invites, analytics, reports, audit, settings and compatibility pages exist. | Unauth redirect checked only. | `partial` | `/admin/invites` now exists as a placeholder. Admin certificate issuance/report export/audit actions need seeded smoke. |
 | Instructor | Dashboard, courses/new/builder/edit/curriculum, module/lesson edit, quizzes, assignments, questions, reports, analytics, settings and extra attendance/chat/deadlines routes exist. | Not role-smoked. | `partial` | Active implementation plan still calls out builder publish checklist, quiz builder UI, and related hardening. |
 | Student | Dashboard, my-courses, course page, lesson player, assignments, quizzes, notifications, certificates, settings and reports exist. | Unauth redirect checked only. | `partial` | `/student/modules/[moduleId]` was intentionally removed (merged into course page per UX spec). Unified lesson flow needs seeded proof. |
@@ -135,7 +135,7 @@ Documents inspected:
 ### Scenario/API/action/data matrix
 
 | Scenario | UI route families | API/server workflow surfaces inspected | Prisma/domain evidence | Status |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Closed auth and account issuance | Public auth pages, role dashboards, `/403`, `/auth/2fa` | Auth route handlers, middleware/proxy guards, settings/session handlers | Users, roles, sessions, notification preferences | `partial` |
 | Course authoring and builder | Admin/instructor course routes, builder, edit/curriculum compatibility routes | Course-builder handlers; course and lesson handlers; `server/actions/admin.ts` and dashboard actions | `Course`, `Module`, `Block`, `Lesson`, media, cohort deadlines | `partial` |
 | Student learning/progress | Student dashboard, course page, lesson player | Lesson/video/media/rating/question handlers; `server/actions/student.ts` | `LessonProgress`, `BlockProgress`, `ModuleProgress`, `CourseProgress`, `Enrollment` | `partial` |
@@ -151,7 +151,7 @@ Documents inspected:
 ## Product and UX Findings
 
 | Finding | Route/role | User impact | Status | Recommended package |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Public entry is closed and Russian-first. | `/`, `/login`, `/register` | Core academy positioning is clear. | `done` | Preserve in all route work. |
 | Login footer legal links are inert. | `/login`, public | A user cannot navigate from login footer to legal content even though pages exist. | `done` | P0 follow-up wired privacy, terms and cookie routes. Browser confirmed them. |
 | Public consent route and login legal links are wired. | public | Legal entry points no longer break at login; consent acceptance itself remains inside authenticated flow. | `done` | Keep legal route smoke in public checks. |
@@ -163,7 +163,7 @@ Documents inspected:
 ## Code and Architecture Findings
 
 | Finding | Evidence | Status | Risk |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Prisma schema contains `Block` and `BlockProgress`. | `prisma/schema.prisma` model inventory. | `done` | Product data gap for blocks is not present at schema level. UI/workflow proof remains separate. |
 | Business/domain modules and role actions exist. | `server/modules/**` and `server/actions/**` inventory. | `done` | Modular-monolith direction is visible in code. |
 | Several server pages and at least one component acquire Prisma directly from `app`/`components`. | Grep found admin analytics/reports/audit/cohorts/users, instructor reports/quizzes/assignments, student reports/quiz result, curator/super-curator pages and `components/admin/per-user-visit-table.tsx`. | `partial` | This is an architecture-boundary drift from "business logic in server/modules"; audit did not prove client-side Prisma leakage. |
@@ -173,7 +173,7 @@ Documents inspected:
 ## Security and Privacy Review
 
 | Priority | Surface | Finding | Status | Evidence and required proof |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | P0 | Demo mutation route | `/api/seed-certificate` existed at audit start and mutated demo enrollment/progress/certificate data behind a secret path. | `done` | The app route was removed; local demo issuance remains guarded behind `npm run certificate:issue-demo`; a unit contract and build route inventory confirm the HTTP surface is gone. |
 | P0 | Scenario proof | Full role RBAC, ownership, guessed-ID, file, report/export and observer negative-path checks were not run locally. | `blocked` | Need disposable seeded DB and role e2e/access suite. |
 | P1 | Auth/public boundaries | Proxy/middleware enforces unauth redirect and Browser proved dashboard redirects. | `partial` | Verify redirect priority, 2FA, password reset, email verification, session invalidation and rate-limit behavior with tests. |
@@ -197,7 +197,7 @@ Official Supabase guidance checked during this audit:
 - [2026 Data API changelog](https://supabase.com/changelog/42949-breaking-change-removing-access-to-openapi-spec-via-the-anon-key): the anonymous OpenAPI schema surface changed in 2026 and should not be assumed from older defaults.
 
 | Supabase concern | Local evidence | Status | Required follow-up |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | RLS/Data API exposure | Repo uses Prisma/direct DB patterns; dashboard exposed-schema/grant/RLS state was not inspected. | `blocked` | Inventory exposed schemas, grants, RLS policies and whether Data API should be disabled for private tables. |
 | Storage access | Repo has S3/MinIO-compatible media flow and signed-url handlers. Actual Supabase Storage bucket policy state was not inspected. | `blocked` | Verify bucket privacy, signed URL TTL, service-key handling, and storage RLS if Supabase Storage is active. |
 | Breaking-change assumptions | Current official changelog was checked. | `partial` | Document which production services rely on Data API/OpenAPI/GraphQL/storage defaults. |
@@ -205,7 +205,7 @@ Official Supabase guidance checked during this audit:
 ## Infrastructure and Operations Review
 
 | Area | Evidence | Status | Finding |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Local bootstrap | `docker-compose.yml`, guarded DB scripts and local command attempts. | `partial` | Docker-based bootstrap scripts now run DB setup inside the app container and DB mutation scripts reject remote hosts by default. Docker is still unavailable on this audit machine, so the full compose run remains blocked here. |
 | Environment contract | `.env.example`, config reads and local `.env` inspection. | `partial` | Storage, SMTP, push, Redis, Sentry, cron and DB contracts exist, but local disposable defaults are not safe/proven on this machine. |
 | CI | `.github/workflows/ci.yml`. | `partial` | CI defines PostgreSQL, schema push/seed, typecheck/lint/test/e2e/build flow; current local lint failure must be reconciled with CI claims. |
@@ -218,7 +218,7 @@ Official Supabase guidance checked during this audit:
 ## Documentation Drift Register
 
 | Drift | Status | Correction direction |
-|---|---|---|
+| --- | --- | --- |
 | Active docs disagree on readiness status. | `partial` | Make this audit and work plan the current finishing baseline; update status docs after each validated package. |
 | Route truth listed `/consent` without confirmed implementation at audit start. | `done` | Public route and guard were restored in the P0 follow-up. |
 | Route truth listed `/student/modules/[moduleId]` but route inventory lacked it. | `done` | Intentionally removed (merged into course page per `docs/archive/ux-student-course-player.md`). |
@@ -229,7 +229,7 @@ Official Supabase guidance checked during this audit:
 ## Release Gates
 
 | Gate | Current status | Exit condition |
-|---|---|---|
+| --- | --- | --- |
 | Zero-warning lint | `done` | `npm run lint -- --max-warnings=0` passes. |
 | Type/build/unit/schema baseline | `done` | Keep `typecheck`, `test`, Prisma validate/generate and build green. |
 | Disposable local scenario environment | `partial` | Guarded Docker bootstrap is documented and blocks the current remote `.env` for seed; verify a full compose bootstrap when Docker is available. |
