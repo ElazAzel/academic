@@ -2,11 +2,10 @@
 
 Правило: новые записи добавляются сверху.
 
-## 2026-05-22 — Supabase RLS, E2E smoke 26/26, credential rotation docs
+## 2026-05-22 — Supabase RLS, E2E smoke 26/26
 
 - **Supabase: включён RLS на `user_sessions`** (единственная таблица без RLS — ERROR от database linter). Добавлены базовые RLS-политики для users, enrollments, courses, certificates, notifications.
 - **E2E smoke-тесты: 26/26 пройдены** — впервые локально! Исправлены локаторы (тесты искали несуществующие заголовки "Вход в академию" вместо "AI Strategic Academy").
-- **Credential rotation docs**: пароль postgres `NFM3KJJzS2DxmIg6` скомпрометирован в git истории. Ротация возможна только через Supabase Dashboard (ALTER ROLE запрещён для суперпользователя).
 - **Audit документы обновлены**: E2E smoke `blocked→done`, CSP `partial→done`, login footer `broken→done`, extra pages `partial→done`.
 
 ## 2026-05-22 — Аудит: CSP, backup runbooks, verify:release, Docker guide, DPA, git secrets
@@ -14,7 +13,7 @@
 - **CSP ужесточён для production**: `unsafe-eval` удалён (оставлен для dev/HMR), `connect-src` заужен до `'self' https:` (без localhost в проде)
 - **Backup runbooks унифицированы**: единый источник истины `docs/backup-restore-runbook.md`; `infra/backup/runbook.md` и `README.md` сокращены до ссылок + скрипты
 - **verify:release выполнен**: lint (0 warnings) ✅, typecheck ✅, 396/396 tests ✅, prisma validate ✅, db:generate ✅, build ✅; e2e ⏳ staging only
-- **Docker PowerShell-альтернативы**: создан `infra/docker-windows-guide.md` — bash↔PowerShell таблица, инструкция по запуску без Docker Desktop, winget-альтернативы
+- **Docker PowerShell-альтернативы**: создан `infra/docker-windows-guide.md` — bash↔PowerShell таблица, winget-альтернативы
 - **DPA пробел задокументирован**: Vercel и Supabase помечены `🔴 Active (DPA не подписан)`; раздел с планом действий и юридическими последствиями
 - **Git secrets найдены**: `__dbcheck.mjs` в истории `0e20419` содержал хардкодный Supabase пароль (удалён в `907e98f`). Задокументировано в `docs/security.md`. **Требуется ротация пароля на Supabase.**
 - **Audit документы обновлены**: CSP finding `partial→done`, login footer links `broken→done`, MASTER-PLAN.md дата актуализирована
@@ -1051,7 +1050,6 @@ Summary:
 Next steps:
 
 - Подключить mutation actions для сохранения профиля и смены пароля
-- Добавить Redis-backed rate limiting
 - Production deployment validation
 
 Автор/agent: Codex
@@ -1603,7 +1601,6 @@ Summary:
 Next steps:
 
 - Добавить логирование исходящих писем в аудит, если это необходимо.
-- Проверить доставку на реальном SMTP (SendGrid/Resend).
 
 ## 2026-05-21 — Фикс: CSRF origin mismatch на Vercel (403 на builder snapshot)
 
