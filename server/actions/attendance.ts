@@ -27,7 +27,7 @@ export interface StudentAttendanceDetail {
  * Получить посещаемость уроков для курса (по инструктору).
  */
 export async function getCourseAttendance(courseId: string): Promise<LessonAttendanceRow[]> {
-  const user = await requireUser("courses:read");
+  await requireUser("courses:read");
 
   // Получаем все уроки курса
   const lessons = await getPrisma().lesson.findMany({

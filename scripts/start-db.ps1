@@ -1,9 +1,21 @@
 # start-db.ps1 — Запускает локальный PostgreSQL для разработки
 # Вызывается автоматически из npm run dev (см. package.json scripts)
 
-$pgDir = "C:\Temp\opencode\pgsql\pgsql"
-$pgBin = "$pgDir\bin"
-$pgData = "C:\Temp\opencode\pgdata"
+$pgBin = $env:ACADEMY_PG_BIN
+if (-not $pgBin) {
+    $defaultPgBin = "C:\Temp\opencode\pgsql\pgsql\bin"
+    if (Test-Path "$defaultPgBin\pg_ctl.exe") {
+        $pgBin = $defaultPgBin
+    }
+}
+
+if (-not $pgBin -or -not (Test-Path "$pgBin\pg_ctl.exe")) {
+    Write-Output "[start-db] Local PostgreSQL binaries were not found."
+    Write-Output "[start-db] Use scripts/bootstrap.ps1 for Docker local dependencies or set ACADEMY_PG_BIN."
+    exit 0
+}
+
+$pgData = if ($env:ACADEMY_PG_DATA) { $env:ACADEMY_PG_DATA } else { "C:\Temp\opencode\pgdata" }
 
 # Check if PostgreSQL is already running
 $running = & "$pgBin\pg_ctl.exe" status -D $pgData 2>&1

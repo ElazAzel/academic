@@ -40,7 +40,7 @@ jobs:
 
       - run: npx prisma generate
 
-      - run: npx prisma db push
+      - run: npm run db:push
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 

@@ -134,14 +134,14 @@ If a command is blocked, record the exact blocker and do not mark the package `d
 
 ## Recommended Start Order
 
-1. P0-01 restore lint.
-2. P0-02 remove the demo certificate HTTP mutation path.
-3. P0-03 make local disposable bootstrap safe and repeatable.
-4. P0-04 and P0-05 run the six-role smoke and negative-path matrix.
-5. Convert defects from that evidence into P1 route/product/security packages.
+1. Verify P0-03 Docker bootstrap on a machine with Docker runtime available.
+2. P0-04 and P0-05 run the six-role smoke and negative-path matrix.
+3. Convert defects from that evidence into P1 route/product/security packages.
 
 ## Progress Log
 
 | Date | Update | Status |
 |---|---|---|
 | 2026-05-22 | New active work plan created from local+repo audit. | `partial` |
+| 2026-05-22 | P0-01 lint debt fixed. P0-02 removed `/api/seed-certificate` HTTP surface and kept guarded `certificate:issue-demo`. P0-03 now has guarded DB scripts and Docker bootstrap scripts; runtime compose proof remains blocked here without Docker. | `partial` |
+| 2026-05-22 | Route truth follow-up restored public `/consent`, wired login legal links and added middleware/test coverage. `/student/modules/[moduleId]` and `/admin/invites` remain unresolved route decisions. | `partial` |

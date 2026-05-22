@@ -16,13 +16,29 @@ cp .env.example .env
 ```
 Проверьте, что `DATABASE_URL` указывает на внутренний PostgreSQL из `docker-compose.yml`: `postgresql://academy:<secret>@postgres:5432/academy?schema=public`. Порт PostgreSQL не публикуется наружу.
 
-## 3. Запуск PostgreSQL (через Docker)
+## 3. Безопасный локальный bootstrap
+
+PowerShell:
+
+```powershell
+.\scripts\bootstrap.ps1
+```
+
+Linux/macOS shell:
+
+```bash
+sh scripts/bootstrap.sh
+```
+
+Bootstrap поднимает локальные зависимости через Docker Compose и запускает Prisma generate, `db:push` и `db:seed` внутри app-контейнера с host `postgres`. Команды `npm run db:push`, `npm run db:seed` и `npm run certificate:issue-demo` отказываются работать с remote host по умолчанию. Для намеренной remote-мутации требуется явный `ALLOW_REMOTE_DATABASE_MUTATION=true`.
+
+## 4. Ручной запуск зависимостей (через Docker)
 ```bash
 # Запустить только PostgreSQL, Redis, MinIO, Mailhog
 docker compose up -d postgres redis mailhog minio
 ```
 
-## 4. Миграция и наполнение БД
+## 5. Ручная миграция и наполнение БД
 ```bash
 # Создать таблицы в PostgreSQL из app-контейнера, где доступен внутренний host `postgres`
 docker compose run --rm app npm run db:migrate
@@ -31,7 +47,7 @@ docker compose run --rm app npm run db:migrate
 docker compose run --rm app npm run db:seed
 ```
 
-## 5. Запуск dev-сервера
+## 6. Запуск dev-сервера
 ```bash
 npm run dev
 ```

@@ -24,7 +24,23 @@ cp .env.example .env
 - `DATABASE_URL` — строка подключения к PostgreSQL
 - Остальные параметры по необходимости (OAuth, SMTP, S3)
 
-### 2. Запуск зависимостей (Docker Compose)
+### 2. Безопасный локальный bootstrap
+
+PowerShell:
+
+```powershell
+.\scripts\bootstrap.ps1
+```
+
+Linux/macOS shell:
+
+```bash
+sh scripts/bootstrap.sh
+```
+
+Скрипты поднимают зависимости через Docker Compose и выполняют Prisma generate, `db:push` и `db:seed` внутри app-контейнера. `db:push`, `db:seed` и `certificate:issue-demo` блокируют remote DB host по умолчанию; `ALLOW_REMOTE_DATABASE_MUTATION=true` нужен только для явно подтверждённой remote-мутации.
+
+### 3. Запуск зависимостей (Docker Compose)
 
 ```bash
 docker compose up -d postgres redis mailhog minio
@@ -32,16 +48,16 @@ docker compose up -d postgres redis mailhog minio
 
 **Важно:** PostgreSQL работает во внутренней сети Docker без публикации порта наружу. Для доступа из хоста используйте port-forward.
 
-### 3. Установка зависимостей и инициализация БД
+### 4. Ручная установка зависимостей и инициализация БД
 
 ```bash
 npm install
-npm run db:generate
-npm run db:push
-npm run db:seed
+docker compose run --rm app npm run db:generate
+docker compose run --rm app npm run db:push
+docker compose run --rm app npm run db:seed
 ```
 
-### 4. Запуск разработки
+### 5. Запуск разработки
 
 ```bash
 npm run dev
@@ -139,6 +155,7 @@ npm run dev
 | `npm run db:migrate` | Применение миграций БД |
 | `npm run db:push` | Push схемы БД (для разработки) |
 | `npm run db:seed` | Заполнение БД демо-данными |
+| `npm run certificate:issue-demo` | Локальная demo-выдача сертификата после seed |
 | `npm run users:provision` | Провизион аккаунтов для production |
 | `npm run verify` | Полная проверка: lint + typecheck + test + build |
 

@@ -1,3 +1,4 @@
+import { ScormLaunchStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 
@@ -93,7 +94,7 @@ export async function updateScormLaunch(
   launchId: string,
   userId: string,
   data: {
-    status?: string;
+    status?: ScormLaunchStatus;
     suspendData?: string;
     score?: number;
     maxScore?: number;
@@ -112,7 +113,7 @@ export async function updateScormLaunch(
   await getPrisma().scormLaunch.update({
     where: { id: launchId },
     data: {
-      ...(data.status !== undefined ? { status: data.status as any } : {}),
+      ...(data.status !== undefined ? { status: data.status } : {}),
       ...(data.suspendData !== undefined ? { suspendData: data.suspendData } : {}),
       ...(data.score !== undefined ? { score: data.score } : {}),
       ...(data.maxScore !== undefined ? { maxScore: data.maxScore } : {}),
