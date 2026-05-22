@@ -103,3 +103,35 @@
 | 6.5 | `auth/service.ts` — атомарный `delete` вместо `findUnique`+`delete` | ✅ |
 | 6.6 | `outbox/service.ts` — rescue cutoff по `updated_at` с `updated_at = NOW()` при dequeue | ✅ |
 | 6.7 | `certificates/service.ts` — добавлен `findFirst` check перед create | ✅ |
+
+---
+
+## Задача 7: Аудит документации и устранение несостыковок
+
+**Статус:** ✅ Завершено (2026-05-22)
+
+| Шаг | Действие | Статус |
+|-----|----------|--------|
+| 7.1 | Создать `/admin/invites` — страница-заглушка (редирект `/admin/payments` в 404) | ✅ |
+| 7.2 | Создать `_prisma_migrations` на Supabase, внести все 15 resolved миграций | ✅ |
+| 7.3 | Обновить `full-project-audit.md` — тесты 368→385, lint `broken`→`done`, `/admin/invites` `missing`→`done` | ✅ |
+| 7.4 | Обновить `vercel-supabase-deployment.md` — 100MB→20MB, PostgreSQL 15→17 | ✅ |
+| 7.5 | Обновить `platform-functional-overview.md` — `/student/modules/[moduleId]` помечен как удалённый | ✅ |
+| 7.6 | Чат: `max-w-5xl mx-auto` для стандартной ширины окна чата | ✅ |
+
+---
+
+## Задача 8: Автосжатие изображений при загрузке
+
+**Статус:** ✅ Завершено (2026-05-22)
+
+| Шаг | Действие | Статус |
+|-----|----------|--------|
+| 8.1 | Создать `lib/client-image-compress.ts` — Canvas-based сжатие (1920px max, JPEG 80%, пропуск GIF/<50KB) | ✅ |
+| 8.2 | Создать `lib/upload-with-compress.ts` — обёртки `uploadMedia()` и `uploadChatFile()` | ✅ |
+| 8.3 | Интегрировать в `chat-panel.tsx` — чат | ✅ |
+| 8.4 | Интегрировать в `assignment-block.tsx` — загрузка к заданию | ✅ |
+| 8.5 | Интегрировать в `assignment-view.tsx` — студент | ✅ |
+| 8.6 | Интегрировать в `course-builder-shell.tsx` — обложка курса | ✅ |
+| 8.7 | Интегрировать в `lesson-block-editor.tsx` — файлы уроков | ✅ |
+| 8.8 | Написать тесты (11 шт.) — Node.js mocks для Canvas API | ✅ |

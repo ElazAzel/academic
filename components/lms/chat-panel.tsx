@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/icon";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendMessageAction, getConversation, markAsRead } from "@/server/actions/chat";
 import { toast } from "sonner";
+import { compressImage, formatBytes } from "@/lib/client-image-compress";
 
 const COMMON_EMOJIS = ["😊", "👍", "❤️", "🎉", "🔥", "👏", "😄", "🚀", "⭐", "🙏", "💪", "😎", "✨"];
 const MAX_CHAT_TEXT_LENGTH = 10_000;
@@ -230,18 +231,36 @@ export function ChatPanel({
   }
 
   async function handleFileUpload(file: File) {
-    if (file.size > 15 * 1024 * 1024) {
-      toast.error("Файл слишком большой. Максимум 15MB");
-      return;
-    }
-    if (!["image/png", "image/jpeg", "image/gif", "image/webp", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"].includes(file.type)) {
+    const ALLOWED = new Set([
+      "image/png", "image/jpeg", "image/gif", "image/webp",
+      "application/pdf", "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain",
+    ]);
+    if (!ALLOWED.has(file.type)) {
       toast.error("Формат не поддерживается. Разрешены: PNG, JPEG, GIF, WebP, PDF, DOC, DOCX, TXT");
       return;
     }
+
     setUploading(true);
     try {
+      // Compress image before upload
+      const result = await compressImage(file);
+
+      if (result.finalSize > 15 * 1024 * 1024) {
+        toast.error(`Файл слишком большой после сжатия. Максимум 15MB (${formatBytes(result.finalSize)})`);
+        return;
+      }
+
+      if (result.compressed) {
+        const saved = result.originalSize - result.finalSize;
+        const pct = Math.round((saved / result.originalSize) * 100);
+        console.log(
+          `[Compress] ${file.name}: ${formatBytes(result.originalSize)} → ${formatBytes(result.finalSize)} (−${pct}%)`,
+        );
+      }
+
       const body = new FormData();
-      body.append("file", file);
+      body.append("file", result.file);
       const res = await fetch("/api/v1/chat/upload", { method: "POST", body });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -250,7 +269,7 @@ export function ChatPanel({
       const { publicUrl, attachmentType } = await res.json();
       const formData = new FormData();
       formData.set("attachmentUrl", publicUrl);
-      formData.set("attachmentType", attachmentType ?? file.type);
+      formData.set("attachmentType", attachmentType ?? result.file.type);
       if (messageLessonId) formData.set("lessonId", messageLessonId);
       formData.set("receiverId", receiverId);
       sendMutation.mutate(formData);

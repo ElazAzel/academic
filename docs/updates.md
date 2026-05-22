@@ -2,6 +2,34 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-22 — Автосжатие изображений в чатах и загрузках
+
+- **Создана утилита `lib/client-image-compress.ts`** — сжатие JPEG/PNG/WebP на клиенте перед загрузкой:
+  - Ресайз до макс. 1920px по длинной стороне
+  - Конвертация в JPEG 80% качества
+  - Пропуск GIF (анимация), PDF, DOC и файлов <50KB
+  - Если сжатый файл не меньше оригинала — возвращается оригинал
+  - `formatBytes()` для читаемых сообщений о размере
+- **Создана обёртка `lib/upload-with-compress.ts`** — `uploadMedia()` для presigned-URL потока, `uploadChatFile()` для чата
+- **Интегрировано во все точки загрузки:**
+  - `components/lms/chat-panel.tsx` — чат (со счётчиком сэкономленного места)
+  - `components/lms/assignment-block.tsx` — загрузка файлов к заданию
+  - `app/student/assignments/[assignmentId]/assignment-view.tsx` — загрузка файлов студентом
+  - `components/lms/course-builder-shell.tsx` — загрузка обложки курса
+  - `components/lms/lesson-block-editor.tsx` — загрузка файлов в урок
+- **Попутно исправлен баг**: `lesson-block-editor.tsx` отправлял FormData в API, ожидающий JSON — теперь используется правильный presigned-URL флоу
+- **11 новых тестов** на утилиту сжатия (Node.js mocks для Canvas API)
+- **Typecheck**: ✅ | **Tests**: 396/396 ✅ (64/64 files)
+
+## 2026-05-22 — Аудит документации и исправление несостыковок
+
+- **Создана страница `/admin/invites`** — функциональная заглушка с карточками-ссылками на Users, Enrollments, Cohorts + CLI provision guide. Исправляет редирект `/admin/payments` → 404.
+- **Создана таблица `_prisma_migrations` на Supabase** — добавлены записи для всех 15 resolved миграций. `prisma migrate deploy` больше не упадёт на fresh deploy.
+- **Обновлён `full-project-audit.md`** — тесты 368→385, lint `broken`→`done`, `/admin/invites` `missing`→`done`, `/student/modules/[moduleId]` отмечен как намеренно удалённый.
+- **Обновлён `docs/archive/vercel-supabase-deployment.md`** — лимит загрузки 100MB→20MB (согласован с кодом), PostgreSQL 15→17.
+- **Обновлён `platform-functional-overview.md`** — `/student/modules/[moduleId]` отмечен как ❌ удалён (объединён со страницей курса).
+- **Чат: ограничена ширина** — `max-w-5xl mx-auto` для чата куратора/инструктора.
+
 ## 2026-05-22 — Исправлено 85+ багов: forgot-password, schema sync, quiz grading, rate limiter, CSRF, race conditions, outbox rescue, memorySet bug
 
 - **Задача 1 — Отключение самосброса пароля**: форма `/forgot-password` показывает сообщение «напишите на admin@aistrategic.kz»; API `forgot-password` и `reset-password` → 410 Gone; `/reset-password` редиректит на `/forgot-password`

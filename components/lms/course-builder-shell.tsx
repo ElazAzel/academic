@@ -13,6 +13,7 @@ import { ModuleEditor } from "@/components/lms/module-editor";
 import { LessonEditor } from "@/components/lms/lesson-editor";
 import { CourseBuilderPreview } from "@/components/lms/course-builder-preview";
 import { useBeforeUnload } from "@/components/lms/use-before-unload";
+import { uploadMedia } from "@/lib/upload-with-compress";
 import { getCourseBuilderPublishChecks, isCourseBuilderReadyToPublish } from "@/lib/course-builder-readiness";
 import type {
   AssignmentSummary,
@@ -483,19 +484,17 @@ export function CourseBuilderShell({
                           accept="image/jpeg,image/png,image/webp"
                           className="hidden"
                           onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const formData = new FormData();
-                            formData.append("file", file);
-                            formData.append("prefix", "covers");
-                            const res = await fetch("/api/v1/media/uploads", { method: "POST", body: formData });
-                            if (res.ok) {
-                              const result = await res.json();
-                              const data = result.data ?? result;
-                              setDetail((current) => ({ ...current, coverUrl: data.url ?? data.fileUrl }));
-                              setDirty(true);
-                            }
-                          }}
+                             const file = e.target.files?.[0];
+                             if (!file) return;
+                             try {
+                               const result = await uploadMedia(file, "covers");
+                               setDetail((current) => ({ ...current, coverUrl: result.publicUrl }));
+                               setDirty(true);
+                               toast.success("Обложка загружена");
+                             } catch {
+                               toast.error("Ошибка при загрузке обложки");
+                             }
+                           }}
                         />
                       </div>
                     </div>

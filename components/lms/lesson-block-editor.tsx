@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { RichTextEditor } from "@/components/lms/rich-text-editor";
 import type { AssignmentSummary, ContentBlock, ContentBlockType, QuizSummary } from "@/types/domain";
+import { uploadMedia } from "@/lib/upload-with-compress";
 
 /** Block editor uses generic data shape for mutable editing */
 interface BlockItem {
@@ -225,38 +226,29 @@ export function LessonBlockEditor({
         onChange={async (e) => {
           const file = e.target.files?.[0];
           if (!file) return;
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("prefix", "course-builder");
           try {
-            const res = await fetch("/api/v1/media/uploads", {
-              method: "POST",
-              body: formData,
+            const result = await uploadMedia(file, "course-builder");
+            // Find the first file block that doesn't have a url and prefill it
+            setBlocks((prev) => {
+              const fileBlockIndex = prev.findIndex((b) => b.type === "file" && !b.data.url);
+              if (fileBlockIndex === -1) return prev;
+              const next = [...prev];
+              next[fileBlockIndex] = {
+                ...next[fileBlockIndex],
+                data: {
+                  ...next[fileBlockIndex].data,
+                  url: result.publicUrl,
+                  filename: result.fileName,
+                },
+              };
+              return next;
             });
-            if (res.ok) {
-              const result = await res.json();
-              const data = result.data ?? result;
-              // Find the first file block that doesn't have a url and prefill it
-              setBlocks((prev) => {
-                const fileBlockIndex = prev.findIndex((b) => b.type === "file" && !b.data.url);
-                if (fileBlockIndex === -1) return prev;
-                const next = [...prev];
-                next[fileBlockIndex] = {
-                  ...next[fileBlockIndex],
-                  data: {
-                    ...next[fileBlockIndex].data,
-                    url: data.url ?? data.fileUrl,
-                    filename: file.name,
-                  },
-                };
-                return next;
-              });
-              toast.success("Файл загружен");
-            } else {
-              toast.error("Ошибка загрузки");
-            }
+            toast.success("Файл загружен");
           } catch {
-            toast.error("Сетевая ошибка");
+            toast.error("Ошибка загрузки");
+          } finally {
+            // Reset so re-selecting the same file triggers onChange
+            if (fileInputRef.current) fileInputRef.current.value = "";
           }
         }}
       />
