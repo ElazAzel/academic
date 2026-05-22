@@ -33,10 +33,8 @@ export const rolePermissions: Record<RoleKey, Permission[]> = {
 };
 
 export function hasPermission(roles: RoleKey[], permission: Permission) {
-  // По умолчанию любой аутентифицированный пользователь имеет права студента
-  if (roles.length === 0) {
-    return ["courses:read", "progress:write"].includes(permission);
-  }
+  // Без ролей — нет прав (защита от неполных JWTs)
+  if (roles.length === 0) return false;
   return roles.some((role) => rolePermissions[role]?.includes(permission));
 }
 

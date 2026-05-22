@@ -40,18 +40,19 @@ export async function requestPasswordReset(emailInput: string) {
 }
 
 export async function resetPassword(token: string, password: string) {
-  const verification = await prisma.verificationToken.findUnique({ where: { token } });
-  if (!verification || verification.expires < new Date() || !verification.identifier.startsWith("reset:")) {
+  // Атомарный delete — исключает TOCTOU: если два запроса с одинаковым токеном,
+  // второй получит null и корректно отклонит сброс
+  const tokenRecord = await prisma.verificationToken.delete({ where: { token } }).catch(() => null);
+  if (!tokenRecord || tokenRecord.expires < new Date() || !tokenRecord.identifier.startsWith("reset:")) {
     throw new ApiError("bad_request", "Токен сброса недействителен", 400);
   }
-  const email = verification.identifier.replace("reset:", "");
+  const email = tokenRecord.identifier.replace("reset:", "");
   const passwordHash = await hashPassword(password);
   const user = await prisma.user.update({
     where: { email },
     data: { passwordHash },
     select: { id: true, email: true }
   });
-  await prisma.verificationToken.delete({ where: { token } });
   await logAudit({ actorId: user.id, action: "auth.password_reset_completed", entity: "user", entityId: user.id });
   await createNotification({
     userId: user.id,
@@ -64,16 +65,16 @@ export async function resetPassword(token: string, password: string) {
 }
 
 export async function verifyEmail(token: string) {
-  const verification = await prisma.verificationToken.findUnique({ where: { token } });
-  if (!verification || verification.expires < new Date() || verification.identifier.startsWith("reset:")) {
+  // Атомарный delete — исключает TOCTOU
+  const tokenRecord = await prisma.verificationToken.delete({ where: { token } }).catch(() => null);
+  if (!tokenRecord || tokenRecord.expires < new Date() || tokenRecord.identifier.startsWith("reset:")) {
     throw new ApiError("bad_request", "Токен подтверждения недействителен", 400);
   }
   const user = await prisma.user.update({
-    where: { email: verification.identifier },
+    where: { email: tokenRecord.identifier },
     data: { emailVerified: new Date() },
     select: { id: true, email: true }
   });
-  await prisma.verificationToken.delete({ where: { token } });
   await logAudit({ actorId: user.id, action: "auth.email_verified", entity: "user", entityId: user.id });
   return { verified: true };
 }

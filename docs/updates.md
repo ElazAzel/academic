@@ -2,6 +2,42 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-22 — Исправлено 85+ багов: forgot-password, schema sync, quiz grading, rate limiter, CSRF, race conditions, outbox rescue, memorySet bug
+
+- **Задача 1 — Отключение самосброса пароля**: форма `/forgot-password` показывает сообщение «напишите на admin@aistrategic.kz»; API `forgot-password` и `reset-password` → 410 Gone; `/reset-password` редиректит на `/forgot-password`
+- **Задача 2 — Prisma schema ↔ migration (12 critical)**: создана fix-миграция `20260522000003_fix_schema_mismatches`; все 14 применены; `prisma migrate status` → Database schema is up to date!
+- **Задача 3 — Quiz grading logic**: `gradeObjectiveQuiz` исправлен — `resolveOptionLabel` применяется к обеим сторонам сравнения; добавлено 8 тестов на object-options
+- **Задача 4 — Rate limiter fail-open → fail-closed**: catch block → `{ success: false }`; атомарный INCR (`cacheIncr` с Redis INCR + memory fallback); ключ per-IP в `proxy.ts`
+- **Задача 5 — CSRF + submissions leak**: scheme check; CSRF на все API кроме webhooks/cron; `listAssignments` фильтрует submissions по userId для студентов; `hasPermission` с пустыми ролями → `false`
+- **Задача 6 — Race conditions (7 шт.)**: FOR UPDATE на enrollment в progress/quizzes/assignments; sequential unlock внутри tx; атомарный delete для password reset; duplicate check в issueCertificate; **outbox rescue фикс** — `updated_at` колонка + `SET updated_at = NOW()` при dequeue + rescue по `updated_at`
+- **cacheIncr memoryStore → memorySet bug**: исправлен вызов `memoryStore.set(key, 2, ttlSeconds)` на `memorySet(key, 2, ttlSeconds)` — предотвращает падение in-memory fallback rate limit
+- **Typecheck**: ✅ | **Tests**: 385/385 ✅ (63/63 files)
+
+## 2026-05-22 — Исправлены 12 schema–migration mismatches
+
+- **Создана миграция** `20260522000003_fix_schema_mismatches` — ALTER TABLE для всех 12 расхождений между Prisma-схемой и миграциями.
+- **lesson_progress**: ADD `started_at`, `last_seen_at` (код progress/service.ts писал в эти колонки)
+- **assignment_submissions**: RENAME `created_at` → `submitted_at`, DROP `updated_at` (код использовал submittedAt в 38 местах)
+- **activity_logs**: RENAME `entity`→`resource`, `entity_id`→`resource_id`, ADD `ip_address`, `session_id`, FIX FK → CASCADE
+- **risk_flags**: RENAME `student_id`→`user_id`, ADD `cohort_id`, FIX FK→CASCADE
+- **reports**: ADD `project_id`, `course_id`, `url`, DROP `created_by_id`, ALTER defaults
+- **admin_popups**: ADD `target_user_ids` (код popups/service.ts читал/писал это поле)
+- **messages**: ADD `reply_to_id` + index (код chat.ts использовал replyToId)
+- **certificates**: ADD UNIQUE INDEX `(user_id, course_id)` — предотвращает race condition
+- **course.finalAssignmentId**: ADD FK constraint
+- **quizzes.maxAttempts** DEFAULT 3, **reports.status** DEFAULT 'ready'
+- **Все миграции resolved**: `prisma migrate status` → Database schema is up to date!
+- **Typecheck**: ✅ | Tests: 377/377 ✅
+
+## 2026-05-22 — Отключён самосброс пароля
+
+- **Самостоятельный сброс пароля отключён**: `/forgot-password` больше не показывает форму с email, а выводит сообщение с просьбой написать на admin@aistrategic.kz с указанием ФИО.
+- **API `POST /api/v1/auth/forgot-password`** — возвращает 410 Gone.
+- **API `POST /api/v1/auth/reset-password`** — возвращает 410 Gone.
+- **`/reset-password`** — перенаправляет на `/forgot-password`.
+- **Тесты**: e2e smoke обновлены — проверяют наличие admin@aistrategic.kz и редирект.
+- **Typecheck**: ✅ | Tests: 377/377 ✅
+
 ## 2026-05-22 — Chat attachments migrated from MinIO/S3 to Supabase Storage
 
 - **MinIO/S3 → Supabase Storage for chat uploads**:

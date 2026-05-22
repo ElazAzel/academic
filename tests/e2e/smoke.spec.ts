@@ -13,9 +13,16 @@ test.describe("public pages", () => {
     await expect(page.getByLabel("Email")).toBeVisible();
   });
 
-  test("forgot password page loads", async ({ page }) => {
+  test("forgot password page shows contact message", async ({ page }) => {
     await page.goto("/forgot-password");
     await expect(page.getByRole("heading", { name: "Восстановление" })).toBeVisible();
+    await expect(page.getByText("admin@aistrategic.kz")).toBeVisible();
+  });
+
+  test("reset password page redirects to forgot password", async ({ page }) => {
+    await page.goto("/reset-password");
+    await expect(page).toHaveURL(/\/forgot-password/);
+    await expect(page.getByText("admin@aistrategic.kz")).toBeVisible();
   });
 
   test("privacy page loads", async ({ page }) => {

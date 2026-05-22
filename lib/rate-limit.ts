@@ -9,7 +9,7 @@
  *   if (!success) return new Response("Too Many Requests", { status: 429 });
  */
 
-import { cacheGet, cacheSet } from "@/lib/cache";
+import { cacheIncr } from "@/lib/cache";
 
 interface RateLimitResult {
   success: boolean;
@@ -43,24 +43,23 @@ function memoryRateLimit(key: string, limit: number, windowSeconds: number): Rat
   return { success: true, remaining: limit - entry.count, reset: entry.resetAt };
 }
 
-// ── Vercel KV sliding window ─────────────────────────────────────────
+// ── Vercel KV sliding window (атомарный INCR) ─────────────────────────
 
 async function kvRateLimit(key: string, limit: number, windowSeconds: number): Promise<RateLimitResult> {
   const now = Date.now();
   const windowKey = `ratelimit:${key}:${Math.floor(now / (windowSeconds * 1000))}`;
 
-  const current = await cacheGet<number>(windowKey);
-  if (current === null) {
-    await cacheSet(windowKey, 1, windowSeconds);
+  const count = await cacheIncr(windowKey, windowSeconds);
+  if (count === 1) {
+    // Первый запрос в окне — INCR уже создал ключ с TTL через expire
     return { success: true, remaining: limit - 1, reset: now + windowSeconds * 1000 };
   }
 
-  if (current >= limit) {
+  if (count > limit) {
     return { success: false, remaining: 0, reset: now + windowSeconds * 1000 };
   }
 
-  await cacheSet(windowKey, current + 1, windowSeconds);
-  return { success: true, remaining: limit - current - 1, reset: now + windowSeconds * 1000 };
+  return { success: true, remaining: limit - count, reset: now + windowSeconds * 1000 };
 }
 
 // ── Public API ───────────────────────────────────────────────────────
@@ -76,7 +75,7 @@ export async function rateLimit(
     }
     return memoryRateLimit(identifier, limit, windowSeconds);
   } catch {
-    // On error, tight rate limit as fallback (fail-restricted)
-    return { success: true, remaining: 1, reset: Date.now() + 60000 };
+    // Fail-closed: если rate limiter недоступен, блокируем запрос
+    return { success: false, remaining: 0, reset: Date.now() + 60000 };
   }
 }

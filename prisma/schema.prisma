@@ -12,6 +12,7 @@ model OutboxEvent {
   payload   Json     @default("{}")
   status    String   @default("pending")
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   sentAt    DateTime? @map("sent_at")
   error     String?  @db.Text
 
