@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { LoginForm } from "@/components/auth/login-form";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
 
@@ -40,11 +41,11 @@ export function LoginScreen({ oauthProviders }: { oauthProviders: OAuthProviderF
 
         {/* Footer */}
         <footer className="mt-lg flex flex-wrap justify-center gap-x-md gap-y-xs text-body-sm font-body-sm text-m3-on-surface-variant/80">
-          <a href="#" className="transition-colors hover:text-m3-primary hover:underline">Политика конфиденциальности</a>
+          <Link href="/privacy" className="transition-colors hover:text-m3-primary hover:underline">Политика конфиденциальности</Link>
           <span className="hidden text-m3-outline-variant md:inline">•</span>
-          <a href="#" className="transition-colors hover:text-m3-primary hover:underline">Условия использования</a>
+          <Link href="/terms" className="transition-colors hover:text-m3-primary hover:underline">Условия использования</Link>
           <span className="hidden text-m3-outline-variant md:inline">•</span>
-          <a href="#" className="transition-colors hover:text-m3-primary hover:underline">Файлы Cookie</a>
+          <Link href="/docs/cookie-notice" className="transition-colors hover:text-m3-primary hover:underline">Файлы Cookie</Link>
         </footer>
       </div>
     </main>

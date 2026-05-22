@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { existsSync } from "node:fs";
 import { hasPermission } from "@/lib/auth/rbac";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { verifyCsrf } from "@/lib/http";
@@ -154,5 +155,15 @@ describe("Public asset middleware exemptions", () => {
     expect(isPublicRoute("/sw.js")).toBe(true);
     expect(isPublicRoute("/manifest.json")).toBe(true);
     expect(isPublicRoute("/icon.svg")).toBe(true);
+  });
+
+  it("keeps the consent route public", () => {
+    expect(isPublicRoute("/consent")).toBe(true);
+  });
+});
+
+describe("Demo seed surface", () => {
+  it("does not expose certificate issuance as an app route", () => {
+    expect(existsSync("app/api/seed-certificate/route.ts")).toBe(false);
   });
 });

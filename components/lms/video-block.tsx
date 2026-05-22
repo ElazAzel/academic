@@ -213,7 +213,6 @@ export function VideoBlock({ video, videoUrl, title, duration, onProgress, showW
     video?.provider && video?.providerVideoId ? video : null;
 
   const isYouTube = resolvedVideo?.provider === "youtube";
-  const isVimeo = resolvedVideo?.provider === "vimeo";
   const youTubeVideoId = isYouTube ? resolvedVideo!.providerVideoId : null;
 
   const useIFrameAPI = isYouTube && !!onProgress;

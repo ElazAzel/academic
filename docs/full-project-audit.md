@@ -12,12 +12,12 @@ The repository contains a broad modular-monolith implementation for the closed a
 
 That is not the same as a fully working platform. The audit found:
 
-- the zero-warning lint gate is broken;
+- the zero-warning lint gate was broken at audit start and was fixed in the P0 follow-up on 2026-05-22;
 - the safe local seeded scenario environment is blocked on this machine;
 - active documentation disagrees about readiness;
 - active audit and work-plan documents were missing before this audit;
-- route truth drifts from functional truth for `/consent`, `/student/modules/[moduleId]`, and `/admin/invites`;
-- a demo certificate seed route still exists in the application surface;
+- route truth still drifts from functional truth for `/student/modules/[moduleId]` and `/admin/invites`; `/consent` was restored in the P0 follow-up;
+- a demo certificate seed route existed in the application surface at audit start and was removed in the P0 follow-up;
 - several server pages and API handlers need boundary/access/validation review before they can be claimed production-hardened;
 - end-to-end role scenarios, file privacy, notification email opt-in, exports, real certificate issuance, revoke visibility, backup/restore, and external Supabase policy state were not proven by this local audit.
 
@@ -53,7 +53,7 @@ Evidence levels:
 
 | Check | Result | Evidence |
 |---|---|---|
-| `npm run lint -- --max-warnings=0` | `broken` | ESLint fails on `server/modules/scorm/service.ts` explicit `any`; warnings remain in instructor attendance UI, LMS video block, and attendance action. |
+| `npm run lint -- --max-warnings=0` | `done` | Initial audit run failed on SCORM/attendance/video lint debt. P0 follow-up fixed it and reran the zero-warning gate successfully. |
 | `npx tsc --noEmit --incremental false` | `done` | TypeScript check passed. |
 | `npm run test` | `done` | 62 Vitest files and 368 tests passed. |
 | `npx prisma validate` | `done` | Prisma schema validation passed. |
@@ -76,8 +76,8 @@ The Browser smoke used the local dev server only for non-mutating public and una
 | `/403` | `done` | Restricted-access page renders. |
 | `/admin`, `/student`, `/customer-observer` unauthenticated | `done` | Browser redirects to login with callback URL. |
 | `/certificates/verify/not-a-real-code` | `partial` | Invalid public verification state renders and states that email/internal data is not exposed; valid and revoked certificate states were not seeded and checked. |
-| `/consent` | `missing` | Functional truth lists it as public, but local request is intercepted to login and route inventory did not find a page. |
-| Login footer legal links | `broken` | Browser inspection found footer hrefs are `#` instead of legal routes. |
+| `/consent` | `done` | Initial audit found it missing. P0 follow-up added the public route and Browser confirmed it renders without login redirect. |
+| Login footer legal links | `done` | Initial audit found `#` hrefs. P0 follow-up wired privacy, terms and cookie routes and Browser confirmed them. |
 
 ## Source Truth and Drift
 
@@ -116,7 +116,7 @@ Documents inspected:
 | `/verify-email` | Page exists and form renders. | `partial` | Token flow not run. |
 | `/certificates/verify/[verificationCode]` | Page exists; invalid code state checked. | `partial` | Valid/revoked scenarios still require seeded data. |
 | `/privacy`, `/terms` | Pages exist and render. | `done` | Login footer links still need wiring. |
-| `/consent` | Page was not found in page inventory; Browser redirected to login. | `missing` | Decide whether to implement or remove from route truth. |
+| `/consent` | Public route added after the initial audit and Browser smoke confirmed it. | `done` | Consent acceptance remains authenticated through the existing modal/API. |
 | `/403` | Page exists and renders. | `done` | Used for inaccessible sections. |
 
 ### Role route truth
@@ -152,7 +152,7 @@ Documents inspected:
 |---|---|---|---|---|
 | Public entry is closed and Russian-first. | `/`, `/login`, `/register` | Core academy positioning is clear. | `done` | Preserve in all route work. |
 | Login footer legal links are inert. | `/login`, public | A user cannot navigate from login footer to legal content even though pages exist. | `broken` | Wire legal footer links and add smoke coverage. |
-| Functional truth lists `/consent`, but route inventory and Browser do not confirm a public consent page. | public | Legal/access UX and docs disagree. | `missing` | Decide implement/remove compatibility route. |
+| Public consent route and login legal links are wired. | public | Legal entry points no longer break at login; consent acceptance itself remains inside authenticated flow. | `done` | Keep legal route smoke in public checks. |
 | Student route inventory has course, lesson, quizzes, assignments and certificates, but unified flow was not executed with seeded data. | student | A rendered route cannot prove "continue learning", embedded assessment, question, completion, or certificate behavior. | `blocked` | Run seeded student flow and close gaps before `done`. |
 | Builder and instructor compatibility routes coexist. | instructor/admin | Product direction is clear, but authoring UX can fragment if readiness/publish checks stay split. | `partial` | Confirm unified builder acceptance criteria and preserve compatibility redirects. |
 | Curator and super-curator route families are broad. | curator/super-curator | Operational workspaces exist in the tree, but queue, scope and resolution behavior remain unproven here. | `partial` | Role smoke and targeted access tests. |
@@ -172,7 +172,7 @@ Documents inspected:
 
 | Priority | Surface | Finding | Status | Evidence and required proof |
 |---|---|---|---|---|
-| P0 | Demo mutation route | `/api/seed-certificate` remains in the app route tree and mutates enrollment/progress/certificate data behind a secret path. Source comment says it should be deleted after use. | `unsafe` | Remove from release surface or replace with a local-only seed command; add route test proving production surface is closed. |
+| P0 | Demo mutation route | `/api/seed-certificate` existed at audit start and mutated demo enrollment/progress/certificate data behind a secret path. | `done` | The app route was removed; local demo issuance remains guarded behind `npm run certificate:issue-demo`; a unit contract and build route inventory confirm the HTTP surface is gone. |
 | P0 | Scenario proof | Full role RBAC, ownership, guessed-ID, file, report/export and observer negative-path checks were not run locally. | `blocked` | Need disposable seeded DB and role e2e/access suite. |
 | P1 | Auth/public boundaries | Proxy/middleware enforces unauth redirect and Browser proved dashboard redirects. | `partial` | Verify redirect priority, 2FA, password reset, email verification, session invalidation and rate-limit behavior with tests. |
 | P1 | Course-builder mutations | Some builder handlers only show `requireUser()` at route entry. | `partial` | Prove permission, instructor-course scope, Zod input validation and audit trail at service/action boundary. |
@@ -204,7 +204,7 @@ Official Supabase guidance checked during this audit:
 
 | Area | Evidence | Status | Finding |
 |---|---|---|---|
-| Local bootstrap | `docker-compose.yml`, scripts and local command attempts. | `broken` | Docker is unavailable here and `scripts/start-db.ps1` depends on an absent hardcoded PostgreSQL path. |
+| Local bootstrap | `docker-compose.yml`, guarded DB scripts and local command attempts. | `partial` | Docker-based bootstrap scripts now run DB setup inside the app container and DB mutation scripts reject remote hosts by default. Docker is still unavailable on this audit machine, so the full compose run remains blocked here. |
 | Environment contract | `.env.example`, config reads and local `.env` inspection. | `partial` | Storage, SMTP, push, Redis, Sentry, cron and DB contracts exist, but local disposable defaults are not safe/proven on this machine. |
 | CI | `.github/workflows/ci.yml`. | `partial` | CI defines PostgreSQL, schema push/seed, typecheck/lint/test/e2e/build flow; current local lint failure must be reconciled with CI claims. |
 | Deployment configs | Vercel config and Kubernetes manifests. | `partial` | Deployment shapes exist; real deploy verification, secret injection and rollback were not run. |
@@ -218,7 +218,7 @@ Official Supabase guidance checked during this audit:
 | Drift | Status | Correction direction |
 |---|---|---|
 | Active docs disagree on readiness status. | `partial` | Make this audit and work plan the current finishing baseline; update status docs after each validated package. |
-| Route truth lists `/consent` without confirmed implementation. | `missing` | Implement a public page/redirect policy or remove from active product route truth with reason. |
+| Route truth listed `/consent` without confirmed implementation at audit start. | `done` | Public route and guard were restored in the P0 follow-up. |
 | Route truth lists `/student/modules/[moduleId]` but route inventory lacks it. | `missing` | Decide compatibility redirect, dedicated page, or documented removal. |
 | Route truth lists `/admin/invites` but route inventory lacks it. | `missing` | Decide invite UX route ownership and update access docs. |
 | Extra role/chat/popups/glossary/attendance/offline/docs pages are not consistently reflected in product truth. | `partial` | Classify as core, compatibility, internal, or deferred. |
@@ -228,10 +228,10 @@ Official Supabase guidance checked during this audit:
 
 | Gate | Current status | Exit condition |
 |---|---|---|
-| Zero-warning lint | `broken` | `npm run lint -- --max-warnings=0` passes. |
+| Zero-warning lint | `done` | `npm run lint -- --max-warnings=0` passes. |
 | Type/build/unit/schema baseline | `done` | Keep `typecheck`, `test`, Prisma validate/generate and build green. |
-| Disposable local scenario environment | `broken` | One documented local bootstrap starts dependencies, migrates/seeds demo data safely, and never seeds an external non-local DB by accident. |
-| Security cleanup of seed surfaces | `unsafe` | Release surface contains no demo mutation route that can issue progress/certificates from HTTP. |
+| Disposable local scenario environment | `partial` | Guarded Docker bootstrap is documented and blocks the current remote `.env` for seed; verify a full compose bootstrap when Docker is available. |
+| Security cleanup of seed surfaces | `done` | Release surface contains no demo mutation route that can issue progress/certificates from HTTP. |
 | Six-role workflow smoke | `blocked` | Seeded Browser/e2e evidence exists for required public, student, builder, curator, super-curator, admin and observer paths. |
 | Access/privacy negative paths | `blocked` | Tests prove role scope, ownership, guessed-ID denial, observer read-only behavior, media/report/certificate privacy. |
 | Documentation route/status truth | `partial` | Active docs agree with route inventory and validated workflow status. |

@@ -130,10 +130,10 @@
 # Установка
 npm ci
 
-# База данных (Supabase)
-# Скопируйте .env.example → .env и укажите DATABASE_URL
-npx prisma db push
-npx prisma db seed
+# Локальная база данных
+# Скопируйте .env.example → .env, затем выполните Docker bootstrap
+powershell -ExecutionPolicy Bypass -File scripts/bootstrap.ps1
+# или: sh scripts/bootstrap.sh
 
 # Разработка
 npm run dev
@@ -145,6 +145,8 @@ npm run test         # Unit-тесты
 npm run test:e2e     # E2E (требуется база)
 npm run build        # Production сборка
 ```
+
+`db:push`, `db:seed` и `certificate:issue-demo` отказываются мутировать remote database host по умолчанию. Для Docker local bootstrap используйте `scripts/bootstrap.ps1` или `scripts/bootstrap.sh`; `ALLOW_REMOTE_DATABASE_MUTATION=true` нужен только для намеренной remote-мутации.
 
 ### Пользователи по умолчанию (seed)
 
