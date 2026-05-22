@@ -1,4 +1,5 @@
-import { getUserXp, getLevel } from "@/server/actions/xp";
+import { getUserXp } from "@/server/actions/xp";
+import { getLevel } from "@/lib/xp-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
