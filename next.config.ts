@@ -14,12 +14,12 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion", "date-fns", "recharts", "@radix-ui/react-*"],
-    outputFileTracingIncludes: {
-      "/api/v1/certificates/**/*": [
-        "public/assets/fonts/**/*",
-        "public/assets/certificates/**/*"
-      ]
-    }
+  },
+  outputFileTracingIncludes: {
+    "/api/v1/certificates/**/*": [
+      "public/assets/fonts/**/*",
+      "public/assets/certificates/**/*"
+    ]
   },
   async headers() {
     return [

@@ -215,6 +215,7 @@ export async function listCertificates(filter?: { userId?: string; userIds?: str
       number: true,
       userId: true,
       courseId: true,
+      verificationCode: true,
       verificationUrl: true,
       issuedAt: true,
       revokedAt: true,
