@@ -462,12 +462,16 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
               <div 
                 ref={previewContainerRef}
                 className="w-full max-w-[842px] aspect-[842/595] border relative bg-m3-surface-container-low shadow-sm rounded-xl overflow-hidden select-none"
-                style={{ 
-                  backgroundImage: config.backgroundUrl ? `url(${config.backgroundUrl})` : "none",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center"
-                }}
               >
+                {/* Visual Background Image Layer */}
+                {config.backgroundUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img 
+                    src={config.backgroundUrl} 
+                    alt="Фон сертификата" 
+                    className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none"
+                  />
+                )}
                 {/* Visual Grid Lines overlay */}
                 {showGrid && (
                   <div 

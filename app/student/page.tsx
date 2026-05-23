@@ -63,6 +63,10 @@ async function withAchievements() {
   return (
    <div className="space-y-6">
 
+   {continueLearning ? (
+    <ContinueLearningCard data={continueLearning}/>
+   ) : null}
+
     <Suspense fallback={<div className="h-20 animate-pulse rounded-xl bg-muted" />}>
      <XpDisplay userId={data.userId} />
     </Suspense>
@@ -73,10 +77,6 @@ async function withAchievements() {
       coursesProgress={coursesProgress.map(c => ({ percent: c.percent, title: c.courseTitle }))}
       questionsCount={questions.length}
     />
-
-   {continueLearning ? (
-    <ContinueLearningCard data={continueLearning}/>
-   ) : null}
 
    {metrics.length > 0 && (
     <MetricGrid metrics={metrics}/>
