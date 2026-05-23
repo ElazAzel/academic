@@ -62,33 +62,21 @@ async function withAchievements() {
 
   return (
    <div className="space-y-6">
+
    {continueLearning ? (
     <ContinueLearningCard data={continueLearning}/>
-   ) : (
-    <EmptyState
-     icon={BookOpenCheck}
-     title="Продолжить обучение"
-     description="Активного следующего урока пока нет. Откройте назначенные курсы и выберите доступный урок."
-     action={
-      <Button asChild>
-       <Link href="/student/my-courses">Открыть мои курсы</Link>
-      </Button>
-     }
+   ) : null}
+
+    <Suspense fallback={<div className="h-20 animate-pulse rounded-xl bg-muted" />}>
+     <XpDisplay userId={data.userId} />
+    </Suspense>
+
+    <StudentAchievements 
+      xp={xp}
+      level={levelInfo.level}
+      coursesProgress={coursesProgress.map(c => ({ percent: c.percent, title: c.courseTitle }))}
+      questionsCount={questions.length}
     />
-   )}
-
-    <section className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(360px,1fr)]">
-     <Suspense fallback={<div className="min-h-[6rem] animate-pulse rounded-xl bg-muted" />}>
-      <XpDisplay userId={data.userId} />
-     </Suspense>
-
-     <StudentAchievements
-       xp={xp}
-       level={levelInfo.level}
-       coursesProgress={coursesProgress.map(c => ({ percent: c.percent, title: c.courseTitle }))}
-       questionsCount={questions.length}
-     />
-    </section>
 
    {metrics.length > 0 && (
     <MetricGrid metrics={metrics}/>
