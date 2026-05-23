@@ -8,6 +8,7 @@ import { logAudit } from "@/server/modules/audit/service";
 import { ApiError } from "@/lib/http";
 import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
 import { createNotification } from "@/server/modules/notifications/service";
+import { maskStudentName } from "@/lib/utils";
 import { QuestionStatus } from "@prisma/client";
 
 const prisma = getPrisma();
@@ -179,7 +180,7 @@ export async function getCohortDetail(cohortId: string) {
     endsAt: cohort.endsAt?.toISOString() ?? null,
     students: cohort.enrollments.map((e) => ({
       id: e.user.id,
-      name: e.user.name ?? e.user.email,
+      name: maskStudentName(e.user.id),
       email: e.user.email,
       enrollmentId: e.id,
       enrollmentStatus: e.status,
@@ -414,7 +415,7 @@ export async function getCuratorActivity(curatorId: string) {
       orderBy: { createdAt: "desc" },
       take: 100,
       include: {
-        student: { select: { name: true, email: true } },
+        student: { select: { id: true, name: true, email: true } },
         lesson: { select: { title: true } },
       },
     }),
@@ -423,7 +424,7 @@ export async function getCuratorActivity(curatorId: string) {
       orderBy: { submittedAt: "desc" },
       take: 50,
       include: {
-        user: { select: { name: true, email: true } },
+        user: { select: { id: true, name: true, email: true } },
         assignment: { select: { title: true } },
       },
     }),
@@ -447,7 +448,7 @@ export async function getCuratorActivity(curatorId: string) {
       text: q.text,
       answer: q.answer,
       status: q.status,
-      studentName: q.student.name ?? q.student.email,
+      studentName: maskStudentName(q.student.id),
       lessonTitle: q.lesson.title,
       createdAt: q.createdAt.toISOString(),
       answeredAt: q.answeredAt?.toISOString() ?? null,
@@ -455,7 +456,7 @@ export async function getCuratorActivity(curatorId: string) {
     reviews: submissions.map((s) => ({
       id: s.id,
       assignmentTitle: s.assignment.title,
-      studentName: s.user.name ?? s.user.email,
+      studentName: maskStudentName(s.user.id),
       status: s.status,
       score: s.score,
       submittedAt: s.submittedAt.toISOString(),
@@ -532,7 +533,7 @@ export async function getSuperCuratorDistributionData() {
     .filter((enrollment) => enrollment.cohortId && !assignmentByCohortStudent.has(`${enrollment.cohortId}:${enrollment.userId}`))
     .map((enrollment) => ({
       id: enrollment.user.id,
-      name: enrollment.user.name ?? enrollment.user.email,
+      name: maskStudentName(enrollment.user.id),
       email: enrollment.user.email,
       cohortId: enrollment.cohortId!,
       cohortName: enrollment.cohort?.name ?? "",
@@ -543,7 +544,7 @@ export async function getSuperCuratorDistributionData() {
     .filter((assignment) => scopedAssignmentKeys.has(`${assignment.cohortId}:${assignment.studentId}`))
     .map((assignment) => ({
       id: assignment.student.id,
-      name: assignment.student.name ?? assignment.student.email,
+      name: maskStudentName(assignment.student.id),
       email: assignment.student.email,
       cohortId: assignment.cohortId,
       cohortName: assignment.cohort.name,
@@ -641,7 +642,7 @@ export async function getSuperCuratorRisks() {
       type: risk.type,
       severity: risk.severity,
       studentId: risk.userId,
-      studentName: risk.user?.name ?? risk.user?.email ?? "Неизвестно",
+      studentName: maskStudentName(risk.userId),
       studentEmail: risk.user?.email ?? "",
       courseTitle: risk.course?.title ?? "",
       cohortName: risk.cohort?.name ?? null,

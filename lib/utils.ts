@@ -16,3 +16,7 @@ export function slugify(value: string) {
 export function clamp(value: number, min: number, max: number) {
   return Number.isNaN(value) ? min : Math.min(Math.max(value, min), max);
 }
+
+export function maskStudentName(studentId: string): string {
+  return `Слушатель #${studentId.slice(-5).toUpperCase()}`;
+}

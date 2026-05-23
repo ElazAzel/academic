@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getCustomerObserverDashboard } from "@/server/actions/dashboard";
+import { maskStudentName } from "@/lib/utils";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { listCertificates } from "@/server/modules/certificates/service";
@@ -77,7 +78,7 @@ async function CustomerObserverDashboardContent() {
         {certificates.length > 0 ? certificates.map((cert) => (
          <TableRow key={cert.id}>
           <TableCell><code className="rounded bg-muted px-2 py-0.5 text-xs">{cert.number}</code></TableCell>
-          <TableCell className="text-sm">{cert.user.name ?? cert.user.email}</TableCell>
+           <TableCell className="text-sm">{maskStudentName(cert.user.id)}</TableCell>
           <TableCell className="text-sm text-muted-foreground">{cert.course.title}</TableCell>
           <TableCell className="text-xs text-muted-foreground">{new Date(cert.issuedAt).toLocaleDateString("ru-RU")}</TableCell>
          </TableRow>

@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { maskStudentName } from "@/lib/utils";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { listCertificates } from "@/server/modules/certificates/service";
 import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
@@ -38,7 +39,7 @@ export default async function CustomerObserverCertificatesPage() {
           <TableCell>
            <Badge>{certificate.number}</Badge>
           </TableCell>
-          <TableCell className="text-sm">{certificate.user.name ?? certificate.user.email}</TableCell>
+           <TableCell className="text-sm">{maskStudentName(certificate.user.id)}</TableCell>
           <TableCell className="text-sm text-muted-foreground">{certificate.course.title}</TableCell>
           <TableCell className="text-xs text-muted-foreground">
            {new Date(certificate.issuedAt).toLocaleDateString("ru-RU")}

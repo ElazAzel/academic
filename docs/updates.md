@@ -2,6 +2,17 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-23 — Анонимизация имён студентов для не-администраторов
+
+- **`lib/auth/mask-name.ts`** — `maskChatName()` и `deriveDisplayName()` теперь возвращают `Слушатель #XXXXX` для студентов при просмотре не-админами
+- **`lib/utils.ts`** — добавлен helper `maskStudentName(studentId)` → `Слушатель #XXXXX`
+- **Дашборды (8 файлов):** Все имена студентов в `server/actions/dashboard/{curator,instructor,super-curator,shared}.ts` и `server/actions/curator-enhanced.ts` заменены на `maskStudentName()` для не-админов
+- **`server/actions/super-curator.ts`** — маскировка в списках студентов когорт, распределения, вопросов, рисков
+- **`server/actions/curator.ts`** — маскировка в `getSubmissionDetail` и уведомлениях о форварде/ответе
+- **`server/actions/attendance.ts`** — маскировка в посещаемости
+- **`app/{curator,super-curator,customer-observer}/**/page.tsx` — маскировка имён в inline-запросах страниц (assignments, popups, chat, certificates)
+- **Тесты:** 403/403 ✅ | **Typecheck:** clean ✅
+
 ## 2026-05-23 — Оптимизация UX и Геймификация для Слушателей и Кураторов
 
 - **Интерактивный центр XP (Слушатели):** Статичная карточка опыта на дашборде студента переведена на интерактивный клиентский компонент `XpDisplayClient` с возможностью клика.
