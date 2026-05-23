@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Download, FileText, FileSpreadsheet, Table2, Settings2, X, Check } from "lucide-react";
+import { Download, FileText, FileSpreadsheet, Table2, Settings2, X, Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -118,6 +118,31 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
   const [selectedColumns, setSelectedColumns] = useState<Set<string>>(new Set());
   const [generating, setGenerating] = useState(false);
 
+  const [previewRows, setPreviewRows] = useState<Record<string, unknown>[]>([]);
+  const [totalRowsCount, setTotalRowsCount] = useState<number | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const fetchPreview = async () => {
+    setLoadingPreview(true);
+    setPreviewError(null);
+    setShowPreview(true);
+    try {
+      const res = await fetch(`/api/v1/reports/preview?type=${reportType}`);
+      if (!res.ok) {
+        throw new Error("Не удалось загрузить предварительный просмотр");
+      }
+      const { data } = await res.json();
+      setPreviewRows(data.previewRows);
+      setTotalRowsCount(data.totalRowsCount);
+    } catch (err) {
+      setPreviewError(err instanceof Error ? err.message : "Неизвестная ошибка");
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
   const currentType = REPORT_TYPES.find((t) => t.id === reportType) ?? REPORT_TYPES[0];
 
   const openDesigner = useCallback(() => {
@@ -181,6 +206,9 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
                 onClick={() => {
                   setReportType(t.id);
                   setSelectedColumns(new Set(t.columns.filter((c) => c.defaultOn).map((c) => c.key)));
+                  setShowPreview(false);
+                  setPreviewRows([]);
+                  setTotalRowsCount(null);
                 }}
                 className={cn(
                   "rounded-xl border px-4 py-2 text-sm font-medium transition-all text-left",
@@ -252,24 +280,111 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
           </div>
         </div>
 
-        {/* 4. Download */}
-        <div className="flex items-center justify-between pt-2 border-t">
+        {/* 5. Live Interactive Preview */}
+        {showPreview && (
+          <div className="mt-4 border-t pt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase text-muted-foreground">
+                  Предварительный просмотр (первые 5 строк)
+                </span>
+                {totalRowsCount !== null && (
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                    Всего строк: {totalRowsCount}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="text-xs text-muted-foreground hover:text-foreground hover:underline flex items-center gap-1"
+              >
+                <EyeOff className="h-3 w-3" />
+                Скрыть
+              </button>
+            </div>
+
+            {loadingPreview ? (
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="text-xs">Загрузка данных из базы...</span>
+              </div>
+            ) : previewError ? (
+              <div className="rounded-xl bg-red-50 p-4 text-xs text-red-800 border border-red-200">
+                {previewError}
+              </div>
+            ) : previewRows.length === 0 ? (
+              <div className="rounded-xl border border-dashed p-6 text-center text-xs text-muted-foreground">
+                Нет данных для отображения.
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-border shadow-inner max-h-[300px] overflow-y-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-muted/50 border-b border-border sticky top-0">
+                      {currentType.columns.map((col) => {
+                        if (!selectedColumns.has(col.key)) return null;
+                        return (
+                          <th key={col.key} className="p-2.5 font-semibold text-m3-on-surface">
+                            {col.label}
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewRows.map((row, idx) => (
+                      <tr key={idx} className="border-b border-border last:border-0 hover:bg-muted/10 transition-colors">
+                        {currentType.columns.map((col) => {
+                          if (!selectedColumns.has(col.key)) return null;
+                          const rawVal = row[col.key];
+                          const displayVal = 
+                            rawVal === undefined || rawVal === null ? "—" : 
+                            typeof rawVal === "boolean" ? (rawVal ? "Да" : "Нет") : 
+                            String(rawVal);
+                          return (
+                            <td key={col.key} className="p-2.5 text-m3-on-surface-variant font-medium">
+                              {displayVal}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 6. Download */}
+        <div className="flex flex-wrap gap-2 items-center justify-between pt-4 border-t">
           <p className="text-xs text-muted-foreground">
             {selectedColumns.size} колонок · формат {format.toUpperCase()}
           </p>
-          <a
-            href={downloadUrl}
-            download
-            onClick={() => {
-              setGenerating(true);
-              setTimeout(() => setGenerating(false), 3000);
-            }}
-          >
-            <Button disabled={selectedColumns.size === 0 || generating}>
-              <Download className="h-4 w-4 mr-2" />
-              {generating ? "Генерация..." : "Скачать"}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={selectedColumns.size === 0 || loadingPreview}
+              onClick={fetchPreview}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Показать превью
             </Button>
-          </a>
+            <a
+              href={downloadUrl}
+              download
+              onClick={() => {
+                setGenerating(true);
+                setTimeout(() => setGenerating(false), 3000);
+              }}
+            >
+              <Button disabled={selectedColumns.size === 0 || generating}>
+                <Download className="h-4 w-4 mr-2" />
+                {generating ? "Генерация..." : "Скачать"}
+              </Button>
+            </a>
+          </div>
         </div>
       </CardContent>
     </Card>
