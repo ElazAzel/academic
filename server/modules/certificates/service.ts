@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb, PDFFont } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import QRCode from "qrcode";
 import fs from "fs";
@@ -41,6 +41,79 @@ export function generateCertificateNumber() {
 function completionBasis<T extends { isRequired: boolean | null }>(lessons: T[]) {
   const required = lessons.filter((lesson) => lesson.isRequired);
   return required.length > 0 ? required : lessons;
+}
+
+interface TextElementStyle {
+  x: number;
+  y: number;
+  fontSize: number;
+  color: string;
+  align: "left" | "center" | "right";
+}
+
+interface QrElementStyle {
+  x: number;
+  y: number;
+  size: number;
+}
+
+interface CertificateTemplateConfig {
+  backgroundUrl?: string;
+  studentName?: TextElementStyle;
+  courseTitle?: TextElementStyle;
+  durationHours?: TextElementStyle;
+  serialNumber?: TextElementStyle;
+  issuedAt?: TextElementStyle;
+  qrCode?: QrElementStyle;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readNumber(value: unknown, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function readString(value: unknown, fallback: string) {
+  return typeof value === "string" ? value : fallback;
+}
+
+function readAlign(value: unknown, fallback: TextElementStyle["align"]) {
+  return value === "left" || value === "center" || value === "right" ? value : fallback;
+}
+
+function readTextStyle(value: unknown, fallback: TextElementStyle): TextElementStyle {
+  const record = isRecord(value) ? value : {};
+  return {
+    x: readNumber(record.x, fallback.x),
+    y: readNumber(record.y, fallback.y),
+    fontSize: readNumber(record.fontSize, fallback.fontSize),
+    color: readString(record.color, fallback.color),
+    align: readAlign(record.align, fallback.align),
+  };
+}
+
+function readQrStyle(value: unknown, fallback: QrElementStyle): QrElementStyle {
+  const record = isRecord(value) ? value : {};
+  return {
+    x: readNumber(record.x, fallback.x),
+    y: readNumber(record.y, fallback.y),
+    size: readNumber(record.size, fallback.size),
+  };
+}
+
+function readTemplateConfig(value: unknown): CertificateTemplateConfig | null {
+  if (!isRecord(value)) return null;
+  return {
+    backgroundUrl: typeof value.backgroundUrl === "string" ? value.backgroundUrl : undefined,
+    studentName: readTextStyle(value.studentName, { x: 421, y: 360, fontSize: 42, color: "#1c376f", align: "center" }),
+    courseTitle: readTextStyle(value.courseTitle, { x: 421, y: 280, fontSize: 24, color: "#1a1a1a", align: "center" }),
+    durationHours: readTextStyle(value.durationHours, { x: 421, y: 200, fontSize: 14, color: "#333333", align: "center" }),
+    serialNumber: readTextStyle(value.serialNumber, { x: 60, y: 60, fontSize: 10, color: "#808080", align: "left" }),
+    issuedAt: readTextStyle(value.issuedAt, { x: 60, y: 45, fontSize: 10, color: "#808080", align: "left" }),
+    qrCode: readQrStyle(value.qrCode, { x: 620, y: 120, size: 100 }),
+  };
 }
 
 export async function issueCertificate(input: { userId: string; courseId: string; force?: boolean }, actorId: string) {
@@ -355,24 +428,21 @@ export async function generateCertificatePdf(certificateId: string) {
   });
 
   let drawCustom = false;
-  let config: any = null;
-  if (template && typeof template.body === "object" && template.body) {
-    config = template.body as any;
-    if (config.backgroundUrl) {
-      drawCustom = true;
-    }
+  const config = template ? readTemplateConfig(template.body) : null;
+  if (config?.backgroundUrl) {
+    drawCustom = true;
   }
 
   if (drawCustom) {
     try {
-      const bgRes = await fetch(config.backgroundUrl);
+      const bgRes = await fetch(config?.backgroundUrl ?? "");
       if (bgRes.ok) {
         const bgBytes = await bgRes.arrayBuffer();
         const bgBuffer = Buffer.from(bgBytes);
         const bgImage = await embedImageSafely(pdf, bgBuffer);
         page.drawImage(bgImage, { x: 0, y: 0, width: pageWidth, height: pageHeight });
       } else {
-        console.warn(`[Certificate PDF] Failed to fetch custom background URL: ${config.backgroundUrl}, status ${bgRes.status}. Using default template.`);
+        console.warn(`[Certificate PDF] Failed to fetch custom background URL: ${config?.backgroundUrl ?? ""}, status ${bgRes.status}. Using default template.`);
         drawCustom = false;
       }
     } catch (e) {
@@ -383,27 +453,27 @@ export async function generateCertificatePdf(certificateId: string) {
 
   if (drawCustom) {
     // Draw customizable elements based on template coordinates
-    const nameStyle = config.studentName || { x: 421, y: 360, fontSize: 42, color: "#1c376f", align: "center" };
+    const nameStyle = config?.studentName ?? { x: 421, y: 360, fontSize: 42, color: "#1c376f", align: "center" };
     const nameText = certificate.user.organization ?? certificate.user.name ?? certificate.user.email;
     drawTextElement(page, nameText, nameStyle, bold);
 
-    const courseStyle = config.courseTitle || { x: 421, y: 280, fontSize: 24, color: "#1a1a1a", align: "center" };
+    const courseStyle = config?.courseTitle ?? { x: 421, y: 280, fontSize: 24, color: "#1a1a1a", align: "center" };
     const courseText = certificate.course.title;
     drawTextElement(page, courseText, courseStyle, bold);
 
-    const hoursStyle = config.durationHours || { x: 421, y: 200, fontSize: 14, color: "#333333", align: "center" };
+    const hoursStyle = config?.durationHours ?? { x: 421, y: 200, fontSize: 14, color: "#333333", align: "center" };
     const hoursText = `Количество часов: ${certificate.course.durationHours ?? 72}`;
     drawTextElement(page, hoursText, hoursStyle, font);
 
-    const serialStyle = config.serialNumber || { x: 60, y: 60, fontSize: 10, color: "#808080", align: "left" };
+    const serialStyle = config?.serialNumber ?? { x: 60, y: 60, fontSize: 10, color: "#808080", align: "left" };
     const serialText = `Номер: ${certificate.number}`;
     drawTextElement(page, serialText, serialStyle, font);
 
-    const dateStyle = config.issuedAt || { x: 60, y: 45, fontSize: 10, color: "#808080", align: "left" };
+    const dateStyle = config?.issuedAt ?? { x: 60, y: 45, fontSize: 10, color: "#808080", align: "left" };
     const dateText = `Дата выдачи: ${certificate.issuedAt.toISOString().slice(0, 10)}`;
     drawTextElement(page, dateText, dateStyle, font);
 
-    const qrStyle = config.qrCode || { x: 620, y: 120, size: 100 };
+    const qrStyle = config?.qrCode ?? { x: 620, y: 120, size: 100 };
     page.drawImage(qrImage, { x: Number(qrStyle.x), y: Number(qrStyle.y), width: Number(qrStyle.size), height: Number(qrStyle.size) });
 
     return pdf.save();
@@ -504,10 +574,10 @@ function hexToRgb(hex = "#000000") {
   return rgb(isNaN(r) ? 0 : r, isNaN(g) ? 0 : g, isNaN(b) ? 0 : b);
 }
 
-function drawTextElement(page: any, text: string, style: any, font: any) {
+function drawTextElement(page: PDFPage, text: string, style: TextElementStyle, font: PDFFont) {
   const x = Number(style.x);
   const y = Number(style.y);
-  const size = Number(style.fontSize || style.size || 14);
+  const size = Number(style.fontSize || 14);
   const textColor = hexToRgb(style.color || "#000000");
 
   if (style.align === "center") {

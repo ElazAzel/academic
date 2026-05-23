@@ -5,8 +5,6 @@ import { CertificateDesigner } from "@/components/admin/certificate-designer";
 
 export const dynamic = "force-dynamic";
 
-type Context = { params: Promise<{ courseId: string }> };
-
 export default async function AdminCertificateDesignerPage({ params }: { params: Promise<{ courseId: string }> }) {
   await requireRolePage(["admin"]);
   const { courseId } = await params;

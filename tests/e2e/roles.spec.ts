@@ -24,22 +24,25 @@ async function loginAs(page: Page, email: string, password: string = "Password12
   await expect(loginForm).toHaveAttribute("data-auth-ready", "true");
   await expect(submitButton).toBeEnabled();
 
+  const navigation = page.waitForURL((url) => url.pathname !== "/login", { timeout: 25_000 })
+    .then(() => "navigated" as const)
+    .catch(() => "timeout" as const);
+  const loginError = loginForm.locator('[role="alert"]').waitFor({ state: "visible", timeout: 25_000 })
+    .then(() => "error" as const)
+    .catch(() => "timeout" as const);
+
   // We explicitly click the login button to simulate a real user interaction
   await submitButton.click();
+  const outcome = await Promise.race([navigation, loginError]);
 
-  const deadline = Date.now() + 15_000;
-  while (Date.now() < deadline) {
-    const currentPath = new URL(page.url()).pathname;
-    if (currentPath !== "/login") {
-      return;
-    }
-
+  if (outcome === "error") {
     const errorText = ((await loginForm.locator('[role="alert"]').textContent().catch(() => null)) ?? "").trim();
-    if (errorText) {
-      throw new Error(`Login failed for ${email}: ${errorText}. Run: npm run users:create`);
-    }
+    throw new Error(`Login failed for ${email}: ${errorText}. Run: npm run users:create`);
+  }
 
-    await page.waitForTimeout(100);
+  const currentPath = new URL(page.url()).pathname;
+  if (currentPath !== "/login") {
+    return;
   }
 
   const buttonText = (await submitButton.textContent().catch(() => null)) ?? "unknown";
@@ -56,6 +59,8 @@ const ROLE_USERS = [
 ];
 
 test.describe("Role-based Access Control (RBAC) E2E", () => {
+  test.describe.configure({ timeout: 60_000 });
+
   test.describe("role login smoke", () => {
     for (const { role, email, path } of ROLE_USERS) {
       test(`${role} can login and load ${path}`, async ({ page }) => {
@@ -111,7 +116,7 @@ test.describe("Role-based Access Control (RBAC) E2E", () => {
       await page.waitForURL("/student");
 
       await page.goto("/student/my-courses");
-      await expect(page.getByText("Мои курсы").first()).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Мои курсы" })).toBeVisible();
 
       // If there's a course linked, check clicking it works
       // We will just verify the page loads correctly without crashing

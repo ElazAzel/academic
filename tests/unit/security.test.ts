@@ -164,6 +164,11 @@ describe("Public asset middleware exemptions", () => {
 });
 
 describe("Demo seed surface", () => {
+  it("does not expose temporary seeding as an app route", () => {
+    expect(existsSync("app/api/seed-temp/route.ts")).toBe(false);
+    expect(isPublicRoute("/api/seed-temp")).toBe(false);
+  });
+
   it("does not expose certificate issuance as an app route", () => {
     expect(existsSync("app/api/seed-certificate/route.ts")).toBe(false);
   });

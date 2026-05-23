@@ -5,7 +5,47 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
+import { getDefaultRolePath } from "@/lib/auth/role-redirect";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
+import type { RoleKey } from "@/types/domain";
+
+const REDIRECT_TARGET_RETRIES = 20;
+const REDIRECT_TARGET_RETRY_DELAY_MS = 250;
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const ROLE_KEYS = new Set<RoleKey>([
+  "admin",
+  "super_curator",
+  "curator",
+  "instructor",
+  "customer_observer",
+  "student",
+]);
+
+function isRoleKey(value: unknown): value is RoleKey {
+  return typeof value === "string" && ROLE_KEYS.has(value as RoleKey);
+}
+
+async function resolveRedirectPath() {
+  for (let attempt = 0; attempt < REDIRECT_TARGET_RETRIES; attempt++) {
+    const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
+    const session = (await sessionResponse.json().catch(() => null)) as { user?: { roles?: unknown[] } } | null;
+    const roles = Array.isArray(session?.user?.roles) ? session.user.roles.filter(isRoleKey) : [];
+    if (roles.length > 0) {
+      return getDefaultRolePath(roles);
+    }
+    if (attempt < REDIRECT_TARGET_RETRIES - 1) {
+      await wait(REDIRECT_TARGET_RETRY_DELAY_MS);
+    }
+  }
+
+  const targetResponse = await fetch("/api/v1/auth/redirect-target", { cache: "no-store" });
+  const payload = (await targetResponse.json().catch(() => null)) as { data?: { path?: string } } | null;
+  return payload?.data?.path ?? "/403";
+}
 
 export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFlags }) {
   const router = useRouter();
@@ -39,10 +79,9 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
     }
 
     try {
-      const targetResponse = await fetch("/api/v1/auth/redirect-target", { cache: "no-store" });
-      const payload = (await targetResponse.json().catch(() => null)) as { data?: { path?: string } } | null;
+      const targetPath = await resolveRedirectPath();
       setPending(false);
-      router.replace(payload?.data?.path ?? "/student");
+      router.replace(targetPath);
     } catch {
       setPending(false);
       router.replace("/student");

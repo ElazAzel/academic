@@ -48,7 +48,6 @@ export const PUBLIC_PATH_PREFIXES = [
   "/api/v1/auth/reset-password",
   "/api/v1/auth/verify-email",
   "/api/v1/auth/2fa/verify-login",
-  "/api/seed-temp",
   "/certificates/verify",
   "/docs",
   "/_next/static",
