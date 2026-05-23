@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
+import { maskStudentName } from "@/lib/utils";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { buildMessagePreview } from "@/lib/chat/utils";
@@ -90,7 +91,7 @@ export default async function SuperCuratorChatPage() {
       curatorId: assignment.curatorId,
       curatorName: assignment.curator.name ?? assignment.curator.email,
       studentId: assignment.studentId,
-      studentName: assignment.student.name ?? assignment.student.email,
+      studentName: maskStudentName(assignment.studentId),
       lastMessage: lastMsg ? buildMessagePreview(lastMsg.text ?? "", Boolean(lastMsg.attachmentUrl)) : null,
       lastDate: lastMsg?.createdAt?.toISOString() ?? null,
       lastSenderId: lastMsg?.senderId ?? null,

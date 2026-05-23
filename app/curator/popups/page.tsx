@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
+import { maskStudentName } from "@/lib/utils";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { CuratorPopupClient } from "./client";
@@ -25,7 +26,7 @@ export default async function CuratorPopupsPage() {
 
   const students = assignments.map((a) => ({
     id: a.student.id,
-    name: a.student.name ?? a.student.email,
+    name: maskStudentName(a.student.id),
     email: a.student.email,
     cohortName: a.cohort.name,
     courseTitle: a.cohort.course?.title ?? "",

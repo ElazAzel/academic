@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { getStudentAnalyticsDetail } from "@/server/actions/dashboard/shared";
 import { QuestionStatus } from "@prisma/client";
+import { maskStudentName } from "@/lib/utils";
 
 const prisma = getPrisma();
 
@@ -58,7 +59,7 @@ export async function getCuratorEnhancedStudents() {
 
     return {
       id: a.student.id,
-      name: a.student.name ?? a.student.email,
+      name: actor.roles.includes("admin") ? (a.student.name ?? a.student.email) : maskStudentName(a.student.id),
       email: a.student.email,
       cohortName: a.cohort?.name ?? null,
       progress: progress?.percent ?? 0,
@@ -135,7 +136,7 @@ export async function getCuratorEnhancedRisks() {
       type: r.type,
       severity: r.severity,
       studentId: r.userId,
-      studentName: r.user.name ?? r.user.email,
+      studentName: actor.roles.includes("admin") ? (r.user.name ?? r.user.email) : maskStudentName(r.user.id),
       studentEmail: r.user.email,
       courseTitle: r.course?.title ?? "",
       cohortName: r.cohort?.name ?? null,

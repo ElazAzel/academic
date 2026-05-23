@@ -106,7 +106,7 @@ describe("chat actions", () => {
         id: "m1",
         lessonId: "lesson1",
         lessonTitle: "Prompt engineering",
-        senderName: "Слушатель1",
+        senderName: "Слушатель #DENT1",
       }),
     ]);
   });
@@ -169,7 +169,7 @@ describe("chat actions", () => {
     await expect(getMyConversations()).resolves.toEqual([
       expect.objectContaining({
         partnerId: "student1",
-        partnerName: "Слушатель1",
+        partnerName: "Слушатель #DENT1",
         responseStatus: "awaiting_reply",
         responseLabel: "Ожидает ответа",
       }),
@@ -306,7 +306,7 @@ describe("chat actions", () => {
     expect(mockCreateNotification).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: "cur1",
-        title: "Новое сообщение от Слушатель1",
+        title: "Новое сообщение от Слушатель #DENT1",
         body: "Prompt engineering: Нужна помощь по кейсу",
         data: expect.objectContaining({
           link: "/curator/chat",

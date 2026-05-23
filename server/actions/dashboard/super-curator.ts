@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
+import { maskStudentName } from "@/lib/utils";
 import { QuestionStatus } from "@prisma/client";
 import type {
   CohortSummary,
@@ -439,7 +440,7 @@ export async function getSuperCuratorDashboard(): Promise<SuperCuratorDashboardD
         id: question.id,
         text: question.text,
         status: question.status as "OPEN" | "FORWARDED",
-        studentName: question.student.name ?? question.student.email,
+        studentName: maskStudentName(question.student.id),
         studentEmail: question.student.email,
         curatorId: assignment?.curatorId ?? question.curatorId,
         curatorName: assignment?.curator.name ?? question.curator?.name ?? question.curator?.email ?? null,
@@ -462,7 +463,7 @@ export async function getSuperCuratorDashboard(): Promise<SuperCuratorDashboardD
           id: risk.id,
           type: risk.type,
           severity: risk.severity as SuperCuratorRiskQueueItem["severity"],
-          studentName: risk.user.name ?? risk.user.email,
+          studentName: maskStudentName(risk.user.id),
           studentEmail: risk.user.email,
           curatorId: assignment?.curatorId ?? null,
           curatorName: assignment?.curator.name ?? assignment?.curator.email ?? null,
@@ -591,7 +592,7 @@ export async function getSuperCuratorQuestions(status: QuestionStatus = Question
       },
       orderBy: { createdAt: "desc" },
       include: {
-        student: { select: { name: true, email: true } },
+        student: { select: { id: true, name: true, email: true } },
         lesson: { include: { module: { include: { course: true } } } },
       },
       take: QUERY_LIMITS.questionQueue,
@@ -600,7 +601,7 @@ export async function getSuperCuratorQuestions(status: QuestionStatus = Question
     return questions.map((question) => ({
       id: question.id,
       text: question.text,
-      studentName: question.student.name ?? question.student.email,
+      studentName: maskStudentName(question.student.id),
       courseTitle: question.lesson.module.course.title,
       moduleTitle: question.lesson.module.title,
       lessonTitle: question.lesson.title,

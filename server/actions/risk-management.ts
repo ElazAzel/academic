@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { logAudit } from "@/server/modules/audit/service";
+import { maskStudentName } from "@/lib/utils";
 import { ApiError } from "@/lib/http";
 import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
 
@@ -125,7 +126,7 @@ export async function getRiskOverview(filters?: {
         type: risk.type,
         severity: risk.severity,
         studentId: risk.userId,
-        studentName: risk.user.name ?? risk.user.email,
+        studentName: maskStudentName(risk.userId),
         studentEmail: risk.user.email,
         studentRealName: risk.user.organization ?? null,
         courseTitle: risk.course?.title ?? "",

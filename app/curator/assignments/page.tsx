@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/lms/page-header";
 import { SubmissionsQueue } from "@/components/lms/dashboard-widgets";
 import { Icon } from "@/components/ui/icon";
 import { Pagination } from "@/components/ui/pagination";
+import { maskStudentName } from "@/lib/utils";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
@@ -73,7 +74,7 @@ export default async function CuratorAssignmentsPage({
 
   const submissions: SubmissionForReview[] = submissionsDb.map((sub) => ({
     id: sub.id,
-    studentName: sub.user.name ?? sub.user.email,
+    studentName: maskStudentName(sub.user.id),
     studentEmail: sub.user.email,
     assignmentTitle: sub.assignment.title,
     lessonTitle: sub.assignment.lesson?.title ?? "Без урока",

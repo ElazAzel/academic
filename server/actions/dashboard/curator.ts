@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
+import { maskStudentName } from "@/lib/utils";
 import { QuestionStatus } from "@prisma/client";
 import type {
   CuratorNextAction,
@@ -469,7 +470,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
       return {
         assignmentId: assignment.id,
         studentId: assignment.student.id,
-        name: assignment.student.name ?? assignment.student.email,
+        name: maskStudentName(assignment.student.id),
         email: assignment.student.email,
         cohortId: assignment.cohort.id,
         cohortName: assignment.cohort.name,
@@ -498,7 +499,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
     const formattedQuestions: QuestionFromStudent[] = questions.map((question) => ({
       id: question.id,
       text: question.text,
-      studentName: question.student.name ?? question.student.email,
+      studentName: maskStudentName(question.student.id),
       courseTitle: question.lesson.module.course.title,
       moduleTitle: question.lesson.module.title,
       lessonTitle: question.lesson.title,
@@ -509,7 +510,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
     const formattedSubmissions: SubmissionForReview[] = submissions.map((submission) => ({
       id: submission.id,
       assignmentTitle: submission.assignment.title,
-      studentName: submission.user.name ?? submission.user.email,
+      studentName: maskStudentName(submission.user.id),
       studentEmail: submission.user.email,
       courseTitle: submission.assignment.course?.title ?? submission.assignment.lesson?.module.course.title ?? "",
       lessonTitle: submission.assignment.lesson?.title ?? "",
@@ -524,7 +525,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
       id: risk.id,
       type: risk.type as RiskItem["type"],
       severity: risk.severity as RiskItem["severity"],
-      studentName: risk.user.name ?? risk.user.email,
+      studentName: maskStudentName(risk.user.id),
       studentEmail: risk.user.email,
       courseTitle: risk.course?.title ?? risk.cohort?.course?.title ?? "",
       cohortName: risk.cohort?.name,
@@ -623,7 +624,7 @@ export async function getCuratorStudents() {
       const enrollment = assignment.student.enrollments[0];
       return {
         id: assignment.student.id,
-        name: assignment.student.name ?? assignment.student.email,
+        name: maskStudentName(assignment.student.id),
         email: assignment.student.email,
         course: enrollment?.course?.title ?? "Не зачислен",
         progress: enrollment?.courseProgress[0]?.percent ?? 0,
@@ -643,7 +644,7 @@ export async function getCuratorQuestions(status: QuestionStatus = QuestionStatu
       where: { curatorId: user.id, status },
       orderBy: { createdAt: "desc" },
       include: {
-        student: { select: { name: true, email: true } },
+        student: { select: { id: true, name: true, email: true } },
         lesson: { include: { module: { include: { course: true } } } },
       },
       take: QUERY_LIMITS.questionQueue,
@@ -652,7 +653,7 @@ export async function getCuratorQuestions(status: QuestionStatus = QuestionStatu
     return questions.map((question) => ({
       id: question.id,
       text: question.text,
-      studentName: question.student.name ?? question.student.email,
+      studentName: maskStudentName(question.student.id),
       courseTitle: question.lesson.module.course.title,
       moduleTitle: question.lesson.module.title,
       lessonTitle: question.lesson.title,

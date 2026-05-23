@@ -5,6 +5,7 @@ import { QUERY_LIMITS } from "@/lib/query-limits";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
+import { maskStudentName } from "@/lib/utils";
 import type { CourseSummary, DashboardMetric } from "@/types/domain";
 import { ProgressStatus, QuestionStatus, SubmissionStatus } from "@prisma/client";
 
@@ -295,7 +296,7 @@ export async function getForwardedQuestions() {
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMITS.questionQueue,
       include: {
-        student: { select: { name: true, email: true } },
+        student: { select: { id: true, name: true, email: true } },
         curator: { select: { name: true, email: true } },
         lesson: { include: { module: { include: { course: true } } } },
       },
@@ -304,7 +305,7 @@ export async function getForwardedQuestions() {
     return questions.map((q) => ({
       id: q.id,
       text: q.text,
-      studentName: q.student.name ?? q.student.email,
+      studentName: maskStudentName(q.student.id),
       curatorName: q.curator?.name ?? q.curator?.email ?? "Неизвестно",
       courseTitle: q.lesson.module.course.title,
       moduleTitle: q.lesson.module.title,
@@ -344,7 +345,7 @@ export async function getInstructorStudents() {
 
     return enrollments.map((e) => ({
       id: e.user.id,
-      name: e.user.name ?? e.user.email,
+      name: maskStudentName(e.user.id),
       email: e.user.email,
       courseTitle: e.course.title,
       cohortName: e.cohort?.name ?? null,

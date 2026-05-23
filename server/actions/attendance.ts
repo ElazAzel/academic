@@ -1,5 +1,6 @@
 "use server";
 
+import { maskStudentName } from "@/lib/utils";
 import { getPrisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/session";
 
@@ -139,7 +140,7 @@ export async function getLessonAttendanceDetail(lessonId: string): Promise<Stude
     const userId = enrollment.user.id;
     return {
       userId,
-      userName: enrollment.user.name ?? "Без имени",
+      userName: maskStudentName(userId),
       email: enrollment.user.email,
       lastLessonAccess: lastAccessMap.get(userId) ?? null,
       lessonsViewed: viewedSet.has(userId) ? 1 : 0,

@@ -68,7 +68,7 @@ function formatChatDisplayName(realName: string | null | undefined, roles: RoleK
  * Rules:
  * - own messages are shown as "Вы";
  * - curator messages are shown as "Куратор <name>";
- * - student messages use the academy-issued name, for example "Слушатель1";
+ * - student messages use the anonymized student format for non-admins: "Слушатель #XXXXX";
  * - no id-derived "Пользователь N" aliases are used in chat.
  */
 export function maskChatName(
@@ -82,12 +82,20 @@ export function maskChatName(
     return "Вы";
   }
 
+  const isSenderStudent = senderRoles.includes("student");
+  if (isSenderStudent && !viewerRoles.includes("admin")) {
+    return `Слушатель #${senderId.slice(-5).toUpperCase()}`;
+  }
+
   return formatChatDisplayName(senderName, senderRoles.length > 0 ? senderRoles : viewerRoles);
 }
 
 /**
  * Display name for chat notifications.
  */
-export function deriveDisplayName(realName: string | null | undefined, _userId?: string, roles: RoleKey[] = []): string {
+export function deriveDisplayName(realName: string | null | undefined, userId?: string, roles: RoleKey[] = []): string {
+  if (roles.includes("student") && userId) {
+    return `Слушатель #${userId.slice(-5).toUpperCase()}`;
+  }
   return formatChatDisplayName(realName, roles);
 }

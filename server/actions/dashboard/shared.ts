@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
 import type { StudentAnalyticsDetail } from "@/types/domain";
+import { getCurrentUser } from "@/lib/auth/session";
+import { maskStudentName } from "@/lib/utils";
 
 export async function withQueryFallback<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
@@ -14,6 +16,9 @@ export async function withQueryFallback<T>(fn: () => Promise<T>, fallback: T): P
 export async function getStudentAnalyticsDetail(studentIds: string[]): Promise<StudentAnalyticsDetail[]> {
   if (studentIds.length === 0) return [];
   const scopedStudentIds = studentIds.slice(0, QUERY_LIMITS.studentAnalyticsStudents);
+
+  const actor = await getCurrentUser();
+  const isAdmin = actor?.roles.includes("admin") ?? false;
 
   const enrollments = await prisma.enrollment.findMany({
     where: { userId: { in: scopedStudentIds } },
@@ -64,7 +69,7 @@ export async function getStudentAnalyticsDetail(studentIds: string[]): Promise<S
     const timeData = lessonTimeMap.get(e.user.id);
     return {
       id: e.user.id,
-      name: e.user.name ?? e.user.email,
+      name: isAdmin ? (e.user.name ?? e.user.email) : maskStudentName(e.user.id),
       email: e.user.email,
       courseTitle: e.course.title,
       cohortName: e.cohort?.name,

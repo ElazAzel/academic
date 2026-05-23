@@ -9,6 +9,7 @@ import { markLessonProgress } from "@/server/modules/progress/service";
 import { ApiError } from "@/lib/http";
 import { NOTIFICATION_CHANNELS } from "@/lib/constants";
 import { answerForwardedQuestionSchema } from "@/lib/validation";
+import { maskStudentName } from "@/lib/utils";
 import { QuestionStatus } from "@prisma/client";
 
 const prisma = getPrisma();
@@ -219,7 +220,7 @@ export async function getSubmissionDetail(submissionId: string) {
       attemptNumber: submission.attemptNumber,
       submittedAt: submission.submittedAt.toISOString(),
       reviewedAt: submission.reviewedAt?.toISOString() ?? null,
-      student: submission.user,
+      student: { ...submission.user, name: actor.roles.includes("admin") ? submission.user.name : maskStudentName(submission.user.id) },
       reviewedBy: submission.reviewedBy,
       assignment: {
         title: submission.assignment.title,
@@ -305,7 +306,7 @@ export async function forwardQuestionAction(questionId: string) {
       event: "question_forwarded",
       refType: "lesson_question",
       refId: questionId,
-      data: { lessonId: question.lessonId, questionId, studentName: question.student?.name, link: "/curator/questions" }
+      data: { lessonId: question.lessonId, questionId, studentName: maskStudentName(question.studentId), link: "/curator/questions" }
     }).catch((e) => console.error("Failed to notify curator:", e));
   }
   const instructorIds = [
@@ -322,7 +323,7 @@ export async function forwardQuestionAction(questionId: string) {
           lessonId: question.lessonId,
           questionId,
           studentId: question.studentId,
-          studentName: question.student?.name,
+          studentName: maskStudentName(question.studentId),
           link: "/instructor/questions",
         },
       }).catch((e) => console.error("Failed to notify instructor:", e)),
@@ -398,7 +399,7 @@ export async function answerForwardedQuestionAction(formData: FormData) {
       event: "question_answered",
       refType: "lesson_question",
       refId: questionId,
-      data: { lessonId: question.lessonId, questionId, studentName: question.student?.name, link: "/curator/questions" }
+      data: { lessonId: question.lessonId, questionId, studentName: maskStudentName(question.studentId), link: "/curator/questions" }
     }).catch((e) => console.error("Failed to notify curator:", e));
   }
 
