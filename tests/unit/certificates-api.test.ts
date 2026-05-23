@@ -111,6 +111,7 @@ describe("certificates API scope", () => {
       expect.objectContaining({
         where: {
           id: { in: ["cert-allowed", "cert-outside-scope"] },
+          revokedAt: null,
           userId: { in: ["student-allowed"] },
         },
       }),
@@ -126,7 +127,7 @@ describe("certificates API scope", () => {
     expect(response.status).toBe(404);
     expect(mockCertificateFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: { in: ["cert-any"] } },
+        where: { id: { in: ["cert-any"] }, revokedAt: null },
       }),
     );
     expect(mockGetScopedStudentIdsForObserver).not.toHaveBeenCalled();

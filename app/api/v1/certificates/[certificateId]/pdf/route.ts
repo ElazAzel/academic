@@ -19,12 +19,16 @@ export async function GET(_request: Request, context: Context) {
         userId: true,
         courseId: true,
         number: true,
+        revokedAt: true,
         user: { select: { name: true } },
         course: { select: { title: true } },
       }
     });
     if (!certificate) {
       throw new ApiError("not_found", "Сертификат не найден", 404);
+    }
+    if (certificate.revokedAt) {
+      throw new ApiError("forbidden", "Сертификат отозван и более недоступен для скачивания", 403);
     }
 
     const isOwner = certificate.userId === user.id;

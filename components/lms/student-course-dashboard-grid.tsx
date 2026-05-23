@@ -38,7 +38,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
 
   // Расчет прогноза окончания курса на основе процента прогресса
   const getForecastText = (percent: number, status: string) => {
-    if (status === "PAUSED") {
+    if (status === "BLOCKED") {
       return "Обучение приостановлено";
     }
     if (percent >= 100) {
@@ -149,16 +149,16 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
                     {/* Completion Forecast Block with dynamic micro-details */}
                     <div className="flex items-center gap-2 rounded-xl bg-m3-surface-container-low p-2.5 text-body-xs font-body-xs text-m3-on-surface-variant">
                       <Icon 
-                        name={c.percent >= 100 ? "workspace_premium" : c.status === "PAUSED" ? "pause" : "schedule"} 
+                        name={c.percent >= 100 ? "workspace_premium" : c.status === "BLOCKED" ? "pause" : "schedule"} 
                         size={16} 
                         className={cn(
-                          c.percent >= 100 ? "text-emerald-500" : c.status === "PAUSED" ? "text-amber-500" : "text-m3-primary"
+                          c.percent >= 100 ? "text-emerald-500" : c.status === "BLOCKED" ? "text-amber-500" : "text-m3-primary"
                         )}
                       />
                       <span className="truncate">{getForecastText(c.percent, c.status)}</span>
                     </div>
 
-                    <Button asChild className="w-full rounded-xl" size="sm" variant={c.status === "PAUSED" ? "secondary" : "primary"}>
+                    <Button asChild className="w-full rounded-xl" size="sm" variant={c.status === "BLOCKED" ? "secondary" : "primary"}>
                       <Link href={c.nextLessonId ? `/student/lessons/${c.nextLessonId}` : `/student/courses/${c.courseId}`}>
                         <span>{c.nextLessonId ? "Продолжить" : "Открыть курс"}</span>
                         <Icon name="arrow_forward" size={16} />

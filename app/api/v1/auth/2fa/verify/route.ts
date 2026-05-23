@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { verifyTotp, enable2fa } from "@/server/modules/2fa/service";
+import { checkRateLimit } from "@/lib/security/rate-limit";
+import { ApiError, errorResponse } from "@/lib/http";
 
 /**
  * POST /api/v1/auth/2fa/verify
@@ -10,27 +12,27 @@ import { verifyTotp, enable2fa } from "@/server/modules/2fa/service";
 export async function POST(req: Request) {
   try {
     const user = await requireUser();
+
+    // Enforce strict per-user verification rate limit (max 5 verification attempts per window)
+    const rl = await checkRateLimit(`2fa-verify:${user.id}`);
+    if (!rl.allowed) {
+      throw new ApiError("too_many_requests", "Слишком много попыток. Попробуйте позже.", 429);
+    }
+
     const { secret, token } = await req.json();
 
     if (!secret || !token) {
-      return NextResponse.json(
-        { error: "Secret and token are required" },
-        { status: 400 },
-      );
+      throw new ApiError("bad_request", "Secret and token are required", 400);
     }
 
     if (!verifyTotp(token, secret)) {
-      return NextResponse.json(
-        { error: "Неверный код. Попробуйте снова." },
-        { status: 400 },
-      );
+      throw new ApiError("bad_request", "Неверный код. Попробуйте снова.", 400);
     }
 
     const { backupCodes } = await enable2fa(user.id, secret);
 
     return NextResponse.json({ success: true, backupCodes });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal error";
-    return NextResponse.json({ error: message }, { status: 403 });
+    return errorResponse(error);
   }
 }
