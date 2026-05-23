@@ -7,6 +7,7 @@ import {
   RisksList,
 } from "@/components/lms/dashboard-widgets";
 import { CuratorOperationsBoard } from "@/components/lms/curator-operations-board";
+import { CuratorRadar } from "@/components/lms/curator-radar";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 import { PageHeader } from "@/components/lms/page-header";
 import { PageSkeleton } from "@/components/lms/page-skeleton";
@@ -53,6 +54,7 @@ async function CuratorDashboardContent() {
       <MetricGrid metrics={metrics} />
       <DeadlineAlerts />
       <CuratorOperationsBoard students={students} />
+      <CuratorRadar students={students} />
 
       <Tabs
         paramName="tab"

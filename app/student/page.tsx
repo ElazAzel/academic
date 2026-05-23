@@ -4,6 +4,9 @@ import { AppShell } from "@/components/layout/app-shell";
 import { ContinueLearningCard, MetricGrid } from "@/components/lms/dashboard-widgets";
 import { StudentCourseDashboardGrid } from "@/components/lms/student-course-dashboard-grid";
 import { XpDisplay } from "@/components/lms/xp-display";
+import { StudentAchievements } from "@/components/lms/student-achievements";
+import { getUserXp } from "@/server/actions/xp";
+import { getLevel } from "@/lib/xp-utils";
 import { PageHeader } from "@/components/lms/page-header";
 import { EmptyState } from "@/components/lms/empty-state";
 import { StatusBadge } from "@/components/lms/status-badge";
@@ -33,29 +36,43 @@ export default function StudentDashboardPage() {
 }
 
 async function StudentDashboardContent() {
- await requireRolePage(["student"]);
- const data = await getStudentDashboard();
+  await requireRolePage(["student"]);
+  return withAchievements();
+}
 
- if (!data) {
-  return (
-   <div className="space-y-6">
-    <EmptyState icon={Clock} title="Не удалось загрузить данные" description="Попробуйте обновить страницу позже." />
-   </div>
-  );
- }
- 
+async function withAchievements() {
+  const data = await getStudentDashboard();
+
+  if (!data) {
+   return (
+    <div className="space-y-6">
+     <EmptyState icon={Clock} title="Не удалось загрузить данные" description="Попробуйте обновить страницу позже." />
+    </div>
+   );
+  }
+  
   const coursesProgress = data.coursesProgress ?? [];
   const metrics = data.metrics ?? [];
   const continueLearning = data.continueLearning ?? null;
   const questions = data.questions ?? [];
   const learningPaths = data.learningPaths ?? [];
 
- return (
-  <div className="space-y-6">
+  const xp = await getUserXp(data.userId);
+  const levelInfo = getLevel(xp);
 
-   <Suspense fallback={<div className="h-20 animate-pulse rounded-xl bg-muted" />}>
-    <XpDisplay userId={data.userId} />
-   </Suspense>
+  return (
+   <div className="space-y-6">
+
+    <Suspense fallback={<div className="h-20 animate-pulse rounded-xl bg-muted" />}>
+     <XpDisplay userId={data.userId} />
+    </Suspense>
+
+    <StudentAchievements 
+      xp={xp}
+      level={levelInfo.level}
+      coursesProgress={coursesProgress.map(c => ({ percent: c.percent, title: c.courseTitle }))}
+      questionsCount={questions.length}
+    />
 
    {continueLearning ? (
     <ContinueLearningCard data={continueLearning}/>
