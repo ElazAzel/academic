@@ -195,7 +195,8 @@ export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) 
       {courses.map((c) => (
         <FadeIn key={c.courseId}>
         <CardHover>
-        <Card className="rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <Card className="rounded-xl border-m3-outline-variant/60 glass-card-premium relative overflow-hidden">
+          <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-m3-primary to-m3-secondary" />
           <CardHeader>
             <div className="flex items-center justify-between">
               <StatusBadge status={c.status as BadgeStatus} />
@@ -209,7 +210,7 @@ export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) 
           </CardHeader>
           <CardContent className="space-y-2">
             <Progress value={c.percent} className="bg-m3-surface-container-high [&>div]:bg-m3-primary" />
-            <Button asChild className="mt-3 w-full" size="sm" variant="secondary">
+            <Button asChild className="mt-3 w-full btn-shine" size="sm" variant="secondary">
               <Link href={c.nextLessonId ? `/student/lessons/${c.nextLessonId}` : `/student/courses/${c.courseId}`}>
                 {c.nextLessonId ? "Продолжить" : "Открыть курс"}
               </Link>
@@ -237,7 +238,8 @@ export function CourseManageGrid({
       {courses.map((c) => (
         <FadeIn key={c.id}>
           <CardHover>
-            <Card className="rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+            <Card className="rounded-xl border-m3-outline-variant/60 glass-card-premium relative overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-m3-primary to-m3-secondary" />
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <StatusBadge status={c.status as BadgeStatus} />
@@ -259,7 +261,7 @@ export function CourseManageGrid({
                   </div>
                 )}
                 <div className="mt-4 pt-4 border-t border-m3-outline-variant">
-                  <Button asChild variant="secondary" size="sm" className="w-full">
+                  <Button asChild variant="secondary" size="sm" className="w-full btn-shine">
                     <Link href={`${builderBasePath}/${c.id}/builder`}>Управление курсом</Link>
                   </Button>
                 </div>
@@ -286,7 +288,7 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
       {questions.map((q) => (
         <FadeIn key={q.id}>
         <CardHover>
-        <Card className="transition-shadow rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <Card className="rounded-xl border-m3-outline-variant/60 glass-card-premium">
           <CardContent className="flex items-start gap-4 py-4">
             <Avatar name={q.studentName} />
             <div className="min-w-0 flex-1">
@@ -300,7 +302,7 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
               </p>
             </div>
             {q.status === "open" && (
-              <Button size="sm" variant="secondary" onClick={() => setSelectedQuestion(q)} aria-label="Ответить на вопрос">
+              <Button size="sm" variant="secondary" className="btn-shine" onClick={() => setSelectedQuestion(q)} aria-label="Ответить на вопрос">
                 <Icon name="reply" className="text-[18px]" />
                 Ответить
               </Button>
@@ -328,9 +330,9 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
     );
   }
   return (
-    <div className="overflow-x-auto rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+    <div className="overflow-x-auto rounded-xl border border-m3-outline-variant/60 glass-card-premium">
       <Table>
-        <TableHeader className="bg-m3-surface-container">
+        <TableHeader className="bg-m3-surface-container/60 backdrop-blur-md">
           <TableRow>
             <TableHead className="font-label-lg text-label-lg text-m3-on-surface-variant">Слушатель</TableHead>
             <TableHead className="font-label-lg text-label-lg text-m3-on-surface-variant">Задание</TableHead>
@@ -342,7 +344,7 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
         </TableHeader>
         <TableBody>
           {submissions.map((s) => (
-            <TableRow key={s.id} className="hover:bg-m3-surface-container-low transition-colors">
+            <TableRow key={s.id} className="hover:bg-m3-surface-container-low/40 transition-colors">
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Avatar name={s.studentName} className="h-7 w-7 text-[10px]" />
@@ -357,7 +359,7 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
               </TableCell>
               <TableCell className="text-right">
                 <Link href={`/curator/assignments/${s.id}`}>
-                  <Button size="sm" aria-label="Проверить задание">
+                  <Button size="sm" aria-label="Проверить задание" className="btn-shine">
                     <Icon name="rate_review" className="text-[18px]" />
                     Проверить
                   </Button>
@@ -387,7 +389,14 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
       {risks.map((r) => (
         <FadeIn key={r.id}>
         <CardHover>
-        <Card className="transition-shadow rounded-xl border-m3-error/30 bg-m3-surface-container-lowest shadow-m3-soft">
+        <Card className={cn(
+          "rounded-xl border backdrop-blur-xl transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) hover:-translate-y-0.5",
+          r.severity === "critical" 
+            ? "border-m3-error/25 bg-m3-error-container/8 dark:bg-m3-error-container/5 hover:border-m3-error/60 hover:shadow-[0_8px_30px_rgba(186,26,26,0.06)]"
+            : r.severity === "high"
+              ? "border-amber-500/25 bg-amber-500/5 hover:border-amber-500/60 hover:shadow-[0_8px_30px_rgba(245,158,11,0.06)]"
+              : "border-m3-outline-variant/60 bg-white/70 dark:bg-slate-900/70 hover:border-m3-primary/30"
+        )}>
           <CardContent className="flex items-center gap-4 py-4">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-error-container/30">
               <Icon name="warning" className="text-[20px] text-m3-error" />
@@ -402,7 +411,7 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
                 {r.cohortName && ` · ${r.cohortName}`}
               </p>
             </div>
-            <Button size="sm" variant="secondary" aria-label="Подробнее о риске">
+            <Button size="sm" variant="secondary" className="btn-shine" aria-label="Подробнее о риске">
               <Icon name="arrow_forward" className="text-[18px]" />
               Подробнее
             </Button>
@@ -418,9 +427,9 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
 // ── Таблица кураторов ───────────────────────────────────────────────
 export function CuratorLoadTable({ curators }: { curators: CuratorLoad[] }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+    <div className="overflow-x-auto rounded-xl border border-m3-outline-variant/60 glass-card-premium">
     <Table>
-      <TableHeader className="bg-m3-surface-container">
+      <TableHeader className="bg-m3-surface-container/60 backdrop-blur-md">
         <TableRow>
           <TableHead className="font-label-lg text-label-lg text-m3-on-surface-variant">Куратор</TableHead>
           <TableHead className="font-label-lg text-label-lg text-m3-on-surface-variant text-center">Слушатели</TableHead>
@@ -432,7 +441,7 @@ export function CuratorLoadTable({ curators }: { curators: CuratorLoad[] }) {
       </TableHeader>
       <TableBody>
         {curators.map((c) => (
-          <TableRow key={c.curatorId} className="hover:bg-m3-surface-container-low transition-colors">
+          <TableRow key={c.curatorId} className="hover:bg-m3-surface-container-low/40 transition-colors">
             <TableCell>
               <div className="flex items-center gap-2">
                 <Avatar name={c.curatorName} className="h-7 w-7 text-[10px]" />
