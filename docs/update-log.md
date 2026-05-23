@@ -1,5 +1,21 @@
 # Project Update Log
 
+## 2026-05-23 - Auth Session Dynamic Route Build Signal
+
+- **Author:** Codex
+- **Scope:** Keep Next.js App Router dynamic route classification errors out of application auth error logging.
+- **Fixed / Added:**
+  - Updated `getCurrentUser` in `lib/auth/session.ts` to rethrow Next.js `DYNAMIC_SERVER_USAGE` framework errors instead of treating them as session failures.
+  - Added `tests/unit/auth-session.test.ts` to lock the behavior and prevent future regressions that would hide App Router dynamic rendering signals.
+- **Validation:**
+  - `npx vitest run tests/unit/auth-session.test.ts` passed.
+  - `npm run lint -- --max-warnings=0` passed.
+  - `npm run typecheck` passed.
+  - `npm run test` passed: 420/420 tests.
+  - `npm run build` passed and no longer prints `[getCurrentUser] Failed to get session: Dynamic server usage` noise during page data collection.
+  - `npx playwright test --reporter=line` passed: 52/52 e2e tests across desktop Chromium and mobile Pixel 7.
+- **Status:** green.
+
 ## 2026-05-23 - UX Optimization and Gamification for Students and Curators
 
 - **Author:** Antigravity

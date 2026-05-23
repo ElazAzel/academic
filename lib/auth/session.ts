@@ -4,6 +4,15 @@ import { isActiveUserStatus } from "@/lib/auth/user-status";
 import type { AppSessionUser, RoleKey } from "@/types/domain";
 export type { AppSessionUser };
 
+function isDynamicServerUsageError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "digest" in error &&
+    error.digest === "DYNAMIC_SERVER_USAGE"
+  );
+}
+
 async function revalidateSession(user: AppSessionUser): Promise<AppSessionUser | null> {
   if (typeof window !== "undefined") return user;
 
@@ -51,6 +60,10 @@ export async function getCurrentUser(): Promise<AppSessionUser | null> {
     }
     return revalidateSession(user);
   } catch (error) {
+    if (isDynamicServerUsageError(error)) {
+      throw error;
+    }
+
     // If anything fails (import error, NextAuth crash, DB timeout),
     // return null so the page redirects to login instead of 500
     console.error("[getCurrentUser] Failed to get session:", error);
