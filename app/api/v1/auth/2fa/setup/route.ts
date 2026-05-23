@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
-import {
-  generateTotpSecret,
-} from "@/server/modules/2fa/service";
+import { generateTotpSecret } from "@/server/modules/2fa/service";
+import { checkRateLimit } from "@/lib/security/rate-limit";
+import { ApiError, errorResponse } from "@/lib/http";
 
 /**
  * POST /api/v1/auth/2fa/setup
@@ -12,11 +12,17 @@ import {
 export async function POST() {
   try {
     const user = await requireUser();
+
+    // Enforce per-user rate limit: 10 requests per window
+    const rl = await checkRateLimit(`2fa-setup:${user.id}`);
+    if (!rl.allowed) {
+      throw new ApiError("too_many_requests", "Слишком много запросов. Попробуйте позже.", 429);
+    }
+
     const { secret, otpauthUrl } = generateTotpSecret(user.email!);
 
     return NextResponse.json({ secret, otpauthUrl });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal error";
-    return NextResponse.json({ error: message }, { status: 403 });
+    return errorResponse(error);
   }
 }

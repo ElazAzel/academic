@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     const certs = await prisma.certificate.findMany({
       where: {
         id: { in: certificateIds },
+        revokedAt: null,
         ...(isObserver ? { userId: { in: scopedStudentIds ?? [] } } : {}),
       },
       select: {

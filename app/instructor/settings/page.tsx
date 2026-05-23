@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getProfile } from "@/server/modules/auth/service";
+import { TwoFactorSettings } from "@/components/admin/two-factor-settings";
 import { updateProfileSettingsAction, updatePasswordAction, getNotificationPreferencesAction, updateNotificationPreferencesAction } from "@/server/actions/settings";
 
 const NOTIFICATION_CHANNELS = [
@@ -109,30 +110,37 @@ export default async function InstructorSettingsPage() {
     {
      label: "Безопасность",
      content: (
-      <form action={updatePasswordAction}>
-       <Card className="rounded-2xl">
-        <CardHeader>
-         <CardTitle className="text-base">Безопасность</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-         <div>
-          <label className="text-sm font-medium">Текущий пароль</label>
-          <input name="currentPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Текущий пароль" required/>
-         </div>
-         <div>
-          <label className="text-sm font-medium">Новый пароль</label>
-          <input name="newPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Мин. 10 символов" required minLength={10}/>
-         </div>
-         <div>
-          <label className="text-sm font-medium">Повторите новый пароль</label>
-          <input name="confirmPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Повторите пароль" required/>
-         </div>
-         <div className="flex justify-end">
-          <Button type="submit">Изменить пароль</Button>
-         </div>
-        </CardContent>
-       </Card>
-      </form>
+      <div className="space-y-6">
+        <form action={updatePasswordAction}>
+         <Card className="rounded-2xl">
+          <CardHeader>
+           <CardTitle className="text-base">Безопасность</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+           <div>
+            <label className="text-sm font-medium">Текущий пароль</label>
+            <input name="currentPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Текущий пароль" required/>
+           </div>
+           <div>
+            <label className="text-sm font-medium">Новый пароль</label>
+            <input name="newPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Мин. 10 символов" required minLength={10}/>
+           </div>
+           <div>
+            <label className="text-sm font-medium">Повторите новый пароль</label>
+            <input name="confirmPassword" type="password" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Повторите пароль" required/>
+           </div>
+           <div className="flex justify-end">
+            <Button type="submit">Изменить пароль</Button>
+           </div>
+          </CardContent>
+         </Card>
+        </form>
+        <Card className="rounded-2xl">
+          <CardContent className="pt-6">
+            <TwoFactorSettings />
+          </CardContent>
+        </Card>
+      </div>
      ),
     },
       ]}/>
