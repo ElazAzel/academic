@@ -83,6 +83,11 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Smooth visual constructor states
+  const [showGrid, setShowGrid] = useState(false);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+
   // Live preview scaling
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -102,6 +107,52 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [loading]);
+
+  // Nudge active element via Keyboard Arrows (1px, or 10px with Shift)
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (!activeField) return;
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "SELECT" ||
+        document.activeElement?.tagName === "TEXTAREA"
+      ) {
+        return;
+      }
+
+      const step = e.shiftKey ? 10 : 1;
+      let deltaX = 0;
+      let deltaY = 0;
+
+      if (e.key === "ArrowLeft") {
+        deltaX = -step;
+        e.preventDefault();
+      } else if (e.key === "ArrowRight") {
+        deltaX = step;
+        e.preventDefault();
+      } else if (e.key === "ArrowUp") {
+        deltaY = step;
+        e.preventDefault();
+      } else if (e.key === "ArrowDown") {
+        deltaY = -step;
+        e.preventDefault();
+      }
+
+      if (deltaX !== 0 || deltaY !== 0) {
+        const current = config[activeField] as any;
+        let nextX = Math.round(current.x + deltaX);
+        let nextY = Math.round(current.y + deltaY);
+
+        nextX = Math.max(0, Math.min(842, nextX));
+        nextY = Math.max(0, Math.min(595, nextY));
+
+        updateStyle(activeField, { x: nextX, y: nextY });
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeField, config]);
 
   async function loadTemplate() {
     setLoading(true);
@@ -220,6 +271,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
       startElementY: element.y,
     };
     setActiveField(field);
+    setIsDragging(true);
     const target = e.currentTarget;
     target.setPointerCapture(e.pointerId);
   }
@@ -236,6 +288,16 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
     let nextX = Math.round(drag.startElementX + deltaX);
     let nextY = Math.round(drag.startElementY - deltaY); // reversed delta because Y starts from bottom
 
+    // Apply smart grid alignment/snapping and center guidance magnetism
+    if (snapToGrid) {
+      if (Math.abs(nextX - 421) < 8) {
+        nextX = 421; // Snap horizontally to perfect center
+      } else {
+        nextX = Math.round(nextX / 10) * 10;
+      }
+      nextY = Math.round(nextY / 10) * 10;
+    }
+
     // Bound values inside page bounds
     nextX = Math.max(0, Math.min(842, nextX));
     nextY = Math.max(0, Math.min(595, nextY));
@@ -248,6 +310,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
     const target = e.currentTarget;
     target.releasePointerCapture(e.pointerId);
     activeDragRef.current = null;
+    setIsDragging(false);
   }
 
   if (loading) {
@@ -301,14 +364,38 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
         {/* Visual Live Editor Canvas (842 x 595 landscape) */}
         <div className="lg:col-span-2 space-y-4">
           <Card className="rounded-2xl overflow-hidden shadow-sm">
-            <CardHeader className="bg-muted/30">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Award className="text-primary h-5 w-5" />
-                <span>Интерактивный холст (Drag & Drop)</span>
-              </CardTitle>
-              <CardDescription>
-                Перетаскивайте элементы прямо на свидетельство мышью, чтобы точно отрегулировать координаты.
-              </CardDescription>
+            <CardHeader className="bg-muted/30 border-b">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="space-y-1">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Award className="text-primary h-5 w-5" />
+                    <span>Интерактивный холст (Drag & Drop)</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Перетаскивайте элементы прямо на холст или тонко настраивайте их положение стрелками клавиатуры.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    size="sm" 
+                    variant={showGrid ? "primary" : "secondary"}
+                    onClick={() => setShowGrid(!showGrid)}
+                    title="Вспомогательная сетка и печатная рамка безопасности"
+                  >
+                    <Grid className="h-4 w-4 mr-1" />
+                    {showGrid ? "Сетка: Вкл" : "Сетка: Выкл"}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={snapToGrid ? "primary" : "secondary"}
+                    onClick={() => setSnapToGrid(!snapToGrid)}
+                    title="Примагничивать элементы к шагу сетки и центру холста"
+                  >
+                    <Sliders className="h-4 w-4 mr-1" />
+                    {snapToGrid ? "Магнит: Вкл" : "Магнит: Выкл"}
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="p-6 flex justify-center">
               <div 
@@ -320,6 +407,37 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                   backgroundPosition: "center"
                 }}
               >
+                {/* Visual Grid Lines overlay */}
+                {showGrid && (
+                  <div 
+                    className="absolute inset-0 pointer-events-none opacity-[0.05]"
+                    style={{
+                      backgroundImage: "linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px)",
+                      backgroundSize: `${(10 / 842) * 100}% ${(10 / 595) * 100}%`,
+                    }}
+                  />
+                )}
+
+                {/* Printable safe margins boundaries overlay */}
+                {showGrid && (
+                  <div 
+                    className="absolute pointer-events-none border border-dashed border-rose-500/20"
+                    style={{
+                      left: `${(40 / 842) * 100}%`,
+                      right: `${(40 / 842) * 100}%`,
+                      top: `${(40 / 595) * 100}%`,
+                      bottom: `${(40 / 595) * 100}%`,
+                    }}
+                  />
+                )}
+
+                {/* Snapping magnetic center line overlay */}
+                {showGrid && (
+                  <div 
+                    className="absolute top-0 bottom-0 left-[50%] -translate-x-1/2 border-l border-dashed border-amber-500/30 pointer-events-none z-10"
+                  />
+                )}
+
                 {/* Fallback elegant border grid if background is not uploaded */}
                 {!config.backgroundUrl && (
                   <div className="absolute inset-0 border-8 border-slate-700 flex flex-col justify-between p-6 bg-slate-50">
@@ -351,7 +469,11 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                       onPointerDown={(e) => handleDragStart(field, e)}
                       onPointerMove={handleDragMove}
                       onPointerUp={handleDragEnd}
-                      className={`absolute cursor-move select-none p-1 rounded border hover:bg-primary/5 transition-colors ${isActive ? "border-amber-500 bg-amber-500/10 z-20" : "border-transparent hover:border-slate-300"}`}
+                      className={`absolute cursor-move select-none p-1 rounded border transition-all duration-150 ${
+                        isActive 
+                          ? "border-amber-500 bg-amber-500/10 shadow-md scale-[1.01] ring-2 ring-amber-500/25 z-20" 
+                          : "border-transparent hover:border-slate-300 hover:bg-slate-50/50"
+                      }`}
                       style={{
                         left: `${(s.x / 842) * 100}%`,
                         bottom: `${(s.y / 595) * 100}%`,
@@ -363,9 +485,19 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                         fontStyle: field === "studentName" ? "normal" : "inherit"
                       }}
                     >
-                      <span className="flex items-center gap-1">
-                        {isActive && <Move className="h-3 w-3 inline text-amber-500" style={{ transform: `scale(${1 / scale})` }} />}
+                      <span className="flex items-center gap-1 relative whitespace-nowrap">
+                        {isActive && <Move className="h-3 w-3 inline text-amber-500 animate-pulse" style={{ transform: `scale(${1 / scale})` }} />}
                         {label}
+
+                        {/* Drag coordinates visual tooltip */}
+                        {isDragging && isActive && (
+                          <span 
+                            className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white text-[10px] px-1.5 py-0.5 rounded shadow-lg pointer-events-none whitespace-nowrap z-50 font-mono"
+                            style={{ transform: `scale(${Math.max(1, 1 / scale)})` }}
+                          >
+                            X: {s.x} Y: {s.y}
+                          </span>
+                        )}
                       </span>
                     </div>
                   );
@@ -376,7 +508,11 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                   onPointerDown={(e) => handleDragStart("qrCode", e)}
                   onPointerMove={handleDragMove}
                   onPointerUp={handleDragEnd}
-                  className={`absolute cursor-move border select-none p-1 flex items-center justify-center hover:bg-primary/5 bg-white ${activeField === "qrCode" ? "border-amber-500 bg-amber-500/10 z-20" : "border-slate-300"}`}
+                  className={`absolute cursor-move border select-none p-1 flex items-center justify-center bg-white transition-all duration-150 ${
+                    activeField === "qrCode" 
+                      ? "border-amber-500 bg-amber-500/10 shadow-md scale-[1.01] ring-2 ring-amber-500/25 z-20" 
+                      : "border-slate-300 hover:border-slate-400"
+                  }`}
                   style={{
                     left: `${(config.qrCode.x / 842) * 100}%`,
                     bottom: `${(config.qrCode.y / 595) * 100}%`,
@@ -384,9 +520,19 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                     height: `${config.qrCode.size * scale}px`,
                   }}
                 >
-                  <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center p-1 border">
+                  <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center p-1 border relative">
                     <Grid className="w-full h-full text-slate-700" />
                     <span className="text-[6px] text-slate-400 absolute bottom-0 bg-white/95 px-1 truncate">QR-код</span>
+
+                    {/* QR coordinates visual tooltip */}
+                    {isDragging && activeField === "qrCode" && (
+                      <span 
+                        className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white text-[10px] px-1.5 py-0.5 rounded shadow-lg pointer-events-none whitespace-nowrap z-50 font-mono"
+                        style={{ transform: `scale(${Math.max(1, 1 / scale)})` }}
+                      >
+                        X: {config.qrCode.x} Y: {config.qrCode.y}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
