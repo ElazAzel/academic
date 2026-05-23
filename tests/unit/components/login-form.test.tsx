@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LoginForm } from "@/components/auth/login-form";
@@ -14,6 +14,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockSignIn.mockResolvedValue({ error: null });
   mockReplace.mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("LoginForm", () => {
@@ -52,9 +56,9 @@ describe("LoginForm", () => {
   });
 
   it("redirects after successful sign-in", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      json: () => Promise.resolve({ data: { path: "/admin" } }),
-    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      json: () => Promise.resolve({ user: { roles: ["admin"] } }),
+    }));
     const user = userEvent.setup();
 
     render(<LoginForm oauthProviders={{ google: false, github: false }} />);
@@ -66,7 +70,28 @@ describe("LoginForm", () => {
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith("/admin");
     });
+  });
 
-    vi.restoreAllMocks();
+  it("retries session roles before redirecting", async () => {
+    const mockFetch = vi.fn()
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ user: { roles: [] } }),
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ user: { roles: ["curator"] } }),
+      });
+    vi.stubGlobal("fetch", mockFetch);
+    const user = userEvent.setup();
+
+    render(<LoginForm oauthProviders={{ google: false, github: false }} />);
+
+    await user.type(screen.getByLabelText(/E-mail/), "curator@test.com");
+    await user.type(screen.getByLabelText(/Пароль/), "correct");
+    await user.click(screen.getByRole("button", { name: /Войти в систему/i }));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/curator");
+    });
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 });

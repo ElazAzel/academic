@@ -14,7 +14,6 @@ import {
   Send, 
   Activity, 
   CheckCircle,
-  Copy,
   Mail
 } from "lucide-react";
 import { toast } from "sonner";
@@ -67,6 +66,19 @@ export function CuratorRadar({ students }: CuratorRadarProps) {
     lagging: categorized.filter(s => s.category === "lagging").length
   };
 
+  const filterCards: Array<{
+    key: "all" | "leaders" | "active" | "lagging";
+    label: string;
+    count: number;
+    icon: React.ReactNode;
+    tone: string;
+  }> = [
+    { key: "all", label: "Все слушатели", count: countMap.all, icon: <Users className="h-5 w-5" />, tone: "bg-primary/5 text-primary border-primary/20" },
+    { key: "leaders", label: "Лидеры (>=70%)", count: countMap.leaders, icon: <Flame className="h-5 w-5" />, tone: "bg-amber-50 text-amber-600 border-amber-200" },
+    { key: "active", label: "В темпе (активные)", count: countMap.active, icon: <CheckCircle className="h-5 w-5" />, tone: "bg-emerald-50 text-emerald-600 border-emerald-200" },
+    { key: "lagging", label: "В зоне риска", count: countMap.lagging, icon: <AlertTriangle className="h-5 w-5" />, tone: "bg-red-50 text-red-600 border-red-200" },
+  ];
+
   // Filter students based on category and search query
   const filteredStudents = categorized.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -115,15 +127,10 @@ export function CuratorRadar({ students }: CuratorRadarProps) {
     <div className="space-y-6">
       {/* Activity Pulse Cards */}
       <div className="grid gap-4 sm:grid-cols-4">
-        {[
-          { key: "all", label: "Все слушатели", count: countMap.all, icon: <Users className="h-5 w-5" />, tone: "bg-primary/5 text-primary border-primary/20" },
-          { key: "leaders", label: "Лидеры (>=70%)", count: countMap.leaders, icon: <Flame className="h-5 w-5" />, tone: "bg-amber-50 text-amber-600 border-amber-200" },
-          { key: "active", label: "В темпе (активные)", count: countMap.active, icon: <CheckCircle className="h-5 w-5" />, tone: "bg-emerald-50 text-emerald-600 border-emerald-200" },
-          { key: "lagging", label: "В зоне риска", count: countMap.lagging, icon: <AlertTriangle className="h-5 w-5" />, tone: "bg-red-50 text-red-600 border-red-200" }
-        ].map((c) => (
+        {filterCards.map((c) => (
           <Card 
             key={c.key} 
-            onClick={() => setActiveFilter(c.key as any)}
+            onClick={() => setActiveFilter(c.key)}
             className={`border cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm ${
               activeFilter === c.key 
                 ? `${c.tone.split(" ")[0]} ring-2 ring-primary/30 font-semibold` 
