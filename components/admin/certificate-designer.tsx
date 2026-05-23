@@ -54,6 +54,9 @@ const DEFAULT_CONFIG: TemplateConfig = {
   qrCode: { x: 620, y: 120, size: 100 },
 };
 
+const CERTIFICATE_BACKGROUND_MAX_BYTES = 5 * 1024 * 1024;
+const PNG_CONTENT_TYPE = "image/png";
+
 const PRESET_COLORS = [
   { value: "#1c376f", label: "Синий флотский" },
   { value: "#1a1a1a", label: "Глубокий черный" },
@@ -116,6 +119,27 @@ function readQrStyle(value: unknown, fallback: QrStyle): QrStyle {
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
+}
+
+async function readUploadPublicUrl(response: Response, fallback: string): Promise<string> {
+  const responseType = response.headers.get("content-type") ?? "";
+  if (!responseType.includes("application/json")) return fallback;
+
+  const body = await response.json().catch(() => null);
+  return isRecord(body) && typeof body.publicUrl === "string" ? body.publicUrl : fallback;
+}
+
+function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: string } {
+  const envelope = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
+
+  if (!isRecord(envelope) || typeof envelope.url !== "string" || typeof envelope.publicUrl !== "string") {
+    throw new Error("Некорректный ответ сервера загрузки");
+  }
+
+  return {
+    url: envelope.url,
+    publicUrl: envelope.publicUrl,
+  };
 }
 
 export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerProps) {
@@ -230,13 +254,23 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.includes("image/png")) {
+    const isPng = file.type === PNG_CONTENT_TYPE || file.name.toLowerCase().endsWith(".png");
+    if (!isPng) {
       setError("Разрешены только PNG фоны для сертификатов.");
+      e.currentTarget.value = "";
+      return;
+    }
+
+    if (file.size > CERTIFICATE_BACKGROUND_MAX_BYTES) {
+      setError("PNG-фон не должен превышать 5 MB.");
+      e.currentTarget.value = "";
       return;
     }
 
     setUploading(true);
     setError(null);
+    setSuccess(null);
+    const contentType = file.type || PNG_CONTENT_TYPE;
 
     try {
       const res = await fetch("/api/v1/media/uploads", {
@@ -244,29 +278,32 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           filename: file.name,
-          contentType: file.type,
+          contentType,
+          fileSize: file.size,
           prefix: "certificates",
         }),
       });
 
       if (!res.ok) throw new Error("Не удалось создать ссылку для загрузки");
-      const { url, publicUrl } = await res.json();
+      const { url, publicUrl } = readUploadTicketPayload(await res.json());
 
       const uploadRes = await fetch(url, {
         method: "PUT",
-        headers: { "Content-Type": file.type },
+        headers: { "Content-Type": contentType },
         body: file,
       });
 
       if (!uploadRes.ok) throw new Error("Не удалось загрузить файл в облако");
 
-      setConfig(prev => ({ ...prev, backgroundUrl: publicUrl }));
+      const uploadedPublicUrl = await readUploadPublicUrl(uploadRes, publicUrl);
+      setConfig(prev => ({ ...prev, backgroundUrl: uploadedPublicUrl }));
       setSuccess("Фоновый PNG успешно загружен!");
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(getErrorMessage(err, "Не удалось загрузить фоновое изображение"));
     } finally {
       setUploading(false);
+      e.currentTarget.value = "";
     }
   }
 

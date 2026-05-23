@@ -1,5 +1,41 @@
 # Project Update Log
 
+## 2026-05-23 - Student Dashboard Primary Learning Flow
+
+- **Author:** Codex
+- **Scope:** Reorder and tune the student dashboard for the primary learning action and responsive use across desktop, tablet, and mobile.
+- **Fixed / Added:**
+  - Moved `ContinueLearningCard` to the first content block on `/student`, before XP and achievements, to match the product rule that the student starts with the next learning step.
+  - Added a first-position empty state for students without an active next lesson, with a direct action to `/student/my-courses`.
+  - Placed gamification below the learning CTA and adjusted XP/achievement cards to avoid cramped layouts on smaller screens.
+  - Improved responsive course tabs/cards, moved the role sidebar/header navigation to the `lg` breakpoint for tablet-width layouts, and added bottom spacing in `AppShell` so the fixed bottom navigation does not cover page content.
+- **Validation:**
+  - `npm run lint -- --max-warnings=0` passed.
+  - `npm run typecheck` passed.
+  - `npm run test` passed: 422/422 tests.
+  - `npm run build` passed.
+  - Browser smoke on `/student` before the final `lg` breakpoint adjustment passed for desktop/tablet/mobile: `ContinueLearningCard` rendered before XP/achievements, console had no errors/warnings, and `body.scrollWidth` did not exceed the viewport. A repeat browser reload after the breakpoint adjustment was blocked by Browser Use URL policy for the already-open local URL, so the final breakpoint change is covered by lint/typecheck/tests/build and code inspection.
+- **Status:** green with browser policy limitation noted.
+
+## 2026-05-23 - Certificate Background PNG Upload Repair
+
+- **Author:** Codex
+- **Scope:** Fix certificate designer PNG background upload through the shared media upload flow.
+- **Fixed / Added:**
+  - Fixed `components/admin/certificate-designer.tsx` to read the enveloped `/api/v1/media/uploads` response (`data.url`, `data.publicUrl`) instead of treating `url` as a top-level field.
+  - Added PNG filename fallback, 5 MB client-side size check, file size submission, input reset for retries, and support for the final `publicUrl` returned by `/api/v1/media/upload-fallback`.
+  - Updated `lib/upload-with-compress.ts` with the same enveloped upload-ticket parsing and fallback `publicUrl` handling for other media upload surfaces.
+  - Updated `lib/storage.ts` to run a real S3 `HeadBucket` availability check before returning a presigned URL; unavailable MinIO/S3 now returns `null` and lets `/api/v1/media/uploads` use Supabase fallback as documented.
+  - Added regression coverage for certificate PNG fallback tickets and shared upload wrapper fallback URL handling.
+- **Validation:**
+  - `npx vitest run tests/unit/media-upload-routes.test.ts tests/unit/upload-with-compress.test.ts tests/unit/media-upload.test.ts tests/unit/storage.test.ts` passed.
+  - `npm run lint -- --max-warnings=0` passed.
+  - `npm run typecheck` passed.
+  - `npm run test` passed: 422/422 tests.
+  - `npm run build` passed.
+  - Browser smoke on `/admin/certificates/designer/[courseId]` passed: page rendered, PNG upload input existed and was enabled, console had no errors/warnings. Browser screenshot capture timed out in the tool, so visual proof is DOM/console-based.
+- **Status:** green.
+
 ## 2026-05-23 - Auth Session Dynamic Route Build Signal
 
 - **Author:** Codex

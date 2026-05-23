@@ -146,15 +146,17 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
   return (
     <FadeIn>
     <Card className="overflow-hidden border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-shadow hover:shadow-m3-soft-hover rounded-xl">
-      <CardHeader>
+      <CardHeader className="space-y-2 p-4 sm:p-6">
         <StatusBadge status="ACTIVE" label="Следующее действие" className="w-fit" />
-        <CardTitle className="text-headline-md text-m3-on-surface">Продолжить: {data.courseTitle}</CardTitle>
+        <CardTitle className="break-words text-headline-sm text-m3-on-surface sm:text-headline-md">
+          Продолжить: {data.courseTitle}
+        </CardTitle>
         <CardDescription className="font-body-md text-body-md text-m3-on-surface-variant">
           {data.moduleTitle} · {data.lessonTitle}
           {data.deadlineDaysLeft != null && ` · дедлайн через ${data.deadlineDaysLeft} дн.`}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
         <div className="space-y-2">
           <div className="flex items-center justify-between font-body-sm text-body-sm">
             <span className="text-m3-on-surface-variant">Прогресс курса</span>
@@ -170,10 +172,10 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
           <Progress value={data.modulePercent} className="h-1.5 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
+          <p className="min-w-0 font-body-sm text-body-sm text-m3-on-surface-variant">
             До сертификата: пройти {100 - data.coursePercent}% курса и сдать финальное задание.
           </p>
-          <Button asChild>
+          <Button asChild className="w-full shrink-0 sm:w-auto">
             <Link href={`/student/lessons/${data.lessonId}`}>
             Открыть урок
             <Icon name="arrow_forward" className="text-[18px]" />

@@ -63,6 +63,27 @@ describe("media upload routes", () => {
     expect(mockBuildStorageKey).toHaveBeenCalledWith("covers", "cover.png");
   });
 
+  it("returns Supabase fallback upload URL for certificate PNG backgrounds when S3 is unavailable", async () => {
+    mockCreatePresignedUploadUrl.mockResolvedValueOnce(null);
+
+    const response = await createUploadUrl(new Request("http://localhost/api/v1/media/uploads", {
+      method: "POST",
+      body: JSON.stringify({
+        filename: "certificate-background.png",
+        contentType: "image/png",
+        fileSize: 1024,
+        prefix: "certificates",
+      }),
+    }));
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockRequireUser).toHaveBeenCalledWith("courses:write");
+    expect(mockBuildStorageKey).toHaveBeenCalledWith("certificates", "certificate-background.png");
+    expect(data.data.url).toContain("/api/v1/media/upload-fallback");
+    expect(data.data.publicUrl).toContain("/storage/v1/object/public/academy-media/certificates/");
+  });
+
   it("applies the same permission policy in fallback uploads", async () => {
     const response = await uploadFallback(new Request(
       "http://localhost/api/v1/media/upload-fallback?key=submissions/1710000000000-abcdef12.pdf&contentType=application/pdf",
