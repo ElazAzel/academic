@@ -12,7 +12,8 @@ import {
   Grid,
   CheckCircle,
   AlertCircle,
-  Loader2
+  Loader2,
+  ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -322,6 +323,32 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
     }
   }
 
+  const [previewing, setPreviewing] = useState(false);
+
+  async function handlePreviewPdf() {
+    setPreviewing(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/v1/certificates/designer/${courseId}/preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config),
+      });
+
+      if (!res.ok) {
+        throw new Error("Не удалось сгенерировать предпросмотр PDF");
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      setError(getErrorMessage(err, "Ошибка при генерации предпросмотра"));
+    } finally {
+      setPreviewing(false);
+    }
+  }
+
   function handleReset() {
     if (confirm("Вы уверены, что хотите сбросить дизайн до настроек по умолчанию?")) {
       setConfig(DEFAULT_CONFIG);
@@ -436,6 +463,10 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
           <Button variant="secondary" onClick={handleReset} size="sm">
             <RotateCcw className="h-4 w-4 mr-1" />
             Сбросить
+          </Button>
+          <Button variant="secondary" onClick={handlePreviewPdf} disabled={previewing} size="sm">
+            {previewing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ExternalLink className="h-4 w-4 mr-1" />}
+            Предпросмотр PDF
           </Button>
           <Button onClick={handleSave} disabled={saving} size="sm">
             {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
