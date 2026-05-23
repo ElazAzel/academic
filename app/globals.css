@@ -175,13 +175,15 @@ body {
   background-color: var(--m3-background);
 }
 
-/* Desktop: subtle gradient overlay (very faint) */
+/* Desktop: premium animated mesh gradient background (refined, deep and slow) */
 @media (min-width: 768px) {
   body {
     background:
-      radial-gradient(circle at 15% 0%, rgba(65, 89, 171, 0.04), transparent 34rem),
-      radial-gradient(circle at 85% 10%, rgba(99, 57, 219, 0.03), transparent 30rem),
+      radial-gradient(circle at 10% 10%, rgba(99, 57, 219, 0.05), transparent 45rem),
+      radial-gradient(circle at 90% 90%, rgba(12, 45, 126, 0.06), transparent 50rem),
+      radial-gradient(circle at 50% 50%, rgba(0, 83, 94, 0.03), transparent 40rem),
       var(--m3-background);
+    background-attachment: fixed;
   }
 }
 
@@ -498,4 +500,67 @@ img[loading="lazy"]:not([src=""]) {
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.35);
   }
+}
+
+/* ── Premium Glassmorphism & Micro-animations ──────────────────────── */
+
+.glass-card-premium {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.03),
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.dark .glass-card-premium {
+  background: rgba(30, 41, 59, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+.glass-card-premium:hover {
+  transform: translateY(-2px) scale(1.005);
+  box-shadow: 
+    0 20px 40px rgba(12, 45, 126, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(99, 57, 219, 0.15) !important;
+}
+
+.dark .glass-card-premium:hover {
+  border-color: rgba(154, 219, 232, 0.15) !important;
+}
+
+/* Micro-shine button effect */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-100%) skewX(-15deg);
+  transition: transform 0.6s ease;
+}
+
+.btn-shine:hover::after {
+  transform: translateX(100%) skewX(-15deg);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }

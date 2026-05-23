@@ -87,12 +87,12 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
   const card = (
     <Card
       className={cn(
-        "relative flex min-h-[178px] h-full flex-col overflow-hidden rounded-xl bg-m3-surface-container-lowest shadow-m3-soft transition-all hover:shadow-m3-soft-hover",
+        "relative flex min-h-[178px] h-full flex-col overflow-hidden rounded-xl glass-card-premium",
         "px-5 py-4",
-        "before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:to-transparent",
+        "before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:to-transparent",
         TONE_TOP_ACCENT[metric.tone],
-        metric.priority === "critical" && "ring-1 ring-m3-error/25",
-        metric.priority === "elevated" && "ring-1 ring-amber-400/25",
+        metric.priority === "critical" && "ring-1 ring-m3-error/30",
+        metric.priority === "elevated" && "ring-1 ring-amber-400/30",
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -145,35 +145,37 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
 export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
   return (
     <FadeIn>
-    <Card className="overflow-hidden border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-shadow hover:shadow-m3-soft-hover rounded-xl">
-      <CardHeader>
-        <StatusBadge status="ACTIVE" label="Следующее действие" className="w-fit" />
-        <CardTitle className="text-headline-md text-m3-on-surface">Продолжить: {data.courseTitle}</CardTitle>
-        <CardDescription className="font-body-md text-body-md text-m3-on-surface-variant">
+    <Card className="overflow-hidden border-m3-outline-variant/60 glass-card-premium rounded-xl relative">
+      {/* Decorative premium gradient line */}
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-m3-primary via-m3-secondary to-m3-tertiary" />
+      <CardHeader className="pb-3 pt-5">
+        <StatusBadge status="ACTIVE" label="Следующее действие" className="w-fit bg-m3-primary-fixed/30 text-m3-primary" />
+        <CardTitle className="text-headline-md text-m3-on-surface mt-2">Продолжить: {data.courseTitle}</CardTitle>
+        <CardDescription className="font-body-md text-body-md text-m3-on-surface-variant/90">
           {data.moduleTitle} · {data.lessonTitle}
           {data.deadlineDaysLeft != null && ` · дедлайн через ${data.deadlineDaysLeft} дн.`}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         <div className="space-y-2">
           <div className="flex items-center justify-between font-body-sm text-body-sm">
             <span className="text-m3-on-surface-variant">Прогресс курса</span>
-            <span className="font-medium text-m3-primary">{data.coursePercent}%</span>
+            <span className="font-semibold text-m3-primary">{data.coursePercent}%</span>
           </div>
-          <Progress value={data.coursePercent} className="bg-m3-surface-container-high [&>div]:bg-m3-primary" />
+          <Progress value={data.coursePercent} className="bg-m3-surface-container-high h-2 [&>div]:bg-m3-primary" />
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between font-body-sm text-body-sm">
             <span className="text-m3-on-surface-variant">Прогресс модуля</span>
-            <span className="font-medium text-m3-primary">{data.modulePercent}%</span>
+            <span className="font-semibold text-m3-primary">{data.modulePercent}%</span>
           </div>
           <Progress value={data.modulePercent} className="h-1.5 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2 border-t border-m3-outline-variant/30">
+          <p className="font-body-sm text-body-sm text-m3-on-surface-variant/80">
             До сертификата: пройти {100 - data.coursePercent}% курса и сдать финальное задание.
           </p>
-          <Button asChild>
+          <Button asChild className="btn-shine rounded-xl shadow-m3-soft hover:shadow-m3-soft-hover">
             <Link href={`/student/lessons/${data.lessonId}`}>
             Открыть урок
             <Icon name="arrow_forward" className="text-[18px]" />
