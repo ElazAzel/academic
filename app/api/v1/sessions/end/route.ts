@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     }
 
     const session = await prisma.userSession.findFirst({
-      where: { id: body.sessionId, userId: user.id, endedAt: null },
+      where: { id: body.sessionId, userId: user.id, durationSec: null },
     });
 
     if (!session) {
