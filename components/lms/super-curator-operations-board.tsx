@@ -54,23 +54,38 @@ export function SuperCuratorOperationsBoard({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <span className={cn("inline-flex items-center gap-1 px-3 py-1.5 rounded-full font-label-md text-label-md", overloadedCount > 0 ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300" : "bg-m3-primary-fixed/20 text-m3-on-primary-fixed")}>
-            <Icon name="warning" className="text-[16px]" />
+          <span className={cn(
+            "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border font-semibold text-xs backdrop-blur-md shadow-sm transition-all duration-300",
+            overloadedCount > 0 
+              ? "bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-300 shadow-[0_2px_10px_rgba(245,158,11,0.04)]" 
+              : "bg-m3-primary-fixed/15 border-m3-primary/25 text-m3-primary shadow-[0_2px_10px_rgba(12,45,126,0.04)]"
+          )}>
+            <Icon name="warning" className="text-[15px]" />
             {overloadedCount} перегрузок
           </span>
-          <span className={cn("inline-flex items-center gap-1 px-3 py-1.5 rounded-full font-label-md text-label-md", openQuestionsCount > 0 ? "bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300" : "bg-m3-primary-fixed/20 text-m3-on-primary-fixed")}>
-            <Icon name="forum" className="text-[16px]" />
+          <span className={cn(
+            "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border font-semibold text-xs backdrop-blur-md shadow-sm transition-all duration-300",
+            openQuestionsCount > 0 
+              ? "bg-sky-500/10 border-sky-500/25 text-sky-700 dark:text-sky-300 shadow-[0_2px_10px_rgba(14,165,233,0.04)]" 
+              : "bg-m3-primary-fixed/15 border-m3-primary/25 text-m3-primary shadow-[0_2px_10px_rgba(12,45,126,0.04)]"
+          )}>
+            <Icon name="forum" className="text-[15px]" />
             {openQuestionsCount} проблемных вопросов
           </span>
-          <span className={cn("inline-flex items-center gap-1 px-3 py-1.5 rounded-full font-label-md text-label-md", hotRisksCount > 0 ? "bg-m3-error-container/30 text-m3-error" : "bg-m3-primary-fixed/20 text-m3-on-primary-fixed")}>
-            <Icon name="error" className="text-[16px]" />
+          <span className={cn(
+            "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border font-semibold text-xs backdrop-blur-md shadow-sm transition-all duration-300",
+            hotRisksCount > 0 
+              ? "bg-m3-error-container/15 dark:bg-m3-error-container/10 border border-m3-error/25 text-m3-error shadow-[0_2px_10px_rgba(186,26,26,0.04)]" 
+              : "bg-m3-primary-fixed/15 border-m3-primary/25 text-m3-primary shadow-[0_2px_10px_rgba(12,45,126,0.04)]"
+          )}>
+            <Icon name="error" className="text-[15px]" />
             {hotRisksCount} высоких рисков
           </span>
         </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
-        <Card className="rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <Card className="rounded-xl border-m3-outline-variant/60 glass-card-premium">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-headline-sm text-m3-on-surface">
               <Icon name="group" className="text-[22px] text-m3-primary" />
@@ -86,9 +101,11 @@ export function SuperCuratorOperationsBoard({
                   <article
                     key={curator.curatorId}
                     className={cn(
-                      "rounded-xl border p-4 transition-shadow hover:shadow-m3-soft bg-m3-surface-container-lowest",
-                      curator.workloadLevel === "critical" && "border-m3-error/20 bg-m3-error-container/10",
-                      curator.workloadLevel === "overloaded" && "border-amber-200 bg-amber-50/30",
+                      "rounded-xl border p-4 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) hover:-translate-y-0.5 backdrop-blur-xl",
+                      curator.workloadLevel === "critical" && "border-m3-error/30 bg-m3-error-container/8 hover:shadow-[0_8px_30px_rgba(186,26,26,0.05)]",
+                      curator.workloadLevel === "overloaded" && "border-amber-500/25 bg-amber-500/5 hover:shadow-[0_8px_30px_rgba(245,158,11,0.05)]",
+                      curator.workloadLevel === "watch" && "border-sky-500/25 bg-sky-500/5 hover:shadow-[0_8px_30px_rgba(14,165,233,0.05)]",
+                      curator.workloadLevel === "normal" && "border-m3-outline-variant/60 bg-white/60 dark:bg-slate-900/60 hover:border-m3-primary/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.03)]"
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -104,7 +121,7 @@ export function SuperCuratorOperationsBoard({
                           {curator.cohorts.length > 0 ? curator.cohorts.join(" · ") : "поток не указан"}
                         </p>
                       </div>
-                      <Button asChild size="sm" variant={curator.workloadLevel === "normal" ? "secondary" : "primary"}>
+                      <Button asChild size="sm" variant={curator.workloadLevel === "normal" ? "secondary" : "primary"} className="btn-shine">
                         <Link href={curator.nextActionHref}>{curator.nextActionLabel}</Link>
                       </Button>
                     </div>
@@ -124,7 +141,7 @@ export function SuperCuratorOperationsBoard({
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <Card className="rounded-xl border-m3-outline-variant/60 glass-card-premium">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-headline-sm text-m3-on-surface">
               <Icon name="help_center" className="text-[22px] text-m3-secondary" />
@@ -136,7 +153,7 @@ export function SuperCuratorOperationsBoard({
               <EmptyState text="Нет открытых вопросов в зоне контроля." />
             ) : (
               problemQuestions.map((question) => (
-                <div key={question.id} className="rounded-xl border border-m3-outline-variant p-3 bg-m3-surface-container-low">
+                <div key={question.id} className="rounded-xl border border-m3-outline-variant/60 p-3.5 bg-m3-surface-container-low/40 backdrop-blur-md transition-all hover:bg-m3-surface-container-low hover:border-m3-primary/30">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-label-md text-label-md text-m3-on-surface">{question.studentName}</p>
@@ -161,7 +178,7 @@ export function SuperCuratorOperationsBoard({
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
-        <Card className="rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <Card className="rounded-xl border-m3-outline-variant/60 glass-card-premium">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-headline-sm text-m3-on-surface">
               <Icon name="shuffle" className="text-[22px] text-amber-600" />
@@ -174,13 +191,13 @@ export function SuperCuratorOperationsBoard({
             ) : (
               <div className="space-y-3">
                 {cohortOperations.map((cohort) => (
-                  <article key={cohort.cohortId} className="rounded-xl border border-m3-outline-variant p-4 bg-m3-surface-container-lowest">
+                  <article key={cohort.cohortId} className="rounded-xl border border-m3-outline-variant/60 p-4 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl transition-all duration-300 hover:border-m3-primary/30">
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div className="min-w-0">
                         <h3 className="truncate font-label-lg text-label-lg text-m3-on-surface">{cohort.cohortName}</h3>
                         <p className="mt-1 truncate font-body-sm text-body-sm text-m3-on-surface-variant">{cohort.courseTitle}</p>
                       </div>
-                      <Button asChild size="sm" variant={cohort.criticalRisks > 0 || cohort.overloadedCurators > 0 ? "primary" : "secondary"}>
+                      <Button asChild size="sm" variant={cohort.criticalRisks > 0 || cohort.overloadedCurators > 0 ? "primary" : "secondary"} className="btn-shine">
                         <Link href={cohort.nextActionHref}>{cohort.nextActionLabel}</Link>
                       </Button>
                     </div>
@@ -199,7 +216,7 @@ export function SuperCuratorOperationsBoard({
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <Card className="rounded-xl border-m3-outline-variant/60 glass-card-premium">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-headline-sm text-m3-on-surface">
               <Icon name="warning" className="text-[22px] text-m3-error" />
@@ -211,7 +228,7 @@ export function SuperCuratorOperationsBoard({
               <EmptyState text="Нет высоких или критичных рисков." />
             ) : (
               riskQueue.map((risk) => (
-                <div key={risk.id} className="rounded-xl border border-m3-outline-variant p-3 bg-m3-surface-container-low">
+                <div key={risk.id} className="rounded-xl border border-m3-outline-variant/60 p-3.5 bg-m3-surface-container-low/40 backdrop-blur-md transition-all hover:bg-m3-surface-container-low hover:border-m3-error/30">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-label-md text-label-md text-m3-on-surface">{risk.studentName}</p>
@@ -242,9 +259,14 @@ export function SuperCuratorOperationsBoard({
 
 function MetricCell({ value, label, hot = false }: { value: string | number; label: string; hot?: boolean }) {
   return (
-    <div className={cn("rounded-xl border border-m3-outline-variant bg-m3-surface-container-low px-2 py-2", hot && "border-amber-200 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200")}>
-      <p className="font-label-lg text-label-lg text-m3-on-surface tabular-nums">{value}</p>
-      <p className="font-label-md text-label-md text-m3-on-surface-variant">{label}</p>
+    <div className={cn(
+      "rounded-xl border px-2 py-2.5 transition-all duration-300", 
+      hot 
+        ? "border-amber-500/25 bg-amber-500/5 text-amber-700 dark:text-amber-300 shadow-[0_2px_8px_rgba(245,158,11,0.03)] font-semibold" 
+        : "border-m3-outline-variant/60 bg-m3-surface-container-low/40 text-m3-on-surface-variant"
+    )}>
+      <p className={cn("font-semibold text-label-lg tabular-nums", hot ? "text-amber-600 dark:text-amber-400" : "text-m3-on-surface")}>{value}</p>
+      <p className="font-label-md text-label-md text-m3-on-surface-variant/90">{label}</p>
     </div>
   );
 }
