@@ -19,10 +19,13 @@ export function LoginScreen({ oauthProviders }: { oauthProviders: OAuthProviderF
       {/* Login container */}
       <div className="z-10 flex w-full max-w-[440px] flex-col items-center px-margin-mobile md:px-0">
         {/* Card */}
-        <div className="flex w-full flex-col gap-lg rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest p-lg shadow-m3-soft backdrop-blur-sm md:p-xl">
+        <div className="relative flex w-full flex-col gap-lg rounded-2xl border border-m3-outline-variant/60 glass-card-premium p-lg md:p-xl overflow-hidden">
+          {/* Visual Top Decorative Accent */}
+          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-m3-primary via-m3-secondary to-m3-tertiary" />
+          
           {/* Header */}
-          <div className="flex flex-col items-center gap-sm border-b border-m3-surface-container-high pb-md text-center">
-            <div className="mb-sm flex h-12 w-12 items-center justify-center rounded-lg border border-m3-outline-variant/50 bg-m3-surface-container">
+          <div className="flex flex-col items-center gap-sm border-b border-m3-outline-variant/20 pb-md text-center">
+            <div className="mb-sm flex h-12 w-12 items-center justify-center rounded-xl border border-m3-outline-variant/50 bg-m3-surface-container">
               <span className="material-symbols-outlined text-[28px] text-m3-primary" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
                 school
               </span>
