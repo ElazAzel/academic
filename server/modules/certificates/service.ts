@@ -321,8 +321,9 @@ export async function generateCertificatePdf(certificateId: string) {
       verificationUrl: true,
       issuedAt: true,
       revokedAt: true,
+      courseId: true,
       user: { select: { name: true, email: true, organization: true } },
-      course: { select: { title: true } },
+      course: { select: { title: true, durationHours: true } },
     },
   });
   if (!certificate) {
@@ -348,7 +349,67 @@ export async function generateCertificatePdf(certificateId: string) {
   const qrPngBuffer = await QRCode.toBuffer(qrUrl, { type: "png" });
   const qrImage = await pdf.embedPng(qrPngBuffer);
 
-  // Load assets safely (with module-level file caching)
+  // Load custom template if exists
+  const template = await prisma.certificateTemplate.findFirst({
+    where: { courseId: certificate.courseId },
+  });
+
+  let drawCustom = false;
+  let config: any = null;
+  if (template && typeof template.body === "object" && template.body) {
+    config = template.body as any;
+    if (config.backgroundUrl) {
+      drawCustom = true;
+    }
+  }
+
+  if (drawCustom) {
+    try {
+      const bgRes = await fetch(config.backgroundUrl);
+      if (bgRes.ok) {
+        const bgBytes = await bgRes.arrayBuffer();
+        const bgBuffer = Buffer.from(bgBytes);
+        const bgImage = await embedImageSafely(pdf, bgBuffer);
+        page.drawImage(bgImage, { x: 0, y: 0, width: pageWidth, height: pageHeight });
+      } else {
+        console.warn(`[Certificate PDF] Failed to fetch custom background URL: ${config.backgroundUrl}, status ${bgRes.status}. Using default template.`);
+        drawCustom = false;
+      }
+    } catch (e) {
+      console.error("[Certificate PDF] Error fetching custom background. Using default:", e);
+      drawCustom = false;
+    }
+  }
+
+  if (drawCustom) {
+    // Draw customizable elements based on template coordinates
+    const nameStyle = config.studentName || { x: 421, y: 360, fontSize: 42, color: "#1c376f", align: "center" };
+    const nameText = certificate.user.organization ?? certificate.user.name ?? certificate.user.email;
+    drawTextElement(page, nameText, nameStyle, bold);
+
+    const courseStyle = config.courseTitle || { x: 421, y: 280, fontSize: 24, color: "#1a1a1a", align: "center" };
+    const courseText = certificate.course.title;
+    drawTextElement(page, courseText, courseStyle, bold);
+
+    const hoursStyle = config.durationHours || { x: 421, y: 200, fontSize: 14, color: "#333333", align: "center" };
+    const hoursText = `Количество часов: ${certificate.course.durationHours ?? 72}`;
+    drawTextElement(page, hoursText, hoursStyle, font);
+
+    const serialStyle = config.serialNumber || { x: 60, y: 60, fontSize: 10, color: "#808080", align: "left" };
+    const serialText = `Номер: ${certificate.number}`;
+    drawTextElement(page, serialText, serialStyle, font);
+
+    const dateStyle = config.issuedAt || { x: 60, y: 45, fontSize: 10, color: "#808080", align: "left" };
+    const dateText = `Дата выдачи: ${certificate.issuedAt.toISOString().slice(0, 10)}`;
+    drawTextElement(page, dateText, dateStyle, font);
+
+    const qrStyle = config.qrCode || { x: 620, y: 120, size: 100 };
+    page.drawImage(qrImage, { x: Number(qrStyle.x), y: Number(qrStyle.y), width: Number(qrStyle.size), height: Number(qrStyle.size) });
+
+    return pdf.save();
+  }
+
+  // Fallback to default border and signature assets
   const assetsDir = path.join(process.cwd(), "public/assets/certificates");
 
   const borderBytes = await readAssetCached(path.join(assetsDir, "border.png"));
@@ -433,4 +494,47 @@ export async function generateCertificatePdf(certificateId: string) {
   page.drawText(`Дата выдачи: ${certificate.issuedAt.toISOString().slice(0, 10)}`, { x: 60, y: 45, size: 10, font, color: rgb(0.5, 0.5, 0.5) });
 
   return pdf.save();
+}
+
+function hexToRgb(hex = "#000000") {
+  const clean = hex.replace("#", "");
+  const r = parseInt(clean.substring(0, 2), 16) / 255;
+  const g = parseInt(clean.substring(2, 4), 16) / 255;
+  const b = parseInt(clean.substring(4, 6), 16) / 255;
+  return rgb(isNaN(r) ? 0 : r, isNaN(g) ? 0 : g, isNaN(b) ? 0 : b);
+}
+
+function drawTextElement(page: any, text: string, style: any, font: any) {
+  const x = Number(style.x);
+  const y = Number(style.y);
+  const size = Number(style.fontSize || style.size || 14);
+  const textColor = hexToRgb(style.color || "#000000");
+
+  if (style.align === "center") {
+    const textWidth = font.widthOfTextAtSize(text, size);
+    page.drawText(text, {
+      x: x - textWidth / 2,
+      y: y,
+      size: size,
+      font: font,
+      color: textColor,
+    });
+  } else if (style.align === "right") {
+    const textWidth = font.widthOfTextAtSize(text, size);
+    page.drawText(text, {
+      x: x - textWidth,
+      y: y,
+      size: size,
+      font: font,
+      color: textColor,
+    });
+  } else {
+    page.drawText(text, {
+      x: x,
+      y: y,
+      size: size,
+      font: font,
+      color: textColor,
+    });
+  }
 }

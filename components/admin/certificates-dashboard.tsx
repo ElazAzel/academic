@@ -70,7 +70,7 @@ export function CertificatesDashboard({
 
   // Interactive UI State
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"history" | "issue">("history");
+  const [activeTab, setActiveTab] = useState<"history" | "issue" | "designer">("history");
   const [loading, setLoading] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -265,6 +265,16 @@ export function CertificatesDashboard({
           }`}
         >
           Выдать сертификат
+        </button>
+        <button
+          onClick={() => setActiveTab("designer")}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+            activeTab === "designer" 
+              ? "bg-primary text-primary-foreground shadow-sm" 
+              : "text-muted-foreground hover:bg-muted/50"
+          }`}
+        >
+          Конструктор шаблонов
         </button>
       </div>
 
@@ -570,6 +580,33 @@ export function CertificatesDashboard({
             </Card>
           </div>
         </div>
+      )}
+      {activeTab === "designer" && (
+        <Card className="rounded-2xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardHeader>
+            <CardTitle className="text-lg">Управление шаблонами курсов</CardTitle>
+            <CardDescription>Выберите учебную программу для настройки визуального оформления цифровых дипломов.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y border rounded-xl overflow-hidden bg-white">
+              {courses.length > 0 ? (
+                courses.map(c => (
+                  <div key={c.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                    <div>
+                      <p className="font-semibold text-m3-on-surface">{c.title}</p>
+                      <p className="text-xs text-muted-foreground">ID: {c.id}</p>
+                    </div>
+                    <Button asChild size="sm">
+                      <Link href={`/admin/certificates/designer/${c.id}`}>Редактировать дизайн</Link>
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center text-muted-foreground">Нет доступных курсов для настройки.</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
