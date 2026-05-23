@@ -29,9 +29,9 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
   const filteredCourses = useMemo(() => {
     return courses.filter((c) => {
       if (activeTab === "all") return true;
-      if (activeTab === "in_progress") return c.status === "ACTIVE" && c.percent < 100;
+      if (activeTab === "in_progress") return (c.status === "IN_PROGRESS" || c.status === "NOT_STARTED") && c.percent < 100;
       if (activeTab === "completed") return c.percent >= 100 || c.status === "COMPLETED";
-      if (activeTab === "paused") return c.status === "PAUSED";
+      if (activeTab === "paused") return c.status === "BLOCKED";
       return true;
     });
   }, [courses, activeTab]);
@@ -67,9 +67,9 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
           {TABS.map((tab) => {
             const count = courses.filter((c) => {
               if (tab.id === "all") return true;
-              if (tab.id === "in_progress") return c.status === "ACTIVE" && c.percent < 100;
+              if (tab.id === "in_progress") return (c.status === "IN_PROGRESS" || c.status === "NOT_STARTED") && c.percent < 100;
               if (tab.id === "completed") return c.percent >= 100 || c.status === "COMPLETED";
-              if (tab.id === "paused") return c.status === "PAUSED";
+              if (tab.id === "paused") return c.status === "BLOCKED";
               return true;
             }).length;
 
