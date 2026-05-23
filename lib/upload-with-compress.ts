@@ -16,6 +16,36 @@ export interface UploadMediaResult {
   finalSize: number;
 }
 
+async function readUploadPublicUrl(response: Response, fallback: string): Promise<string> {
+  const responseType = response.headers.get("content-type") ?? "";
+  if (!responseType.includes("application/json")) return fallback;
+
+  const body = await response.json().catch(() => null);
+  return typeof body === "object" &&
+    body !== null &&
+    "publicUrl" in body &&
+    typeof body.publicUrl === "string"
+    ? body.publicUrl
+    : fallback;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: string } {
+  const envelope = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
+
+  if (!isRecord(envelope) || typeof envelope.url !== "string" || typeof envelope.publicUrl !== "string") {
+    throw new Error("Некорректный ответ сервера загрузки");
+  }
+
+  return {
+    url: envelope.url,
+    publicUrl: envelope.publicUrl,
+  };
+}
+
 /**
  * Upload a file via the presigned URL flow with auto image compression.
  * Works for course covers, lesson media, assignment submissions, etc.
@@ -53,7 +83,7 @@ export async function uploadMedia(
     throw new Error(err.error?.message ?? "Ошибка при подготовке загрузки");
   }
 
-  const { url, publicUrl } = await presignRes.json();
+  const { url, publicUrl } = readUploadTicketPayload(await presignRes.json());
 
   // 3. Upload compressed file to S3/MinIO
   const uploadRes = await fetch(url, {
@@ -66,8 +96,10 @@ export async function uploadMedia(
     throw new Error("Ошибка при загрузке файла");
   }
 
+  const uploadedPublicUrl = await readUploadPublicUrl(uploadRes, publicUrl);
+
   return {
-    publicUrl,
+    publicUrl: uploadedPublicUrl,
     fileName: uploadFile.name,
     compressed: result.compressed,
     originalSize: result.originalSize,

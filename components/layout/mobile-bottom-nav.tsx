@@ -16,7 +16,7 @@ export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
 
   return (
     <nav
-      className="bottom-nav-bar md:hidden"
+      className="bottom-nav-bar lg:hidden"
       aria-label="Мобильная навигация"
     >
       {items.map((item) => {

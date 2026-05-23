@@ -28,10 +28,10 @@ export function AppShell({
       <MobileBottomNav role={role} />
 
       {/* Desktop sidebar layout */}
-      <div className="mx-auto w-full max-w-7xl px-0 md:px-6">
-        <div className="md:grid md:grid-cols-[260px_1fr] md:gap-6 md:py-6">
+      <div className="mx-auto w-full max-w-7xl px-0 lg:px-6">
+        <div className="lg:grid lg:grid-cols-[260px_1fr] lg:gap-6 lg:py-6">
           {/* Desktop sidebar — hidden on mobile */}
-          <aside className="hidden md:block">
+          <aside className="hidden lg:block">
             <nav
               className="sticky top-24 flex flex-col rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest p-sm shadow-m3-soft"
               aria-label={`Кабинет: ${roleLabel}`}
@@ -56,7 +56,7 @@ export function AppShell({
             id="main-content"
             className={cn(
               "min-w-0 outline-none animate-slide-up",
-              "px-4 md:px-0 pb-4 md:pb-8",
+              "px-4 pb-24 lg:px-0 lg:pb-8",
               className
             )}
           >

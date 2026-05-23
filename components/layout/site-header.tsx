@@ -48,7 +48,7 @@ export async function SiteHeader() {
           const { links } = getHeaderLinks(user.roles);
           if (links.length === 0) return null;
           return (
-            <nav className="hidden md:flex items-center gap-1" aria-label="Основная навигация">
+            <nav className="hidden lg:flex items-center gap-1" aria-label="Основная навигация">
               {links.map((item) => (
                 <Button key={item.href} asChild variant="ghost" size="sm">
                   <Link href={item.href}>{item.label}</Link>
