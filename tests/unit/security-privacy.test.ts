@@ -1,5 +1,4 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { NextResponse } from "next/server";
 
 // Mocking required session, prisma, and rate-limiting modules
 const mockRequireUser = vi.hoisted(() => vi.fn());

@@ -1,39 +1,57 @@
 import { requireUser } from "@/lib/auth/session";
+import { ApiError, errorResponse } from "@/lib/http";
+import {
+  fallbackUploadParamsSchema,
+  getUploadMaxFileSizeBytes,
+  getUploadPermissionForPrefix,
+  parseMediaUploadPrefixFromKey,
+} from "@/lib/media-upload-policy";
 import { uploadFileToSupabase } from "@/lib/storage";
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 
 export async function PUT(request: Request) {
   try {
-    // 1. Authenticate user
-    await requireUser();
-
-    // 2. Parse search parameters
     const { searchParams } = new URL(request.url);
-    const key = searchParams.get("key");
-    const contentType = searchParams.get("contentType") || "application/octet-stream";
+    const input = fallbackUploadParamsSchema.parse({
+      key: searchParams.get("key") ?? "",
+      contentType: searchParams.get("contentType") ?? "",
+    });
 
-    if (!key) {
-      return NextResponse.json({ error: "Не указан ключ файла (key)" }, { status: 400 });
+    const prefix = parseMediaUploadPrefixFromKey(input.key);
+    if (!prefix) {
+      throw new ApiError("bad_request", "Unsupported storage key", 400);
     }
 
-    // 3. Read request body as Buffer
+    await requireUser(getUploadPermissionForPrefix(prefix));
+
+    const contentLength = Number(request.headers.get("content-length") ?? 0);
+    if (contentLength > getUploadMaxFileSizeBytes()) {
+      throw new ApiError("bad_request", "File is too large", 413);
+    }
+
     const arrayBuffer = await request.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     if (buffer.length === 0) {
-      return NextResponse.json({ error: "Файл пуст" }, { status: 400 });
+      throw new ApiError("bad_request", "File is empty", 400);
     }
 
-    // 4. Upload directly to Supabase Storage (cloud service)
-    const publicUrl = await uploadFileToSupabase(key, buffer, contentType);
+    if (buffer.length > getUploadMaxFileSizeBytes()) {
+      throw new ApiError("bad_request", "File is too large", 413);
+    }
+
+    const publicUrl = await uploadFileToSupabase(input.key, buffer, input.contentType);
 
     if (!publicUrl) {
-      return NextResponse.json({ error: "Ошибка при сохранении файла в облаке" }, { status: 503 });
+      throw new ApiError("service_unavailable", "Storage upload failed", 503);
     }
 
     return NextResponse.json({ success: true, publicUrl });
-  } catch (error: any) {
-    console.error("[Upload Fallback Error]:", error);
-    return NextResponse.json({ error: error.message || "Внутренняя ошибка сервера" }, { status: 500 });
+  } catch (error) {
+    if (!(error instanceof ApiError) && !(error instanceof ZodError)) {
+      console.error("[Upload Fallback Error]:", error);
+    }
+    return errorResponse(error);
   }
 }

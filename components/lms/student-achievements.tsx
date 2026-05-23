@@ -90,6 +90,12 @@ export function StudentAchievements({ xp, level, coursesProgress, questionsCount
           </div>
           <div className="flex items-center gap-3">
             {/* Active learning streak */}
+            <Badge variant="secondary" className="px-2.5 py-1 text-xs">
+              {xp} XP
+            </Badge>
+            <Badge variant="secondary" className="px-2.5 py-1 text-xs">
+              Курсов завершено: {completedCourses}
+            </Badge>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold shadow-sm animate-pulse">
               <Flame className="h-4 w-4 fill-orange-500 text-orange-500" />
               <span>5 дней подряд!</span>

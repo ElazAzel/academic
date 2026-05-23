@@ -1,17 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { 
   Award, 
   ArrowLeft, 
   UploadCloud, 
   Move, 
   RotateCcw, 
-  Palette, 
-  HelpCircle, 
   Save, 
   Sliders, 
-  Type, 
   Grid,
   CheckCircle,
   AlertCircle,
@@ -73,8 +70,56 @@ interface CertificateDesignerProps {
   backUrl: string;
 }
 
+interface CoursePreview {
+  id: string;
+  title: string;
+  durationHours: number | null;
+}
+
+type TextFieldKey = Exclude<FieldKey, "qrCode">;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readNumber(value: unknown, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function readString(value: unknown, fallback: string) {
+  return typeof value === "string" ? value : fallback;
+}
+
+function readAlign(value: unknown, fallback: ElementStyle["align"]) {
+  return value === "left" || value === "center" || value === "right" ? value : fallback;
+}
+
+function readElementStyle(value: unknown, fallback: ElementStyle): ElementStyle {
+  const record = isRecord(value) ? value : {};
+  return {
+    x: readNumber(record.x, fallback.x),
+    y: readNumber(record.y, fallback.y),
+    fontSize: readNumber(record.fontSize, fallback.fontSize),
+    color: readString(record.color, fallback.color),
+    align: readAlign(record.align, fallback.align),
+  };
+}
+
+function readQrStyle(value: unknown, fallback: QrStyle): QrStyle {
+  const record = isRecord(value) ? value : {};
+  return {
+    x: readNumber(record.x, fallback.x),
+    y: readNumber(record.y, fallback.y),
+    size: readNumber(record.size, fallback.size),
+  };
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerProps) {
-  const [course, setCourse] = useState<any>(null);
+  const [course, setCourse] = useState<CoursePreview | null>(null);
   const [config, setConfig] = useState<TemplateConfig>(DEFAULT_CONFIG);
   const [activeField, setActiveField] = useState<FieldKey>("studentName");
   const [uploading, setUploading] = useState(false);
@@ -92,9 +137,36 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
-  useEffect(() => {
-    loadTemplate();
+  const loadTemplate = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getCertificateTemplateAction(courseId);
+      setCourse(res.course);
+      if (res.template && isRecord(res.template.body)) {
+        const body = res.template.body;
+        setConfig({
+          backgroundUrl: readString(body.backgroundUrl, ""),
+          studentName: readElementStyle(body.studentName, DEFAULT_CONFIG.studentName),
+          courseTitle: readElementStyle(body.courseTitle, DEFAULT_CONFIG.courseTitle),
+          durationHours: readElementStyle(body.durationHours, DEFAULT_CONFIG.durationHours),
+          serialNumber: readElementStyle(body.serialNumber, DEFAULT_CONFIG.serialNumber),
+          issuedAt: readElementStyle(body.issuedAt, DEFAULT_CONFIG.issuedAt),
+          qrCode: readQrStyle(body.qrCode, DEFAULT_CONFIG.qrCode),
+        });
+      } else {
+        setConfig(DEFAULT_CONFIG);
+      }
+    } catch (err) {
+      setError(getErrorMessage(err, "Ошибка при получении шаблона"));
+    } finally {
+      setLoading(false);
+    }
   }, [courseId]);
+
+  useEffect(() => {
+    void loadTemplate();
+  }, [loadTemplate]);
 
   useEffect(() => {
     function handleResize() {
@@ -139,7 +211,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
       }
 
       if (deltaX !== 0 || deltaY !== 0) {
-        const current = config[activeField] as any;
+        const current = config[activeField];
         let nextX = Math.round(current.x + deltaX);
         let nextY = Math.round(current.y + deltaY);
 
@@ -153,34 +225,6 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeField, config]);
-
-  async function loadTemplate() {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await getCertificateTemplateAction(courseId);
-      setCourse(res.course);
-      if (res.template && res.template.body && typeof res.template.body === "object") {
-        const body = res.template.body as any;
-        // Merge with defaults to ensure complete config safety
-        setConfig({
-          backgroundUrl: body.backgroundUrl || "",
-          studentName: { ...DEFAULT_CONFIG.studentName, ...body.studentName },
-          courseTitle: { ...DEFAULT_CONFIG.courseTitle, ...body.courseTitle },
-          durationHours: { ...DEFAULT_CONFIG.durationHours, ...body.durationHours },
-          serialNumber: { ...DEFAULT_CONFIG.serialNumber, ...body.serialNumber },
-          issuedAt: { ...DEFAULT_CONFIG.issuedAt, ...body.issuedAt },
-          qrCode: { ...DEFAULT_CONFIG.qrCode, ...body.qrCode },
-        });
-      } else {
-        setConfig(DEFAULT_CONFIG);
-      }
-    } catch (err: any) {
-      setError(err.message || "Ошибка при получении шаблона");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleBgUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -219,8 +263,8 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
       setConfig(prev => ({ ...prev, backgroundUrl: publicUrl }));
       setSuccess("Фоновый PNG успешно загружен!");
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || "Не удалось загрузить фоновое изображение");
+    } catch (err) {
+      setError(getErrorMessage(err, "Не удалось загрузить фоновое изображение"));
     } finally {
       setUploading(false);
     }
@@ -234,8 +278,8 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
       await saveCertificateTemplateAction(courseId, config);
       setSuccess("Шаблон сертификата успешно сохранен!");
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || "Ошибка при сохранении шаблона");
+    } catch (err) {
+      setError(getErrorMessage(err, "Ошибка при сохранении шаблона"));
     } finally {
       setSaving(false);
     }
@@ -248,11 +292,28 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
   }
 
   function updateStyle(field: FieldKey, updates: Partial<ElementStyle & QrStyle>) {
+    if (field === "qrCode") {
+      setConfig(prev => ({
+        ...prev,
+        qrCode: {
+          ...prev.qrCode,
+          x: updates.x ?? prev.qrCode.x,
+          y: updates.y ?? prev.qrCode.y,
+          size: updates.size ?? prev.qrCode.size,
+        },
+      }));
+      return;
+    }
+
     setConfig(prev => ({
       ...prev,
       [field]: {
-        ...(prev[field] as any),
-        ...updates,
+        ...prev[field],
+        x: updates.x ?? prev[field].x,
+        y: updates.y ?? prev[field].y,
+        fontSize: updates.fontSize ?? prev[field].fontSize,
+        color: updates.color ?? prev[field].color,
+        align: updates.align ?? prev[field].align,
       },
     }));
   }
@@ -262,7 +323,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
 
   function handleDragStart(field: FieldKey, e: React.PointerEvent<HTMLDivElement>) {
     e.preventDefault();
-    const element = config[field] as any;
+    const element = config[field];
     activeDragRef.current = {
       field,
       startX: e.clientX,
@@ -322,7 +383,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
     );
   }
 
-  const currentFieldStyle = config[activeField] as any;
+  const currentFieldStyle = config[activeField];
 
   return (
     <div className="space-y-6">
@@ -449,7 +510,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                 )}
 
                 {/* Draggable fields overlays */}
-                {(["studentName", "courseTitle", "durationHours", "serialNumber", "issuedAt"] as FieldKey[]).map(field => {
+                {(["studentName", "courseTitle", "durationHours", "serialNumber", "issuedAt"] as TextFieldKey[]).map(field => {
                   const s = config[field] as ElementStyle;
                   const label = field === "studentName" 
                     ? "Иванов Иван Иванович" 
@@ -661,13 +722,13 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                     <div>
                       <div className="flex justify-between text-xs mb-1">
                         <Label>Размер шрифта</Label>
-                        <span className="font-semibold">{currentFieldStyle.fontSize}px</span>
+                        <span className="font-semibold">{config[activeField].fontSize}px</span>
                       </div>
                       <input 
                         type="range" 
                         min={8} 
                         max={72} 
-                        value={currentFieldStyle.fontSize} 
+                        value={config[activeField].fontSize}
                         onChange={(e) => updateStyle(activeField, { fontSize: Number(e.target.value) })}
                         className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
                       />
@@ -676,12 +737,12 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                     <div>
                       <Label className="text-xs">Выравнивание текста</Label>
                       <div className="flex gap-2 mt-1">
-                        {["left", "center", "right"].map(align => (
+                        {(["left", "center", "right"] as const).map(align => (
                           <Button
                             key={align}
                             size="sm"
-                            variant={currentFieldStyle.align === align ? "primary" : "secondary"}
-                            onClick={() => updateStyle(activeField, { align: align as any })}
+                            variant={config[activeField].align === align ? "primary" : "secondary"}
+                            onClick={() => updateStyle(activeField, { align })}
                             className="flex-1 capitalize"
                           >
                             {align === "left" ? "Слева" : align === "center" ? "Центр" : "Справа"}
@@ -697,14 +758,14 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                           <button
                             key={c.value}
                             onClick={() => updateStyle(activeField, { color: c.value })}
-                            className={`w-6 h-6 rounded-full border border-slate-300 hover:scale-110 transition-transform ${currentFieldStyle.color === c.value ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                            className={`w-6 h-6 rounded-full border border-slate-300 hover:scale-110 transition-transform ${config[activeField].color === c.value ? "ring-2 ring-primary ring-offset-2" : ""}`}
                             style={{ backgroundColor: c.value }}
                             title={c.label}
                           />
                         ))}
                         <input
                           type="color"
-                          value={currentFieldStyle.color || "#000000"}
+                          value={config[activeField].color || "#000000"}
                           onChange={(e) => updateStyle(activeField, { color: e.target.value })}
                           className="w-6 h-6 border rounded cursor-pointer"
                           title="Выбрать свой цвет"
@@ -716,13 +777,13 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                   <div>
                     <div className="flex justify-between text-xs mb-1">
                       <Label>Размер QR-кода</Label>
-                      <span className="font-semibold">{currentFieldStyle.size}px</span>
+                      <span className="font-semibold">{config.qrCode.size}px</span>
                     </div>
                     <input 
                       type="range" 
                       min={40} 
                       max={200} 
-                      value={currentFieldStyle.size} 
+                      value={config.qrCode.size}
                       onChange={(e) => updateStyle(activeField, { size: Number(e.target.value) })}
                       className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
                     />

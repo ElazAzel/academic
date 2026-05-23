@@ -533,7 +533,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
                       <Icon name="arrow_forward" size={14} className="text-m3-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <p className="text-body-xs text-m3-on-surface-variant line-clamp-2 italic">
-                      "Привет, ${diagStudent.name}! Заметил, что ты давно не заходил на курс..."
+                      «Привет, {diagStudent.name}! Заметил, что ты давно не заходил на курс...»
                     </p>
                   </button>
 
@@ -550,7 +550,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
                       <Icon name="arrow_forward" size={14} className="text-m3-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <p className="text-body-xs text-m3-on-surface-variant line-clamp-2 italic">
-                      "Привет, ${diagStudent.name}! Напоминаю, что у тебя есть задача..."
+                      «Привет, {diagStudent.name}! Напоминаю, что у тебя есть задача...»
                     </p>
                   </button>
 
@@ -567,7 +567,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
                       <Icon name="arrow_forward" size={14} className="text-m3-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <p className="text-body-xs text-m3-on-surface-variant line-clamp-2 italic">
-                      "Привет, ${diagStudent.name}! Поздравляю с отличным прогрессом..."
+                      «Привет, {diagStudent.name}! Поздравляю с отличным прогрессом...»
                     </p>
                   </button>
                 </div>

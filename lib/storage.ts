@@ -72,7 +72,8 @@ export async function createPresignedUploadUrl(
 }
 
 export function buildStorageKey(prefix: string, filename: string): string {
-  const ext = filename.includes(".") ? filename.split(".").pop() : "";
+  const rawExt = filename.includes(".") ? filename.split(".").pop() : "";
+  const ext = rawExt && /^[a-zA-Z0-9]{1,16}$/.test(rawExt) ? rawExt.toLowerCase() : "";
   const safeName = `${prefix}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}${ext ? `.${ext}` : ""}`;
   return safeName;
 }
@@ -111,7 +112,7 @@ export async function uploadFileToSupabase(
       return null;
     }
 
-    const resolvedContentType = contentType || (file as any).type || "application/octet-stream";
+    const resolvedContentType = contentType || (file instanceof Blob ? file.type : undefined) || "application/octet-stream";
 
     const { data, error } = await client.storage.from(BUCKET).upload(path, file, {
       contentType: resolvedContentType,
