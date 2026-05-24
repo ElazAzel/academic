@@ -210,9 +210,7 @@ export async function resumeEnrollmentAction(enrollmentId: string) {
   }
 }
 
-const DeleteEnrollmentActionSchema = z.object({
-  enrollmentId: z.string().min(1, "ID записи обязателен"),
-});
+
 
 export async function deleteEnrollmentAction(enrollmentId: string) {
   try {

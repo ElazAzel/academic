@@ -1,6 +1,5 @@
 "use server";
 
-import { z } from "zod";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
