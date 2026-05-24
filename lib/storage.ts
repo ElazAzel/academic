@@ -11,7 +11,7 @@ let s3AvailabilityCache: { checkedAt: number; available: boolean } | null = null
 const BUCKET = "academy-media";
 const S3_AVAILABILITY_CACHE_MS = 30_000;
 
-function getStorageClient() {
+export function getStorageClient() {
   if (supabaseStorageChecked) return supabaseStorageClient;
 
   const supabaseUrl = env.STORAGE_SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || process.env.storage_SUPABASE_URL;
