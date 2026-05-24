@@ -18,6 +18,8 @@ const NOTIFICATION_CHANNELS = [
   { key: "customer_deadline_reminder", label: "Напоминания о сроках", desc: "Напоминания о ближайших дедлайнах" },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default async function CustomerObserverSettingsPage() {
   await requireRolePage(["customer_observer"]);
   const user = await getCurrentUser();

@@ -18,6 +18,8 @@ const NOTIFICATION_CHANNELS = [
   { key: "super_curator_deadline_reminder", label: "Напоминания по дедлайнам", desc: "Напоминания о важных сроках" },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default async function SuperCuratorSettingsPage() {
   await requireRolePage(["super_curator"]);
   const user = await getCurrentUser();

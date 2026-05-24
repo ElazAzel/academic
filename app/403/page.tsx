@@ -7,6 +7,8 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getDefaultRolePath } from "@/lib/auth/role-redirect";
 import { AUTH_ROUTES } from "@/lib/constants";
 
+export const dynamic = "force-dynamic";
+
 export default async function ForbiddenPage() {
   const user = await getCurrentUser();
   const homePath = user ? getDefaultRolePath(user.roles) : AUTH_ROUTES.LOGIN;
