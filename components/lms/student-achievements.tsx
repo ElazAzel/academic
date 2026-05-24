@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Flame, Trophy, Sparkles, CheckCircle2, Lock, Calendar, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -81,13 +80,6 @@ export function StudentAchievements({ xp, level, coursesProgress, questionsCount
   };
 
   return (
-    <Card className="h-full overflow-hidden rounded-2xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
-      <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5 p-4 pb-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="min-w-0 space-y-1">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Trophy className="h-5 w-5 text-amber-500 animate-bounce" />
-              <span className="min-w-0 break-words">Мои Достижения и Статистика</span>
     <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft rounded-2xl overflow-hidden">
       <CardHeader
         className="bg-gradient-to-r from-primary/5 to-secondary/5 pb-4 cursor-pointer md:cursor-default select-none"
@@ -107,9 +99,6 @@ export function StudentAchievements({ xp, level, coursesProgress, questionsCount
               Развивайте навыки, получайте XP и открывайте премиальные награды Академии.
             </CardDescription>
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            {/* Active learning streak */}
-            <Badge variant="secondary" className="px-2.5 py-1 text-xs">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary" className="px-2.5 py-1 text-xs whitespace-nowrap">
               {xp} XP
@@ -127,37 +116,6 @@ export function StudentAchievements({ xp, level, coursesProgress, questionsCount
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 p-4 sm:p-6">
-        {/* Visual Weekly Track Checklist */}
-        <div className="space-y-3 rounded-xl border bg-slate-50/50 p-3 sm:p-4">
-          <div className="flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <span className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
-              Учебный трек за неделю
-            </span>
-            <span className="font-semibold text-primary">Цель: 3 дня активности</span>
-          </div>
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-            {[
-              { day: "Пн", active: true },
-              { day: "Вт", active: true },
-              { day: "Ср", active: false },
-              { day: "Чт", active: true },
-              { day: "Пт", active: true },
-              { day: "Сб", active: true },
-              { day: "Вс", active: false }
-            ].map((d, index) => (
-              <div 
-                key={index}
-                className={`flex flex-col items-center gap-1 rounded-lg p-1.5 transition-all duration-300 sm:p-2 ${
-                  d.active 
-                    ? "bg-emerald-50 border border-emerald-200 text-emerald-700 shadow-sm" 
-                    : "bg-muted/40 border border-transparent text-muted-foreground"
-                }`}
-              >
-                <span className="text-[10px] uppercase font-bold">{d.day}</span>
-                <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] ${d.active ? "bg-emerald-500 text-white font-bold" : "bg-muted text-muted-foreground"}`}>
-                  {d.active ? "✓" : "•"}
 
       <div className={cn(
         "overflow-hidden transition-all duration-300 ease-in-out",
@@ -203,25 +161,6 @@ export function StudentAchievements({ xp, level, coursesProgress, questionsCount
             </div>
           </div>
 
-        {/* Dynamic Achievements Badges Grid */}
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-          {achievements.map((ach) => {
-            const isActive = activeBadge === ach.id;
-            return (
-              <div
-                key={ach.id}
-                onMouseEnter={() => setActiveBadge(ach.id)}
-                onMouseLeave={() => setActiveBadge(null)}
-                className={`relative p-4 rounded-xl border transition-all duration-300 cursor-help ${
-                  ach.unlocked 
-                    ? isActive 
-                      ? "border-amber-400 bg-amber-500/[0.04] shadow-md scale-[1.01]" 
-                      : "border-m3-outline-variant bg-white"
-                    : "border-slate-100 bg-slate-50/50 opacity-60"
-                }`}
-              >
-                <div className="flex gap-3">
-                  <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 shadow-inner transition-transform duration-500 ${
           <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
             {achievements.map((ach) => {
               const isActive = activeBadge === ach.id;
