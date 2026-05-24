@@ -8,6 +8,12 @@ import { Progress } from "@/components/ui/progress";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 
+export const metadata = {
+  title: "Результат теста — Студент",
+  description: "Результаты прохождения теста.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 function resolveOptionLabel(val: unknown, options: unknown[]): string {

@@ -8,6 +8,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { listCertificates } from "@/server/modules/certificates/service";
 import Link from "next/link";
 
+export const metadata = {
+  title: "Сертификаты — Студент",
+  description: "Мои сертификаты.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function StudentCertificatesPage() {

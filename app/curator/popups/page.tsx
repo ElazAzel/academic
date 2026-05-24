@@ -6,6 +6,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { CuratorPopupClient } from "./client";
 
+export const metadata = {
+  title: "Всплывающие окна — Куратор",
+  description: "Управление всплывающими окнами.",
+};
+
+
 const prisma = getPrisma();
 
 export const dynamic = "force-dynamic";

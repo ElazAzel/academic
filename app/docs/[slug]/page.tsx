@@ -2,6 +2,12 @@ import fs from "fs";
 import path from "path";
 import { notFound } from "next/navigation";
 
+export const metadata = {
+  title: "Документация",
+  description: "Документация платформы AI Strategic Academy.",
+};
+
+
 export const revalidate = 86400; // ISR: revalidate once per day
 export const dynamicParams = true; // Allow generating new slugs on-demand
 

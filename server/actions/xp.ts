@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { getPrisma } from "@/lib/prisma";
 
 const XP_LESSON_COMPLETE = 50;
@@ -12,17 +13,32 @@ export type XpAction = "lesson_complete" | "quiz_pass" | "quiz_attempt" | "assig
 /**
  * Начислить XP пользователю и вернуть текущий баланс.
  */
+const AwardXpSchema = z.object({
+  userId: z.string().min(1, "ID пользователя обязателен"),
+  action: z.enum(["lesson_complete", "quiz_pass", "quiz_attempt", "assignment_submit"]),
+});
+
 export async function awardXp(userId: string, action: XpAction): Promise<{ xp: number; earned: number }> {
-  const earned = getXpForAction(action);
-  if (earned === 0) return { xp: 0, earned: 0 };
+  try {
+    const parsed = AwardXpSchema.safeParse({ userId, action });
+    if (!parsed.success) {
+      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+    }
 
-  const user = await getPrisma().user.update({
-    where: { id: userId },
-    data: { xp: { increment: earned } },
-    select: { xp: true },
-  });
+    const earned = getXpForAction(action);
+    if (earned === 0) return { xp: 0, earned: 0 };
 
-  return { xp: user.xp, earned };
+    const user = await getPrisma().user.update({
+      where: { id: userId },
+      data: { xp: { increment: earned } },
+      select: { xp: true },
+    });
+
+    return { xp: user.xp, earned };
+  } catch (error) {
+    console.error("[awardXp]", error);
+    throw error;
+  }
 }
 
 function getXpForAction(action: XpAction): number {
@@ -38,26 +54,45 @@ function getXpForAction(action: XpAction): number {
   }
 }
 
+const GetUserXpSchema = z.object({
+  userId: z.string().min(1, "ID пользователя обязателен"),
+});
+
 /**
  * Получить XP пользователя.
  */
 export async function getUserXp(userId: string): Promise<number> {
-  const user = await getPrisma().user.findUnique({
-    where: { id: userId },
-    select: { xp: true },
-  });
-  return user?.xp ?? 0;
+  try {
+    const parsed = GetUserXpSchema.safeParse({ userId });
+    if (!parsed.success) {
+      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+    }
+
+    const user = await getPrisma().user.findUnique({
+      where: { id: userId },
+      select: { xp: true },
+    });
+    return user?.xp ?? 0;
+  } catch (error) {
+    console.error("[getUserXp]", error);
+    throw error;
+  }
 }
 
 /**
  * Получить топ пользователей по XP (leaderboard).
  */
 export async function getLeaderboard(limit = 10) {
-  return getPrisma().user.findMany({
-    where: { xp: { gt: 0 } },
-    orderBy: { xp: "desc" },
-    take: limit,
-    select: { id: true, name: true, xp: true },
-  });
+  try {
+    return getPrisma().user.findMany({
+      where: { xp: { gt: 0 } },
+      orderBy: { xp: "desc" },
+      take: limit,
+      select: { id: true, name: true, xp: true },
+    });
+  } catch (error) {
+    console.error("[getLeaderboard]", error);
+    throw error;
+  }
 }
 

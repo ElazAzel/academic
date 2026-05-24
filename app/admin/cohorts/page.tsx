@@ -10,6 +10,12 @@ import { getPrisma } from "@/lib/prisma";
 import { EmptyState } from "@/components/lms/empty-state";
 import { DeleteCohortButton } from "./delete-cohort-button";
 
+export const metadata = {
+  title: "Когорты — Администрирование",
+  description: "Управление когортами и потоками.",
+};
+
+
 const prisma = getPrisma();
 
 export const dynamic = "force-dynamic";

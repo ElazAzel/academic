@@ -2,6 +2,12 @@ import fs from "fs";
 import path from "path";
 import { SiteHeader } from "@/components/layout/site-header";
 
+export const metadata = {
+  title: "Политика конфиденциальности",
+  description: "Политика обработки и защиты персональных данных.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 function renderMarkdown(md: string): string {

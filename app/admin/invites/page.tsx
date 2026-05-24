@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { UserPlus, Upload, BookOpen, Users } from "lucide-react";
 
+export const metadata = {
+  title: "Приглашения — Администрирование",
+  description: "Управление приглашениями пользователей.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 const TOOLS = [

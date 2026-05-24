@@ -3,6 +3,12 @@ import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { AdminPopupManagerClient } from "./client";
 
+export const metadata = {
+  title: "Всплывающие окна — Администрирование",
+  description: "Управление всплывающими окнами.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function AdminPopupsPage() {

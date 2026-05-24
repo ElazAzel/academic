@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/page-guards";
 import { enrollStudent as enrollStudentService } from "@/server/modules/courses/service";
@@ -139,49 +140,79 @@ export async function assignCuratorAction(input: { studentId: string; curatorId:
   }
 }
 
+const PauseEnrollmentActionSchema = z.object({
+  enrollmentId: z.string().min(1, "ID записи обязателен"),
+});
+
 export async function pauseEnrollmentAction(enrollmentId: string) {
-  const actor = await requireRole(["admin"]);
-  const enrollment = await prisma.enrollment.findUnique({ where: { id: enrollmentId } });
-  if (!enrollment) throw new ApiError("not_found", "Запись не найдена", 404);
-  if (enrollment.status !== "ACTIVE") throw new ApiError("bad_request", "Можно приостановить только активное зачисление", 400);
+  try {
+    const parsed = PauseEnrollmentActionSchema.safeParse({ enrollmentId });
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные", 400);
+    }
 
-  await prisma.enrollment.update({
-    where: { id: enrollmentId },
-    data: { status: "PAUSED" }
-  });
+    const actor = await requireRole(["admin"]);
+    const enrollment = await prisma.enrollment.findUnique({ where: { id: enrollmentId } });
+    if (!enrollment) throw new ApiError("not_found", "Запись не найдена", 404);
+    if (enrollment.status !== "ACTIVE") throw new ApiError("bad_request", "Можно приостановить только активное зачисление", 400);
 
-  await logAudit({
-    actorId: actor.id,
-    action: "enrollment.paused",
-    entity: "enrollment",
-    entityId: enrollmentId
-  });
+    await prisma.enrollment.update({
+      where: { id: enrollmentId },
+      data: { status: "PAUSED" }
+    });
 
-  revalidatePath("/admin/enrollments");
-  return { success: true };
+    await logAudit({
+      actorId: actor.id,
+      action: "enrollment.paused",
+      entity: "enrollment",
+      entityId: enrollmentId
+    });
+
+    revalidatePath("/admin/enrollments");
+    return { success: true };
+  } catch (error) {
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+  }
 }
+
+const ResumeEnrollmentActionSchema = z.object({
+  enrollmentId: z.string().min(1, "ID записи обязателен"),
+});
 
 export async function resumeEnrollmentAction(enrollmentId: string) {
-  const actor = await requireRole(["admin"]);
-  const enrollment = await prisma.enrollment.findUnique({ where: { id: enrollmentId } });
-  if (!enrollment) throw new ApiError("not_found", "Запись не найдена", 404);
-  if (enrollment.status !== "PAUSED") throw new ApiError("bad_request", "Можно возобновить только приостановленное зачисление", 400);
+  try {
+    const parsed = ResumeEnrollmentActionSchema.safeParse({ enrollmentId });
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные", 400);
+    }
 
-  await prisma.enrollment.update({
-    where: { id: enrollmentId },
-    data: { status: "ACTIVE" }
-  });
+    const actor = await requireRole(["admin"]);
+    const enrollment = await prisma.enrollment.findUnique({ where: { id: enrollmentId } });
+    if (!enrollment) throw new ApiError("not_found", "Запись не найдена", 404);
+    if (enrollment.status !== "PAUSED") throw new ApiError("bad_request", "Можно возобновить только приостановленное зачисление", 400);
 
-  await logAudit({
-    actorId: actor.id,
-    action: "enrollment.resumed",
-    entity: "enrollment",
-    entityId: enrollmentId
-  });
+    await prisma.enrollment.update({
+      where: { id: enrollmentId },
+      data: { status: "ACTIVE" }
+    });
 
-  revalidatePath("/admin/enrollments");
-  return { success: true };
+    await logAudit({
+      actorId: actor.id,
+      action: "enrollment.resumed",
+      entity: "enrollment",
+      entityId: enrollmentId
+    });
+
+    revalidatePath("/admin/enrollments");
+    return { success: true };
+  } catch (error) {
+    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+  }
 }
+
+const DeleteEnrollmentActionSchema = z.object({
+  enrollmentId: z.string().min(1, "ID записи обязателен"),
+});
 
 export async function deleteEnrollmentAction(enrollmentId: string) {
   try {

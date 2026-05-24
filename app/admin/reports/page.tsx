@@ -12,6 +12,12 @@ import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 import { CourseStatus, ProgressStatus, SubmissionStatus } from "@prisma/client";
 import type { DashboardMetric } from "@/types/domain";
 
+export const metadata = {
+  title: "Отчёты — Администрирование",
+  description: "Генерация и просмотр отчётов.",
+};
+
+
 const prisma = getPrisma();
 
 export const dynamic = "force-dynamic";

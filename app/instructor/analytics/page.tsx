@@ -10,6 +10,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 
+export const metadata = {
+  title: "Аналитика — Инструктор",
+  description: "Аналитика по курсам и студентам.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function InstructorAnalyticsPage() {

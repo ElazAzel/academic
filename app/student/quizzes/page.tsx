@@ -9,6 +9,12 @@ import Link from "next/link";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getStudentQuizAttemptsAction } from "@/server/actions/student";
 
+export const metadata = {
+  title: "Тесты — Студент",
+  description: "Список тестов.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function StudentQuizzesPage() {

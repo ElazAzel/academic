@@ -11,6 +11,12 @@ import type { DashboardMetric } from "@/types/domain";
 import { RiskFilters } from "./risk-filters";
 import { RiskActions, ResolveRiskButton } from "./risk-actions";
 
+export const metadata = {
+  title: "Риски — Супер-куратор",
+  description: "Мониторинг рисков по всем когортам.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorRisksPage(props: {

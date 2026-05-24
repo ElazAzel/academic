@@ -8,6 +8,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getSubmissionDetail } from "@/server/actions/curator";
 import { ReviewSubmissionForm } from "@/components/curator/review-submission-form";
 
+export const metadata = {
+  title: "Проверка задания — Куратор",
+  description: "Детальная проверка работы студента.",
+};
+
+
 const STATUS_LABELS: Record<string, string> = {
   SUBMITTED: "Отправлено",
   IN_REVIEW: "На проверке",

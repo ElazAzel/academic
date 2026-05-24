@@ -16,6 +16,11 @@ import {
   updateNotificationPreferencesAction
 } from "@/server/actions/settings";
 
+export const metadata = {
+  title: "Настройки — Студент",
+  description: "Настройки профиля студента.",
+};
+
 const NOTIFICATION_CHANNELS = [
   { key: "curator_reply", label: "Ответы куратора", desc: "Уведомления о новых ответах куратора на ваши вопросы" },
   { key: "module_deadline", label: "Дедлайны модулей", desc: "Предупреждения о приближающихся сроках сдачи модулей" },

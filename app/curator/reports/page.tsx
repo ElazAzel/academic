@@ -10,6 +10,12 @@ import { getCuratorReportData } from "@/server/actions/curator-enhanced";
 import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 import type { DashboardMetric } from "@/types/domain";
 
+export const metadata = {
+  title: "Отчёты — Куратор",
+  description: "Отчёты по успеваемости студентов.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function CuratorReportsPage() {

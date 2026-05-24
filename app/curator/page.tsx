@@ -17,6 +17,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { getCuratorDashboard } from "@/server/actions/dashboard";
 
+export const metadata = {
+  title: "Дашборд — Куратор",
+  description: "Панель управления куратора.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default function CuratorDashboardPage() {

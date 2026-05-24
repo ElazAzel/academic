@@ -15,6 +15,12 @@ import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { listCertificates } from "@/server/modules/certificates/service";
 import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 
+export const metadata = {
+  title: "Дашборд — Наблюдатель",
+  description: "Панель управления наблюдателя.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default function CustomerObserverDashboardPage() {

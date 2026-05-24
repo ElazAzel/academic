@@ -10,6 +10,12 @@ import { QUERY_LIMITS } from "@/lib/query-limits";
 import type { SubmissionForReview } from "@/types/domain";
 import { CuratorAssignmentsFilter } from "@/components/curator/assignments-filter";
 
+export const metadata = {
+  title: "Задания — Куратор",
+  description: "Проверка и оценка заданий.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 const ITEMS_PER_PAGE = 20;

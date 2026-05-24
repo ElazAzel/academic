@@ -1,15 +1,28 @@
 "use server";
 
+import { z } from "zod";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 
 const prisma = getPrisma();
 
-export async function getActivityAnalytics(days = 30, cohortId?: string, courseId?: string) {
-  await requireRole(["admin", "super_curator"]);
+const GetActivityAnalyticsSchema = z.object({
+  days: z.number().min(7).max(180).optional(),
+  cohortId: z.string().optional(),
+  courseId: z.string().optional(),
+});
 
-  const maxDays = Math.min(Math.max(days, 7), 180);
+export async function getActivityAnalytics(days = 30, cohortId?: string, courseId?: string) {
+  try {
+    const parsed = GetActivityAnalyticsSchema.safeParse({ days, cohortId, courseId });
+    if (!parsed.success) {
+      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+    }
+
+    await requireRole(["admin", "super_curator"]);
+
+    const maxDays = Math.min(Math.max(days, 7), 180);
   const now = new Date();
   const startDate = new Date(now.getTime() - maxDays * 24 * 60 * 60 * 1000);
 
@@ -88,4 +101,8 @@ export async function getActivityAnalytics(days = 30, cohortId?: string, courseI
     },
     filters: { cohorts, courses, selectedCohortId: cohortId ?? null, selectedCourseId: courseId ?? null },
   };
+  } catch (error) {
+    console.error("[getActivityAnalytics]", error);
+    throw error;
+  }
 }

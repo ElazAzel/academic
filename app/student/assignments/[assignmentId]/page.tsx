@@ -10,6 +10,12 @@ import { AssignmentView } from "./assignment-view";
 import { ApiError } from "@/lib/http";
 import { FORBIDDEN_ROUTE } from "@/lib/constants";
 
+export const metadata = {
+  title: "Задание — Студент",
+  description: "Просмотр и выполнение задания.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function StudentAssignmentPage({ params }: { params: Promise<{ assignmentId: string }> }) {

@@ -7,6 +7,12 @@ import { getStudentLessonPlayerDetail } from "@/server/modules/learning/service"
 import { FORBIDDEN_ROUTE } from "@/lib/constants";
 import { logProtectedContentAccess } from "@/server/modules/security/content-protection-server";
 
+export const metadata = {
+  title: "Урок — Студент",
+  description: "Просмотр урока.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function StudentLessonPage({ params }: { params: Promise<{ lessonId: string }> }) {

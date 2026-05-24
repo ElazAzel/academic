@@ -12,6 +12,12 @@ import { getSuperCuratorReportData } from "@/server/actions/super-curator";
 import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 import type { DashboardMetric } from "@/types/domain";
 
+export const metadata = {
+  title: "Отчёты — Супер-куратор",
+  description: "Отчёты по работе кураторов.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorReportsPage() {

@@ -3,6 +3,12 @@ import { VerifyEmailForm } from "@/components/auth/verify-email-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AUTH_ROUTES } from "@/lib/constants";
 
+export const metadata = {
+  title: "Подтверждение email",
+  description: "Подтвердите ваш email для активации учётной записи.",
+};
+
+
 export default async function VerifyEmailPage({
   searchParams
 }: {

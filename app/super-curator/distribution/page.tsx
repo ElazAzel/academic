@@ -7,6 +7,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getSuperCuratorDistributionData } from "@/server/actions/super-curator";
 import { AssignCuratorForm } from "./assign-curator-form";
 
+export const metadata = {
+  title: "Распределение — Супер-куратор",
+  description: "Распределение студентов по кураторам.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorDistributionPage() {

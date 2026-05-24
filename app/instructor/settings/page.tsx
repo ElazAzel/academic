@@ -11,6 +11,12 @@ import { getProfile } from "@/server/modules/auth/service";
 import { TwoFactorSettings } from "@/components/admin/two-factor-settings";
 import { updateProfileSettingsAction, updatePasswordAction, getNotificationPreferencesAction, updateNotificationPreferencesAction } from "@/server/actions/settings";
 
+export const metadata = {
+  title: "Настройки — Инструктор",
+  description: "Настройки профиля инструктора.",
+};
+
+
 const NOTIFICATION_CHANNELS = [
   { key: "curator_question", label: "Вопросы от кураторов", desc: "Уведомления о переадресованных вопросах" },
   { key: "student_submission", label: "Новые отправки заданий", desc: "Уведомления о отправках заданий слушателями" },
