@@ -143,6 +143,8 @@ export const UPLOAD = {
   /** Максимальный размер файла в байтах */
   get MAX_FILE_SIZE_BYTES(): number { return this.MAX_FILE_SIZE_MB * 1024 * 1024; },
   /** Допустимые MIME-типы (синхронизировано с upload route) */
+  /** Максимальный размер SCORM-пакета в байтах (200 MB) */
+  SCORM_MAX_SIZE_BYTES: 200 * 1024 * 1024,
   ALLOWED_MIME_TYPES: [
     "image/jpeg",
     "image/png",

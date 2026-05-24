@@ -15,6 +15,7 @@ import { QuizBlock } from "@/components/lms/quiz-block";
 import { AssignmentBlock } from "@/components/lms/assignment-block";
 import { LessonRating } from "@/components/lms/lesson-rating";
 import { LessonNavigation } from "@/components/lms/lesson-navigation";
+import { ScormPlayer } from "@/components/lms/scorm-player";
 import { ProtectedContentShell } from "@/components/lms/security/protected-content-shell";
 import dynamic from "next/dynamic";
 import type { StudentLessonPlayerDetail } from "@/types/domain";
@@ -229,6 +230,15 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
                     <div key={block.id} className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-6 text-center shadow-m3-soft">
                       <p className="text-body-md font-body-md text-m3-on-surface-variant">{block.data.label ?? "Урок завершён"}</p>
                     </div>
+                  );
+                case "scorm":
+                  return (
+                    <ScormPlayer
+                      key={block.id}
+                      entryUrl={`/api/v1/scorm/serve/${block.data.packageId}/index.html`}
+                      lessonId={lesson.id}
+                      title="SCORM-пакет"
+                    />
                   );
                 default:
                   return null;

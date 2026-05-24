@@ -11,9 +11,10 @@
 
 ### Core Metrics
 - **Build:** 87/87 страниц, 0 ошибок ✅
-- **Tests:** 422/422 passed (69 test files) ✅
+- **Tests:** 426/426 passed (70 test files) ✅
 - **Lint:** 0 errors, 0 warnings ✅
-- **Typecheck:** clean ✅
+- **Typecheck:** clean ✅ (кроме предсуществующих `.next/dev/types/validator.ts`)
+- **SCORM/xAPI:** Full import + proxy + CMI + player + xAPI LRS ✅
 - **Deployment:** Vercel auto-deploy на push в main ✅; preview на codex/* ветках ✅
 - **Security scan:** Все C1-C5 findings закрыты ✅
 - **CSRF:** Исправлен (origin vs hostname) ✅
@@ -75,6 +76,16 @@
 | Code | Metadata | P2 | ✅ | Все 105 page.tsx с русскими title/description |
 | Code | loading.tsx | P2 | ✅ | Все 84 route-директории с skeleton |
 | DevOps | Vercel preview branches | P2 | ✅ | codex/* ветки деплоятся в preview |
+
+### Уже реализовано (Phase 2.4 — SCORM/xAPI)
+- ✅ SCORM ZIP import (adm-zip + manifest parsing + Supabase Storage upload)
+- ✅ SCORM proxy route with API Bridge injection (SCORM 1.2 `window.API` + 2004 `window.API_1484_11`)
+- ✅ CMI backend endpoints (init, get/set values, update launch)
+- ✅ Instructor SCORM block editor (upload ZIP, replace, delete)
+- ✅ Student SCORM player (iframe + fullscreen)
+- ✅ Minimal xAPI LRS (Statement API POST/GET + API key auth)
+- ✅ xapi_statements table (migration applied)
+- ✅ Unit tests: manifest parser (2 tests), full suite: 426 pass
 
 ### Уже реализовано (Phase 0)
 - ✅ Builder publish checklist UX (checks + UI в course-settings-panel.tsx + footer статус)

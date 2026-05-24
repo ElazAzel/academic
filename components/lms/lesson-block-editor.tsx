@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Plus, Trash2, GripVertical, Video as VideoIcon, FileText, HelpCircle, CheckSquare, Star, MessageSquare, CheckCircle, Upload, Eye, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { RichTextEditor } from "@/components/lms/rich-text-editor";
 import type { AssignmentSummary, ContentBlock, ContentBlockType, QuizSummary } from "@/types/domain";
 import { uploadMedia } from "@/lib/upload-with-compress";
+import { ScormBlockEditor } from "@/components/lms/scorm-block";
 
 /** Block editor uses generic data shape for mutable editing */
 interface BlockItem {
@@ -25,6 +26,7 @@ const BLOCK_LABELS: Record<ContentBlockType, string> = {
   rating: "Оценка урока",
   curator_question: "Вопрос куратору",
   completion: "Завершение",
+  scorm: "SCORM-пакет",
 };
 
 const BLOCK_ICONS: Record<ContentBlockType, React.ComponentType<{ className?: string }>> = {
@@ -36,6 +38,7 @@ const BLOCK_ICONS: Record<ContentBlockType, React.ComponentType<{ className?: st
   rating: Star,
   curator_question: MessageSquare,
   completion: CheckCircle,
+  scorm: FileText,
 };
 
 function defaultBlockData(type: ContentBlockType, lessonId: string): Record<string, unknown> {
@@ -46,6 +49,7 @@ function defaultBlockData(type: ContentBlockType, lessonId: string): Record<stri
   if (type === "assignment") return { assignmentId: "" };
   if (type === "rating") return { lessonId };
   if (type === "curator_question") return { lessonId };
+  if (type === "scorm") return { packageId: "", lessonId };
   return { label: "Завершить урок" };
 }
 
@@ -95,6 +99,8 @@ function BlockPreview({ block }: { block: BlockItem }) {
       return <p className="text-xs text-muted-foreground"><HelpCircle className="h-3 w-3 inline mr-1" />Тест: {block.data.quizId as string}</p>;
     case "assignment":
       return <p className="text-xs text-muted-foreground"><CheckSquare className="h-3 w-3 inline mr-1" />Задание: {block.data.assignmentId as string}</p>;
+    case "scorm":
+      return <p className="text-xs text-muted-foreground"><FileText className="h-3 w-3 inline mr-1" />SCORM-пакет: {block.data.packageId ? "загружен" : "не выбран"}</p>;
     default:
       return <p className="text-xs text-muted-foreground">{BLOCK_LABELS[block.type]}</p>;
   }
@@ -122,7 +128,18 @@ export function LessonBlockEditor({
   const [savingBlocks, setSavingBlocks] = useState(false);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [previewBlocks, setPreviewBlocks] = useState<Set<string>>(new Set());
+  const [scormPackageInfo, setScormPackageInfo] = useState<Record<string, unknown> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const scormBlock = blocks.find((b) => b.type === "scorm");
+    if (scormBlock?.data?.packageId) {
+      fetch(`/api/v1/lessons/${lessonId}/scorm/package`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((j) => setScormPackageInfo(j?.data ?? null))
+        .catch(() => {});
+    }
+  }, [blocks, lessonId]);
 
   const addBlock = useCallback((type: ContentBlockType, index: number) => {
     const newBlock: BlockItem = { id: crypto.randomUUID(), type, data: defaultBlockData(type, lessonId) };
@@ -396,6 +413,14 @@ export function LessonBlockEditor({
                     onChange={(e) => updateBlockData(block.id, { ...block.data, label: e.target.value })}
                   />
                 )}
+
+                {block.type === "scorm" && (
+                  <ScormBlockEditor
+                    lessonId={lessonId}
+                    packageInfo={block.data.packageId ? (scormPackageInfo as { id: string; title: string; version: string; organizations: Array<{ identifier: string; title: string }>; fileCount: number } | null) : null}
+                    onPackageChange={(pkg) => updateBlockData(block.id, pkg ? { packageId: pkg.id as string, lessonId } : { packageId: "", lessonId })}
+                  />
+                )}
               </>
             )}
 
@@ -428,7 +453,7 @@ export function LessonBlockEditor({
             <div className="flex justify-center">
               <button
                 onClick={() => {
-                  const types: ContentBlockType[] = ["text", "video", "file", "quiz", "assignment", "rating", "curator_question", "completion"];
+                  const types: ContentBlockType[] = ["text", "video", "file", "quiz", "assignment", "rating", "curator_question", "completion", "scorm"];
                   addBlock(types[0], index);
                 }}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"

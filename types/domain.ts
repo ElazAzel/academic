@@ -150,7 +150,7 @@ export interface LessonDetail extends LessonSummary {
 }
 
 // ── Блоки контента урока (Discriminated Union) ──────────────────────
-export type ContentBlockType = "video" | "text" | "file" | "quiz" | "assignment" | "rating" | "curator_question" | "completion";
+export type ContentBlockType = "video" | "text" | "file" | "quiz" | "assignment" | "rating" | "curator_question" | "completion" | "scorm";
 
 export type VideoProvider = "youtube" | "vimeo" | "bunny" | "mux" | "cloudflare" | "peertube";
 
@@ -204,6 +204,11 @@ export interface CompletionBlockData {
   label?: string;
 }
 
+export interface ScormBlockData {
+  packageId: string;
+  lessonId: string;
+}
+
 export type ContentBlockData =
   | VideoBlockData
   | TextBlockData
@@ -212,7 +217,8 @@ export type ContentBlockData =
   | AssignmentBlockData
   | RatingBlockData
   | CuratorQuestionBlockData
-  | CompletionBlockData;
+  | CompletionBlockData
+  | ScormBlockData;
 
 export interface ContentBlockBase {
   id: string;
@@ -258,6 +264,11 @@ export interface CompletionContentBlock extends ContentBlockBase {
   data: CompletionBlockData;
 }
 
+export interface ScormContentBlock extends ContentBlockBase {
+  type: "scorm";
+  data: ScormBlockData;
+}
+
 export type ContentBlock =
   | VideoContentBlock
   | TextContentBlock
@@ -266,7 +277,8 @@ export type ContentBlock =
   | AssignmentContentBlock
   | RatingContentBlock
   | CuratorQuestionContentBlock
-  | CompletionContentBlock;
+  | CompletionContentBlock
+  | ScormContentBlock;
 
 // ── Course Builder (PR 5) ──────────────────────────────────────────
 export interface BuilderLessonDetail {

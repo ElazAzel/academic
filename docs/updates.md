@@ -2,6 +2,22 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-24 — SCORM/xAPI импорт (Phase 2.4)
+
+- **Миграция БД**: `xapi_statements` таблица создана (JSONB, user/lesson indexes)
+- **Типы domain.ts**: добавлены `ScormBlockData`, `ScormContentBlock`, `"scorm"` в `ContentBlockType` + `ContentBlock` union
+- **Константы**: `UPLOAD.SCORM_MAX_SIZE_BYTES` (200 MB), `XAPI_API_KEY` в env vars
+- **Manifest parser**: `server/modules/scorm/manifest-parser.ts` — парсинг imsmanifest.xml (SCORM 1.2 + 2004), organizations, resources, entry point
+- **Storage helpers**: `server/modules/scorm/storage.ts` — upload/download/delete в Supabase Storage `scorm-packages/`
+- **ZIP import**: `server/modules/scorm/import.ts` + `POST .../scorm/import` — валидация, распаковка (adm-zip), загрузка файлов, создание ScormPackage
+- **SCORM package API**: `GET/DELETE .../scorm/package` — статус и удаление пакета
+- **Proxy + API Bridge**: `server/modules/scorm/api-bridge.ts` (JS-шаблоны для SCORM 1.2 `window.API` и 2004 `window.API_1484_11`), `proxy.ts` (инжекция bridge в HTML), `GET /api/v1/scorm/serve/[...path]` (catch-all)
+- **CMI endpoints**: `cmi-service.ts` + launch init/update/CMI GET+POST endpoints
+- **Instructor UI**: `ScormBlockEditor` — дроп-зона ZIP, информация о пакете, замена/удаление; добавлен тип `scorm` в `LessonBlockEditor`
+- **Student player**: `ScormPlayer` — iframe с fullscreen toggle, встроен в `LessonPlayerShell`
+- **xAPI LRS**: `xapi/auth.ts` + `xapi/lrs.ts` + `POST/GET /api/v1/xapi/statements` — минимальный LRS с API key и JWT auth
+- **Tests**: 2 unit-теста на manifest parser, 426/426 всех тестов pass
+
 ## 2026-05-24 — Мобильная адаптация достижений и статистики
 
 - `components/lms/student-achievements.tsx`:

@@ -1328,3 +1328,16 @@ enum ScormLaunchStatus {
   COMPLETED
   FAILED
 }
+
+// ── xAPI LRS (Phase 2.4) ──────────────────────────────────────────────
+
+model XapiStatement {
+  id          String   @id
+  statement   Json
+  stored      DateTime @default(now())
+  userId      String?
+  lessonId    String?
+
+  @@index([userId])
+  @@map("xapi_statements")
+}

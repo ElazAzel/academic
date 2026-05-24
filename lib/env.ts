@@ -74,6 +74,9 @@ const envSchema = z.object({
 
   // Cron / Scheduled Jobs
   CRON_SECRET: z.string().min(16).optional(),
+
+  // xAPI LRS
+  XAPI_API_KEY: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);
