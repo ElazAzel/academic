@@ -20,7 +20,6 @@ export async function getCuratorEnhancedStudents() {
       student: {
         select: {
           id: true, name: true, email: true, lastLoginAt: true,
-          roles: { include: { role: { select: { key: true } } } },
         },
       },
       cohort: { select: { id: true, name: true } },
@@ -29,7 +28,7 @@ export async function getCuratorEnhancedStudents() {
 
   const studentIds = assignments.map((a) => a.studentId);
 
-  const [progressData, riskData] = await Promise.all([
+  const [progressData, riskData, answeredQuestions, chatMsgs] = await Promise.all([
     prisma.courseProgress.findMany({
       where: { userId: { in: studentIds } },
       select: { userId: true, percent: true, status: true },
@@ -37,6 +36,21 @@ export async function getCuratorEnhancedStudents() {
     prisma.riskFlag.findMany({
       where: { userId: { in: studentIds }, resolvedAt: null },
       select: { userId: true, severity: true },
+    }),
+    prisma.lessonQuestion.findMany({
+      where: { curatorId: actor.id, answeredAt: { not: null } },
+      select: { studentId: true, createdAt: true, answeredAt: true },
+    }),
+    prisma.message.findMany({
+      where: {
+        OR: [
+          { senderId: { in: studentIds }, receiverId: actor.id },
+          { senderId: actor.id, receiverId: { in: studentIds } },
+        ],
+      },
+      select: { senderId: true, receiverId: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+      take: 500,
     }),
   ]);
 
@@ -49,6 +63,39 @@ export async function getCuratorEnhancedStudents() {
     riskMap.set(r.userId, cur);
   }
 
+  const questionResponseMap = new Map<string, { total: number; count: number }>();
+  for (const q of answeredQuestions) {
+    if (!q.answeredAt) continue;
+    const hours = (q.answeredAt.getTime() - q.createdAt.getTime()) / (1000 * 60 * 60);
+    const prev = questionResponseMap.get(q.studentId) ?? { total: 0, count: 0 };
+    prev.total += hours;
+    prev.count++;
+    questionResponseMap.set(q.studentId, prev);
+  }
+
+  const chatResponseMap = new Map<string, { total: number; count: number }>();
+  const chatByStudent = new Map<string, typeof chatMsgs>();
+  for (const msg of chatMsgs) {
+    const otherId = msg.senderId === actor.id ? (msg.receiverId ?? "") : msg.senderId;
+    if (!otherId || !studentIds.includes(otherId)) continue;
+    const list = chatByStudent.get(otherId) ?? [];
+    list.push(msg);
+    chatByStudent.set(otherId, list);
+  }
+  for (const [sid, msgs] of chatByStudent) {
+    let total = 0;
+    let count = 0;
+    for (let i = 0; i < msgs.length - 1; i++) {
+      const cur = msgs[i];
+      const next = msgs[i + 1];
+      const isStudentThenCurator = cur.senderId === sid && next.senderId === actor.id;
+      if (!isStudentThenCurator) continue;
+      total += (next.createdAt.getTime() - cur.createdAt.getTime()) / (1000 * 60 * 60);
+      count++;
+    }
+    if (count > 0) chatResponseMap.set(sid, { total, count });
+  }
+
   return assignments.map((a) => {
     const progress = progressMap.get(a.studentId);
     const risk = riskMap.get(a.studentId);
@@ -56,6 +103,8 @@ export async function getCuratorEnhancedStudents() {
     const daysSinceLogin = lastLogin
       ? Math.floor((Date.now() - new Date(lastLogin).getTime()) / (1000 * 60 * 60 * 24))
       : null;
+    const qResp = questionResponseMap.get(a.studentId);
+    const cResp = chatResponseMap.get(a.studentId);
 
     return {
       id: a.student.id,
@@ -68,6 +117,8 @@ export async function getCuratorEnhancedStudents() {
       daysSinceLogin,
       riskCount: risk?.count ?? 0,
       hasCriticalRisk: risk?.hasCritical ?? false,
+      avgResponseHours: qResp ? Math.round((qResp.total / qResp.count) * 10) / 10 : 0,
+      avgChatResponseHours: cResp ? Math.round((cResp.total / cResp.count) * 10) / 10 : 0,
     };
   });
 }

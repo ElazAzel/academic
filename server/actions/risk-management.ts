@@ -121,12 +121,13 @@ export async function getRiskOverview(filters?: {
         return assignment.studentId === risk.userId || assignment.curatorId === scopedAssignment?.curatorId;
       })?.curator ?? risk.cohort?.curatorAssignments?.[0]?.curator ?? null;
 
+      const isAdmin = actor.roles.includes("admin");
       return {
         id: risk.id,
         type: risk.type,
         severity: risk.severity,
         studentId: risk.userId,
-        studentName: maskStudentName(risk.userId),
+        studentName: isAdmin ? (risk.user.name ?? risk.user.email) : maskStudentName(risk.userId),
         studentEmail: risk.user.email,
         studentRealName: risk.user.organization ?? null,
         courseTitle: risk.course?.title ?? "",

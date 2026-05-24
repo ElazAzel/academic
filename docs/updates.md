@@ -2,6 +2,22 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-24 — Исправления по результатам глубокой проверки
+
+- **`server/actions/curator-enhanced.ts`** — добавлен `take: 500` на запрос сообщений (был безлимитный); убран неиспользуемый include `roles` у студента
+- **`server/actions/super-curator.ts`** — добавлен `take: 500` на запрос сообщений в `getCuratorActivity`
+- **`server/actions/risk-management.ts`** — `getRiskOverview` теперь проверяет `actor.roles.includes("admin")` при маскировке имени: админы видят реальное имя, остальные — `Слушатель #XXXXX`
+- **Supabase RLS**: 49 таблиц с включённым RLS без политик — известная проблема, требуется миграция для добавления политик
+- **Supabase Performance**: все внешние ключи без индексов — типично для Prisma, рекомендуется добавить индексы на FK колонки через отдельную миграцию
+- **Typecheck**: clean ✅ | **Tests**: 419/419 ✅
+
+## 2026-05-24 — Скорость ответов куратора: per-student + super-curator breakdown
+
+- **`server/actions/curator-enhanced.ts`** — `getCuratorEnhancedStudents()` теперь возвращает `avgResponseHours` и `avgChatResponseHours` per student (вопросы + чат)
+- **`server/actions/super-curator.ts`** — `getCuratorActivity()` теперь возвращает `studentResponseBreakdown[]` с per-student средними по вопросам и чату
+- **`app/super-curator/curators/[id]/page.tsx`** — добавлена колонка «Время отв.» в таблицу вопросов (color-coded: <8h зелёный, 8-24h янтарный, >24h красный); добавлена вкладка «По студентам» с таблицей per-student response time
+- **Typecheck**: clean ✅ | **Tests**: 419/419 ✅
+
 ## 2026-05-23 — Анонимизация имён студентов для не-администраторов
 
 - **`lib/auth/mask-name.ts`** — `maskChatName()` и `deriveDisplayName()` теперь возвращают `Слушатель #XXXXX` для студентов при просмотре не-админами

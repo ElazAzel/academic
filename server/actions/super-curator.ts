@@ -409,7 +409,12 @@ export async function getCuratorActivity(curatorId: string) {
   });
   if (!curator) return null;
 
-  const [questions, submissions, activityLogs] = await Promise.all([
+  const curatorStudentIds = (await prisma.curatorAssignment.findMany({
+    where: { curatorId, active: true },
+    select: { studentId: true },
+  })).map((a) => a.studentId);
+
+  const [questions, submissions, activityLogs, chatMsgs] = await Promise.all([
     prisma.lessonQuestion.findMany({
       where: { curatorId },
       orderBy: { createdAt: "desc" },
@@ -433,7 +438,67 @@ export async function getCuratorActivity(curatorId: string) {
       orderBy: { createdAt: "desc" },
       take: 200,
     }),
+    prisma.message.findMany({
+      where: {
+        OR: [
+          { senderId: { in: curatorStudentIds }, receiverId: curatorId },
+          { senderId: curatorId, receiverId: { in: curatorStudentIds } },
+        ],
+      },
+      select: { senderId: true, receiverId: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+      take: 500,
+    }),
   ]);
+
+  const studentNames = new Map<string, string>();
+  for (const q of questions) {
+    if (!studentNames.has(q.studentId)) studentNames.set(q.studentId, q.student.name ?? q.student.email);
+  }
+  const curatorStudents = await prisma.user.findMany({
+    where: { id: { in: curatorStudentIds.filter((sid) => !studentNames.has(sid)) } },
+    select: { id: true, name: true, email: true },
+  });
+  for (const s of curatorStudents) {
+    if (!studentNames.has(s.id)) studentNames.set(s.id, s.name ?? s.email);
+  }
+
+  const chatGrouped = new Map<string, typeof chatMsgs>();
+  for (const msg of chatMsgs) {
+    const otherId = msg.senderId === curatorId ? (msg.receiverId ?? "") : msg.senderId;
+    const list = chatGrouped.get(otherId) ?? [];
+    list.push(msg);
+    chatGrouped.set(otherId, list);
+  }
+
+  const studentResponseBreakdown = curatorStudentIds.map((sid) => {
+    const qHours = questions
+      .filter((q): q is typeof q & { answeredAt: Date } => q.studentId === sid && q.answeredAt !== null)
+      .reduce((sum, q) => sum + (q.answeredAt.getTime() - q.createdAt.getTime()) / (1000 * 60 * 60), 0);
+    const qCount = questions.filter((q) => q.studentId === sid && q.answeredAt !== null).length;
+
+    const sidMsgs = chatGrouped.get(sid) ?? [];
+    let chatTotal = 0;
+    let chatCount = 0;
+    for (let i = 0; i < sidMsgs.length - 1; i++) {
+      const cur = sidMsgs[i];
+      const next = sidMsgs[i + 1];
+      if (!(cur.senderId === sid && next.senderId === curatorId)) continue;
+      chatTotal += (next.createdAt.getTime() - cur.createdAt.getTime()) / (1000 * 60 * 60);
+      chatCount++;
+    }
+
+    return {
+      studentId: sid,
+      studentName: actor.roles.includes("admin")
+        ? (studentNames.get(sid) ?? "Неизвестно")
+        : maskStudentName(sid),
+      avgQuestionHours: qCount > 0 ? Math.round((qHours / qCount) * 10) / 10 : 0,
+      questionCount: qCount,
+      avgChatHours: chatCount > 0 ? Math.round((chatTotal / chatCount) * 10) / 10 : 0,
+      chatResponseCount: chatCount,
+    };
+  }).filter((s) => s.questionCount > 0 || s.chatResponseCount > 0);
 
   return {
     curator: {
@@ -467,6 +532,7 @@ export async function getCuratorActivity(curatorId: string) {
       resource: l.resource,
       createdAt: l.createdAt.toISOString(),
     })),
+    studentResponseBreakdown,
   };
 }
 
