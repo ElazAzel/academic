@@ -230,6 +230,7 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
 
     const [
       questions,
+      allQuestions,
       submissions,
       risks,
       courseProgress,
@@ -250,6 +251,10 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
           },
         },
         take: QUERY_LIMITS.questionQueue,
+      }),
+      prisma.lessonQuestion.findMany({
+        where: { curatorId: user.id, answeredAt: { not: null } },
+        select: { studentId: true, createdAt: true, answeredAt: true },
       }),
       prisma.assignmentSubmission.findMany({
         where: { userId: { in: studentIds }, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
@@ -389,6 +394,45 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
       conversationByStudent.set(partnerId, current);
     }
 
+    const responseTimeByStudent = new Map<string, number>();
+    const responseCountByStudent = new Map<string, number>();
+    for (const q of allQuestions) {
+      if (!q.answeredAt) continue;
+      const hours = (q.answeredAt.getTime() - q.createdAt.getTime()) / (1000 * 60 * 60);
+      const prev = responseTimeByStudent.get(q.studentId) ?? 0;
+      const count = responseCountByStudent.get(q.studentId) ?? 0;
+      responseTimeByStudent.set(q.studentId, prev + hours);
+      responseCountByStudent.set(q.studentId, count + 1);
+    }
+
+    const chatResponseHoursByStudent = new Map<string, number>();
+    const chatResponseCountByStudent = new Map<string, number>();
+    const chatByStudent = new Map<string, typeof messages>();
+    for (const msg of messages) {
+      const otherId = msg.senderId === user.id ? msg.receiverId : msg.senderId;
+      if (!otherId || !studentIds.includes(otherId)) continue;
+      const list = chatByStudent.get(otherId) ?? [];
+      list.push(msg);
+      chatByStudent.set(otherId, list);
+    }
+    for (const [studentId, msgs] of chatByStudent) {
+      msgs.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      let totalHours = 0;
+      let responseCount = 0;
+      for (let i = 0; i < msgs.length - 1; i++) {
+        const cur = msgs[i];
+        const next = msgs[i + 1];
+        const isStudentThenCurator = cur.senderId === studentId && next.senderId === user.id;
+        if (!isStudentThenCurator) continue;
+        totalHours += (next.createdAt.getTime() - cur.createdAt.getTime()) / (1000 * 60 * 60);
+        responseCount++;
+      }
+      if (responseCount > 0) {
+        chatResponseHoursByStudent.set(studentId, totalHours / responseCount);
+        chatResponseCountByStudent.set(studentId, responseCount);
+      }
+    }
+
     const students: CuratorStudentOperation[] = assignments.map((assignment) => {
       const fallbackEnrollment = assignment.cohort.courseId
         ? enrollmentByStudentCourse.get(studentCourseKey(assignment.studentId, assignment.cohort.courseId))
@@ -489,6 +533,12 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
         unreadMessages,
         lastMessageAt: conversation?.lastMessageAt ?? null,
         nextAction,
+        avgResponseHours: (() => {
+          const total = responseTimeByStudent.get(assignment.studentId) ?? 0;
+          const count = responseCountByStudent.get(assignment.studentId) ?? 0;
+          return count > 0 ? Math.round((total / count) * 10) / 10 : 0;
+        })(),
+        avgChatResponseHours: chatResponseHoursByStudent.get(assignment.studentId) ?? 0,
       };
     }).sort((a, b) => {
       const priorityDelta = ACTION_WEIGHT[a.nextAction.kind] - ACTION_WEIGHT[b.nextAction.kind];
@@ -537,6 +587,12 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
     const avgProgress = students.length > 0
       ? Math.round(students.reduce((sum, student) => sum + student.progressPercent, 0) / students.length)
       : 0;
+    const avgGroupResponse = students.length > 0
+      ? Math.round(students.reduce((sum, s) => sum + s.avgResponseHours, 0) / students.length * 10) / 10
+      : 0;
+    const avgGroupChatResponse = students.length > 0
+      ? Math.round(students.reduce((sum, s) => sum + s.avgChatResponseHours, 0) / students.length * 10) / 10
+      : 0;
     const overdueDeadlines = students.filter((student) => student.nextDeadline?.overdue).length;
     const unreadMessagesCount = students.reduce((sum, student) => sum + student.unreadMessages, 0);
     const urgentStudents = students.filter((student) => student.nextAction.kind !== "monitor").length;
@@ -580,6 +636,13 @@ export async function getCuratorDashboard(): Promise<CuratorDashboardData | null
         value: `${avgProgress}%`,
         tone: avgProgress >= 70 ? "success" : avgProgress >= 35 ? "warning" : "danger",
         detail: `${unreadMessagesCount} непрочитанных сообщений`,
+      },
+      {
+        label: "Ср. ответ на вопросы",
+        value: avgGroupResponse > 0 ? `${avgGroupResponse}ч` : "—",
+        tone: avgGroupResponse > 24 ? "danger" : avgGroupResponse > 8 ? "warning" : avgGroupResponse > 0 ? "success" : "neutral",
+        detail: avgGroupChatResponse > 0 ? `Чат: ${avgGroupChatResponse}ч` : "Нет данных",
+        priority: avgGroupResponse > 24 ? "critical" : avgGroupResponse > 8 ? "elevated" : "normal",
       },
     ];
 
