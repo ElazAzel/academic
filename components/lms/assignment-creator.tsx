@@ -67,7 +67,7 @@ export function AssignmentCreator({
   };
 
   return (
-    <div className="rounded-2xl border bg-muted/10 p-4 space-y-4">
+    <div className="rounded-lg border bg-muted/10 p-4 space-y-4">
       <h4 className="text-sm font-semibold">Создание задания</h4>
       <div>
         <label className="text-xs text-muted-foreground">Название</label>
@@ -76,7 +76,7 @@ export function AssignmentCreator({
       <div>
         <label className="text-xs text-muted-foreground">Инструкция</label>
         <textarea
-          className="w-full min-h-[120px] rounded-xl border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full min-h-[120px] rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
           placeholder="Опишите задание подробно..."

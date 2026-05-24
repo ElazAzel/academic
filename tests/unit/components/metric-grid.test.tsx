@@ -5,7 +5,7 @@ import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import type { DashboardMetric } from "@/types/domain";
 
 describe("MetricGrid", () => {
-  it("renders large operational KPI values with details and tone classes", () => {
+  it("renders restrained operational KPI values with details and tone classes", () => {
     const metrics: DashboardMetric[] = [
       {
         label: "Критичные",
@@ -31,15 +31,15 @@ describe("MetricGrid", () => {
     expect(screen.getByText("3 старше 24 часов")).toBeInTheDocument();
 
     const criticalValue = screen.getByText("12");
-    expect(criticalValue.className).toContain("text-display-lg");
-    expect(criticalValue.className).toContain("font-bold");
+    expect(criticalValue.className).toContain("text-headline-md");
+    expect(criticalValue.className).toContain("font-semibold");
     expect(criticalValue.className).toContain("tabular-nums");
 
     // Clickable card links to risks page
     const link = criticalValue.closest("a");
     expect(link).toHaveAttribute("href", "/super-curator/risks");
     // Critical priority adds a visual ring
-    const card = link?.querySelector(".rounded-xl");
+    const card = link?.querySelector(".rounded-lg");
     expect(card?.className).toBeDefined();
     expect(card?.className).toContain("ring-m3-error");
 

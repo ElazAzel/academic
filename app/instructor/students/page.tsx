@@ -89,7 +89,7 @@ export default async function InstructorStudentsPage() {
       </div>
 
       {Object.keys(courseGroups).length > 0 && (
-        <Card className="rounded-2xl mb-6">
+        <Card className="rounded-lg mb-6">
           <CardContent className="p-5">
             <BarChart
               items={Object.entries(courseGroups).map(([course, list]) => ({
@@ -103,7 +103,7 @@ export default async function InstructorStudentsPage() {
         </Card>
       )}
 
-      <Card className="rounded-2xl overflow-hidden">
+      <Card className="rounded-lg overflow-hidden">
         <CardContent className="p-0">
           <Table>
             <TableHeader>

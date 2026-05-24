@@ -19,8 +19,8 @@ export function EmptyState({
 }) {
   const LucideIconCmp = typeof iconProp === "string" ? null : iconProp;
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-m3-outline-variant bg-m3-surface-container-lowest px-6 py-16 text-center shadow-m3-soft">
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-m3-surface-container-high">
+    <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-m3-outline-variant bg-m3-surface-container-lowest px-6 py-16 text-center shadow-m3-soft">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-m3-surface-container-high">
         {typeof iconProp === "string" ? (
           <Icon name={iconProp} size={28} className="text-m3-on-surface-variant/60" />
         ) : LucideIconCmp ? (

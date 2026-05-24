@@ -37,7 +37,7 @@ export function Tabs({
 
   return (
     <div className={className}>
-      <div className="flex gap-1 rounded-xl bg-muted/60 p-1" role="tablist">
+      <div className="flex gap-1 rounded-lg bg-muted/60 p-1" role="tablist">
         {tabs.map((tab, i) => (
           <button
             key={tab.label}

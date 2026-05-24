@@ -49,14 +49,14 @@ export function ReviewSubmissionForm({ submission }: { submission: ReviewFormSub
             onChange={(e) => setScore(Number(e.target.value))}
             min={0}
             max={submission.assignment.maxScore}
-            className="w-full max-w-[120px] rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface outline-none focus:ring-2 focus:ring-m3-outline"
+            className="w-full max-w-[120px] rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface outline-none focus:ring-2 focus:ring-m3-outline"
           />
         </div>
 
         <div className="space-y-2">
           <label className="text-label-sm font-label-sm text-m3-on-surface-variant">Комментарий</label>
           <textarea
-            className="w-full min-h-[120px] resize-y rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface outline-none focus:ring-2 focus:ring-m3-outline"
+            className="w-full min-h-[120px] resize-y rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface outline-none focus:ring-2 focus:ring-m3-outline"
             placeholder="Напишите замечания или похвалу..."
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}

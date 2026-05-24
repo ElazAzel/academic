@@ -54,7 +54,7 @@ export function QuizBlockEditor({
       </div>
 
       {questions.map((q, i) => (
-        <div key={i} className="rounded-xl border p-3 space-y-2">
+        <div key={i} className="rounded-lg border p-3 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium">Вопрос {i + 1}</span>
             <button onClick={() => { const qs = questions.filter((_, j) => j !== i); setQuestions(qs); updateParent(qs, title, passThreshold, maxAttempts); }}>

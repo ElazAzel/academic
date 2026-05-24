@@ -45,10 +45,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
             toastOptions={{
               duration: 5000,
               classNames: {
-                toast: "!bg-card !text-card-foreground !border !border-border !shadow-panel !rounded-2xl !p-4",
+                toast: "!bg-card !text-card-foreground !border !border-border !shadow-panel !rounded-lg !p-4",
                 title: "!text-foreground !font-medium !text-sm",
                 description: "!text-muted-foreground !text-xs",
-                actionButton: "!bg-primary !text-primary-foreground !rounded-xl !text-xs !font-medium !h-8 !px-3",
+                actionButton: "!bg-primary !text-primary-foreground !rounded-lg !text-xs !font-medium !h-8 !px-3",
                 cancelButton: "!text-muted-foreground !hover:text-foreground !text-xs",
                 closeButton: "!text-muted-foreground !hover:text-foreground",
               },

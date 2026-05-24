@@ -55,7 +55,7 @@ export function AddStudentForm({
           <div>
             <label className="text-sm font-medium">Курс</label>
             <input
-              className="mt-1 w-full rounded-xl border bg-muted px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border bg-muted px-3 py-2 text-sm"
               value={courseTitle}
               disabled
             />

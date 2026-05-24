@@ -46,7 +46,7 @@ export default async function AdminEnrollmentsPage() {
       <h2 className="text-xl font-bold">Активные зачисления</h2>
       <Button variant="secondary" size="sm"><Download className="h-4 w-4 mr-2"/>Экспорт CSV</Button>
      </div>
-     <div className="border rounded-2xl bg-white overflow-hidden">
+     <div className="border rounded-lg bg-white overflow-hidden">
       <Table>
        <TableHeader>
         <TableRow>

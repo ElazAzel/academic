@@ -74,7 +74,7 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
         </div>
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase text-muted-foreground">Статус</label>
-          <select name="status" defaultValue={course.status} className="w-full h-10 rounded-xl border bg-background px-3 text-sm">
+          <select name="status" defaultValue={course.status} className="w-full h-10 rounded-lg border bg-background px-3 text-sm">
             <option value="DRAFT">Черновик</option>
             <option value="PUBLISHED">Опубликован</option>
             <option value="ARCHIVED">Архив</option>
@@ -89,7 +89,7 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
           defaultValue={course.description || ""}
           required
           minLength={10}
-          className="w-full min-h-[120px] rounded-2xl border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+          className="w-full min-h-[120px] rounded-lg border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
         />
       </div>
 
@@ -107,7 +107,7 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase text-muted-foreground">Режим прохождения</label>
-          <select name="traversalMode" defaultValue={course.traversalMode} className="w-full h-10 rounded-xl border bg-background px-3 text-sm">
+          <select name="traversalMode" defaultValue={course.traversalMode} className="w-full h-10 rounded-lg border bg-background px-3 text-sm">
             <option value="sequential">Последовательный</option>
             <option value="open">Свободный</option>
           </select>

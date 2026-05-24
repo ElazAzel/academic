@@ -36,7 +36,7 @@ export default async function StudentAssignmentsPage() {
    <div className="space-y-4 mt-6">
     {submissions.length > 0 ? (
      submissions.map((sub) => (
-      <Card key={sub.id} className="rounded-2xl">
+      <Card key={sub.id} className="rounded-lg">
        <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
          <CardTitle className="text-base">{sub.assignment.title}</CardTitle>
@@ -56,7 +56,7 @@ export default async function StudentAssignmentsPage() {
         </div>
         {sub.score !== null && <p>Оценка: {sub.score} / {sub.assignment.maxScore}</p>}
         {sub.feedback && (
-         <div className="mt-2 p-3 bg-muted rounded-xl">
+         <div className="mt-2 p-3 bg-muted rounded-lg">
           <p className="font-medium text-xs mb-1">Комментарий куратора:</p>
           <p>{sub.feedback}</p>
          </div>

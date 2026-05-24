@@ -54,14 +54,14 @@ async function InstructorDashboardContent() {
      {
       label: "Аналитика",
       content: (
-       <Card className="rounded-2xl border-m3-outline-variant/60 glass-card-premium">
+       <Card className="border-m3-outline-variant">
         <CardHeader>
          <CardTitle className="text-headline-sm text-m3-on-surface">Прогресс по курсам</CardTitle>
          <CardDescription className="text-body-md text-m3-on-surface-variant">Средний прогресс всех слушателей</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
          {myCourses.map((c) => (
-          <div key={c.id} className="space-y-1.5 p-3 rounded-xl bg-m3-surface-container-low/40 backdrop-blur-sm border border-m3-outline-variant/40 hover:bg-m3-surface-container-low hover:border-m3-primary/30 transition-all duration-300">
+          <div key={c.id} className="space-y-1.5 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-3 transition-colors hover:bg-m3-surface-container">
            <div className="flex items-center justify-between text-sm font-semibold text-m3-on-surface">
             <span>{c.title}</span>
             <span className="text-m3-primary font-bold">{c.avgProgress ?? 0}%</span>
@@ -78,7 +78,7 @@ async function InstructorDashboardContent() {
        content: forwardedQuestions.length > 0 ? (
         <div className="space-y-3">
          {forwardedQuestions.slice(0, 5).map((q) => (
-          <Card key={q.id} className="rounded-2xl border-m3-outline-variant/60 glass-card-premium transition-all duration-300 hover:-translate-y-0.5">
+          <Card key={q.id} className="border-m3-outline-variant">
            <CardContent className="p-4">
             <div className="flex items-center justify-between mb-1">
              <p className="text-sm font-semibold text-m3-on-surface">{q.studentName}</p>

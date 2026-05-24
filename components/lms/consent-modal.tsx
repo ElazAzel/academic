@@ -59,7 +59,7 @@ export function ConsentModal() {
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v && !consented) return; setOpen(v); }}>
       <DialogContent className="sm:max-w-lg gap-0 p-0 overflow-hidden">
-        <div className="bg-gradient-to-br from-primary/5 via-primary/[0.02] to-background">
+        <div className="bg-m3-surface-container-lowest">
           <div className="flex items-center gap-3 p-6 pb-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
               <FileText className="h-5 w-5" />

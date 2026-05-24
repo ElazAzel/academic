@@ -33,7 +33,7 @@ export function AppShell({
           {/* Desktop sidebar — hidden on mobile */}
           <aside className="hidden lg:block">
             <nav
-              className="sticky top-24 flex flex-col rounded-2xl border border-m3-outline-variant/60 glass-card-premium p-sm"
+              className="sticky top-24 flex flex-col rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-sm shadow-m3-soft"
               aria-label={`Кабинет: ${roleLabel}`}
             >
               {/* Role label */}
@@ -55,7 +55,7 @@ export function AppShell({
           <main
             id="main-content"
             className={cn(
-              "min-w-0 outline-none animate-slide-up",
+              "min-w-0 outline-none",
               "px-4 pb-24 lg:px-0 lg:pb-8",
               className
             )}

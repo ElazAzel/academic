@@ -92,17 +92,17 @@ export function GlossaryEditor({
       </div>
 
       {newForm && (
-        <Card className="rounded-2xl border-primary/20">
+        <Card className="rounded-lg border-primary/20">
           <CardContent className="p-4">
             <form action={handleCreate} className="space-y-3">
               <div className="grid grid-cols-4 gap-3">
                 <div className="col-span-2">
                   <Input name="question" placeholder="Вопрос" required />
                 </div>
-                <select name="direction" defaultValue="general" className="rounded-xl border bg-background px-3 py-2 text-sm">
+                <select name="direction" defaultValue="general" className="rounded-lg border bg-background px-3 py-2 text-sm">
                   {DIRECTIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
                 </select>
-                <select name="category" className="rounded-xl border bg-background px-3 py-2 text-sm">
+                <select name="category" className="rounded-lg border bg-background px-3 py-2 text-sm">
                   {allCats.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
@@ -135,7 +135,7 @@ export function GlossaryEditor({
               </h3>
               <div className="space-y-2">
                 {catEntries.map((entry) => (
-                  <Card key={entry.id} className="rounded-2xl">
+                  <Card key={entry.id} className="rounded-lg">
                     <CardContent className="p-4">
                       {editingId === entry.id ? (
                         <form action={handleUpdate} className="space-y-3">
@@ -143,10 +143,10 @@ export function GlossaryEditor({
                             <div className="col-span-2">
                               <Input name="question" defaultValue={entry.question} required />
                             </div>
-                            <select name="direction" defaultValue={entry.direction} className="rounded-xl border bg-background px-3 py-2 text-sm">
+                            <select name="direction" defaultValue={entry.direction} className="rounded-lg border bg-background px-3 py-2 text-sm">
                               {DIRECTIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
                             </select>
-                            <select name="category" defaultValue={entry.category} className="rounded-xl border bg-background px-3 py-2 text-sm">
+                            <select name="category" defaultValue={entry.category} className="rounded-lg border bg-background px-3 py-2 text-sm">
                               {allCats.map((c) => <option key={c} value={c}>{c}</option>)}
                             </select>
                           </div>

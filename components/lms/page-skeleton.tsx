@@ -8,11 +8,11 @@ export function PageSkeleton() {
         <Skeleton className="h-5 w-96" />
       </div>
       <div className="grid gap-4 md:grid-cols-3">
-        <Skeleton className="h-28 rounded-xl" />
-        <Skeleton className="h-28 rounded-xl" />
-        <Skeleton className="h-28 rounded-xl" />
+        <Skeleton className="h-28 rounded-lg" />
+        <Skeleton className="h-28 rounded-lg" />
+        <Skeleton className="h-28 rounded-lg" />
       </div>
-      <Skeleton className="h-64 rounded-xl" />
+      <Skeleton className="h-64 rounded-lg" />
     </div>
   );
 }

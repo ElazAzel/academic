@@ -79,7 +79,7 @@ export function AssignmentEditForm({ assignment }: AssignmentEditFormProps) {
         </div>
       </div>
 
-      <Card className="rounded-3xl border-2">
+      <Card className="rounded-lg border">
         <CardHeader>
           <CardTitle className="text-lg">Основные параметры</CardTitle>
         </CardHeader>
@@ -95,7 +95,7 @@ export function AssignmentEditForm({ assignment }: AssignmentEditFormProps) {
               name="instructions"
               defaultValue={assignment.instructions}
               required
-              className="w-full min-h-[300px] rounded-2xl border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              className="w-full min-h-[300px] rounded-lg border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
             />
           </div>
 

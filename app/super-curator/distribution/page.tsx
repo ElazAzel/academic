@@ -45,7 +45,7 @@ export default async function SuperCuratorDistributionPage() {
             ) : (
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {data.curators.map((curator) => (
-                  <div key={curator.id} className="rounded-xl border border-m3-outline-variant bg-m3-surface-container-low p-4">
+                  <div key={curator.id} className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="font-label-md text-label-md text-m3-on-surface truncate">{curator.name ?? curator.email}</p>
@@ -77,7 +77,7 @@ export default async function SuperCuratorDistributionPage() {
               </p>
             ) : (
               data.unassignedStudents.map((student) => (
-                <div key={`${student.cohortId}:${student.id}`} className="flex flex-col gap-4 rounded-xl border border-m3-outline-variant bg-m3-surface-container-low p-4 lg:flex-row lg:items-center">
+                <div key={`${student.cohortId}:${student.id}`} className="flex flex-col gap-4 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-4 lg:flex-row lg:items-center">
                   <div className="min-w-0 flex-1">
                     <p className="font-label-md text-label-md text-m3-on-surface">{student.name}</p>
                     <p className="font-body-sm text-body-sm text-m3-on-surface-variant">{student.email}</p>
@@ -113,7 +113,7 @@ export default async function SuperCuratorDistributionPage() {
               </p>
             ) : (
               data.assignedStudents.map((student) => (
-                <div key={`${student.cohortId}:${student.id}`} className="flex flex-col gap-4 rounded-xl border border-m3-outline-variant bg-m3-surface-container-low p-4 lg:flex-row lg:items-center">
+                <div key={`${student.cohortId}:${student.id}`} className="flex flex-col gap-4 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-4 lg:flex-row lg:items-center">
                   <div className="min-w-0 flex-1">
                     <p className="font-label-md text-label-md text-m3-on-surface">{student.name}</p>
                     <p className="font-body-sm text-body-sm text-m3-on-surface-variant">{student.email}</p>

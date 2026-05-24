@@ -13,15 +13,14 @@ interface XpCenterModalProps {
   levelInfo: { level: number; name: string; progress: number };
 }
 
-const XP_QUESTS = [
-  { id: "lesson", label: "Прохождение урока", xp: "+10 XP", desc: "Завершите все учебные блоки и видео в уроке.", icon: "auto_stories", color: "text-blue-500 bg-blue-500/10" },
-  { id: "quiz", label: "Идеальный тест", xp: "+15 XP", desc: "Сдайте любой тест урока на 100% правильных ответов.", icon: "quiz", color: "text-amber-500 bg-amber-500/10" },
-  { id: "assignment", label: "Сдача вовремя", xp: "+20 XP", desc: "Отправьте домашнее задание куратору до наступления дедлайна.", icon: "assignment_turned_in", color: "text-emerald-500 bg-emerald-500/10" },
-  { id: "discussion", label: "Активность в сообществе", xp: "+5 XP", desc: "Оставьте конструктивный комментарий или ответьте в обсуждении.", icon: "forum", color: "text-indigo-500 bg-indigo-500/10" },
+const XP_RULES = [
+  { id: "lesson", label: "Прохождение урока", xp: "+10 XP", icon: "auto_stories" },
+  { id: "quiz", label: "Идеальный тест", xp: "+15 XP", icon: "quiz" },
+  { id: "assignment", label: "Сдача задания", xp: "+20 XP", icon: "assignment_turned_in" },
+  { id: "discussion", label: "Активность", xp: "+5 XP", icon: "forum" },
 ];
 
 export function XpCenterModal({ isOpen, onClose, xp, levelInfo }: XpCenterModalProps) {
-  // Вычисляем, сколько XP нужно до следующего уровня
   const currentLevelIdx = XP_LEVELS.findIndex((l) => l.level === levelInfo.level);
   const nextLevel = currentLevelIdx !== -1 && currentLevelIdx < XP_LEVELS.length - 1
     ? XP_LEVELS[currentLevelIdx + 1]
@@ -30,138 +29,111 @@ export function XpCenterModal({ isOpen, onClose, xp, levelInfo }: XpCenterModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-xl overflow-hidden rounded-3xl border border-m3-outline-variant bg-m3-surface-container-lowest/90 p-0 shadow-m3-soft backdrop-blur-md">
-        {/* Glassmorphic Top Header */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-m3-primary/10 via-transparent to-m3-tertiary/10 p-6 pb-4">
-          <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-m3-primary/5 blur-2xl" />
-          <DialogHeader className="relative">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-m3-primary-fixed text-m3-primary">
-                <Icon name="military_tech" size={24} />
-              </span>
-              <div>
-                <DialogTitle className="text-headline-sm font-headline-sm text-m3-on-surface">
-                  Центр развития XP
-                </DialogTitle>
-                <DialogDescription className="font-body-sm text-body-sm text-m3-on-surface-variant">
-                  Ваш прогресс обучения, награды и геймификация.
-                </DialogDescription>
-              </div>
+      <DialogContent className="max-w-lg rounded-lg border-m3-outline-variant bg-m3-surface-container-lowest p-0 shadow-m3-modal">
+        <DialogHeader className="border-b border-m3-outline-variant/60 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+              <Icon name="military_tech" size={22} />
+            </span>
+            <div>
+              <DialogTitle className="text-headline-sm font-headline-sm text-m3-on-surface">
+                Центр развития
+              </DialogTitle>
+              <DialogDescription className="text-body-sm text-m3-on-surface-variant">
+                Уровни, прогресс и правила начисления XP
+              </DialogDescription>
             </div>
-          </DialogHeader>
-        </div>
+          </div>
+        </DialogHeader>
 
-        <div className="space-y-6 px-6 pb-6 pt-2">
-          {/* Active Level Progress Card */}
-          <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-low p-5 shadow-inner">
+        <div className="space-y-6 px-6 pb-6 pt-4">
+          <div className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-label-md font-label-md text-m3-on-surface-variant">Текущий уровень</p>
+                <span className="text-body-sm text-m3-on-surface-variant">Текущий уровень</span>
                 <p className="text-headline-md font-headline-md text-m3-on-surface">
                   {levelInfo.level} — {levelInfo.name}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-display-sm font-bold text-m3-primary leading-none">{xp}</p>
-                <p className="text-label-sm font-label-sm text-m3-on-surface-variant">Всего XP</p>
+                <p className="text-display-sm font-bold text-m3-primary">{xp}</p>
+                <span className="text-label-sm text-m3-on-surface-variant">Всего XP</span>
               </div>
             </div>
 
-            <div className="mt-4 space-y-2">
-              <Progress value={levelInfo.progress} className="h-2.5 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
-              <div className="flex items-center justify-between text-body-sm font-body-sm text-m3-on-surface-variant">
-                <span>{levelInfo.progress}% прогресса уровня</span>
+            <div className="mt-4 space-y-1.5">
+              <Progress
+                value={levelInfo.progress}
+                className="h-2 bg-m3-surface-container-high [&>div]:bg-m3-primary"
+              />
+              <div className="flex items-center justify-between text-body-sm text-m3-on-surface-variant">
+                <span>{levelInfo.progress}%</span>
                 {nextLevel ? (
-                  <span>Осталось {xpLeft} XP до уровня {nextLevel.level}</span>
+                  <span>Осталось {xpLeft} XP до {nextLevel.level}-го уровня</span>
                 ) : (
-                  <span>Максимальный уровень достигнут! 👑</span>
+                  <span>Максимальный уровень</span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Level Roadmap Grid */}
           <div>
-            <h3 className="mb-3 text-label-lg font-label-lg text-m3-on-surface">Линия развития</h3>
-            <div className="relative flex items-center justify-between px-2">
-              {/* Timeline Connector Line */}
-              <div className="absolute left-6 right-6 top-1/2 h-[2px] -translate-y-1/2 bg-m3-surface-container-high" />
-              <div 
-                className="absolute left-6 top-1/2 h-[2px] -translate-y-1/2 bg-m3-primary transition-all duration-500" 
-                style={{ width: `${(Math.max(1, levelInfo.level) - 1) * 20}%` }}
-              />
-
-              {XP_LEVELS.map((item) => {
+            <h3 className="mb-3 text-label-md font-medium text-m3-on-surface">Линия развития</h3>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {XP_LEVELS.map((item, i) => {
                 const isCompleted = xp >= item.xpRequired;
                 const isCurrent = levelInfo.level === item.level;
 
                 return (
-                  <div key={item.level} className="relative flex flex-col items-center z-10">
-                    <span
+                  <div key={item.level} className="flex items-center gap-2">
+                    <div
                       className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-full text-label-md font-label-md transition-all shadow-m3-soft",
-                        isCurrent 
-                          ? "bg-m3-primary text-m3-on-primary ring-4 ring-m3-primary/20 scale-110" 
-                          : isCompleted 
-                            ? "bg-m3-primary-fixed text-m3-primary" 
-                            : "bg-m3-surface-container-highest text-m3-on-surface-variant"
-                      )}
-                      title={`${item.name} (${item.xpRequired} XP)`}
-                    >
-                      {item.level}
-                    </span>
-                    <span 
-                      className={cn(
-                        "absolute -bottom-6 whitespace-nowrap text-[10px] font-medium transition-colors",
-                        isCurrent ? "text-m3-primary font-semibold" : "text-m3-on-surface-variant/70"
+                        "flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm",
+                        isCurrent
+                          ? "border-m3-primary bg-m3-primary-fixed/20 text-m3-primary"
+                          : isCompleted
+                            ? "border-m3-outline-variant bg-m3-surface-container-low text-m3-on-surface"
+                            : "border-m3-outline-variant/40 bg-muted/20 text-muted-foreground",
                       )}
                     >
-                      {item.name}
-                    </span>
+                      <span
+                        className={cn(
+                          "flex h-7 w-7 items-center justify-center rounded-full text-label-sm font-bold",
+                          isCurrent
+                            ? "bg-m3-primary text-white"
+                            : isCompleted
+                              ? "bg-m3-primary-fixed-dim text-m3-primary"
+                              : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {item.level}
+                      </span>
+                      <span className="whitespace-nowrap font-medium">{item.name}</span>
+                      <span className="text-[11px] opacity-60">{item.xpRequired} XP</span>
+                    </div>
+                    {i < XP_LEVELS.length - 1 && (
+                      <span className="shrink-0 text-muted-foreground/30">→</span>
+                    )}
                   </div>
                 );
               })}
             </div>
-            <div className="h-6" /> {/* Spacer for labels */}
           </div>
 
-          {/* Daily Motivational Recommendation */}
-          <div className="flex items-start gap-3 rounded-2xl border border-m3-tertiary-fixed-dim/30 bg-m3-tertiary-fixed/10 p-4">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-m3-tertiary-fixed/30 text-m3-tertiary">
-              <Icon name="rocket_launch" size={18} />
-            </span>
-            <div>
-              <p className="text-label-md font-label-md text-m3-tertiary">Мотивирующий буст</p>
-              <p className="mt-0.5 text-body-sm font-body-sm text-m3-on-surface-variant">
-                Пройдите следующий доступный урок сегодня, чтобы приблизиться к уровню{" "}
-                <span className="font-semibold text-m3-primary">
-                  {nextLevel ? nextLevel.name : "Легенда"}
-                </span>{" "}
-                и заработать дополнительные 10 XP!
-              </p>
-            </div>
-          </div>
-
-          {/* Quests Guide Grid */}
           <div>
-            <h3 className="mb-3 text-label-lg font-label-lg text-m3-on-surface">Как заработать очки опыта</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {XP_QUESTS.map((q) => (
-                <div 
-                  key={q.id} 
-                  className="flex gap-3 rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-3 transition-colors hover:bg-m3-surface-container-low"
+            <h3 className="mb-3 text-label-md font-medium text-m3-on-surface">Правила начисления XP</h3>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {XP_RULES.map((rule) => (
+                <div
+                  key={rule.id}
+                  className="flex items-center gap-3 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-3"
                 >
-                  <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm", q.color)}>
-                    <Icon name={q.icon} size={20} />
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed/20 text-m3-primary">
+                    <Icon name={rule.icon} size={18} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-1">
-                      <p className="truncate text-label-md font-label-md text-m3-on-surface">{q.label}</p>
-                      <span className="shrink-0 text-label-sm font-label-sm font-semibold text-m3-primary">{q.xp}</span>
-                    </div>
-                    <p className="mt-0.5 text-body-xs font-body-xs text-m3-on-surface-variant/80 line-clamp-2">
-                      {q.desc}
-                    </p>
+                    <p className="truncate text-label-sm font-medium text-m3-on-surface">{rule.label}</p>
+                    <p className="text-label-sm font-semibold text-m3-primary">{rule.xp}</p>
                   </div>
                 </div>
               ))}

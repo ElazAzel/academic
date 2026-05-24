@@ -138,7 +138,7 @@ export default async function SuperCuratorChatPage() {
 
       <div className="space-y-6">
         {Array.from(byCurator.entries()).map(([curatorId, chats]) => (
-          <div key={curatorId} className="rounded-2xl border bg-card p-4">
+          <div key={curatorId} className="rounded-lg border bg-card p-4">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
               <MessageCircle className="h-4 w-4 text-primary" />
               {chats[0].curatorName}
@@ -151,7 +151,7 @@ export default async function SuperCuratorChatPage() {
               {chats.map((chat) => (
                 <div
                   key={`${chat.curatorId}-${chat.studentId}`}
-                  className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-background/40"
+                  className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-background/40"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{chat.studentName}</p>

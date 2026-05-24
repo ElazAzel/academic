@@ -69,8 +69,8 @@ export default async function CuratorGlossaryPage(props: {
               </h3>
               <div className="space-y-2">
                 {catEntries.map((entry) => (
-                  <details key={entry.id} className="rounded-2xl border group">
-                    <summary className="cursor-pointer px-5 py-4 text-sm font-medium hover:bg-muted/30 rounded-2xl transition-colors">
+                  <details key={entry.id} className="rounded-lg border group">
+                    <summary className="cursor-pointer px-5 py-4 text-sm font-medium hover:bg-muted/30 rounded-lg transition-colors">
                       {entry.question}
                     </summary>
                     <div className="border-t px-5 py-4 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">

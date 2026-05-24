@@ -266,7 +266,7 @@ export function LessonBlockEditor({
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, index)}
             onDragEnd={handleDragEnd}
-            className={`rounded-xl border bg-card p-4 space-y-3 transition-all ${
+            className={`rounded-lg border bg-card p-4 space-y-3 transition-all ${
               isDragOver
                 ? "border-primary shadow-md scale-[1.01]"
                 : "hover:border-muted-foreground/30"
@@ -322,7 +322,7 @@ export function LessonBlockEditor({
                 {block.type === "video" && (
                   <>
                     <input
-                      className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                      className="w-full rounded-lg border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                       placeholder="Ссылка на видео (YouTube embed)"
                       value={(block.data.videoUrl as string) ?? ""}
                       onChange={(e) => updateBlockData(block.id, { ...block.data, videoUrl: e.target.value })}
@@ -337,7 +337,7 @@ export function LessonBlockEditor({
                   <div className="grid gap-2 md:grid-cols-2">
                     <div>
                       <input
-                        className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        className="w-full rounded-lg border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                         placeholder="URL файла"
                         value={(block.data.url as string) ?? ""}
                         onChange={(e) => updateBlockData(block.id, { ...block.data, url: e.target.value })}
@@ -345,7 +345,7 @@ export function LessonBlockEditor({
                     </div>
                     <div className="flex gap-2">
                       <input
-                        className="flex-1 rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        className="flex-1 rounded-lg border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                         placeholder="Название файла"
                         value={(block.data.filename as string) ?? ""}
                         onChange={(e) => updateBlockData(block.id, { ...block.data, filename: e.target.value })}
@@ -364,7 +364,7 @@ export function LessonBlockEditor({
 
                 {block.type === "quiz" && (
                   <select
-                    className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                     value={(block.data.quizId as string) ?? ""}
                     onChange={(e) => updateBlockData(block.id, { ...block.data, quizId: e.target.value })}
                   >
@@ -377,7 +377,7 @@ export function LessonBlockEditor({
 
                 {block.type === "assignment" && (
                   <select
-                    className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                     value={(block.data.assignmentId as string) ?? ""}
                     onChange={(e) => updateBlockData(block.id, { ...block.data, assignmentId: e.target.value })}
                   >
@@ -390,7 +390,7 @@ export function LessonBlockEditor({
 
                 {block.type === "completion" && (
                   <input
-                    className="w-full rounded-xl border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border bg-muted/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="Текст кнопки завершения"
                     value={(block.data.label as string) ?? ""}
                     onChange={(e) => updateBlockData(block.id, { ...block.data, label: e.target.value })}

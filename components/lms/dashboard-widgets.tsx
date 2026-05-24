@@ -51,16 +51,6 @@ const TONE_BG_CLASSES: Record<DashboardMetric["tone"], string> = {
   neutral: "bg-m3-surface-container-high",
 };
 
-/** Акцентная полоса сверху (для горизонтальных карточек на ПК удобнее, чем border-l) */
-const TONE_TOP_ACCENT: Record<DashboardMetric["tone"], string> = {
-  primary: "from-m3-primary/40",
-  success: "from-m3-tertiary/40",
-  warning: "from-m3-secondary/40",
-  danger: "from-m3-error/40",
-  info: "from-m3-outline/30",
-  neutral: "from-m3-outline/20",
-};
-
 const TONE_ICON_NAMES: Record<DashboardMetric["tone"], string> = {
   primary: "trending_up",
   success: "check_circle",
@@ -87,10 +77,8 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
   const card = (
     <Card
       className={cn(
-        "relative flex min-h-[178px] h-full flex-col overflow-hidden rounded-xl glass-card-premium",
+        "flex min-h-[132px] h-full flex-col",
         "px-5 py-4",
-        "before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:to-transparent",
-        TONE_TOP_ACCENT[metric.tone],
         metric.priority === "critical" && "ring-1 ring-m3-error/30",
         metric.priority === "elevated" && "ring-1 ring-amber-400/30",
       )}
@@ -106,8 +94,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
         </div>
         <span
           className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-            "shadow-m3-soft",
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
             TONE_BG_CLASSES[metric.tone],
           )}
         >
@@ -116,7 +103,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
       </div>
 
       <div className="mt-5 flex flex-1 flex-col justify-end">
-        <p className={`text-display-lg font-bold leading-none tabular-nums ${TONE_CLASSES[metric.tone]}`}>
+        <p className={`text-headline-md font-semibold leading-none tabular-nums ${TONE_CLASSES[metric.tone]}`}>
           {metric.value}
         </p>
         {metric.detail || metric.change ? (
@@ -145,10 +132,8 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
 export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
   return (
     <FadeIn>
-    <Card className="overflow-hidden border-m3-outline-variant/60 glass-card-premium rounded-xl relative">
-      {/* Decorative premium gradient line */}
-      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-m3-primary via-m3-secondary to-m3-tertiary" />
-      <CardHeader className="pb-3 pt-5">
+    <Card className="overflow-hidden border-m3-outline-variant">
+      <CardHeader className="pb-3">
         <StatusBadge status="ACTIVE" label="Следующее действие" className="w-fit bg-m3-primary-fixed/30 text-m3-primary" />
         <CardTitle className="text-headline-md text-m3-on-surface mt-2">Продолжить: {data.courseTitle}</CardTitle>
         <CardDescription className="font-body-md text-body-md text-m3-on-surface-variant/90">
@@ -175,7 +160,7 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
           <p className="font-body-sm text-body-sm text-m3-on-surface-variant/80">
             До сертификата: пройти {100 - data.coursePercent}% курса и сдать финальное задание.
           </p>
-          <Button asChild className="btn-shine rounded-xl shadow-m3-soft hover:shadow-m3-soft-hover">
+          <Button asChild>
             <Link href={`/student/lessons/${data.lessonId}`}>
             Открыть урок
             <Icon name="arrow_forward" className="text-[18px]" />
@@ -195,8 +180,7 @@ export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) 
       {courses.map((c) => (
         <FadeIn key={c.courseId}>
         <CardHover>
-        <Card className="rounded-xl border-m3-outline-variant/60 glass-card-premium relative overflow-hidden">
-          <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-m3-primary to-m3-secondary" />
+        <Card className="border-m3-outline-variant">
           <CardHeader>
             <div className="flex items-center justify-between">
               <StatusBadge status={c.status as BadgeStatus} />
@@ -210,7 +194,7 @@ export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) 
           </CardHeader>
           <CardContent className="space-y-2">
             <Progress value={c.percent} className="bg-m3-surface-container-high [&>div]:bg-m3-primary" />
-            <Button asChild className="mt-3 w-full btn-shine" size="sm" variant="secondary">
+            <Button asChild className="mt-3 w-full" size="sm" variant="secondary">
               <Link href={c.nextLessonId ? `/student/lessons/${c.nextLessonId}` : `/student/courses/${c.courseId}`}>
                 {c.nextLessonId ? "Продолжить" : "Открыть курс"}
               </Link>
@@ -238,8 +222,7 @@ export function CourseManageGrid({
       {courses.map((c) => (
         <FadeIn key={c.id}>
           <CardHover>
-            <Card className="rounded-xl border-m3-outline-variant/60 glass-card-premium relative overflow-hidden">
-              <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-m3-primary to-m3-secondary" />
+            <Card className="border-m3-outline-variant">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <StatusBadge status={c.status as BadgeStatus} />
@@ -261,7 +244,7 @@ export function CourseManageGrid({
                   </div>
                 )}
                 <div className="mt-4 pt-4 border-t border-m3-outline-variant">
-                  <Button asChild variant="secondary" size="sm" className="w-full btn-shine">
+                  <Button asChild variant="secondary" size="sm" className="w-full">
                     <Link href={`${builderBasePath}/${c.id}/builder`}>Управление курсом</Link>
                   </Button>
                 </div>
@@ -288,7 +271,7 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
       {questions.map((q) => (
         <FadeIn key={q.id}>
         <CardHover>
-        <Card className="rounded-xl border-m3-outline-variant/60 glass-card-premium">
+        <Card className="border-m3-outline-variant">
           <CardContent className="flex items-start gap-4 py-4">
             <Avatar name={q.studentName} />
             <div className="min-w-0 flex-1">
@@ -302,7 +285,7 @@ export function QuestionsQueue({ questions }: { questions: QuestionFromStudent[]
               </p>
             </div>
             {q.status === "open" && (
-              <Button size="sm" variant="secondary" className="btn-shine" onClick={() => setSelectedQuestion(q)} aria-label="Ответить на вопрос">
+              <Button size="sm" variant="secondary" onClick={() => setSelectedQuestion(q)} aria-label="Ответить на вопрос">
                 <Icon name="reply" className="text-[18px]" />
                 Ответить
               </Button>
@@ -330,9 +313,9 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
     );
   }
   return (
-    <div className="overflow-x-auto rounded-xl border border-m3-outline-variant/60 glass-card-premium">
+    <div className="overflow-x-auto rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
       <Table>
-        <TableHeader className="bg-m3-surface-container/60 backdrop-blur-md">
+        <TableHeader className="bg-m3-surface-container">
           <TableRow>
             <TableHead className="font-label-lg text-label-lg text-m3-on-surface-variant">Слушатель</TableHead>
             <TableHead className="font-label-lg text-label-lg text-m3-on-surface-variant">Задание</TableHead>
@@ -359,7 +342,7 @@ export function SubmissionsQueue({ submissions }: { submissions: SubmissionForRe
               </TableCell>
               <TableCell className="text-right">
                 <Link href={`/curator/assignments/${s.id}`}>
-                  <Button size="sm" aria-label="Проверить задание" className="btn-shine">
+                  <Button size="sm" aria-label="Проверить задание">
                     <Icon name="rate_review" className="text-[18px]" />
                     Проверить
                   </Button>
@@ -390,15 +373,15 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
         <FadeIn key={r.id}>
         <CardHover>
         <Card className={cn(
-          "rounded-xl border backdrop-blur-xl transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) hover:-translate-y-0.5",
+          "border",
           r.severity === "critical" 
-            ? "border-m3-error/25 bg-m3-error-container/8 dark:bg-m3-error-container/5 hover:border-m3-error/60 hover:shadow-[0_8px_30px_rgba(186,26,26,0.06)]"
+            ? "border-m3-error/25 bg-m3-error-container/10 dark:bg-m3-error-container/5"
             : r.severity === "high"
-              ? "border-amber-500/25 bg-amber-500/5 hover:border-amber-500/60 hover:shadow-[0_8px_30px_rgba(245,158,11,0.06)]"
-              : "border-m3-outline-variant/60 bg-white/70 dark:bg-slate-900/70 hover:border-m3-primary/30"
+              ? "border-amber-500/25 bg-amber-500/5"
+              : "border-m3-outline-variant bg-m3-surface-container-lowest"
         )}>
           <CardContent className="flex items-center gap-4 py-4">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-error-container/30">
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-m3-error-container/30">
               <Icon name="warning" className="text-[20px] text-m3-error" />
             </span>
             <div className="min-w-0 flex-1">
@@ -411,7 +394,7 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
                 {r.cohortName && ` · ${r.cohortName}`}
               </p>
             </div>
-            <Button size="sm" variant="secondary" className="btn-shine" aria-label="Подробнее о риске">
+            <Button size="sm" variant="secondary" aria-label="Подробнее о риске">
               <Icon name="arrow_forward" className="text-[18px]" />
               Подробнее
             </Button>
@@ -427,9 +410,9 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
 // ── Таблица кураторов ───────────────────────────────────────────────
 export function CuratorLoadTable({ curators }: { curators: CuratorLoad[] }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-m3-outline-variant/60 glass-card-premium">
+    <div className="overflow-x-auto rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
     <Table>
-      <TableHeader className="bg-m3-surface-container/60 backdrop-blur-md">
+      <TableHeader className="bg-m3-surface-container">
         <TableRow>
           <TableHead className="font-label-lg text-label-lg text-m3-on-surface-variant">Куратор</TableHead>
           <TableHead className="font-label-lg text-label-lg text-m3-on-surface-variant text-center">Слушатели</TableHead>

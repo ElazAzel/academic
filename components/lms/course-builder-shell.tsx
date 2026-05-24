@@ -569,7 +569,7 @@ export function CourseBuilderShell({
                         }}
                       />
                     </div>
-                    <div className="rounded-xl bg-m3-surface-container-low p-4 font-body-md text-body-md text-m3-on-surface-variant">
+                    <div className="rounded-lg bg-m3-surface-container-low p-4 font-body-md text-body-md text-m3-on-surface-variant">
                       Уроков в блоке: {selectedBlock.lessons?.length ?? 0}
                     </div>
                   </div>
@@ -646,7 +646,7 @@ export function CourseBuilderShell({
               <div
                 key={idx}
                 onClick={() => handleChecklistNavigation(check.target)}
-                className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
                   check.passed
                     ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20"
                     : "bg-rose-500/10 border-rose-500/20 text-rose-800 dark:text-rose-300 hover:bg-rose-500/20"

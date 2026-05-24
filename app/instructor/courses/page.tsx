@@ -49,7 +49,7 @@ export default async function InstructorCoursesPage() {
     {courses.length > 0 ? (
      <CourseManageGrid courses={courses}/>
     ) : (
-     <div className="text-center text-muted-foreground py-10 border rounded-2xl">У вас пока нет курсов.</div>
+     <div className="text-center text-muted-foreground py-10 border rounded-lg">У вас пока нет курсов.</div>
     )}
    </div>
   </AppShell>

@@ -108,7 +108,7 @@ export default async function AdminManagementPage() {
         <MetricGrid metrics={metrics} />
       </div>
 
-      <Card className="rounded-2xl">
+      <Card className="rounded-lg">
         <CardHeader>
           <CardTitle className="text-base">Пользователи и их зачисления</CardTitle>
         </CardHeader>

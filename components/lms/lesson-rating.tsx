@@ -41,21 +41,21 @@ export function LessonRating({ lessonId }: { lessonId: string }) {
 
   if (submitted) {
     return (
-      <div className="rounded-2xl border bg-card p-5 text-center">
+      <div className="rounded-lg border bg-card p-5 text-center">
         <p className="text-sm text-muted-foreground">Вы оценили этот урок. Спасибо!</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 rounded-2xl border bg-card p-5">
+    <div className="space-y-4 rounded-lg border bg-card p-5">
       <p className="text-sm font-medium">Оцените занятие</p>
       <div className="flex items-center gap-3">
         {EMOJIS.map((emoji) => (
           <button
             key={emoji.value}
             onClick={() => setRating(emoji.value)}
-            className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 text-lg transition-all ${
+            className={`flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-lg transition-all ${
               rating === emoji.value
                 ? "bg-primary/10 ring-2 ring-primary/30"
                 : "hover:bg-muted"
@@ -69,7 +69,7 @@ export function LessonRating({ lessonId }: { lessonId: string }) {
       {rating && (
         <div className="space-y-3">
           <textarea
-            className="min-h-[60px] w-full resize-none rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            className="min-h-[60px] w-full resize-none rounded-lg border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="Комментарий (необязательно)"
             value={comment}
             onChange={(e) => setComment(e.target.value)}

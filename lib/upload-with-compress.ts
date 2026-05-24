@@ -33,7 +33,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: string } {
+function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: string; fallbackUrl?: string } {
   const envelope = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
 
   if (!isRecord(envelope) || typeof envelope.url !== "string" || typeof envelope.publicUrl !== "string") {
@@ -43,7 +43,20 @@ function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: st
   return {
     url: envelope.url,
     publicUrl: envelope.publicUrl,
+    fallbackUrl: typeof envelope.fallbackUrl === "string" ? envelope.fallbackUrl : undefined,
   };
+}
+
+async function putUploadFile(url: string, file: File, contentType: string, publicUrl: string): Promise<string> {
+  const uploadRes = await fetch(url, {
+    method: "PUT",
+    body: file,
+    headers: { "Content-Type": contentType },
+  });
+
+  if (!uploadRes.ok) throw new Error("Ошибка при загрузке файла");
+
+  return readUploadPublicUrl(uploadRes, publicUrl);
 }
 
 /**
@@ -83,20 +96,18 @@ export async function uploadMedia(
     throw new Error(err.error?.message ?? "Ошибка при подготовке загрузки");
   }
 
-  const { url, publicUrl } = readUploadTicketPayload(await presignRes.json());
+  const { url, publicUrl, fallbackUrl } = readUploadTicketPayload(await presignRes.json());
 
-  // 3. Upload compressed file to S3/MinIO
-  const uploadRes = await fetch(url, {
-    method: "PUT",
-    body: uploadFile,
-    headers: { "Content-Type": uploadFile.type },
-  });
-
-  if (!uploadRes.ok) {
-    throw new Error("Ошибка при загрузке файла");
+  // 3. Upload compressed file to S3/MinIO, then retry through the same-origin proxy if direct PUT is blocked.
+  let uploadedPublicUrl: string;
+  try {
+    uploadedPublicUrl = await putUploadFile(url, uploadFile, uploadFile.type, publicUrl);
+  } catch (error) {
+    if (!fallbackUrl || fallbackUrl === url) {
+      throw error;
+    }
+    uploadedPublicUrl = await putUploadFile(fallbackUrl, uploadFile, uploadFile.type, publicUrl);
   }
-
-  const uploadedPublicUrl = await readUploadPublicUrl(uploadRes, publicUrl);
 
   return {
     publicUrl: uploadedPublicUrl,

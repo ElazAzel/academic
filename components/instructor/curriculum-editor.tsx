@@ -203,12 +203,12 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
       </div>
 
       {showNewModule ? (
-        <Card className="rounded-3xl border-2 p-6">
+        <Card className="rounded-lg border p-6">
           <form onSubmit={handleAddModule} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase text-muted-foreground">Название модуля</label>
-                <input name="title" className="w-full rounded-xl border bg-background px-3 py-2 text-sm" required />
+                <input name="title" className="w-full rounded-lg border bg-background px-3 py-2 text-sm" required />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase text-muted-foreground">Порядок</label>
@@ -217,7 +217,7 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                   type="number"
                   min={1}
                   defaultValue={modules.length + 1}
-                  className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                   required
                 />
               </div>
@@ -228,14 +228,14 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                   type="number"
                   min={1}
                   defaultValue={7}
-                  className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                   required
                 />
               </div>
             </div>
             <textarea
               name="description"
-              className="w-full rounded-2xl border bg-background px-4 py-3 text-sm"
+              className="w-full rounded-lg border bg-background px-4 py-3 text-sm"
               placeholder="Краткое описание модуля"
             />
             {moduleError ? <p className="text-sm text-rose-600">{moduleError}</p> : null}
@@ -254,7 +254,7 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
       <div className="space-y-6">
         {modules.map((moduleItem) => (
           <div key={moduleItem.id} className="space-y-4">
-            <div className="flex items-center justify-between rounded-2xl border bg-muted/30 p-4">
+            <div className="flex items-center justify-between rounded-lg border bg-muted/30 p-4">
               <div className="flex min-w-0 items-center gap-3">
                 <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground/50" />
                 <span className="w-6 shrink-0 text-sm font-bold text-muted-foreground">{moduleItem.order}.</span>
@@ -310,16 +310,16 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
               ))}
 
               {activeLessonForm === moduleItem.id ? (
-                <Card className="rounded-3xl border-2 p-4">
+                <Card className="rounded-lg border p-4">
                   <form onSubmit={(event) => handleAddLesson(event, moduleItem.id)} className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-3">
                       <div className="space-y-2">
                         <label className="text-xs font-semibold uppercase text-muted-foreground">Название урока</label>
-                        <input name="title" className="w-full rounded-xl border bg-background px-3 py-2 text-sm" required />
+                        <input name="title" className="w-full rounded-lg border bg-background px-3 py-2 text-sm" required />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold uppercase text-muted-foreground">Тип урока</label>
-                        <select name="type" className="w-full rounded-xl border bg-background px-3 py-2 text-sm">
+                        <select name="type" className="w-full rounded-lg border bg-background px-3 py-2 text-sm">
                           <option value="VIDEO">Видео</option>
                           <option value="TEXT">Текст</option>
                           <option value="VIDEO_DOCUMENT">Видео + документ</option>
@@ -335,7 +335,7 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                           type="number"
                           min={1}
                           defaultValue={moduleItem.lessons.length + 1}
-                          className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           required
                         />
                       </div>
@@ -348,7 +348,7 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                           type="number"
                           min={0}
                           defaultValue={10}
-                          className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           required
                         />
                       </div>
@@ -356,7 +356,7 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                         <label className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
                         <input
                           name="summary"
-                          className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           placeholder="Краткое описание урока"
                         />
                       </div>
@@ -364,7 +364,7 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                     <textarea
                       name="contentText"
                       rows={4}
-                      className="w-full rounded-2xl border bg-background px-4 py-3 text-sm"
+                      className="w-full rounded-lg border bg-background px-4 py-3 text-sm"
                       placeholder="Основной текст урока"
                     />
                     {lessonError ? <p className="text-sm text-rose-600">{lessonError}</p> : null}
@@ -382,7 +382,7 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-12 w-full rounded-xl border-2 border-dashed text-muted-foreground hover:border-primary/50 hover:text-primary"
+                  className="h-12 w-full rounded-lg border-2 border-dashed text-muted-foreground hover:border-primary/50 hover:text-primary"
                   onClick={() => setActiveLessonForm(moduleItem.id)}
                 >
                   <Plus className="h-4 w-4" />

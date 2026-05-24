@@ -30,12 +30,12 @@ export function CuratorChatList({
   return (
     <div className="flex gap-4 h-[calc(100vh-220px)] min-h-[500px] max-w-5xl mx-auto">
       {/* Sidebar — список диалогов (папок) */}
-      <div className={`w-80 shrink-0 flex flex-col rounded-2xl border bg-card overflow-hidden ${selectedPartner ? 'hidden lg:flex' : 'flex'}`}>
+      <div className={`w-80 shrink-0 flex flex-col rounded-lg border bg-card overflow-hidden ${selectedPartner ? 'hidden lg:flex' : 'flex'}`}>
         <div className="p-3 border-b border-border/60">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
-              className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="Поиск по имени..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -62,7 +62,7 @@ export function CuratorChatList({
                 <button
                   key={c.partnerId}
                   onClick={() => setSelectedPartner({ id: c.partnerId, name: c.partnerName, lessonId: c.lessonId, lessonTitle: c.lessonTitle })}
-                  className={`w-full text-left rounded-xl p-3 transition-colors ${
+                  className={`w-full text-left rounded-lg p-3 transition-colors ${
                     isSelected
                       ? "bg-accent ring-1 ring-primary/20"
                       : "hover:bg-accent/50"
@@ -157,7 +157,7 @@ export function CuratorChatList({
             </div>
           </div>
         ) : (
-          <div className="hidden lg:flex items-center justify-center w-full h-full rounded-2xl border border-dashed border-m3-outline-variant bg-m3-surface-container-lowest">
+          <div className="hidden lg:flex items-center justify-center w-full h-full rounded-lg border border-dashed border-m3-outline-variant bg-m3-surface-container-lowest">
             <div className="text-center px-6">
               <MessageCircle className="mx-auto h-12 w-12 mb-3 opacity-20 text-m3-on-surface-variant" />
               <p className="text-body-md font-body-md text-m3-on-surface-variant">Выберите диалог</p>

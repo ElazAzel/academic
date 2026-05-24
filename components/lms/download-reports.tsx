@@ -44,7 +44,7 @@ export function DownloadReports({ reports }: { reports: ReportType[] }) {
           <Card key={r.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 hover:shadow-m3-soft-hover">
             <CardHeader>
               <div className="flex items-start justify-between gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-m3-primary-container/20">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-m3-primary-container/20">
                   <Icon name={r.icon} className="text-[22px] text-m3-primary" />
                 </span>
                 {r.owner ? <Badge variant="secondary" className="shrink-0 text-[10px]">{r.owner}</Badge> : null}

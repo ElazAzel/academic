@@ -13,7 +13,7 @@ export function ErrorFallback({
 }) {
   return (
     <div className="flex min-h-[400px] items-center justify-center p-6">
-      <Card className="max-w-md rounded-2xl border-destructive/20">
+      <Card className="max-w-md rounded-lg border-destructive/20">
         <CardHeader className="text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
             <AlertTriangle className="h-6 w-6 text-destructive" />

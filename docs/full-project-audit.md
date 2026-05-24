@@ -160,6 +160,18 @@ Documents inspected:
 | Curator and super-curator route families are broad. | curator/super-curator | Operational workspaces exist in the tree, but queue, scope and resolution behavior remain unproven here. | `partial` | Role smoke and targeted access tests. |
 | Observer route family exists and observer scope code avoids global fallback. | customer observer | Read-only transparency is designed, but real observer UI and export scope require proof. | `partial` | Role smoke plus negative mutation tests. |
 
+### UX/UI 2026 Audit Addendum
+
+Detailed audit: [`docs/ux-ui-2026-audit.md`](./ux-ui-2026-audit.md).
+
+| Finding | Scope | Status | Impact | Required correction |
+| --- | --- | --- | --- | --- |
+| Visual system is now governed by the first P0 pass, but role-level UX still needs deeper scenario redesign. | all role cabinets | `partial` | The previous glassmorphism, gradient strips, decorative blobs, shine buttons, oversized radii and heavy ad hoc shadows were removed from core `app`/`components`; dashboards are calmer, but some flows still need task-level redesign. | Keep the banned-pattern smoke in release checks and continue P1 role-workspace redesign. |
+| Dashboards prioritize card aesthetics over role work. | student, curator, super-curator, instructor, admin, observer | `partial` | Users must scan decorative cards before seeing the next role action. | Rebuild dashboards as role-specific work queues with metrics as support, not decoration. |
+| Student learning hierarchy was corrected on the dashboard and visually normalized across student surfaces. | `/student`, course/player routes | `partial` | `Продолжить обучение` is first, gamification is one compact secondary block, and responsive smoke proved no overflow on `/student`; course/lesson/assessment scenarios still need seeded proof. | Run seeded student flow for lesson completion, embedded quiz/assignment, curator question and certificate state. |
+| Adaptive design is implemented as breakpoints, not a complete compact/medium/expanded information model. | all core layouts | `partial` | Tablet and wide desktop can feel stretched, cramped or overly card-heavy. | Define and test component behavior for phone, tablet, laptop and wide desktop. |
+| Accessibility quality is not proven as a UX release gate. | all interactive routes | `partial` | Focus, keyboard, contrast, dialogs, reduced motion, target sizes and status semantics need full proof. | Add WCAG 2.2 AA-oriented audit and Playwright keyboard/responsive smoke for core flows. |
+
 ## Code and Architecture Findings
 
 | Finding | Evidence | Status | Risk |

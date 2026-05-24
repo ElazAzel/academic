@@ -102,7 +102,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
             autoComplete="email"
             required
             placeholder="Введите ваш e-mail"
-            className="w-full rounded-xl border border-m3-outline-variant/60 bg-m3-surface/60 py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface shadow-sm placeholder:text-m3-outline/70 transition-all focus:border-m3-primary focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
+            className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface placeholder:text-m3-outline transition-colors focus:border-m3-primary focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
             onChange={() => setError("")}
           />
         </div>
@@ -125,7 +125,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
             autoComplete="current-password"
             required
             placeholder="Введите пароль"
-            className="w-full rounded-xl border border-m3-outline-variant/60 bg-m3-surface/60 py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface shadow-sm placeholder:text-m3-outline/70 transition-all focus:border-m3-primary focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
+            className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface placeholder:text-m3-outline transition-colors focus:border-m3-primary focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
             onChange={() => setError("")}
           />
         </div>
@@ -151,7 +151,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
       <button
         type="submit"
         disabled={pending || !hydrated}
-        className="mt-sm flex w-full items-center justify-center gap-sm rounded-xl bg-m3-primary py-md text-label-lg font-label-lg text-m3-on-primary shadow-sm btn-shine transition-all duration-300 hover:bg-m3-primary-container active:scale-[0.99] disabled:opacity-50"
+        className="mt-sm flex w-full items-center justify-center gap-sm rounded-lg bg-m3-primary py-md text-label-lg font-label-lg text-m3-on-primary transition-colors hover:bg-m3-primary-container disabled:opacity-50"
       >
         <span>{pending ? "Входим..." : "Войти в систему"}</span>
         <Icon name="arrow_forward" size={20} />

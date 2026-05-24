@@ -13,7 +13,7 @@ export function CourseHeroCard({ detail }: { detail: StudentCoursePlayerDetail }
   return (
     <div className="sticky top-24 space-y-4">
       {/* Cover image */}
-      <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-m3-primary-container/30 to-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 ease-in-out">
+      <div className="overflow-hidden rounded-lg border border-m3-outline-variant bg-m3-surface-container-low">
         {course.coverUrl ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img src={course.coverUrl} alt={course.title} className="aspect-video w-full object-cover" />
@@ -48,14 +48,14 @@ export function CourseHeroCard({ detail }: { detail: StudentCoursePlayerDetail }
               </Link>
             </Button>
           ) : (
-            <div className="rounded-xl border border-dashed border-m3-outline-variant bg-m3-surface-container-low px-3 py-2 text-center">
+            <div className="rounded-lg border border-dashed border-m3-outline-variant bg-m3-surface-container-low px-3 py-2 text-center">
               <p className="text-label-md font-label-md text-m3-on-surface-variant">Сертификат после {detail.completionThreshold}%</p>
             </div>
           )}
 
           {/* Curator */}
           {curator && (
-            <div className="space-y-2 rounded-xl bg-m3-surface-container-low p-3">
+            <div className="space-y-2 rounded-lg bg-m3-surface-container-low p-3">
               <p className="text-label-sm font-label-sm text-m3-on-surface-variant">Куратор</p>
               <p className="text-body-md font-body-md text-m3-on-surface">{curator.name}</p>
               {curator.unansweredCount > 0 && (

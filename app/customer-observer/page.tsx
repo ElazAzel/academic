@@ -51,7 +51,7 @@ async function CustomerObserverDashboardContent() {
  return (
   <div className="space-y-6">
    <MetricGrid metrics={metrics}/>
-   <Card className="rounded-2xl">
+   <Card className="rounded-lg">
     <CardHeader>
      <CardTitle className="text-base">Прогресс по потокам</CardTitle>
     </CardHeader>

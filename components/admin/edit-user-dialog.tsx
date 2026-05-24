@@ -63,7 +63,7 @@ export function EditUserDialog({
           </div>
           <div>
             <label className="text-sm font-medium">Статус</label>
-            <select name="status" defaultValue={user.status} className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm">
+            <select name="status" defaultValue={user.status} className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
               <option value="ACTIVE">Активен</option>
               <option value="INACTIVE">Неактивен</option>
               <option value="BLOCKED">Заблокирован</option>

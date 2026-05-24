@@ -47,12 +47,12 @@ export function AskCuratorQuestion({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border bg-card p-5">
+    <div className="space-y-4 rounded-lg border bg-card p-5">
       <p className="text-sm font-medium">Задать вопрос куратору</p>
       <p className="text-xs text-muted-foreground">Опишите вашу проблему по материалам урока.</p>
       <div className="space-y-3">
         <textarea
-          className="min-h-[80px] w-full resize-none rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+          className="min-h-[80px] w-full resize-none rounded-lg border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           placeholder="Ваш вопрос..."
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -69,7 +69,7 @@ export function AskCuratorQuestion({
         <div className="space-y-2 pt-2 border-t">
           <p className="text-xs font-semibold text-muted-foreground">История вопросов</p>
           {questions.map((q) => (
-            <div key={q.id} className="rounded-xl border p-3">
+            <div key={q.id} className="rounded-lg border p-3">
               <div className="mb-1 flex items-center justify-between">
                 <Badge
                   className={

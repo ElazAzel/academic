@@ -47,7 +47,7 @@ export function FileBlock({ url, filename, fileType, mediaId, lessonId, useSigne
       onClick={handleClick}
       onContextMenu={(e) => e.preventDefault()}
       draggable={false}
-      className="flex items-center gap-3 rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-4 shadow-m3-soft transition-all duration-200 ease-in-out active:scale-[0.98] hover:shadow-m3-soft-hover hover:border-m3-outline"
+      className="flex items-center gap-3 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-4 shadow-m3-soft transition-all duration-200 ease-in-out active:scale-[0.98] hover:shadow-m3-soft-hover hover:border-m3-outline"
     >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-m3-primary-container text-m3-primary">
         <Icon name="description" size={20} />

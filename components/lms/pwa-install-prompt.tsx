@@ -125,9 +125,9 @@ export function PWAInstallPrompt() {
           transition={shouldReduce ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
           className="fixed bottom-20 md:bottom-4 left-4 right-4 z-50 mx-auto max-w-md"
         >
-          <div className="rounded-2xl border bg-card p-4 shadow-panel backdrop-blur-xl">
+          <div className="rounded-lg border bg-card p-4 shadow-panel">
             <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                 <Download className="h-5 w-5 text-primary" />
               </span>
               <div className="flex-1 min-w-0">
@@ -163,7 +163,7 @@ export function PWAInstallPrompt() {
           initial={shouldReduce ? { opacity: 1 } : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={shouldReduce ? { opacity: 1 } : { opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4"
           onClick={() => setShowIOSInstructions(false)}
         >
           <motion.div
@@ -171,7 +171,7 @@ export function PWAInstallPrompt() {
             animate={{ opacity: 1, y: 0 }}
             exit={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 40 }}
             transition={shouldReduce ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
-            className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl"
+            className="w-full max-w-sm rounded-lg bg-card p-6 shadow-m3-modal"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -199,7 +199,7 @@ export function PWAInstallPrompt() {
               </Step>
             </div>
 
-            <div className="mt-6 rounded-xl bg-muted/50 p-3">
+            <div className="mt-6 rounded-lg bg-muted/50 p-3">
               <p className="text-xs text-muted-foreground">
                 После установки приложение появится на рабочем столе как отдельная иконка.
                 Уведомления будут приходить даже при закрытом браузере.

@@ -39,7 +39,7 @@ export default async function AdminSettingsPage() {
      label: "Профиль",
      content: (
       <form action={updateProfileSettingsAction}>
-       <Card className="rounded-2xl">
+       <Card className="rounded-lg">
         <CardHeader>
          <CardTitle className="text-headline-sm">Личные данные</CardTitle>
         </CardHeader>
@@ -75,7 +75,7 @@ export default async function AdminSettingsPage() {
      content: (
        <div>
         <form action={updatePasswordAction}>
-         <Card className="rounded-2xl">
+         <Card className="rounded-lg">
           <CardHeader>
            <CardTitle className="text-headline-sm">Безопасность</CardTitle>
           </CardHeader>
@@ -106,7 +106,7 @@ export default async function AdminSettingsPage() {
       label: "Feature Flags",
       content: (
        <form action={updateAppSettingsAction}>
-        <Card className="rounded-2xl">
+        <Card className="rounded-lg">
          <CardHeader>
           <div className="flex items-center gap-2">
            <Icon name="flag" className="text-m3-primary" size={20} />
@@ -116,7 +116,7 @@ export default async function AdminSettingsPage() {
          </CardHeader>
          <CardContent className="space-y-3">
           {FEATURE_FLAGS.map((f) => (
-           <div key={f.key} className="flex items-center justify-between rounded-xl border p-4">
+           <div key={f.key} className="flex items-center justify-between rounded-lg border p-4">
             <div>
              <p className="text-sm font-medium">{f.label}</p>
              <code className="text-xs text-muted-foreground">{f.key}</code>
@@ -140,7 +140,7 @@ export default async function AdminSettingsPage() {
       label: "Уведомления",
       content: (
        <form action={updateAppSettingsAction}>
-        <Card className="rounded-2xl">
+        <Card className="rounded-lg">
          <CardHeader>
           <div className="flex items-center gap-2">
            <Icon name="mail" className="text-m3-primary" size={20} />
@@ -181,7 +181,7 @@ export default async function AdminSettingsPage() {
       label: "Сертификаты",
       content: (
        <form action={updateAppSettingsAction}>
-        <Card className="rounded-2xl">
+        <Card className="rounded-lg">
          <CardHeader>
           <div className="flex items-center gap-2">
            <Icon name="verified" className="text-m3-primary" size={20} />
@@ -206,7 +206,7 @@ export default async function AdminSettingsPage() {
     {
       label: "Кэш",
       content: (
-       <Card className="rounded-2xl">
+       <Card className="rounded-lg">
         <CardHeader>
          <div className="flex items-center gap-2">
           <Icon name="refresh" className="text-m3-primary" size={20} />
@@ -218,7 +218,7 @@ export default async function AdminSettingsPage() {
          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-         <div className="rounded-xl border bg-m3-surface-container-high px-4 py-3">
+         <div className="rounded-lg border bg-m3-surface-container-high px-4 py-3">
           <p className="text-sm">
            Текущая версия сборки: <strong className="font-semibold">{appSettings.BUILD_VERSION as number ?? 1}</strong>
           </p>

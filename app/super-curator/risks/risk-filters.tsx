@@ -41,7 +41,7 @@ export function RiskFilters({
       </div>
 
       <select
-        className="rounded-xl border bg-background px-3 py-2 text-sm"
+        className="rounded-lg border bg-background px-3 py-2 text-sm"
         onChange={(e) => applyFilter("cohortId", e.target.value)}
         defaultValue=""
       >
@@ -50,7 +50,7 @@ export function RiskFilters({
       </select>
 
       <select
-        className="rounded-xl border bg-background px-3 py-2 text-sm"
+        className="rounded-lg border bg-background px-3 py-2 text-sm"
         onChange={(e) => applyFilter("curatorId", e.target.value)}
         defaultValue=""
       >
@@ -59,7 +59,7 @@ export function RiskFilters({
       </select>
 
       <select
-        className="rounded-xl border bg-background px-3 py-2 text-sm"
+        className="rounded-lg border bg-background px-3 py-2 text-sm"
         onChange={(e) => applyFilter("type", e.target.value)}
         defaultValue=""
       >
@@ -71,7 +71,7 @@ export function RiskFilters({
       </select>
 
       <select
-        className="rounded-xl border bg-background px-3 py-2 text-sm"
+        className="rounded-lg border bg-background px-3 py-2 text-sm"
         onChange={(e) => applyFilter("severity", e.target.value)}
         defaultValue=""
       >

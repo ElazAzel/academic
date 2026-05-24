@@ -82,7 +82,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
 
   return (
     <div className="space-y-6">
-      <Card className="rounded-2xl">
+      <Card className="rounded-lg">
         <CardHeader>
           <CardTitle className="text-base">Инструкция</CardTitle>
         </CardHeader>
@@ -99,7 +99,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl">
+      <Card className="rounded-lg">
         <CardHeader>
           <CardTitle className="text-base">Ваш ответ</CardTitle>
           <CardDescription>
@@ -108,7 +108,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
         </CardHeader>
         <CardContent className="space-y-4">
           <textarea
-            className="min-h-[200px] w-full resize-y rounded-xl border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-[200px] w-full resize-y rounded-lg border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             placeholder="Введите ваш ответ..."
             value={answer}
             onChange={(event) => setAnswer(event.target.value)}
@@ -118,7 +118,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
           {canSubmit ? (
             <div className="space-y-3">
               <div
-                className="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/30 p-6 transition-colors hover:border-primary/30 hover:bg-primary/5"
+                className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/30 p-6 transition-colors hover:border-primary/30 hover:bg-primary/5"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {uploading ? (
@@ -166,7 +166,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
       </Card>
 
       {submission ? (
-        <Card className="rounded-2xl border-primary/10">
+        <Card className="rounded-lg border-primary/10">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               {submission.status === "ACCEPTED" ? (
@@ -186,7 +186,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
             </div>
 
             {submission.fileUrl ? (
-              <div className="rounded-xl border border-m3-outline-variant bg-m3-surface-container-low p-4">
+              <div className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-4">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Прикреплённый файл:
                 </p>
@@ -205,7 +205,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
             ) : null}
 
             {submission.feedback ? (
-              <div className="rounded-xl bg-muted/50 p-4">
+              <div className="rounded-lg bg-muted/50 p-4">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Комментарий куратора:
                 </p>

@@ -131,7 +131,7 @@ export function CuratorRadar({ students }: CuratorRadarProps) {
           <Card 
             key={c.key} 
             onClick={() => setActiveFilter(c.key)}
-            className={`border cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm ${
+            className={`cursor-pointer border transition-colors ${
               activeFilter === c.key 
                 ? `${c.tone.split(" ")[0]} ring-2 ring-primary/30 font-semibold` 
                 : "bg-white"
@@ -151,7 +151,7 @@ export function CuratorRadar({ students }: CuratorRadarProps) {
       </div>
 
       {/* Main Radar Card */}
-      <Card className="rounded-2xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+      <Card className="rounded-lg border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b">
           <div className="space-y-1">
             <CardTitle className="text-base flex items-center gap-2">
@@ -250,8 +250,8 @@ export function CuratorRadar({ students }: CuratorRadarProps) {
       {/* Encouragement templates modal dialog */}
       {selectedStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-in fade-in duration-200">
-          <Card className="w-full max-w-lg rounded-2xl shadow-xl border animate-in zoom-in-95 duration-200 bg-white">
-            <CardHeader className="border-b bg-slate-50 rounded-t-2xl">
+          <Card className="w-full max-w-lg rounded-lg shadow-m3-modal border animate-in zoom-in-95 duration-200 bg-white">
+            <CardHeader className="border-b bg-slate-50 rounded-t-lg">
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle className="text-base flex items-center gap-2">
@@ -299,7 +299,7 @@ export function CuratorRadar({ students }: CuratorRadarProps) {
                 <textarea
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value)}
-                  className="w-full min-h-[120px] p-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent mt-1.5 resize-none bg-slate-50"
+                  className="w-full min-h-[120px] p-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent mt-1.5 resize-none bg-slate-50"
                 />
               </div>
 

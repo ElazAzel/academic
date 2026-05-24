@@ -248,7 +248,7 @@ export function VideoBlock({ video, videoUrl, title, duration, onProgress, showW
   if (!resolvedVideo && !videoUrl) return null;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 ease-in-out hover:shadow-m3-soft-hover">
+    <div className="overflow-hidden rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 ease-in-out hover:shadow-m3-soft-hover">
       <div className="relative aspect-video bg-m3-surface-container-high">
         {canWatch ? (
           useIFrameAPI ? (

@@ -36,7 +36,7 @@ export function PopupNotificationViewer({
           <X className="h-4 w-4" />
         </button>
 
-        <div className="bg-gradient-to-br from-primary/5 via-primary/[0.02] to-background">
+        <div className="bg-m3-surface-container-lowest">
           {/* Header */}
           <div className="flex items-center gap-3 p-6 pb-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -57,7 +57,7 @@ export function PopupNotificationViewer({
               <img
                 src={popup.imageUrl}
                 alt={popup.title}
-                className="w-full rounded-xl object-cover max-h-60"
+                className="w-full rounded-lg object-cover max-h-60"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
                 }}

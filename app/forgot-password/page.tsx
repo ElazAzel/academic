@@ -11,7 +11,7 @@ export const metadata = {
 export default function ForgotPasswordPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-6 rounded-xl border bg-card p-8 text-center shadow-sm">
+      <div className="w-full max-w-md space-y-6 rounded-lg border bg-card p-8 text-center shadow-sm">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <MailQuestion className="h-7 w-7 text-primary" />
         </div>

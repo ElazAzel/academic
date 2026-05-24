@@ -43,20 +43,20 @@ export function AnswerQuestionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-card rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-lg overflow-hidden rounded-lg border border-m3-outline-variant bg-card shadow-m3-modal animate-in fade-in zoom-in duration-200">
         <div className="p-6 border-b">
           <h3 className="text-lg font-bold">Ответ на вопрос</h3>
           <p className="text-sm text-muted-foreground">Слушатель: {question.studentName}</p>
         </div>
         <div className="p-6 space-y-4">
-          <div className="bg-muted/50 p-4 rounded-2xl italic text-sm text-muted-foreground">
+          <div className="rounded-lg bg-muted/50 p-4 text-sm italic text-muted-foreground">
             &quot;{question.text}&quot;
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase text-muted-foreground">Ваш ответ</label>
             <textarea
-              className="w-full min-h-[150px] rounded-2xl border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              className="min-h-[150px] w-full rounded-lg border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="Введите ответ студенту..."
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
@@ -110,8 +110,8 @@ export function ReviewSubmissionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-card rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-2xl overflow-hidden rounded-lg border border-m3-outline-variant bg-card shadow-m3-modal animate-in fade-in zoom-in duration-200">
         <div className="p-6 border-b flex justify-between items-center">
           <div>
             <h3 className="text-lg font-bold">Проверка задания</h3>
@@ -125,13 +125,13 @@ export function ReviewSubmissionModal({
         <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase text-muted-foreground">Ответ студента</label>
-            <div className="bg-muted/30 p-5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap border">
+            <div className="rounded-lg border bg-muted/30 p-5 text-sm leading-relaxed whitespace-pre-wrap">
               {submission.answerText || "Текст ответа отсутствует"}
             </div>
           </div>
 
           {submission.fileUrl ? (
-            <div className="rounded-xl border bg-muted/20 p-4">
+            <div className="rounded-lg border bg-muted/20 p-4">
               <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Прикреплённый файл:</p>
               <div className="flex items-center gap-2">
                 <File className="h-5 w-5 text-primary" />
@@ -160,7 +160,7 @@ export function ReviewSubmissionModal({
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase text-muted-foreground">Комментарий (feedback)</label>
             <textarea
-              className="w-full min-h-[100px] rounded-2xl border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              className="min-h-[100px] w-full rounded-lg border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="Напишите замечания или похвалу..."
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}

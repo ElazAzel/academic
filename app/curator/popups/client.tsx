@@ -118,7 +118,7 @@ export function CuratorPopupClient({ students, curatorId }: Props) {
 
       {/* Create Form */}
       {showForm && (
-        <Card className="rounded-2xl border-primary/20">
+        <Card className="rounded-lg border-primary/20">
           <CardHeader>
             <CardTitle className="text-base">Новое уведомление слушателю</CardTitle>
           </CardHeader>
@@ -219,7 +219,7 @@ export function CuratorPopupClient({ students, curatorId }: Props) {
           popups.map((popup) => {
             const { viewCount, totalSent } = getViewStats(popup);
             return (
-              <Card key={popup.id} className="rounded-2xl">
+              <Card key={popup.id} className="rounded-lg">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">

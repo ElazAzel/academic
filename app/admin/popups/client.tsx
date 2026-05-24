@@ -181,7 +181,7 @@ export function AdminPopupManagerClient() {
 
       {/* Create Form */}
       {showForm && (
-        <Card className="rounded-2xl border-primary/20">
+        <Card className="rounded-lg border-primary/20">
           <CardHeader>
             <CardTitle className="text-base">Новый всплывающий попап</CardTitle>
           </CardHeader>
@@ -332,7 +332,7 @@ export function AdminPopupManagerClient() {
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       ) : popups.length === 0 ? (
-        <Card className="rounded-2xl">
+        <Card className="rounded-lg">
           <CardContent className="py-16 text-center text-muted-foreground">
             Попапов пока нет. Создайте первый попап.
           </CardContent>
@@ -345,7 +345,7 @@ export function AdminPopupManagerClient() {
               : [];
 
             return (
-              <Card key={popup.id} className="rounded-2xl">
+              <Card key={popup.id} className="rounded-lg">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">

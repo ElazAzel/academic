@@ -52,7 +52,7 @@ export function RichTextEditor({ value, onChange, minHeight = "120px" }: RichTex
 
   return (
     <div
-      className="rounded-xl border bg-background overflow-hidden"
+      className="rounded-lg border bg-background overflow-hidden"
       style={{ minHeight }}
     >
       {/* Toolbar */}

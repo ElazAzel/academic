@@ -198,7 +198,7 @@ export function NotificationsList() {
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-m3-primary border-t-transparent" />
         </div>
       ) : notifications.length === 0 ? (
-        <Card className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <Card className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
           <CardContent className="py-16 text-center">
             <Icon name="notifications" size={40} className="mx-auto mb-3 text-m3-on-surface-variant/40" />
             <p className="text-body-md font-body-md text-m3-on-surface-variant">У вас пока нет уведомлений.</p>
@@ -236,7 +236,7 @@ export function NotificationsList() {
                       <Card
                         key={n.id}
                         className={cn(
-                          "rounded-2xl border shadow-m3-soft cursor-pointer transition-all hover:shadow-m3-soft-hover overflow-hidden",
+                          "rounded-lg border shadow-m3-soft cursor-pointer transition-all hover:shadow-m3-soft-hover overflow-hidden",
                           isUnread
                             ? "border-m3-primary-fixed-dim bg-m3-primary-fixed/10"
                             : "border-m3-outline-variant bg-m3-surface-container-lowest"

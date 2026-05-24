@@ -36,7 +36,7 @@ export function Pagination({
         {currentPage > 1 ? (
           <Link
             href={href(currentPage - 1)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-sm transition-colors hover:bg-muted"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors hover:bg-muted"
           >
             <ChevronLeft className="h-4 w-4" />
           </Link>
@@ -51,7 +51,7 @@ export function Pagination({
               key={page}
               href={href(page)}
               className={cn(
-                "inline-flex h-9 w-9 items-center justify-center rounded-xl text-sm transition-colors",
+                "inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors",
                 page === currentPage
                   ? "bg-primary text-primary-foreground"
                   : "hover:bg-muted"
@@ -64,7 +64,7 @@ export function Pagination({
         {currentPage < totalPages ? (
           <Link
             href={href(currentPage + 1)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-sm transition-colors hover:bg-muted"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors hover:bg-muted"
           >
             <ChevronRight className="h-4 w-4" />
           </Link>

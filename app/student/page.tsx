@@ -116,7 +116,7 @@ async function withAchievements() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
        {learningPaths.map((lp) => (
-        <Card key={lp.id} className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <Card key={lp.id} className="border-m3-outline-variant bg-m3-surface-container-lowest">
          <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
            <div className="flex items-center gap-2">
@@ -166,7 +166,7 @@ async function withAchievements() {
     {questions.length > 0 ? (
      <div className="space-y-3">
       {questions.slice(0, 5).map((q) => (
-       <Card key={q.id} className="rounded-2xl">
+       <Card key={q.id}>
         <CardContent className="flex items-start gap-4 py-4">
          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
           <MessageCircle className="h-4 w-4 text-muted-foreground" aria-hidden />

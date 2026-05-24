@@ -145,7 +145,7 @@ export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
 
       {preview ? (
         // ── Preview mode ──────────────────────────────────────────
-        <Card className="rounded-2xl">
+        <Card className="rounded-lg">
           <CardHeader>
             <CardTitle className="text-lg">Предпросмотр: {quiz.title}</CardTitle>
             <p className="text-sm text-muted-foreground">{questions.length} вопросов · порог {quiz.passThreshold}%</p>
@@ -161,7 +161,7 @@ export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
                       <label
                         key={opt}
                         className={cn(
-                          "flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-all",
+                          "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all",
                           previewAnswers[q.id] === opt
                             ? "border-primary bg-primary/5 ring-1 ring-primary"
                             : "hover:bg-muted"
@@ -187,7 +187,7 @@ export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
         // ── Edit mode ─────────────────────────────────────────────
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            <Card className="rounded-3xl border-2">
+            <Card className="rounded-lg border">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">Вопросы теста ({questions.length})</CardTitle>
                 <span className="text-xs text-muted-foreground">Перетащите за ≡ чтобы изменить порядок</span>
@@ -256,7 +256,7 @@ export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
                 <Button
                   variant="ghost"
                   type="button"
-                  className="w-full border-2 border-dashed rounded-2xl h-14 text-muted-foreground hover:text-primary hover:border-primary/50 mt-4"
+                  className="w-full border-2 border-dashed rounded-lg h-14 text-muted-foreground hover:text-primary hover:border-primary/50 mt-4"
                   onClick={async () => {
                     const res = await fetch(`/api/v1/quizzes/${quiz.id}/questions`, {
                       method: "POST",
@@ -308,7 +308,7 @@ export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
                     ) : (
                       <div className="space-y-2">
                         {bankQuestions.map((q) => (
-                          <label key={q.id} className="flex items-start gap-3 rounded-xl border p-3 cursor-pointer hover:bg-muted/30">
+                          <label key={q.id} className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/30">
                             <input
                               type="checkbox"
                               checked={selectedQs.has(q.id)}
@@ -361,7 +361,7 @@ export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
 
           {/* Settings sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            <Card className="rounded-3xl border-2 shadow-sm">
+            <Card className="rounded-lg border">
               <CardHeader>
                 <CardTitle className="text-lg">Настройки</CardTitle>
               </CardHeader>

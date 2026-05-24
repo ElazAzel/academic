@@ -27,7 +27,7 @@ export function UserAccountNav({ user }: { user: AppSessionUser }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-3 rounded-xl p-1.5 transition-colors hover:bg-muted outline-none">
+        <button className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted outline-none">
           <Avatar name={user.name || user.email} className="h-8 w-8 text-xs" />
           <div className="hidden flex-col items-start sm:flex">
             <p className="text-sm font-medium leading-none">{user.name || "Пользователь"}</p>

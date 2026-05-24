@@ -5,7 +5,7 @@ export function DashboardUnavailable() {
   return (
     <Card className="border-amber-200 bg-amber-50">
       <CardContent className="flex flex-col gap-3 py-8 text-amber-950 sm:flex-row sm:items-start">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100">
           <AlertTriangle className="h-5 w-5 text-amber-700" aria-hidden />
         </span>
         <div>

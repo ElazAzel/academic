@@ -55,7 +55,7 @@ export function ResetPasswordForm({ token }: { token?: string }) {
         Повторите пароль
         <Input className="mt-2" name="passwordConfirm" type="password" required minLength={10} autoComplete="new-password" />
       </label>
-      {message ? <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground" role="alert">{message}</p> : null}
+      {message ? <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground" role="alert">{message}</p> : null}
       <Button className="w-full" type="submit" disabled={pending}>
         {pending ? "Обновляем..." : "Обновить пароль"}
       </Button>

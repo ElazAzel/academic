@@ -103,7 +103,7 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
       protectionLevel="standard"
     >
       {/* ── Top bar ───────────────────────────────────── */}
-      <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 border-b border-m3-outline-variant bg-m3-surface-container-lowest/80 px-4 py-2 shadow-m3-soft backdrop-blur-md sm:px-6">
+      <div className="sticky top-0 z-20 -mx-4 border-b border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2 shadow-m3-soft sm:-mx-6 sm:px-6">
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <Link
@@ -152,7 +152,7 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
 
       <div className="mx-auto max-w-4xl space-y-6 py-6">
         {/* ── Progress bar ────────────────────────────── */}
-        <div className="sticky top-16 z-10 -mx-4 border-b border-m3-outline-variant bg-m3-surface-container-low/80 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6">
+        <div className="sticky top-16 z-10 -mx-4 border-b border-m3-outline-variant bg-m3-surface-container-low px-4 py-3 sm:-mx-6 sm:px-6">
           <div className="flex items-center gap-4">
             <div className="flex-1 space-y-1">
               <div className="flex items-center justify-between text-label-md font-label-md text-m3-on-surface-variant">
@@ -226,7 +226,7 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
                   ) : null;
                 case "completion":
                   return (
-                    <div key={block.id} className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-6 text-center shadow-m3-soft">
+                    <div key={block.id} className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-6 text-center shadow-m3-soft">
                       <p className="text-body-md font-body-md text-m3-on-surface-variant">{block.data.label ?? "Урок завершён"}</p>
                     </div>
                   );

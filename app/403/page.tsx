@@ -25,7 +25,7 @@ export default async function ForbiddenPage() {
       <main className="mx-auto flex min-h-[70vh] max-w-3xl items-center px-4 py-12">
         <Card className="w-full">
           <CardContent className="flex flex-col items-start gap-5 p-8">
-            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10">
+            <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-destructive/10">
               <ShieldAlert className="h-6 w-6 text-destructive" aria-hidden />
             </span>
             <div>

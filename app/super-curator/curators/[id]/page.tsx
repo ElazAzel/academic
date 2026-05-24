@@ -93,7 +93,7 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
           {
             label: `Вопросы (${questions.length})`,
             content: (
-              <Card className="rounded-2xl">
+              <Card className="rounded-lg">
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader>
@@ -147,7 +147,7 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
           {
             label: `Проверки (${reviews.length})`,
             content: (
-              <Card className="rounded-2xl">
+              <Card className="rounded-lg">
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader>
@@ -190,7 +190,7 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
           {
             label: `По студентам (${studentResponseBreakdown.length})`,
             content: (
-              <Card className="rounded-2xl">
+              <Card className="rounded-lg">
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader>
@@ -231,7 +231,7 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
           {
             label: `Активность (${activityLog.length})`,
             content: (
-              <Card className="rounded-2xl">
+              <Card className="rounded-lg">
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader>

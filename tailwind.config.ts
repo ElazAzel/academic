@@ -127,15 +127,15 @@ const config: Config = {
 
       boxShadow: {
         /* M3 elevation */
-        "m3-soft": "0 4px 20px rgba(0, 0, 0, 0.05)",
-        "m3-soft-hover": "0 8px 30px rgba(0, 0, 0, 0.08)",
-        "m3-modal": "0 10px 30px rgba(15, 23, 42, 0.12)",
+        "m3-soft": "0 1px 2px rgba(15, 23, 42, 0.04)",
+        "m3-soft-hover": "0 1px 3px rgba(15, 23, 42, 0.08)",
+        "m3-modal": "0 16px 48px rgba(15, 23, 42, 0.16)",
         /* Legacy */
-        glass: "0 20px 80px rgba(17, 24, 39, 0.08)",
-        panel: "0 1px 2px rgba(17, 24, 39, 0.05), 0 16px 40px rgba(17, 24, 39, 0.07)",
-        "bottom-nav": "0 -4px 20px rgba(0, 0, 0, 0.06)",
-        "card-hover": "0 8px 30px rgba(0, 0, 0, 0.1)",
-        "mobile-top": "0 -2px 12px rgba(0, 0, 0, 0.05)",
+        glass: "0 1px 2px rgba(15, 23, 42, 0.04)",
+        panel: "0 1px 2px rgba(15, 23, 42, 0.06)",
+        "bottom-nav": "0 -1px 2px rgba(15, 23, 42, 0.05)",
+        "card-hover": "0 1px 3px rgba(15, 23, 42, 0.08)",
+        "mobile-top": "0 -1px 2px rgba(15, 23, 42, 0.04)",
       },
 
       spacing: {

@@ -84,7 +84,7 @@ export default async function SubmissionDetailPage({
             </CardHeader>
             <CardContent className="space-y-4">
               {submission.answerText ? (
-                <div className="rounded-xl bg-m3-surface-container-high p-4 text-body-md font-body-md leading-relaxed whitespace-pre-wrap text-m3-on-surface">
+                <div className="rounded-lg bg-m3-surface-container-high p-4 text-body-md font-body-md leading-relaxed whitespace-pre-wrap text-m3-on-surface">
                   {submission.answerText}
                 </div>
               ) : (
@@ -92,7 +92,7 @@ export default async function SubmissionDetailPage({
               )}
 
               {submission.fileUrl ? (
-                <div className="flex items-center gap-2 rounded-xl border border-m3-outline-variant bg-m3-surface-container-high p-3">
+                <div className="flex items-center gap-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-high p-3">
                   <Icon name="description" className="text-m3-primary" size={20} />
                   <a
                     href={submission.fileUrl}
@@ -129,7 +129,7 @@ export default async function SubmissionDetailPage({
                   <span className="text-body-md font-body-md font-bold text-m3-on-surface">{submission.score}/{submission.assignment.maxScore}</span>
                 </div>
                 {submission.feedback && (
-                  <div className="rounded-xl border border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed/30 p-4">
+                  <div className="rounded-lg border border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed/30 p-4">
                     <p className="text-label-sm font-label-sm text-m3-on-surface-variant mb-1">Комментарий:</p>
                     <p className="text-body-md font-body-md text-m3-tertiary whitespace-pre-wrap">{submission.feedback}</p>
                   </div>

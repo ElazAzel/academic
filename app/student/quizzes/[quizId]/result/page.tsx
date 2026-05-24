@@ -152,7 +152,7 @@ export default async function QuizResultPage({
 
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Result card */}
-        <Card className="rounded-3xl border-2 overflow-hidden">
+        <Card className="overflow-hidden rounded-lg border">
           <div className={`h-2 ${passed ? "bg-emerald-500" : "bg-rose-500"}`} />
           <CardHeader className="text-center pt-8">
             <div className="flex justify-center mb-4">
@@ -185,7 +185,7 @@ export default async function QuizResultPage({
               />
             </div>
 
-            <div className="bg-muted/50 rounded-2xl p-4 text-sm space-y-2">
+            <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Всего вопросов:</span>
                 <span>{totalQuestions}</span>
@@ -206,11 +206,11 @@ export default async function QuizResultPage({
 
             <div className="flex flex-col gap-3 pt-4">
               {passed ? (
-                <Button asChild className="w-full h-12 rounded-xl">
+                <Button asChild className="w-full h-12 rounded-lg">
                   <Link href={lessonHref}>Вернуться к уроку</Link>
                 </Button>
               ) : (
-                <Button asChild className="w-full h-12 rounded-xl">
+                <Button asChild className="w-full h-12 rounded-lg">
                   <Link href={`/student/quizzes/${quizId}`}>
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Попробовать еще раз
@@ -221,7 +221,7 @@ export default async function QuizResultPage({
           </CardContent>
         </Card>
         {/* Detailed answer review */}
-        <Card className="rounded-2xl">
+        <Card className="rounded-lg">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <HelpCircle className="h-4 w-4 text-muted-foreground" />
@@ -248,7 +248,7 @@ export default async function QuizResultPage({
               return (
                 <div
                   key={q.id}
-                  className={`rounded-xl border p-4 transition-all ${
+                  className={`rounded-lg border p-4 transition-all ${
                     isCorrect
                       ? "border-emerald-200 bg-emerald-50/30"
                       : "border-rose-200 bg-rose-50/30"
@@ -323,7 +323,7 @@ export default async function QuizResultPage({
 
         {/* Attempt history */}
         {allAttempts.length > 1 && (
-          <Card className="rounded-2xl">
+          <Card className="rounded-lg">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <History className="h-4 w-4 text-muted-foreground" />
@@ -337,7 +337,7 @@ export default async function QuizResultPage({
                   return (
                     <div
                       key={att.id}
-                      className={`flex items-center justify-between rounded-xl border p-3 transition-colors ${
+                      className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${
                         att.id === attempt.id ? "border-primary/30 bg-primary/5" : "border-muted"
                       }`}
                     >

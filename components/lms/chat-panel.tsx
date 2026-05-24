@@ -292,7 +292,7 @@ export function ChatPanel({
   }
 
   return (
-    <div className={`flex flex-col rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft ${fullHeight ? 'h-full' : (className || 'h-[480px] sm:h-[520px] md:h-[560px] lg:h-[600px] max-h-[60vh] sm:max-h-[70vh] lg:max-h-[75vh] min-h-[350px]')}`}>
+    <div className={`flex flex-col rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft ${fullHeight ? 'h-full' : (className || 'h-[480px] sm:h-[520px] md:h-[560px] lg:h-[600px] max-h-[60vh] sm:max-h-[70vh] lg:max-h-[75vh] min-h-[350px]')}`}>
       <div className="flex items-center justify-between px-4 pt-3 pb-1 shrink-0">
         <span className="text-label-lg font-label-lg text-m3-on-surface">{conversationTitle}</span>
         {messages.length > 0 && (
@@ -307,7 +307,7 @@ export function ChatPanel({
           <div className="flex flex-col gap-3 py-8">
             {[1, 2, 3].map((i) => (
               <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
-                <div className={`h-12 w-3/5 animate-pulse rounded-2xl bg-m3-surface-container-high ${i % 2 === 0 ? "rounded-br-sm" : "rounded-bl-sm"}`} />
+                <div className={`h-12 w-3/5 animate-pulse rounded-lg bg-m3-surface-container-high ${i % 2 === 0 ? "rounded-br-sm" : "rounded-bl-sm"}`} />
               </div>
             ))}
           </div>
@@ -324,15 +324,15 @@ export function ChatPanel({
 
           let roundClasses = "";
           if (isSingle) {
-            roundClasses = "rounded-2xl";
+            roundClasses = "rounded-lg";
           } else if (m.isMine) {
-            if (isFirstInGroup) roundClasses = "rounded-2xl rounded-br-sm";
-            else if (isLastInGroup) roundClasses = "rounded-2xl rounded-tr-sm";
-            else roundClasses = "rounded-2xl rounded-r-sm rounded-l-2xl";
+            if (isFirstInGroup) roundClasses = "rounded-lg rounded-br-sm";
+            else if (isLastInGroup) roundClasses = "rounded-lg rounded-tr-sm";
+            else roundClasses = "rounded-lg rounded-r-sm rounded-l-lg";
           } else {
-            if (isFirstInGroup) roundClasses = "rounded-2xl rounded-bl-sm";
-            else if (isLastInGroup) roundClasses = "rounded-2xl rounded-tl-sm";
-            else roundClasses = "rounded-2xl rounded-l-sm rounded-r-2xl";
+            if (isFirstInGroup) roundClasses = "rounded-lg rounded-bl-sm";
+            else if (isLastInGroup) roundClasses = "rounded-lg rounded-tl-sm";
+            else roundClasses = "rounded-lg rounded-l-sm rounded-r-lg";
           }
 
           return (

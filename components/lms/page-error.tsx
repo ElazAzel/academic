@@ -15,7 +15,7 @@ export function PageError({
       <Card className="w-full max-w-md text-center">
         <CardHeader>
           <div className="mb-4 flex justify-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
+            <span className="flex h-16 w-16 items-center justify-center rounded-lg bg-destructive/10">
               <AlertTriangle className="h-8 w-8 text-destructive" aria-hidden />
             </span>
           </div>

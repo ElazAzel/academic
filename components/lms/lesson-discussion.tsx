@@ -104,7 +104,7 @@ function PostCard({
 
   return (
     <div className={cn("space-y-2", depth > 0 && "ml-8 border-l-2 border-m3-outline-variant/40 pl-4")}>
-      <div className="group flex items-start gap-3 rounded-xl p-3 transition-colors hover:bg-m3-surface-container-low">
+      <div className="group flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-m3-surface-container-low">
         <Avatar name={post.userName} className="mt-0.5 h-8 w-8 shrink-0 text-xs" />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -156,7 +156,7 @@ function PostCard({
 
       {/* Reply form inline */}
       {isReplyOpen && (
-        <div className="ml-8 space-y-2 rounded-xl border border-m3-outline-variant bg-m3-surface-container-low p-3">
+        <div className="ml-8 space-y-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-3">
           <Textarea
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
@@ -273,7 +273,7 @@ export function LessonDiscussion({ lessonId }: { lessonId: string }) {
       </div>
 
       {/* New post form */}
-      <div className="space-y-2 rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest p-4 shadow-m3-soft">
+      <div className="space-y-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-4 shadow-m3-soft">
         <Textarea
           value={newPostText}
           onChange={(e) => setNewPostText(e.target.value)}
@@ -301,7 +301,7 @@ export function LessonDiscussion({ lessonId }: { lessonId: string }) {
         )}
 
         {isError && (
-          <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-center text-body-md font-body-md text-destructive">
+          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-center text-body-md font-body-md text-destructive">
             Не удалось загрузить обсуждение. Попробуйте позже.
           </div>
         )}

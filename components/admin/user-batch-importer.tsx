@@ -194,7 +194,7 @@ export function UserBatchImporter({
   };
 
   return (
-    <Card className="rounded-2xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-sm overflow-hidden">
+    <Card className="rounded-lg border-m3-outline-variant bg-m3-surface-container-lowest shadow-sm overflow-hidden">
       <CardHeader className="border-b bg-muted/20 pb-4">
         <div className="flex items-center justify-between">
           <div>
@@ -210,7 +210,7 @@ export function UserBatchImporter({
               size="sm" 
               onClick={() => setStep((prev) => (prev - 1) as 1 | 2 | 3)}
               disabled={loading}
-              className="rounded-xl"
+              className="rounded-lg"
             >
               <ArrowLeft className="h-4 w-4 mr-1" /> Назад
             </Button>
@@ -237,7 +237,7 @@ export function UserBatchImporter({
                     {assignableRoles.map((role) => (
                       <label 
                         key={role} 
-                        className={`flex items-center gap-2 p-3 rounded-2xl border hover:bg-muted/30 cursor-pointer text-sm transition-all duration-200 ${
+                        className={`flex items-center gap-2 p-3 rounded-lg border hover:bg-muted/30 cursor-pointer text-sm transition-all duration-200 ${
                           defaultRoles.includes(role) 
                             ? "border-primary bg-primary/5 text-primary font-medium" 
                             : "border-m3-outline-variant"
@@ -270,7 +270,7 @@ export function UserBatchImporter({
                   <select 
                     value={selectedCohort}
                     onChange={(e) => setSelectedCohort(e.target.value)}
-                    className="w-full rounded-2xl border border-m3-outline-variant bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-lg border border-m3-outline-variant bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Не зачислять в поток (только создать аккаунты)</option>
                     {cohorts.map((c) => (
@@ -293,7 +293,7 @@ export function UserBatchImporter({
                   onDragLeave={handleDrag}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-3xl p-8 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center min-h-[180px] ${
+                  className={`flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
                     dragActive 
                       ? "border-primary bg-primary/5 scale-[0.99]" 
                       : "border-m3-outline-variant bg-muted/10 hover:bg-muted/20"
@@ -326,7 +326,7 @@ export function UserBatchImporter({
                     onChange={(e) => setCsvText(e.target.value)}
                     placeholder={`student1@example.com, Иван Иванов\nstudent2@example.com, Анна Сидорова\ncurator1@example.com, Петр Петров, curator`}
                     rows={4}
-                    className="w-full rounded-2xl border border-m3-outline-variant bg-background p-3 text-sm font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-lg border border-m3-outline-variant bg-background p-3 text-sm font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -336,7 +336,7 @@ export function UserBatchImporter({
               <Button 
                 onClick={() => handleParse(csvText)} 
                 disabled={!csvText.trim()}
-                className="rounded-2xl px-6 py-5 flex items-center gap-2"
+                className="rounded-lg px-6 py-5 flex items-center gap-2"
               >
                 <Play className="h-4 w-4" /> Анализировать данные
               </Button>
@@ -359,7 +359,7 @@ export function UserBatchImporter({
                   variant="secondary" 
                   size="sm" 
                   onClick={() => setParsedUsers(parsedUsers.map(u => ({ ...u, selected: u.isValid })))}
-                  className="rounded-xl text-xs"
+                  className="rounded-lg text-xs"
                 >
                   Выбрать все готовые
                 </Button>
@@ -367,14 +367,14 @@ export function UserBatchImporter({
                   variant="secondary" 
                   size="sm" 
                   onClick={() => setParsedUsers(parsedUsers.map(u => ({ ...u, selected: false })))}
-                  className="rounded-xl text-xs"
+                  className="rounded-lg text-xs"
                 >
                   Снять все
                 </Button>
               </div>
             </div>
 
-            <div className="border rounded-2xl overflow-hidden max-h-[350px] overflow-y-auto">
+            <div className="border rounded-lg overflow-hidden max-h-[350px] overflow-y-auto">
               <Table>
                 <TableHeader className="bg-muted/30 sticky top-0 z-10">
                   <TableRow>
@@ -433,14 +433,14 @@ export function UserBatchImporter({
               <Button 
                 variant="secondary" 
                 onClick={() => setStep(1)}
-                className="rounded-2xl"
+                className="rounded-lg"
               >
                 Изменить данные
               </Button>
               <Button 
                 onClick={handleImport}
                 disabled={loading || parsedUsers.filter(u => u.selected).length === 0}
-                className="rounded-2xl px-6 py-5 flex items-center gap-2"
+                className="rounded-lg px-6 py-5 flex items-center gap-2"
               >
                 {loading ? (
                   <>
@@ -459,7 +459,7 @@ export function UserBatchImporter({
         {/* STEP 3: RESULTS SUMMARY & DOWNLOAD */}
         {step === 3 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom duration-300">
-            <div className="text-center p-6 bg-emerald-500/5 rounded-3xl border border-emerald-500/10 max-w-xl mx-auto space-y-3">
+            <div className="mx-auto max-w-xl space-y-3 rounded-lg border border-emerald-500/10 bg-emerald-500/5 p-6 text-center">
               <CheckCircle className="h-12 w-12 text-emerald-500 mx-auto" />
               <h3 className="text-lg font-bold text-emerald-800">Импорт успешно завершен!</h3>
               <p className="text-sm text-emerald-700">
@@ -467,25 +467,25 @@ export function UserBatchImporter({
               </p>
               
               <div className="grid grid-cols-4 gap-2 pt-2 text-xs">
-                <div className="bg-background rounded-2xl p-3 border">
+                <div className="bg-background rounded-lg p-3 border">
                   <div className="font-bold text-emerald-600 text-lg">
                     {importResults.filter(r => r.status === "created").length}
                   </div>
                   <div className="text-muted-foreground">Создано</div>
                 </div>
-                <div className="bg-background rounded-2xl p-3 border">
+                <div className="bg-background rounded-lg p-3 border">
                   <div className="font-bold text-blue-600 text-lg">
                     {importResults.filter(r => r.status === "enrolled").length}
                   </div>
                   <div className="text-muted-foreground">Зачислено</div>
                 </div>
-                <div className="bg-background rounded-2xl p-3 border">
+                <div className="bg-background rounded-lg p-3 border">
                   <div className="font-bold text-amber-600 text-lg">
                     {importResults.filter(r => r.status === "skipped").length}
                   </div>
                   <div className="text-muted-foreground">Пропущено</div>
                 </div>
-                <div className="bg-background rounded-2xl p-3 border">
+                <div className="bg-background rounded-lg p-3 border">
                   <div className="font-bold text-rose-600 text-lg">
                     {importResults.filter(r => r.status === "failed").length}
                   </div>
@@ -497,7 +497,7 @@ export function UserBatchImporter({
                 <div className="pt-4">
                   <Button 
                     onClick={handleDownloadCredentials} 
-                    className="w-full rounded-2xl py-6 bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/10"
+                    className="w-full rounded-lg py-6 bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/10"
                   >
                     <Download className="h-5 w-5" /> Скачать CSV-файл с реквизитами доступа
                   </Button>
@@ -511,7 +511,7 @@ export function UserBatchImporter({
             {/* In-depth list of results */}
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Подробный лог импорта</h4>
-              <div className="border rounded-2xl overflow-hidden max-h-[250px] overflow-y-auto">
+              <div className="border rounded-lg overflow-hidden max-h-[250px] overflow-y-auto">
                 <Table>
                   <TableHeader className="bg-muted/30">
                     <TableRow>
@@ -570,7 +570,7 @@ export function UserBatchImporter({
                   setImportResults([]);
                   setStep(1);
                 }}
-                className="rounded-2xl"
+                className="rounded-lg"
               >
                 Выполнить новый импорт
               </Button>

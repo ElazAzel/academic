@@ -21,7 +21,7 @@ export function ListToolbar({
       <div className="relative flex-1 min-w-[200px] max-w-sm">
         <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-m3-on-surface-variant" />
         <input
-          className="h-10 w-full rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest pl-9 pr-3 text-body-md font-body-md text-m3-on-surface outline-none transition focus:border-m3-outline focus:ring-2 focus:ring-m3-outline-variant placeholder:text-m3-on-surface-variant/50"
+          className="h-10 w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest pl-9 pr-3 text-body-md font-body-md text-m3-on-surface outline-none transition focus:border-m3-outline focus:ring-2 focus:ring-m3-outline-variant placeholder:text-m3-on-surface-variant/50"
           placeholder={searchPlaceholder}
           onChange={(e) => onSearch?.(e.target.value)}
         />
@@ -29,7 +29,7 @@ export function ListToolbar({
       {filters && filters.length > 0 && (
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="inline-flex h-10 items-center gap-2 rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest px-3 text-body-md font-body-md text-m3-on-surface-variant transition hover:bg-m3-surface-container-high"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 text-body-md font-body-md text-m3-on-surface-variant transition hover:bg-m3-surface-container-high"
         >
           <Icon name="filter_list" size={16} />
           Фильтры
@@ -38,7 +38,7 @@ export function ListToolbar({
       {onExport && (
         <button
           onClick={onExport}
-          className="inline-flex h-10 items-center gap-2 rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest px-3 text-body-md font-body-md text-m3-on-surface-variant transition hover:bg-m3-surface-container-high"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 text-body-md font-body-md text-m3-on-surface-variant transition hover:bg-m3-surface-container-high"
         >
           <Icon name="download" size={16} />
           Экспорт

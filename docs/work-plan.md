@@ -162,3 +162,68 @@
 | 9.7 | Изменить ссылки проверки сертификатов на относительные в UI (автовыбор хоста) | ✅ |
 | 9.8 | Исправить 500 ошибку рендеринга PDF (переход на буферы, автозамена localhost, автосборка ассетов в next.config, RFC 5987 кодирование в заголовках) | ✅ |
 
+---
+
+## Задача 10: UX/UI 2026 — визуальная система платформы
+
+**Статус:** ✅ Завершено (P0, 2026-05-24)
+**Основание:** `docs/ux-ui-2026-audit.md`
+
+Цель: убрать ощущение дешёвой AI-генерации и привести платформу к строгой академической операционной системе: спокойной, доступной, адаптивной и компонентно управляемой.
+
+| Шаг | Действие | Статус |
+|-----|----------|--------|
+| 10.1 | Утвердить один дизайн-контракт: цвета, радиусы, тени, типографика, spacing, статусы, density modes | ✅ |
+| 10.2 | Убрать `glass-card-premium`, `glass-panel`, `btn-shine`, декоративные blobs, массовые gradient strips из core UI | ✅ |
+| 10.3 | Нормализовать `Card`, `Button`, `StatusBadge`, `Table`, `Dialog`, `FormField`, `EmptyState`, `PageHeader` | ✅ |
+| 10.4 | Ввести запретный список визуальных паттернов через audit checklist или `rg` smoke | ✅ |
+| 10.5 | Проверить desktop/tablet/mobile: 375, 430, 768, 1024, 1440, 1920 px | 🟡 частично: 375/768/1024/1440 |
+
+---
+
+## Задача 11: UX/UI 2026 — единый путь студента
+
+**Статус:** 🟡 Частично выполнено (P0/P1, 2026-05-24)
+**Основание:** `docs/ux-ui-2026-audit.md`
+
+Цель: студент должен видеть один понятный учебный путь, а не набор несвязанных карточек и игровых блоков.
+
+| Шаг | Действие | Статус |
+|-----|----------|--------|
+| 11.1 | Оставить `Продолжить обучение` первым блоком `/student`; gamification только вторично и компактно | ✅ |
+| 11.2 | Переделать `/student/my-courses` под компактные карточки/список с progress, next action, certificate state | ✅ |
+| 11.3 | Переделать `/student/courses/[courseId]` под Course → Module → Block → Lesson с next CTA и locked states | 🟡 визуально выровнено, полный сценарий требует seeded flow |
+| 11.4 | Переделать `/student/lessons/[lessonId]`: materials/test/assignment/question/rating/completion внутри урока | 🟡 визуально выровнено, полный embedded assessment smoke ещё нужен |
+| 11.5 | Оставить quizzes/assignments как агрегаторы с явной привязкой назад к уроку и курсу | 🟡 |
+
+---
+
+## Задача 12: UX/UI 2026 — операционные кабинеты ролей
+
+**Статус:** 🟡 Частично выполнено (visual pass, 2026-05-24)
+**Основание:** `docs/ux-ui-2026-audit.md`
+
+Цель: каждый кабинет должен отвечать на вопрос “что этой роли делать дальше?”, а не показывать декоративный набор KPI.
+
+| Шаг | Действие | Статус |
+|-----|----------|--------|
+| 12.1 | Curator: вопросы, задания на проверку, риски, просрочки, быстрые действия | 🟡 визуально выровнено |
+| 12.2 | Super Curator: нагрузка кураторов, распределение, SLA очередей, риски когорт | 🟡 визуально выровнено |
+| 12.3 | Instructor: курсы к публикации, forwarded questions, тесты/задания, аналитика курса | 🟡 визуально выровнено |
+| 12.4 | Admin: доступы, пользователи, когорты, зачисления, сертификаты, audit/system health | 🟡 surfaces normalized; scenario UX pending |
+| 12.5 | Customer Observer: read-only отчёты и сертификаты без edit affordances | 🟡 surfaces normalized; scenario UX pending |
+
+---
+
+## Задача 13: UX/UI 2026 — accessibility и адаптивная проверка
+
+**Статус:** 🟡 Частично выполнено (responsive smoke, 2026-05-24)
+**Основание:** `docs/ux-ui-2026-audit.md`
+
+| Шаг | Действие | Статус |
+|-----|----------|--------|
+| 13.1 | Провести WCAG 2.2 AA-oriented audit: contrast, focus, keyboard, status semantics, target size | ⏳ |
+| 13.2 | Добавить Playwright responsive smoke для core routes на phone/tablet/desktop | 🟡 ручной smoke: `/login`, `/student`, 375/768/1024/1440 |
+| 13.3 | Добавить keyboard smoke для login, continue lesson, quiz, assignment, curator answer, certificate issue | ⏳ |
+| 13.4 | Проверить sticky header/bottom nav/dialog focus clipping и reduced motion | 🟡 частично через no-overflow smoke |
+| 13.5 | Зафиксировать результаты в `docs/update-log.md` после каждой UX партии | ✅ |

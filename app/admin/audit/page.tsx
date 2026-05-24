@@ -127,7 +127,7 @@ export default async function AdminAuditPage(props: {
               name="search"
               defaultValue={search}
               placeholder="Поиск по действию, пользователю..."
-              className="pl-9 rounded-xl"
+              className="pl-9 rounded-lg"
             />
           </form>
         </div>
@@ -139,7 +139,7 @@ export default async function AdminAuditPage(props: {
             return (
               <div
                 key={log.id}
-                className="flex items-start gap-4 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/30"
+                className="flex items-start gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-muted/30"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                   <Icon className="h-4 w-4 text-primary" />

@@ -174,7 +174,7 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
   }
 
   return (
-    <Card className="rounded-2xl border-primary/20">
+    <Card className="rounded-lg border-primary/20">
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
           <CardTitle className="text-base flex items-center gap-2">
@@ -205,7 +205,7 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
                   setTotalRowsCount(null);
                 }}
                 className={cn(
-                  "rounded-xl border px-4 py-2 text-sm font-medium transition-all text-left",
+                  "rounded-lg border px-4 py-2 text-sm font-medium transition-all text-left",
                   reportType === t.id
                     ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
                     : "border-border hover:border-primary/30 hover:bg-muted/50"
@@ -258,7 +258,7 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
                   key={f.id}
                   onClick={() => setFormat(f.id)}
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all",
+                    "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all",
                     format === f.id
                       ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
                       : "border-border hover:border-primary/30 hover:bg-muted/50"
@@ -300,15 +300,15 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
                 <span className="text-xs">Загрузка данных из базы...</span>
               </div>
             ) : previewError ? (
-              <div className="rounded-xl bg-red-50 p-4 text-xs text-red-800 border border-red-200">
+              <div className="rounded-lg bg-red-50 p-4 text-xs text-red-800 border border-red-200">
                 {previewError}
               </div>
             ) : previewRows.length === 0 ? (
-              <div className="rounded-xl border border-dashed p-6 text-center text-xs text-muted-foreground">
+              <div className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
                 Нет данных для отображения.
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-border shadow-inner max-h-[300px] overflow-y-auto">
+              <div className="overflow-x-auto rounded-lg border border-border shadow-inner max-h-[300px] overflow-y-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-muted/50 border-b border-border sticky top-0">

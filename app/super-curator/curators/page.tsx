@@ -27,14 +27,14 @@ export default async function SuperCuratorCuratorsPage() {
       </div>
 
       {curators.length === 0 ? (
-        <div className="rounded-2xl border bg-card p-10 text-center text-muted-foreground">
+        <div className="rounded-lg border bg-card p-10 text-center text-muted-foreground">
           <p className="text-sm">Нет кураторов. Добавьте первого куратора через кнопку &laquo;Добавить куратора&raquo;.</p>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {curators.map((cur) => (
             <a key={cur.id} href={`/super-curator/curators/${cur.id}`} className="block">
-              <Card className="rounded-2xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 h-full">
+              <Card className="h-full transition-colors">
                 <CardContent className="p-5 space-y-4">
                   <div className="flex items-center gap-3">
                     <Avatar name={cur.name} className="h-10 w-10" />

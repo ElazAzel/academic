@@ -35,8 +35,8 @@ export function CreateUserModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-card rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md overflow-hidden rounded-lg border border-m3-outline-variant bg-card shadow-m3-modal animate-in fade-in zoom-in duration-200">
         <div className="p-6 border-b flex justify-between items-center">
           <h3 className="text-lg font-bold">Добавить пользователя</h3>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
@@ -54,7 +54,7 @@ export function CreateUserModal({
             <label className="text-xs font-semibold uppercase text-muted-foreground">Роли</label>
             <div className="grid grid-cols-2 gap-2">
               {assignableRoles.map((role) => (
-                <label key={role} className="flex items-center gap-2 p-2 rounded-xl border hover:bg-muted/50 cursor-pointer text-sm">
+                <label key={role} className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted/50 cursor-pointer text-sm">
                   <input type="checkbox" name="roles" value={role} defaultChecked={role === "student"} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
                   {ROLE_LABELS[role]}
                 </label>
@@ -62,7 +62,7 @@ export function CreateUserModal({
             </div>
           </div>
           
-          {error && <p className="text-sm text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100">{error}</p>}
+          {error && <p className="text-sm text-rose-600 bg-rose-50 p-3 rounded-lg border border-rose-100">{error}</p>}
           
           <div className="pt-4 flex gap-3">
             <Button type="button" variant="secondary" className="flex-1" onClick={onClose} disabled={pending}>Отмена</Button>

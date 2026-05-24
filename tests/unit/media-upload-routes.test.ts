@@ -63,6 +63,24 @@ describe("media upload routes", () => {
     expect(mockBuildStorageKey).toHaveBeenCalledWith("covers", "cover.png");
   });
 
+  it("returns a same-origin fallback URL with presigned uploads", async () => {
+    const response = await createUploadUrl(new Request("http://localhost/api/v1/media/uploads", {
+      method: "POST",
+      body: JSON.stringify({
+        filename: "certificate-background.png",
+        contentType: "image/png",
+        fileSize: 1024,
+        prefix: "certificates",
+      }),
+    }));
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.data.url).toBe("https://storage.example/upload");
+    expect(data.data.fallbackUrl).toContain("/api/v1/media/upload-fallback");
+    expect(data.data.fallbackUrl).toContain("certificates%2F1710000000000-abcdef12.png");
+  });
+
   it("returns Supabase fallback upload URL for certificate PNG backgrounds when S3 is unavailable", async () => {
     mockCreatePresignedUploadUrl.mockResolvedValueOnce(null);
 

@@ -17,18 +17,17 @@ export async function POST(request: Request) {
     await requireUser(getUploadPermissionForPrefix(prefix));
 
     const storageKey = buildStorageKey(prefix, filename);
+    const supabaseUrl = env.STORAGE_SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || "https://jqltcnuxpmeckezoypfm.supabase.co";
+    const fallbackPublicUrl = `${supabaseUrl}/storage/v1/object/public/academy-media/${storageKey}`;
+    const fallbackUploadUrl = `/api/v1/media/upload-fallback?key=${encodeURIComponent(storageKey)}&contentType=${encodeURIComponent(contentType)}`;
     const result = await createPresignedUploadUrl(storageKey, contentType);
 
     if (!result) {
-      const supabaseUrl = env.STORAGE_SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || "https://jqltcnuxpmeckezoypfm.supabase.co";
-      const publicUrl = `${supabaseUrl}/storage/v1/object/public/academy-media/${storageKey}`;
-      const fallbackUploadUrl = `/api/v1/media/upload-fallback?key=${encodeURIComponent(storageKey)}&contentType=${encodeURIComponent(contentType)}`;
-
       console.log(`[Storage Fallback] S3 offline. Using cloud proxy fallback. Key: ${storageKey}`);
-      return ok({ url: fallbackUploadUrl, publicUrl, key: storageKey });
+      return ok({ url: fallbackUploadUrl, publicUrl: fallbackPublicUrl, fallbackUrl: fallbackUploadUrl, key: storageKey });
     }
 
-    return ok({ url: result.url, publicUrl: result.publicUrl, key: storageKey });
+    return ok({ url: result.url, publicUrl: result.publicUrl, fallbackUrl: fallbackUploadUrl, key: storageKey });
   } catch (error) {
     return errorResponse(error);
   }

@@ -31,7 +31,7 @@ export default async function SuperCuratorCohortsPage() {
 
       <div className="space-y-4">
         {cohorts.length === 0 ? (
-          <Card className="rounded-2xl">
+          <Card className="rounded-lg">
             <CardContent className="p-10 text-center text-muted-foreground">
               <Users className="mx-auto h-10 w-10 mb-3 opacity-40" />
               <p className="text-sm">Нет созданных потоков. Нажмите &laquo;Создать поток&raquo;.</p>
@@ -41,7 +41,7 @@ export default async function SuperCuratorCohortsPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {cohorts.map((c) => (
               <a key={c.id} href={`/super-curator/cohorts/${c.id}`} className="block">
-                <Card className="rounded-2xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 h-full">
+                <Card className="h-full transition-colors">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
@@ -85,14 +85,14 @@ export default async function SuperCuratorCohortsPage() {
         )}
 
         {cohorts.filter((c) => c.status !== "archived").length > 0 && (
-          <details className="rounded-2xl border p-4">
+          <details className="rounded-lg border p-4">
             <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
               Архивные потоки ({cohorts.filter((c) => c.status === "archived").length})
             </summary>
             <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {cohorts.filter((c) => c.status === "archived").map((c) => (
                 <a key={c.id} href={`/super-curator/cohorts/${c.id}`} className="block">
-                  <Card className="rounded-xl opacity-70 hover:opacity-100 transition-opacity">
+                  <Card className="rounded-lg opacity-70 hover:opacity-100 transition-opacity">
                     <CardContent className="p-4">
                       <p className="text-sm font-medium">{c.name}</p>
                       <p className="text-xs text-muted-foreground">{c.courseTitle}</p>

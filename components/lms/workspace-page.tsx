@@ -24,7 +24,7 @@ export function WorkspacePage({
               <CardDescription>Экран готов как production scaffold с REST-контрактами и пустыми состояниями.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-xl border border-dashed bg-muted/40 p-5 text-sm text-muted-foreground">
+              <div className="rounded-lg border border-dashed bg-muted/40 p-5 text-sm text-muted-foreground">
                 Данные подключаются через server modules и React Query без прямого доступа UI к базе.
               </div>
             </CardContent>

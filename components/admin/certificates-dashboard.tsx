@@ -213,7 +213,7 @@ export function CertificatesDashboard({
               <p className="text-sm font-medium text-muted-foreground">Всего выданных</p>
               <p className="text-3xl font-bold tracking-tight text-m3-on-surface">{certificates.length}</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
               <Award className="h-6 w-6" />
             </div>
           </CardContent>
@@ -225,7 +225,7 @@ export function CertificatesDashboard({
               <p className="text-sm font-medium text-muted-foreground">Активных</p>
               <p className="text-3xl font-bold tracking-tight text-emerald-600">{activeCerts}</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <div className="h-12 w-12 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
               <ShieldCheck className="h-6 w-6" />
             </div>
           </CardContent>
@@ -237,7 +237,7 @@ export function CertificatesDashboard({
               <p className="text-sm font-medium text-muted-foreground">Отозванных</p>
               <p className="text-3xl font-bold tracking-tight text-red-600">{revokedCerts}</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+            <div className="h-12 w-12 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
               <AlertCircle className="h-6 w-6" />
             </div>
           </CardContent>
@@ -280,14 +280,14 @@ export function CertificatesDashboard({
 
       {/* Status Alerts */}
       {success && (
-        <div className="flex items-center gap-2 p-4 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200">
+        <div className="flex items-center gap-2 p-4 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-200">
           <CheckCircle className="h-5 w-5 shrink-0" />
           <p className="text-sm">{success}</p>
         </div>
       )}
 
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-red-50 text-red-800 rounded-xl border border-red-200">
+        <div className="flex items-center gap-2 p-4 bg-red-50 text-red-800 rounded-lg border border-red-200">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <p className="text-sm">{error}</p>
         </div>
@@ -295,7 +295,7 @@ export function CertificatesDashboard({
 
       {/* Tab 1: History of Issued Certificates */}
       {activeTab === "history" && (
-        <Card className="rounded-2xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <Card className="rounded-lg border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
           <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <CardTitle className="text-lg">Журнал свидетельств</CardTitle>
@@ -415,7 +415,7 @@ export function CertificatesDashboard({
       {activeTab === "issue" && (
         <div className="grid gap-6 md:grid-cols-3">
           {/* Main Form */}
-          <Card className="md:col-span-2 rounded-2xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <Card className="md:col-span-2 rounded-lg border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
             <CardHeader>
               <CardTitle className="text-lg">Ручной выпуск свидетельства</CardTitle>
               <CardDescription>
@@ -467,7 +467,7 @@ export function CertificatesDashboard({
                   )}
 
                   {selectedStudent && (
-                    <div className="flex items-center justify-between p-3 bg-primary/5 rounded-xl border border-primary/20 text-xs">
+                    <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20 text-xs">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-primary" />
                         <div>
@@ -519,7 +519,7 @@ export function CertificatesDashboard({
                 </div>
 
                 {/* Step 3: Force Bypass Checkbox */}
-                <div className="flex items-center justify-between p-4 bg-muted/20 rounded-xl border">
+                <div className="flex items-center justify-between p-4 bg-muted/20 rounded-lg border">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-medium">Bypass progress requirements</Label>
                     <p className="text-xs text-muted-foreground">
@@ -582,13 +582,13 @@ export function CertificatesDashboard({
         </div>
       )}
       {activeTab === "designer" && (
-        <Card className="rounded-2xl border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <Card className="rounded-lg border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
           <CardHeader>
             <CardTitle className="text-lg">Управление шаблонами курсов</CardTitle>
             <CardDescription>Выберите учебную программу для настройки визуального оформления цифровых дипломов.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="divide-y border rounded-xl overflow-hidden bg-white">
+            <div className="divide-y border rounded-lg overflow-hidden bg-white">
               {courses.length > 0 ? (
                 courses.map(c => (
                   <div key={c.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">

@@ -60,7 +60,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
   // ── Idle / before start ────────────────────────────────────────────
   if (phase === "idle") {
     return (
-      <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
+      <div className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-body-md font-body-md text-m3-on-surface">{quiz.title}</p>
@@ -78,7 +78,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
   // ── Active (during quiz) ──────────────────────────────────────────
   if (phase === "active") {
     return (
-      <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+      <div className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
         {/* Question numbers */}
         <div className="flex items-center gap-1.5 px-5 py-3 border-b border-m3-outline-variant overflow-x-auto">
           {quiz.questions.map((q, i) => (
@@ -114,7 +114,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
             {currentQuestion.options.map((option) => (
               <label
                 key={option}
-                className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-all ${
+                className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all ${
                   answers[currentQuestion.id] === option
                     ? "border-m3-primary bg-m3-primary-container/20 ring-1 ring-m3-primary"
                     : "border-m3-outline-variant hover:bg-m3-surface-container-high"
@@ -168,7 +168,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
   // ── Result ────────────────────────────────────────────────────────
   if (phase === "result") {
     return (
-      <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-8 shadow-m3-soft text-center space-y-5">
+      <div className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-8 shadow-m3-soft text-center space-y-5">
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-m3-surface-container-high">
           {result?.passed ? (
             <Icon name="check_circle" size={40} className="text-m3-tertiary" fill />
@@ -201,12 +201,12 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
   // ── Review ────────────────────────────────────────────────────────
   if (phase === "review") {
     return (
-      <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
+      <div className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
         <p className="text-body-md font-body-md text-m3-on-surface">Ответы</p>
         {quiz.questions.map((q, i) => {
           const selected = answers[q.id];
           return (
-            <div key={q.id} className="rounded-xl border border-m3-outline-variant p-4 space-y-2">
+            <div key={q.id} className="rounded-lg border border-m3-outline-variant p-4 space-y-2">
               <p className="text-body-md font-body-md text-m3-on-surface">{i + 1}. {q.text}</p>
               <div className="space-y-1">
                 {q.options.map((option) => {

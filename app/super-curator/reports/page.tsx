@@ -106,7 +106,7 @@ export default async function SuperCuratorReportsPage() {
                       {data.map((c) => {
                         const total = c.totalStudents || 1;
                         return (
-                          <div key={c.cohortId} className="rounded-xl border border-m3-outline-variant bg-m3-surface-container-low p-4 space-y-2">
+                          <div key={c.cohortId} className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-4 space-y-2">
                             <div className="flex items-center justify-between">
                               <p className="font-label-md text-label-md text-m3-on-surface">{c.cohortName}</p>
                               <Badge variant={c.status === "active" ? "default" : "secondary"}>

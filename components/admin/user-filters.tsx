@@ -36,13 +36,13 @@ export function UserFilters({
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input className="pl-9" name="search" defaultValue={search} placeholder="Поиск по имени или email..." />
       </div>
-      <select name="role" defaultValue={role} className="rounded-xl border bg-background px-3 py-2 text-sm">
+      <select name="role" defaultValue={role} className="rounded-lg border bg-background px-3 py-2 text-sm">
         <option value="">Все роли</option>
         {Object.entries(ROLE_LABELS).map(([key, label]) => (
           <option key={key} value={key}>{label}</option>
         ))}
       </select>
-      <select name="status" defaultValue={status} className="rounded-xl border bg-background px-3 py-2 text-sm">
+      <select name="status" defaultValue={status} className="rounded-lg border bg-background px-3 py-2 text-sm">
         <option value="">Все статусы</option>
         <option value="ACTIVE">Активен</option>
         <option value="INACTIVE">Неактивен</option>

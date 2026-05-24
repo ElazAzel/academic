@@ -75,7 +75,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
   }
 
   const contentTab = (
-    <Card className="rounded-2xl border-0 shadow-none">
+    <Card className="rounded-lg border-0 shadow-none">
       <CardContent className="space-y-6 pt-6">
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
@@ -84,7 +84,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase text-muted-foreground">Тип урока</label>
-            <select name="type" defaultValue={lesson.type} className="w-full h-10 rounded-xl border bg-background px-3 text-sm">
+            <select name="type" defaultValue={lesson.type} className="w-full h-10 rounded-lg border bg-background px-3 text-sm">
               <option value="VIDEO">Видео</option>
               <option value="TEXT">Текст</option>
               <option value="VIDEO_DOCUMENT">Видео + документ</option>
@@ -116,7 +116,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
           <textarea
             name="summary"
             defaultValue={lesson.summary || ""}
-            className="w-full min-h-[80px] rounded-2xl border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+            className="w-full min-h-[80px] rounded-lg border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
           />
         </div>
 
@@ -125,7 +125,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
           <textarea
             name="contentText"
             defaultValue={lesson.content?.text || ""}
-            className="w-full min-h-[300px] rounded-2xl border bg-background px-4 py-3 text-sm font-mono focus:ring-2 focus:ring-primary/20 outline-none"
+            className="w-full min-h-[300px] rounded-lg border bg-background px-4 py-3 text-sm font-mono focus:ring-2 focus:ring-primary/20 outline-none"
           />
         </div>
       </CardContent>
@@ -152,8 +152,8 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
 
       <Tabs tabs={[
         { label: "Контент", content: contentTab },
-        { label: "Медиа", content: <div className="p-10 text-center text-muted-foreground border-2 border-dashed rounded-3xl mt-4">Загрузка файлов будет доступна в следующей версии.</div> },
-        { label: "Тесты / Задания", content: <div className="p-10 text-center text-muted-foreground border-2 border-dashed rounded-3xl mt-4">Редактирование связанных объектов доступно через специальные модули.</div> }
+        { label: "Медиа", content: <div className="mt-4 rounded-lg border-2 border-dashed p-10 text-center text-muted-foreground">Загрузка файлов будет доступна в следующей версии.</div> },
+        { label: "Тесты / Задания", content: <div className="mt-4 rounded-lg border-2 border-dashed p-10 text-center text-muted-foreground">Редактирование связанных объектов доступно через специальные модули.</div> }
       ]} />
     </form>
   );

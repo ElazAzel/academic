@@ -47,7 +47,7 @@ export default async function StudentSettingsPage() {
             label: "Профиль",
             content: (
               <form action={updateProfileSettingsAction}>
-                <Card className="rounded-2xl">
+                <Card className="rounded-lg">
                   <CardHeader>
                     <CardTitle className="text-base">Личные данные</CardTitle>
                   </CardHeader>
@@ -65,14 +65,14 @@ export default async function StudentSettingsPage() {
                         <label className="text-sm font-medium">Имя</label>
                         <input
                           name="name"
-                          className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.name ?? ""}
                         />
                       </div>
                       <div>
                         <label className="text-sm font-medium">Email</label>
                         <input
-                          className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.email}
                           disabled
                         />
@@ -81,7 +81,7 @@ export default async function StudentSettingsPage() {
                         <label className="text-sm font-medium">Телефон</label>
                         <input
                           name="phone"
-                          className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.phone ?? ""}
                           placeholder="+7 (___) ___-__-__"
                         />
@@ -90,7 +90,7 @@ export default async function StudentSettingsPage() {
                         <label className="text-sm font-medium">Организация</label>
                         <input
                           name="organization"
-                          className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.organization ?? ""}
                           placeholder="Название организации"
                         />
@@ -99,7 +99,7 @@ export default async function StudentSettingsPage() {
                         <label className="text-sm font-medium">Компания</label>
                         <input
                           name="company"
-                          className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.company ?? ""}
                           placeholder="Название компании"
                         />
@@ -108,7 +108,7 @@ export default async function StudentSettingsPage() {
                         <label className="text-sm font-medium">Должность</label>
                         <input
                           name="position"
-                          className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.position ?? ""}
                           placeholder="Ваша должность"
                         />
@@ -126,14 +126,14 @@ export default async function StudentSettingsPage() {
             label: "Уведомления",
             content: (
               <form action={updateNotificationPreferencesAction}>
-                <Card className="rounded-2xl">
+                <Card className="rounded-lg">
                   <CardHeader>
                     <CardTitle className="text-base">Настройки уведомлений</CardTitle>
                     <CardDescription>Выберите, какие уведомления вы хотите получать.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {NOTIFICATION_CHANNELS.map((item) => (
-                      <div key={item.key} className="flex items-center justify-between rounded-xl border p-4">
+                      <div key={item.key} className="flex items-center justify-between rounded-lg border p-4">
                         <div>
                           <p className="text-sm font-medium">{item.label}</p>
                           <p className="text-xs text-muted-foreground">{item.desc}</p>
@@ -163,7 +163,7 @@ export default async function StudentSettingsPage() {
             content: (
               <div className="space-y-6">
                 <form action={updatePasswordAction}>
-                  <Card className="rounded-2xl">
+                  <Card className="rounded-lg">
                     <CardHeader>
                       <CardTitle className="text-base">Безопасность</CardTitle>
                     </CardHeader>
@@ -173,7 +173,7 @@ export default async function StudentSettingsPage() {
                         <input
                           name="currentPassword"
                           type="password"
-                          className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           placeholder="Текущий пароль"
                           required
                         />
@@ -183,7 +183,7 @@ export default async function StudentSettingsPage() {
                         <input
                           name="newPassword"
                           type="password"
-                          className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           placeholder="Мин. 10 символов"
                           required
                           minLength={10}
@@ -194,7 +194,7 @@ export default async function StudentSettingsPage() {
                         <input
                           name="confirmPassword"
                           type="password"
-                          className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           placeholder="Повторите пароль"
                           required
                         />
@@ -205,7 +205,7 @@ export default async function StudentSettingsPage() {
                     </CardContent>
                   </Card>
                 </form>
-                <Card className="rounded-2xl">
+                <Card className="rounded-lg">
                   <CardContent className="pt-6">
                     <TwoFactorSettings />
                   </CardContent>

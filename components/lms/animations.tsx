@@ -86,15 +86,10 @@ export function Stagger({
 }
 
 export function CardHover({ children, className }: { children: React.ReactNode; className?: string }) {
-  const shouldReduce = useReducedMotion();
   return (
-    <motion.div
-      whileHover={shouldReduce ? undefined : { y: -3, boxShadow: "0 8px 30px rgba(0,0,0,0.08)" }}
-      transition={{ duration: 0.2 }}
-      className={cn("transition-colors", className)}
-    >
+    <div className={cn("transition-colors", className)}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 

@@ -68,7 +68,7 @@ export default async function StudentCoursePage({ params }: { params: Promise<{ 
 
       {/* Paused banner */}
       {isPaused && (
-        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-800">
+        <div className="mb-6 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-5 py-4 text-amber-800">
           <PauseCircle className="h-5 w-5 shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium">Ваше обучение приостановлено</p>
@@ -103,7 +103,7 @@ export default async function StudentCoursePage({ params }: { params: Promise<{ 
 
             {/* All completed */}
             {isAllCompleted && (
-              <div className="mt-6 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+              <div className="mt-6 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-4">
                 <div>
                   <p className="text-sm font-semibold text-emerald-800">Курс завершён!</p>
                   <p className="text-xs text-emerald-700">Вы прошли все уроки курса.</p>

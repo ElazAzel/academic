@@ -1,5 +1,44 @@
 # Project Update Log
 
+## 2026-05-24 - UX/UI P0 Implementation and Certificate PNG Upload Fix
+
+- **Author:** Codex
+- **Scope:** Implement the first audit batch: visual foundation, student dashboard hierarchy, responsive cleanup, and certificate background upload reliability.
+- **Fixed / Added:**
+  - Removed core decorative UI patterns from `app` and `components`: glass cards/panels, shine buttons, blurred/radial decorative backgrounds, gradient card strips, hover lifts, oversized radii and heavy ad-hoc shadows.
+  - Normalized shared primitives and surfaces: `Card`, `Button`, `Input`, `Textarea`, `Table`, `Dialog`, `Sheet`, dropdowns, empty states, shell, login screen, student surfaces, curator/super-curator boards and related role pages.
+  - Kept `/student` learning-first: continue-learning remains first, level/achievements is a single compact secondary block, and achievements stay collapsed by default.
+  - Fixed certificate PNG background upload resilience: `/api/v1/media/uploads` now returns a same-origin fallback URL with presigned tickets, and client upload code retries that fallback when direct storage PUT is blocked or fails.
+  - Updated upload tests and metric-grid component tests for the new restrained visual hierarchy.
+- **Validation:**
+  - `rg` banned-pattern smoke passed for `app` and `components`: no `glass-card-premium`, `btn-shine`, `bg-gradient`, `backdrop-blur`, `rounded-xl/2xl/3xl`, `shadow-xl/2xl`, decorative radial-gradient/blob classes, or hover-lift patterns in core TSX/CSS.
+  - `git diff --check` passed.
+  - `npm run test -- tests/unit/media-upload-routes.test.ts tests/unit/upload-with-compress.test.ts` passed: 9/9 tests.
+  - `npm run lint -- --max-warnings=0` passed.
+  - `npm run typecheck` passed.
+  - `npm run test` passed: 424/424 tests.
+  - `npm run build` passed; Sentry auth-token warnings remain expected without production secrets.
+  - Playwright responsive smoke against `next start` passed for `/login` and `/student` at 375, 768, 1024 and 1440 px: no horizontal overflow; phone `/student` headings render as `Моё обучение` → `Продолжить: ...` → `Уровень и достижения`, and achievement details are closed by default.
+- **Status:** P0 visual foundation green; broader role-workspace redesign and full WCAG/keyboard proof remain partial.
+
+## 2026-05-24 - UX/UI 2026 Platform Audit
+
+- **Author:** Codex
+- **Scope:** Full-platform UX/UI audit against closed-academy product principles, current source evidence, user-provided `/student` screenshot, and 2026 design reference baseline.
+- **Fixed / Added:**
+  - Added `docs/ux-ui-2026-audit.md` with the visual-system verdict, evidence register, 2026 target direction, role-level UX requirements, responsive/accessibility gates, banned visual patterns, and redesign roadmap.
+  - Updated `docs/full-project-audit.md` with a UX/UI 2026 addendum and current status: visual-system consistency is `broken`, implementation readiness is `partial`.
+  - Updated `docs/work-plan.md` with UX/UI tasks 10-13: visual foundation, student journey, operational role workspaces, and accessibility/adaptive QA.
+- **Validation:**
+  - External references checked: WCAG 2.2, NN/g heuristics/design systems, Material adaptive guidance, Apple HIG Accessibility, Atlassian Design, IBM Carbon, GOV.UK Design System, and selected 2026 UX trend reports.
+  - Source review covered global styles, app shell, login, student dashboard/course cards, role dashboard widgets, and current decorative/animation patterns.
+  - `git diff --check` passed after removing trailing whitespace in the new work-plan entries.
+  - `npm run lint -- --max-warnings=0` passed.
+  - `npm run typecheck` passed.
+  - `npm run test` passed: 422/422 tests.
+  - `npm run build` passed; local Sentry auth-token warnings remain expected without production secrets.
+- **Status:** audit complete; implementation not started in this pass.
+
 ## 2026-05-24 - Compact Student Level and Achievements Block
 
 - **Author:** Codex

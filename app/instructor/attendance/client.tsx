@@ -58,7 +58,7 @@ function CourseSelector({ onSelect }: { onSelect: (courseId: string) => void }) 
           key={course.id}
           type="button"
           onClick={() => onSelect(course.id)}
-          className="group rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest p-4 text-left shadow-m3-soft transition-all hover:border-m3-primary hover:shadow-m3-md focus:outline-none focus:ring-2 focus:ring-m3-primary"
+          className="group rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-4 text-left shadow-m3-soft transition-all hover:border-m3-primary hover:shadow-m3-md focus:outline-none focus:ring-2 focus:ring-m3-primary"
         >
           <div className="flex items-start justify-between gap-2">
             <span className="text-label-md font-label-md text-m3-on-surface group-hover:text-m3-primary transition-colors">

@@ -60,11 +60,11 @@ export function NotificationPreferencesForm() {
 
   if (isLoading) {
     return (
-      <Card className="rounded-2xl">
+      <Card className="rounded-lg">
         <CardContent className="p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             {DISPLAY_CHANNELS.map((channel) => (
-              <div key={channel} className="flex items-center justify-between rounded-xl border p-4">
+              <div key={channel} className="flex items-center justify-between rounded-lg border p-4">
                 <Skeleton className="h-4 w-40" />
                 <Skeleton className="h-5 w-9 rounded-full" />
               </div>
@@ -76,13 +76,13 @@ export function NotificationPreferencesForm() {
   }
 
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-lg">
       <CardContent className="p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           {DISPLAY_CHANNELS.map((channel) => {
             const enabled = preferences?.[channel] ?? false;
             return (
-              <div key={channel} className="flex items-center justify-between rounded-xl border p-4">
+              <div key={channel} className="flex items-center justify-between rounded-lg border p-4">
                 <Label htmlFor={`pref-${channel}`} className="cursor-pointer text-sm font-medium">
                   {CHANNEL_LABELS[channel]}
                 </Label>

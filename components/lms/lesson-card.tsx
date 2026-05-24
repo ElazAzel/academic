@@ -32,7 +32,7 @@ export function LessonCard({ lesson }: { lesson: LessonCardType }) {
   return (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest p-3 transition-all duration-200 ease-in-out shadow-m3-soft",
+        "flex items-start gap-3 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-3 transition-all duration-200 ease-in-out shadow-m3-soft",
         isLocked ? "opacity-50" : "active:scale-[0.98] hover:shadow-m3-soft-hover hover:border-m3-outline"
       )}
     >

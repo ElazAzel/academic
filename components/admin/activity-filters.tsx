@@ -33,17 +33,17 @@ export function ActivityFilters({
 
   return (
     <form onSubmit={apply} className="flex flex-wrap items-center gap-3 mb-4">
-      <select name="days" defaultValue={days} className="rounded-xl border bg-background px-3 py-2 text-sm">
+      <select name="days" defaultValue={days} className="rounded-lg border bg-background px-3 py-2 text-sm">
         <option value="7">7 дней</option>
         <option value="30">30 дней</option>
         <option value="90">90 дней</option>
         <option value="180">180 дней</option>
       </select>
-      <select name="cohortId" defaultValue={cohortId ?? ""} className="rounded-xl border bg-background px-3 py-2 text-sm">
+      <select name="cohortId" defaultValue={cohortId ?? ""} className="rounded-lg border bg-background px-3 py-2 text-sm">
         <option value="">Все потоки</option>
         {cohorts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
-      <select name="courseId" defaultValue={courseId ?? ""} className="rounded-xl border bg-background px-3 py-2 text-sm">
+      <select name="courseId" defaultValue={courseId ?? ""} className="rounded-lg border bg-background px-3 py-2 text-sm">
         <option value="">Все курсы</option>
         {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
       </select>

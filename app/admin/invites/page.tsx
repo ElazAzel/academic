@@ -56,7 +56,7 @@ export default async function AdminInvitesPage() {
       />
 
       <div className="mt-6 space-y-6">
-        <Card className="rounded-2xl border-amber-200 bg-amber-50">
+        <Card className="rounded-lg border-amber-200 bg-amber-50">
           <CardHeader>
             <CardTitle className="text-base">О пригласительной модели</CardTitle>
             <CardDescription>
@@ -69,7 +69,7 @@ export default async function AdminInvitesPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {TOOLS.map((tool) => (
-            <Card key={tool.title} className="rounded-2xl hover:shadow-md transition-shadow">
+            <Card key={tool.title} className="rounded-lg hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
@@ -88,7 +88,7 @@ export default async function AdminInvitesPage() {
           ))}
         </div>
 
-        <Card className="rounded-2xl">
+        <Card className="rounded-lg">
           <CardHeader>
             <CardTitle className="text-base">CLI-скрипт массового создания</CardTitle>
             <CardDescription>

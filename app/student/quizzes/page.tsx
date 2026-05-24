@@ -27,7 +27,7 @@ export default async function StudentQuizzesPage() {
    <div className="space-y-4 mt-6">
     {attempts.length > 0 ? (
      attempts.map((attempt) => (
-      <Card key={attempt.id} className="rounded-2xl">
+      <Card key={attempt.id} className="rounded-lg">
        <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
          <CardTitle className="text-base">{attempt.quiz.title}</CardTitle>

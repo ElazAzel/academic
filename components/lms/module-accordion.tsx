@@ -41,7 +41,7 @@ export function ModuleAccordion({
 
   if (visibleModules.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-m3-outline-variant bg-m3-surface-container-lowest px-6 py-16 text-center shadow-m3-soft">
+      <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-m3-outline-variant bg-m3-surface-container-lowest px-6 py-16 text-center shadow-m3-soft">
         <Icon name="visibility_off" size={32} className="mb-3 text-m3-on-surface-variant/40" />
         <h3 className="text-headline-sm font-headline-sm text-m3-on-surface">Все модули пройдены</h3>
         <p className="mt-1 text-body-md font-body-md text-m3-on-surface-variant">Отключите скрытие завершённых, чтобы увидеть их снова.</p>
@@ -66,11 +66,11 @@ export function ModuleAccordion({
       {visibleModules.map((mod) => {
         const isOpen = openModules.has(mod.id);
         return (
-          <div key={mod.id} className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 ease-in-out overflow-hidden">
+          <div key={mod.id} className="overflow-hidden rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
             {/* Module header */}
             <button
               onClick={() => toggleModule(mod.id)}
-              className="flex w-full items-center gap-3 px-5 py-4 text-left transition-all duration-200 ease-in-out active:scale-[0.99] hover:bg-m3-surface-container-high"
+              className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-m3-surface-container-high"
             >
               <span className="shrink-0 text-m3-on-surface-variant">
                 {isOpen ? <Icon name="expand_more" size={16} /> : <Icon name="chevron_right" size={16} />}

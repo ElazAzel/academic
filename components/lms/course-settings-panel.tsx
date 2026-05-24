@@ -54,7 +54,7 @@ export function CourseSettingsPanel({
             }, 0)}
           </p>
         </div>
-        <div className="space-y-3 rounded-xl border bg-background p-3">
+        <div className="space-y-3 rounded-lg border bg-background p-3">
           <h4 className="text-xs font-semibold uppercase text-muted-foreground">Готовность к публикации</h4>
           {publishChecks.map((check) => {
             const Icon = check.status === "passed" ? CheckCircle2 : XCircle;

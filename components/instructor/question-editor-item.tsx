@@ -96,7 +96,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
   }
 
   return (
-    <div className="border rounded-2xl bg-muted/5 overflow-hidden transition-all">
+    <div className="border rounded-lg bg-muted/5 overflow-hidden transition-all">
       {/* Collapsed preview */}
       <div className="flex items-center gap-4 p-4 cursor-pointer hover:bg-muted/10" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex-1 min-w-0">
@@ -122,7 +122,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase text-muted-foreground">Текст вопроса</label>
             <textarea
-              className="w-full min-h-[80px] rounded-xl border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              className="w-full min-h-[80px] rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
               value={data.prompt}
               onChange={(e) => { setData({ ...data, prompt: e.target.value }); markDirty(); }}
             />
@@ -132,7 +132,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase text-muted-foreground">Тип</label>
               <select
-                className="w-full h-10 rounded-xl border bg-background px-3 text-sm"
+                className="w-full h-10 rounded-lg border bg-background px-3 text-sm"
                 value={data.type}
                 onChange={(e) => { setData({ ...data, type: e.target.value, options: (e.target.value === "TEXT" ? [] : options) }); markDirty(); }}
               >
@@ -177,7 +177,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
                   </Button>
                 </div>
               ))}
-              <Button type="button" variant="secondary" size="sm" className="w-full border-dashed rounded-xl h-10" onClick={addOption}>
+              <Button type="button" variant="secondary" size="sm" className="w-full border-dashed rounded-lg h-10" onClick={addOption}>
                 <Plus className="h-3 w-3 mr-2" />
                 Добавить вариант
               </Button>

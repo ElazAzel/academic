@@ -54,7 +54,7 @@ export function QuizView({ quiz }: { quiz: StudentQuizDetail }) {
   return (
     <div className="space-y-4">
       {quiz.questions.map((question, index) => (
-        <Card key={question.id} className="rounded-2xl transition-shadow hover:shadow-sm">
+        <Card key={question.id} className="rounded-lg transition-shadow hover:shadow-sm">
           <CardContent className="space-y-3 py-5">
             <p className="text-sm font-medium">
               {index + 1}. {question.text}
@@ -63,7 +63,7 @@ export function QuizView({ quiz }: { quiz: StudentQuizDetail }) {
               {question.options.map((option) => (
                 <label
                   key={option}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-all ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all ${
                     answers[question.id] === option ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted"
                   }`}
                 >

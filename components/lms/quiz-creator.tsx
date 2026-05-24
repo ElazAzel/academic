@@ -105,7 +105,7 @@ export function QuizCreator({
   };
 
   return (
-    <div className="rounded-2xl border bg-muted/10 p-4 space-y-4">
+    <div className="rounded-lg border bg-muted/10 p-4 space-y-4">
       <h4 className="text-sm font-semibold">Создание теста</h4>
       <div className="grid grid-cols-3 gap-3">
         <div>
@@ -125,7 +125,7 @@ export function QuizCreator({
       {/* Questions */}
       <div className="space-y-3">
         {questions.map((q, qi) => (
-          <div key={qi} className="rounded-xl border bg-card p-3 space-y-2">
+          <div key={qi} className="rounded-lg border bg-card p-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium">Вопрос {qi + 1}</span>
               {questions.length > 1 && (

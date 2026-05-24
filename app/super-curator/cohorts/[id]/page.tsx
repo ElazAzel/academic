@@ -83,7 +83,7 @@ export default async function CohortDetailPage(props: { params: Promise<{ id: st
         <MetricGrid metrics={metrics} />
 
         {/* Curators assigned */}
-        <Card className="rounded-2xl">
+        <Card className="rounded-lg">
           <CardHeader>
             <CardTitle className="text-base">Назначенные кураторы</CardTitle>
           </CardHeader>
@@ -98,7 +98,7 @@ export default async function CohortDetailPage(props: { params: Promise<{ id: st
                   <a
                     key={cur.id}
                     href={`/super-curator/curators/${cur.id}`}
-                    className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 transition-colors hover:bg-accent"
+                    className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 transition-colors hover:bg-accent"
                   >
                     <Avatar name={cur.name} className="h-7 w-7 text-[10px]" />
                     <div>
@@ -113,7 +113,7 @@ export default async function CohortDetailPage(props: { params: Promise<{ id: st
         </Card>
 
         {/* Students table */}
-        <Card className="rounded-2xl">
+        <Card className="rounded-lg">
           <CardHeader>
             <CardTitle className="text-base">Участники потока ({cohort.students.length})</CardTitle>
           </CardHeader>

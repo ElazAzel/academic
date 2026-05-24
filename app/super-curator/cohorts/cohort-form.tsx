@@ -49,7 +49,7 @@ export function CreateCohortForm({ courses }: { courses: { id: string; title: st
           </div>
           <div>
             <label className="text-sm font-medium">Курс</label>
-            <select name="courseId" required className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm">
+            <select name="courseId" required className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
               <option value="">Выберите курс</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>{c.title}</option>
@@ -147,7 +147,7 @@ export function EditCohortForm({
           </div>
           <div>
             <label className="text-sm font-medium">Статус</label>
-            <select name="status" defaultValue={cohort.status} className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm">
+            <select name="status" defaultValue={cohort.status} className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
               <option value="active">Активен</option>
               <option value="draft">Черновик</option>
               <option value="archived">Архив</option>

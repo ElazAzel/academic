@@ -61,7 +61,7 @@ export function CommandPalette() {
         <DialogOverlay />
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] pointer-events-none">
           <div
-            className="pointer-events-auto w-full max-w-xl rounded-2xl border bg-card shadow-2xl overflow-hidden"
+            className="pointer-events-auto w-full max-w-xl rounded-lg border bg-card shadow-m3-modal overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 border-b px-4 py-3 dark:border-gray-800">
@@ -84,7 +84,7 @@ export function CommandPalette() {
                     <button
                       key={item.href}
                       onClick={() => handleSelect(item.href)}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-left transition-colors hover:bg-muted"
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-left transition-colors hover:bg-muted"
                     >
                       <span className="text-muted-foreground">{item.label}</span>
                     </button>

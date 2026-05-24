@@ -27,24 +27,24 @@ function getCategory(type: string, refType: string | null): ToastCategory {
   return "default";
 }
 
-const categoryConfig: Record<ToastCategory, { gradient: string; border: string; icon: React.ElementType }> = {
+const categoryConfig: Record<ToastCategory, { surface: string; border: string; icon: React.ElementType }> = {
   message: {
-    gradient: "from-blue-500/10 via-blue-500/5 to-transparent",
+    surface: "bg-blue-50 dark:bg-blue-950/20",
     border: "border-blue-200/50 dark:border-blue-800/30",
     icon: MessageCircle,
   },
   progress: {
-    gradient: "from-emerald-500/10 via-emerald-500/5 to-transparent",
+    surface: "bg-emerald-50 dark:bg-emerald-950/20",
     border: "border-emerald-200/50 dark:border-emerald-800/30",
     icon: Box,
   },
   system: {
-    gradient: "from-amber-500/10 via-amber-500/5 to-transparent",
+    surface: "bg-amber-50 dark:bg-amber-950/20",
     border: "border-amber-200/50 dark:border-amber-800/30",
     icon: Bell,
   },
   default: {
-    gradient: "from-primary/10 via-primary/5 to-transparent",
+    surface: "bg-card",
     border: "border-primary/20 dark:border-primary/10",
     icon: Info,
   },
@@ -89,13 +89,12 @@ function showNotificationToast(n: NotificationItem) {
         href={link}
         onClick={() => { toast.dismiss(t); }}
         className={[
-          "relative flex w-[360px] max-w-[90vw] items-start gap-3 rounded-2xl border bg-card p-4 shadow-xl",
-          "bg-gradient-to-br",
-          config.gradient,
+          "relative flex w-[360px] max-w-[90vw] items-start gap-3 rounded-lg border p-4 shadow-m3-modal",
+          config.surface,
           config.border,
         ].join(" ")}
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Icon className="h-4 w-4" />
         </span>
         <div className="flex-1 min-w-0">

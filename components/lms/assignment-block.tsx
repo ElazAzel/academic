@@ -78,21 +78,21 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
     const sub = assignment.submission;
 
     return (
-      <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
+      <div className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-body-md font-body-md text-m3-on-surface">{assignment.title}</p>
           <StatusBadge status={sub.status as BadgeStatus} />
         </div>
 
         {sub.answerText && (
-          <div className="rounded-xl bg-m3-surface-container-high p-3">
+          <div className="rounded-lg bg-m3-surface-container-high p-3">
             <p className="text-label-sm font-label-sm text-m3-on-surface-variant mb-1">Ваш ответ:</p>
             <p className="text-body-md font-body-md text-m3-on-surface whitespace-pre-wrap">{sub.answerText}</p>
           </div>
         )}
 
         {sub.fileUrl && (
-          <div className="flex items-center gap-2 rounded-xl border border-m3-outline-variant bg-m3-surface-container-high p-3">
+          <div className="flex items-center gap-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-high p-3">
             <Icon name="description" className="text-m3-primary" size={20} />
             <a
               href={sub.fileUrl}
@@ -113,7 +113,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
         )}
 
         {sub.feedback && (
-          <div className="rounded-xl border border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed/30 p-3">
+          <div className="rounded-lg border border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed/30 p-3">
             <p className="text-label-sm font-label-sm text-m3-on-surface-variant mb-1">Комментарий:</p>
             <p className="text-body-md font-body-md text-m3-tertiary">{sub.feedback}</p>
           </div>
@@ -134,7 +134,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
 
   // ── Before submission ─────────────────────────────────────────────
   return (
-    <div className="rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
+    <div className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-body-md font-body-md text-m3-on-surface">{assignment.title}</p>
@@ -147,7 +147,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
 
       {/* Instructions */}
       <div
-        className="rounded-xl bg-m3-surface-container-high p-4 text-body-md font-body-md leading-relaxed text-m3-on-surface-variant [&_h1]:text-title-lg [&_h1]:font-semibold [&_h1]:text-m3-on-surface [&_h2]:font-semibold [&_h2]:text-m3-on-surface [&_p]:my-2"
+        className="rounded-lg bg-m3-surface-container-high p-4 text-body-md font-body-md leading-relaxed text-m3-on-surface-variant [&_h1]:text-title-lg [&_h1]:font-semibold [&_h1]:text-m3-on-surface [&_h2]:font-semibold [&_h2]:text-m3-on-surface [&_p]:my-2"
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(assignment.instructions) }}
       />
 
@@ -159,7 +159,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
 
       {/* Answer textarea */}
       <textarea
-        className="min-h-[120px] w-full resize-none rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface outline-none focus:ring-2 focus:ring-m3-outline placeholder:text-m3-on-surface-variant/50"
+        className="min-h-[120px] w-full resize-none rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface outline-none focus:ring-2 focus:ring-m3-outline placeholder:text-m3-on-surface-variant/50"
         placeholder="Ваш ответ..."
         value={answerText}
         onChange={(e) => setAnswerText(e.target.value)}
@@ -167,7 +167,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
 
       {/* File upload zone */}
       <div
-        className="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-m3-outline-variant bg-m3-surface-container-lowest/50 p-4 transition-colors hover:border-m3-primary/30 hover:bg-m3-primary/5"
+        className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-m3-outline-variant bg-m3-surface-container-lowest/50 p-4 transition-colors hover:border-m3-primary/30 hover:bg-m3-primary/5"
         onClick={() => fileInputRef.current?.click()}
       >
         {uploading ? (

@@ -130,7 +130,7 @@ async function readUploadPublicUrl(response: Response, fallback: string): Promis
   return isRecord(body) && typeof body.publicUrl === "string" ? body.publicUrl : fallback;
 }
 
-function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: string } {
+function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: string; fallbackUrl?: string } {
   const envelope = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
 
   if (!isRecord(envelope) || typeof envelope.url !== "string" || typeof envelope.publicUrl !== "string") {
@@ -140,7 +140,20 @@ function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: st
   return {
     url: envelope.url,
     publicUrl: envelope.publicUrl,
+    fallbackUrl: typeof envelope.fallbackUrl === "string" ? envelope.fallbackUrl : undefined,
   };
+}
+
+async function uploadCertificateBackgroundFile(url: string, file: File, contentType: string, publicUrl: string): Promise<string> {
+  const uploadRes = await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": contentType },
+    body: file,
+  });
+
+  if (!uploadRes.ok) throw new Error("Не удалось загрузить файл в облако");
+
+  return readUploadPublicUrl(uploadRes, publicUrl);
 }
 
 export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerProps) {
@@ -286,15 +299,36 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
       });
 
       if (!res.ok) throw new Error("Не удалось создать ссылку для загрузки");
-      const { url, publicUrl } = readUploadTicketPayload(await res.json());
+      const { url, publicUrl, fallbackUrl } = readUploadTicketPayload(await res.json());
 
-      const uploadRes = await fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": contentType },
-        body: file,
-      });
+      let uploadRes: Response;
+      try {
+        uploadRes = await fetch(url, {
+          method: "PUT",
+          headers: { "Content-Type": contentType },
+          body: file,
+        });
+      } catch (uploadError) {
+        if (!fallbackUrl || fallbackUrl === url) {
+          throw uploadError;
+        }
+        const uploadedPublicUrl = await uploadCertificateBackgroundFile(fallbackUrl, file, contentType, publicUrl);
+        setConfig(prev => ({ ...prev, backgroundUrl: uploadedPublicUrl }));
+        setSuccess("Фоновый PNG успешно загружен!");
+        setTimeout(() => setSuccess(null), 3000);
+        return;
+      }
 
-      if (!uploadRes.ok) throw new Error("Не удалось загрузить файл в облако");
+      if (!uploadRes.ok) {
+        if (fallbackUrl && fallbackUrl !== url) {
+          const uploadedPublicUrl = await uploadCertificateBackgroundFile(fallbackUrl, file, contentType, publicUrl);
+          setConfig(prev => ({ ...prev, backgroundUrl: uploadedPublicUrl }));
+          setSuccess("Фоновый PNG успешно загружен!");
+          setTimeout(() => setSuccess(null), 3000);
+          return;
+        }
+        throw new Error("Не удалось загрузить файл в облако");
+      }
 
       const uploadedPublicUrl = await readUploadPublicUrl(uploadRes, publicUrl);
       setConfig(prev => ({ ...prev, backgroundUrl: uploadedPublicUrl }));
@@ -476,14 +510,14 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-700">
+        <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-sm text-red-700">
           <AlertCircle className="h-5 w-5" />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="flex items-center gap-2 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700">
+        <div className="flex items-center gap-2 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-700">
           <CheckCircle className="h-5 w-5" />
           <span>{success}</span>
         </div>
@@ -492,7 +526,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Visual Live Editor Canvas (842 x 595 landscape) */}
         <div className="lg:col-span-2 space-y-4">
-          <Card className="rounded-2xl overflow-hidden shadow-sm">
+          <Card className="rounded-lg overflow-hidden shadow-sm">
             <CardHeader className="bg-muted/30 border-b">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="space-y-1">
@@ -529,7 +563,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
             <CardContent className="p-6 flex justify-center">
               <div 
                 ref={previewContainerRef}
-                className="w-full max-w-[842px] aspect-[842/595] border relative bg-m3-surface-container-low shadow-sm rounded-xl overflow-hidden select-none"
+                className="w-full max-w-[842px] aspect-[842/595] border relative bg-m3-surface-container-low shadow-sm rounded-lg overflow-hidden select-none"
               >
                 {/* Visual Background Image Layer */}
                 {config.backgroundUrl && (
@@ -675,7 +709,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
 
         {/* Control Inspector Panel */}
         <div className="space-y-4">
-          <Card className="rounded-2xl">
+          <Card className="rounded-lg">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <UploadCloud className="text-primary h-5 w-5" />
@@ -686,7 +720,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-center border-2 border-dashed rounded-xl p-6 bg-muted/20">
+              <div className="flex items-center justify-center border-2 border-dashed rounded-lg p-6 bg-muted/20">
                 <Label htmlFor="bg-upload" className="cursor-pointer flex flex-col items-center gap-2 w-full text-center">
                   <UploadCloud className="h-8 w-8 text-muted-foreground animate-bounce" />
                   <span className="text-sm font-medium">{uploading ? "Загрузка файла..." : "Выберите PNG файл"}</span>
@@ -709,7 +743,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl">
+          <Card className="rounded-lg">
             <CardHeader className="border-b">
               <CardTitle className="text-base flex items-center gap-2">
                 <Sliders className="text-amber-500 h-5 w-5" />
