@@ -20,15 +20,12 @@ export function XpDisplayClient({ xp, levelInfo }: XpDisplayClientProps) {
         onClick={() => setIsModalOpen(true)}
         className="overflow-hidden border-m3-outline-variant/60 glass-card-premium cursor-pointer relative active:scale-[0.99] transition-transform duration-150"
       >
-        {/* Decorative inner glow for active student */}
         <div className="absolute inset-0 bg-gradient-to-r from-m3-primary/5 to-m3-tertiary/5 opacity-40 pointer-events-none" />
         <CardContent className="relative flex items-center gap-4 p-4 z-10">
-          {/* Level badge */}
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-m3-primary-fixed to-m3-tertiary-fixed text-label-lg font-label-lg text-m3-primary shadow-sm">
             {levelInfo.level}
           </div>
 
-          {/* Info */}
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-label-md font-semibold text-m3-on-surface">
