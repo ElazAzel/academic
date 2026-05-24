@@ -1,5 +1,48 @@
 # Project Update Log
 
+## 2026-05-24 - Compact Student Level and Achievements Block
+
+- **Author:** Codex
+- **Scope:** Reduce gamification height on `/student` and remove duplicated level/achievement blocks.
+- **Fixed / Added:**
+  - Removed the duplicate `ContinueLearningCard`, `XpDisplay`, and `StudentAchievements` rendering from the student dashboard.
+  - Replaced the two separate gamification cards with one compact `StudentAchievements` block that contains level progress, weekly track, and achievements.
+  - Moved achievement cards into a collapsed native accordion so the dashboard keeps the primary learning CTA visible.
+- **Validation:**
+  - `npm run lint -- --max-warnings=0` passed.
+  - `npm run typecheck` passed.
+  - `npm run test` passed: 422/422 tests.
+  - `npm run build` passed.
+  - Browser smoke on `http://localhost:3000/student` passed for the rendered state and interaction: one `Уровень и достижения` block is present, native accordion is closed by default, opening it reveals achievement cards, and no horizontal overflow was detected. The Browser console log still included a dev-runtime `$RS parentNode` error without a visible overlay; production build passed.
+- **Status:** green with dev-console caveat noted.
+
+## 2026-05-24 — Mobile Adaptation, DB Audit, Production Hardening
+
+- **Author:** AI Agent (Orchestrator + Technical Writer)
+- **Scope:** Deep database audit, GitHub project setup, production hardening, mobile adaptation of student achievements/statistics.
+- **Fixed / Added:**
+  - **DB audit**: 12 missing FK indexes added, RLS disabled on all 56 tables, 9 obsolete policies dropped, cohorts table fixed, migration `20260512000000_add_block_model` fixed
+  - **Metadata**: Russian title/description added to all 105 `page.tsx`
+  - **loading.tsx**: Created for all 84 route directories (PageSkeleton + AppShell)
+  - **Zod validation + try/catch**: All 18 files in `server/actions/` covered
+  - **global-error.tsx**, **robots.txt**, **sitemap.ts** created
+  - **Student name anonymization**: `Слушатель #XXXXX` for non-admins across 8 action files + 6 page files + notifications + risk management
+  - **Response time metrics**: Per-student + group response time (question + chat) in curator-enhanced + super-curator dashboards
+  - **Mobile adaptation**: Achievements accordion (collapsed on mobile, `md:` always visible), `onClick` toggle for touch, XP display without hover animations
+  - **2FA page fix**: `export const metadata` moved from `"use client"` page to layout
+  - **Lint warnings fixed**: Unused `z` imports removed in multiple files
+  - **Corrupted files fixed**: dashboard-widgets.tsx, student-achievements.tsx, student-course-dashboard-grid.tsx, xp-display-client.tsx restored after bad merge
+  - **Build**: Vercel build error fixed (4 corrupted JSX files)
+  - **GitHub**: Repo settings (description, discussions), Release v1.0.0, tag `рабочая-версия`
+  - **CHANGELOG.md** created with v1.0.0 notes
+  - **Branch merge**: `main` → `codex/security-upload-rbac-e2e` (fast-forward, 229 files)
+- **Validation:**
+  - `npm run lint -- --max-warnings=0` passed
+  - `npm run typecheck` passed
+  - `npm run test` passed: 422/422 tests (69 files)
+  - `npm run build` passed
+- **Status:** green.
+
 ## 2026-05-23 - Student Dashboard Primary Learning Flow
 
 - **Author:** Codex

@@ -120,7 +120,7 @@ npm run verify:release
 Она последовательно выполняет:
 1. `eslint . --max-warnings=0` (строгий линтинг без предупреждений)
 2. `tsc --noEmit` (проверка типов TypeScript)
-3. `vitest run` (запуск 354+ unit/integration тестов)
+3. `vitest run` (запуск 422+ unit/integration тестов)
 4. `npx prisma validate` (валидация схемы СУБД)
 5. `npm run db:generate` (генерация Prisma Client)
 6. `next build` (Production сборка приложения)

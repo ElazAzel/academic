@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { ContinueLearningCard, MetricGrid } from "@/components/lms/dashboard-widgets";
 import { StudentCourseDashboardGrid } from "@/components/lms/student-course-dashboard-grid";
-import { XpDisplay } from "@/components/lms/xp-display";
 import { StudentAchievements } from "@/components/lms/student-achievements";
 import { getUserXp } from "@/server/actions/xp";
 import { getLevel } from "@/lib/xp-utils";
@@ -83,30 +82,9 @@ async function withAchievements() {
     />
    )}
 
-    <section className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(360px,1fr)]">
-     <Suspense fallback={<div className="min-h-[6rem] animate-pulse rounded-xl bg-muted" />}>
-      <XpDisplay userId={data.userId} />
-     </Suspense>
-
-     <StudentAchievements
-       xp={xp}
-       level={levelInfo.level}
-       coursesProgress={coursesProgress.map(c => ({ percent: c.percent, title: c.courseTitle }))}
-       questionsCount={questions.length}
-     />
-    </section>
-
-   {continueLearning ? (
-    <ContinueLearningCard data={continueLearning}/>
-   ) : null}
-
-    <Suspense fallback={<div className="h-20 animate-pulse rounded-xl bg-muted" />}>
-     <XpDisplay userId={data.userId} />
-    </Suspense>
-
-    <StudentAchievements 
+    <StudentAchievements
       xp={xp}
-      level={levelInfo.level}
+      levelInfo={levelInfo}
       coursesProgress={coursesProgress.map(c => ({ percent: c.percent, title: c.courseTitle }))}
       questionsCount={questions.length}
     />
