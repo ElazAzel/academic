@@ -2,6 +2,12 @@ import { MailQuestion, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AUTH_ROUTES } from "@/lib/constants";
 
+export const metadata = {
+  title: "Восстановление пароля",
+  description: "Восстановите доступ к своей учётной записи.",
+};
+
+
 export default function ForgotPasswordPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">

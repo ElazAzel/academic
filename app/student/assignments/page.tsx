@@ -11,6 +11,12 @@ import { redirect } from "next/navigation";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getStudentAssignmentSubmissionsAction } from "@/server/actions/student";
 
+export const metadata = {
+  title: "Задания — Студент",
+  description: "Список заданий.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function StudentAssignmentsPage() {

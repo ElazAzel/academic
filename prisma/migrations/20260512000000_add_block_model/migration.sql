@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS block_progress (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   block_id TEXT NOT NULL REFERENCES blocks(id) ON DELETE CASCADE,
-  enrollment_id TEXT REFERENCES enrollments(id) ON DELETE SET NULL,
+  enrollment_id TEXT,
   status TEXT NOT NULL DEFAULT 'NOT_STARTED',
   percent INTEGER NOT NULL DEFAULT 0,
   completed_at TIMESTAMPTZ,

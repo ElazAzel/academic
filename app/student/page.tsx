@@ -19,6 +19,12 @@ import { getStudentDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import type { BadgeStatus } from "@/components/lms/status-badge";
 
+export const metadata = {
+  title: "Дашборд — Студент",
+  description: "Панель управления студента.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default function StudentDashboardPage() {
@@ -89,6 +95,21 @@ async function withAchievements() {
        questionsCount={questions.length}
      />
     </section>
+
+   {continueLearning ? (
+    <ContinueLearningCard data={continueLearning}/>
+   ) : null}
+
+    <Suspense fallback={<div className="h-20 animate-pulse rounded-xl bg-muted" />}>
+     <XpDisplay userId={data.userId} />
+    </Suspense>
+
+    <StudentAchievements 
+      xp={xp}
+      level={levelInfo.level}
+      coursesProgress={coursesProgress.map(c => ({ percent: c.percent, title: c.courseTitle }))}
+      questionsCount={questions.length}
+    />
 
    {metrics.length > 0 && (
     <MetricGrid metrics={metrics}/>

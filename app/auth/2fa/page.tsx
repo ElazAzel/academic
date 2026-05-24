@@ -5,6 +5,8 @@ import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AUTH_ROUTES } from "@/lib/constants";
 
+
+
 type Mode = "totp" | "backup";
 
 export default function TwoFactorAuthPage() {

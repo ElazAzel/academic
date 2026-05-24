@@ -28,10 +28,10 @@ const RISK_LABELS: Record<RiskSeverity, string> = {
 };
 
 const ACTION_TONE_CLASSES: Record<CuratorStudentOperation["nextAction"]["tone"], string> = {
-  primary: "border-m3-primary/20 bg-m3-primary-fixed/10",
-  warning: "border-m3-secondary-fixed-dim/50 bg-m3-secondary-fixed/20 dark:border-m3-secondary-container dark:bg-m3-secondary-container/20",
-  danger: "border-m3-error/20 bg-m3-error-container/20",
-  neutral: "border-m3-outline-variant bg-m3-surface-container-lowest",
+  primary: "border-m3-primary/25 bg-white/70 dark:bg-slate-900/70 hover:border-m3-primary/60 hover:shadow-[0_8px_30px_rgba(12,45,126,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)]",
+  warning: "border-amber-500/25 bg-amber-50/20 dark:bg-amber-950/10 hover:border-amber-500/60 hover:shadow-[0_8px_30px_rgba(245,158,11,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)]",
+  danger: "border-m3-error/25 bg-m3-error-container/8 dark:bg-m3-error-container/5 hover:border-m3-error/60 hover:shadow-[0_8px_30px_rgba(186,26,26,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)]",
+  neutral: "border-m3-outline-variant/60 bg-white/70 dark:bg-slate-900/70 hover:border-m3-primary/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)]",
 };
 
 function formatDate(date: string) {
@@ -57,7 +57,7 @@ function deadlineText(student: CuratorStudentOperation) {
 function ActionButton({ student, onChat }: { student: CuratorStudentOperation; onChat: () => void }) {
   if (student.nextAction.kind === "chat" || student.nextAction.kind === "check_in") {
     return (
-      <Button size="sm" variant={student.nextAction.tone === "danger" ? "danger" : "primary"} onClick={onChat}>
+      <Button size="sm" variant={student.nextAction.tone === "danger" ? "danger" : "primary"} className="btn-shine" onClick={onChat}>
         <Icon name="send" className="text-[18px]" />
         {student.nextAction.label}
       </Button>
@@ -69,6 +69,7 @@ function ActionButton({ student, onChat }: { student: CuratorStudentOperation; o
       asChild
       size="sm"
       variant={student.nextAction.tone === "danger" ? "danger" : student.nextAction.tone === "primary" ? "primary" : "secondary"}
+      className="btn-shine"
     >
       <Link href={student.nextAction.href}>
         {student.nextAction.label}
@@ -90,7 +91,12 @@ function CounterPill({
   active: boolean;
 }) {
   return (
-    <div className={`flex min-w-0 items-center gap-1.5 rounded-lg border px-2 py-1 text-xs ${active ? "border-m3-primary/20 bg-m3-primary-fixed/10 text-foreground" : "border-m3-outline-variant text-m3-on-surface-variant"}`}>
+    <div className={cn(
+      "flex min-w-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-all duration-300",
+      active 
+        ? "border-m3-primary/20 bg-m3-primary-fixed/15 text-m3-primary font-semibold shadow-[0_2px_8px_rgba(12,45,126,0.03)]" 
+        : "border-m3-outline-variant/60 bg-m3-surface-container-low/40 text-m3-on-surface-variant"
+    )}>
       {icon}
       <span className="tabular-nums">{value}</span>
       <span className="truncate">{label}</span>
@@ -179,26 +185,27 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-m3-error-container/30 text-m3-error font-label-md text-label-md">
-            <Icon name="warning" className="text-[16px]" />
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-m3-error-container/15 dark:bg-m3-error-container/10 border border-m3-error/25 text-m3-error font-semibold text-xs shadow-[0_2px_10px_rgba(186,26,26,0.04)] backdrop-blur-md">
+            <Icon name="warning" className="text-[15px]" />
             {summary.urgent} срочно
           </span>
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-m3-primary-fixed/30 text-m3-primary font-label-md text-label-md">
-            <Icon name="forum" className="text-[16px]" />
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-m3-primary-fixed/15 border border-m3-primary/25 text-m3-primary font-semibold text-xs shadow-[0_2px_10px_rgba(12,45,126,0.04)] backdrop-blur-md">
+            <Icon name="forum" className="text-[15px]" />
             {summary.questions} вопросов
           </span>
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-m3-secondary-fixed/30 text-m3-secondary font-label-md text-label-md">
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-m3-secondary-fixed/15 border border-m3-secondary/25 text-m3-secondary font-semibold text-xs shadow-[0_2px_10px_rgba(99,57,219,0.04)] backdrop-blur-md">
+            <Icon name="assignment" className="text-[15px]" />
             {summary.assignments} работ
           </span>
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-label-md text-label-md">
-            <Icon name="chat" className="text-[16px]" />
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 font-semibold text-xs shadow-[0_2px_10px_rgba(16,185,129,0.04)] backdrop-blur-md">
+            <Icon name="chat" className="text-[15px]" />
             {summary.unread} в чате
           </span>
         </div>
       </div>
 
       {/* Advanced Interactive Toolbar (Search & Segmented Filters) */}
-      <Card className="border-m3-outline-variant bg-m3-surface-container-low p-4 rounded-2xl shadow-sm space-y-4">
+      <Card className="glass-card-premium p-4 rounded-2xl space-y-4 border-m3-outline-variant/60">
         <div className="flex flex-col md:flex-row gap-3">
           {/* Live Search Input */}
           <div className="relative flex-1">
@@ -208,12 +215,12 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
               placeholder="Живой поиск слушателей (имя, email, курс, когорта)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest py-2.5 pl-10 pr-4 font-body-md text-body-md text-m3-on-surface placeholder:text-m3-on-surface-variant/50 focus:border-m3-primary focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-m3-outline-variant bg-m3-surface-container-lowest/80 py-2.5 pl-10 pr-4 font-body-md text-body-md text-m3-on-surface placeholder:text-m3-on-surface-variant/50 focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/10 focus:outline-none transition-all duration-300"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery("")} 
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-m3-on-surface-variant/60 hover:text-m3-on-surface"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-m3-on-surface-variant/60 hover:text-m3-on-surface transition-colors"
               >
                 <Icon name="close" size={18} />
               </button>
@@ -225,28 +232,28 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
           {/* Risk Level Segmented Pill */}
           <div className="flex items-center gap-2">
             <span className="font-semibold text-m3-on-surface-variant/80">Фильтр рисков:</span>
-            <div className="flex bg-m3-surface-container-high rounded-full p-0.5 border border-m3-outline-variant">
+            <div className="flex bg-m3-surface-container-high/60 backdrop-blur-sm rounded-full p-0.5 border border-m3-outline-variant/60">
               <button
                 onClick={() => setRiskFilter("all")}
-                className={cn("rounded-full px-3 py-1 font-medium transition-all", riskFilter === "all" ? "bg-m3-primary text-m3-on-primary shadow-sm" : "text-m3-on-surface-variant hover:text-m3-on-surface")}
+                className={cn("rounded-full px-3 py-1 font-medium transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1)", riskFilter === "all" ? "bg-m3-primary text-m3-on-primary shadow-sm scale-105" : "text-m3-on-surface-variant hover:text-m3-on-surface hover:bg-m3-surface-container-highest/40")}
               >
                 Все
               </button>
               <button
                 onClick={() => setRiskFilter("high_crit")}
-                className={cn("rounded-full px-3 py-1 font-medium transition-all", riskFilter === "high_crit" ? "bg-m3-error text-m3-on-error shadow-sm" : "text-m3-on-surface-variant hover:text-m3-on-surface")}
+                className={cn("rounded-full px-3 py-1 font-medium transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1)", riskFilter === "high_crit" ? "bg-m3-error text-m3-on-error shadow-sm scale-105" : "text-m3-on-surface-variant hover:text-m3-on-surface hover:bg-m3-surface-container-highest/40")}
               >
                 Высокий/Крит. 🚨
               </button>
               <button
                 onClick={() => setRiskFilter("med_low")}
-                className={cn("rounded-full px-3 py-1 font-medium transition-all", riskFilter === "med_low" ? "bg-m3-secondary text-m3-on-secondary shadow-sm" : "text-m3-on-surface-variant hover:text-m3-on-surface")}
+                className={cn("rounded-full px-3 py-1 font-medium transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1)", riskFilter === "med_low" ? "bg-m3-secondary text-m3-on-secondary shadow-sm scale-105" : "text-m3-on-surface-variant hover:text-m3-on-surface hover:bg-m3-surface-container-highest/40")}
               >
                 Низкий/Средний
               </button>
               <button
                 onClick={() => setRiskFilter("none")}
-                className={cn("rounded-full px-3 py-1 font-medium transition-all", riskFilter === "none" ? "bg-emerald-600 text-white shadow-sm" : "text-m3-on-surface-variant hover:text-m3-on-surface")}
+                className={cn("rounded-full px-3 py-1 font-medium transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1)", riskFilter === "none" ? "bg-emerald-600 text-white shadow-sm scale-105" : "text-m3-on-surface-variant hover:text-m3-on-surface hover:bg-m3-surface-container-highest/40")}
               >
                 Без рисков
               </button>
@@ -256,28 +263,28 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
           {/* Action Queue Segmented Pill */}
           <div className="flex items-center gap-2">
             <span className="font-semibold text-m3-on-surface-variant/80">Очередь действий:</span>
-            <div className="flex bg-m3-surface-container-high rounded-full p-0.5 border border-m3-outline-variant">
+            <div className="flex bg-m3-surface-container-high/60 backdrop-blur-sm rounded-full p-0.5 border border-m3-outline-variant/60">
               <button
                 onClick={() => setActionFilter("all")}
-                className={cn("rounded-full px-3 py-1 font-medium transition-all", actionFilter === "all" ? "bg-m3-primary text-m3-on-primary shadow-sm" : "text-m3-on-surface-variant hover:text-m3-on-surface")}
+                className={cn("rounded-full px-3 py-1 font-medium transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1)", actionFilter === "all" ? "bg-m3-primary text-m3-on-primary shadow-sm scale-105" : "text-m3-on-surface-variant hover:text-m3-on-surface hover:bg-m3-surface-container-highest/40")}
               >
                 Все
               </button>
               <button
                 onClick={() => setActionFilter("reply")}
-                className={cn("rounded-full px-3 py-1 font-medium transition-all", actionFilter === "reply" ? "bg-m3-primary-fixed text-m3-primary shadow-sm" : "text-m3-on-surface-variant hover:text-m3-on-surface")}
+                className={cn("rounded-full px-3 py-1 font-medium transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1)", actionFilter === "reply" ? "bg-m3-primary-fixed text-m3-primary shadow-sm scale-105" : "text-m3-on-surface-variant hover:text-m3-on-surface hover:bg-m3-surface-container-highest/40")}
               >
                 Есть вопросы ({students.filter(s => s.openQuestions > 0).length})
               </button>
               <button
                 onClick={() => setActionFilter("assignments")}
-                className={cn("rounded-full px-3 py-1 font-medium transition-all", actionFilter === "assignments" ? "bg-m3-secondary-fixed text-m3-secondary shadow-sm" : "text-m3-on-surface-variant hover:text-m3-on-surface")}
+                className={cn("rounded-full px-3 py-1 font-medium transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1)", actionFilter === "assignments" ? "bg-m3-secondary-fixed text-m3-secondary shadow-sm scale-105" : "text-m3-on-surface-variant hover:text-m3-on-surface hover:bg-m3-surface-container-highest/40")}
               >
                 Работы на проверку ({students.filter(s => s.pendingAssignments > 0).length})
               </button>
               <button
                 onClick={() => setActionFilter("urgent")}
-                className={cn("rounded-full px-3 py-1 font-medium transition-all", actionFilter === "urgent" ? "bg-m3-error-container text-m3-error shadow-sm" : "text-m3-on-surface-variant hover:text-m3-on-surface")}
+                className={cn("rounded-full px-3 py-1 font-medium transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1)", actionFilter === "urgent" ? "bg-m3-error-container text-m3-error shadow-sm scale-105" : "text-m3-on-surface-variant hover:text-m3-on-surface hover:bg-m3-surface-container-highest/40")}
               >
                 Срочные меры ({students.filter(s => s.nextAction.tone === "danger").length})
               </button>
@@ -302,7 +309,10 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
           {filteredStudents.map((student) => (
             <article
               key={student.assignmentId}
-              className={`rounded-xl border p-4 shadow-m3-soft transition-all duration-300 hover:shadow-m3-soft-hover ${ACTION_TONE_CLASSES[student.nextAction.tone]}`}
+              className={cn(
+                "rounded-xl border p-4 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) backdrop-blur-xl hover:-translate-y-0.5",
+                ACTION_TONE_CLASSES[student.nextAction.tone]
+              )}
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="min-w-0 flex items-start gap-3">
@@ -332,7 +342,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
                 </div>
 
                 <div className="flex shrink-0 gap-2">
-                  <Button size="sm" variant="secondary" onClick={() => handleOpenChat(student)}>
+                  <Button size="sm" variant="secondary" className="btn-shine" onClick={() => handleOpenChat(student)}>
                     <Icon name="chat" className="text-[18px]" />
                     Чат
                   </Button>
@@ -417,7 +427,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
       {/* 1. Quick Chat Dialog with pre-filled intervention templates support */}
       <Dialog open={Boolean(chatStudent)} onOpenChange={(open) => !open && setChatStudent(null)}>
         {chatStudent && (
-          <DialogContent className="max-w-3xl p-0 overflow-hidden rounded-3xl border border-m3-outline-variant">
+          <DialogContent className="max-w-3xl p-0 overflow-hidden rounded-3xl border border-m3-outline-variant/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl shadow-m3-soft">
             <DialogHeader className="p-6 pb-2 bg-gradient-to-r from-m3-primary/10 to-transparent">
               <DialogTitle className="text-headline-sm text-m3-on-surface">Чат: {chatStudent.name}</DialogTitle>
               <DialogDescription className="font-body-md text-body-md text-m3-on-surface-variant">
@@ -442,7 +452,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
       {/* 2. Interactive Risk Diagnostics Modal (RiskDiagnosticDialog) */}
       <Dialog open={Boolean(diagStudent)} onOpenChange={(open) => !open && setDiagStudent(null)}>
         {diagStudent && (
-          <DialogContent className="max-w-xl overflow-hidden rounded-3xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+          <DialogContent className="max-w-xl overflow-hidden rounded-3xl border border-m3-outline-variant/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl shadow-m3-soft">
             <DialogHeader className="p-6 pb-2 bg-gradient-to-r from-m3-error-container/20 to-transparent">
               <div className="flex items-center gap-2">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-m3-error/10 text-m3-error">

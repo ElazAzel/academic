@@ -3,6 +3,12 @@ import { PageHeader } from "@/components/lms/page-header";
 import { NotificationsList } from "@/components/lms/notifications-list";
 import { requireRolePage } from "@/lib/auth/page-guards";
 
+export const metadata = {
+  title: "Уведомления — Супер-куратор",
+  description: "Центр уведомлений супер-куратора.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorNotificationsPage() {

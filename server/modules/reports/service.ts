@@ -494,6 +494,38 @@ export async function generateReportDownload(input: {
   return download;
 }
 
+export async function generateReportPreview(input: {
+  user: Pick<AppSessionUser, "id" | "roles">;
+  type: string | null;
+}) {
+  const type = normalizeReportType(input.type);
+  const definition = REPORT_DEFINITIONS[type];
+  const access = await resolveReportScope(input.user);
+  assertReportAllowed(definition, access.actorRole);
+
+  const rows = await (async () => {
+    switch (type) {
+      case "progress":
+        return fetchProgressData(access.scope);
+      case "risk":
+        return fetchRiskData(access.scope);
+      case "assignments":
+        return fetchAssignmentData(access.scope);
+      case "certificates":
+        return fetchCertificateData(access.scope);
+      case "curator_workload":
+        return fetchCuratorWorkloadData(access.scope);
+    }
+  })();
+
+  return {
+    type,
+    definition,
+    totalRowsCount: rows.length,
+    previewRows: rows.slice(0, 5),
+  };
+}
+
 export async function getReportUser(userId: string): Promise<Pick<AppSessionUser, "id" | "roles"> | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },

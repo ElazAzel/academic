@@ -11,6 +11,12 @@ import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import type { DashboardMetric } from "@/types/domain";
 import { QuestionStatus } from "@prisma/client";
 
+export const metadata = {
+  title: "Куратор — Супер-куратор",
+  description: "Профиль и статистика куратора.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function CuratorDetailPage(props: { params: Promise<{ id: string }> }) {
@@ -19,7 +25,7 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
   const data = await getCuratorActivity(id);
   if (!data) notFound();
 
-  const { curator, questions, reviews, activityLog } = data;
+  const { curator, questions, reviews, activityLog, studentResponseBreakdown = [] } = data;
 
   const answered = questions.filter((q) => q.status === QuestionStatus.ANSWERED || q.status === QuestionStatus.CLOSED);
   const unanswered = questions.filter((q) => q.status === QuestionStatus.OPEN);
@@ -98,12 +104,17 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
                         <TableHead>Статус</TableHead>
                         <TableHead>Создан</TableHead>
                         <TableHead>Ответ</TableHead>
+                        <TableHead>Время отв.</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {questions.length === 0 ? (
-                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Нет вопросов</TableCell></TableRow>
-                      ) : questions.map((q) => (
+                        <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Нет вопросов</TableCell></TableRow>
+                      ) : questions.map((q) => {
+                        const respHours = q.answeredAt && q.createdAt
+                          ? (new Date(q.answeredAt).getTime() - new Date(q.createdAt).getTime()) / (1000 * 60 * 60)
+                          : null;
+                        return (
                         <TableRow key={q.id}>
                           <TableCell className="text-sm">{q.studentName}</TableCell>
                           <TableCell className="text-sm max-w-[200px] truncate">{q.text}</TableCell>
@@ -117,8 +128,16 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
                           <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
                             {q.answer ?? "—"}
                           </TableCell>
+                          <TableCell className="text-xs">
+                            {respHours !== null ? (
+                              <span className={respHours > 24 ? "text-red-600 font-medium" : respHours > 8 ? "text-amber-600" : "text-emerald-600"}>
+                                {respHours < 1 ? "<1ч" : `${Math.round(respHours)}ч`}
+                              </span>
+                            ) : "—"}
+                          </TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -160,6 +179,47 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
                           <TableCell>{r.score ?? "—"}</TableCell>
                           <TableCell className="text-xs text-muted-foreground">{new Date(r.submittedAt).toLocaleString("ru")}</TableCell>
                           <TableCell className="text-xs text-muted-foreground">{r.reviewedAt ? new Date(r.reviewedAt).toLocaleString("ru") : "—"}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            label: `По студентам (${studentResponseBreakdown.length})`,
+            content: (
+              <Card className="rounded-2xl">
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Студент</TableHead>
+                        <TableHead>Ср. ответ (вопросы)</TableHead>
+                        <TableHead>Отвечено вопросов</TableHead>
+                        <TableHead>Ср. ответ (чат)</TableHead>
+                        <TableHead>Ответов в чате</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {studentResponseBreakdown.length === 0 ? (
+                        <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Нет данных</TableCell></TableRow>
+                      ) : studentResponseBreakdown.map((s) => (
+                        <TableRow key={s.studentId}>
+                          <TableCell className="text-sm">{s.studentName}</TableCell>
+                          <TableCell>
+                            <span className={s.avgQuestionHours > 24 ? "text-red-600 font-medium" : s.avgQuestionHours > 8 ? "text-amber-600" : "text-emerald-600"}>
+                              {s.avgQuestionHours > 0 ? `${s.avgQuestionHours}ч` : "—"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-xs">{s.questionCount}</TableCell>
+                          <TableCell>
+                            <span className={s.avgChatHours > 24 ? "text-red-600 font-medium" : s.avgChatHours > 8 ? "text-amber-600" : "text-emerald-600"}>
+                              {s.avgChatHours > 0 ? `${s.avgChatHours}ч` : "—"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-xs">{s.chatResponseCount}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

@@ -12,6 +12,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getStudentCoursePlayerDetail } from "@/server/modules/learning/service";
 import { FORBIDDEN_ROUTE } from "@/lib/constants";
 
+export const metadata = {
+  title: "Курс — Студент",
+  description: "Содержимое и прогресс курса.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function StudentCoursePage({ params }: { params: Promise<{ courseId: string }> }) {

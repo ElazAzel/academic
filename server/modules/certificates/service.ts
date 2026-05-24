@@ -566,6 +566,152 @@ export async function generateCertificatePdf(certificateId: string) {
   return pdf.save();
 }
 
+export async function generateDraftCertificatePdf(courseId: string, customConfig: unknown) {
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: { title: true, durationHours: true }
+  });
+  if (!course) {
+    throw new ApiError("not_found", "Курс не найден", 404);
+  }
+
+  const pdf = await PDFDocument.create();
+  const pageWidth = 842;
+  const pageHeight = 595;
+  const page = pdf.addPage([pageWidth, pageHeight]);
+
+  // Загружаем шрифты (с кириллицей, если доступны)
+  const { regular: font, bold } = await loadCyrillicFonts(pdf);
+
+  // Генерируем тестовый URL верификации для QR-кода
+  const dummyVerificationCode = "DRAFT-VERIFICATION-CODE-PREVIEW";
+  const qrUrl = `${env.APP_URL || "https://strategic-academy.local"}/certificates/verify/${dummyVerificationCode}`;
+  const qrPngBuffer = await QRCode.toBuffer(qrUrl, { type: "png" });
+  const qrImage = await pdf.embedPng(qrPngBuffer);
+
+  const config = readTemplateConfig(customConfig);
+  let drawCustom = false;
+  if (config?.backgroundUrl) {
+    drawCustom = true;
+  }
+
+  if (drawCustom) {
+    try {
+      const bgRes = await fetch(config?.backgroundUrl ?? "");
+      if (bgRes.ok) {
+        const bgBytes = await bgRes.arrayBuffer();
+        const bgBuffer = Buffer.from(bgBytes);
+        const bgImage = await embedImageSafely(pdf, bgBuffer);
+        page.drawImage(bgImage, { x: 0, y: 0, width: pageWidth, height: pageHeight });
+      } else {
+        drawCustom = false;
+      }
+    } catch {
+      drawCustom = false;
+    }
+  }
+
+  const dummyStudentName = "Иванов Иван Иванович";
+  const dummyCertNumber = "ASA-2026-DRAFT";
+  const dummyIssuedDate = new Date();
+
+  if (drawCustom) {
+    const nameStyle = config?.studentName ?? { x: 421, y: 360, fontSize: 42, color: "#1c376f", align: "center" };
+    drawTextElement(page, dummyStudentName, nameStyle, bold);
+
+    const courseStyle = config?.courseTitle ?? { x: 421, y: 280, fontSize: 24, color: "#1a1a1a", align: "center" };
+    drawTextElement(page, course.title, courseStyle, bold);
+
+    const hoursStyle = config?.durationHours ?? { x: 421, y: 200, fontSize: 14, color: "#333333", align: "center" };
+    drawTextElement(page, `Количество часов: ${course.durationHours ?? 72}`, hoursStyle, font);
+
+    const serialStyle = config?.serialNumber ?? { x: 60, y: 60, fontSize: 10, color: "#808080", align: "left" };
+    drawTextElement(page, `Номер: ${dummyCertNumber}`, serialStyle, font);
+
+    const dateStyle = config?.issuedAt ?? { x: 60, y: 45, fontSize: 10, color: "#808080", align: "left" };
+    drawTextElement(page, `Дата выдачи: ${dummyIssuedDate.toISOString().slice(0, 10)}`, dateStyle, font);
+
+    const qrStyle = config?.qrCode ?? { x: 620, y: 120, size: 100 };
+    page.drawImage(qrImage, { x: Number(qrStyle.x), y: Number(qrStyle.y), width: Number(qrStyle.size), height: Number(qrStyle.size) });
+
+    return pdf.save();
+  }
+
+  // Отрисовка стандартного бланка по умолчанию с тестовыми данными
+  const assetsDir = path.join(process.cwd(), "public/assets/certificates");
+  const borderBytes = await readAssetCached(path.join(assetsDir, "border.png"));
+  if (borderBytes) {
+    try {
+      const borderImage = await embedImageSafely(pdf, borderBytes);
+      page.drawImage(borderImage, { x: 0, y: 0, width: pageWidth, height: pageHeight });
+    } catch { /* ignore */ }
+  }
+
+  page.drawRectangle({
+    x: 20, y: 20, width: pageWidth - 40, height: pageHeight - 40,
+    borderColor: rgb(0.12, 0.23, 0.47), borderWidth: 2,
+  });
+  page.drawRectangle({
+    x: 25, y: 25, width: pageWidth - 50, height: pageHeight - 50,
+    borderColor: rgb(0.85, 0.73, 0.35), borderWidth: 1,
+  });
+
+  const textTitle = "AI Strategic Academy";
+  const titleWidth = bold.widthOfTextAtSize(textTitle, 36);
+  page.drawText(textTitle, { x: (pageWidth - titleWidth) / 2, y: 500, size: 36, font: bold, color: rgb(0.12, 0.23, 0.47) });
+
+  const textSubtitle = "СВИДЕТЕЛЬСТВО О ЗАВЕРШЕНИИ (ЧЕРНОВИК)";
+  const subtitleWidth = font.widthOfTextAtSize(textSubtitle, 16);
+  page.drawText(textSubtitle, { x: (pageWidth - subtitleWidth) / 2, y: 460, size: 16, font, color: rgb(0.4, 0.4, 0.4) });
+
+  const textPresentedTo = "Настоящее свидетельство вручается";
+  const presentedWidth = font.widthOfTextAtSize(textPresentedTo, 14);
+  page.drawText(textPresentedTo, { x: (pageWidth - presentedWidth) / 2, y: 420, size: 14, font, color: rgb(0.3, 0.3, 0.3) });
+
+  const nameWidth = bold.widthOfTextAtSize(dummyStudentName, 42);
+  page.drawText(dummyStudentName, { x: (pageWidth - nameWidth) / 2, y: 360, size: 42, font: bold, color: rgb(0.12, 0.23, 0.47) });
+
+  const textFor = "за успешное прохождение курса";
+  const forWidth = font.widthOfTextAtSize(textFor, 14);
+  page.drawText(textFor, { x: (pageWidth - forWidth) / 2, y: 320, size: 14, font, color: rgb(0.3, 0.3, 0.3) });
+
+  const courseTitle = course.title;
+  const courseWidth = bold.widthOfTextAtSize(courseTitle, 24);
+  page.drawText(courseTitle, { x: (pageWidth - courseWidth) / 2, y: 280, size: 24, font: bold, color: rgb(0.1, 0.1, 0.1) });
+
+  const textNumber = `Сертификат № ${dummyCertNumber}`;
+  const numberWidth = bold.widthOfTextAtSize(textNumber, 14);
+  page.drawText(textNumber, { x: (pageWidth - numberWidth) / 2, y: 240, size: 14, font: bold, color: rgb(0.85, 0.73, 0.35) });
+
+  // Подпись и печать
+  const signatureBytes = await readAssetCached(path.join(assetsDir, "signature.png"));
+  if (signatureBytes) {
+    try {
+      const signatureImage = await embedImageSafely(pdf, signatureBytes);
+      page.drawImage(signatureImage, { x: 150, y: 130, width: 120, height: 40 });
+    } catch { /* ignore */ }
+  }
+
+  page.drawLine({ start: { x: 120, y: 120 }, end: { x: 300, y: 120 }, thickness: 1, color: rgb(0.5, 0.5, 0.5) });
+  page.drawText("Уполномоченное лицо", { x: 160, y: 100, size: 12, font, color: rgb(0.3, 0.3, 0.3) });
+
+  const sealBytes = await readAssetCached(path.join(assetsDir, "seal.png"));
+  if (sealBytes) {
+    try {
+      const sealImage = await embedImageSafely(pdf, sealBytes);
+      page.drawImage(sealImage, { x: 360, y: 100, width: 120, height: 120 });
+    } catch { /* ignore */ }
+  }
+
+  page.drawImage(qrImage, { x: 620, y: 120, width: 100, height: 100 });
+  page.drawText("Проверить онлайн", { x: 620, y: 100, size: 10, font, color: rgb(0.3, 0.3, 0.3) });
+
+  page.drawText(`Номер: ${dummyCertNumber}`, { x: 60, y: 60, size: 10, font, color: rgb(0.5, 0.5, 0.5) });
+  page.drawText(`Дата выдачи: ${dummyIssuedDate.toISOString().slice(0, 10)}`, { x: 60, y: 45, size: 10, font, color: rgb(0.5, 0.5, 0.5) });
+
+  return pdf.save();
+}
+
 function hexToRgb(hex = "#000000") {
   const clean = hex.replace("#", "");
   const r = parseInt(clean.substring(0, 2), 16) / 255;

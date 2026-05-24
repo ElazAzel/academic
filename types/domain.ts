@@ -702,6 +702,10 @@ export interface CuratorStudentOperation {
   unreadMessages: number;
   lastMessageAt: string | null;
   nextAction: CuratorNextAction;
+  /** Среднее время ответа на вопросы (часы) */
+  avgResponseHours: number;
+  /** Среднее время ответа в чате (часы) */
+  avgChatResponseHours: number;
 }
 
 // ── Сертификаты ─────────────────────────────────────────────────────

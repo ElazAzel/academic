@@ -3,6 +3,14 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { Button } from "@/components/ui/button";
 import { AUTH_ROUTES } from "@/lib/constants";
 
+export const metadata = {
+  title: "Согласие на обработку данных",
+  description: "Ознакомьтесь с политикой обработки персональных данных.",
+};
+
+
+export const dynamic = "force-dynamic";
+
 export default function ConsentPage() {
   return (
     <div className="min-h-screen bg-background">

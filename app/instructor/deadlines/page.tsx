@@ -5,6 +5,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { InstructorDeadlinesClient } from "./client";
 
+export const metadata = {
+  title: "Дедлайны — Инструктор",
+  description: "Управление сроками и дедлайнами.",
+};
+
+
 const prisma = getPrisma();
 
 export const dynamic = "force-dynamic";

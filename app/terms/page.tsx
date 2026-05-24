@@ -2,6 +2,14 @@ import fs from "fs";
 import path from "path";
 import { SiteHeader } from "@/components/layout/site-header";
 
+export const metadata = {
+  title: "Пользовательское соглашение",
+  description: "Условия использования платформы.",
+};
+
+
+export const dynamic = "force-dynamic";
+
 function renderMarkdown(md: string): string {
   const lines = md.split("\n");
   const html: string[] = [];

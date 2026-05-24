@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { buildMessagePreview } from "@/lib/chat/utils";
 
 import { revalidatePath } from "next/cache";
@@ -106,62 +107,77 @@ async function assertCanAccessStudentChat(user: { id: string; roles: RoleKey[] }
   }
 }
 
+const GetConversationSchema = z.object({
+  studentId: z.string().min(1, "ID студента обязателен"),
+  lessonId: z.string().optional(),
+});
+
 export async function getConversation(studentId: string, lessonId?: string) {
-  const user = await requireRole(["curator", "super_curator", "admin", "student"]);
-  const roles = user.roles as RoleKey[];
-  const targetUserId = roles.includes("student") ? user.id : studentId;
+  try {
+    const parsed = GetConversationSchema.safeParse({ studentId, lessonId });
+    if (!parsed.success) {
+      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+    }
 
-  await assertCanAccessStudentChat({ id: user.id, roles }, targetUserId);
+    const user = await requireRole(["curator", "super_curator", "admin", "student"]);
+    const roles = user.roles as RoleKey[];
+    const targetUserId = roles.includes("student") ? user.id : studentId;
 
-  const lessonFilter = lessonId ? { lessonId } : {};
+    await assertCanAccessStudentChat({ id: user.id, roles }, targetUserId);
 
-  const messages = await prisma.message.findMany({
-    where: {
-      OR: [
-        { senderId: targetUserId, ...lessonFilter },
-        { receiverId: targetUserId, ...lessonFilter },
-      ],
-    },
-    orderBy: { createdAt: "desc" },
-    take: QUERY_LIMITS.chatConversationMessages,
-    include: {
-      sender: {
-        select: {
-          id: true,
-          name: true,
-          roles: { select: { role: { select: { key: true } } } },
+    const lessonFilter = lessonId ? { lessonId } : {};
+
+    const messages = await prisma.message.findMany({
+      where: {
+        OR: [
+          { senderId: targetUserId, ...lessonFilter },
+          { receiverId: targetUserId, ...lessonFilter },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: QUERY_LIMITS.chatConversationMessages,
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            roles: { select: { role: { select: { key: true } } } },
+          },
+        },
+        lesson: { select: { id: true, title: true } },
+        replyTo: {
+          select: {
+            id: true,
+            text: true,
+            senderId: true,
+            sender: { select: { name: true, roles: { select: { role: { select: { key: true } } } } } },
+          },
         },
       },
-      lesson: { select: { id: true, title: true } },
-      replyTo: {
-        select: {
-          id: true,
-          text: true,
-          senderId: true,
-          sender: { select: { name: true, roles: { select: { role: { select: { key: true } } } } } },
-        },
-      },
-    },
-  });
+    });
 
-  messages.reverse();
+    messages.reverse();
 
-  return messages.map((m) => ({
-    id: m.id,
-    text: m.text,
-    attachmentUrl: m.attachmentUrl,
-    attachmentType: m.attachmentType,
-    lessonId: m.lessonId,
-    lessonTitle: m.lesson?.title ?? null,
-    senderId: m.senderId,
-    senderName: maskChatName(m.sender.name, m.senderId, roles, user.id, getRoleKeys(m.sender)),
-    createdAt: m.createdAt.toISOString(),
-    readAt: m.readAt?.toISOString() ?? null,
-    isMine: m.senderId === user.id,
-    replyToId: m.replyToId ?? null,
-    replyToText: m.replyTo ? (m.replyTo.text ? m.replyTo.text.slice(0, 100) : "📎 Вложение") : null,
-    replyToSenderName: m.replyTo ? maskChatName(m.replyTo.sender.name, m.replyTo.senderId, roles, user.id, getRoleKeys(m.replyTo.sender)) : null,
-  }));
+    return messages.map((m) => ({
+      id: m.id,
+      text: m.text,
+      attachmentUrl: m.attachmentUrl,
+      attachmentType: m.attachmentType,
+      lessonId: m.lessonId,
+      lessonTitle: m.lesson?.title ?? null,
+      senderId: m.senderId,
+      senderName: maskChatName(m.sender.name, m.senderId, roles, user.id, getRoleKeys(m.sender)),
+      createdAt: m.createdAt.toISOString(),
+      readAt: m.readAt?.toISOString() ?? null,
+      isMine: m.senderId === user.id,
+      replyToId: m.replyToId ?? null,
+      replyToText: m.replyTo ? (m.replyTo.text ? m.replyTo.text.slice(0, 100) : "📎 Вложение") : null,
+      replyToSenderName: m.replyTo ? maskChatName(m.replyTo.sender.name, m.replyTo.senderId, roles, user.id, getRoleKeys(m.replyTo.sender)) : null,
+    }));
+  } catch (error) {
+    console.error("[getConversation]", error);
+    throw error;
+  }
 }
 
 export interface ConversationInfo {
@@ -177,233 +193,281 @@ export interface ConversationInfo {
 }
 
 export async function getMyConversations() {
-  const user = await requireRole(["student", "curator", "super_curator", "admin", "instructor"]);
-  const roles = user.roles as RoleKey[];
+  try {
+    const user = await requireRole(["student", "curator", "super_curator", "admin", "instructor"]);
+    const roles = user.roles as RoleKey[];
 
-  const messages = await prisma.message.findMany({
-    where: {
-      OR: [{ senderId: user.id }, { receiverId: user.id }],
-    },
-    orderBy: { createdAt: "desc" },
-    include: {
-      sender: {
-        select: {
-          id: true,
-          name: true,
-          roles: { select: { role: { select: { key: true } } } },
-        },
+    const messages = await prisma.message.findMany({
+      where: {
+        OR: [{ senderId: user.id }, { receiverId: user.id }],
       },
-      receiver: {
-        select: {
-          id: true,
-          name: true,
-          roles: { select: { role: { select: { key: true } } } },
+      orderBy: { createdAt: "desc" },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            roles: { select: { role: { select: { key: true } } } },
+          },
         },
+        receiver: {
+          select: {
+            id: true,
+            name: true,
+            roles: { select: { role: { select: { key: true } } } },
+          },
+        },
+        lesson: { select: { id: true, title: true } },
       },
-      lesson: { select: { id: true, title: true } },
-    },
-    take: QUERY_LIMITS.chatConversationScan,
-  });
+      take: QUERY_LIMITS.chatConversationScan,
+    });
 
-  const convMap = new Map<string, ConversationInfo>();
-  for (const m of messages) {
-    const partnerId = m.senderId === user.id ? (m.receiverId ?? "") : m.senderId;
-    if (!partnerId) continue;
+    const convMap = new Map<string, ConversationInfo>();
+    for (const m of messages) {
+      const partnerId = m.senderId === user.id ? (m.receiverId ?? "") : m.senderId;
+      if (!partnerId) continue;
 
-    const rawName = m.senderId === user.id
-      ? (m.receiver?.name ?? "Куратор")
-      : (m.sender.name ?? "Слушатель");
-    const partnerRoles = m.senderId === user.id ? getRoleKeys(m.receiver) : getRoleKeys(m.sender);
-    const partnerName = maskChatName(rawName, partnerId, roles, user.id, partnerRoles);
+      const rawName = m.senderId === user.id
+        ? (m.receiver?.name ?? "Куратор")
+        : (m.sender.name ?? "Слушатель");
+      const partnerRoles = m.senderId === user.id ? getRoleKeys(m.receiver) : getRoleKeys(m.sender);
+      const partnerName = maskChatName(rawName, partnerId, roles, user.id, partnerRoles);
 
-    if (!convMap.has(partnerId)) {
-      const latestIsMine = m.senderId === user.id;
-      convMap.set(partnerId, {
-        partnerId,
-        partnerName,
-        lastMessage: buildMessagePreview(m.text ?? "", Boolean(m.attachmentUrl)),
-        lastDate: m.createdAt.toISOString(),
-        unread: m.readAt === null && m.senderId !== user.id ? 1 : 0,
-        responseStatus: latestIsMine ? "answered" : "awaiting_reply",
-        responseLabel: latestIsMine ? "Отвечено" : "Ожидает ответа",
-        lessonId: m.lessonId ?? undefined,
-        lessonTitle: m.lesson?.title ?? undefined,
-      });
-    } else {
-      const existing = convMap.get(partnerId)!;
-      if (m.readAt === null && m.senderId !== user.id) {
-        existing.unread += 1;
-      }
-      if (!existing.lessonId && m.lessonId) {
-        existing.lessonId = m.lessonId;
-        existing.lessonTitle = m.lesson?.title ?? undefined;
+      if (!convMap.has(partnerId)) {
+        const latestIsMine = m.senderId === user.id;
+        convMap.set(partnerId, {
+          partnerId,
+          partnerName,
+          lastMessage: buildMessagePreview(m.text ?? "", Boolean(m.attachmentUrl)),
+          lastDate: m.createdAt.toISOString(),
+          unread: m.readAt === null && m.senderId !== user.id ? 1 : 0,
+          responseStatus: latestIsMine ? "answered" : "awaiting_reply",
+          responseLabel: latestIsMine ? "Отвечено" : "Ожидает ответа",
+          lessonId: m.lessonId ?? undefined,
+          lessonTitle: m.lesson?.title ?? undefined,
+        });
+      } else {
+        const existing = convMap.get(partnerId)!;
+        if (m.readAt === null && m.senderId !== user.id) {
+          existing.unread += 1;
+        }
+        if (!existing.lessonId && m.lessonId) {
+          existing.lessonId = m.lessonId;
+          existing.lessonTitle = m.lesson?.title ?? undefined;
+        }
       }
     }
-  }
 
-  return Array.from(convMap.values()).sort((a, b) => b.lastDate.localeCompare(a.lastDate));
+    return Array.from(convMap.values()).sort((a, b) => b.lastDate.localeCompare(a.lastDate));
+  } catch (error) {
+    console.error("[getMyConversations]", error);
+    throw error;
+  }
 }
 
 export async function sendMessageAction(formData: FormData) {
-  const user = await requireRole(["student", "curator", "super_curator", "admin", "instructor"]);
-  const roles = user.roles as RoleKey[];
-  const text = String(formData.get("text") ?? "").trim();
-  const lessonId = String(formData.get("lessonId") ?? "").trim();
-  const attachmentUrl = String(formData.get("attachmentUrl") ?? "").trim();
-  const attachmentType = String(formData.get("attachmentType") ?? "").trim();
-  const receiverId = String(formData.get("receiverId") ?? "").trim();
-  const replyToIdStr = String(formData.get("replyToId") ?? "").trim();
+  try {
+    const user = await requireRole(["student", "curator", "super_curator", "admin", "instructor"]);
+    const roles = user.roles as RoleKey[];
+    const text = String(formData.get("text") ?? "").trim();
+    const lessonId = String(formData.get("lessonId") ?? "").trim();
+    const attachmentUrl = String(formData.get("attachmentUrl") ?? "").trim();
+    const attachmentType = String(formData.get("attachmentType") ?? "").trim();
+    const receiverId = String(formData.get("receiverId") ?? "").trim();
+    const replyToIdStr = String(formData.get("replyToId") ?? "").trim();
 
-  if (!text && !attachmentUrl) {
-    throw new ApiError("bad_request", "Текст или вложение обязательны", 400);
-  }
-  if (text.length > MAX_CHAT_MESSAGE_LENGTH) {
-    throw new ApiError("bad_request", `Сообщение слишком длинное. Максимум ${MAX_CHAT_MESSAGE_LENGTH} символов`, 400);
-  }
+    if (!text && !attachmentUrl) {
+      throw new ApiError("bad_request", "Текст или вложение обязательны", 400);
+    }
+    if (text.length > MAX_CHAT_MESSAGE_LENGTH) {
+      throw new ApiError("bad_request", `Сообщение слишком длинное. Максимум ${MAX_CHAT_MESSAGE_LENGTH} символов`, 400);
+    }
 
-  if (attachmentUrl && attachmentType && !ALLOWED_ATTACHMENT_TYPES.has(attachmentType)) {
-    throw new ApiError("bad_request", "Формат вложения не поддерживается", 400);
-  }
+    if (attachmentUrl && attachmentType && !ALLOWED_ATTACHMENT_TYPES.has(attachmentType)) {
+      throw new ApiError("bad_request", "Формат вложения не поддерживается", 400);
+    }
 
-  // If replying, resolve lessonId from parent message
-  let resolvedLessonId = lessonId;
-  if (replyToIdStr && !lessonId) {
-    const parentMsg = await prisma.message.findUnique({
-      where: { id: replyToIdStr },
-      select: { lessonId: true },
+    // If replying, resolve lessonId from parent message
+    let resolvedLessonId = lessonId;
+    if (replyToIdStr && !lessonId) {
+      const parentMsg = await prisma.message.findUnique({
+        where: { id: replyToIdStr },
+        select: { lessonId: true },
+      });
+      if (parentMsg?.lessonId) {
+        resolvedLessonId = parentMsg.lessonId;
+      }
+    }
+
+    let toUserId = receiverId;
+    if (roles.includes("student")) {
+      const assignment = await prisma.curatorAssignment.findFirst({
+        where: { studentId: user.id, active: true },
+        select: { curatorId: true },
+      });
+      if (!assignment) {
+        throw new ApiError("forbidden", "У вас нет назначенного куратора", 403);
+      }
+      toUserId = assignment.curatorId;
+    } else {
+      if (!toUserId) {
+        throw new ApiError("bad_request", "Receiver id is required", 400);
+      }
+
+      if (roles.includes("curator") && !isElevatedChatRole(roles)) {
+        await assertCanAccessStudentChat({ id: user.id, roles }, toUserId);
+      }
+    }
+
+    const receiver = await prisma.user.findUnique({
+      where: { id: toUserId },
+      select: { id: true, name: true, roles: { include: { role: true } } },
     });
-    if (parentMsg?.lessonId) {
-      resolvedLessonId = parentMsg.lessonId;
-    }
-  }
-
-  let toUserId = receiverId;
-  if (roles.includes("student")) {
-    const assignment = await prisma.curatorAssignment.findFirst({
-      where: { studentId: user.id, active: true },
-      select: { curatorId: true },
-    });
-    if (!assignment) {
-      throw new ApiError("forbidden", "У вас нет назначенного куратора", 403);
-    }
-    toUserId = assignment.curatorId;
-  } else {
-    if (!toUserId) {
-      throw new ApiError("bad_request", "Receiver id is required", 400);
+    if (!receiver) {
+      throw new ApiError("not_found", "Получатель не найден", 404);
     }
 
-    if (roles.includes("curator") && !isElevatedChatRole(roles)) {
-      await assertCanAccessStudentChat({ id: user.id, roles }, toUserId);
-    }
-  }
+    const receiverRoles = receiver.roles.map((entry) => entry.role.key as RoleKey);
+    const receiverIsStudent = receiverRoles.includes("student");
+    const contextStudentId = roles.includes("student") ? user.id : receiverIsStudent ? toUserId : null;
+    const lessonContext = resolvedLessonId
+      ? contextStudentId
+        ? await getLessonContextForStudent(contextStudentId, resolvedLessonId)
+        : (() => {
+            throw new ApiError("bad_request", "Контекст урока можно указать только в диалоге со слушателем", 400);
+          })()
+      : null;
 
-  const receiver = await prisma.user.findUnique({
-    where: { id: toUserId },
-    select: { id: true, name: true, roles: { include: { role: true } } },
-  });
-  if (!receiver) {
-    throw new ApiError("not_found", "Получатель не найден", 404);
-  }
-
-  const receiverRoles = receiver.roles.map((entry) => entry.role.key as RoleKey);
-  const receiverIsStudent = receiverRoles.includes("student");
-  const contextStudentId = roles.includes("student") ? user.id : receiverIsStudent ? toUserId : null;
-  const lessonContext = resolvedLessonId
-    ? contextStudentId
-      ? await getLessonContextForStudent(contextStudentId, resolvedLessonId)
-      : (() => {
-          throw new ApiError("bad_request", "Контекст урока можно указать только в диалоге со слушателем", 400);
-        })()
-    : null;
-
-  const message = await prisma.message.create({
-    data: {
-      senderId: user.id,
-      receiverId: toUserId,
-      text: text || null,
-      attachmentUrl: attachmentUrl || null,
-      attachmentType: attachmentType || null,
-      lessonId: resolvedLessonId || null,
-      replyToId: replyToIdStr || null,
-    },
-    select: { id: true },
-  });
-
-  if (toUserId !== user.id) {
-    const messagePreview = buildMessagePreview(text, Boolean(attachmentUrl));
-    const link = receiverIsStudent
-      ? (resolvedLessonId ? `/student/lessons/${resolvedLessonId}` : "/student")
-      : "/curator/chat";
-
-    const displaySenderName = deriveDisplayName(user.name, user.id, roles);
-    const body = lessonContext?.lessonTitle
-      ? `${lessonContext.lessonTitle}: ${messagePreview}`
-      : messagePreview;
-
-    await createNotification({
-      userId: toUserId,
-      event: "new_message",
-      title: `Новое сообщение от ${displaySenderName}`,
-      body,
-      refType: "message",
-      refId: message.id,
+    const message = await prisma.message.create({
       data: {
+        senderId: user.id,
+        receiverId: toUserId,
+        text: text || null,
+        attachmentUrl: attachmentUrl || null,
+        attachmentType: attachmentType || null,
+        lessonId: resolvedLessonId || null,
+        replyToId: replyToIdStr || null,
+      },
+      select: { id: true },
+    });
+
+    if (toUserId !== user.id) {
+      const messagePreview = buildMessagePreview(text, Boolean(attachmentUrl));
+      const link = receiverIsStudent
+        ? (resolvedLessonId ? `/student/lessons/${resolvedLessonId}` : "/student")
+        : "/curator/chat";
+
+      const displaySenderName = deriveDisplayName(user.name, user.id, roles);
+      const body = lessonContext?.lessonTitle
+        ? `${lessonContext.lessonTitle}: ${messagePreview}`
+        : messagePreview;
+
+      await createNotification({
+        userId: toUserId,
+        event: "new_message",
+        title: `Новое сообщение от ${displaySenderName}`,
+        body,
         refType: "message",
         refId: message.id,
-        link,
-        url: link,
-        messageId: message.id,
-        senderId: user.id,
-        senderName: displaySenderName,
-        receiverId: toUserId,
-        conversationStudentId: contextStudentId,
-        lessonId: lessonContext?.lessonId ?? null,
-        lessonTitle: lessonContext?.lessonTitle ?? null,
-        moduleId: lessonContext?.moduleId ?? null,
-        moduleTitle: lessonContext?.moduleTitle ?? null,
-        courseId: lessonContext?.courseId ?? null,
-        courseTitle: lessonContext?.courseTitle ?? null,
-      },
-    });
-  }
+        data: {
+          refType: "message",
+          refId: message.id,
+          link,
+          url: link,
+          messageId: message.id,
+          senderId: user.id,
+          senderName: displaySenderName,
+          receiverId: toUserId,
+          conversationStudentId: contextStudentId,
+          lessonId: lessonContext?.lessonId ?? null,
+          lessonTitle: lessonContext?.lessonTitle ?? null,
+          moduleId: lessonContext?.moduleId ?? null,
+          moduleTitle: lessonContext?.moduleTitle ?? null,
+          courseId: lessonContext?.courseId ?? null,
+          courseTitle: lessonContext?.courseTitle ?? null,
+        },
+      });
+    }
 
-  revalidatePath("/curator/chat");
-  revalidatePath("/student");
-  if (lessonId) {
-    revalidatePath(`/student/lessons/${lessonId}`);
+    revalidatePath("/curator/chat");
+    revalidatePath("/student");
+    if (lessonId) {
+      revalidatePath(`/student/lessons/${lessonId}`);
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("[sendMessageAction]", error);
+    if (error instanceof z.ZodError) {
+      return { success: false, error: "Ошибка валидации данных" };
+    }
+    if (error instanceof ApiError) throw error;
+    return { success: false, error: "Произошла ошибка при отправке сообщения" };
   }
-  return { success: true };
 }
 
 export async function getUploadUrl() {
-  return getUploadUrlForFile("image.png", "image/png");
+  try {
+    return getUploadUrlForFile("image.png", "image/png");
+  } catch (error) {
+    console.error("[getUploadUrl]", error);
+    throw error;
+  }
 }
+
+const GetUploadUrlForFileSchema = z.object({
+  filename: z.string().min(1, "Имя файла обязательно"),
+  contentType: z.string().min(1, "Тип контента обязателен"),
+});
 
 export async function getUploadUrlForFile(filename: string, contentType: string) {
-  const user = await requireRole(["student", "curator", "super_curator", "admin", "instructor"]);
-  const safeFilename = filename.trim() || "attachment";
-  const safeContentType = contentType.trim();
+  try {
+    const parsed = GetUploadUrlForFileSchema.safeParse({ filename, contentType });
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные", 400);
+    }
 
-  if (!ALLOWED_ATTACHMENT_TYPES.has(safeContentType)) {
-    throw new ApiError("bad_request", "Формат вложения не поддерживается", 400);
-  }
+    const user = await requireRole(["student", "curator", "super_curator", "admin", "instructor"]);
+    const safeFilename = filename.trim() || "attachment";
+    const safeContentType = contentType.trim();
 
-  const key = buildStorageKey(`chat/${user.id}`, safeFilename);
-  const result = await createPresignedUploadUrl(key, safeContentType);
-  if (!result) {
-    throw new ApiError("service_unavailable", "Хранилище S3 недоступно. Используйте /api/v1/chat/upload для загрузки через Supabase.", 503);
+    if (!ALLOWED_ATTACHMENT_TYPES.has(safeContentType)) {
+      throw new ApiError("bad_request", "Формат вложения не поддерживается", 400);
+    }
+
+    const key = buildStorageKey(`chat/${user.id}`, safeFilename);
+    const result = await createPresignedUploadUrl(key, safeContentType);
+    if (!result) {
+      throw new ApiError("service_unavailable", "Хранилище S3 недоступно. Используйте /api/v1/chat/upload для загрузки через Supabase.", 503);
+    }
+    return result;
+  } catch (error) {
+    console.error("[getUploadUrlForFile]", error);
+    throw error;
   }
-  return result;
 }
 
-export async function markAsRead(messageIds: string[]) {
-  const user = await requireRole(["curator", "super_curator", "admin", "student"]);
-  const ids = [...new Set(messageIds.filter(Boolean))];
-  if (ids.length === 0) return { success: true };
+const MarkAsReadSchema = z.object({
+  messageIds: z.array(z.string()).min(1, "Список ID сообщений обязателен"),
+});
 
-  await prisma.message.updateMany({
-    where: { id: { in: ids }, receiverId: user.id, readAt: null },
-    data: { readAt: new Date() },
-  });
-  return { success: true };
+export async function markAsRead(messageIds: string[]) {
+  try {
+    const parsed = MarkAsReadSchema.safeParse({ messageIds });
+    if (!parsed.success) {
+      return { success: false, error: "Ошибка валидации" };
+    }
+
+    const user = await requireRole(["curator", "super_curator", "admin", "student"]);
+    const ids = [...new Set(messageIds.filter(Boolean))];
+    if (ids.length === 0) return { success: true };
+
+    await prisma.message.updateMany({
+      where: { id: { in: ids }, receiverId: user.id, readAt: null },
+      data: { readAt: new Date() },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("[markAsRead]", error);
+    return { success: false, error: "Произошла ошибка" };
+  }
 }

@@ -10,6 +10,12 @@ import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 import { VisitAnalyticsBlock } from "@/components/admin/visit-analytics-block";
 
+export const metadata = {
+  title: "Аналитика — Супер-куратор",
+  description: "Аналитика по всем когортам.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorAnalyticsPage() {

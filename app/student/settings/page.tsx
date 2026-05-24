@@ -16,6 +16,11 @@ import {
   updateNotificationPreferencesAction
 } from "@/server/actions/settings";
 
+export const metadata = {
+  title: "Настройки — Студент",
+  description: "Настройки профиля студента.",
+};
+
 const NOTIFICATION_CHANNELS = [
   { key: "curator_reply", label: "Ответы куратора", desc: "Уведомления о новых ответах куратора на ваши вопросы" },
   { key: "module_deadline", label: "Дедлайны модулей", desc: "Предупреждения о приближающихся сроках сдачи модулей" },
@@ -24,6 +29,8 @@ const NOTIFICATION_CHANNELS = [
   { key: "email_digest", label: "Email дайджест", desc: "Еженедельная сводка вашей активности и успеваемости на почту" },
   { key: "system_message", label: "Системные сообщения", desc: "Важные технические уведомления от администрации платформы" },
 ];
+
+export const dynamic = "force-dynamic";
 
 export default async function StudentSettingsPage() {
   await requireRolePage(["student", "admin"]);

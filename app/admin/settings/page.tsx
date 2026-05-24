@@ -13,6 +13,14 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { updateProfileSettingsAction, updatePasswordAction, getAppSettingsAction, updateAppSettingsAction, incrementBuildVersionAction } from "@/server/actions/settings";
 import { TwoFactorSettings } from "@/components/admin/two-factor-settings";
 
+export const metadata = {
+  title: "Настройки — Администрирование",
+  description: "Настройки платформы.",
+};
+
+
+export const dynamic = "force-dynamic";
+
 const FEATURE_FLAGS = [
   { key: "FEATURE_PUSH_NOTIFICATIONS", label: "Push-уведомления" },
   { key: "FEATURE_GRAPHQL", label: "GraphQL API" },

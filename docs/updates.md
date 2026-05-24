@@ -2,6 +2,41 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-24 — Мобильная адаптация достижений и статистики
+
+- `components/lms/student-achievements.tsx`:
+  - Аккордеон на мобилке (свёрнут по умолчанию, `md:` всегда виден)
+  - hover → click toggle для карточек ачивок (работает на тач)
+  - Заголовок и бейджи — `flex-wrap`, компактные отступы
+  - Tрек активности — уменьшенные ячейки на мобилке (`gap-1`, `p-1.5`)
+  - Текст описания — `line-clamp-2`
+  - Анимация `max-h` для аккордеона
+- `components/lms/xp-display-client.tsx`:
+  - Убраны `group-hover` анимации (не работали на тач)
+  - Добавлен `active:scale-[0.99]` для тактильного отклика
+  - Текст «Центр развития» всегда виден
+  - `shrink-0` на XP и иконке для защиты от переполнения
+
+## 2026-05-24 — Глубокий аудит БД: FK-индексы + отключение RLS + исправление схемы cohorts
+
+- **FK-индексы**: добавлены 12 недостающих индексов на FK-колонки (oauth_accounts.user_id, sessions.user_id, lesson_media.lesson_id, cohorts.course_id, cohorts.project_id, quiz_questions.quiz_id, certificate_templates.course_id, admin_popups.created_by_id, popup_views.popup_id, reports.project_id, reports.course_id, import_jobs.created_by_id)
+- **`prisma/schema.prisma`** — добавлены `@@index` для всех вышеуказанных FK-колонок
+- **RLS отключён** на всех 56 таблицах (приложение использует Prisma server-side, Supabase REST API не используется). Удалены 9 устаревших RLS-политик.
+- **БД**: исправлена миграция `20260512000000_add_block_model` — удалена ошибочная FK-ссылка на `enrollments` (таблица не существовала на момент миграции)
+- **БД**: добавлены недостающие колонки `project_id`, `starts_at`, `ends_at`, `updated_at` в таблицу `cohorts` (схема Prisma была шире актуальной БД)
+- **Supabase Security Advisor**: больше нет предупреждений о RLS-enabled без политик
+- **Supabase Performance Advisor**: FK-индексы добавлены
+- **`server/actions/curator-enhanced.ts`** — добавлен `take: 500` на запрос сообщений (был безлимитный); убран неиспользуемый include `roles` у студента
+- **`server/actions/super-curator.ts`** — добавлен `take: 500` на запрос сообщений в `getCuratorActivity`
+- **`server/actions/risk-management.ts`** — `getRiskOverview` теперь проверяет `actor.roles.includes("admin")` при маскировке имени: админы видят реальное имя, остальные — `Слушатель #XXXXX`
+
+## 2026-05-24 — Скорость ответов куратора: per-student + super-curator breakdown
+
+- **`server/actions/curator-enhanced.ts`** — `getCuratorEnhancedStudents()` теперь возвращает `avgResponseHours` и `avgChatResponseHours` per student (вопросы + чат)
+- **`server/actions/super-curator.ts`** — `getCuratorActivity()` теперь возвращает `studentResponseBreakdown[]` с per-student средними по вопросам и чату
+- **`app/super-curator/curators/[id]/page.tsx`** — добавлена колонка «Время отв.» в таблицу вопросов (color-coded: <8h зелёный, 8-24h янтарный, >24h красный); добавлена вкладка «По студентам» с таблицей per-student response time
+- **Typecheck**: clean ✅ | **Tests**: 419/419 ✅
+
 ## 2026-05-23 — Анонимизация имён студентов для не-администраторов
 
 - **`lib/auth/mask-name.ts`** — `maskChatName()` и `deriveDisplayName()` теперь возвращают `Слушатель #XXXXX` для студентов при просмотре не-админами

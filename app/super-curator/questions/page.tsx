@@ -6,6 +6,12 @@ import { getSuperCuratorQuestions } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { QuestionStatus } from "@prisma/client";
 
+export const metadata = {
+  title: "Вопросы — Супер-куратор",
+  description: "Вопросы и обращения кураторов.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorQuestionsPage() {

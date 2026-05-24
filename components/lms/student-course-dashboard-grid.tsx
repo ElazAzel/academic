@@ -116,9 +116,9 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
           {filteredCourses.map((c) => (
             <FadeIn key={c.courseId}>
               <CardHover>
-                <Card className="relative overflow-hidden rounded-2xl border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all hover:shadow-m3-soft-hover">
+                <Card className="relative overflow-hidden rounded-2xl border-m3-outline-variant/60 glass-card-premium">
                   {/* Visual Top Decorative Accent */}
-                  <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-m3-primary/30 to-m3-tertiary/30" />
+                  <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-m3-primary via-m3-secondary to-m3-tertiary" />
 
                   <CardHeader className="pb-3 pt-5">
                     <div className="flex items-center justify-between mb-2">
@@ -130,7 +130,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
                     <CardTitle className="line-clamp-2 text-headline-sm font-headline-sm text-m3-on-surface">
                       {c.courseTitle}
                     </CardTitle>
-                    <CardDescription className="line-clamp-2 min-h-[2.5rem] font-body-sm text-body-sm text-m3-on-surface-variant">
+                    <CardDescription className="line-clamp-2 min-h-[2.5rem] font-body-sm text-body-sm text-m3-on-surface-variant/90">
                       {c.currentModuleTitle 
                         ? `${c.currentModuleTitle} ${c.currentLessonTitle ? `→ ${c.currentLessonTitle}` : ""}`
                         : "Уроки еще не начаты"}
@@ -143,11 +143,12 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
                         <span>Прогресс курса</span>
                         <span className="font-semibold text-m3-primary">{c.percent}%</span>
                       </div>
-                      <Progress value={c.percent} className="h-1.5 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
+                      <Progress value={c.percent} className="h-1.5 bg-m3-surface-container-high [&>div]:bg-gradient-to-r [&>div]:from-m3-primary [&>div]:to-m3-secondary" />
                     </div>
 
                     {/* Completion Forecast Block with dynamic micro-details */}
                     <div className="flex min-w-0 items-center gap-2 rounded-xl bg-m3-surface-container-low p-2.5 text-body-xs font-body-xs text-m3-on-surface-variant">
+                    <div className="flex items-center gap-2 rounded-xl bg-m3-surface-container-low/80 p-2.5 text-body-xs font-body-xs text-m3-on-surface-variant/90 border border-m3-outline-variant/20">
                       <Icon 
                         name={c.percent >= 100 ? "workspace_premium" : c.status === "BLOCKED" ? "pause" : "schedule"} 
                         size={16} 
@@ -158,7 +159,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
                       <span className="min-w-0 flex-1 truncate">{getForecastText(c.percent, c.status)}</span>
                     </div>
 
-                    <Button asChild className="w-full rounded-xl" size="sm" variant={c.status === "BLOCKED" ? "secondary" : "primary"}>
+                    <Button asChild className="w-full rounded-xl btn-shine shadow-m3-soft hover:shadow-m3-soft-hover" size="sm" variant={c.status === "BLOCKED" ? "secondary" : "primary"}>
                       <Link href={c.nextLessonId ? `/student/lessons/${c.nextLessonId}` : `/student/courses/${c.courseId}`}>
                         <span>{c.nextLessonId ? "Продолжить" : "Открыть курс"}</span>
                         <Icon name="arrow_forward" size={16} />
