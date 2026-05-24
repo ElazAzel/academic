@@ -2,14 +2,18 @@
 
 Правило: новые записи добавляются сверху.
 
-## 2026-05-24 — Исправления по результатам глубокой проверки
+## 2026-05-24 — Глубокий аудит БД: FK-индексы + отключение RLS + исправление схемы cohorts
 
+- **FK-индексы**: добавлены 12 недостающих индексов на FK-колонки (oauth_accounts.user_id, sessions.user_id, lesson_media.lesson_id, cohorts.course_id, cohorts.project_id, quiz_questions.quiz_id, certificate_templates.course_id, admin_popups.created_by_id, popup_views.popup_id, reports.project_id, reports.course_id, import_jobs.created_by_id)
+- **`prisma/schema.prisma`** — добавлены `@@index` для всех вышеуказанных FK-колонок
+- **RLS отключён** на всех 56 таблицах (приложение использует Prisma server-side, Supabase REST API не используется). Удалены 9 устаревших RLS-политик.
+- **БД**: исправлена миграция `20260512000000_add_block_model` — удалена ошибочная FK-ссылка на `enrollments` (таблица не существовала на момент миграции)
+- **БД**: добавлены недостающие колонки `project_id`, `starts_at`, `ends_at`, `updated_at` в таблицу `cohorts` (схема Prisma была шире актуальной БД)
+- **Supabase Security Advisor**: больше нет предупреждений о RLS-enabled без политик
+- **Supabase Performance Advisor**: FK-индексы добавлены
 - **`server/actions/curator-enhanced.ts`** — добавлен `take: 500` на запрос сообщений (был безлимитный); убран неиспользуемый include `roles` у студента
 - **`server/actions/super-curator.ts`** — добавлен `take: 500` на запрос сообщений в `getCuratorActivity`
 - **`server/actions/risk-management.ts`** — `getRiskOverview` теперь проверяет `actor.roles.includes("admin")` при маскировке имени: админы видят реальное имя, остальные — `Слушатель #XXXXX`
-- **Supabase RLS**: 49 таблиц с включённым RLS без политик — известная проблема, требуется миграция для добавления политик
-- **Supabase Performance**: все внешние ключи без индексов — типично для Prisma, рекомендуется добавить индексы на FK колонки через отдельную миграцию
-- **Typecheck**: clean ✅ | **Tests**: 419/419 ✅
 
 ## 2026-05-24 — Скорость ответов куратора: per-student + super-curator breakdown
 

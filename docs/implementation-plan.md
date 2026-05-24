@@ -7,17 +7,20 @@
 
 Закрытая LMS одной академии для управления курсами, потоками, кураторами, заданиями, тестами, сертификатами, инвайт-доступом, аналитикой и отчётностью. Production-minded: безопасная, расширяемая, документированная.
 
-## Текущее состояние на 2026-05-22
+## Текущее состояние на 2026-05-24
 
 ### Core Metrics
-- **Build:** 84/84 страниц, 0 ошибок ✅
-- **Tests:** 377/377 passed (63 test files) ✅
+- **Build:** 87/87 страниц, 0 ошибок ✅
+- **Tests:** 419/419 passed (67 test files) ✅
 - **Lint:** 0 errors, 0 warnings ✅
 - **Typecheck:** clean ✅
 - **Deployment:** Vercel auto-deploy на push в main ✅
 - **Security scan:** Все C1-C5 findings закрыты ✅
 - **CSRF:** Исправлен (origin vs hostname) ✅
 - **Session resilience:** try/catch revalidateSession, fallback на JWT роли ✅
+- **FK-индексы:** 12 недостающих индексов добавлены ✅
+- **RLS:** Отключён на всех 56 таблицах (не используется, приложение на Prisma) ✅
+- **Схема cohorts:** Исправлена (добавлены отсутствующие колонки) ✅
 
 ### Последние изменения
 - Runtime error: 500 на `/api/v1/modules/[moduleId]/lessons` — добавлен retry при Prisma unique constraint collision
@@ -44,13 +47,17 @@
 | PWA (manifest, SW, push, Apple Web App) | done | Custom install prompts |
 | Студент (dashboard, learning paths, settings, deadlines) | done | Settings page, StatusBadge |
 
-### Что осталось (после аудита Phase 0)
+### Что осталось (после аудита Phase 0 + Phase 1)
 
 | Область | Задача | Приоритет | Статус | Примечание |
 |---------|--------|-----------|--------|------------|
 | DevOps | Production deployment validation runbook | P2 | ✅ | `verify:release` выполнен 2026-05-22 (статический гейт зелёный, e2e требует staging) |
 | Безопасность | CSP hardening (unsafe-eval в production) | P2 | ✅ | `unsafe-eval` удалён из production CSP. `unsafe-inline` остаётся (Next.js hydration). |
 | Инфра | MinIO/S3 uploads локально | P3 | ❌ | Требует Docker (не установлен) — upload падает с ERR_CONNECTION_REFUSED |
+| БД | FK-индексы (12 шт) | P1 | ✅ | Добавлены через миграцию `20260524000000_add_missing_fk_indexes` |
+| БД | RLS-политики (49 таблиц) | P2 | ✅ | RLS отключён полностью — приложение использует Prisma server-side |
+| БД | Схема cohorts | P2 | ✅ | Добавлены колонки project_id, starts_at, ends_at, updated_at |
+| БД | Миграция `add_block_model` | P1 | ✅ | Исправлена ошибочная FK-ссылка на enrollments |
 
 ### Уже реализовано (Phase 0)
 - ✅ Builder publish checklist UX (checks + UI в course-settings-panel.tsx + footer статус)
