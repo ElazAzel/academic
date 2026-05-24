@@ -7,6 +7,12 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getDefaultRolePath } from "@/lib/auth/role-redirect";
 import { AUTH_ROUTES } from "@/lib/constants";
 
+export const metadata = {
+  title: "Доступ запрещён",
+  description: "У вас нет прав для доступа к этой странице.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function ForbiddenPage() {

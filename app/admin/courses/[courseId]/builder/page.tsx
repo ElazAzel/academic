@@ -5,6 +5,12 @@ import { resolveCourseBuilderSelection } from "@/lib/course-builder-selection";
 import { getCourseForBuilder } from "@/server/modules/course-builder/service";
 import { notFound } from "next/navigation";
 
+export const metadata = {
+  title: "Конструктор курса — Администрирование",
+  description: "Редактирование структуры курса.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function AdminCourseBuilderPage({

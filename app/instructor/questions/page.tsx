@@ -9,6 +9,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getForwardedQuestions } from "@/server/actions/dashboard";
 import { answerForwardedQuestionAction } from "@/server/actions/curator";
 
+export const metadata = {
+  title: "Вопросы — Инструктор",
+  description: "Вопросы от кураторов и студентов.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function InstructorQuestionsPage() {

@@ -9,6 +9,12 @@ import { getCuratorStudentAnalytics } from "@/server/actions/dashboard";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 
+export const metadata = {
+  title: "Аналитика — Куратор",
+  description: "Аналитика успеваемости студентов.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function CuratorAnalyticsPage() {

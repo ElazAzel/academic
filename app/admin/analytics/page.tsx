@@ -16,6 +16,12 @@ import { getActivityAnalytics } from "@/server/actions/activity-analytics";
 import { ActivityFilters } from "@/components/admin/activity-filters";
 import { VisitAnalyticsBlock } from "@/components/admin/visit-analytics-block";
 
+export const metadata = {
+  title: "Аналитика — Администрирование",
+  description: "Аналитические данные платформы.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 async function StudentAnalyticsTab() {

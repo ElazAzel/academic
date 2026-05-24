@@ -10,6 +10,12 @@ import { QuizView } from "./quiz-view";
 import { ApiError } from "@/lib/http";
 import { FORBIDDEN_ROUTE } from "@/lib/constants";
 
+export const metadata = {
+  title: "Тест — Студент",
+  description: "Прохождение теста.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function StudentQuizPage({ params }: { params: Promise<{ quizId: string }> }) {

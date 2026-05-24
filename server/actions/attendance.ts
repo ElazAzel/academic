@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { maskStudentName } from "@/lib/utils";
 import { getPrisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/session";
@@ -27,137 +28,170 @@ export interface StudentAttendanceDetail {
 /**
  * Получить посещаемость уроков для курса (по инструктору).
  */
+const GetCourseAttendanceSchema = z.object({
+  courseId: z.string().min(1, "ID курса обязателен"),
+});
+
 export async function getCourseAttendance(courseId: string): Promise<LessonAttendanceRow[]> {
-  await requireUser("courses:read");
+  try {
+    const parsed = GetCourseAttendanceSchema.safeParse({ courseId });
+    if (!parsed.success) {
+      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+    }
 
-  // Получаем все уроки курса
-  const lessons = await getPrisma().lesson.findMany({
-    where: { module: { courseId } },
-    select: {
-      id: true,
-      title: true,
-      order: true,
-      module: { select: { title: true } },
-    },
-    orderBy: [{ module: { order: "asc" } }, { order: "asc" }],
-  });
+    await requireUser("courses:read");
 
-  if (lessons.length === 0) return [];
+    // Получаем все уроки курса
+    const lessons = await getPrisma().lesson.findMany({
+      where: { module: { courseId } },
+      select: {
+        id: true,
+        title: true,
+        order: true,
+        module: { select: { title: true } },
+      },
+      orderBy: [{ module: { order: "asc" } }, { order: "asc" }],
+    });
 
-  const lessonIds = lessons.map((l) => l.id);
+    if (lessons.length === 0) return [];
 
-  // Считаем уникальных студентов, просматривавших каждый урок (через activity_logs)
-  const accessCounts = await getPrisma().activityLog.groupBy({
-    by: ["resourceId"],
-    where: {
-      action: "lesson_access",
-      resourceId: { in: lessonIds },
-    },
-    _count: { userId: true },
-  });
+    const lessonIds = lessons.map((l) => l.id);
 
-  const accessMap = new Map(accessCounts.map((a) => [a.resourceId, a._count.userId]));
+    // Считаем уникальных студентов, просматривавших каждый урок (через activity_logs)
+    const accessCounts = await getPrisma().activityLog.groupBy({
+      by: ["resourceId"],
+      where: {
+        action: "lesson_access",
+        resourceId: { in: lessonIds },
+      },
+      _count: { userId: true },
+    });
 
-  // Общее количество студентов на курсе (enrolled)
-  const totalStudents = await getPrisma().enrollment.count({
-    where: { courseId, status: "ACTIVE" },
-  });
+    const accessMap = new Map(accessCounts.map((a) => [a.resourceId, a._count.userId]));
 
-  return lessons.map((lesson) => {
-    const viewedStudents = accessMap.get(lesson.id) ?? 0;
-    return {
-      lessonId: lesson.id,
-      lessonTitle: lesson.title,
-      lessonOrder: lesson.order,
-      moduleTitle: lesson.module.title,
-      totalStudents,
-      viewedStudents,
-      viewPercent: totalStudents > 0 ? Math.round((viewedStudents / totalStudents) * 100) : 0,
-    };
-  });
+    // Общее количество студентов на курсе (enrolled)
+    const totalStudents = await getPrisma().enrollment.count({
+      where: { courseId, status: "ACTIVE" },
+    });
+
+    return lessons.map((lesson) => {
+      const viewedStudents = accessMap.get(lesson.id) ?? 0;
+      return {
+        lessonId: lesson.id,
+        lessonTitle: lesson.title,
+        lessonOrder: lesson.order,
+        moduleTitle: lesson.module.title,
+        totalStudents,
+        viewedStudents,
+        viewPercent: totalStudents > 0 ? Math.round((viewedStudents / totalStudents) * 100) : 0,
+      };
+    });
+  } catch (error) {
+    console.error("[getCourseAttendance]", error);
+    throw error;
+  }
 }
 
 /**
  * Получить детальную посещаемость студентов по уроку.
  */
+const GetLessonAttendanceDetailSchema = z.object({
+  lessonId: z.string().min(1, "ID урока обязателен"),
+});
+
 export async function getLessonAttendanceDetail(lessonId: string): Promise<StudentAttendanceDetail[]> {
-  await requireUser("courses:read");
-
-  const lesson = await getPrisma().lesson.findUnique({
-    where: { id: lessonId },
-    select: {
-      id: true,
-      module: { select: { courseId: true } },
-    },
-  });
-  if (!lesson) return [];
-
-  // Студенты, enrolled в курс
-  const enrollments = await getPrisma().enrollment.findMany({
-    where: { courseId: lesson.module.courseId, status: "ACTIVE" },
-    include: {
-      user: { select: { id: true, name: true, email: true } },
-    },
-  });
-
-  // Кто просматривал урок
-  const accessLogs = await getPrisma().activityLog.findMany({
-    where: {
-      action: "lesson_access",
-      resourceId: lessonId,
-      userId: { in: enrollments.map((e) => e.userId) },
-    },
-    select: { userId: true, createdAt: true },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const lastAccessMap = new Map<string, string>();
-  const viewedSet = new Set<string>();
-  for (const log of accessLogs) {
-    if (!viewedSet.has(log.userId)) {
-      viewedSet.add(log.userId);
+  try {
+    const parsed = GetLessonAttendanceDetailSchema.safeParse({ lessonId });
+    if (!parsed.success) {
+      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
     }
-    if (!lastAccessMap.has(log.userId)) {
-      lastAccessMap.set(log.userId, log.createdAt.toISOString());
+
+    await requireUser("courses:read");
+
+    const lesson = await getPrisma().lesson.findUnique({
+      where: { id: lessonId },
+      select: {
+        id: true,
+        module: { select: { courseId: true } },
+      },
+    });
+    if (!lesson) return [];
+
+    // Студенты, enrolled в курс
+    const enrollments = await getPrisma().enrollment.findMany({
+      where: { courseId: lesson.module.courseId, status: "ACTIVE" },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    // Кто просматривал урок
+    const accessLogs = await getPrisma().activityLog.findMany({
+      where: {
+        action: "lesson_access",
+        resourceId: lessonId,
+        userId: { in: enrollments.map((e) => e.userId) },
+      },
+      select: { userId: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const lastAccessMap = new Map<string, string>();
+    const viewedSet = new Set<string>();
+    for (const log of accessLogs) {
+      if (!viewedSet.has(log.userId)) {
+        viewedSet.add(log.userId);
+      }
+      if (!lastAccessMap.has(log.userId)) {
+        lastAccessMap.set(log.userId, log.createdAt.toISOString());
+      }
     }
+
+    // Прогресс студентов
+    const progresses = await getPrisma().lessonProgress.findMany({
+      where: {
+        lessonId,
+        userId: { in: enrollments.map((e) => e.userId) },
+      },
+      select: { userId: true, percent: true },
+    });
+    const progressMap = new Map(progresses.map((p) => [p.userId, p.percent]));
+
+    const totalLessons = await getPrisma().lesson.count({
+      where: { module: { courseId: lesson.module.courseId } },
+    });
+
+    return enrollments.map((enrollment) => {
+      const userId = enrollment.user.id;
+      return {
+        userId,
+        userName: maskStudentName(userId),
+        email: enrollment.user.email,
+        lastLessonAccess: lastAccessMap.get(userId) ?? null,
+        lessonsViewed: viewedSet.has(userId) ? 1 : 0,
+        totalLessons,
+        progressPercent: progressMap.get(userId) ?? 0,
+      };
+    });
+  } catch (error) {
+    console.error("[getLessonAttendanceDetail]", error);
+    throw error;
   }
-
-  // Прогресс студентов
-  const progresses = await getPrisma().lessonProgress.findMany({
-    where: {
-      lessonId,
-      userId: { in: enrollments.map((e) => e.userId) },
-    },
-    select: { userId: true, percent: true },
-  });
-  const progressMap = new Map(progresses.map((p) => [p.userId, p.percent]));
-
-  const totalLessons = await getPrisma().lesson.count({
-    where: { module: { courseId: lesson.module.courseId } },
-  });
-
-  return enrollments.map((enrollment) => {
-    const userId = enrollment.user.id;
-    return {
-      userId,
-      userName: maskStudentName(userId),
-      email: enrollment.user.email,
-      lastLessonAccess: lastAccessMap.get(userId) ?? null,
-      lessonsViewed: viewedSet.has(userId) ? 1 : 0,
-      totalLessons,
-      progressPercent: progressMap.get(userId) ?? 0,
-    };
-  });
 }
 
 /**
  * Получить курсы инструктора для выбора.
  */
 export async function getInstructorCourses() {
-  const user = await requireUser("courses:read");
-  return getPrisma().course.findMany({
-    where: { instructors: { some: { userId: user.id } } },
-    select: { id: true, title: true, status: true },
-    orderBy: { title: "asc" },
-  });
+  try {
+    const user = await requireUser("courses:read");
+    return getPrisma().course.findMany({
+      where: { instructors: { some: { userId: user.id } } },
+      select: { id: true, title: true, status: true },
+      orderBy: { title: "asc" },
+    });
+  } catch (error) {
+    console.error("[getInstructorCourses]", error);
+    throw error;
+  }
 }

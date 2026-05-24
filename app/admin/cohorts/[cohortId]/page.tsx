@@ -11,6 +11,12 @@ import { getPrisma } from "@/lib/prisma";
 import { EditCohortForm } from "./edit-cohort-form";
 import { DeadlineManager } from "./deadline-manager";
 
+export const metadata = {
+  title: "Когорта — Администрирование",
+  description: "Детали и управление когортой.",
+};
+
+
 const prisma = getPrisma();
 
 export const dynamic = "force-dynamic";

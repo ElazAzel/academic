@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
@@ -30,381 +31,456 @@ async function assertCuratorStudentAccess(actor: { id: string; roles: string[] }
   }
 }
 
+const AnswerQuestionActionSchema = z.object({
+  questionId: z.string().min(1, "ID вопроса обязателен"),
+  answer: z.string().trim().min(1, "Ответ не может быть пустым"),
+});
+
 export async function answerQuestionAction(questionId: string, answer: string) {
-  const actor = await requireRole(["curator", "super_curator", "admin"]);
-  
-  if (!answer.trim()) {
-    throw new ApiError("bad_request", "Ответ не может быть пустым", 400);
-  }
-
-  const question = await prisma.lessonQuestion.findUnique({
-    where: { id: questionId },
-    select: { studentId: true, lessonId: true }
-  });
-  if (!question) {
-    throw new ApiError("not_found", "Вопрос не найден", 404);
-  }
-
-  await assertCuratorStudentAccess(actor, question.studentId);
-
-  await prisma.lessonQuestion.update({
-    where: { id: questionId },
-    data: {
-      answer,
-      status: QuestionStatus.ANSWERED,
-      answeredAt: new Date(),
-      curatorId: actor.id
+  try {
+    const parsed = AnswerQuestionActionSchema.safeParse({ questionId, answer });
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные", 400);
     }
-  });
 
-  await logAudit({
-    actorId: actor.id,
-    action: "question.answered",
-    entity: "question",
-    entityId: questionId,
-    metadata: { answer }
-  });
+    const actor = await requireRole(["curator", "super_curator", "admin"]);
 
-  if (question?.studentId) {
-    await createNotification({
-      userId: question.studentId,
-      event: "question_answered",
-      channel: NOTIFICATION_CHANNELS.IN_APP,
-      refType: "lesson_question",
-      refId: questionId,
-      data: { lessonId: question.lessonId, questionId },
+    const question = await prisma.lessonQuestion.findUnique({
+      where: { id: questionId },
+      select: { studentId: true, lessonId: true }
     });
-  }
+    if (!question) {
+      throw new ApiError("not_found", "Вопрос не найден", 404);
+    }
 
-  if (question?.lessonId) {
-    revalidatePath("/student/lessons/" + question.lessonId);
+    await assertCuratorStudentAccess(actor, question.studentId);
+
+    await prisma.lessonQuestion.update({
+      where: { id: questionId },
+      data: {
+        answer,
+        status: QuestionStatus.ANSWERED,
+        answeredAt: new Date(),
+        curatorId: actor.id
+      }
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "question.answered",
+      entity: "question",
+      entityId: questionId,
+      metadata: { answer }
+    });
+
+    if (question?.studentId) {
+      await createNotification({
+        userId: question.studentId,
+        event: "question_answered",
+        channel: NOTIFICATION_CHANNELS.IN_APP,
+        refType: "lesson_question",
+        refId: questionId,
+        data: { lessonId: question.lessonId, questionId },
+      });
+    }
+
+    if (question?.lessonId) {
+      revalidatePath("/student/lessons/" + question.lessonId);
+    }
+    revalidatePath("/curator");
+    revalidatePath("/curator/questions");
+    return { success: true };
+  } catch (error) {
+    console.error("[answerQuestionAction]", error);
+    throw error;
   }
-  revalidatePath("/curator");
-  revalidatePath("/curator/questions");
-  return { success: true };
 }
+
+const ReviewSubmissionActionSchema = z.object({
+  submissionId: z.string().min(1, "ID работы обязателен"),
+  status: z.enum(["ACCEPTED", "REJECTED", "NEEDS_REVISION"]),
+  score: z.number().min(0, "Оценка должна быть положительным числом"),
+  feedback: z.string().optional(),
+});
 
 export async function reviewSubmissionAction(submissionId: string, input: {
   status: "ACCEPTED" | "REJECTED" | "NEEDS_REVISION";
   score: number;
   feedback?: string;
 }) {
-  const actor = await requireRole(["curator", "super_curator", "admin"]);
-
-  const submission = await prisma.assignmentSubmission.findUnique({
-    where: { id: submissionId },
-    select: { userId: true, assignment: { select: { lessonId: true } } }
-  });
-  if (!submission) {
-    throw new ApiError("not_found", "Запись не найдена", 404);
-  }
-
-  await assertCuratorStudentAccess(actor, submission.userId);
-
-  const updated = await prisma.assignmentSubmission.update({
-    where: { id: submissionId },
-    data: {
-      status: input.status,
-      score: input.score,
-      feedback: input.feedback,
-      reviewedAt: new Date(),
-      reviewedById: actor.id
-    },
-    include: { assignment: true }
-  });
-
-  await logAudit({
-    actorId: actor.id,
-    action: "assignment.reviewed",
-    entity: "assignment_submission",
-    entityId: submissionId,
-    metadata: input
-  });
-
-  await createNotification({
-    userId: updated.userId,
-    event: "assignment_reviewed",
-    channel: NOTIFICATION_CHANNELS.IN_APP,
-    data: { status: input.status, score: input.score }
-  });
-
-  if (input.status === "ACCEPTED" && updated.assignment.lessonId) {
-    try {
-      await markLessonProgress(updated.userId, updated.assignment.lessonId, 100);
-    } catch (e) {
-      console.error("Failed to update student progress after assignment acceptance:", e);
+  try {
+    const parsed = ReviewSubmissionActionSchema.safeParse({ submissionId, ...input });
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные", 400);
     }
-  }
 
-  revalidatePath("/curator");
-  revalidatePath("/curator/submissions");
-  revalidatePath("/student/assignments");
-  return { success: true };
+    const actor = await requireRole(["curator", "super_curator", "admin"]);
+
+    const submission = await prisma.assignmentSubmission.findUnique({
+      where: { id: submissionId },
+      select: { userId: true, assignment: { select: { lessonId: true } } }
+    });
+    if (!submission) {
+      throw new ApiError("not_found", "Запись не найдена", 404);
+    }
+
+    await assertCuratorStudentAccess(actor, submission.userId);
+
+    const updated = await prisma.assignmentSubmission.update({
+      where: { id: submissionId },
+      data: {
+        status: input.status,
+        score: input.score,
+        feedback: input.feedback,
+        reviewedAt: new Date(),
+        reviewedById: actor.id
+      },
+      include: { assignment: true }
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "assignment.reviewed",
+      entity: "assignment_submission",
+      entityId: submissionId,
+      metadata: input
+    });
+
+    await createNotification({
+      userId: updated.userId,
+      event: "assignment_reviewed",
+      channel: NOTIFICATION_CHANNELS.IN_APP,
+      data: { status: input.status, score: input.score }
+    });
+
+    if (input.status === "ACCEPTED" && updated.assignment.lessonId) {
+      try {
+        await markLessonProgress(updated.userId, updated.assignment.lessonId, 100);
+      } catch (e) {
+        console.error("Failed to update student progress after assignment acceptance:", e);
+      }
+    }
+
+    revalidatePath("/curator");
+    revalidatePath("/curator/submissions");
+    revalidatePath("/student/assignments");
+    return { success: true };
+  } catch (error) {
+    console.error("[reviewSubmissionAction]", error);
+    throw error;
+  }
 }
+
+const MarkSubmissionInReviewSchema = z.object({
+  submissionId: z.string().min(1, "ID работы обязателен"),
+});
 
 export async function markSubmissionInReview(submissionId: string) {
-  const actor = await requireRole(["curator", "super_curator", "admin"]);
+  try {
+    const parsed = MarkSubmissionInReviewSchema.safeParse({ submissionId });
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные", 400);
+    }
 
-  const submission = await prisma.assignmentSubmission.findUnique({
-    where: { id: submissionId },
-    select: { userId: true, status: true },
-  });
-  if (!submission) {
-    throw new ApiError("not_found", "Запись не найдена", 404);
-  }
+    const actor = await requireRole(["curator", "super_curator", "admin"]);
 
-  await assertCuratorStudentAccess(actor, submission.userId);
-
-  // Only transition from SUBMITTED to IN_REVIEW
-  if (submission.status === "SUBMITTED") {
-    await prisma.assignmentSubmission.update({
+    const submission = await prisma.assignmentSubmission.findUnique({
       where: { id: submissionId },
-      data: { status: "IN_REVIEW" },
+      select: { userId: true, status: true },
     });
-    revalidatePath("/curator");
-    revalidatePath("/curator/assignments");
-  }
+    if (!submission) {
+      throw new ApiError("not_found", "Запись не найдена", 404);
+    }
 
-  return { success: true };
+    await assertCuratorStudentAccess(actor, submission.userId);
+
+    // Only transition from SUBMITTED to IN_REVIEW
+    if (submission.status === "SUBMITTED") {
+      await prisma.assignmentSubmission.update({
+        where: { id: submissionId },
+        data: { status: "IN_REVIEW" },
+      });
+      revalidatePath("/curator");
+      revalidatePath("/curator/assignments");
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("[markSubmissionInReview]", error);
+    throw error;
+  }
 }
+
+const GetSubmissionDetailSchema = z.object({
+  submissionId: z.string().min(1, "ID работы обязателен"),
+});
 
 export async function getSubmissionDetail(submissionId: string) {
-  const actor = await requireRole(["curator", "super_curator", "admin"]);
+  try {
+    const parsed = GetSubmissionDetailSchema.safeParse({ submissionId });
+    if (!parsed.success) {
+      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+    }
 
-  const submission = await prisma.assignmentSubmission.findUnique({
-    where: { id: submissionId },
-    include: {
-      user: { select: { id: true, name: true, email: true } },
-      reviewedBy: { select: { id: true, name: true } },
-      assignment: {
-        include: {
-          course: { select: { id: true, title: true } },
-          lesson: { select: { id: true, title: true } },
+    const actor = await requireRole(["curator", "super_curator", "admin"]);
+
+    const submission = await prisma.assignmentSubmission.findUnique({
+      where: { id: submissionId },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        reviewedBy: { select: { id: true, name: true } },
+        assignment: {
+          include: {
+            course: { select: { id: true, title: true } },
+            lesson: { select: { id: true, title: true } },
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!submission) {
-    throw new ApiError("not_found", "Запись не найдена", 404);
-  }
+    if (!submission) {
+      throw new ApiError("not_found", "Запись не найдена", 404);
+    }
 
-  await assertCuratorStudentAccess(actor, submission.userId);
+    await assertCuratorStudentAccess(actor, submission.userId);
 
-  // Fetch previous attempts for this student+assignment
-  const previousAttempts = await prisma.assignmentSubmission.findMany({
-    where: {
-      assignmentId: submission.assignmentId,
-      userId: submission.userId,
-      id: { not: submissionId },
-    },
-    orderBy: { submittedAt: "desc" },
-    take: 10,
-    select: {
-      id: true,
-      status: true,
-      score: true,
-      submittedAt: true,
-      reviewedAt: true,
-    },
-  });
-
-  return {
-    submission: {
-      id: submission.id,
-      status: submission.status,
-      answerText: submission.answerText,
-      fileUrl: submission.fileUrl,
-      score: submission.score,
-      feedback: submission.feedback,
-      attemptNumber: submission.attemptNumber,
-      submittedAt: submission.submittedAt.toISOString(),
-      reviewedAt: submission.reviewedAt?.toISOString() ?? null,
-      student: { ...submission.user, name: actor.roles.includes("admin") ? submission.user.name : maskStudentName(submission.user.id) },
-      reviewedBy: submission.reviewedBy,
-      assignment: {
-        title: submission.assignment.title,
-        instructions: submission.assignment.instructions,
-        maxScore: submission.assignment.maxScore,
-        maxAttempts: submission.assignment.maxAttempts,
-        deadline: submission.assignment.deadline?.toISOString() ?? null,
-        course: submission.assignment.course,
-        lesson: submission.assignment.lesson,
+    // Fetch previous attempts for this student+assignment
+    const previousAttempts = await prisma.assignmentSubmission.findMany({
+      where: {
+        assignmentId: submission.assignmentId,
+        userId: submission.userId,
+        id: { not: submissionId },
       },
-      previousAttempts: previousAttempts.map((a) => ({
-        id: a.id,
-        status: a.status,
-        score: a.score,
-        submittedAt: a.submittedAt.toISOString(),
-        reviewedAt: a.reviewedAt?.toISOString() ?? null,
-      })),
-    },
-  };
+      orderBy: { submittedAt: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        status: true,
+        score: true,
+        submittedAt: true,
+        reviewedAt: true,
+      },
+    });
+
+    return {
+      submission: {
+        id: submission.id,
+        status: submission.status,
+        answerText: submission.answerText,
+        fileUrl: submission.fileUrl,
+        score: submission.score,
+        feedback: submission.feedback,
+        attemptNumber: submission.attemptNumber,
+        submittedAt: submission.submittedAt.toISOString(),
+        reviewedAt: submission.reviewedAt?.toISOString() ?? null,
+        student: { ...submission.user, name: actor.roles.includes("admin") ? submission.user.name : maskStudentName(submission.user.id) },
+        reviewedBy: submission.reviewedBy,
+        assignment: {
+          title: submission.assignment.title,
+          instructions: submission.assignment.instructions,
+          maxScore: submission.assignment.maxScore,
+          maxAttempts: submission.assignment.maxAttempts,
+          deadline: submission.assignment.deadline?.toISOString() ?? null,
+          course: submission.assignment.course,
+          lesson: submission.assignment.lesson,
+        },
+        previousAttempts: previousAttempts.map((a) => ({
+          id: a.id,
+          status: a.status,
+          score: a.score,
+          submittedAt: a.submittedAt.toISOString(),
+          reviewedAt: a.reviewedAt?.toISOString() ?? null,
+        })),
+      },
+    };
+  } catch (error) {
+    console.error("[getSubmissionDetail]", error);
+    throw error;
+  }
 }
 
-export async function forwardQuestionAction(questionId: string) {
-  const actor = await requireRole(["curator", "super_curator", "admin"]);
+const ForwardQuestionActionSchema = z.object({
+  questionId: z.string().min(1, "ID вопроса обязателен"),
+});
 
-  const question = await prisma.lessonQuestion.findUnique({
-    where: { id: questionId },
-    include: {
-      student: { select: { name: true } },
-      lesson: {
-        select: {
-          module: {
-            select: {
-              course: {
-                select: {
-                  instructors: { select: { userId: true } },
+export async function forwardQuestionAction(questionId: string) {
+  try {
+    const parsed = ForwardQuestionActionSchema.safeParse({ questionId });
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные", 400);
+    }
+
+    const actor = await requireRole(["curator", "super_curator", "admin"]);
+
+    const question = await prisma.lessonQuestion.findUnique({
+      where: { id: questionId },
+      include: {
+        student: { select: { name: true } },
+        lesson: {
+          select: {
+            module: {
+              select: {
+                course: {
+                  select: {
+                    instructors: { select: { userId: true } },
+                  },
                 },
               },
             },
           },
         },
-      },
+      }
+    });
+
+    if (!question) {
+      throw new ApiError("not_found", "Вопрос не найден", 404);
     }
-  });
 
-  if (!question) {
-    throw new ApiError("not_found", "Вопрос не найден", 404);
-  }
+    await assertCuratorStudentAccess(actor, question.studentId);
 
-  await assertCuratorStudentAccess(actor, question.studentId);
+    await prisma.lessonQuestion.update({
+      where: { id: questionId },
+      data: {
+        status: QuestionStatus.FORWARDED
+      }
+    });
 
-  await prisma.lessonQuestion.update({
-    where: { id: questionId },
-    data: {
-      status: QuestionStatus.FORWARDED
+    await logAudit({
+      actorId: actor.id,
+      action: "question.forwarded",
+      entity: "question",
+      entityId: questionId
+    });
+
+    if (question?.lessonId) {
+      revalidatePath("/student/lessons/" + question.lessonId);
     }
-  });
-
-  await logAudit({
-    actorId: actor.id,
-    action: "question.forwarded",
-    entity: "question",
-    entityId: questionId
-  });
-
-  if (question?.lessonId) {
-    revalidatePath("/student/lessons/" + question.lessonId);
-  }
-  revalidatePath("/curator");
-  revalidatePath("/curator/questions");
-  // Notify student and original curator
-  if (question?.studentId) {
-    await createNotification({
-      userId: question.studentId,
-      event: "question_forwarded",
-      refType: "lesson_question",
-      refId: questionId,
-      data: { lessonId: question.lessonId, questionId, link: `/student/lessons/${question.lessonId}` }
-    }).catch((e) => console.error("Failed to notify student:", e));
-  }
-  if (question?.curatorId) {
-    await createNotification({
-      userId: question.curatorId,
-      event: "question_forwarded",
-      refType: "lesson_question",
-      refId: questionId,
-      data: { lessonId: question.lessonId, questionId, studentName: maskStudentName(question.studentId), link: "/curator/questions" }
-    }).catch((e) => console.error("Failed to notify curator:", e));
-  }
-  const instructorIds = [
-    ...new Set(question.lesson.module.course.instructors.map((instructor) => instructor.userId)),
-  ].filter((instructorId) => instructorId !== actor.id);
-  await Promise.all(
-    instructorIds.map((instructorId) =>
-      createNotification({
-        userId: instructorId,
+    revalidatePath("/curator");
+    revalidatePath("/curator/questions");
+    // Notify student and original curator
+    if (question?.studentId) {
+      await createNotification({
+        userId: question.studentId,
         event: "question_forwarded",
         refType: "lesson_question",
         refId: questionId,
-        data: {
-          lessonId: question.lessonId,
-          questionId,
-          studentId: question.studentId,
-          studentName: maskStudentName(question.studentId),
-          link: "/instructor/questions",
-        },
-      }).catch((e) => console.error("Failed to notify instructor:", e)),
-    ),
-  );
+        data: { lessonId: question.lessonId, questionId, link: `/student/lessons/${question.lessonId}` }
+      }).catch((e) => console.error("Failed to notify student:", e));
+    }
+    if (question?.curatorId) {
+      await createNotification({
+        userId: question.curatorId,
+        event: "question_forwarded",
+        refType: "lesson_question",
+        refId: questionId,
+        data: { lessonId: question.lessonId, questionId, studentName: maskStudentName(question.studentId), link: "/curator/questions" }
+      }).catch((e) => console.error("Failed to notify curator:", e));
+    }
+    const instructorIds = [
+      ...new Set(question.lesson.module.course.instructors.map((instructor) => instructor.userId)),
+    ].filter((instructorId) => instructorId !== actor.id);
+    await Promise.all(
+      instructorIds.map((instructorId) =>
+        createNotification({
+          userId: instructorId,
+          event: "question_forwarded",
+          refType: "lesson_question",
+          refId: questionId,
+          data: {
+            lessonId: question.lessonId,
+            questionId,
+            studentId: question.studentId,
+            studentName: maskStudentName(question.studentId),
+            link: "/instructor/questions",
+          },
+        }).catch((e) => console.error("Failed to notify instructor:", e)),
+      ),
+    );
 
-  revalidatePath("/instructor");
-  return { success: true };
+    revalidatePath("/instructor");
+    return { success: true };
+  } catch (error) {
+    console.error("[forwardQuestionAction]", error);
+    throw error;
+  }
 }
 
 export async function answerForwardedQuestionAction(formData: FormData) {
-  const actor = await requireRole(["instructor", "admin"]);
+  try {
+    const actor = await requireRole(["instructor", "admin"]);
 
-  const parsed = answerForwardedQuestionSchema.safeParse({
-    questionId: formData.get("questionId"),
-    answer: formData.get("answer"),
-  });
-  if (!parsed.success) {
-    throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные формы", 400);
-  }
-  const { questionId, answer } = parsed.data;
-
-  const question = await prisma.lessonQuestion.findUnique({
-    where: { id: questionId },
-    include: {
-      student: { select: { name: true, email: true } },
-      lesson: { include: { module: { include: { course: { include: { instructors: { select: { userId: true } } } } } } } }
+    const parsed = answerForwardedQuestionSchema.safeParse({
+      questionId: formData.get("questionId"),
+      answer: formData.get("answer"),
+    });
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные формы", 400);
     }
-  });
-  if (!question || question.status !== QuestionStatus.FORWARDED) {
-    throw new ApiError("not_found", "Вопрос не найден или не был переадресован", 404);
-  }
+    const { questionId, answer } = parsed.data;
 
-  if (!actor.roles.includes("admin")) {
-    const isInstructor = question.lesson.module.course.instructors.some(
-      (i) => i.userId === actor.id
-    );
-    if (!isInstructor) {
-      throw new ApiError("forbidden", "Доступ запрещен: вопрос относится к курсу, который вы не ведете", 403);
+    const question = await prisma.lessonQuestion.findUnique({
+      where: { id: questionId },
+      include: {
+        student: { select: { name: true, email: true } },
+        lesson: { include: { module: { include: { course: { include: { instructors: { select: { userId: true } } } } } } } }
+      }
+    });
+    if (!question || question.status !== QuestionStatus.FORWARDED) {
+      throw new ApiError("not_found", "Вопрос не найден или не был переадресован", 404);
     }
-  }
 
-  await prisma.lessonQuestion.update({
-    where: { id: questionId },
-    data: {
-      answer,
-      status: QuestionStatus.ANSWERED,
-      answeredAt: new Date()
+    if (!actor.roles.includes("admin")) {
+      const isInstructor = question.lesson.module.course.instructors.some(
+        (i) => i.userId === actor.id
+      );
+      if (!isInstructor) {
+        throw new ApiError("forbidden", "Доступ запрещен: вопрос относится к курсу, который вы не ведете", 403);
+      }
     }
-  });
 
-  await logAudit({
-    actorId: actor.id,
-    action: "question.answered_forwarded",
-    entity: "question",
-    entityId: questionId,
-    metadata: { answer }
-  });
+    await prisma.lessonQuestion.update({
+      where: { id: questionId },
+      data: {
+        answer,
+        status: QuestionStatus.ANSWERED,
+        answeredAt: new Date()
+      }
+    });
 
-  // Notify student and original curator
-  if (question?.studentId) {
-    await createNotification({
-      userId: question.studentId,
-      event: "question_answered",
-      refType: "lesson_question",
-      refId: questionId,
-      data: { lessonId: question.lessonId, questionId, link: `/student/lessons/${question.lessonId}` }
-    }).catch((e) => console.error("Failed to notify student:", e));
+    await logAudit({
+      actorId: actor.id,
+      action: "question.answered_forwarded",
+      entity: "question",
+      entityId: questionId,
+      metadata: { answer }
+    });
+
+    // Notify student and original curator
+    if (question?.studentId) {
+      await createNotification({
+        userId: question.studentId,
+        event: "question_answered",
+        refType: "lesson_question",
+        refId: questionId,
+        data: { lessonId: question.lessonId, questionId, link: `/student/lessons/${question.lessonId}` }
+      }).catch((e) => console.error("Failed to notify student:", e));
+    }
+    if (question?.curatorId) {
+      await createNotification({
+        userId: question.curatorId,
+        event: "question_answered",
+        refType: "lesson_question",
+        refId: questionId,
+        data: { lessonId: question.lessonId, questionId, studentName: maskStudentName(question.studentId), link: "/curator/questions" }
+      }).catch((e) => console.error("Failed to notify curator:", e));
+    }
+
+    revalidatePath("/instructor");
+    revalidatePath("/instructor/questions");
+    revalidatePath("/curator");
+  } catch (error) {
+    console.error("[answerForwardedQuestionAction]", error);
+    throw error;
   }
-  if (question?.curatorId) {
-    await createNotification({
-      userId: question.curatorId,
-      event: "question_answered",
-      refType: "lesson_question",
-      refId: questionId,
-      data: { lessonId: question.lessonId, questionId, studentName: maskStudentName(question.studentId), link: "/curator/questions" }
-    }).catch((e) => console.error("Failed to notify curator:", e));
-  }
-
-  revalidatePath("/instructor");
-  revalidatePath("/instructor/questions");
-  revalidatePath("/curator");
 }
 

@@ -11,6 +11,12 @@ import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 import { BarChart3 } from "lucide-react";
 import type { DashboardMetric } from "@/types/domain";
 
+export const metadata = {
+  title: "Отчёты — Студент",
+  description: "Отчёты по успеваемости.",
+};
+
+
 const prisma = getPrisma();
 
 export const dynamic = "force-dynamic";

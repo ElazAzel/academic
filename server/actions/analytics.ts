@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
@@ -23,83 +24,129 @@ async function assertCuratorStudentAccess(actor: { id: string; roles: string[] }
   }
 }
 
+const GenerateReportActionSchema = z.object({
+  projectId: z.string().min(1, "ID проекта обязателен"),
+  type: z.string().min(1, "Тип отчёта обязателен"),
+});
+
 export async function generateReportAction(projectId: string, type: string) {
-  const actor = await requireRole(["admin", "instructor", "super_curator", "customer_observer"]);
-
-  const report = await prisma.report.create({
-    data: {
-      projectId,
-      type,
-      status: "ready",
-      url: `/api/v1/reports?type=${type}&format=csv`
+  try {
+    const parsed = GenerateReportActionSchema.safeParse({ projectId, type });
+    if (!parsed.success) {
+      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
     }
-  });
 
-  await logAudit({
-    actorId: actor.id,
-    action: "report.generated",
-    entity: "report",
-    entityId: report.id,
-    metadata: { projectId, type }
-  });
+    const actor = await requireRole(["admin", "instructor", "super_curator", "customer_observer"]);
 
-  return report;
+    const report = await prisma.report.create({
+      data: {
+        projectId,
+        type,
+        status: "ready",
+        url: `/api/v1/reports?type=${type}&format=csv`
+      }
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "report.generated",
+      entity: "report",
+      entityId: report.id,
+      metadata: { projectId, type }
+    });
+
+    return report;
+  } catch (error) {
+    console.error("[generateReportAction]", error);
+    throw error;
+  }
 }
+
+const CreateRiskFlagActionSchema = z.object({
+  userId: z.string().min(1, "ID пользователя обязателен"),
+  type: z.string().min(1, "Тип риска обязателен"),
+  courseId: z.string().optional(),
+  cohortId: z.string().optional(),
+});
 
 export async function createRiskFlagAction(userId: string, type: string, courseId?: string, cohortId?: string) {
-  const actor = await requireRole(["admin", "super_curator", "curator"]);
-
-  await assertCuratorStudentAccess(actor, userId);
-
-  const flag = await prisma.riskFlag.create({
-    data: {
-      userId,
-      type,
-      courseId,
-      cohortId,
-      severity: "high",
-      status: "open"
+  try {
+    const parsed = CreateRiskFlagActionSchema.safeParse({ userId, type, courseId, cohortId });
+    if (!parsed.success) {
+      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
     }
-  });
 
-  await logAudit({
-    actorId: actor.id,
-    action: "risk_flag.created",
-    entity: "risk_flag",
-    entityId: flag.id,
-    metadata: { userId, type }
-  });
+    const actor = await requireRole(["admin", "super_curator", "curator"]);
 
-  return flag;
+    await assertCuratorStudentAccess(actor, userId);
+
+    const flag = await prisma.riskFlag.create({
+      data: {
+        userId,
+        type,
+        courseId,
+        cohortId,
+        severity: "high",
+        status: "open"
+      }
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "risk_flag.created",
+      entity: "risk_flag",
+      entityId: flag.id,
+      metadata: { userId, type }
+    });
+
+    return flag;
+  } catch (error) {
+    console.error("[createRiskFlagAction]", error);
+    throw error;
+  }
 }
 
+const ResolveRiskFlagActionSchema = z.object({
+  flagId: z.string().min(1, "ID флага обязателен"),
+});
+
 export async function resolveRiskFlagAction(flagId: string) {
-  const actor = await requireRole(["admin", "super_curator", "curator"]);
-
-  const riskFlag = await prisma.riskFlag.findUnique({
-    where: { id: flagId },
-    select: { id: true, userId: true }
-  });
-  if (!riskFlag) {
-    throw new ApiError("not_found", "Флаг риска не найден", 404);
-  }
-
-  await assertCuratorStudentAccess(actor, riskFlag.userId);
-
-  const updated = await prisma.riskFlag.update({
-    where: { id: flagId },
-    data: {
-      status: "resolved",
-      resolvedAt: new Date()
+  try {
+    const parsed = ResolveRiskFlagActionSchema.safeParse({ flagId });
+    if (!parsed.success) {
+      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
     }
-  });
 
-  await logAudit({
-    actorId: actor.id,
-    action: "risk_flag.resolved",
-    entity: "risk_flag",
-    entityId: riskFlag.id
-  });
+    const actor = await requireRole(["admin", "super_curator", "curator"]);
 
-  return updated;
+    const riskFlag = await prisma.riskFlag.findUnique({
+      where: { id: flagId },
+      select: { id: true, userId: true }
+    });
+    if (!riskFlag) {
+      throw new ApiError("not_found", "Флаг риска не найден", 404);
+    }
+
+    await assertCuratorStudentAccess(actor, riskFlag.userId);
+
+    const updated = await prisma.riskFlag.update({
+      where: { id: flagId },
+      data: {
+        status: "resolved",
+        resolvedAt: new Date()
+      }
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "risk_flag.resolved",
+      entity: "risk_flag",
+      entityId: riskFlag.id
+    });
+
+    return updated;
+  } catch (error) {
+    console.error("[resolveRiskFlagAction]", error);
+    throw error;
+  }
 }

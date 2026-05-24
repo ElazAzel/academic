@@ -19,6 +19,12 @@ import { getStudentDashboard } from "@/server/actions/dashboard";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import type { BadgeStatus } from "@/components/lms/status-badge";
 
+export const metadata = {
+  title: "Дашборд — Студент",
+  description: "Панель управления студента.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default function StudentDashboardPage() {

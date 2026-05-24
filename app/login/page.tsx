@@ -4,6 +4,12 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getDefaultRolePath } from "@/lib/auth/role-redirect";
 import { getEnabledOAuthProviders } from "@/server/auth/provider-flags";
 
+export const metadata = {
+  title: "Вход — AI Strategic Academy",
+  description: "Войдите в свою учётную запись.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {

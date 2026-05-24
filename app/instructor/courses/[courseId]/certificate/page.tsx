@@ -3,6 +3,12 @@ import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { CertificateDesigner } from "@/components/admin/certificate-designer";
 
+export const metadata = {
+  title: "Сертификат курса — Инструктор",
+  description: "Настройка сертификата курса.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function InstructorCertificateDesignerPage({ params }: { params: Promise<{ courseId: string }> }) {

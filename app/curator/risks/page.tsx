@@ -12,6 +12,12 @@ import { getCuratorEnhancedRisks } from "@/server/actions/curator-enhanced";
 import { RISK_LABELS } from "@/types/domain";
 import type { DashboardMetric } from "@/types/domain";
 
+export const metadata = {
+  title: "Риски — Куратор",
+  description: "Мониторинг рисков отчисления.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function CuratorRisksPage() {

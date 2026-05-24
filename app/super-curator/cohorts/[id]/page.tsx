@@ -12,6 +12,12 @@ import { EditCohortForm } from "../cohort-form";
 import { AddStudentForm } from "./add-student-form";
 import type { DashboardMetric } from "@/types/domain";
 
+export const metadata = {
+  title: "Когорта — Супер-куратор",
+  description: "Детали когорты.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function CohortDetailPage(props: { params: Promise<{ id: string }> }) {

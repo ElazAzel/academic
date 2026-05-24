@@ -11,6 +11,12 @@ import { getProfile } from "@/server/modules/auth/service";
 import { TwoFactorSettings } from "@/components/admin/two-factor-settings";
 import { updateProfileSettingsAction, updatePasswordAction, getNotificationPreferencesAction, updateNotificationPreferencesAction } from "@/server/actions/settings";
 
+export const metadata = {
+  title: "Настройки — Супер-куратор",
+  description: "Настройки профиля супер-куратора.",
+};
+
+
 const NOTIFICATION_CHANNELS = [
   { key: "super_curator_applications", label: "Новые заявки кураторов", desc: "Уведомления о новых кандидатурах" },
   { key: "super_curator_flow_reports", label: "Отчеты по потокам", desc: "Получать сводки о работе кураторов" },

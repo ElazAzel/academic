@@ -5,6 +5,12 @@ import { getPrisma } from "@/lib/prisma";
 import { QuizEditForm } from "@/components/instructor/quiz-edit-form";
 import { notFound } from "next/navigation";
 
+export const metadata = {
+  title: "Редактирование теста — Инструктор",
+  description: "Редактирование теста и вопросов.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function InstructorEditQuizPage({ params }: { params: Promise<{ quizId: string }> }) {

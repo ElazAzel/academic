@@ -9,6 +9,12 @@ import { getPrisma } from "@/lib/prisma";
 import Link from "next/link";
 import { createQuizAction } from "@/server/actions/quiz-assignment";
 
+export const metadata = {
+  title: "Тесты — Инструктор",
+  description: "Управление тестами курсов.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function InstructorQuizzesPage() {

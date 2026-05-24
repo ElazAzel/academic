@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
@@ -29,8 +30,17 @@ function toJsonObject(value: unknown): Prisma.InputJsonObject {
   return isRecord(value) ? { ...value } as Prisma.InputJsonObject : {};
 }
 
+const GetCertificateTemplateActionSchema = z.object({
+  courseId: z.string().min(1, "ID курса обязателен"),
+});
+
 export async function getCertificateTemplateAction(courseId: string) {
   try {
+    const parsed = GetCertificateTemplateActionSchema.safeParse({ courseId });
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные", 400);
+    }
+
     const user = await requireUser();
     await assertCanEditTemplate(courseId, user.id, user.roles);
 
@@ -59,8 +69,18 @@ export async function getCertificateTemplateAction(courseId: string) {
   }
 }
 
+const SaveCertificateTemplateActionSchema = z.object({
+  courseId: z.string().min(1, "ID курса обязателен"),
+  config: z.any(),
+});
+
 export async function saveCertificateTemplateAction(courseId: string, config: unknown) {
   try {
+    const parsed = SaveCertificateTemplateActionSchema.safeParse({ courseId, config });
+    if (!parsed.success) {
+      throw new ApiError("bad_request", parsed.error.errors[0]?.message ?? "Некорректные данные", 400);
+    }
+
     const user = await requireUser();
     await assertCanEditTemplate(courseId, user.id, user.roles);
     const body = toJsonObject(config);

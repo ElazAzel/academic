@@ -3,6 +3,12 @@ import { PageHeader } from "@/components/lms/page-header";
 import { CreateCourseForm } from "@/components/admin/create-course-form";
 import { requireRolePage } from "@/lib/auth/page-guards";
 
+export const metadata = {
+  title: "Создание курса — Инструктор",
+  description: "Создание нового курса.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function InstructorNewCoursePage() {

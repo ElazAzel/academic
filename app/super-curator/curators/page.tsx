@@ -7,6 +7,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getSuperCuratorCurators } from "@/server/actions/super-curator";
 import { AddCuratorDialog } from "./add-curator-form";
 
+export const metadata = {
+  title: "Кураторы — Супер-куратор",
+  description: "Управление кураторами.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorCuratorsPage() {

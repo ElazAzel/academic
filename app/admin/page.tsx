@@ -12,6 +12,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 
+export const metadata = {
+  title: "Дашборд — Администрирование",
+  description: "Панель управления администратора.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default function AdminDashboardPage() {
