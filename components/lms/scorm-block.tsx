@@ -92,11 +92,11 @@ export function ScormBlockEditor({ lessonId, packageInfo, onPackageChange }: Sco
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => document.getElementById("scorm-zip-input")?.click()} disabled={uploading}>
+            <Button variant="secondary" size="sm" onClick={() => document.getElementById("scorm-zip-input")?.click()} disabled={uploading}>
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Replace className="h-4 w-4" />}
               Заменить
             </Button>
-            <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>
+            <Button variant="danger" size="sm" onClick={handleDelete} disabled={deleting}>
               {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               Удалить
             </Button>
@@ -117,7 +117,7 @@ export function ScormBlockEditor({ lessonId, packageInfo, onPackageChange }: Sco
         <div className="flex flex-col items-center gap-3">
           <Upload className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">Загрузите SCORM-пакет (ZIP)</p>
-          <Button variant="outline" disabled={uploading} onClick={() => document.getElementById("scorm-zip-input")?.click()}>
+          <Button variant="secondary" disabled={uploading} onClick={() => document.getElementById("scorm-zip-input")?.click()}>
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
             {uploading ? "Загрузка..." : "Выбрать ZIP"}
           </Button>
