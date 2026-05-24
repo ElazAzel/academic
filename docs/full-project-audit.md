@@ -1,6 +1,6 @@
 # Full Project Audit: AI Strategic Academy
 
-Date: 2026-05-22 (updated 2026-05-22 — post-fix audit refresh)  
+Date: 2026-05-24 (updated — post-production-hardening)  
 Scope: local repository, local build/test gates, non-mutating Browser smoke, active and archived documentation.  
 Readiness target: full roadmap readiness, with release blockers separated from later strategic work.
 
@@ -54,18 +54,18 @@ Evidence levels:
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| `npm run lint -- --max-warnings=0` | `done` | Initial audit run failed on SCORM/attendance/video lint debt. P0 follow-up fixed it and reran the zero-warning gate successfully. |
-| `npx tsc --noEmit --incremental false` | `done` | TypeScript check passed. |
-| `npm run test` | `done` | 63 Vitest files and 385 tests passed. 8 new tests added for quiz grading edge cases. |
+| `npm run lint -- --max-warnings=0` | `done` | 0 errors, 0 warnings |
+| `npx tsc --noEmit --incremental false` | `done` | TypeScript check passed clean. |
+| `npm run test` | `done` | 69 Vitest files and 422 tests passed. |
 | `npx prisma validate` | `done` | Prisma schema validation passed. |
 | `npm run db:generate` | `done` | Prisma client generation passed. |
-| `npm run build` | `done` | Next.js production build completed: 85 pages / 102 API routes. |
+| `npm run build` | `done` | Next.js production build completed: 87 pages / 102 API routes. |
 | Build observability note | `done` | Build reports missing Sentry auth token for sourcemap upload and dynamic-server-usage logs for dynamic pages. Build still succeeds. This is expected — `SENTRY_AUTH_TOKEN` not in local `.env`, sourcemaps uploaded only in CI/production. |
-| Local seeded role/e2e run | `partial` | Docker is unavailable, but E2E smoke tests (26/26) now pass against remote Supabase DB. |
+| Local seeded role/e2e run | `done` | E2E smoke tests (52/52) pass against remote Supabase DB. |
 
 ### Browser smoke + E2E smoke
 
-The Browser smoke used the local dev server only for non-mutating public and unauthenticated checks. E2E smoke tests (`tests/e2e/smoke.spec.ts`) now pass 26/26.
+The Browser smoke used the local dev server only for non-mutating public and unauthenticated checks. E2E smoke tests pass 52/52 (Chromium desktop + Pixel 7 mobile).
 
 | Scenario | Result | Evidence |
 | --- | --- | --- |
@@ -79,7 +79,7 @@ The Browser smoke used the local dev server only for non-mutating public and una
 | `/certificates/verify/not-a-real-code` | `partial` | Invalid public verification state renders and states that email/internal data is not exposed; valid and revoked certificate states were not seeded and checked. |
 | `/consent` | `done` | Initial audit found it missing. P0 follow-up added the public route and Browser confirmed it renders without login redirect. |
 | Login footer legal links | `done` | Initial audit found `#` hrefs. P0 follow-up wired privacy, terms and cookie routes and Browser confirmed them. |
-| **E2E smoke suite** | `done` | **2026-05-22: 26/26 passed** (chromium + mobile). Tests fixed to match actual UI text. |
+| **E2E smoke suite** | `done` | **2026-05-24: 52/52 passed** (Chromium + Pixel 7). Auth session dynamic route signal fix applied. |
 
 ## Source Truth and Drift
 
@@ -182,7 +182,10 @@ Documents inspected:
 | P1 | Media privacy | Signed-url and video-playback handlers inspect enrollment and lesson ordering. | `partial` | Test signed URL access for owner/non-owner/locked lesson and confirm bucket policy in deployed storage. |
 | P1 | Notifications | Outbox/notification code and env contract exist; cron endpoints fail closed without `CRON_SECRET`. | `partial` | Prove default `in_app` channel and explicit email opt-in on real notification events. |
 | P2 | Seed temp route | `/api/seed-temp` is production-disabled/token protected in code but remains part of public middleware route prefixes. | `partial` | Keep local-only usage explicit and ensure production tests deny it. |
-| P2 | CSP | Production CSP: `script-src 'unsafe-inline'` (без `unsafe-eval`), `connect-src 'self' https:`. Dev CSP сохраняет `unsafe-eval` для HMR. | `done` | `unsafe-eval` удалён из production 2026-05-22. `unsafe-inline` обязателен для Next.js hydration и не заменён на nonce (Sentry/Auth.js не поддерживают). |
+| P2 | CSP | Production CSP: `script-src 'unsafe-inline'` (без `unsafe-eval`), `connect-src 'self' https:`. | `done` | `unsafe-eval` удалён из production. `unsafe-inline` обязателен для Next.js hydration. |
+| P2 | Student name masking | `done` | Имена студентов заменяются на `Слушатель #XXXXX` для не-admin ролей. Все 14 action-файлов и 6 page-файлов обновлены. |
+| P2 | Mobile adaptation | `done` | Achievements: accordion (collapsed on mobile). XP: без hover-only анимаций (touch). |
+| P2 | Metadata + loading.tsx | `done` | 105 page.tsx с русскими title/description. 84 loading.tsx с skeleton. |
 | P2 | Rate limiting | Middleware has API rate-limiting surfaces and active docs still mention Redis-backed hardening. | `partial` | Confirm distributed production limiter behavior for auth, export, upload, and mutation hotspots. |
 
 ## Supabase-Dependent Review

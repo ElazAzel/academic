@@ -395,8 +395,9 @@ docker compose up app
 - [Specification](docs/specification.md) — полная спецификация системы
 - [Security](docs/security.md) — модель безопасности
 - [TODO](docs/todo.md) — план развития
-- [AI Agent Roles](docs/ai-agent-roles.md) — роли AI-агентов
-- [UX Documentation](docs/ux-*.md) — UX-спецификации
+- [AI Agent Roles](docs/archive/ai-agent-roles.md) — роли AI-агентов (архив)
+- [Updates](docs/updates.md) — журнал обновлений
+- [MASTER-PLAN](docs/MASTER-PLAN.md) — стратегический план
 
 ---
 

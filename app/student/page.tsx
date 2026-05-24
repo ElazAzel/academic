@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { ContinueLearningCard, MetricGrid } from "@/components/lms/dashboard-widgets";
 import { StudentCourseDashboardGrid } from "@/components/lms/student-course-dashboard-grid";
-import { XpDisplay } from "@/components/lms/xp-display";
 import { StudentAchievements } from "@/components/lms/student-achievements";
 import { getUserXp } from "@/server/actions/xp";
 import { getLevel } from "@/lib/xp-utils";
@@ -68,18 +67,24 @@ async function withAchievements() {
 
   return (
    <div className="space-y-6">
-
    {continueLearning ? (
     <ContinueLearningCard data={continueLearning}/>
-   ) : null}
+   ) : (
+    <EmptyState
+     icon={BookOpenCheck}
+     title="Продолжить обучение"
+     description="Активного следующего урока пока нет. Откройте назначенные курсы и выберите доступный урок."
+     action={
+      <Button asChild>
+       <Link href="/student/my-courses">Открыть мои курсы</Link>
+      </Button>
+     }
+    />
+   )}
 
-    <Suspense fallback={<div className="h-20 animate-pulse rounded-xl bg-muted" />}>
-     <XpDisplay userId={data.userId} />
-    </Suspense>
-
-    <StudentAchievements 
+    <StudentAchievements
       xp={xp}
-      level={levelInfo.level}
+      levelInfo={levelInfo}
       coursesProgress={coursesProgress.map(c => ({ percent: c.percent, title: c.courseTitle }))}
       questionsCount={questions.length}
     />

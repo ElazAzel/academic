@@ -131,13 +131,14 @@ proxy.ts               # Middleware (auth gate, CSRF)
 - Argon2id для паролей
 - Auth.js JWT сессии
 - Server-side RBAC (`requireRolePage`, `assertPermission`)
-- Zod валидация на всех входных данных
-- RLS на всех 55 таблицах
+- Zod валидация на всех входных данных (все 18 server actions)
+- RLS отключён на всех 56 таблицах (приложение использует Prisma server-side)
 - Rate limiting (Redis + memory fallback)
 - CSRF check в middleware (origin vs hostname)
 - Content Security Policy в заголовках
 - Sentry monitoring
 - Аудит всех sensitive операций
+- Анонимизация имён студентов для не-admin ролей
 
 # Связанные документы
 
@@ -147,3 +148,4 @@ proxy.ts               # Middleware (auth gate, CSRF)
 - `docs/DEVELOPER_GUIDE.md` — инструкция для разработчиков
 - `docs/PLATFORM_SNAPSHOT.md` — архитектурный обзор
 - `docs/updates.md` — журнал обновлений
+- `docs/todo.md` — текущий TODO-лист

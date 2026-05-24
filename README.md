@@ -2,7 +2,7 @@
 
 Закрытая LMS-платформа для корпоративного AI-обучения. Управление курсами, потоками, кураторами, слушателями, сертификатами и отчётностью.
 
-**Стек:** Next.js 16 (App Router) · TypeScript · Prisma ORM · PostgreSQL (Supabase) · Tailwind CSS · NextAuth.js · Framer Motion
+**Стек:** Next.js 16 (App Router) · TypeScript strict · Prisma ORM 7.8 · PostgreSQL 17 (Supabase) · Tailwind CSS 3.4 · NextAuth.js 4 · Framer Motion · Redis (Upstash)
 
 ---
 
@@ -31,6 +31,7 @@
 - Полноценный чат слушатель ↔ куратор внутри урока
 - Отправка изображений (PNG/JPEG до 15MB) через S3 presigned URL
 - Автоматическая отметка прочитанного
+- Автосжатие изображений перед загрузкой (JPEG 80%, макс. 1920px)
 - Список диалогов для куратора
 
 ### Тесты и задания
@@ -72,16 +73,17 @@
 
 | Слой | Технология |
 |------|-----------|
-| **Фреймворк** | Next.js 16.2.5 (App Router) |
+| **Фреймворк** | Next.js 16.2.6 (App Router) |
 | **Язык** | TypeScript 5.9 (strict mode) |
 | **ORM** | Prisma 7.8 |
 | **База данных** | PostgreSQL 17 (Supabase) |
-| **Аутентификация** | NextAuth.js 4.24 (JWT, credentials) |
-| **UI** | Tailwind CSS 3.4, Radix UI, shadcn/ui |
-| **Анимации** | Framer Motion |
+| **Аутентификация** | NextAuth.js 4.24 (JWT, credentials + OAuth) |
+| **UI** | Tailwind CSS 3.4, Radix UI, shadcn/ui, Framer Motion |
 | **Отчёты** | exceljs, pdf-lib (PDF) |
 | **Хранилище** | S3-compatible (Supabase / MinIO) |
-| **Тесты** | Vitest (unit), Playwright (E2E) |
+| **Кэш/Rate limiter** | Redis (Upstash) + memory fallback |
+| **Тесты** | Vitest (unit, 422 теста), Playwright (E2E, 52 теста) |
+| **Мониторинг** | Sentry |
 | **CI/CD** | GitHub Actions, Vercel |
 | **MCP** | Supabase MCP сервер |
 
@@ -119,7 +121,20 @@
 │   └── seed.ts          # Сидирование
 ├── types/               # TypeScript типы
 ├── ai/                  # AI-роли (оркестратор, бэкенд, фронтенд...)
-└── .agents/skills/      # Supabase skills
+├── .agents/skills/      # Supabase skills
+├── tests/               # Unit-тесты (Vitest)
+│   ├── unit/            # Модульные тесты
+│   └── e2e/             # E2E smoke-тесты (Playwright)
+├── docs/                # Документация
+│   ├── updates.md       # Журнал обновлений
+│   ├── implementation-plan.md # План реализации
+│   ├── MASTER-PLAN.md   # Стратегический план
+│   ├── specification.md # Спецификация
+│   ├── security.md      # Безопасность
+│   ├── todo.md          # TODO-лист
+│   ├── archive/         # Архивные документы
+│   └── legal/           # Юридические документы
+└── CHANGELOG.md         # Лог изменений по версиям
 ```
 
 ---
@@ -130,8 +145,8 @@
 # Установка
 npm ci
 
-# Локальная база данных
-# Скопируйте .env.example → .env, затем выполните Docker bootstrap
+# Локальная база данных (PostgreSQL portable)
+# Скопируйте .env.example → .env
 powershell -ExecutionPolicy Bypass -File scripts/bootstrap.ps1
 # или: sh scripts/bootstrap.sh
 
@@ -139,14 +154,16 @@ powershell -ExecutionPolicy Bypass -File scripts/bootstrap.ps1
 npm run dev
 
 # Проверки
-npm run typecheck    # TypeScript
-npm run lint         # ESLint
-npm run test         # Unit-тесты
-npm run test:e2e     # E2E (требуется база)
-npm run build        # Production сборка
+npm run typecheck       # TypeScript (strict mode)
+npm run lint            # ESLint (0 warnings)
+npm run test            # Unit-тесты (422 теста, 69 файлов)
+npm run test:e2e        # E2E Playwright (52 теста)
+npm run build           # Production сборка (87 страниц)
+npm run verify          # typecheck + lint + test + build
+npm run verify:release  # Полный release gate (включая Prisma validate + E2E)
 ```
 
-`db:push`, `db:seed` и `certificate:issue-demo` отказываются мутировать remote database host по умолчанию. Для Docker local bootstrap используйте `scripts/bootstrap.ps1` или `scripts/bootstrap.sh`; `ALLOW_REMOTE_DATABASE_MUTATION=true` нужен только для намеренной remote-мутации.
+`db:push`, `db:seed` и `certificate:issue-demo` отказываются мутировать remote database host по умолчанию. Для локального bootstrap используйте `scripts/bootstrap.ps1` или `scripts/bootstrap.sh`; `ALLOW_REMOTE_DATABASE_MUTATION=true` нужен только для намеренной remote-мутации.
 
 ### Пользователи по умолчанию (seed)
 
@@ -161,6 +178,19 @@ npm run build        # Production сборка
 
 ---
 
+## Статус проекта
+
+| Метрика | Значение |
+|---------|----------|
+| **Страницы** | 87/87 сборка 0 ошибок |
+| **API routes** | 102 |
+| **Unit-тесты** | 422/422 (69 файлов) |
+| **E2E smoke** | 52/52 (Chromium + Mobile) |
+| **Lint** | 0 errors, 0 warnings |
+| **Typecheck** | clean ✅ |
+| **Deployment** | Vercel auto-deploy (main) |
+| **Последний релиз** | v1.0.0 (2026-05-24) |
+
 ## Переменные окружения
 
 Основные (обязательные):
@@ -169,9 +199,11 @@ npm run build        # Production сборка
 - `NEXTAUTH_URL` — URL приложения
 
 Опционально:
-- `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` — файловое хранилище
+- `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` — файловое хранилище (MinIO/Supabase)
 - `NEXT_PUBLIC_DEMO_MODE=true` — демо-режим без базы данных
 - `FEATURE_EMAIL_NOTIFICATIONS` — email-уведомления (по умолчанию выкл.)
+- `CRON_SECRET` — секрет для cron-воркеров
+- `STORAGE_SUPABASE_URL`, `STORAGE_SUPABASE_SERVICE_ROLE_KEY` — Supabase Storage
 
 Полный список: `.env.example`
 

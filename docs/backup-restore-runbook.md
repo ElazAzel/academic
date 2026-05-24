@@ -1,12 +1,13 @@
 # Backup / Restore Runbook
 
 > **Единый источник истины для всех процедур бэкапа.**
-> Дата: 2026-05-22 (унифицирован)
+> Дата: 2026-05-24
 > Статус: ✅ Проверено на staging
 
 Связанные файлы:
 - Скрипты автоматизации: `infra/backup/scripts/daily-backup.sh`, `infra/backup/backup.sh`, `infra/backup/restore.sh`
 - S3-конфигурация: `infra/s3-config.md`
+- Документация: `docs/implementation-plan.md`, `docs/security.md`
 
 ---
 
@@ -179,7 +180,7 @@ npm run verify
 | Дата | Тип | Результат |
 |------|-----|-----------|
 | 2026-05-22 | pg_dump → local restore | ✅ Успешно |
-| — | Supabase PITR | 🟡 Не тестировалось |
+| 2026-05-24 | Supabase PITR проверка | 🟡 Не тестировалось — PITR включён в Supabase Pro |
 
 ---
 

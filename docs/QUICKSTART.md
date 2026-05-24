@@ -1,9 +1,10 @@
 # Быстрый старт — локальная разработка
 
 ## Требования
-- Node.js >= 24 < 25
-- Docker + Docker Compose
+- Node.js >= 20 < 23
 - npm
+- PostgreSQL 17 (локально или Supabase)
+- Docker + Docker Compose (опционально, для MinIO/Redis)
 
 ## 1. Установка зависимостей
 ```bash

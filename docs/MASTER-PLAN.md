@@ -1,7 +1,7 @@
 # Master Plan — AI Strategic Academy
 
 > Единый план развития: от текущего состояния до стратегического roadmap.
-> Дата актуализации: 2026-05-22
+> Дата актуализации: 2026-05-24
 
 ---
 
@@ -12,8 +12,8 @@
 **Масштаб:**
 
 - 6 ролей: admin, instructor, student, curator, super_curator, customer_observer
-- 83+ маршрута, 368 тестов (62 файла), build 0 ошибок
-- Vercel auto-deploy, Sentry monitoring, PWA, 59 таблиц с RLS
+- 87+ страниц, 422 теста (69 файлов), build 0 ошибок
+- Vercel auto-deploy, Sentry monitoring, PWA, 56 таблиц (RLS отключён)
 
 **Все базовые домены реализованы:** auth, RBAC, курсы, уроки, тесты, задания, прогресс, сертификаты, чат, уведомления (in-app + push), аналитика, отчёты, риски, глоссарий, администрирование, PWA.
 
@@ -23,27 +23,43 @@
 - Исправлена схема cohorts (добавлены 4 недостающие колонки)
 - Исправлена миграция `add_block_model` (ошибочная FK-ссылка)
 
+**Производственная полировка (2026-05-24):**
+- Zod-валидация + try/catch: все 18 server actions
+- Metadata: все 105 page.tsx
+- loading.tsx: все 84 route-директории
+- global-error.tsx, robots.txt, sitemap.ts
+- Mobile adaptation: achievements accordion, XP touch-friendly
+- Анонимизация имён студентов: Слушатель #XXXXX
+- Метрики скорости ответов куратора per-student
+- Тесты: 422/422 ✅ | Typecheck: ✅ | Build: ✅
+
 ---
 
 ## Часть II. Фазы развития
 
-### Фаза 0: Production Hardening (сейчас — 2 недели)
+### Фаза 0: Production Hardening ✅ (завершена 2026-05-24)
 
-> Закрыть оставшиеся P0-P2 задачи, стабилизировать платформу для production-эксплуатации.
+> Все P0-P2 задачи закрыты. Платформа стабилизирована для production-эксплуатации.
 
-| # | Задача | Домен | Ожидаемый результат |
-| --- | -------- | ------- | ------------------- |
-| 0.1 | **Email verification + password recovery UI** | Auth | Полный цикл: запрос → ссылка → сброс; email через SMTP |
-| 0.2 | **Builder publish checklist UX** | Курсы | Понятный UI: что мешает публикации, подсветка проблем |
-| 0.3 | **Production deployment validation** | DevOps | `npm run verify:release` проходит на staging |
-| 0.4 | **Block deadlines for cohorts** | Курсы | Admin/instructor задаёт дедлайны блоков, студент видит |
-| 0.5 | **Curator popup notifications** | Уведомления | Попапы с текстом, фиксация просмотра |
-| 0.6 | **File upload signing + review queue UI** | Задания | Curator видит очередь, S3 presigned upload |
-| 0.7 | **Quiz builder UI** | Тесты | Instructor создаёт тесты в builder |
-| 0.8 | **Attempt history UI** | Тесты | Student видит свои попытки |
-| 0.9 | **FK-индексы (аудит)** | БД | Добавлены 12 недостающих индексов |
-| 0.10 | **RLS-политики (аудит)** | БД | RLS отключён (Prisma server-side) |
-| 0.11 | **Схема cohorts (аудит)** | БД | Восстановлены недостающие колонки |
+| # | Задача | Домен | Статус |
+| --- | -------- | ------- | ------ |
+| 0.1 | **Email verification + password recovery UI** | Auth | ✅ |
+| 0.2 | **Builder publish checklist UX** | Курсы | ✅ |
+| 0.3 | **Production deployment validation** | DevOps | ✅ |
+| 0.4 | **Block deadlines for cohorts** | Курсы | ✅ |
+| 0.5 | **Curator popup notifications** | Уведомления | ✅ |
+| 0.6 | **File upload signing + review queue UI** | Задания | ✅ |
+| 0.7 | **Quiz builder UI** | Тесты | ✅ |
+| 0.8 | **Attempt history UI** | Тесты | ✅ |
+| 0.9 | **FK-индексы (аудит)** | БД | ✅ |
+| 0.10 | **RLS отключён** | БД | ✅ |
+| 0.11 | **Схема cohorts (аудит)** | БД | ✅ |
+| 0.12 | **Zod-валидация + try/catch** | Code | ✅ |
+| 0.13 | **Metadata + loading.tsx** | UX | ✅ |
+| 0.14 | **global-error.tsx / robots.txt / sitemap.ts** | DevOps | ✅ |
+| 0.15 | **Скорость ответов куратора** | Аналитика | ✅ |
+| 0.16 | **Анонимизация студентов** | Privacy | ✅ |
+| 0.17 | **Mobile adaptation** | UX | ✅ |
 
 ### Фаза 1: UX & Quality (2-4 недели)
 
