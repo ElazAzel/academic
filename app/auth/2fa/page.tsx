@@ -5,10 +5,6 @@ import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AUTH_ROUTES } from "@/lib/constants";
 
-export const metadata = {
-  title: "Двухфакторная аутентификация",
-  description: "Подтвердите вход с помощью кода 2FA.",
-};
 
 
 type Mode = "totp" | "backup";
