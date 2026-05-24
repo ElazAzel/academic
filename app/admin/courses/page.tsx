@@ -6,6 +6,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import type { CourseSummary } from "@/types/domain";
 import { CreateCourseForm } from "@/components/admin/create-course-form";
 
+export const metadata = {
+  title: "Курсы — Администрирование",
+  description: "Управление курсами платформы.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function AdminCoursesPage() {

@@ -4,6 +4,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getMyConversations } from "@/server/actions/chat";
 import { CuratorChatList } from "@/app/curator/chat/chat-list";
 
+export const metadata = {
+  title: "Чат — Инструктор",
+  description: "Общение с кураторами и студентами.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function InstructorChatPage() {

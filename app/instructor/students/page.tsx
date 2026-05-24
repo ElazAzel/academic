@@ -10,6 +10,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getInstructorStudents } from "@/server/actions/dashboard";
 import type { DashboardMetric } from "@/types/domain";
 
+export const metadata = {
+  title: "Студенты — Инструктор",
+  description: "Управление студентами курсов.",
+};
+
+
 interface StudentRow {
   id: string;
   name: string;

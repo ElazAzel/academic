@@ -8,6 +8,12 @@ import { QUERY_LIMITS } from "@/lib/query-limits";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle } from "lucide-react";
 
+export const metadata = {
+  title: "Чат — Супер-куратор",
+  description: "Общение с кураторами и студентами.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 const prisma = getPrisma();

@@ -11,6 +11,12 @@ import { getProfile } from "@/server/modules/auth/service";
 import { TwoFactorSettings } from "@/components/admin/two-factor-settings";
 import { updateProfileSettingsAction, updatePasswordAction, getNotificationPreferencesAction, updateNotificationPreferencesAction } from "@/server/actions/settings";
 
+export const metadata = {
+  title: "Настройки — Наблюдатель",
+  description: "Настройки профиля наблюдателя.",
+};
+
+
 const NOTIFICATION_CHANNELS = [
   { key: "customer_course_reports", label: "Отчеты по курсам", desc: "Еженедельная аналитика по прогрессу курса" },
   { key: "customer_new_certificates", label: "Новые сертификаты", desc: "Уведомления о выдаче сертификатов" },

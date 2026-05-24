@@ -3,6 +3,12 @@ import { PageHeader } from "@/components/lms/page-header";
 import { NotificationsList } from "@/components/lms/notifications-list";
 import { requireRolePage } from "@/lib/auth/page-guards";
 
+export const metadata = {
+  title: "Уведомления — Студент",
+  description: "Центр уведомлений студента.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function StudentNotificationsPage() {

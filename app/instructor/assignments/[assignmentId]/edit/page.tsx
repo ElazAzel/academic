@@ -5,6 +5,12 @@ import { getPrisma } from "@/lib/prisma";
 import { AssignmentEditForm } from "@/components/instructor/assignment-edit-form";
 import { notFound } from "next/navigation";
 
+export const metadata = {
+  title: "Редактирование задания — Инструктор",
+  description: "Редактирование параметров задания.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function InstructorEditAssignmentPage({ params }: { params: Promise<{ assignmentId: string }> }) {

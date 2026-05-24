@@ -7,6 +7,12 @@ import { ROLE_LABELS } from "@/types/domain";
 import type { RoleKey } from "@/types/domain";
 import { requireRolePage } from "@/lib/auth/page-guards";
 
+export const metadata = {
+  title: "Роли и права — Администрирование",
+  description: "Управление ролями и правами доступа.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 const ROLES = [

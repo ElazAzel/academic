@@ -12,6 +12,12 @@ import { UserPlus, Users2, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import type { DashboardMetric } from "@/types/domain";
 
+export const metadata = {
+  title: "Управление — Администрирование",
+  description: "Панель управления платформой.",
+};
+
+
 const prisma = getPrisma();
 export const dynamic = "force-dynamic";
 

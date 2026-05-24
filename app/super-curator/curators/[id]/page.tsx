@@ -11,6 +11,12 @@ import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import type { DashboardMetric } from "@/types/domain";
 import { QuestionStatus } from "@prisma/client";
 
+export const metadata = {
+  title: "Куратор — Супер-куратор",
+  description: "Профиль и статистика куратора.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function CuratorDetailPage(props: { params: Promise<{ id: string }> }) {

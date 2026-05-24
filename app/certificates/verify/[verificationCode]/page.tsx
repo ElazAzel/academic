@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { verifyCertificateByCode } from "@/server/modules/certificates/service";
 
+export const metadata = {
+  title: "Проверка сертификата",
+  description: "Проверка подлинности сертификата AI Strategic Academy.",
+};
+
+
 export const revalidate = 3600;
 
 export default async function CertificateVerificationPage({

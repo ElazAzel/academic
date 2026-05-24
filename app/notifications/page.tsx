@@ -4,6 +4,12 @@ import { NotificationsList } from "@/components/lms/notifications-list";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import type { RoleKey } from "@/types/domain";
 
+export const metadata = {
+  title: "Уведомления",
+  description: "Центр уведомлений платформы.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function NotificationsPage() {

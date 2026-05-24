@@ -4,6 +4,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { CertificatesDashboard } from "@/components/admin/certificates-dashboard";
 
+export const metadata = {
+  title: "Сертификаты — Администрирование",
+  description: "Управление сертификатами.",
+};
+
+
 const prisma = getPrisma();
 export const dynamic = "force-dynamic";
 

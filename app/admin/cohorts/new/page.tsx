@@ -8,6 +8,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { CreateCohortForm } from "./create-cohort-form";
 
+export const metadata = {
+  title: "Создание когорты — Администрирование",
+  description: "Создание новой когорты.",
+};
+
+
 const prisma = getPrisma();
 
 export const dynamic = "force-dynamic";

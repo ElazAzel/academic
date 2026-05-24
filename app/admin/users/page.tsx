@@ -18,6 +18,12 @@ import { UserFilters } from "@/components/admin/user-filters";
 import { UserBatchImporter } from "@/components/admin/user-batch-importer";
 import { getPrisma } from "@/lib/prisma";
 
+export const metadata = {
+  title: "Пользователи — Администрирование",
+  description: "Управление пользователями платформы.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 200;

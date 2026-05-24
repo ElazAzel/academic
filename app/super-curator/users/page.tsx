@@ -7,6 +7,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { listUsers } from "@/server/modules/users/service";
 import { ROLE_LABELS, type RoleKey } from "@/types/domain";
 
+export const metadata = {
+  title: "Пользователи — Супер-куратор",
+  description: "Управление пользователями.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 /**

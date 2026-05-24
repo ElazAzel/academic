@@ -7,6 +7,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getGlossaryEntries, getGlossaryCategories } from "@/server/actions/glossary";
 import { EmptyState } from "@/components/lms/empty-state";
 
+export const metadata = {
+  title: "Глоссарий — Куратор",
+  description: "Просмотр терминов глоссария.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function CuratorGlossaryPage(props: {

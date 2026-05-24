@@ -12,6 +12,12 @@ import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 import { EmptyState } from "@/components/lms/empty-state";
 
+export const metadata = {
+  title: "Дашборд — Инструктор",
+  description: "Панель управления инструктора.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default function InstructorDashboardPage() {

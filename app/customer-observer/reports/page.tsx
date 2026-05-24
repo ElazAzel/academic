@@ -9,6 +9,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCustomerObserverDashboard } from "@/server/actions/dashboard";
 import { getDisplayReportsForRole } from "@/server/modules/reports/service";
 
+export const metadata = {
+  title: "Отчёты — Наблюдатель",
+  description: "Отчёты по обучению сотрудников.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function CustomerObserverReportsPage() {

@@ -7,6 +7,12 @@ import { getPrisma } from "@/lib/prisma";
 import { getSuperCuratorCohorts } from "@/server/actions/super-curator";
 import { CreateCohortForm } from "./cohort-form";
 
+export const metadata = {
+  title: "Когорты — Супер-куратор",
+  description: "Управление когортами.",
+};
+
+
 const prisma = getPrisma();
 
 export const dynamic = "force-dynamic";

@@ -5,6 +5,12 @@ import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCuratorDashboard } from "@/server/actions/dashboard";
 
+export const metadata = {
+  title: "Студенты — Куратор",
+  description: "Управление закреплёнными студентами.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function CuratorStudentsPage() {

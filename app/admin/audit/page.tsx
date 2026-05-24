@@ -10,6 +10,12 @@ import { ru } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Search, Activity, ShieldCheck, Users, BookOpen, Award, FileText, Settings, Mail, MessageCircle, HelpCircle, ClipboardCheck } from "lucide-react";
 import Link from "next/link";
 
+export const metadata = {
+  title: "Аудит безопасности — Администрирование",
+  description: "Аудит безопасности и событий.",
+};
+
+
 const prisma = getPrisma();
 export const dynamic = "force-dynamic";
 

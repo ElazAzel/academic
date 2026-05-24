@@ -8,6 +8,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { listCourses } from "@/server/modules/courses/service";
 import type { CourseSummary } from "@/types/domain";
 
+export const metadata = {
+  title: "Курсы — Инструктор",
+  description: "Управление своими курсами.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function InstructorCoursesPage() {

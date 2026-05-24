@@ -12,6 +12,12 @@ import { getEnrollmentData } from "@/server/actions/dashboard";
 import { EnrollStudentForm } from "@/components/admin/enroll-student-form";
 import { DeleteEnrollmentButton } from "@/components/admin/delete-enrollment-button";
 
+export const metadata = {
+  title: "Зачисления — Администрирование",
+  description: "Управление зачислениями пользователей.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 const STATUS_BADGE = {

@@ -5,6 +5,12 @@ import { getCourseForBuilder } from "@/server/modules/course-builder/service";
 import { CourseBuilderShell } from "@/components/lms/course-builder-shell";
 import { notFound } from "next/navigation";
 
+export const metadata = {
+  title: "Конструктор курса — Инструктор",
+  description: "Конструктор структуры курса.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function CourseBuilderPage({

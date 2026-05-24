@@ -6,6 +6,12 @@ import { BookOpen } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getStudentCourseCards } from "@/server/modules/learning/service";
 
+export const metadata = {
+  title: "Мои курсы — Студент",
+  description: "Список записанных курсов.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function StudentMyCoursesPage() {

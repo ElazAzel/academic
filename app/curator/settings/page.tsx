@@ -11,6 +11,12 @@ import { getProfile } from "@/server/modules/auth/service";
 import { TwoFactorSettings } from "@/components/admin/two-factor-settings";
 import { updateProfileSettingsAction, updatePasswordAction, getNotificationPreferencesAction, updateNotificationPreferencesAction } from "@/server/actions/settings";
 
+export const metadata = {
+  title: "Настройки — Куратор",
+  description: "Настройки профиля куратора.",
+};
+
+
 const NOTIFICATION_CHANNELS = [
   { key: "curator_new_questions", label: "Новые вопросы", desc: "Уведомления о вопросах от слушателей" },
   { key: "curator_assignment_check", label: "Задания на проверку", desc: "Уведомления о новых отправках заданий" },

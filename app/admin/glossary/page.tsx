@@ -4,6 +4,12 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getGlossaryEntries, getGlossaryCategories } from "@/server/actions/glossary";
 import { GlossaryEditor } from "./glossary-editor";
 
+export const metadata = {
+  title: "Глоссарий — Администрирование",
+  description: "Управление терминами глоссария.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function AdminGlossaryPage() {

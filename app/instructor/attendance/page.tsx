@@ -2,6 +2,12 @@ import { AppShell } from "@/components/layout/app-shell";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { AttendanceDashboard } from "./client";
 
+export const metadata = {
+  title: "Посещаемость — Инструктор",
+  description: "Учёт посещаемости занятий.",
+};
+
+
 export const dynamic = "force-dynamic";
 
 export default async function InstructorAttendancePage() {
