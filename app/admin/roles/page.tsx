@@ -7,6 +7,8 @@ import { ROLE_LABELS } from "@/types/domain";
 import type { RoleKey } from "@/types/domain";
 import { requireRolePage } from "@/lib/auth/page-guards";
 
+export const dynamic = "force-dynamic";
+
 const ROLES = [
  { key: "admin" as RoleKey, permissions: ["users:manage", "courses:manage", "enrollments:manage", "invites:manage", "analytics:read", "audit:read", "settings:manage", "roles:manage"] },
  { key: "instructor" as RoleKey, permissions: ["courses:manage", "lessons:manage", "quizzes:manage", "assignments:manage", "analytics:read"] },

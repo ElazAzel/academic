@@ -19,6 +19,8 @@ const NOTIFICATION_CHANNELS = [
   { key: "system_message", label: "Системные сообщения", desc: "Уведомления о технических обновлениях" },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default async function InstructorSettingsPage() {
   await requireRolePage(["instructor", "admin"]);
   const user = await getCurrentUser();
