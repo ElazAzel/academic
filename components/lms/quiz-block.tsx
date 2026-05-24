@@ -12,26 +12,46 @@ import type { StudentQuizDetail } from "@/types/domain";
 
 type QuizPhase = "idle" | "active" | "result" | "review";
 
+function isMultiChoice(type: string): boolean {
+  return type === "MULTIPLE_CHOICE";
+}
+
+function hasAnswer(answer: string | string[] | undefined): boolean {
+  if (!answer) return false;
+  if (Array.isArray(answer)) return answer.length > 0;
+  return answer !== "";
+}
+
 export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
   const router = useRouter();
   const [phase, setPhase] = useState<QuizPhase>("idle");
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ score: number; passed: boolean } | null>(null);
 
   const currentQuestion = quiz.questions[currentIndex];
-  const progressPercent = Math.round(((Object.keys(answers).length) / quiz.questions.length) * 100);
+  const answeredTotal = quiz.questions.filter((q) => hasAnswer(answers[q.id])).length;
+  const progressPercent = Math.round((answeredTotal / quiz.questions.length) * 100);
 
-  const handleOptionChange = useCallback((questionId: string, option: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: option }));
+  const handleOptionChange = useCallback((questionId: string, option: string, type: string) => {
+    if (isMultiChoice(type)) {
+      setAnswers((prev) => {
+        const currentVal = prev[questionId];
+        const arr = Array.isArray(currentVal) ? currentVal : [];
+        const next = arr.includes(option) ? arr.filter((v) => v !== option) : [...arr, option];
+        return { ...prev, [questionId]: next };
+      });
+    } else {
+      setAnswers((prev) => ({ ...prev, [questionId]: option }));
+    }
   }, []);
 
   const questionsCount = quiz.questions.length;
 
   const handleSubmit = useCallback(async () => {
     if (submitting) return;
-    if (Object.keys(answers).length < questionsCount) {
+    if (answeredTotal < questionsCount) {
       if (!confirm("Вы ответили не на все вопросы. Всё равно отправить?")) return;
     }
     setSubmitting(true);
@@ -88,7 +108,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
               className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-label-sm font-label-sm transition-colors ${
                 i === currentIndex
                   ? "bg-m3-primary text-m3-on-primary"
-                  : answers[q.id]
+                  : hasAnswer(answers[q.id])
                   ? "bg-m3-primary-container text-m3-primary"
                   : "bg-m3-surface-container-high text-m3-on-surface-variant"
               }`}
@@ -102,34 +122,47 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
           {/* Progress */}
           <div className="flex items-center justify-between text-label-sm font-label-sm text-m3-on-surface-variant">
             <span>Вопрос {currentIndex + 1} из {quiz.questions.length}</span>
-            <span>{Math.round((Object.keys(answers).length / quiz.questions.length) * 100)}%</span>
+            <span>{progressPercent}%</span>
           </div>
           <Progress value={progressPercent} className="h-1" />
 
           {/* Question */}
-          <p className="text-body-md font-body-md text-m3-on-surface">{currentQuestion.text}</p>
+          <p className="text-body-md font-body-md text-m3-on-surface">
+            {currentQuestion.text}
+            {isMultiChoice(currentQuestion.type) && (
+              <span className="ml-2 text-label-sm font-label-sm text-m3-on-surface-variant">
+                (можно выбрать несколько)
+              </span>
+            )}
+          </p>
 
           {/* Options */}
           <div className="space-y-2">
-            {currentQuestion.options.map((option) => (
-              <label
-                key={option}
-                className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all ${
-                  answers[currentQuestion.id] === option
-                    ? "border-m3-primary bg-m3-primary-container/20 ring-1 ring-m3-primary"
-                    : "border-m3-outline-variant hover:bg-m3-surface-container-high"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={currentQuestion.id}
-                  className="h-4 w-4 text-m3-primary focus:ring-m3-primary accent-m3-primary"
-                  checked={answers[currentQuestion.id] === option}
-                  onChange={() => handleOptionChange(currentQuestion.id, option)}
-                />
-                <span className="text-body-md font-body-md text-m3-on-surface">{option}</span>
-              </label>
-            ))}
+            {currentQuestion.options.map((option) => {
+              const multi = isMultiChoice(currentQuestion.type);
+              const selected = multi
+                ? Array.isArray(answers[currentQuestion.id]) && (answers[currentQuestion.id] as string[]).includes(option)
+                : answers[currentQuestion.id] === option;
+              return (
+                <label
+                  key={option}
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all ${
+                    selected
+                      ? "border-m3-primary bg-m3-primary-container/20 ring-1 ring-m3-primary"
+                      : "border-m3-outline-variant hover:bg-m3-surface-container-high"
+                  }`}
+                >
+                  <input
+                    type={multi ? "checkbox" : "radio"}
+                    name={currentQuestion.id}
+                    className="h-4 w-4 text-m3-primary focus:ring-m3-primary accent-m3-primary"
+                    checked={selected}
+                    onChange={() => handleOptionChange(currentQuestion.id, option, currentQuestion.type)}
+                  />
+                  <span className="text-body-md font-body-md text-m3-on-surface">{option}</span>
+                </label>
+              );
+            })}
           </div>
 
           {/* Navigation */}
@@ -204,13 +237,16 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
       <div className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-5 shadow-m3-soft space-y-4">
         <p className="text-body-md font-body-md text-m3-on-surface">Ответы</p>
         {quiz.questions.map((q, i) => {
-          const selected = answers[q.id];
+          const selectedVal = answers[q.id];
+          const selectedArr = isMultiChoice(q.type)
+            ? (Array.isArray(selectedVal) ? selectedVal : [])
+            : [selectedVal];
           return (
             <div key={q.id} className="rounded-lg border border-m3-outline-variant p-4 space-y-2">
               <p className="text-body-md font-body-md text-m3-on-surface">{i + 1}. {q.text}</p>
               <div className="space-y-1">
                 {q.options.map((option) => {
-                  const isSelected = selected === option;
+                  const isSelected = selectedArr.includes(option);
                   return (
                     <div
                       key={option}

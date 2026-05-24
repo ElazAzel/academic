@@ -389,6 +389,24 @@ docker compose up app
 
 ---
 
+## Staging-окружение
+
+Ветка `staging` автоматически деплоится в preview на Vercel при пуше.
+
+### Настройка (однократно)
+
+1. Создать ветку: `git checkout -b staging main && git push origin staging`
+2. В Vercel Dashboard → Add New Project → импортировать этот же репозиторий
+3. Установить Framework: Next.js
+4. В Environment Variables добавить переменные с суффиксом `_STAGING`:
+   - `DATABASE_URL_STAGING` — URL БД для staging (отдельный Supabase проект)
+   - `NEXT_PUBLIC_SITE_URL_STAGING` — URL деплоя
+   - Остальные переменные можно скопировать из production
+5. Установить Branch: `staging`
+6. Deploy
+
+После настройки каждый push в `staging` создаёт preview-деплой с URL вида `project-name-git-staging-*.vercel.app`.
+
 ## Документация
 
 - [Assumptions](docs/assumptions.md) — предположения и ограничения

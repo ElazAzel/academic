@@ -2,6 +2,22 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-24 — Real-time SSE уведомления + багфиксы + staging
+
+- **SSE endpoint**: `app/api/v1/notifications/stream/route.ts` — Server-Sent Events на ReadableStream, поллинг новых уведомлений каждые 3 сек
+- **Hook**: `hooks/use-notifications.ts` — EventSource с auto-reconnect, initial fetch через GET /api/v1/notifications, возвращает `{notifications, unreadCount, loading, connected}`
+- **NotificationsDropdown**: переведён на `useNotifications` (SSE вместо 30-сек polling)
+- **Багфикс 500**: `POST /api/v1/course-builder/quiz` — `createQuizInline` мапил frontend-типы (`"single"`/`"multiple"`) через `.toUpperCase()` → получалось `"SINGLE"` (нет в `QuestionType` enum). Добавлена `mapQuestionType()` с корректным маппингом: `single→SINGLE_CHOICE`, `multiple→MULTIPLE_CHOICE`, `text→TEXT`
+- **Багфикс quiz creator**: Для `type: "multiple"` добавлены чекбоксы для выбора нескольких правильных ответов (вместо радио-кнопок)
+- **Staging**: ветка `staging` + инструкция в DEVELOPER_GUIDE.md
+- **CSP**: добавлены `worker-src 'self' blob:` и `manifest-src 'self'`; production `connect-src` включает `wss:` для WebSocket
+
+## 2026-05-24 — Исправление MULTIPLE_CHOICE в тестах
+
+- **quiz-view.tsx**: `answers` изменён на `Record<string, string | string[]>`, добавлена поддержка чекбоксов для MULTIPLE_CHOICE, подсказка "(можно выбрать несколько)"
+- **quiz-block.tsx**: те же изменения + корректный подсчёт отвеченных вопросов через `hasAnswer()`, отображение нескольких выбранных ответов в режиме ревью
+- **Серверная проверка**: `gradeObjectiveQuiz()` уже корректно обрабатывает MULTIPLE_CHOICE через `{values: [...]}` → `toComparableStrings()` → сортировка и сравнение массивов
+
 ## 2026-05-24 — SCORM/xAPI импорт (Phase 2.4)
 
 - **Миграция БД**: `xapi_statements` таблица создана (JSONB, user/lesson indexes)

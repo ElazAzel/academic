@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Bell, CheckCheck, ExternalLink, MessageCircle, Box, Layers, Info } from "lucide-react";
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PopupNotificationViewer } from "@/components/lms/popup-notification-viewer";
+import { useNotifications } from "@/hooks/use-notifications";
 
 interface NotificationItem {
   id: string;
@@ -57,42 +58,9 @@ function getNotificationAction(n: NotificationItem): { link: string; label: stri
 
 export function NotificationsDropdown() {
   const router = useRouter();
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const { notifications, unreadCount, loading, setNotifications } = useNotifications();
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [popupView, setPopupView] = useState<{ n: NotificationItem } | null>(null);
-
-  const unreadCount = notifications.filter((n) => !n.readAt).length;
-
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const res = await fetch("/api/v1/notifications");
-      if (!res.ok) return;
-      const contentType = res.headers.get("content-type") ?? "";
-      if (!contentType.includes("application/json")) return;
-      const json = await res.json();
-      setNotifications(json.data ?? []);
-    } catch {
-      // Silently ignore fetch errors
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Fetch on mount so unread badge is visible immediately
-  useEffect(() => {
-    setLoading(true);
-    fetchNotifications();
-  }, [fetchNotifications]);
-
-  useEffect(() => {
-    if (open) fetchNotifications();
-  }, [open, fetchNotifications]);
-
-  useEffect(() => {
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
 
   async function markAllRead() {
     try {

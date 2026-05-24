@@ -594,6 +594,15 @@ async function appendLessonContentBlock(lessonId: string, block: ContentBlock) {
   });
 }
 
+function mapQuestionType(type: string): string {
+  switch (type) {
+    case "single": return "SINGLE_CHOICE";
+    case "multiple": return "MULTIPLE_CHOICE";
+    case "text": return "TEXT";
+    default: return type.toUpperCase();
+  }
+}
+
 export async function createQuizInline(
   lessonId: string,
   input: {
@@ -601,7 +610,7 @@ export async function createQuizInline(
     description?: string;
     passThreshold: number;
     maxAttempts: number;
-    questions: Array<{ type: string; prompt: string; options: string[]; correctAnswer: string; points: number }>;
+    questions: Array<{ type: string; prompt: string; options: string[]; correctAnswer: string | string[]; points: number }>;
     courseId: string;
   },
   actorId: string
@@ -618,10 +627,10 @@ export async function createQuizInline(
       maxAttempts: input.maxAttempts,
       questions: {
         create: input.questions.map((q, i) => ({
-          type: q.type.toUpperCase() as never,
+          type: mapQuestionType(q.type) as never,
           prompt: q.prompt,
           options: toJsonValue(q.options),
-          correctAnswer: toJsonValue(q.correctAnswer),
+          correctAnswer: toJsonValue(Array.isArray(q.correctAnswer) ? { values: q.correctAnswer } : { value: q.correctAnswer }),
           points: q.points,
           order: i,
         })),

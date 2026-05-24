@@ -167,6 +167,35 @@ export function QuizCreator({
                   placeholder="Правильный ответ"
                 />
               </div>
+            ) : q.type === "multiple" ? (
+              <div className="space-y-1">
+                {q.options.map((opt, oi) => {
+                  const arr = Array.isArray(q.correctAnswer) ? q.correctAnswer : [];
+                  const checked = arr.includes(String(oi));
+                  return (
+                    <div key={oi} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          const next = checked ? arr.filter((v) => v !== String(oi)) : [...arr, String(oi)];
+                          updateQuestion(qi, { correctAnswer: next });
+                        }}
+                        className="shrink-0"
+                      />
+                      <input
+                        className="flex-1 rounded-lg border px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-primary/20"
+                        value={opt}
+                        onChange={(e) => updateOption(qi, oi, e.target.value)}
+                        placeholder={`Вариант ${oi + 1}`}
+                      />
+                    </div>
+                  );
+                })}
+                <Button size="sm" variant="ghost" className="text-xs" onClick={() => addOption(qi)}>
+                  <Plus className="h-3 w-3 mr-1" /> Вариант
+                </Button>
+              </div>
             ) : (
               <div className="space-y-1">
                 {q.options.map((opt, oi) => (

@@ -15,8 +15,11 @@
 - **Lint:** 0 errors, 0 warnings ✅
 - **Typecheck:** clean ✅ (кроме предсуществующих `.next/dev/types/validator.ts`)
 - **SCORM/xAPI:** Full import + proxy + CMI + player + xAPI LRS ✅
+- **SSE Notifications:** Real-time SSE endpoint + hook + dropdown integration ✅
+- **Staging:** Branch + guide created ✅
 - **Deployment:** Vercel auto-deploy на push в main ✅; preview на codex/* ветках ✅
 - **Security scan:** Все C1-C5 findings закрыты ✅
+- **CSP:** worker-src, manifest-src, wss: добавлены ✅
 - **CSRF:** Исправлен (origin vs hostname) ✅
 - **Session resilience:** try/catch revalidateSession, fallback на JWT роли ✅
 - **FK-индексы:** 12 недостающих индексов добавлены ✅
@@ -45,7 +48,7 @@
 | Задания (submissions, review service) | done | Enrollment check, courseId resolution |
 | Сертификаты (unique number, premium PDF, verification) | done | Premium assets, Cyrillic fonts, QR |
 | Чат (студент↔куратор, S3 вложения) | done | 503 fix, attachment previews |
-| Уведомления (in-app + push Firebase) | done | Channel filtering fix |
+| Уведомления (in-app + push Firebase + SSE) | done | Channel filtering fix, SSE real-time stream |
 | Аналитика/отчёты (CSV/XLSX/PDF, per-role scope) | done | Dynamic report config |
 | Риски (флаги, фильтры, curator/super-curator) | done | Deadline integration |
 | Глоссарий (категории, поиск) | done | — |
@@ -59,6 +62,18 @@
 | global-error.tsx / robots.txt / sitemap.ts | done | Production hardening |
 | Metadata / loading.tsx | done | 105 pages metadata, 84 loading.tsx |
 | Mobile adaptation | done | Achievements accordion, XP touch-friendly |
+
+### Достигнуто 2026-05-24 (багфиксы + SSE + staging)
+
+| Область | Задача | Статус | Примечание |
+|---------|--------|--------|------------|
+| Багфикс | 500 на POST /api/v1/course-builder/quiz | ✅ | QuestionType mapping: `single`→`SINGLE_CHOICE`, `multiple`→`MULTIPLE_CHOICE` |
+| Багфикс | 503 на builder page | ✅ | Каскадный сбой от той же ошибки (чтение вопросов с невалидным type) |
+| Багфикс | MULTIPLE_CHOICE в quiz-view.tsx + quiz-block.tsx | ✅ | Чекбоксы, Record<string,string\|string[]>, проверка через hasAnswer() |
+| Багфикс | quiz-creator.tsx: чекбоксы для multiple choice | ✅ | Вместо радио-кнопок |
+| Уведомления | Real-time SSE (Phase 2) | ✅ | SSE endpoint + useNotifications hook + интеграция в NotificationsDropdown |
+| DevOps | Staging окружение | ✅ | Ветка staging + инструкция в DEVELOPER_GUIDE.md |
+| Безопасность | CSP hardening | ✅ | worker-src, manifest-src, wss: добавлены |
 
 ### Что осталось (после аудита Phase 0 + Phase 1)
 
@@ -76,6 +91,7 @@
 | Code | Metadata | P2 | ✅ | Все 105 page.tsx с русскими title/description |
 | Code | loading.tsx | P2 | ✅ | Все 84 route-директории с skeleton |
 | DevOps | Vercel preview branches | P2 | ✅ | codex/* ветки деплоятся в preview |
+| Уведомления | Real-time SSE (Phase 2) | P2 | ✅ | SSE endpoint + useNotifications hook + NotificationsDropdown |
 
 ### Уже реализовано (Phase 2.4 — SCORM/xAPI)
 - ✅ SCORM ZIP import (adm-zip + manifest parsing + Supabase Storage upload)
