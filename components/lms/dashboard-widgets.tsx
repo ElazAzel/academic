@@ -145,6 +145,13 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
 export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
   return (
     <FadeIn>
+    <Card className="overflow-hidden border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-shadow hover:shadow-m3-soft-hover rounded-xl">
+      <CardHeader className="space-y-2 p-4 sm:p-6">
+        <StatusBadge status="ACTIVE" label="Следующее действие" className="w-fit" />
+        <CardTitle className="break-words text-headline-sm text-m3-on-surface sm:text-headline-md">
+          Продолжить: {data.courseTitle}
+        </CardTitle>
+        <CardDescription className="font-body-md text-body-md text-m3-on-surface-variant">
     <Card className="overflow-hidden border-m3-outline-variant/60 glass-card-premium rounded-xl relative">
       {/* Decorative premium gradient line */}
       <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-m3-primary via-m3-secondary to-m3-tertiary" />
@@ -156,6 +163,7 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
           {data.deadlineDaysLeft != null && ` · дедлайн через ${data.deadlineDaysLeft} дн.`}
         </CardDescription>
       </CardHeader>
+      <CardContent className="space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
       <CardContent className="space-y-5">
         <div className="space-y-2">
           <div className="flex items-center justify-between font-body-sm text-body-sm">
@@ -171,6 +179,11 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
           </div>
           <Progress value={data.modulePercent} className="h-1.5 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
         </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0 font-body-sm text-body-sm text-m3-on-surface-variant">
+            До сертификата: пройти {100 - data.coursePercent}% курса и сдать финальное задание.
+          </p>
+          <Button asChild className="w-full shrink-0 sm:w-auto">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2 border-t border-m3-outline-variant/30">
           <p className="font-body-sm text-body-sm text-m3-on-surface-variant/80">
             До сертификата: пройти {100 - data.coursePercent}% курса и сдать финальное задание.

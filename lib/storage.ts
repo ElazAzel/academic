@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, HeadBucketCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
@@ -6,8 +6,10 @@ import { env } from "@/lib/env";
 let s3Client: S3Client | null = null;
 let supabaseStorageClient: ReturnType<typeof createClient> | null = null;
 let supabaseStorageChecked = false;
+let s3AvailabilityCache: { checkedAt: number; available: boolean } | null = null;
 
 const BUCKET = "academy-media";
+const S3_AVAILABILITY_CACHE_MS = 30_000;
 
 function getStorageClient() {
   if (supabaseStorageChecked) return supabaseStorageClient;
@@ -50,6 +52,24 @@ export function getS3Client(): S3Client | null {
   }
 }
 
+async function isS3BucketAvailable(client: S3Client): Promise<boolean> {
+  const now = Date.now();
+  if (s3AvailabilityCache && now - s3AvailabilityCache.checkedAt < S3_AVAILABILITY_CACHE_MS) {
+    return s3AvailabilityCache.available;
+  }
+
+  try {
+    await client.send(new HeadBucketCommand({ Bucket: env.S3_BUCKET }));
+    s3AvailabilityCache = { checkedAt: now, available: true };
+    return true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[Storage] S3 bucket unavailable, using upload fallback: ${message}`);
+    s3AvailabilityCache = { checkedAt: now, available: false };
+    return false;
+  }
+}
+
 export async function createPresignedUploadUrl(
   key: string,
   contentType: string,
@@ -58,6 +78,8 @@ export async function createPresignedUploadUrl(
   try {
     const client = getS3Client();
     if (!client) return null;
+    if (!(await isS3BucketAvailable(client))) return null;
+
     const command = new PutObjectCommand({
       Bucket: env.S3_BUCKET,
       Key: key,

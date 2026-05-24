@@ -62,8 +62,8 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
   return (
     <div className="space-y-4">
       {/* Premium Tab Bar for Course Filtering */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-m3-outline-variant pb-2">
-        <div className="flex flex-wrap gap-1.5">
+      <div className="border-b border-m3-outline-variant pb-2">
+        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
           {TABS.map((tab) => {
             const count = courses.filter((c) => {
               if (tab.id === "all") return true;
@@ -78,7 +78,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-full px-4 py-2 font-label-md text-label-md transition-all duration-200",
+                  "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 font-label-md text-label-md transition-all duration-200 sm:px-4",
                   activeTab === tab.id
                     ? "bg-m3-primary text-m3-on-primary shadow-sm"
                     : "text-m3-on-surface-variant hover:bg-m3-surface-container-high"
@@ -102,7 +102,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
 
       {/* Grid of Courses */}
       {filteredCourses.length === 0 ? (
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest p-8 text-center rounded-2xl shadow-m3-soft">
+        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest p-4 text-center rounded-2xl shadow-m3-soft sm:p-8">
           <CardContent className="space-y-2 py-4">
             <Icon name="search_off" size={40} className="mx-auto text-m3-outline" />
             <p className="font-label-lg text-label-lg text-m3-on-surface">Нет курсов в этой категории</p>
@@ -112,7 +112,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
           </CardContent>
         </Card>
       ) : (
-        <Stagger className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filteredCourses.map((c) => (
             <FadeIn key={c.courseId}>
               <CardHover>
@@ -147,6 +147,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
                     </div>
 
                     {/* Completion Forecast Block with dynamic micro-details */}
+                    <div className="flex min-w-0 items-center gap-2 rounded-xl bg-m3-surface-container-low p-2.5 text-body-xs font-body-xs text-m3-on-surface-variant">
                     <div className="flex items-center gap-2 rounded-xl bg-m3-surface-container-low/80 p-2.5 text-body-xs font-body-xs text-m3-on-surface-variant/90 border border-m3-outline-variant/20">
                       <Icon 
                         name={c.percent >= 100 ? "workspace_premium" : c.status === "BLOCKED" ? "pause" : "schedule"} 
@@ -155,7 +156,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
                           c.percent >= 100 ? "text-emerald-500" : c.status === "BLOCKED" ? "text-amber-500" : "text-m3-primary"
                         )}
                       />
-                      <span className="truncate">{getForecastText(c.percent, c.status)}</span>
+                      <span className="min-w-0 flex-1 truncate">{getForecastText(c.percent, c.status)}</span>
                     </div>
 
                     <Button asChild className="w-full rounded-xl btn-shine shadow-m3-soft hover:shadow-m3-soft-hover" size="sm" variant={c.status === "BLOCKED" ? "secondary" : "primary"}>
