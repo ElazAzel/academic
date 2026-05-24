@@ -194,8 +194,9 @@ export function NotificationsList() {
 
       {/* List */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-16">
+        <div role="status" aria-live="polite" className="flex items-center justify-center py-16">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-m3-primary border-t-transparent" />
+          <span className="sr-only">Загрузка уведомлений...</span>
         </div>
       ) : notifications.length === 0 ? (
         <Card className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
@@ -235,6 +236,8 @@ export function NotificationsList() {
                     return (
                       <Card
                         key={n.id}
+                        role="button"
+                        tabIndex={0}
                         className={cn(
                           "rounded-lg border shadow-m3-soft cursor-pointer transition-all hover:shadow-m3-soft-hover overflow-hidden",
                           isUnread
@@ -242,6 +245,7 @@ export function NotificationsList() {
                             : "border-m3-outline-variant bg-m3-surface-container-lowest"
                         )}
                         onClick={() => handleAction(n)}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleAction(n); } }}
                       >
                         <CardContent className="flex items-start gap-4 p-4">
                           {/* Unread indicator line + icon */}
