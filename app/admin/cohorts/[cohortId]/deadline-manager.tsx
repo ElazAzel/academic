@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Calendar, Save, Clock, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { ru } from "date-fns/locale";
 
 interface BlockDeadline {
   id: string;
+  targetType: "block" | "module";
   title: string;
   order: number;
   moduleId: string;
@@ -22,6 +23,15 @@ interface BlockDeadline {
 interface Props {
   cohortId: string;
   cohortName: string;
+}
+
+function deadlineToInputValue(dueAt: string) {
+  return format(parseISO(dueAt), "yyyy-MM-dd");
+}
+
+function inputDateToIso(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day, 23, 59, 0, 0).toISOString();
 }
 
 export function DeadlineManager({ cohortId, cohortName }: Props) {
@@ -38,25 +48,34 @@ export function DeadlineManager({ cohortId, cohortName }: Props) {
     },
   });
 
-  // Initialize dates from existing deadlines
-  useState(() => {
-    const initial: Record<string, string> = {};
-    for (const block of blocks) {
-      if (block.deadline?.dueAt) {
-        initial[block.id] = format(parseISO(block.deadline.dueAt), "yyyy-MM-dd'T'HH:mm");
+  // Initialize dates from existing deadlines once the async data is available.
+  useEffect(() => {
+    if (blocks.length === 0) return;
+
+    setDates((current) => {
+      if (Object.keys(current).length > 0) return current;
+
+      const initial: Record<string, string> = {};
+      for (const block of blocks) {
+        if (block.deadline?.dueAt) {
+          initial[block.id] = deadlineToInputValue(block.deadline.dueAt);
+        }
       }
-    }
-    setDates(initial);
-  });
+      return initial;
+    });
+  }, [blocks]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const deadlines = Object.entries(dates)
         .filter(([, dueAt]) => dueAt)
-        .map(([blockId, dueAt]) => ({
-          blockId,
-          dueAt: new Date(dueAt).toISOString(),
-        }));
+        .map(([targetId, dueAt]) => {
+          const target = blocks.find((block) => block.id === targetId);
+          return {
+            ...(target?.targetType === "module" ? { moduleId: targetId } : { blockId: targetId }),
+            dueAt: inputDateToIso(dueAt),
+          };
+        });
 
       if (deadlines.length === 0) {
         throw new Error("Нет дедлайнов для сохранения");
@@ -137,7 +156,7 @@ export function DeadlineManager({ cohortId, cohortName }: Props) {
                     </span>
                     <div className="flex items-center gap-2 flex-1">
                       <input
-                        type="datetime-local"
+                        type="date"
                         value={dates[block.id] ?? ""}
                         onChange={(e) =>
                           setDates((prev) => ({ ...prev, [block.id]: e.target.value }))

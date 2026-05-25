@@ -3,7 +3,7 @@ import { PageSkeleton } from "@/components/lms/page-skeleton";
 
 export default function Loading() {
   return (
-    <AppShell>
+    <AppShell role="instructor">
       <PageSkeleton />
     </AppShell>
   );

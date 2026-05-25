@@ -10,8 +10,11 @@ import {
 const upsertSchema = z.object({
   deadlines: z.array(
     z.object({
-      blockId: z.string().min(1),
+      blockId: z.string().min(1).optional(),
+      moduleId: z.string().min(1).optional(),
       dueAt: z.string().datetime(),
+    }).refine((value) => Boolean(value.blockId) !== Boolean(value.moduleId), {
+      message: "Specify exactly one deadline target",
     }),
   ).min(1),
 });
@@ -42,6 +45,7 @@ export async function POST(
     const body = await parseJson(request, upsertSchema);
     const deadlines = body.deadlines.map((d) => ({
       blockId: d.blockId,
+      moduleId: d.moduleId,
       dueAt: new Date(d.dueAt),
     }));
     const result = await setBlockDeadlines(cohortId, deadlines, user.id);

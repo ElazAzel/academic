@@ -29,14 +29,18 @@ function checkCsrfOrigin(req: NextRequest): NextResponse | null {
 
   try {
     const sourceUrl = new URL(source);
-    // Compare origin against the request's own hostname — works on any domain,
-    // preview deployment, custom domain, and localhost without env vars
-    // Также сверяем схему (http vs https) для защиты от cross-scheme атак
-    if (
-      sourceUrl.protocol !== req.nextUrl.protocol ||
-      sourceUrl.hostname !== req.nextUrl.hostname ||
-      sourceUrl.port !== req.nextUrl.port
-    ) {
+    // Compare against the effective request host so preview deployments,
+    // custom domains, localhost, and Vercel forwarding headers work consistently.
+    // Origin is protocol-strict; Referer fallback is host-strict for browser requests
+    // that omit Origin on same-origin form/fetch calls.
+    const forwardedHost = req.headers.get("x-forwarded-host");
+    const host = forwardedHost ?? req.headers.get("host") ?? req.nextUrl.host;
+    const forwardedProto = req.headers.get("x-forwarded-proto");
+    const requestProtocol = forwardedProto ? `${forwardedProto}:` : req.nextUrl.protocol;
+    const sameHost = sourceUrl.host === host || sourceUrl.host === req.nextUrl.host;
+    const sameProtocol = sourceUrl.protocol === requestProtocol || sourceUrl.protocol === req.nextUrl.protocol;
+
+    if (!sameHost || (origin && !sameProtocol)) {
       return NextResponse.json(
         { error: { code: "forbidden", message: "CSRF: origin mismatch" } },
         { status: 403 }

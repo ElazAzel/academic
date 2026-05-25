@@ -30,11 +30,6 @@ const ChatPanel = dynamic(
   { ssr: false },
 );
 
-const LessonDiscussion = dynamic(
-  () => import("@/components/lms/lesson-discussion").then((m) => ({ default: m.LessonDiscussion })),
-  { ssr: false },
-);
-
 export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlayerDetail; user: { id: string; name?: string | null; email: string } }) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -290,11 +285,6 @@ export function LessonPlayerShell({ detail, user }: { detail: StudentLessonPlaye
               <ChatPanel studentId={session.user.id} curatorId={curatorId} lessonId={lesson.id} />
             </div>
           )}
-
-          {/* Lesson discussion (Phase 2.6) */}
-          <div className="space-y-3">
-            <LessonDiscussion lessonId={lesson.id} />
-          </div>
 
           <LessonNavigation prevLesson={lesson.prevLesson} nextLesson={lesson.nextLesson} />
         </div>

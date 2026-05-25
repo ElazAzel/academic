@@ -4,9 +4,21 @@ import { ApiError } from "@/lib/http";
 const prisma = getPrisma();
 
 export interface BlockDeadlineInput {
-  blockId: string;
+  blockId?: string;
+  moduleId?: string;
   dueAt: Date;
 }
+
+type DeadlineTargetRow = {
+  id: string;
+  targetType: "block" | "module";
+  title: string;
+  order: number;
+  moduleId: string;
+  moduleTitle: string;
+  moduleOrder: number;
+  deadline: { id: string; dueAt: Date } | null;
+};
 
 /**
  * Get all block deadlines for a cohort with block details.
@@ -22,35 +34,51 @@ export async function getCohortBlockDeadlines(cohortId: string) {
   });
   if (!cohort) throw new ApiError("not_found", "Поток не найден", 404);
 
-  // Get all blocks in the course with module info
-  const blocks = await prisma.block.findMany({
-    where: {
-      module: {
-        courseId: cohort.courseId!,
-      },
-    },
+  const modules = await prisma.module.findMany({
+    where: { courseId: cohort.courseId! },
     include: {
-      module: { select: { id: true, title: true, order: true } },
       deadlines: {
         where: { cohortId },
         select: { id: true, dueAt: true },
       },
+      blocks: {
+        include: {
+          deadlines: {
+            where: { cohortId },
+            select: { id: true, dueAt: true },
+          },
+        },
+        orderBy: { order: "asc" },
+      },
     },
-    orderBy: [
-      { module: { order: "asc" } },
-      { order: "asc" },
-    ],
+    orderBy: { order: "asc" },
   });
 
-  return blocks.map((block) => ({
-    id: block.id,
-    title: block.title,
-    order: block.order,
-    moduleId: block.module.id,
-    moduleTitle: block.module.title,
-    moduleOrder: block.module.order,
-    deadline: block.deadlines[0] ?? null,
-  }));
+  return modules.flatMap<DeadlineTargetRow>((courseModule) => {
+    if (courseModule.blocks.length === 0) {
+      return [{
+        id: courseModule.id,
+        targetType: "module" as const,
+        title: courseModule.title,
+        order: courseModule.order,
+        moduleId: courseModule.id,
+        moduleTitle: courseModule.title,
+        moduleOrder: courseModule.order,
+        deadline: courseModule.deadlines[0] ?? null,
+      }];
+    }
+
+    return courseModule.blocks.map((block) => ({
+      id: block.id,
+      targetType: "block" as const,
+      title: block.title,
+      order: block.order,
+      moduleId: courseModule.id,
+      moduleTitle: courseModule.title,
+      moduleOrder: courseModule.order,
+      deadline: block.deadlines[0] ?? null,
+    }));
+  });
 }
 
 /**
@@ -93,26 +121,67 @@ export async function setBlockDeadlines(
   // Upsert each deadline
   const results = [];
   for (const d of deadlines) {
-    const existing = await prisma.blockCohortDeadline.findUnique({
-      where: { cohortId_blockId: { cohortId, blockId: d.blockId } },
-    });
+    if (d.blockId) {
+      const block = await prisma.block.findFirst({
+        where: { id: d.blockId, module: { courseId: cohort.courseId! } },
+        select: { id: true },
+      });
+      if (!block) throw new ApiError("not_found", "Блок не найден в курсе потока", 404);
 
-    if (existing) {
-      const updated = await prisma.blockCohortDeadline.update({
-        where: { id: existing.id },
-        data: { dueAt: d.dueAt },
+      const existing = await prisma.blockCohortDeadline.findUnique({
+        where: { cohortId_blockId: { cohortId, blockId: d.blockId } },
       });
-      results.push(updated);
-    } else {
-      const created = await prisma.blockCohortDeadline.create({
-        data: {
-          cohortId,
-          blockId: d.blockId,
-          dueAt: d.dueAt,
-        },
-      });
-      results.push(created);
+
+      if (existing) {
+        const updated = await prisma.blockCohortDeadline.update({
+          where: { id: existing.id },
+          data: { dueAt: d.dueAt },
+        });
+        results.push(updated);
+      } else {
+        const created = await prisma.blockCohortDeadline.create({
+          data: {
+            cohortId,
+            blockId: d.blockId,
+            dueAt: d.dueAt,
+          },
+        });
+        results.push(created);
+      }
+      continue;
     }
+
+    if (d.moduleId) {
+      const courseModule = await prisma.module.findFirst({
+        where: { id: d.moduleId, courseId: cohort.courseId! },
+        select: { id: true },
+      });
+      if (!courseModule) throw new ApiError("not_found", "Модуль не найден в курсе потока", 404);
+
+      const existing = await prisma.cohortDeadline.findUnique({
+        where: { cohortId_moduleId: { cohortId, moduleId: d.moduleId } },
+      });
+
+      if (existing) {
+        const updated = await prisma.cohortDeadline.update({
+          where: { id: existing.id },
+          data: { dueAt: d.dueAt },
+        });
+        results.push(updated);
+      } else {
+        const created = await prisma.cohortDeadline.create({
+          data: {
+            cohortId,
+            moduleId: d.moduleId,
+            dueAt: d.dueAt,
+          },
+        });
+        results.push(created);
+      }
+      continue;
+    }
+
+    throw new ApiError("bad_request", "Укажите блок или модуль для дедлайна", 400);
   }
 
   return results;
