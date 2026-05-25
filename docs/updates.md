@@ -2,6 +2,19 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-25 — Web Interface Guidelines Fixes (overscroll, autocomplete)
+
+### Curator Modals (curator-modals.tsx)
+- Добавлен `overscroll-behavior: contain` на backdrop обоих модальных окон (`AnswerQuestionModal`, `ReviewSubmissionModal`) — предотвращает скролл body при открытой модалке на iOS
+
+### Curator Search (curator-operations-board.tsx)
+- Добавлен `autoComplete="off"` на поле живого поиска слушателей — предотвращает навязчивые автозаполнения браузера
+
+### Ранее обработанные в globals.css
+- `touch-action: manipulation` — уже глобально на `html`, интерактивных элементах и bottom nav (строчки 186, 320, 329)
+- `prefers-reduced-motion` — уже через framer-motion `useReducedMotion()` во всех анимационных компонентах
+- `focus:outline-none` без кольца — все случаи уже имеют `focus:ring-2`
+
 ## 2026-05-25 — Certificate Designer Premium + NLP Curator Assistant + Student Flow E2E + Curator Scope Tests
 
 ### Certificate Designer Premium

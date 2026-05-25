@@ -44,7 +44,7 @@ export function AnswerQuestionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" style={{ overscrollBehavior: "contain" }}>
       <div className="w-full max-w-lg overflow-hidden rounded-lg border border-m3-outline-variant bg-card shadow-m3-modal animate-in fade-in zoom-in duration-200">
         <div className="p-6 border-b">
           <h3 className="text-lg font-bold">Ответ на вопрос</h3>
@@ -118,7 +118,7 @@ export function ReviewSubmissionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" style={{ overscrollBehavior: "contain" }}>
       <div className="w-full max-w-2xl overflow-hidden rounded-lg border border-m3-outline-variant bg-card shadow-m3-modal animate-in fade-in zoom-in duration-200">
         <div className="p-6 border-b flex justify-between items-center">
           <div>
