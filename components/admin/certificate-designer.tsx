@@ -255,7 +255,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
   configRef.current = config;
 
   // Undo/redo history
-  const { pushState, undo, redo, canUndo, canRedo } = useDesignHistory<TemplateConfig>();
+  const { push: pushState, undo, redo, canUndo, canRedo } = useDesignHistory<TemplateConfig>();
 
   // Visibility toggles
   const [visibility, setVisibility] = useState<Record<string, boolean>>(VISIBILITY_DEFAULTS);
