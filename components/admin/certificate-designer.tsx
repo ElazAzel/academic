@@ -328,7 +328,6 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, courseId]);
 
   // Push history on config changes (debounced)

@@ -110,7 +110,6 @@ test.describe("student flow proof", () => {
       // by extracting course ID from a lesson URL
       const lessonLink = page.locator('a[href*="/student/lessons/"]').first();
       await expect(lessonLink).toBeVisible({ timeout: 5_000 });
-      const href = await lessonLink.getAttribute("href");
       // Lessons link to /student/lessons/[lessonId], course detail is /student/courses/[courseId]
       // We can navigate to a known course from the seed data
       await page.goto("/student/courses");
@@ -169,11 +168,6 @@ test.describe("student flow proof", () => {
 
     // Verify quiz UI is interactive
     await expect(page.locator('input[type="radio"]').first()).toBeVisible({ timeout: 5_000 });
-
-    // Count questions by counting radio button groups
-    const questionNavButtons = page.locator(
-      'button:has-text("1"), button:has-text("2"), button:has-text("3")'
-    ).filter({ has: page.locator("span") });
 
     // Select first option for the first question
     const firstRadio = page.locator('input[type="radio"]').first();

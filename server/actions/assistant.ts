@@ -22,6 +22,6 @@ export async function getQuestionSuggestionsAction(questionText: string): Promis
   } catch (error) {
     console.error("[getQuestionSuggestionsAction]", error);
     if (error instanceof ApiError) throw error;
-    throw new ApiError("internal", "Ошибка при получении подсказок", 500);
+    throw new ApiError("internal_error", "Ошибка при получении подсказок", 500);
   }
 }

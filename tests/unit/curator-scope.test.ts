@@ -21,12 +21,14 @@ vi.mock("@/lib/prisma", () => ({
 // These mimic the inline curator access patterns used in server actions.
 
 /** Simulates DB storage of curator assignments. Tests push into this. */
-let assignmentStore: Array<{
+type AssignmentStoreRow = {
   studentId: string;
   curatorId: string;
   cohortId: string;
   active: boolean;
-}> = [];
+};
+
+let assignmentStore: AssignmentStoreRow[] = [];
 
 function resetStore() {
   assignmentStore = [];
@@ -61,10 +63,10 @@ beforeEach(() => {
 });
 
 async function getCuratorStudentIds(curatorId: string): Promise<string[]> {
-  const assignments = await mockCuratorAssignmentFindMany({
+  const assignments = (await mockCuratorAssignmentFindMany({
     where: { curatorId, active: true },
-  });
-  return [...new Set(assignments.map((a: { studentId: string }) => a.studentId))];
+  })) as AssignmentStoreRow[];
+  return [...new Set(assignments.map((a) => a.studentId))];
 }
 
 async function assertCuratorStudentAccess(
@@ -78,10 +80,10 @@ async function assertCuratorStudentAccess(
 }
 
 async function getCuratorCohortIds(curatorId: string): Promise<string[]> {
-  const assignments = await mockCuratorAssignmentFindMany({
+  const assignments = (await mockCuratorAssignmentFindMany({
     where: { curatorId, active: true },
-  });
-  return [...new Set(assignments.map((a: { cohortId: string }) => a.cohortId))];
+  })) as AssignmentStoreRow[];
+  return [...new Set(assignments.map((a) => a.cohortId))];
 }
 
 // ── Tests ───────────────────────────────────────────────────────────────
