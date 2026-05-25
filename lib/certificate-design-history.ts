@@ -7,7 +7,7 @@ import { useCallback, useRef, useState } from "react";
  * Stores snapshots up to `maxHistory` items.
  * Works with any JSON-serializable state.
  */
-export function useDesignHistory<T extends Record<string, unknown>>(
+export function useDesignHistory<T extends object>(
   initialState: T,
   maxHistory = 50
 ) {
