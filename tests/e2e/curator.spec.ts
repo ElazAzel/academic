@@ -56,3 +56,59 @@ test.describe("curator", () => {
     await expect(page.locator("h1")).toBeVisible();
   });
 });
+
+test.describe("curator — negative path (scope boundaries)", () => {
+  test.describe.configure({ timeout: 120_000 });
+
+  const FORBIDDEN_ROUTES = [
+    { route: "/admin", label: "admin dashboard" },
+    { route: "/instructor", label: "instructor dashboard" },
+    { route: "/student", label: "student dashboard" },
+    { route: "/super-curator", label: "super-curator dashboard" },
+    { route: "/customer-observer", label: "observer dashboard" },
+  ];
+
+  for (const { route, label } of FORBIDDEN_ROUTES) {
+    test(`blocked from ${label}`, async ({ page }) => {
+      await loginAs(page, "curator@academy.local");
+      await page.waitForURL("/curator");
+      await page.goto(route, { timeout: 25_000 });
+      // Should redirect to login, 403, or stay on /curator
+      const url = page.url();
+      const forbidden = url.includes("/login") || url.includes("/403") || url.includes("/forbidden");
+      expect(forbidden).toBeTruthy();
+    });
+  }
+
+  test("blocked from admin sub-routes", async ({ page }) => {
+    await loginAs(page, "curator@academy.local");
+    await page.waitForURL("/curator");
+
+    const adminRoutes = [
+      "/admin/users", "/admin/courses", "/admin/roles",
+      "/admin/certificates", "/admin/settings",
+    ];
+    for (const route of adminRoutes) {
+      await page.goto(route, { timeout: 25_000 });
+      const url = page.url();
+      const forbidden = url.includes("/login") || url.includes("/403") || url.includes("/forbidden");
+      expect(forbidden).toBeTruthy();
+    }
+  });
+
+  test("blocked from instructor sub-routes", async ({ page }) => {
+    await loginAs(page, "curator@academy.local");
+    await page.waitForURL("/curator");
+
+    const instructorRoutes = [
+      "/instructor/courses", "/instructor/quizzes",
+      "/instructor/students", "/instructor/settings",
+    ];
+    for (const route of instructorRoutes) {
+      await page.goto(route, { timeout: 25_000 });
+      const url = page.url();
+      const forbidden = url.includes("/login") || url.includes("/403") || url.includes("/forbidden");
+      expect(forbidden).toBeTruthy();
+    }
+  });
+});

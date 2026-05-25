@@ -13,13 +13,21 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  ExternalLink
+  ExternalLink,
+  Undo2,
+  Redo2,
+  ZoomIn,
+  Eye,
+  EyeOff,
+  Layers,
+  Palette,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getCertificateTemplateAction, saveCertificateTemplateAction } from "@/server/actions/certificates";
+import { useDesignHistory } from "@/lib/certificate-design-history";
 
 interface ElementStyle {
   x: number;
@@ -27,12 +35,14 @@ interface ElementStyle {
   fontSize: number;
   color: string;
   align: "left" | "center" | "right";
+  zIndex: number;
 }
 
 interface QrStyle {
   x: number;
   y: number;
   size: number;
+  zIndex: number;
 }
 
 interface TemplateConfig {
@@ -45,14 +55,59 @@ interface TemplateConfig {
   qrCode: QrStyle;
 }
 
+const FIELD_Z_BASE: Record<string, number> = {
+  studentName: 30,
+  courseTitle: 20,
+  durationHours: 10,
+  serialNumber: 5,
+  issuedAt: 4,
+  qrCode: 50,
+};
+
+const VISIBILITY_DEFAULTS: Record<string, boolean> = {
+  studentName: true,
+  courseTitle: true,
+  durationHours: true,
+  serialNumber: true,
+  issuedAt: true,
+  qrCode: true,
+};
+
+const PRESET_THEMES = [
+  {
+    name: "academic",
+    label: "Академический",
+    icon: "🎓",
+    colors: { studentName: "#1c376f", courseTitle: "#1a1a1a", durationHours: "#333333", serialNumber: "#808080", issuedAt: "#808080" },
+  },
+  {
+    name: "premium",
+    label: "Премиум",
+    icon: "👑",
+    colors: { studentName: "#d4af37", courseTitle: "#1a1a1a", durationHours: "#555555", serialNumber: "#999999", issuedAt: "#999999" },
+  },
+  {
+    name: "nature",
+    label: "Природа",
+    icon: "🌿",
+    colors: { studentName: "#166534", courseTitle: "#1a1a1a", durationHours: "#333333", serialNumber: "#808080", issuedAt: "#808080" },
+  },
+  {
+    name: "modern",
+    label: "Современный",
+    icon: "✨",
+    colors: { studentName: "#0f172a", courseTitle: "#334155", durationHours: "#475569", serialNumber: "#94a3b8", issuedAt: "#94a3b8" },
+  },
+];
+
 const DEFAULT_CONFIG: TemplateConfig = {
   backgroundUrl: "",
-  studentName: { x: 421, y: 360, fontSize: 42, color: "#1c376f", align: "center" },
-  courseTitle: { x: 421, y: 280, fontSize: 24, color: "#1a1a1a", align: "center" },
-  durationHours: { x: 421, y: 200, fontSize: 14, color: "#333333", align: "center" },
-  serialNumber: { x: 60, y: 60, fontSize: 10, color: "#808080", align: "left" },
-  issuedAt: { x: 60, y: 45, fontSize: 10, color: "#808080", align: "left" },
-  qrCode: { x: 620, y: 120, size: 100 },
+  studentName: { x: 421, y: 360, fontSize: 42, color: "#1c376f", align: "center", zIndex: FIELD_Z_BASE.studentName },
+  courseTitle: { x: 421, y: 280, fontSize: 24, color: "#1a1a1a", align: "center", zIndex: FIELD_Z_BASE.courseTitle },
+  durationHours: { x: 421, y: 200, fontSize: 14, color: "#333333", align: "center", zIndex: FIELD_Z_BASE.durationHours },
+  serialNumber: { x: 60, y: 60, fontSize: 10, color: "#808080", align: "left", zIndex: FIELD_Z_BASE.serialNumber },
+  issuedAt: { x: 60, y: 45, fontSize: 10, color: "#808080", align: "left", zIndex: FIELD_Z_BASE.issuedAt },
+  qrCode: { x: 620, y: 120, size: 100, zIndex: FIELD_Z_BASE.qrCode },
 };
 
 const CERTIFICATE_BACKGROUND_MAX_BYTES = 5 * 1024 * 1024;
@@ -106,6 +161,7 @@ function readElementStyle(value: unknown, fallback: ElementStyle): ElementStyle 
     fontSize: readNumber(record.fontSize, fallback.fontSize),
     color: readString(record.color, fallback.color),
     align: readAlign(record.align, fallback.align),
+    zIndex: readNumber(record.zIndex, fallback.zIndex),
   };
 }
 
@@ -115,7 +171,30 @@ function readQrStyle(value: unknown, fallback: QrStyle): QrStyle {
     x: readNumber(record.x, fallback.x),
     y: readNumber(record.y, fallback.y),
     size: readNumber(record.size, fallback.size),
+    zIndex: readNumber(record.zIndex, fallback.zIndex),
   };
+}
+
+function applyConfigFromBody(body: Record<string, unknown>, fallback: TemplateConfig): TemplateConfig {
+  const config: TemplateConfig = {
+    backgroundUrl: readString(body.backgroundUrl, ""),
+    studentName: readElementStyle(body.studentName, fallback.studentName),
+    courseTitle: readElementStyle(body.courseTitle, fallback.courseTitle),
+    durationHours: readElementStyle(body.durationHours, fallback.durationHours),
+    serialNumber: readElementStyle(body.serialNumber, fallback.serialNumber),
+    issuedAt: readElementStyle(body.issuedAt, fallback.issuedAt),
+    qrCode: readQrStyle(body.qrCode, fallback.qrCode),
+  };
+  // Backward compat: if body has no zIndex, assign from FIELD_Z_BASE
+  for (const key of Object.keys(FIELD_Z_BASE)) {
+    if (key === "qrCode") {
+      if (typeof config.qrCode.zIndex === "undefined") config.qrCode.zIndex = FIELD_Z_BASE.qrCode;
+    } else {
+      const el = config[key as TextFieldKey];
+      if (el && typeof el.zIndex === "undefined") el.zIndex = FIELD_Z_BASE[key];
+    }
+  }
+  return config;
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -166,6 +245,29 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Zoom state (50% – 150%)
+  const [zoom, setZoom] = useState(1);
+
+  // Auto-save state
+  const [autoSaving, setAutoSaving] = useState(false);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const configRef = useRef(config);
+  configRef.current = config;
+
+  // Undo/redo history
+  const { pushState, undo, redo, canUndo, canRedo } = useDesignHistory<TemplateConfig>();
+
+  // Visibility toggles
+  const [visibility, setVisibility] = useState<Record<string, boolean>>(VISIBILITY_DEFAULTS);
+
+  function isFieldVisible(key: FieldKey): boolean {
+    return visibility[key] ?? true;
+  }
+
+  function toggleFieldVisibility(key: FieldKey) {
+    setVisibility(prev => ({ ...prev, [key]: !prev[key] }));
+  }
+
   // Smooth visual constructor states
   const [showGrid, setShowGrid] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(true);
@@ -183,15 +285,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
       setCourse(res.course);
       if (res.template && isRecord(res.template.body)) {
         const body = res.template.body;
-        setConfig({
-          backgroundUrl: readString(body.backgroundUrl, ""),
-          studentName: readElementStyle(body.studentName, DEFAULT_CONFIG.studentName),
-          courseTitle: readElementStyle(body.courseTitle, DEFAULT_CONFIG.courseTitle),
-          durationHours: readElementStyle(body.durationHours, DEFAULT_CONFIG.durationHours),
-          serialNumber: readElementStyle(body.serialNumber, DEFAULT_CONFIG.serialNumber),
-          issuedAt: readElementStyle(body.issuedAt, DEFAULT_CONFIG.issuedAt),
-          qrCode: readQrStyle(body.qrCode, DEFAULT_CONFIG.qrCode),
-        });
+        setConfig(applyConfigFromBody(body, DEFAULT_CONFIG));
       } else {
         setConfig(DEFAULT_CONFIG);
       }
@@ -217,6 +311,61 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [loading]);
+
+  // Auto-save: debounce config changes (3s after last change)
+  useEffect(() => {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(async () => {
+      setAutoSaving(true);
+      try {
+        await saveCertificateTemplateAction(courseId, configRef.current);
+      } catch {
+        // silent — errors shown on manual save
+      } finally {
+        setAutoSaving(false);
+      }
+    }, 3000);
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config, courseId]);
+
+  // Push history on config changes (debounced)
+  const lastPushedRef = useRef<string>("");
+  useEffect(() => {
+    const serialized = JSON.stringify(config);
+    if (serialized !== lastPushedRef.current) {
+      pushState(config);
+      lastPushedRef.current = serialized;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config]);
+
+  // Ctrl+Z / Ctrl+Shift+Z shortcuts
+  useEffect(() => {
+    function handleKeyboardShortcut(e: KeyboardEvent) {
+      if (e.ctrlKey && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        const prev = undo();
+        if (prev) setConfig(prev);
+      } else if (e.ctrlKey && e.key === "z" && e.shiftKey) {
+        e.preventDefault();
+        const next = redo();
+        if (next) setConfig(next);
+      } else if (e.ctrlKey && e.key === "Z" && !e.shiftKey) {
+        e.preventDefault();
+        const prev = undo();
+        if (prev) setConfig(prev);
+      } else if (e.ctrlKey && e.key === "Z" && e.shiftKey) {
+        e.preventDefault();
+        const next = redo();
+        if (next) setConfig(next);
+      }
+    }
+    window.addEventListener("keydown", handleKeyboardShortcut);
+    return () => window.removeEventListener("keydown", handleKeyboardShortcut);
+  }, [undo, redo]);
 
   // Nudge active element via Keyboard Arrows (1px, or 10px with Shift)
   useEffect(() => {
@@ -398,6 +547,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
           x: updates.x ?? prev.qrCode.x,
           y: updates.y ?? prev.qrCode.y,
           size: updates.size ?? prev.qrCode.size,
+          zIndex: updates.zIndex ?? prev.qrCode.zIndex,
         },
       }));
       return;
@@ -412,8 +562,34 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
         fontSize: updates.fontSize ?? prev[field].fontSize,
         color: updates.color ?? prev[field].color,
         align: updates.align ?? prev[field].align,
+        zIndex: updates.zIndex ?? prev[field].zIndex,
       },
     }));
+  }
+
+  // Layer movement
+  function moveLayer(field: FieldKey, direction: "up" | "down") {
+    const delta = direction === "up" ? 1 : -1;
+    if (field === "qrCode") {
+      updateStyle(field, { zIndex: config.qrCode.zIndex + delta });
+    } else {
+      updateStyle(field, { zIndex: (config[field] as ElementStyle).zIndex + delta });
+    }
+  }
+
+  // Apply preset theme
+  function applyTheme(theme: typeof PRESET_THEMES[number]) {
+    setConfig(prev => {
+      const next = { ...prev };
+      for (const [fieldKey, color] of Object.entries(theme.colors)) {
+        if (fieldKey === "qrCode") continue;
+        const fk = fieldKey as TextFieldKey;
+        if (fk in next) {
+          next[fk] = { ...next[fk], color };
+        }
+      }
+      return next;
+    });
   }
 
   // Pointer dragging handler inside preview container
@@ -485,26 +661,58 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Button variant="secondary" asChild size="sm">
-          <a href={backUrl}>
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Назад
-          </a>
-        </Button>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="secondary" asChild size="sm">
+            <a href={backUrl}>
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Назад
+            </a>
+          </Button>
 
-        <div className="flex gap-2">
+          {/* Undo / Redo */}
+          <Button variant="secondary" onClick={() => { const prev = undo(); if (prev) setConfig(prev); }} disabled={!canUndo} size="sm" title="Отменить (Ctrl+Z)">
+            <Undo2 className="h-4 w-4" />
+          </Button>
+          <Button variant="secondary" onClick={() => { const next = redo(); if (next) setConfig(next); }} disabled={!canRedo} size="sm" title="Повторить (Ctrl+Shift+Z)">
+            <Redo2 className="h-4 w-4" />
+          </Button>
+
+          <span className="text-xs text-muted-foreground mx-1 hidden md:inline">|</span>
+
+          {/* Zoom */}
+          <div className="flex items-center gap-1" title="Масштаб холста">
+            <ZoomIn className="h-4 w-4 text-muted-foreground" />
+            <input
+              type="range"
+              min={50}
+              max={150}
+              value={Math.round(zoom * 100)}
+              onChange={(e) => setZoom(Number(e.target.value) / 100)}
+              className="w-20 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <span className="text-xs text-muted-foreground w-8 tabular-nums">{Math.round(zoom * 100)}%</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {autoSaving && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Автосохранение...
+            </span>
+          )}
           <Button variant="secondary" onClick={handleReset} size="sm">
             <RotateCcw className="h-4 w-4 mr-1" />
             Сбросить
           </Button>
           <Button variant="secondary" onClick={handlePreviewPdf} disabled={previewing} size="sm">
             {previewing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ExternalLink className="h-4 w-4 mr-1" />}
-            Предпросмотр PDF
+            PDF
           </Button>
-          <Button onClick={handleSave} disabled={saving} size="sm">
+          <Button onClick={handleSave} disabled={saving || autoSaving} size="sm">
             {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
-            Сохранить шаблон
+            {saving ? "Сохранение..." : "Сохранить"}
           </Button>
         </div>
       </div>
@@ -563,7 +771,13 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
             <CardContent className="p-6 flex justify-center">
               <div 
                 ref={previewContainerRef}
-                className="w-full max-w-[842px] aspect-[842/595] border relative bg-m3-surface-container-low shadow-sm rounded-lg overflow-hidden select-none"
+                className="w-full max-w-[842px] border relative bg-m3-surface-container-low shadow-sm rounded-lg overflow-hidden select-none"
+                style={{
+                  aspectRatio: "842 / 595",
+                  transform: `scale(${zoom})`,
+                  transformOrigin: "top left",
+                  height: zoom > 1 ? `${595 * zoom}px` : "auto",
+                }}
               >
                 {/* Visual Background Image Layer */}
                 {config.backgroundUrl && (
@@ -617,6 +831,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
 
                 {/* Draggable fields overlays */}
                 {(["studentName", "courseTitle", "durationHours", "serialNumber", "issuedAt"] as TextFieldKey[]).map(field => {
+                  if (!isFieldVisible(field)) return null;
                   const s = config[field] as ElementStyle;
                   const label = field === "studentName" 
                     ? "Иванов Иван Иванович" 
@@ -638,7 +853,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                       onPointerUp={handleDragEnd}
                       className={`absolute cursor-move select-none p-1 rounded border transition-all duration-150 ${
                         isActive 
-                          ? "border-amber-500 bg-amber-500/10 shadow-md scale-[1.01] ring-2 ring-amber-500/25 z-20" 
+                          ? "border-amber-500 bg-amber-500/10 shadow-md scale-[1.01] ring-2 ring-amber-500/25" 
                           : "border-transparent hover:border-slate-300 hover:bg-slate-50/50"
                       }`}
                       style={{
@@ -649,7 +864,8 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                         color: s.color,
                         fontFamily: isActive ? "sans-serif" : "inherit",
                         fontWeight: field === "studentName" || field === "courseTitle" ? "bold" : "normal",
-                        fontStyle: field === "studentName" ? "normal" : "inherit"
+                        fontStyle: field === "studentName" ? "normal" : "inherit",
+                        zIndex: s.zIndex,
                       }}
                     >
                       <span className="flex items-center gap-1 relative whitespace-nowrap">
@@ -671,13 +887,14 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                 })}
 
                 {/* Draggable QR-code */}
+                {isFieldVisible("qrCode") && (
                 <div
                   onPointerDown={(e) => handleDragStart("qrCode", e)}
                   onPointerMove={handleDragMove}
                   onPointerUp={handleDragEnd}
                   className={`absolute cursor-move border select-none p-1 flex items-center justify-center bg-white transition-all duration-150 ${
                     activeField === "qrCode" 
-                      ? "border-amber-500 bg-amber-500/10 shadow-md scale-[1.01] ring-2 ring-amber-500/25 z-20" 
+                      ? "border-amber-500 bg-amber-500/10 shadow-md scale-[1.01] ring-2 ring-amber-500/25" 
                       : "border-slate-300 hover:border-slate-400"
                   }`}
                   style={{
@@ -685,6 +902,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                     bottom: `${(config.qrCode.y / 595) * 100}%`,
                     width: `${config.qrCode.size * scale}px`,
                     height: `${config.qrCode.size * scale}px`,
+                    zIndex: config.qrCode.zIndex,
                   }}
                 >
                   <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center p-1 border relative">
@@ -702,6 +920,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                     )}
                   </div>
                 </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -740,6 +959,84 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                   <strong>Активный фон:</strong> {config.backgroundUrl}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Preset Themes */}
+          <Card className="rounded-lg">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Palette className="text-primary h-5 w-5" />
+                <span>Готовые темы оформления</span>
+              </CardTitle>
+              <CardDescription>
+                Быстро сменить цветовую схему всех текстовых полей.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-2">
+                {PRESET_THEMES.map(theme => (
+                  <button
+                    key={theme.name}
+                    onClick={() => applyTheme(theme)}
+                    className="flex flex-col items-center gap-1 p-2 rounded-lg border hover:bg-muted/20 transition-colors"
+                    title={theme.label}
+                  >
+                    <span className="text-lg">{theme.icon}</span>
+                    <span className="text-xs font-medium">{theme.label}</span>
+                    <div className="flex gap-0.5 mt-1">
+                      {Object.values(theme.colors).map((c, i) => (
+                        <span key={i} className="w-3 h-3 rounded-full" style={{ backgroundColor: c }} />
+                      ))}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Layers Panel */}
+          <Card className="rounded-lg">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Layers className="text-primary h-5 w-5" />
+                <span>Слои и видимость</span>
+              </CardTitle>
+              <CardDescription>
+                Управляйте порядком слоёв и видимостью элементов на холсте.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-1 max-h-64 overflow-y-auto">
+              {([["studentName", "ФИО"], ["courseTitle", "Курс"], ["durationHours", "Часы"], ["serialNumber", "Номер"], ["issuedAt", "Дата"], ["qrCode", "QR-код"]] as const).map(([key, label]) => {
+                const el = key === "qrCode" ? config.qrCode : config[key];
+                return (
+                  <div key={key} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/20 transition-colors">
+                    <button
+                      onClick={() => toggleFieldVisibility(key as FieldKey)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      title={isFieldVisible(key as FieldKey) ? "Скрыть" : "Показать"}
+                    >
+                      {isFieldVisible(key as FieldKey) ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4 text-muted-foreground/50" />}
+                    </button>
+                    <span className={`text-sm flex-1 ml-2 ${!isFieldVisible(key as FieldKey) ? "line-through text-muted-foreground/50" : ""}`}>
+                      {label}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-mono w-6 text-right">{el.zIndex}</span>
+                    <div className="flex gap-0.5 ml-2">
+                      <button
+                        onClick={() => moveLayer(key as FieldKey, "up")}
+                        className="text-muted-foreground hover:text-foreground text-xs px-1"
+                        title="Выше"
+                      >▲</button>
+                      <button
+                        onClick={() => moveLayer(key as FieldKey, "down")}
+                        className="text-muted-foreground hover:text-foreground text-xs px-1"
+                        title="Ниже"
+                      >▼</button>
+                    </div>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
 
@@ -893,9 +1190,29 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                       onChange={(e) => updateStyle(activeField, { size: Number(e.target.value) })}
                       className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
                     />
+                    </div>
+                  )}
+                  
+                  {/* Z-Index slider for all fields */}
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <Label>Слой (z-index)</Label>
+                      <span className="font-semibold font-mono">{currentFieldStyle.zIndex}</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min={0} 
+                      max={100} 
+                      value={currentFieldStyle.zIndex}
+                      onChange={(e) => updateStyle(activeField, { zIndex: Number(e.target.value) })}
+                      className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between gap-2 mt-1">
+                      <Button size="sm" variant="secondary" onClick={() => moveLayer(activeField, "down")} className="flex-1 text-xs">▼ Назад</Button>
+                      <Button size="sm" variant="secondary" onClick={() => moveLayer(activeField, "up")} className="flex-1 text-xs">▲ Вперёд</Button>
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
             </CardContent>
           </Card>
         </div>

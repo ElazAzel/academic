@@ -2,6 +2,37 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-25 — Certificate Designer Premium + NLP Curator Assistant + Student Flow E2E + Curator Scope Tests
+
+### Certificate Designer Premium
+- **Undo/Redo**: Хук `useDesignHistory` с Ctrl+Z/Ctrl+Shift+Z + панель кнопок, maxHistory=50
+- **Auto-save**: Debounce 3s через configRef + useEffect в `certificate-designer.tsx`
+- **Zoom-слайдер**: 50–150% с transformOrigin: "top left"
+- **Layers Panel**: z-index управление, visibility toggle, move up/down
+- **4 Preset Themes**: Академический, Премиум, Природа, Современный (меняют цвета текста)
+- **z-index**: Добавлен в ElementStyle + QrStyle; обратная совместимость через applyConfigFromBody()
+- **Typecheck**: Чистый (только предсуществующая `.next` ошибка)
+
+### NLP Curator Assistant (MVP)
+- `server/modules/nlp/suggestions.ts` — full-text search по GlossaryEntry (tsvector → ILIKE fallback)
+- `server/actions/assistant.ts` — server action с Zod-валидацией + ролевой защитой
+- `components/curator/question-assistant.tsx` — UI-панель с grouped-результатами и кнопкой "Вставить"
+- Интеграция в AnswerQuestionModal (`components/lms/curator-modals.tsx`)
+
+### Student Flow Proof (E2E)
+- `tests/e2e/student-flow.spec.ts` — 3 теста: курс→урок→квиз→прогресс, course detail page, quiz API submission
+
+### Curator Scope + Negative-path Tests
+- `tests/e2e/curator.spec.ts` — negative-path тесты (блокировка доступа к admin/instructor/student/super-curator/observer)
+- `tests/unit/curator-scope.test.ts` — 14 unit-тестов скоупа (student access, cohort access, edge cases)
+
+### skills.sh интеграция
+- `npx skills init` создан SKILL.md; 14 skills установлены из vercel-labs/agent-skills, shadcn/ui, next-skills
+- `opencode.json` обновлён (paths + instructions)
+
+### Результат
+- `npx vitest run tests/unit/` — **65 test files, 431 tests passed** (0 регрессий)
+
 ## 2026-05-25 — ESLint jsx-a11y: WCAG violations fixed (Tier 2, Step 1)
 
 - **Конфигурация**: `eslint.config.mjs` — добавлен `plugin:jsx-a11y/recommended` + `assert: "either"` для `label-has-associated-control`; `ignoreNonDOM: true` для `aria-role` (AppShell false positive)

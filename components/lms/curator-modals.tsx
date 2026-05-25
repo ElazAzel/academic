@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { answerQuestionAction, forwardQuestionAction, reviewSubmissionAction, markSubmissionInReview } from "@/server/actions/curator";
 import { Loader2, CheckCircle2, XCircle, RotateCcw, Share2, File } from "lucide-react";
 import { toast } from "sonner";
+import { QuestionAssistant } from "@/components/curator/question-assistant";
 
 // --- Модалка ответа на вопрос ---
 export function AnswerQuestionModal({ 
@@ -53,6 +54,12 @@ export function AnswerQuestionModal({
           <div className="rounded-lg bg-muted/50 p-4 text-sm italic text-muted-foreground">
             &quot;{question.text}&quot;
           </div>
+
+          <QuestionAssistant
+            questionText={question.text}
+            onSelectSuggestion={(text) => setAnswer(text)}
+          />
+
           <div className="space-y-2">
             <label htmlFor="answer" className="text-xs font-semibold uppercase text-muted-foreground">Ваш ответ</label>
             <textarea
