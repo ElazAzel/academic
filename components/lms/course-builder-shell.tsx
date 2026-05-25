@@ -422,16 +422,20 @@ export function CourseBuilderShell({
                 {selected.type === "course" && (
                   <div className="mx-auto max-w-3xl space-y-4 md:space-y-6">
                     <div className="space-y-2">
-                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название курса</label>
+                      <label htmlFor="courseTitle" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название курса</label>
                       <input
+                        id="courseTitle"
+                        name="courseTitle"
                         className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                         value={detail.title}
                         onChange={(event) => { setDetail((current) => ({ ...current, title: event.target.value })); setDirty(true); }}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
+                      <label htmlFor="description" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
                       <textarea
+                        id="description"
+                        name="description"
                         className="min-h-[100px] md:min-h-[120px] w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                         value={detail.description}
                         onChange={(event) => { setDetail((current) => ({ ...current, description: event.target.value })); setDirty(true); }}
@@ -439,16 +443,20 @@ export function CourseBuilderShell({
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Цель</label>
+                        <label htmlFor="goal" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Цель</label>
                         <input
+                          id="goal"
+                          name="goal"
                           className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                           value={detail.goal ?? ""}
                           onChange={(event) => { setDetail((current) => ({ ...current, goal: event.target.value })); setDirty(true); }}
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Длительность, часов</label>
+                        <label htmlFor="durationHours" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Длительность, часов</label>
                         <input
+                          id="durationHours"
+                          name="durationHours"
                           type="number"
                           className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                           value={detail.durationHours}
@@ -456,8 +464,10 @@ export function CourseBuilderShell({
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Режим прохождения</label>
+                        <label htmlFor="traversalMode" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Режим прохождения</label>
                         <select
+                          id="traversalMode"
+                          name="traversalMode"
                           className="h-10 w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                           value={detail.traversalMode}
                           onChange={(event) => { setDetail((current) => ({ ...current, traversalMode: event.target.value as "sequential" | "open" })); setDirty(true); }}
@@ -467,8 +477,10 @@ export function CourseBuilderShell({
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Порог завершения, %</label>
+                        <label htmlFor="completionThreshold" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Порог завершения, %</label>
                         <input
+                          id="completionThreshold"
+                          name="completionThreshold"
                           type="number"
                           className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                           value={detail.completionThreshold}
@@ -477,7 +489,7 @@ export function CourseBuilderShell({
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Обложка</label>
+                      <label htmlFor="cover-upload" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Обложка</label>
                       {detail.coverUrl && (
                         <div className="relative mb-2 overflow-hidden rounded-lg">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -534,8 +546,10 @@ export function CourseBuilderShell({
                 {selected.type === "block" && selectedBlock && (
                   <div className="mx-auto max-w-2xl space-y-6">
                     <div className="space-y-2">
-                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название блока</label>
+                      <label htmlFor="blockTitle" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название блока</label>
                       <input
+                        id="blockTitle"
+                        name="blockTitle"
                         className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                         value={selectedBlock.title}
                         onChange={(event) => {
@@ -552,8 +566,10 @@ export function CourseBuilderShell({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
+                      <label htmlFor="blockDescription" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
                       <textarea
+                        id="blockDescription"
+                        name="blockDescription"
                         className="min-h-[80px] w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-4 py-2.5 font-body-md text-body-md text-m3-on-surface outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 transition-all"
                         value={selectedBlock.description ?? ""}
                         onChange={(event) => {
@@ -646,6 +662,9 @@ export function CourseBuilderShell({
               <div
                 key={idx}
                 onClick={() => handleChecklistNavigation(check.target)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleChecklistNavigation(check.target); } }}
+                role="button"
+                tabIndex={0}
                 className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
                   check.passed
                     ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20"

@@ -62,24 +62,27 @@ export default async function StudentSettingsPage() {
                     <Separator />
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <label className="text-sm font-medium">Имя</label>
+                        <label htmlFor="name" className="text-sm font-medium">Имя</label>
                         <input
+                          id="name"
                           name="name"
                           className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.name ?? ""}
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Email</label>
+                        <label htmlFor="email" className="text-sm font-medium">Email</label>
                         <input
+                          id="email"
                           className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.email}
                           disabled
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Телефон</label>
+                        <label htmlFor="phone" className="text-sm font-medium">Телефон</label>
                         <input
+                          id="phone"
                           name="phone"
                           className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.phone ?? ""}
@@ -87,8 +90,9 @@ export default async function StudentSettingsPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Организация</label>
+                        <label htmlFor="organization" className="text-sm font-medium">Организация</label>
                         <input
+                          id="organization"
                           name="organization"
                           className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.organization ?? ""}
@@ -96,8 +100,9 @@ export default async function StudentSettingsPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Компания</label>
+                        <label htmlFor="company" className="text-sm font-medium">Компания</label>
                         <input
+                          id="company"
                           name="company"
                           className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.company ?? ""}
@@ -105,8 +110,9 @@ export default async function StudentSettingsPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Должность</label>
+                        <label htmlFor="position" className="text-sm font-medium">Должность</label>
                         <input
+                          id="position"
                           name="position"
                           className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           defaultValue={profile?.position ?? ""}
@@ -138,7 +144,7 @@ export default async function StudentSettingsPage() {
                           <p className="text-sm font-medium">{item.label}</p>
                           <p className="text-xs text-muted-foreground">{item.desc}</p>
                         </div>
-                        <label className="relative inline-flex cursor-pointer items-center">
+                        <label aria-label={item.label} className="relative inline-flex cursor-pointer items-center">
                           <input
                             type="checkbox"
                             name={`notification_${item.key}`}
@@ -169,8 +175,9 @@ export default async function StudentSettingsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <label className="text-sm font-medium">Текущий пароль</label>
+                        <label htmlFor="currentPassword" className="text-sm font-medium">Текущий пароль</label>
                         <input
+                          id="currentPassword"
                           name="currentPassword"
                           type="password"
                           className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
@@ -179,8 +186,9 @@ export default async function StudentSettingsPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Новый пароль</label>
+                        <label htmlFor="newPassword" className="text-sm font-medium">Новый пароль</label>
                         <input
+                          id="newPassword"
                           name="newPassword"
                           type="password"
                           className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
@@ -190,8 +198,9 @@ export default async function StudentSettingsPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Повторите новый пароль</label>
+                        <label htmlFor="confirmPassword" className="text-sm font-medium">Повторите новый пароль</label>
                         <input
+                          id="confirmPassword"
                           name="confirmPassword"
                           type="password"
                           className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"

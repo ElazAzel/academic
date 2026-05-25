@@ -24,11 +24,11 @@ export function AssignmentBlockEditor({
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-xs text-muted-foreground">Название задания</label>
-        <input className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={title} onChange={(e) => { setTitle(e.target.value); updateParent(); }} />
+        <label htmlFor="assignmentTitle" className="text-xs text-muted-foreground">Название задания</label>
+        <input id="assignmentTitle" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={title} onChange={(e) => { setTitle(e.target.value); updateParent(); }} />
       </div>
       <div>
-        <label className="text-xs text-muted-foreground">Инструкция</label>
+        <span className="text-xs text-muted-foreground">Инструкция</span>
         <RichTextEditor
           value={instructions}
           onChange={(html) => { setInstructions(html); updateParent(); }}
@@ -38,16 +38,16 @@ export function AssignmentBlockEditor({
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="text-xs text-muted-foreground">Макс. попыток</label>
-          <input type="number" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={maxAttempts} onChange={(e) => { setMaxAttempts(Number(e.target.value)); updateParent(); }} />
+          <label htmlFor="maxAttempts" className="text-xs text-muted-foreground">Макс. попыток</label>
+          <input id="maxAttempts" type="number" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={maxAttempts} onChange={(e) => { setMaxAttempts(Number(e.target.value)); updateParent(); }} />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Макс. балл</label>
-          <input type="number" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={maxScore} onChange={(e) => { setMaxScore(Number(e.target.value)); updateParent(); }} />
+          <label htmlFor="maxScore" className="text-xs text-muted-foreground">Макс. балл</label>
+          <input id="maxScore" type="number" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={maxScore} onChange={(e) => { setMaxScore(Number(e.target.value)); updateParent(); }} />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Дедлайн (опц.)</label>
-          <input type="date" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={deadline} onChange={(e) => { setDeadline(e.target.value); updateParent(); }} />
+          <label htmlFor="deadline" className="text-xs text-muted-foreground">Дедлайн (опц.)</label>
+          <input id="deadline" type="date" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={deadline} onChange={(e) => { setDeadline(e.target.value); updateParent(); }} />
         </div>
       </div>
     </div>

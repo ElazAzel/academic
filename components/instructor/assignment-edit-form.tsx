@@ -85,13 +85,14 @@ export function AssignmentEditForm({ assignment }: AssignmentEditFormProps) {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Название задания *</label>
-            <Input name="title" defaultValue={assignment.title} required minLength={3} />
+            <label htmlFor="title" className="text-xs font-semibold uppercase text-muted-foreground">Название задания *</label>
+            <Input id="title" name="title" defaultValue={assignment.title} required minLength={3} />
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Инструкции (Markdown)</label>
+            <label htmlFor="instructions" className="text-xs font-semibold uppercase text-muted-foreground">Инструкции (Markdown)</label>
             <textarea
+              id="instructions"
               name="instructions"
               defaultValue={assignment.instructions}
               required
@@ -101,12 +102,12 @@ export function AssignmentEditForm({ assignment }: AssignmentEditFormProps) {
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Максимальный балл</label>
-              <Input name="maxScore" type="number" min={1} defaultValue={assignment.maxScore} />
+              <label htmlFor="maxScore" className="text-xs font-semibold uppercase text-muted-foreground">Максимальный балл</label>
+              <Input id="maxScore" name="maxScore" type="number" min={1} defaultValue={assignment.maxScore} />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Макс. попыток</label>
-              <Input name="maxAttempts" type="number" min={1} defaultValue={assignment.maxAttempts} />
+              <label htmlFor="maxAttempts" className="text-xs font-semibold uppercase text-muted-foreground">Макс. попыток</label>
+              <Input id="maxAttempts" name="maxAttempts" type="number" min={1} defaultValue={assignment.maxAttempts} />
             </div>
           </div>
         </CardContent>

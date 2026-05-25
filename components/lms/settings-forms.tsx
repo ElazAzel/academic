@@ -32,12 +32,12 @@ export function ProfileSettingsForm({ user }: { user: { name: string | null; ema
         <form action={action} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-label-lg font-label-lg text-m3-on-surface-variant">Имя</label>
-              <Input name="name" className="mt-1" defaultValue={user.name || ""} />
+              <label htmlFor="name" className="text-label-lg font-label-lg text-m3-on-surface-variant">Имя</label>
+              <Input id="name" name="name" className="mt-1" defaultValue={user.name || ""} />
             </div>
             <div>
-              <label className="text-label-lg font-label-lg text-m3-on-surface-variant">Email</label>
-              <Input className="mt-1" defaultValue={user.email} disabled />
+              <label htmlFor="email" className="text-label-lg font-label-lg text-m3-on-surface-variant">Email</label>
+              <Input id="email" name="email" className="mt-1" defaultValue={user.email} disabled />
             </div>
           </div>
           <div className="flex justify-end">
@@ -77,16 +77,16 @@ export function SecuritySettingsForm() {
       <CardContent>
         <form ref={formRef} action={action} className="space-y-4">
           <div>
-            <label className="text-label-lg font-label-lg text-m3-on-surface-variant">Текущий пароль</label>
-            <Input name="currentPassword" type="password" required className="mt-1" placeholder="Текущий пароль" />
+            <label htmlFor="currentPassword" className="text-label-lg font-label-lg text-m3-on-surface-variant">Текущий пароль</label>
+            <Input id="currentPassword" name="currentPassword" type="password" required className="mt-1" placeholder="Текущий пароль" />
           </div>
           <div>
-            <label className="text-label-lg font-label-lg text-m3-on-surface-variant">Новый пароль</label>
-            <Input name="newPassword" type="password" required minLength={10} className="mt-1" placeholder="Мин. 10 символов" />
+            <label htmlFor="newPassword" className="text-label-lg font-label-lg text-m3-on-surface-variant">Новый пароль</label>
+            <Input id="newPassword" name="newPassword" type="password" required minLength={10} className="mt-1" placeholder="Мин. 10 символов" />
           </div>
           <div>
-            <label className="text-label-lg font-label-lg text-m3-on-surface-variant">Повторите новый пароль</label>
-            <Input name="confirmPassword" type="password" required minLength={10} className="mt-1" placeholder="Повторите пароль" />
+            <label htmlFor="confirmPassword" className="text-label-lg font-label-lg text-m3-on-surface-variant">Повторите новый пароль</label>
+            <Input id="confirmPassword" name="confirmPassword" type="password" required minLength={10} className="mt-1" placeholder="Повторите пароль" />
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>

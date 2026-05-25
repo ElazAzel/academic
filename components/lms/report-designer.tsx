@@ -192,7 +192,7 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase text-muted-foreground">Тип отчёта</label>
+          <span className="text-xs font-semibold uppercase text-muted-foreground">Тип отчёта</span>
           <div className="flex flex-wrap gap-2">
             {REPORT_TYPES.map((t) => (
               <button
@@ -249,7 +249,7 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase text-muted-foreground">Формат</label>
+          <span className="text-xs font-semibold uppercase text-muted-foreground">Формат</span>
           <div className="flex gap-2">
             {FORMATS.map((f) => {
               const FmtIcon = f.icon;

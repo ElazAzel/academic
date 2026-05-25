@@ -70,12 +70,13 @@ export function AssignmentCreator({
     <div className="rounded-lg border bg-muted/10 p-4 space-y-4">
       <h4 className="text-sm font-semibold">Создание задания</h4>
       <div>
-        <label className="text-xs text-muted-foreground">Название</label>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Финальное задание" />
+        <label htmlFor="assignmentCreatorTitle" className="text-xs text-muted-foreground">Название</label>
+        <Input id="assignmentCreatorTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Финальное задание" />
       </div>
       <div>
-        <label className="text-xs text-muted-foreground">Инструкция</label>
+        <label htmlFor="assignmentCreatorInstructions" className="text-xs text-muted-foreground">Инструкция</label>
         <textarea
+          id="assignmentCreatorInstructions"
           className="w-full min-h-[120px] rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
@@ -84,12 +85,12 @@ export function AssignmentCreator({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs text-muted-foreground">Макс. попыток</label>
-          <Input type="number" value={maxAttempts} onChange={(e) => setMaxAttempts(Number(e.target.value))} />
+          <label htmlFor="assignmentCreatorMaxAttempts" className="text-xs text-muted-foreground">Макс. попыток</label>
+          <Input id="assignmentCreatorMaxAttempts" type="number" value={maxAttempts} onChange={(e) => setMaxAttempts(Number(e.target.value))} />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Макс. балл</label>
-          <Input type="number" value={maxScore} onChange={(e) => setMaxScore(Number(e.target.value))} />
+          <label htmlFor="assignmentCreatorMaxScore" className="text-xs text-muted-foreground">Макс. балл</label>
+          <Input id="assignmentCreatorMaxScore" type="number" value={maxScore} onChange={(e) => setMaxScore(Number(e.target.value))} />
         </div>
       </div>
       <div className="flex justify-end gap-2">

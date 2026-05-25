@@ -71,6 +71,7 @@ function VideoPreview({ url }: { url: string }) {
     <div className="aspect-video rounded-lg overflow-hidden">
       <iframe
         src={embedUrl}
+        title="Видео урока"
         className="w-full h-full"
         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen

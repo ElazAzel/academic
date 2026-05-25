@@ -44,8 +44,8 @@ export function EnrollStudentForm({ data, onSuccess }: EnrollStudentFormProps) {
       <h3 className="text-lg font-semibold">Зачислить слушателя</h3>
       
       <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground uppercase">Слушатель</label>
-        <select name="userId" required className="w-full h-10 rounded-lg border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20">
+        <label htmlFor="userId" className="text-xs font-medium text-muted-foreground uppercase">Слушатель</label>
+        <select id="userId" name="userId" required className="w-full h-10 rounded-lg border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20">
           <option value="">Выберите слушателя...</option>
           {data.students.map(s => (
             <option key={s.id} value={s.id}>{s.name || s.email} ({s.email})</option>
@@ -54,8 +54,9 @@ export function EnrollStudentForm({ data, onSuccess }: EnrollStudentFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground uppercase">Курс</label>
+        <label htmlFor="courseId" className="text-xs font-medium text-muted-foreground uppercase">Курс</label>
         <select 
+          id="courseId"
           name="courseId" 
           required 
           value={selectedCourse}
@@ -70,8 +71,8 @@ export function EnrollStudentForm({ data, onSuccess }: EnrollStudentFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground uppercase">Поток (необязательно)</label>
-        <select name="cohortId" className="w-full h-10 rounded-lg border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20">
+        <label htmlFor="cohortId" className="text-xs font-medium text-muted-foreground uppercase">Поток (необязательно)</label>
+        <select id="cohortId" name="cohortId" className="w-full h-10 rounded-lg border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20">
           <option value="">Без потока</option>
           {filteredCohorts.map(c => (
             <option key={c.id} value={c.id}>{c.name}</option>
@@ -80,8 +81,8 @@ export function EnrollStudentForm({ data, onSuccess }: EnrollStudentFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground uppercase">Куратор (необязательно)</label>
-        <select name="curatorId" className="w-full h-10 rounded-lg border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20">
+        <label htmlFor="curatorId" className="text-xs font-medium text-muted-foreground uppercase">Куратор (необязательно)</label>
+        <select id="curatorId" name="curatorId" className="w-full h-10 rounded-lg border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20">
           <option value="">Без куратора</option>
           {data.curators.map(c => (
             <option key={c.id} value={c.id}>{c.name || c.email}</option>

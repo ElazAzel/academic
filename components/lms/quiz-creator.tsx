@@ -109,16 +109,16 @@ export function QuizCreator({
       <h4 className="text-sm font-semibold">Создание теста</h4>
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="text-xs text-muted-foreground">Название</label>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Тест по теме" />
+          <label htmlFor="quizTitle" className="text-xs text-muted-foreground">Название</label>
+          <Input id="quizTitle" name="quizTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Тест по теме" />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Порог (%)</label>
-          <Input type="number" value={passThreshold} onChange={(e) => setPassThreshold(Number(e.target.value))} />
+          <label htmlFor="passThreshold" className="text-xs text-muted-foreground">Порог (%)</label>
+          <Input id="passThreshold" name="passThreshold" type="number" value={passThreshold} onChange={(e) => setPassThreshold(Number(e.target.value))} />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Попыток</label>
-          <Input type="number" value={maxAttempts} onChange={(e) => setMaxAttempts(Number(e.target.value))} />
+          <label htmlFor="maxAttempts" className="text-xs text-muted-foreground">Попыток</label>
+          <Input id="maxAttempts" name="maxAttempts" type="number" value={maxAttempts} onChange={(e) => setMaxAttempts(Number(e.target.value))} />
         </div>
       </div>
 

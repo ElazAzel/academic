@@ -308,6 +308,7 @@ export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
                     ) : (
                       <div className="space-y-2">
                         {bankQuestions.map((q) => (
+                          // eslint-disable-next-line jsx-a11y/label-has-associated-control
                           <label key={q.id} className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/30">
                             <input
                               type="checkbox"
@@ -367,16 +368,16 @@ export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase text-muted-foreground">Название теста</label>
-                  <Input name="title" defaultValue={quiz.title} required />
+                  <label htmlFor="title" className="text-xs font-semibold uppercase text-muted-foreground">Название теста</label>
+                  <Input id="title" name="title" defaultValue={quiz.title} required />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase text-muted-foreground">Порог прохождения (%)</label>
-                  <Input name="passThreshold" type="number" min={0} max={100} defaultValue={quiz.passThreshold} />
+                  <label htmlFor="passThreshold" className="text-xs font-semibold uppercase text-muted-foreground">Порог прохождения (%)</label>
+                  <Input id="passThreshold" name="passThreshold" type="number" min={0} max={100} defaultValue={quiz.passThreshold} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase text-muted-foreground">Макс. попыток</label>
-                  <Input name="maxAttempts" type="number" min={1} defaultValue={quiz.maxAttempts} />
+                  <label htmlFor="maxAttempts" className="text-xs font-semibold uppercase text-muted-foreground">Макс. попыток</label>
+                  <Input id="maxAttempts" name="maxAttempts" type="number" min={1} defaultValue={quiz.maxAttempts} />
                 </div>
               </CardContent>
             </Card>

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { loginAs, ROLE_USERS, ALL_ROLE_PREFIXES, verifyForbidden } from "./helpers";
+import { loginAs, ROLE_USERS, ALL_ROLE_PREFIXES } from "./helpers";
 
 test.describe("role-based access control", () => {
   test.describe.configure({ timeout: 120_000 });

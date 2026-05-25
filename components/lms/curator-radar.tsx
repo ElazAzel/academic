@@ -274,7 +274,7 @@ export function CuratorRadar({ students }: CuratorRadarProps) {
             </CardHeader>
             <CardContent className="p-5 space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-700">1. Выберите шаблон сообщения:</label>
+                <span className="text-xs font-semibold text-slate-700">1. Выберите шаблон сообщения:</span>
                 <div className="grid grid-cols-3 gap-2 mt-1.5">
                   {[
                     { type: "encouragement" as const, label: "Напомнить о себе" },
@@ -295,8 +295,9 @@ export function CuratorRadar({ students }: CuratorRadarProps) {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700">2. Текст сообщения куратора:</label>
+                <label htmlFor="curatorMessage" className="text-xs font-semibold text-slate-700">2. Текст сообщения куратора:</label>
                 <textarea
+                  id="curatorMessage"
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value)}
                   className="w-full min-h-[120px] p-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent mt-1.5 resize-none bg-slate-50"

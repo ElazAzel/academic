@@ -445,9 +445,18 @@ export function CertificatesDashboard({
                         filteredStudents.map(s => (
                           <div 
                             key={s.id}
+                            role="button"
+                            tabIndex={0}
                             onClick={() => {
                               setSelectedStudent(s.id);
                               setStudentSearch(s.name || s.email);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                setSelectedStudent(s.id);
+                                setStudentSearch(s.name || s.email);
+                              }
                             }}
                             className={`p-2 cursor-pointer hover:bg-muted/50 flex justify-between items-center ${
                               selectedStudent === s.id ? "bg-primary/10 font-semibold text-primary" : ""

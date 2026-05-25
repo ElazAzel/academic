@@ -2,6 +2,18 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-25 — ESLint jsx-a11y: WCAG violations fixed (Tier 2, Step 1)
+
+- **Конфигурация**: `eslint.config.mjs` — добавлен `plugin:jsx-a11y/recommended` + `assert: "either"` для `label-has-associated-control`; `ignoreNonDOM: true` для `aria-role` (AppShell false positive)
+- **label-has-associated-control**: ~200 ошибок исправлены в 41 файле — добавлены `htmlFor`/`id` пары для всех label/input/select/textarea; display-only label заменены на `<span>`
+- **click-events-have-key-events + no-static-element-interactions**: 9 элементов исправлены (добавлены `role`, `tabIndex`, `onKeyDown` для Enter/Space): файловые зоны загрузки, список студентов, поиск, редактор вопросов, чеклист публикации
+- **no-autofocus**: `command-palette.tsx` — `autoFocus` заменён на `useRef` + `useEffect` с фокусом при открытии
+- **iframe-has-title**: `lesson-block-editor.tsx` — добавлен `title="Видео урока"`
+- **heading-has-content**: `card.tsx` — false positive (child content через {...props}), eslint-suppress
+- **Безопасность**: удалён неиспользуемый `verifyForbidden` из `rbac.spec.ts`, неиспользуемый `useCallback` из `notifications-dropdown.tsx`
+- **Другие правки**: добавлен `answeredTotal` в dependency array `useCallback` в `quiz-block.tsx`
+- **Результат**: `npx eslint .` — 0 errors, 0 warnings
+
 ## 2026-05-24 — Real-time SSE уведомления + багфиксы + staging
 
 - **SSE endpoint**: `app/api/v1/notifications/stream/route.ts` — Server-Sent Events на ReadableStream, поллинг новых уведомлений каждые 3 сек

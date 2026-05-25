@@ -54,12 +54,12 @@ export default async function AdminSettingsPage() {
          <Separator/>
          <div className="grid gap-4 sm:grid-cols-2">
           <div>
-           <label className="text-sm font-medium">Имя</label>
-           <Input name="name" className="mt-1" defaultValue={user?.name ?? ""}/>
+            <label htmlFor="name" className="text-sm font-medium">Имя</label>
+            <Input id="name" name="name" className="mt-1" defaultValue={user?.name ?? ""}/>
           </div>
           <div>
-           <label className="text-sm font-medium">Email</label>
-           <Input className="mt-1" defaultValue={user?.email} disabled/>
+            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <Input id="email" className="mt-1" defaultValue={user?.email} disabled/>
           </div>
          </div>
          <div className="flex justify-end">
@@ -81,16 +81,16 @@ export default async function AdminSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
            <div>
-            <label className="text-sm font-medium">Текущий пароль</label>
-            <Input name="currentPassword" type="password" className="mt-1" placeholder="Текущий пароль" required/>
+            <label htmlFor="currentPassword" className="text-sm font-medium">Текущий пароль</label>
+            <Input id="currentPassword" name="currentPassword" type="password" className="mt-1" placeholder="Текущий пароль" required/>
            </div>
            <div>
-            <label className="text-sm font-medium">Новый пароль</label>
-            <Input name="newPassword" type="password" className="mt-1" placeholder="Мин. 10 символов" required minLength={10}/>
+            <label htmlFor="newPassword" className="text-sm font-medium">Новый пароль</label>
+            <Input id="newPassword" name="newPassword" type="password" className="mt-1" placeholder="Мин. 10 символов" required minLength={10}/>
            </div>
            <div>
-            <label className="text-sm font-medium">Повторите новый пароль</label>
-            <Input name="confirmPassword" type="password" className="mt-1" placeholder="Повторите пароль" required/>
+            <label htmlFor="confirmPassword" className="text-sm font-medium">Повторите новый пароль</label>
+            <Input id="confirmPassword" name="confirmPassword" type="password" className="mt-1" placeholder="Повторите пароль" required/>
            </div>
            <div className="flex justify-end">
             <Button type="submit">Изменить пароль</Button>
@@ -150,22 +150,25 @@ export default async function AdminSettingsPage() {
          <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
            <div>
-            <label className="text-sm font-medium">SMTP Host</label>
+            <label htmlFor="setting_SMTP_HOST" className="text-sm font-medium">SMTP Host</label>
             <Input
+              id="setting_SMTP_HOST"
               name="setting_SMTP_HOST"
               className="mt-1"
               defaultValue={appSettings.SMTP_HOST as string ?? "localhost"}/>
            </div>
            <div>
-            <label className="text-sm font-medium">SMTP Port</label>
+            <label htmlFor="setting_SMTP_PORT" className="text-sm font-medium">SMTP Port</label>
             <Input
+              id="setting_SMTP_PORT"
               name="setting_SMTP_PORT"
               className="mt-1"
               defaultValue={appSettings.SMTP_PORT as string ?? "1025"}/>
            </div>
            <div className="sm:col-span-2">
-            <label className="text-sm font-medium">От кого</label>
+            <label htmlFor="setting_SMTP_FROM" className="text-sm font-medium">От кого</label>
             <Input
+              id="setting_SMTP_FROM"
               name="setting_SMTP_FROM"
               className="mt-1"
               defaultValue={appSettings.SMTP_FROM as string ?? "AI Strategic Academy <noreply@example.com>"}/>
@@ -190,12 +193,13 @@ export default async function AdminSettingsPage() {
          </CardHeader>
          <CardContent className="space-y-4">
           <div>
-           <label className="text-sm font-medium">Порог завершения для сертификата (%)</label>
-           <Input
-             name="setting_CERTIFICATE_COMPLETION_THRESHOLD"
-             type="number"
-             className="mt-1 max-w-[200px]"
-             defaultValue={appSettings.CERTIFICATE_COMPLETION_THRESHOLD as number ?? 85}/>
+            <label htmlFor="setting_CERTIFICATE_COMPLETION_THRESHOLD" className="text-sm font-medium">Порог завершения для сертификата (%)</label>
+            <Input
+              id="setting_CERTIFICATE_COMPLETION_THRESHOLD"
+              name="setting_CERTIFICATE_COMPLETION_THRESHOLD"
+              type="number"
+              className="mt-1 max-w-[200px]"
+              defaultValue={appSettings.CERTIFICATE_COMPLETION_THRESHOLD as number ?? 85}/>
           </div>
           <Button type="submit">Сохранить</Button>
          </CardContent>

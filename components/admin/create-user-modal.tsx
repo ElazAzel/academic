@@ -43,15 +43,15 @@ export function CreateUserModal({
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Имя</label>
-            <Input name="name" placeholder="Иван Иванов" />
+            <label htmlFor="name" className="text-xs font-semibold uppercase text-muted-foreground">Имя</label>
+            <Input id="name" name="name" placeholder="Иван Иванов" />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Email</label>
-            <Input name="email" type="email" required placeholder="ivan@example.com" />
+            <label htmlFor="email" className="text-xs font-semibold uppercase text-muted-foreground">Email</label>
+            <Input id="email" name="email" type="email" required placeholder="ivan@example.com" />
           </div>
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Роли</label>
+          <fieldset className="space-y-2">
+            <legend className="text-xs font-semibold uppercase text-muted-foreground">Роли</legend>
             <div className="grid grid-cols-2 gap-2">
               {assignableRoles.map((role) => (
                 <label key={role} className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted/50 cursor-pointer text-sm">
@@ -60,7 +60,7 @@ export function CreateUserModal({
                 </label>
               ))}
             </div>
-          </div>
+          </fieldset>
           
           {error && <p className="text-sm text-rose-600 bg-rose-50 p-3 rounded-lg border border-rose-100">{error}</p>}
           

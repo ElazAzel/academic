@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Search } from "lucide-react";
 import { Dialog, DialogPortal, DialogOverlay } from "@/components/ui/dialog";
 import { NAV_BY_ROLE } from "@/components/layout/navigation";
@@ -13,6 +13,13 @@ export function CommandPalette() {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [open]);
 
   const roles = (session?.user?.roles ?? ["student"]) as RoleKey[];
   const primaryRole = (["admin", "super_curator", "curator", "instructor", "customer_observer", "student"] as RoleKey[]).find(
@@ -63,15 +70,17 @@ export function CommandPalette() {
           <div
             className="pointer-events-auto w-full max-w-xl rounded-lg border bg-card shadow-m3-modal overflow-hidden"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
           >
             <div className="flex items-center gap-3 border-b px-4 py-3 dark:border-gray-800">
               <Search className="h-4 w-4 text-muted-foreground shrink-0" />
               <input
+                ref={inputRef}
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 placeholder="Поиск по разделам..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                autoFocus
               />
               <kbd className="hidden sm:inline-flex h-6 items-center gap-1 rounded-md border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
                 ESC

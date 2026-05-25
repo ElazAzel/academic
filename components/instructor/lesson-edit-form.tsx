@@ -79,12 +79,12 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
       <CardContent className="space-y-6 pt-6">
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Название урока *</label>
-            <Input name="title" defaultValue={lesson.title} required minLength={2} />
+            <label htmlFor="title" className="text-xs font-semibold uppercase text-muted-foreground">Название урока *</label>
+            <Input id="title" name="title" defaultValue={lesson.title} required minLength={2} />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Тип урока</label>
-            <select name="type" defaultValue={lesson.type} className="w-full h-10 rounded-lg border bg-background px-3 text-sm">
+            <label htmlFor="type" className="text-xs font-semibold uppercase text-muted-foreground">Тип урока</label>
+            <select id="type" name="type" defaultValue={lesson.type} className="w-full h-10 rounded-lg border bg-background px-3 text-sm">
               <option value="VIDEO">Видео</option>
               <option value="TEXT">Текст</option>
               <option value="VIDEO_DOCUMENT">Видео + документ</option>
@@ -97,8 +97,8 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
 
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Длительность (мин.)</label>
-            <Input name="durationMinutes" type="number" min={0} defaultValue={lesson.durationMinutes} />
+            <label htmlFor="durationMinutes" className="text-xs font-semibold uppercase text-muted-foreground">Длительность (мин.)</label>
+            <Input id="durationMinutes" name="durationMinutes" type="number" min={0} defaultValue={lesson.durationMinutes} />
           </div>
           <div className="flex items-center gap-2 pt-8">
             <input type="checkbox" id="isRequired" name="isRequired" defaultChecked={lesson.isRequired} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
@@ -107,13 +107,14 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase text-muted-foreground">URL видео (если применимо)</label>
-          <Input name="videoUrl" defaultValue={lesson.videoUrl || ""} placeholder="https://..." />
+          <label htmlFor="videoUrl" className="text-xs font-semibold uppercase text-muted-foreground">URL видео (если применимо)</label>
+          <Input id="videoUrl" name="videoUrl" defaultValue={lesson.videoUrl || ""} placeholder="https://..." />
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase text-muted-foreground">Краткое описание (summary)</label>
+          <label htmlFor="summary" className="text-xs font-semibold uppercase text-muted-foreground">Краткое описание (summary)</label>
           <textarea
+            id="summary"
             name="summary"
             defaultValue={lesson.summary || ""}
             className="w-full min-h-[80px] rounded-lg border bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
@@ -121,8 +122,9 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase text-muted-foreground">Текстовый контент (Markdown)</label>
+          <label htmlFor="contentText" className="text-xs font-semibold uppercase text-muted-foreground">Текстовый контент (Markdown)</label>
           <textarea
+            id="contentText"
             name="contentText"
             defaultValue={lesson.content?.text || ""}
             className="w-full min-h-[300px] rounded-lg border bg-background px-4 py-3 text-sm font-mono focus:ring-2 focus:ring-primary/20 outline-none"

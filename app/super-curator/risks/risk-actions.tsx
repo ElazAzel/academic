@@ -51,16 +51,16 @@ export function RiskActions() {
           </DialogHeader>
           <form action={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Студент</label>
-              <select name="userId" required className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
+              <label htmlFor="userId" className="text-sm font-medium">Студент</label>
+              <select id="userId" name="userId" required className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
                 <option value="">Выберите студента</option>
                 {students.map((s) => <option key={s.id} value={s.id}>{s.name ?? s.email}</option>)}
               </select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium">Тип риска</label>
-                <select name="type" required className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
+                <label htmlFor="type" className="text-sm font-medium">Тип риска</label>
+                <select id="type" name="type" required className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
                   <option value="inactive_login">Не заходил</option>
                   <option value="inactive_learning">Нет активности</option>
                   <option value="overdue_module">Просрочен модуль</option>
@@ -68,8 +68,8 @@ export function RiskActions() {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium">Уровень</label>
-                <select name="severity" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
+                <label htmlFor="severity" className="text-sm font-medium">Уровень</label>
+                <select id="severity" name="severity" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
                   <option value="low">Низкий</option>
                   <option value="medium" selected>Средний</option>
                   <option value="high">Высокий</option>

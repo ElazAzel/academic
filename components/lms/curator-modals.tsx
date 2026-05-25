@@ -54,8 +54,9 @@ export function AnswerQuestionModal({
             &quot;{question.text}&quot;
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Ваш ответ</label>
+            <label htmlFor="answer" className="text-xs font-semibold uppercase text-muted-foreground">Ваш ответ</label>
             <textarea
+              id="answer"
               className="min-h-[150px] w-full rounded-lg border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="Введите ответ студенту..."
               value={answer}
@@ -124,7 +125,7 @@ export function ReviewSubmissionModal({
         </div>
         <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Ответ студента</label>
+            <span className="text-xs font-semibold uppercase text-muted-foreground">Ответ студента</span>
             <div className="rounded-lg border bg-muted/30 p-5 text-sm leading-relaxed whitespace-pre-wrap">
               {submission.answerText || "Текст ответа отсутствует"}
             </div>
@@ -148,8 +149,9 @@ export function ReviewSubmissionModal({
           ) : null}
           
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Балл (0-100)</label>
+            <label htmlFor="score" className="text-xs font-semibold uppercase text-muted-foreground">Балл (0-100)</label>
             <Input 
+              id="score"
               type="number" 
               value={score} 
               onChange={(e) => setScore(Number(e.target.value))} 
@@ -158,8 +160,9 @@ export function ReviewSubmissionModal({
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Комментарий (feedback)</label>
+            <label htmlFor="feedback" className="text-xs font-semibold uppercase text-muted-foreground">Комментарий (feedback)</label>
             <textarea
+              id="feedback"
               className="min-h-[100px] w-full rounded-lg border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="Напишите замечания или похвалу..."
               value={feedback}

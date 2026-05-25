@@ -56,20 +56,20 @@ export default async function InstructorSettingsPage() {
          <Separator/>
          <div className="grid gap-4 sm:grid-cols-2">
           <div>
-           <label className="text-sm font-medium">Имя</label>
-           <input name="name" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" defaultValue={profile?.name ?? ""}/>
+            <label htmlFor="name" className="text-sm font-medium">Имя</label>
+            <input id="name" name="name" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" defaultValue={profile?.name ?? ""}/>
           </div>
           <div>
-           <label className="text-sm font-medium">Email</label>
-           <input className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" defaultValue={profile?.email} disabled/>
+            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <input id="email" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" defaultValue={profile?.email} disabled/>
           </div>
           <div>
-           <label className="text-sm font-medium">Телефон</label>
-           <input name="phone" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" defaultValue={profile?.phone ?? ""} placeholder="+7 (___) ___-__-__"/>
+            <label htmlFor="phone" className="text-sm font-medium">Телефон</label>
+            <input id="phone" name="phone" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" defaultValue={profile?.phone ?? ""} placeholder="+7 (___) ___-__-__"/>
           </div>
           <div>
-           <label className="text-sm font-medium">Организация</label>
-           <input name="organization" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" defaultValue={profile?.organization ?? ""} placeholder="Название организации"/>
+            <label htmlFor="organization" className="text-sm font-medium">Организация</label>
+            <input id="organization" name="organization" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" defaultValue={profile?.organization ?? ""} placeholder="Название организации"/>
           </div>
          </div>
          <div className="flex justify-end">
@@ -96,7 +96,7 @@ export default async function InstructorSettingsPage() {
                         <p className="text-sm font-medium">{item.label}</p>
                         <p className="text-xs text-muted-foreground">{item.desc}</p>
                       </div>
-                      <label className="relative inline-flex cursor-pointer items-center">
+                      <label aria-label={item.label} className="relative inline-flex cursor-pointer items-center">
                         <input 
                           type="checkbox" 
                           name={`notification_${item.key}`} 
@@ -126,16 +126,16 @@ export default async function InstructorSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
            <div>
-            <label className="text-sm font-medium">Текущий пароль</label>
-            <input name="currentPassword" type="password" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" placeholder="Текущий пароль" required/>
+            <label htmlFor="currentPassword" className="text-sm font-medium">Текущий пароль</label>
+            <input id="currentPassword" name="currentPassword" type="password" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" placeholder="Текущий пароль" required/>
            </div>
            <div>
-            <label className="text-sm font-medium">Новый пароль</label>
-            <input name="newPassword" type="password" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" placeholder="Мин. 10 символов" required minLength={10}/>
+            <label htmlFor="newPassword" className="text-sm font-medium">Новый пароль</label>
+            <input id="newPassword" name="newPassword" type="password" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" placeholder="Мин. 10 символов" required minLength={10}/>
            </div>
            <div>
-            <label className="text-sm font-medium">Повторите новый пароль</label>
-            <input name="confirmPassword" type="password" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" placeholder="Повторите пароль" required/>
+            <label htmlFor="confirmPassword" className="text-sm font-medium">Повторите новый пароль</label>
+            <input id="confirmPassword" name="confirmPassword" type="password" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" placeholder="Повторите пароль" required/>
            </div>
            <div className="flex justify-end">
             <Button type="submit">Изменить пароль</Button>

@@ -207,12 +207,13 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
           <form onSubmit={handleAddModule} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-muted-foreground">Название модуля</label>
-                <input name="title" className="w-full rounded-lg border bg-background px-3 py-2 text-sm" required />
+                <label htmlFor="module-title" className="text-xs font-semibold uppercase text-muted-foreground">Название модуля</label>
+                <input id="module-title" name="title" className="w-full rounded-lg border bg-background px-3 py-2 text-sm" required />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-muted-foreground">Порядок</label>
+                <label htmlFor="module-order" className="text-xs font-semibold uppercase text-muted-foreground">Порядок</label>
                 <input
+                  id="module-order"
                   name="order"
                   type="number"
                   min={1}
@@ -222,8 +223,9 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-muted-foreground">Дней на модуль</label>
+                <label htmlFor="recommendedDays" className="text-xs font-semibold uppercase text-muted-foreground">Дней на модуль</label>
                 <input
+                  id="recommendedDays"
                   name="recommendedDays"
                   type="number"
                   min={1}
@@ -314,12 +316,12 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                   <form onSubmit={(event) => handleAddLesson(event, moduleItem.id)} className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-3">
                       <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase text-muted-foreground">Название урока</label>
-                        <input name="title" className="w-full rounded-lg border bg-background px-3 py-2 text-sm" required />
+                        <label htmlFor="lesson-title" className="text-xs font-semibold uppercase text-muted-foreground">Название урока</label>
+                        <input id="lesson-title" name="title" className="w-full rounded-lg border bg-background px-3 py-2 text-sm" required />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase text-muted-foreground">Тип урока</label>
-                        <select name="type" className="w-full rounded-lg border bg-background px-3 py-2 text-sm">
+                        <label htmlFor="lesson-type" className="text-xs font-semibold uppercase text-muted-foreground">Тип урока</label>
+                        <select id="lesson-type" name="type" className="w-full rounded-lg border bg-background px-3 py-2 text-sm">
                           <option value="VIDEO">Видео</option>
                           <option value="TEXT">Текст</option>
                           <option value="VIDEO_DOCUMENT">Видео + документ</option>
@@ -329,8 +331,9 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase text-muted-foreground">Порядок</label>
+                        <label htmlFor="lesson-order" className="text-xs font-semibold uppercase text-muted-foreground">Порядок</label>
                         <input
+                          id="lesson-order"
                           name="order"
                           type="number"
                           min={1}
@@ -342,8 +345,9 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                     </div>
                     <div className="grid gap-4 sm:grid-cols-3">
                       <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase text-muted-foreground">Минуты</label>
+                        <label htmlFor="durationMinutes" className="text-xs font-semibold uppercase text-muted-foreground">Минуты</label>
                         <input
+                          id="durationMinutes"
                           name="durationMinutes"
                           type="number"
                           min={0}
@@ -353,8 +357,9 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                         />
                       </div>
                       <div className="space-y-2 sm:col-span-2">
-                        <label className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
+                        <label htmlFor="lesson-summary" className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
                         <input
+                          id="lesson-summary"
                           name="summary"
                           className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                           placeholder="Краткое описание урока"

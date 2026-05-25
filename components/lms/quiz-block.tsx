@@ -75,7 +75,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
     } finally {
       setSubmitting(false);
     }
-  }, [quiz.id, answers, submitting, router, questionsCount]);
+  }, [quiz.id, answers, submitting, router, questionsCount, answeredTotal]);
 
   // ── Idle / before start ────────────────────────────────────────────
   if (phase === "idle") {

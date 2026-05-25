@@ -43,17 +43,17 @@ export function ResetPasswordForm({ token }: { token?: string }) {
 
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
-      <label className="block text-sm font-medium">
+      <label htmlFor="token" className="block text-sm font-medium">
         Токен восстановления
-        <Input className="mt-2" name="token" defaultValue={token} required />
+        <Input id="token" className="mt-2" name="token" defaultValue={token} required />
       </label>
-      <label className="block text-sm font-medium">
+      <label htmlFor="password" className="block text-sm font-medium">
         Новый пароль
-        <Input className="mt-2" name="password" type="password" required minLength={10} autoComplete="new-password" />
+        <Input id="password" className="mt-2" name="password" type="password" required minLength={10} autoComplete="new-password" />
       </label>
-      <label className="block text-sm font-medium">
+      <label htmlFor="passwordConfirm" className="block text-sm font-medium">
         Повторите пароль
-        <Input className="mt-2" name="passwordConfirm" type="password" required minLength={10} autoComplete="new-password" />
+        <Input id="passwordConfirm" className="mt-2" name="passwordConfirm" type="password" required minLength={10} autoComplete="new-password" />
       </label>
       {message ? <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground" role="alert">{message}</p> : null}
       <Button className="w-full" type="submit" disabled={pending}>

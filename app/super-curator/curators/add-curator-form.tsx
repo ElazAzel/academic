@@ -44,12 +44,12 @@ export function AddCuratorDialog() {
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Email</label>
-            <Input name="email" type="email" required placeholder="curator@example.com" />
+            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <Input id="email" name="email" type="email" required placeholder="curator@example.com" />
           </div>
           <div>
-            <label className="text-sm font-medium">Имя</label>
-            <Input name="name" placeholder="Имя Фамилия" />
+            <label htmlFor="name" className="text-sm font-medium">Имя</label>
+            <Input id="name" name="name" placeholder="Имя Фамилия" />
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Отмена</Button>

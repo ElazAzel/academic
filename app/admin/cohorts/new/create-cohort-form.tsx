@@ -31,12 +31,12 @@ export function CreateCohortForm({ courses }: { courses: { id: string; title: st
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground uppercase">Название потока</label>
-        <input name="name" required className="w-full h-10 rounded-lg border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Например: AI Strategy Q3 2026" />
+        <label htmlFor="name" className="text-xs font-medium text-muted-foreground uppercase">Название потока</label>
+        <input id="name" name="name" required className="w-full h-10 rounded-lg border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Например: AI Strategy Q3 2026" />
       </div>
       <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground uppercase">Курс</label>
-        <select name="courseId" required className="w-full h-10 rounded-lg border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20">
+        <label htmlFor="courseId" className="text-xs font-medium text-muted-foreground uppercase">Курс</label>
+        <select id="courseId" name="courseId" required className="w-full h-10 rounded-lg border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20">
           <option value="">Выберите курс...</option>
           {courses.map((c) => (
             <option key={c.id} value={c.id}>{c.title}</option>
@@ -45,12 +45,12 @@ export function CreateCohortForm({ courses }: { courses: { id: string; title: st
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground uppercase">Дата начала</label>
-          <input name="startsAt" type="date" className="w-full h-10 rounded-lg border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+          <label htmlFor="startsAt" className="text-xs font-medium text-muted-foreground uppercase">Дата начала</label>
+          <input id="startsAt" name="startsAt" type="date" className="w-full h-10 rounded-lg border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
         </div>
         <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground uppercase">Дата окончания</label>
-          <input name="endsAt" type="date" className="w-full h-10 rounded-lg border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+          <label htmlFor="endsAt" className="text-xs font-medium text-muted-foreground uppercase">Дата окончания</label>
+          <input id="endsAt" name="endsAt" type="date" className="w-full h-10 rounded-lg border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
         </div>
       </div>
       <Button type="submit" className="w-full" disabled={pending}>

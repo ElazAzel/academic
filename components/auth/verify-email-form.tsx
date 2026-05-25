@@ -31,9 +31,9 @@ export function VerifyEmailForm({ token }: { token?: string }) {
 
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
-      <label className="block text-sm font-medium">
+      <label htmlFor="token" className="block text-sm font-medium">
         Токен подтверждения
-        <Input className="mt-2" name="token" defaultValue={token} required />
+        <Input id="token" className="mt-2" name="token" defaultValue={token} required />
       </label>
       {message ? <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground" role="alert">{message}</p> : null}
       <Button className="w-full" type="submit" disabled={pending}>

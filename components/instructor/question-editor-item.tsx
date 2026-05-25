@@ -98,7 +98,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
   return (
     <div className="border rounded-lg bg-muted/5 overflow-hidden transition-all">
       {/* Collapsed preview */}
-      <div className="flex items-center gap-4 p-4 cursor-pointer hover:bg-muted/10" onClick={() => setIsExpanded(!isExpanded)}>
+      <div className="flex items-center gap-4 p-4 cursor-pointer hover:bg-muted/10" onClick={() => setIsExpanded(!isExpanded)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIsExpanded(!isExpanded); } }}>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{data.prompt}</p>
           <div className="flex items-center gap-2 mt-0.5">
@@ -120,8 +120,9 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
       {isExpanded && (
         <div className="p-4 border-t bg-card space-y-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Текст вопроса</label>
+            <label htmlFor="prompt" className="text-xs font-semibold uppercase text-muted-foreground">Текст вопроса</label>
             <textarea
+              id="prompt"
               className="w-full min-h-[80px] rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
               value={data.prompt}
               onChange={(e) => { setData({ ...data, prompt: e.target.value }); markDirty(); }}
@@ -130,8 +131,9 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Тип</label>
+              <label htmlFor="type" className="text-xs font-semibold uppercase text-muted-foreground">Тип</label>
               <select
+                id="type"
                 className="w-full h-10 rounded-lg border bg-background px-3 text-sm"
                 value={data.type}
                 onChange={(e) => { setData({ ...data, type: e.target.value, options: (e.target.value === "TEXT" ? [] : options) }); markDirty(); }}
@@ -142,8 +144,9 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Баллы</label>
+              <label htmlFor="points" className="text-xs font-semibold uppercase text-muted-foreground">Баллы</label>
               <Input
+                id="points"
                 type="number"
                 value={data.points}
                 onChange={(e) => { setData({ ...data, points: Number(e.target.value) }); markDirty(); }}
@@ -153,7 +156,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
 
           {data.type !== "TEXT" && (
             <div className="space-y-3 pt-2">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Варианты ответов</label>
+              <label htmlFor="options" className="text-xs font-semibold uppercase text-muted-foreground">Варианты ответов</label>
               {options.map((opt, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <div 
@@ -163,6 +166,9 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
                       : "border-muted-foreground/30"
                     }`}
                     onClick={() => toggleCorrect(opt)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleCorrect(opt); } }}
                   >
                     { (data.type === "SINGLE_CHOICE" ? correctAnswer.value === opt : correctAnswer.values?.includes(opt)) && <div className="h-2 w-2 bg-white rounded-full" /> }
                   </div>
@@ -186,8 +192,9 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
 
           {data.type === "TEXT" && (
             <div className="space-y-2 pt-2">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Правильный ответ</label>
-              <Input 
+              <label htmlFor="correctAnswer" className="text-xs font-semibold uppercase text-muted-foreground">Правильный ответ</label>
+              <Input
+                id="correctAnswer"
                 value={correctAnswer.value || ""} 
                 onChange={(e) => { setData({ ...data, correctAnswer: { value: e.target.value } }); markDirty(); }}
                 placeholder="Текст ответа"

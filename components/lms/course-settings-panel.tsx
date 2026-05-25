@@ -29,23 +29,23 @@ export function CourseSettingsPanel({
       <div className="space-y-5">
         <h3 className="text-xs font-semibold uppercase text-muted-foreground">Настройки курса</h3>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Режим прохождения</label>
+          <span className="text-xs text-muted-foreground">Режим прохождения</span>
           <p className="text-sm font-medium capitalize">{detail.traversalMode === "sequential" ? "Последовательный" : "Свободный"}</p>
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Порог завершения</label>
+          <span className="text-xs text-muted-foreground">Порог завершения</span>
           <p className="text-sm font-medium">{detail.completionThreshold}%</p>
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Статус</label>
+          <span className="text-xs text-muted-foreground">Статус</span>
           <p className="text-sm font-medium">{detail.status === "DRAFT" ? "Черновик" : detail.status === "PUBLISHED" ? "Опубликован" : "Архив"}</p>
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Модулей</label>
+          <span className="text-xs text-muted-foreground">Модулей</span>
           <p className="text-sm font-medium">{detail.modules.length}</p>
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Всего уроков</label>
+          <span className="text-xs text-muted-foreground">Всего уроков</span>
           <p className="text-sm font-medium">
             {detail.modules.reduce((sum, mod) => {
               const rootLessons = mod.lessons?.length ?? 0;
@@ -71,7 +71,7 @@ export function CourseSettingsPanel({
         </div>
         {detail.coverUrl && (
           <div className="space-y-2">
-            <label className="text-xs text-muted-foreground">Обложка</label>
+            <span className="text-xs text-muted-foreground">Обложка</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={detail.coverUrl} alt="" className="w-full rounded-lg object-cover h-24" />
           </div>
@@ -85,19 +85,19 @@ export function CourseSettingsPanel({
       <div className="space-y-5">
         <h3 className="text-xs font-semibold uppercase text-muted-foreground">Настройки модуля</h3>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Статус</label>
+          <span className="text-xs text-muted-foreground">Статус</span>
           <p className="text-sm font-medium">{mod.status === "DRAFT" ? "Черновик" : mod.status === "PUBLISHED" ? "Опубликован" : "Архив"}</p>
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Рекомендуемых дней</label>
+          <span className="text-xs text-muted-foreground">Рекомендуемых дней</span>
           <p className="text-sm font-medium">{mod.recommendedDays}</p>
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Уроков</label>
+          <span className="text-xs text-muted-foreground">Уроков</span>
           <p className="text-sm font-medium">{(mod.lessons?.length ?? 0) + (mod.blocks ?? []).reduce((sum, block) => sum + (block.lessons?.length ?? 0), 0)}</p>
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Описание</label>
+          <span className="text-xs text-muted-foreground">Описание</span>
           <p className="text-sm text-muted-foreground">{mod.description ?? "—"}</p>
         </div>
       </div>
@@ -109,34 +109,34 @@ export function CourseSettingsPanel({
       <div className="space-y-5">
         <h3 className="text-xs font-semibold uppercase text-muted-foreground">Настройки урока</h3>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Тип</label>
+          <span className="text-xs text-muted-foreground">Тип</span>
           <p className="text-sm font-medium capitalize">{lesson.type === "MIXED" ? "Смешанный" : lesson.type}</p>
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Длительность</label>
+          <span className="text-xs text-muted-foreground">Длительность</span>
           <p className="text-sm font-medium">{lesson.durationMinutes} мин</p>
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Обязательный</label>
+          <span className="text-xs text-muted-foreground">Обязательный</span>
           <p className="text-sm font-medium">{lesson.isRequired ? "Да" : "Нет"}</p>
         </div>
         {lesson.summary && (
           <div className="space-y-2">
-            <label className="text-xs text-muted-foreground">Описание</label>
+            <span className="text-xs text-muted-foreground">Описание</span>
             <p className="text-sm text-muted-foreground">{lesson.summary}</p>
           </div>
         )}
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Тестов</label>
+          <span className="text-xs text-muted-foreground">Тестов</span>
           <p className="text-sm font-medium">{lesson.quizzes?.length ?? 0}</p>
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Заданий</label>
+          <span className="text-xs text-muted-foreground">Заданий</span>
           <p className="text-sm font-medium">{lesson.assignments?.length ?? 0}</p>
         </div>
         {lesson.quizzes && lesson.quizzes.length > 0 && (
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Тесты</label>
+            <span className="text-xs text-muted-foreground">Тесты</span>
             {lesson.quizzes.map((q) => (
               <p key={q.id} className="text-xs text-muted-foreground">• {q.title}</p>
             ))}
@@ -144,7 +144,7 @@ export function CourseSettingsPanel({
         )}
         {lesson.assignments && lesson.assignments.length > 0 && (
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Задания</label>
+            <span className="text-xs text-muted-foreground">Задания</span>
             {lesson.assignments.map((a) => (
               <p key={a.id} className="text-xs text-muted-foreground">• {a.title}</p>
             ))}

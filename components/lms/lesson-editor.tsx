@@ -27,16 +27,18 @@ export function LessonEditor({
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="space-y-2">
-        <label className="text-xs font-semibold uppercase text-muted-foreground">Название урока</label>
+        <label htmlFor="lessonTitle" className="text-xs font-semibold uppercase text-muted-foreground">Название урока</label>
         <input
+          id="lessonTitle"
           className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           value={lesson.title}
           onChange={(e) => onChange({ title: e.target.value })}
         />
       </div>
       <div className="space-y-2">
-        <label className="text-xs font-semibold uppercase text-muted-foreground">Краткое описание</label>
+        <label htmlFor="lessonSummary" className="text-xs font-semibold uppercase text-muted-foreground">Краткое описание</label>
         <textarea
+          id="lessonSummary"
           className="w-full min-h-[80px] rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           value={lesson.summary ?? ""}
           onChange={(e) => onChange({ summary: e.target.value })}
@@ -44,8 +46,9 @@ export function LessonEditor({
       </div>
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase text-muted-foreground">Тип</label>
+          <label htmlFor="lessonType" className="text-xs font-semibold uppercase text-muted-foreground">Тип</label>
           <select
+            id="lessonType"
             className="w-full h-10 rounded-lg border bg-background px-3 text-sm"
             value={lesson.type}
             onChange={(e) => onChange({ type: e.target.value as BuilderLessonDetail["type"] })}
@@ -59,8 +62,9 @@ export function LessonEditor({
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase text-muted-foreground">Длительность (мин)</label>
+          <label htmlFor="durationMinutes" className="text-xs font-semibold uppercase text-muted-foreground">Длительность (мин)</label>
           <input
+            id="durationMinutes"
             type="number"
             className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
             value={lesson.durationMinutes}
@@ -68,8 +72,9 @@ export function LessonEditor({
           />
         </div>
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase text-muted-foreground">Обязательный</label>
+          <label htmlFor="isRequired" className="text-xs font-semibold uppercase text-muted-foreground">Обязательный</label>
           <select
+            id="isRequired"
             className="w-full h-10 rounded-lg border bg-background px-3 text-sm"
             value={lesson.isRequired ? "true" : "false"}
             onChange={(e) => onChange({ isRequired: e.target.value === "true" })}
@@ -81,8 +86,9 @@ export function LessonEditor({
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-semibold uppercase text-muted-foreground">URL видео (если применимо)</label>
+        <label htmlFor="videoUrl" className="text-xs font-semibold uppercase text-muted-foreground">URL видео (если применимо)</label>
         <input
+          id="videoUrl"
           className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
           value={lesson.videoUrl ?? ""}
           onChange={(e) => onChange({ videoUrl: e.target.value || null })}

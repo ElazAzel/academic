@@ -48,22 +48,22 @@ export function EditUserDialog({
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Отображаемое имя</label>
+            <label htmlFor="name" className="text-sm font-medium">Отображаемое имя</label>
             <p className="text-[10px] text-muted-foreground mb-1">Видит пользователь, куратор, супер-куратор и преподаватель</p>
-            <Input name="name" defaultValue={user.name ?? ""} placeholder="Например: Слушатель №1" />
+            <Input id="name" name="name" defaultValue={user.name ?? ""} placeholder="Например: Слушатель №1" />
           </div>
           <div>
-            <label className="text-sm font-medium">Реальное имя</label>
+            <label htmlFor="realName" className="text-sm font-medium">Реальное имя</label>
             <p className="text-[10px] text-muted-foreground mb-1">Видит только админ. Используется в сертификате</p>
-            <Input name="realName" defaultValue={user.realName ?? ""} placeholder="Иван Петров" />
+            <Input id="realName" name="realName" defaultValue={user.realName ?? ""} placeholder="Иван Петров" />
           </div>
           <div>
-            <label className="text-sm font-medium">Email</label>
-            <Input value={user.email} disabled className="bg-muted" />
+            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <Input id="email" value={user.email} disabled className="bg-muted" />
           </div>
           <div>
-            <label className="text-sm font-medium">Статус</label>
-            <select name="status" defaultValue={user.status} className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
+            <label htmlFor="status" className="text-sm font-medium">Статус</label>
+            <select id="status" name="status" defaultValue={user.status} className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
               <option value="ACTIVE">Активен</option>
               <option value="INACTIVE">Неактивен</option>
               <option value="BLOCKED">Заблокирован</option>

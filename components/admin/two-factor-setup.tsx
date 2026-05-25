@@ -232,8 +232,9 @@ function DisableForm({
 
   return (
     <div className="space-y-2 border-t pt-4">
-      <label className="text-sm font-medium">Введите пароль для отключения</label>
+      <label htmlFor="password" className="text-sm font-medium">Введите пароль для отключения</label>
       <input
+        id="password"
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}

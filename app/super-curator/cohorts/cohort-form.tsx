@@ -44,12 +44,12 @@ export function CreateCohortForm({ courses }: { courses: { id: string; title: st
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Название потока</label>
-            <Input name="name" required placeholder="Например: AI Strategy — Поток C" />
+            <label htmlFor="name" className="text-sm font-medium">Название потока</label>
+            <Input id="name" name="name" required placeholder="Например: AI Strategy — Поток C" />
           </div>
           <div>
-            <label className="text-sm font-medium">Курс</label>
-            <select name="courseId" required className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
+            <label htmlFor="courseId" className="text-sm font-medium">Курс</label>
+            <select id="courseId" name="courseId" required className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
               <option value="">Выберите курс</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>{c.title}</option>
@@ -58,12 +58,12 @@ export function CreateCohortForm({ courses }: { courses: { id: string; title: st
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium">Дата старта</label>
-              <Input name="startsAt" type="date" />
+              <label htmlFor="startsAt" className="text-sm font-medium">Дата старта</label>
+              <Input id="startsAt" name="startsAt" type="date" />
             </div>
             <div>
-              <label className="text-sm font-medium">Дата окончания</label>
-              <Input name="endsAt" type="date" />
+              <label htmlFor="endsAt" className="text-sm font-medium">Дата окончания</label>
+              <Input id="endsAt" name="endsAt" type="date" />
             </div>
           </div>
           <div className="flex justify-end gap-2">
@@ -132,22 +132,22 @@ export function EditCohortForm({
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Название</label>
-            <Input name="name" defaultValue={cohort.name} required />
+            <label htmlFor="name" className="text-sm font-medium">Название</label>
+            <Input id="name" name="name" defaultValue={cohort.name} required />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium">Дата старта</label>
-              <Input name="startsAt" type="date" defaultValue={cohort.startsAt?.slice(0, 10) ?? ""} />
+              <label htmlFor="startsAt" className="text-sm font-medium">Дата старта</label>
+              <Input id="startsAt" name="startsAt" type="date" defaultValue={cohort.startsAt?.slice(0, 10) ?? ""} />
             </div>
             <div>
-              <label className="text-sm font-medium">Дата окончания</label>
-              <Input name="endsAt" type="date" defaultValue={cohort.endsAt?.slice(0, 10) ?? ""} />
+              <label htmlFor="endsAt" className="text-sm font-medium">Дата окончания</label>
+              <Input id="endsAt" name="endsAt" type="date" defaultValue={cohort.endsAt?.slice(0, 10) ?? ""} />
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium">Статус</label>
-            <select name="status" defaultValue={cohort.status} className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
+            <label htmlFor="status" className="text-sm font-medium">Статус</label>
+            <select id="status" name="status" defaultValue={cohort.status} className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
               <option value="active">Активен</option>
               <option value="draft">Черновик</option>
               <option value="archived">Архив</option>

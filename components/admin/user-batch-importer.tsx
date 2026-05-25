@@ -226,13 +226,13 @@ export function UserBatchImporter({
               
               {/* Left Column: Config */}
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider flex items-center gap-1">
+                <fieldset className="space-y-2">
+                  <legend className="text-xs font-bold uppercase text-muted-foreground tracking-wider flex items-center gap-1">
                     Роли по умолчанию
                     <span title="Будут назначены пользователям, если роль не указана в строке CSV">
                       <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help" />
                     </span>
-                  </label>
+                  </legend>
                   <div className="grid grid-cols-2 gap-2">
                     {assignableRoles.map((role) => (
                       <label 
@@ -261,13 +261,14 @@ export function UserBatchImporter({
                       </label>
                     ))}
                   </div>
-                </div>
+                </fieldset>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
+                  <label htmlFor="cohort" className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
                     Автоматически зачислить в поток
                   </label>
                   <select 
+                    id="cohort"
                     value={selectedCohort}
                     onChange={(e) => setSelectedCohort(e.target.value)}
                     className="w-full rounded-lg border border-m3-outline-variant bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -292,7 +293,10 @@ export function UserBatchImporter({
                   onDragOver={handleDrag}
                   onDragLeave={handleDrag}
                   onDrop={handleDrop}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInputRef.current?.click(); } }}
                   className={`flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
                     dragActive 
                       ? "border-primary bg-primary/5 scale-[0.99]" 
@@ -316,12 +320,13 @@ export function UserBatchImporter({
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
+                    <label htmlFor="csvText" className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
                       Или вставьте текст вручную
                     </label>
                     <span className="text-[10px] text-muted-foreground">Шаблон: email, Имя Фамилия</span>
                   </div>
                   <textarea 
+                    id="csvText"
                     value={csvText}
                     onChange={(e) => setCsvText(e.target.value)}
                     placeholder={`student1@example.com, Иван Иванов\nstudent2@example.com, Анна Сидорова\ncurator1@example.com, Петр Петров, curator`}

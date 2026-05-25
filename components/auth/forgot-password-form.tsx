@@ -52,9 +52,10 @@ export function ForgotPasswordForm() {
         Введите email, привязанный к вашему аккаунту. Мы отправим ссылку для сброса пароля.
       </p>
 
-      <label className="block text-sm font-medium">
+      <label htmlFor="email" className="block text-sm font-medium">
         Email
         <Input
+          id="email"
           className="mt-2"
           name="email"
           type="email"

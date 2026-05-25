@@ -42,8 +42,9 @@ export function ReviewSubmissionForm({ submission }: { submission: ReviewFormSub
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <label className="text-label-sm font-label-sm text-m3-on-surface-variant">Балл (0–{submission.assignment.maxScore})</label>
+          <label htmlFor="score" className="text-label-sm font-label-sm text-m3-on-surface-variant">Балл (0–{submission.assignment.maxScore})</label>
           <input
+            id="score"
             type="number"
             value={score}
             onChange={(e) => setScore(Number(e.target.value))}
@@ -54,8 +55,9 @@ export function ReviewSubmissionForm({ submission }: { submission: ReviewFormSub
         </div>
 
         <div className="space-y-2">
-          <label className="text-label-sm font-label-sm text-m3-on-surface-variant">Комментарий</label>
+          <label htmlFor="feedback" className="text-label-sm font-label-sm text-m3-on-surface-variant">Комментарий</label>
           <textarea
+            id="feedback"
             className="w-full min-h-[120px] resize-y rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface outline-none focus:ring-2 focus:ring-m3-outline"
             placeholder="Напишите замечания или похвалу..."
             value={feedback}

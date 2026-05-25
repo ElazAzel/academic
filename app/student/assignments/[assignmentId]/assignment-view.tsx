@@ -118,8 +118,11 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
           {canSubmit ? (
             <div className="space-y-3">
               <div
+                role="button"
+                tabIndex={0}
                 className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/30 p-6 transition-colors hover:border-primary/30 hover:bg-primary/5"
                 onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInputRef.current?.click(); } }}
               >
                 {uploading ? (
                   <div className="flex items-center gap-2">

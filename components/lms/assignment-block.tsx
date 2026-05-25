@@ -167,8 +167,11 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
 
       {/* File upload zone */}
       <div
+        role="button"
+        tabIndex={0}
         className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-m3-outline-variant bg-m3-surface-container-lowest/50 p-4 transition-colors hover:border-m3-primary/30 hover:bg-m3-primary/5"
         onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInputRef.current?.click(); } }}
       >
         {uploading ? (
           <div className="flex items-center gap-2">

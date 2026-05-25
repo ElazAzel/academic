@@ -19,6 +19,7 @@ export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElemen
 }
 
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
+  // eslint-disable-next-line jsx-a11y/heading-has-content
   return <h3 className={cn("text-headline-sm font-headline-sm text-m3-on-surface", className)} {...props} />;
 }
 

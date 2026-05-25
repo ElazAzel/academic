@@ -40,16 +40,16 @@ export function QuizBlockEditor({
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="text-xs text-muted-foreground">Название теста</label>
-           <input className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={title} onChange={(e) => { setTitle(e.target.value); updateParent(questions, e.target.value, passThreshold, maxAttempts); }} />
+          <label htmlFor="quizTitle" className="text-xs text-muted-foreground">Название теста</label>
+           <input id="quizTitle" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={title} onChange={(e) => { setTitle(e.target.value); updateParent(questions, e.target.value, passThreshold, maxAttempts); }} />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Порог (%)</label>
-          <input type="number" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={passThreshold} onChange={(e) => { const v = Number(e.target.value); setPassThreshold(v); updateParent(questions, title, v, maxAttempts); }} />
+          <label htmlFor="passThreshold" className="text-xs text-muted-foreground">Порог (%)</label>
+          <input id="passThreshold" type="number" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={passThreshold} onChange={(e) => { const v = Number(e.target.value); setPassThreshold(v); updateParent(questions, title, v, maxAttempts); }} />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Макс. попыток</label>
-          <input type="number" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={maxAttempts} onChange={(e) => { const v = Number(e.target.value); setMaxAttempts(v); updateParent(questions, title, passThreshold, v); }} />
+          <label htmlFor="maxAttempts" className="text-xs text-muted-foreground">Макс. попыток</label>
+          <input id="maxAttempts" type="number" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={maxAttempts} onChange={(e) => { const v = Number(e.target.value); setMaxAttempts(v); updateParent(questions, title, passThreshold, v); }} />
         </div>
       </div>
 

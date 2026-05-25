@@ -129,12 +129,15 @@ export function CuratorPopupClient({ students, curatorId }: Props) {
                 {students.map((student) => (
                   <div
                     key={student.id}
+                    role="button"
+                    tabIndex={0}
                     className={`flex items-center gap-2 rounded-md px-3 py-2 cursor-pointer text-sm transition-colors ${
                       selectedStudents.includes(student.id)
                         ? "bg-primary/10 border border-primary/30"
                         : "hover:bg-muted border border-transparent"
                     }`}
                     onClick={() => toggleStudent(student.id)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleStudent(student.id); } }}
                   >
                     <div
                       className={`h-4 w-4 rounded border flex items-center justify-center ${

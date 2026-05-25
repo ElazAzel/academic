@@ -53,8 +53,9 @@ export function AddStudentForm({
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Курс</label>
+            <label htmlFor="courseTitle" className="text-sm font-medium">Курс</label>
             <input
+              id="courseTitle"
               className="mt-1 w-full rounded-lg border bg-muted px-3 py-2 text-sm"
               value={courseTitle}
               disabled
@@ -62,8 +63,8 @@ export function AddStudentForm({
             <input type="hidden" name="courseId" value={courseId ?? ""} />
           </div>
           <div>
-            <label className="text-sm font-medium">Email слушателя</label>
-            <Input name="email" type="email" required placeholder="student@example.com" />
+            <label htmlFor="email" className="text-sm font-medium">Email слушателя</label>
+            <Input id="email" name="email" type="email" required placeholder="student@example.com" />
             <p className="text-xs text-muted-foreground mt-1">Введите email пользователя с ролью &laquo;Слушатель&raquo;.</p>
           </div>
           <div className="flex justify-end gap-2">

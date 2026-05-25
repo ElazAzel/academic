@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Bell, CheckCheck, ExternalLink, MessageCircle, Box, Layers, Info } from "lucide-react";
 import {
   DropdownMenu,
