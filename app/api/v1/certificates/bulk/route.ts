@@ -5,7 +5,8 @@ import { errorResponse, ApiError, parseJson } from "@/lib/http";
 import { generateCertificatePdf } from "@/server/modules/certificates/service";
 import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 import { checkRateLimit } from "@/lib/security/rate-limit";
-import archiver from "archiver";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const archiver = require("archiver") as typeof import("archiver");
 import { z } from "zod";
 
 const prisma = getPrisma();
