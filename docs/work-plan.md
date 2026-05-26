@@ -6,6 +6,31 @@
 
 ---
 
+## Задача 14: Release hardening до доказуемой готовности
+
+**Статус:** 🟡 В работе (baseline создан 2026-05-26)
+**Источник:** `docs/release-hardening-plan.md`, `server/modules/release-hardening/readiness.ts`
+
+Цель: перевести платформу из “реализация широкая, но часть сценариев не доказана” в release-ready состояние с проверенными ролями, доступами, ownership, отчётами, сертификатами, уведомлениями и эксплуатационным запуском.
+
+| WP | Действие | Owner roles | Статус |
+|-----|----------|-------------|--------|
+| WP0 | Truth Sync: синхронизировать документы, AI-agent roles, product roles, project skills, technical skills и release gates | Orchestrator, Technical Writer | ✅ |
+| WP1 | Six-role Scenario Proof: доказать сценарии `admin`, `instructor`, `student`, `curator`, `super_curator`, `customer_observer` через Playwright на seeded/disposable env | QA Release, Product Owner, Frontend LMS UX | 🟡 |
+| WP2 | Access/Privacy/Ownership: закрыть guessed IDs, observer read-only, curator/instructor scope, media/report/certificate privacy | Security Privacy, Backend Next Prisma | 🟡 |
+| WP3 | Architecture Boundary Cleanup: вынести критичные Prisma/domain queries из UI routes/components в server modules/actions | Principal Architect, Backend Next Prisma | 🟡 |
+| WP4 | Role Workspace UX: перестроить кабинеты вокруг рабочих очередей и next actions, а не декоративных метрик | Frontend LMS UX, Product Owner | 🟡 |
+| WP5 | Reporting/Analytics/Certificates/Notifications Proof: доказать scoped exports, revoked certificates и channel rules | Data Analytics, Security Privacy, QA Release | 🟡 |
+| WP6 | DevOps/Release/Backup/Observability: выполнить `verify:release` в целевом окружении, health, backup/restore, rollback | DevOps Platform, QA Release | ⛔ blocked |
+
+**Текущее изменение 2026-05-26:**
+- Добавлен машинно-читаемый контракт release hardening.
+- Добавлен unit-тест, который проверяет 6 product roles, redirect priority, 10 AI-agent roles, 5 project skills, 14 technical skills, 7 work packages и неполную release-ready оценку до закрытия WP1-WP6.
+- Начат WP2: lesson video/media access больше не возвращает generic 500 для ожидаемых forbidden/not-found случаев; тесты обновлены на корректный 403.
+- `done` для release-ready теперь требует явного evidence; route rendering больше не считается достаточным доказательством.
+
+---
+
 ## Задача 1: Отключение самосброса пароля
 
 **Статус:** ✅ Завершено (2026-05-22)

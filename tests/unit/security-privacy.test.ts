@@ -150,7 +150,7 @@ describe("Platform Negative Security Boundaries", () => {
   });
 
   describe("Gated Lesson & Video Access", () => {
-    it("returns 403 / error if student has no active enrollment for the course", async () => {
+    it("returns 403 Forbidden if student has no active enrollment for the course", async () => {
       mockRequireUser.mockResolvedValue({ id: "student-1", email: "student@test.com", roles: ["student"] });
       mockLessonFindUnique.mockResolvedValue({
         id: "lesson-1",
@@ -168,7 +168,7 @@ describe("Platform Negative Security Boundaries", () => {
       });
       const data = await response.json();
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(403);
       expect(data.error.message).toContain("Нет доступа к этому уроку");
     });
 
@@ -197,7 +197,7 @@ describe("Platform Negative Security Boundaries", () => {
       });
       const data = await response.json();
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(403);
       expect(data.error.message).toContain("обязательные уроки");
     });
   });

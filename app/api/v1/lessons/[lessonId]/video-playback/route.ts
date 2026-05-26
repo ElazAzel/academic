@@ -1,4 +1,4 @@
-import { errorResponse, ok } from "@/lib/http";
+import { ApiError, errorResponse, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { EnrollmentStatus, ProgressStatus } from "@prisma/client";
@@ -46,7 +46,7 @@ export async function GET(_request: Request, context: Context) {
         lessonId,
         reason: "Lesson not found",
       });
-      return errorResponse(new Error("Урок не найден"));
+      return errorResponse(new ApiError("not_found", "Урок не найден", 404));
     }
 
     const courseId = lesson.module.courseId;
@@ -61,7 +61,7 @@ export async function GET(_request: Request, context: Context) {
         lessonId,
         reason: "No active enrollment",
       });
-      return errorResponse(new Error("Нет доступа к этому уроку"));
+      return errorResponse(new ApiError("forbidden", "Нет доступа к этому уроку", 403));
     }
 
     if (lesson.module.course.traversalMode === TRAVERSAL_MODES.SEQUENTIAL) {
@@ -92,7 +92,7 @@ export async function GET(_request: Request, context: Context) {
             courseId,
             reason: "Sequential lock: previous required lessons not completed",
           });
-          return errorResponse(new Error("Сначала завершите предыдущие обязательные уроки"));
+          return errorResponse(new ApiError("forbidden", "Сначала завершите предыдущие обязательные уроки", 403));
         }
       }
     }
@@ -141,7 +141,7 @@ export async function GET(_request: Request, context: Context) {
     }
 
     if (!playbackUrl) {
-      return errorResponse(new Error("Видео не найдено"));
+      return errorResponse(new ApiError("not_found", "Видео не найдено", 404));
     }
 
     await logVideoPlaybackIssued({

@@ -1,5 +1,25 @@
 # Project Update Log
 
+## 2026-05-26 - Release Hardening Baseline
+
+- **Author:** Codex
+- **Scope:** Implement WP0 from the release-hardening optimization plan and make the remaining work packages enforceable.
+- **Fixed / Added:**
+  - Added `server/modules/release-hardening/readiness.ts` as the typed contract for 6 product roles, redirect priority, 10 AI-agent roles, 5 project skills, 14 installed technical skills, WP0-WP6, and release gates.
+  - Added `tests/unit/release-hardening-readiness.test.ts` to verify the contract against repository files and keep release readiness `partial` until scenario, privacy, and operations proof are complete.
+  - Added `docs/release-hardening-plan.md` as the active execution baseline.
+  - Hardened lesson video/media access route errors: forbidden or locked lesson access now returns typed 403, missing lesson/media returns 404, and storage link failure returns 503 instead of leaking as generic 500.
+  - Updated `docs/implementation-plan.md`, `docs/work-plan.md`, `docs/full-project-audit.md`, and `docs/updates.md` to separate implemented domains from full release-ready evidence.
+- **Validation:**
+  - `npx vitest run tests/unit/release-hardening-readiness.test.ts` passed: 6/6 tests.
+  - `npx vitest run tests/unit/security-privacy.test.ts tests/unit/release-hardening-readiness.test.ts` passed: 12/12 tests.
+  - `npm run lint -- --max-warnings=0` passed.
+  - `npm run typecheck` passed.
+  - `npm run test` passed: 72/72 files, 446/446 tests.
+  - `npm run build` passed; local Sentry auth-token warnings remain expected without production secrets.
+  - `npm run test:e2e` was attempted and timed out after 5 minutes without useful output; WP1 remains `partial` and the E2E gate is not counted as passed.
+- **Status:** WP0 done; overall release readiness remains partial until WP1-WP6 are proven.
+
 ## 2026-05-24 - UX/UI P0 Implementation and Certificate PNG Upload Fix
 
 - **Author:** Codex

@@ -1,6 +1,6 @@
 # Full Project Audit: AI Strategic Academy
 
-Date: 2026-05-24 (updated — post-production-hardening)  
+Date: 2026-05-26 (updated - release-hardening baseline)
 Scope: local repository, local build/test gates, non-mutating Browser smoke, active and archived documentation.  
 Readiness target: full roadmap readiness, with release blockers separated from later strategic work.
 
@@ -23,6 +23,20 @@ That is not the same as a fully working platform. The audit found:
 - end-to-end role scenarios, file privacy, notification email opt-in, exports, real certificate issuance, revoke visibility, backup/restore, and external Supabase policy state were not proven by this local audit.
 
 Current overall status: `partial`.
+
+## 2026-05-26 Release-hardening Baseline
+
+The active execution baseline is now `docs/release-hardening-plan.md`.
+
+Implemented in this pass:
+
+- `server/modules/release-hardening/readiness.ts` defines the machine-readable contract for 6 product roles, redirect priority, 10 AI-agent roles, 5 project skills, 14 installed technical skills, 7 work packages and release gates.
+- `tests/unit/release-hardening-readiness.test.ts` verifies that contract against the repository files and keeps the overall release-ready flag false until WP1-WP6 and operational gates are proven.
+- Lesson video/media access routes now return typed forbidden/not-found/service-unavailable statuses for expected access failures instead of generic 500 responses.
+- `docs/implementation-plan.md` now distinguishes implemented domains from full release-ready scenario proof.
+- `docs/work-plan.md` now tracks WP0-WP6 as the current optimization program.
+
+Status impact: WP0 is `done`; the platform remains `partial` for release readiness because six-role workflow proof, access/privacy negative paths and operational release drill are still incomplete or blocked.
 
 ## Audit Rules
 

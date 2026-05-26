@@ -2,6 +2,36 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-26 — Release Hardening Baseline (WP0)
+
+### Что добавлено
+- `server/modules/release-hardening/readiness.ts` — typed contract для release hardening: 6 product roles, redirect priority, 10 AI-agent roles, 5 project skills, 14 technical skills, WP0-WP6 и release gates.
+- `tests/unit/release-hardening-readiness.test.ts` — unit-тест контракта, который сверяет роли/skills с файлами репозитория и не даёт считать платформу release-ready до закрытия WP1-WP6.
+- `docs/release-hardening-plan.md` — активный execution baseline оптимизации.
+
+### Access/privacy hardening
+- `/api/v1/lessons/[lessonId]/video-playback` теперь возвращает typed `403` для отсутствующего enrollment и sequential lock, `404` для отсутствующего урока/видео.
+- `/api/v1/lessons/[lessonId]/media/[mediaId]/signed-url` теперь возвращает typed `403` для отсутствующего enrollment и sequential lock, `404` для отсутствующего урока/файла, `503` для невозможности получить storage link.
+- `tests/unit/security-privacy.test.ts` обновлён: forbidden lesson/video access больше не считается ожидаемым `500`.
+
+### Документы
+- `docs/implementation-plan.md` теперь явно разделяет implemented domain status и full release-ready proof.
+- `docs/work-plan.md` получил задачу 14 с WP0-WP6.
+- `docs/full-project-audit.md` обновлён baseline-записью от 2026-05-26.
+
+### Статус
+- WP0: `done`.
+- Общая release readiness: `partial`; scenario proof, access/privacy negative paths и operational release drill остаются открыты.
+
+### Проверки
+- `npx vitest run tests/unit/release-hardening-readiness.test.ts` — 6/6 passed.
+- `npx vitest run tests/unit/security-privacy.test.ts tests/unit/release-hardening-readiness.test.ts` — 12/12 passed.
+- `npm run lint -- --max-warnings=0` — passed.
+- `npm run typecheck` — passed.
+- `npm run test` — 72 files, 446 tests passed.
+- `npm run build` — passed; Sentry auth-token warnings ожидаемы без production secrets.
+- `npm run test:e2e` — attempted, timed out after 5 minutes without useful output; WP1/E2E gate remains `partial`.
+
 ## 2026-05-25 — Web Interface Guidelines Fixes (overscroll, autocomplete)
 
 ### Curator Modals (curator-modals.tsx)

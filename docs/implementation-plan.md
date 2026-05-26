@@ -1,7 +1,17 @@
 # План реализации AI Strategic Academy
 
-Дата актуализации: 2026-05-24  
+Дата актуализации: 2026-05-26
 Статус документа: operational source of truth для реализации.
+
+## Release-hardening baseline на 2026-05-26
+
+Текущая оценка release readiness: `partial`.
+
+Ниже в документе домены со статусом `done` означают, что соответствующая реализация и базовые технические gates существуют. Это не равно полной продуктовой готовности, если нет сценарного доказательства для роли, доступа, ownership, отчётов, сертификатов, уведомлений и операционного запуска.
+
+Активный baseline оптимизации: `docs/release-hardening-plan.md`. Машинно-читаемый контракт: `server/modules/release-hardening/readiness.ts`. Контракт проверяется тестом `tests/unit/release-hardening-readiness.test.ts`.
+
+Правило статусов: `done` для release-ready допускается только при наличии evidence из code/test/browser/gate/docs/ops. Route rendering и зелёный build сами по себе не закрывают role workflow.
 
 ## Цель проекта
 

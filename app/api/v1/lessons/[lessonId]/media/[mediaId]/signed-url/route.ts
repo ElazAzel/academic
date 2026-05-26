@@ -1,4 +1,4 @@
-import { errorResponse, ok } from "@/lib/http";
+import { ApiError, errorResponse, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { EnrollmentStatus, ProgressStatus } from "@prisma/client";
@@ -35,7 +35,7 @@ export async function GET(_request: Request, context: Context) {
         mediaId,
         reason: "Lesson not found",
       });
-      return errorResponse(new Error("Урок не найден"));
+      return errorResponse(new ApiError("not_found", "Урок не найден", 404));
     }
 
     const courseId = lesson.module.courseId;
@@ -51,7 +51,7 @@ export async function GET(_request: Request, context: Context) {
         mediaId,
         reason: "No active enrollment",
       });
-      return errorResponse(new Error("Нет доступа к этому уроку"));
+      return errorResponse(new ApiError("forbidden", "Нет доступа к этому уроку", 403));
     }
 
     if (lesson.module.course.traversalMode === TRAVERSAL_MODES.SEQUENTIAL) {
@@ -82,7 +82,7 @@ export async function GET(_request: Request, context: Context) {
             courseId,
             reason: "Sequential lock: previous required lessons not completed",
           });
-          return errorResponse(new Error("Сначала завершите предыдущие обязательные уроки"));
+          return errorResponse(new ApiError("forbidden", "Сначала завершите предыдущие обязательные уроки", 403));
         }
       }
     }
@@ -98,7 +98,7 @@ export async function GET(_request: Request, context: Context) {
         mediaId,
         reason: "Media does not belong to lesson",
       });
-      return errorResponse(new Error("Файл не найден"));
+      return errorResponse(new ApiError("not_found", "Файл не найден", 404));
     }
 
     const settings = getContentProtectionSettings("standard");
@@ -138,7 +138,7 @@ export async function GET(_request: Request, context: Context) {
     }
 
     if (!signedUrl) {
-      return errorResponse(new Error("Не удалось получить ссылку на файл"));
+      return errorResponse(new ApiError("service_unavailable", "Не удалось получить ссылку на файл", 503));
     }
 
     await logSignedUrlIssued({
