@@ -27,6 +27,7 @@
 - Добавлен машинно-читаемый контракт release hardening.
 - Добавлен unit-тест, который проверяет 6 product roles, redirect priority, 10 AI-agent roles, 5 project skills, 14 technical skills, 7 work packages и неполную release-ready оценку до закрытия WP1-WP6.
 - Начат WP2: lesson video/media access больше не возвращает generic 500 для ожидаемых forbidden/not-found случаев; тесты обновлены на корректный 403.
+- WP2 расширен: signed lesson media URL покрыт negative checks для отсутствующего enrollment, sequential lock и guessed foreign media ID.
 - `done` для release-ready теперь требует явного evidence; route rendering больше не считается достаточным доказательством.
 
 ---

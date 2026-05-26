@@ -10,6 +10,7 @@ const mockCertificateFindUnique = vi.hoisted(() => vi.fn());
 const mockCertificateFindMany = vi.hoisted(() => vi.fn());
 const mockCourseInstructorFindFirst = vi.hoisted(() => vi.fn());
 const mockLessonFindUnique = vi.hoisted(() => vi.fn());
+const mockLessonMediaFindUnique = vi.hoisted(() => vi.fn());
 const mockEnrollmentFindUnique = vi.hoisted(() => vi.fn());
 const mockLessonFindMany = vi.hoisted(() => vi.fn());
 const mockLessonProgressCount = vi.hoisted(() => vi.fn());
@@ -31,6 +32,9 @@ vi.mock("@/lib/prisma", () => ({
     lesson: {
       findUnique: mockLessonFindUnique,
       findMany: mockLessonFindMany,
+    },
+    lessonMedia: {
+      findUnique: mockLessonMediaFindUnique,
     },
     enrollment: {
       findUnique: mockEnrollmentFindUnique,
@@ -65,6 +69,7 @@ vi.mock("@/server/modules/certificates/service", () => ({
 // Import target API routes
 import { GET as getCertificatePdf } from "@/app/api/v1/certificates/[certificateId]/pdf/route";
 import { POST as postBulkCertificates } from "@/app/api/v1/certificates/bulk/route";
+import { GET as getLessonMediaSignedUrl } from "@/app/api/v1/lessons/[lessonId]/media/[mediaId]/signed-url/route";
 import { GET as getLessonVideoPlayback } from "@/app/api/v1/lessons/[lessonId]/video-playback/route";
 import { PATCH as patchCourseBuilder } from "@/app/api/v1/courses/[courseId]/builder/route";
 
@@ -199,6 +204,90 @@ describe("Platform Negative Security Boundaries", () => {
 
       expect(response.status).toBe(403);
       expect(data.error.message).toContain("обязательные уроки");
+    });
+  });
+
+  describe("Lesson Media Signed URL Privacy", () => {
+    it("returns 403 Forbidden if student requests media without active course enrollment", async () => {
+      mockRequireUser.mockResolvedValue({ id: "student-1", email: "student@test.com", roles: ["student"] });
+      mockLessonFindUnique.mockResolvedValue({
+        id: "lesson-1",
+        moduleId: "module-1",
+        module: {
+          id: "module-1",
+          courseId: "course-1",
+          course: { traversalMode: "open" },
+        },
+      });
+      mockEnrollmentFindUnique.mockResolvedValue(null);
+
+      const response = await getLessonMediaSignedUrl(new Request("http://localhost"), {
+        params: Promise.resolve({ lessonId: "lesson-1", mediaId: "media-1" }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error.code).toBe("forbidden");
+      expect(mockLessonMediaFindUnique).not.toHaveBeenCalled();
+    });
+
+    it("returns 403 Forbidden for media in a sequentially locked lesson", async () => {
+      mockRequireUser.mockResolvedValue({ id: "student-1", email: "student@test.com", roles: ["student"] });
+      mockLessonFindUnique.mockResolvedValue({
+        id: "lesson-2",
+        moduleId: "module-1",
+        module: {
+          id: "module-1",
+          courseId: "course-1",
+          course: { traversalMode: "sequential" },
+        },
+      });
+      mockEnrollmentFindUnique.mockResolvedValue({ status: "ACTIVE" });
+      mockLessonFindMany.mockResolvedValue([
+        { id: "lesson-1", isRequired: true },
+        { id: "lesson-2", isRequired: true },
+      ]);
+      mockLessonProgressCount.mockResolvedValue(0);
+
+      const response = await getLessonMediaSignedUrl(new Request("http://localhost"), {
+        params: Promise.resolve({ lessonId: "lesson-2", mediaId: "media-1" }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error.code).toBe("forbidden");
+      expect(mockLessonMediaFindUnique).not.toHaveBeenCalled();
+    });
+
+    it("returns 404 when a student guesses a media ID from another lesson", async () => {
+      mockRequireUser.mockResolvedValue({ id: "student-1", email: "student@test.com", roles: ["student"] });
+      mockLessonFindUnique.mockResolvedValue({
+        id: "lesson-1",
+        moduleId: "module-1",
+        module: {
+          id: "module-1",
+          courseId: "course-1",
+          course: { traversalMode: "open" },
+        },
+      });
+      mockEnrollmentFindUnique.mockResolvedValue({ status: "ACTIVE" });
+      mockLessonMediaFindUnique.mockResolvedValue({
+        id: "media-foreign",
+        lessonId: "lesson-foreign",
+        storageKey: "lessons/foreign.pdf",
+        url: null,
+        filename: "foreign.pdf",
+        mimeType: "application/pdf",
+        sizeBytes: 1024,
+      });
+
+      const response = await getLessonMediaSignedUrl(new Request("http://localhost"), {
+        params: Promise.resolve({ lessonId: "lesson-1", mediaId: "media-foreign" }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(data.error.code).toBe("not_found");
     });
   });
 
