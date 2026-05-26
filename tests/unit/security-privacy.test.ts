@@ -8,6 +8,7 @@ vi.mock("@/lib/auth/session", () => ({
 
 const mockCertificateFindUnique = vi.hoisted(() => vi.fn());
 const mockCertificateFindMany = vi.hoisted(() => vi.fn());
+const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockCourseInstructorFindFirst = vi.hoisted(() => vi.fn());
 const mockLessonFindUnique = vi.hoisted(() => vi.fn());
 const mockLessonMediaFindUnique = vi.hoisted(() => vi.fn());
@@ -22,12 +23,16 @@ const mockEnrollmentFindMany = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
+    user: {
+      findUnique: mockUserFindUnique,
+    },
     certificate: {
       findUnique: mockCertificateFindUnique,
       findMany: mockCertificateFindMany,
     },
     courseInstructor: {
       findFirst: mockCourseInstructorFindFirst,
+      findUnique: mockCourseInstructorFindFirst,
     },
     lesson: {
       findUnique: mockLessonFindUnique,
@@ -71,13 +76,14 @@ import { GET as getCertificatePdf } from "@/app/api/v1/certificates/[certificate
 import { POST as postBulkCertificates } from "@/app/api/v1/certificates/bulk/route";
 import { GET as getLessonMediaSignedUrl } from "@/app/api/v1/lessons/[lessonId]/media/[mediaId]/signed-url/route";
 import { GET as getLessonVideoPlayback } from "@/app/api/v1/lessons/[lessonId]/video-playback/route";
-import { PATCH as patchCourseBuilder } from "@/app/api/v1/courses/[courseId]/builder/route";
+import { GET as getCourseBuilder, PATCH as patchCourseBuilder } from "@/app/api/v1/courses/[courseId]/builder/route";
 
 describe("Platform Negative Security Boundaries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Configure default resolved values for safety
     mockAuditLogCreate.mockResolvedValue({ id: "audit-1" });
+    mockUserFindUnique.mockResolvedValue({ id: "admin", roles: [{ role: { key: "admin" } }] });
     mockObserverProjectFindMany.mockResolvedValue([]);
     mockObserverCohortFindMany.mockResolvedValue([]);
     mockCohortFindMany.mockResolvedValue([]);
@@ -316,6 +322,44 @@ describe("Platform Negative Security Boundaries", () => {
 
       expect(response.status).toBe(403);
       expect(data.error.message).toContain("Недостаточно прав");
+    });
+  });
+
+  describe("Instructor Course Scope Boundaries", () => {
+    it("returns 403 Forbidden when an instructor tries to modify a course they do not teach", async () => {
+      mockRequireUser.mockResolvedValue({ id: "instructor-1", email: "instructor@test.com", roles: ["instructor"] });
+      mockUserFindUnique.mockResolvedValue({ id: "instructor-1", roles: [{ role: { key: "instructor" } }] });
+      mockCourseInstructorFindFirst.mockResolvedValue(null);
+
+      const req = new Request("http://localhost", {
+        method: "PATCH",
+        body: JSON.stringify({
+          title: "Unauthorized Course Edit",
+        }),
+      });
+
+      const response = await patchCourseBuilder(req, {
+        params: Promise.resolve({ courseId: "course-not-mine" }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error.code).toBe("forbidden");
+      expect(data.error.message).toContain("преподавателем");
+    });
+
+    it("returns 403 Forbidden when an instructor tries to read a course builder for a course they do not teach", async () => {
+      mockRequireUser.mockResolvedValue({ id: "instructor-2", email: "instructor2@test.com", roles: ["instructor"] });
+      mockUserFindUnique.mockResolvedValue({ id: "instructor-2", roles: [{ role: { key: "instructor" } }] });
+      mockCourseInstructorFindFirst.mockResolvedValue(null);
+
+      const response = await getCourseBuilder(new Request("http://localhost"), {
+        params: Promise.resolve({ courseId: "course-not-mine" }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error.code).toBe("forbidden");
     });
   });
 });
