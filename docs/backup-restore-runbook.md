@@ -7,7 +7,7 @@
 Связанные файлы:
 - Скрипты автоматизации: `infra/backup/scripts/daily-backup.sh`, `infra/backup/backup.sh`, `infra/backup/restore.sh`
 - S3-конфигурация: `infra/s3-config.md`
-- Документация: `docs/implementation-plan.md`, `docs/security.md`
+- Документация: `docs/implementation-plan.md`, `docs/security-review.md`
 
 ---
 

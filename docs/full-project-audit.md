@@ -26,7 +26,7 @@ Current overall status: `partial`.
 
 ## 2026-05-26 Release-hardening Baseline
 
-The active execution baseline is now `docs/release-hardening-plan.md`.
+The active execution baseline is now `docs/release.md`.
 
 Implemented in this pass:
 
@@ -103,8 +103,8 @@ Documents inspected:
 - `docs/platform-functional-overview.md`;
 - `docs/implementation-plan.md`;
 - `docs/MASTER-PLAN.md`;
-- `docs/update-log.md`;
-- `docs/release-verification.md`;
+- `docs/updates.md`;
+- `docs/release.md`;
 - `docs/security-review.md`;
 - archived audit and work-plan documents under `docs/archive/`;
 - root `README.md`;

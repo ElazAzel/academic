@@ -221,6 +221,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
               <button 
                 onClick={() => setSearchQuery("")} 
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-m3-on-surface-variant/60 hover:text-m3-on-surface transition-colors"
+                aria-label="Очистить поиск"
               >
                 <Icon name="close" size={18} />
               </button>

@@ -53,7 +53,6 @@ export function AppShell({
 
           {/* Main content */}
           <main
-            id="main-content"
             className={cn(
               "min-w-0 outline-none",
               "px-4 pb-24 lg:px-0 lg:pb-8",

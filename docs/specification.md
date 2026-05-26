@@ -144,7 +144,7 @@ proxy.ts               # Middleware (auth gate, CSRF)
 
 - `docs/MASTER-PLAN.md` — полный план развития
 - `docs/implementation-plan.md` — операционный план
-- `docs/security.md` — security checklist
+- `docs/security-review.md` — security checklist
 - `docs/DEVELOPER_GUIDE.md` — инструкция для разработчиков
 - `docs/PLATFORM_SNAPSHOT.md` — архитектурный обзор
 - `docs/updates.md` — журнал обновлений

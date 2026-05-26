@@ -9,7 +9,7 @@
 ## Задача 14: Release hardening до доказуемой готовности
 
 **Статус:** 🟡 В работе (baseline создан 2026-05-26)
-**Источник:** `docs/release-hardening-plan.md`, `server/modules/release-hardening/readiness.ts`
+**Источник:** `docs/release.md`, `server/modules/release-hardening/readiness.ts`
 
 Цель: перевести платформу из “реализация широкая, но часть сценариев не доказана” в release-ready состояние с проверенными ролями, доступами, ownership, отчётами, сертификатами, уведомлениями и эксплуатационным запуском.
 
@@ -252,4 +252,4 @@
 | 13.2 | Добавить Playwright responsive smoke для core routes на phone/tablet/desktop | 🟡 ручной smoke: `/login`, `/student`, 375/768/1024/1440 |
 | 13.3 | Добавить keyboard smoke для login, continue lesson, quiz, assignment, curator answer, certificate issue | ⏳ |
 | 13.4 | Проверить sticky header/bottom nav/dialog focus clipping и reduced motion | 🟡 частично через no-overflow smoke |
-| 13.5 | Зафиксировать результаты в `docs/update-log.md` после каждой UX партии | ✅ |
+| 13.5 | Зафиксировать результаты в `docs/updates.md` после каждой UX партии | ✅ |

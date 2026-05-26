@@ -15,7 +15,7 @@
 ## Input Docs
 
 - `docs/api/openapi.yaml`
-- `docs/security.md`
+- `docs/security-review.md`
 - `prisma/schema.prisma`
 - `server/modules/`
 - `lib/auth/rbac.ts`

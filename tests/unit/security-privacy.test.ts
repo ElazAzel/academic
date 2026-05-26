@@ -328,7 +328,7 @@ describe("Platform Negative Security Boundaries", () => {
   describe("Instructor Course Scope Boundaries", () => {
     it("returns 403 Forbidden when an instructor tries to modify a course they do not teach", async () => {
       mockRequireUser.mockResolvedValue({ id: "instructor-1", email: "instructor@test.com", roles: ["instructor"] });
-      mockUserFindUnique.mockResolvedValue({ id: "instructor-1", roles: [{ role: { key: "instructor" } }] });
+      mockUserFindUnique.mockResolvedValue({ id: "instructor-1", roles: [{ role: { key: "instructor" } }], courseInstructors: [] });
       mockCourseInstructorFindFirst.mockResolvedValue(null);
 
       const req = new Request("http://localhost", {
@@ -350,7 +350,7 @@ describe("Platform Negative Security Boundaries", () => {
 
     it("returns 403 Forbidden when an instructor tries to read a course builder for a course they do not teach", async () => {
       mockRequireUser.mockResolvedValue({ id: "instructor-2", email: "instructor2@test.com", roles: ["instructor"] });
-      mockUserFindUnique.mockResolvedValue({ id: "instructor-2", roles: [{ role: { key: "instructor" } }] });
+      mockUserFindUnique.mockResolvedValue({ id: "instructor-2", roles: [{ role: { key: "instructor" } }], courseInstructors: [] });
       mockCourseInstructorFindFirst.mockResolvedValue(null);
 
       const response = await getCourseBuilder(new Request("http://localhost"), {

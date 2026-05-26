@@ -21,7 +21,7 @@ cp .env.example .env
 
 Отредактируйте `.env` и задайте:
 - `NEXTAUTH_SECRET` — минимум 32 случайных символа
-- `DATABASE_URL` — строка подключения к PostgreSQL
+- `DATABASE_URL` — строка подключения к PostgreSQL. При использовании Docker Compose: `postgresql://academy:<secret>@postgres:5432/academy?schema=public`. Порт PostgreSQL не публикуется наружу.
 - Остальные параметры по необходимости (OAuth, SMTP, S3)
 
 ### 2. Безопасный локальный bootstrap
@@ -51,7 +51,7 @@ docker compose up -d postgres redis mailhog minio
 ### 4. Ручная установка зависимостей и инициализация БД
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 docker compose run --rm app npm run db:generate
 docker compose run --rm app npm run db:push
 docker compose run --rm app npm run db:seed
@@ -155,6 +155,7 @@ npm run dev
 | `npm run db:migrate` | Применение миграций БД |
 | `npm run db:push` | Push схемы БД (для разработки) |
 | `npm run db:seed` | Заполнение БД демо-данными |
+| `npx prisma migrate reset` | Сброс БД (удаление всех данных) |
 | `npm run certificate:issue-demo` | Локальная demo-выдача сертификата после seed |
 | `npm run users:provision` | Провизион аккаунтов для production |
 | `npm run verify` | Полная проверка: lint + typecheck + test + build |
@@ -411,7 +412,7 @@ docker compose up app
 
 - [Assumptions](docs/assumptions.md) — предположения и ограничения
 - [Specification](docs/specification.md) — полная спецификация системы
-- [Security](docs/security.md) — модель безопасности
+- [Security](docs/security-review.md) — модель безопасности и аудит
 - [TODO](docs/todo.md) — план развития
 - [AI Agent Roles](docs/archive/ai-agent-roles.md) — роли AI-агентов (архив)
 - [Updates](docs/updates.md) — журнал обновлений

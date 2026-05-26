@@ -127,7 +127,7 @@ export const releaseWorkPackages = [
         id: "release-hardening-docs",
         kind: "docs",
         requiredForDone: true,
-        description: "docs/release-hardening-plan.md is the active execution baseline for WP1-WP6.",
+        description: "docs/release.md is the active execution baseline for WP1-WP6.",
       },
     ],
   },

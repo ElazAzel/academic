@@ -1,6 +1,6 @@
 # AI Roles For AI Strategic Academy
 
-Эта папка описывает специализированные роли для AI-агентов, которые работают над проектом. Роли не заменяют `docs/specification.md`, `docs/security.md` и `docs/implementation-plan.md`; они задают рабочую перспективу агента.
+Эта папка описывает специализированные роли для AI-агентов, которые работают над проектом. Роли не заменяют `docs/specification.md`, `docs/security-review.md` и `docs/implementation-plan.md`; они задают рабочую перспективу агента.
 
 ## Как использовать
 

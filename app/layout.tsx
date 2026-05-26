@@ -70,7 +70,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Перейти к содержимому
         </a>
-        <Providers>{children}</Providers>
+        <div id="main-content" tabIndex={-1} className="outline-none">
+          <Providers>{children}</Providers>
+        </div>
         <PWARegister />
         <Heartbeat />
       </body>

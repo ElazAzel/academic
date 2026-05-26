@@ -334,7 +334,71 @@ A route is UX/UI-ready only when:
 - status language is Russian-first and consistent;
 - no decorative pattern competes with task hierarchy;
 - data mutations and navigation keep the user in the correct course/role context;
-- validation evidence is logged in `docs/update-log.md`.
+- validation evidence is logged in `docs/updates.md`.
+
+## WCAG 2.2 AA Audit (2026-05-26)
+
+Date: 2026-05-26
+Method: Source review (code analysis, no runtime scanner)
+Scope: components/lms/, components/layout/, app/, app/globals.css
+Result: **partial** — foundations exist, several violations fixed, systemic gaps remain.
+
+### Summary
+
+| WCAG Criterion | Status | Details |
+|---|---|---|
+| 1.1.1 Non-text Content | ✅ Pass | All `<img>` have `alt`. Icons are decorative (`<Icon>` without alt is correct). |
+| 1.3.1 Info and Relationships | ✅ Pass | `<label>` elements used, `aria-label` on icon buttons, heading hierarchy exists (h1→h2→h3). |
+| 1.4.1 Use of Color | ✅ Pass | Status uses icons + text + color (not color alone). |
+| 1.4.3 Contrast (AA) | ❓ Not tested | Requires runtime color measurement. Design tokens exist but contrast ratios not verified. |
+| 1.4.4 Resize Text | ✅ Pass | Uses `rem`/`em` throughout, no fixed pixel text sizes. |
+| 1.4.10 Reflow | ✅ Pass | Responsive design with breakpoints, no horizontal overflow on core routes. |
+| 1.4.11 Non-text Contrast | ❓ Not tested | Icons, borders, focus indicators not measured. |
+| 1.4.12 Text Spacing | ✅ Pass | No `!important` on line-height/letter-spacing that would block overrides. |
+| 2.1.1 Keyboard | ✅ Pass | Interactive elements use `<button>` or have `role="button"`+`tabIndex`+`onKeyDown`. Chat textarea has `onKeyDown` handler. |
+| 2.1.2 No Keyboard Trap | ✅ Pass | No evidence of keyboard traps (focusable elements are standard). |
+| 2.4.1 Bypass Blocks | ✅ Pass | Skip-to-content link present in `app/layout.tsx` (`<a href="#main-content">`). Target `<div id="main-content">` in root layout covers ALL pages. |
+| 2.4.2 Page Titled | ✅ Pass | All pages have `<title>` via Next.js `export const metadata`. |
+| 2.4.3 Focus Order | ✅ Pass | DOM order matches visual order. Sidebar nav, then main content. |
+| 2.4.4 Link Purpose (In Context) | ✅ Pass | All links have descriptive text or `aria-label`. |
+| 2.4.6 Headings and Labels | ✅ Pass | h1→h2→h3 hierarchy used. Main page headings are descriptive Russian. |
+| 2.4.7 Focus Visible | ✅ Pass | `globals.css` has `:focus-visible { outline: 3px solid hsl(var(--ring) / 0.45); }`. |
+| 2.5.3 Label in Name | ✅ Pass | Visible labels match accessible names. |
+| 2.5.8 Target Size (AA) | ❓ Not tested | Interactive elements not measured. Buttons using `size="icon"` may be < 24x24 CSS px. |
+| 3.2.1 On Focus | ✅ Pass | No focus-triggered context changes. |
+| 3.2.2 On Input | ✅ Pass | Form submissions require explicit action (button click/Enter). |
+| 3.3.1 Error Identification | ✅ Pass | Form errors shown via `role="alert"` (login, reset-password, verify-email). |
+| 3.3.2 Labels or Instructions | ✅ Pass | Form inputs have visible labels or `aria-label`. |
+| 3.3.4 Error Prevention (Legal/Financial) | N/A | No legal/financial transactions. |
+| 4.1.2 Name, Role, Value | ✅ Pass (fixed) | 2 violations found and fixed + 1 residual gap fixed. See table below. |
+| 4.1.3 Status Messages | ✅ Pass | Loading states use `role="status" aria-live="polite"`. Form errors use `role="alert"`. Toast notifications exist. |
+
+### Violations Found and Fixed
+
+| # | File | Line | Issue | Fix | WCAG |
+|---|---|---|---|---|---|
+| 1 | `components/lms/curator-operations-board.tsx` | 221 | Search clear button (`<Icon name="close" />`) without accessible name | Added `aria-label="Очистить поиск"` | 4.1.2 |
+| 2 | `components/lms/assignment-block.tsx` | 185 | File remove button (`<Icon name="close" />`) without accessible name | Added `aria-label="Удалить файл"` | 4.1.2 |
+| 3 | `components/lms/rich-text-editor.tsx` | 107 | `ToolbarButton` used `title` only (not consistently exposed by screen readers) | Added `aria-label={title}` alongside `title` | 4.1.2 |
+
+### Structural Fix
+
+| # | File | Change | WCAG |
+|---|---|---|---|
+| 1 | `app/layout.tsx` + `components/layout/app-shell.tsx` | Moved `id="main-content"` from AppShell's `<main>` to root layout wrapper `<div>` so skip-to-content link works on ALL pages (auth + dashboards). AppShell `<main>` retains landmark semantics. | 2.4.1 |
+
+### Residual Gaps
+
+1. **Contrast verification** (1.4.3, 1.4.11): M3 token contrast ratios need runtime measurement. Tokens `--m3-on-surface-variant` against `--m3-surface` are a known low-contrast risk with some M3 implementations.
+
+2. **Target size audit** (2.5.8): Icon buttons and inline action links should be checked for 24×24 CSS px minimum touch target (AA requirement).
+
+3. **Emoji picker buttons** (4.1.2): `chat-panel.tsx` emoji buttons use emoji text as content. While emojis are read by screen readers, meaning may be unclear in context. Low priority.
+
+### Immediate Recommendations
+
+1. Run axe DevTools or WAVE on key pages (login, student dashboard, curator board, admin)
+2. Verify M3 contrast tokens against WCAG AA (use contrast-ratio.app or similar)
 
 ## Immediate Next Step
 

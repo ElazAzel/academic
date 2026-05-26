@@ -2,12 +2,49 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-26 — Skip-to-content + ToolbarButton a11y (P3 follow-up)
+
+**Что сделано:**
+- Исправлен `ToolbarButton` в `rich-text-editor.tsx` — добавлен `aria-label={title}` (был только `title`, который нестабильно читается скринридерами)
+- Перемещён `id="main-content"` из `AppShell` в корневой `layout.tsx` — теперь skip-to-content работает на ВСЕХ страницах (включая login, register, consent)
+- Обновлён `docs/ux-ui-2026-audit.md`: исправлен статус 2.4.1 с Fail на Pass, добавлен ToolbarButton fix, убраны выполненные рекомендации
+
+**Файлы изменены:**
+- `components/lms/rich-text-editor.tsx` — +`aria-label={title}` на `ToolbarButton`
+- `components/layout/app-shell.tsx` — удалён `id="main-content"` (перенесён в layout)
+- `app/layout.tsx` — `<div id="main-content" tabIndex={-1}>` wrapper для universal skip target
+- `docs/ux-ui-2026-audit.md` — исправлены 2.4.1, 4.1.2, убраны выполненные рекомендации
+
+**Build:** ✅ Compiled (22s), TypeScript (25s)
+
+## 2026-05-26 — WCAG 2.2 AA Accessibility Audit (P3)
+
+**Что сделано:**
+- Source-review WCAG-аудит по критериям 2.2 AA: проверены `components/lms/`, `components/layout/`, `app/`, `globals.css`
+- Исправлены 2 нарушения 4.1.2 (Name, Role, Value):
+  - `curator-operations-board.tsx:221` — кнопка очистки поиска: добавлен `aria-label="Очистить поиск"`
+  - `assignment-block.tsx:185` — кнопка удаления файла: добавлен `aria-label="Удалить файл"`
+- Выявлен системный пробел: отсутствует skip-to-content ссылка в `AppShell` (2.4.1 Bypass Blocks)
+- Документирована полная таблица WCAG-покрытия в `docs/ux-ui-2026-audit.md`
+
+**Файлы изменены:**
+- `components/lms/curator-operations-board.tsx` — +aria-label на close button
+- `components/lms/assignment-block.tsx` — +aria-label на remove file button
+- `docs/ux-ui-2026-audit.md` — +WCAG audit section
+
+**Статус P3:** `partial` — 24/26 критериев проходят или не тестировались (контраст, target size). 1 fail (skip-to-content). 0 violations остаются после фиксов.
+
+**Next:**
+- Добавить skip-to-content link в AppShell
+- Проверить контраст M3-токенов инструментально (axe/WAVE)
+- Аудитить target size на icon buttons
+
 ## 2026-05-26 — Release Hardening Baseline (WP0)
 
 ### Что добавлено
 - `server/modules/release-hardening/readiness.ts` — typed contract для release hardening: 6 product roles, redirect priority, 10 AI-agent roles, 5 project skills, 14 technical skills, WP0-WP6 и release gates.
 - `tests/unit/release-hardening-readiness.test.ts` — unit-тест контракта, который сверяет роли/skills с файлами репозитория и не даёт считать платформу release-ready до закрытия WP1-WP6.
-- `docs/release-hardening-plan.md` — активный execution baseline оптимизации.
+- `docs/release.md` — активный execution baseline оптимизации.
 
 ### Access/privacy hardening
 - `/api/v1/lessons/[lessonId]/video-playback` теперь возвращает typed `403` для отсутствующего enrollment и sequential lock, `404` для отсутствующего урока/видео.
@@ -205,7 +242,7 @@
 - **verify:release выполнен**: lint (0 warnings) ✅, typecheck ✅, 396/396 tests ✅, prisma validate ✅, db:generate ✅, build ✅; e2e ⏳ staging only
 - **Docker PowerShell-альтернативы**: создан `infra/docker-windows-guide.md` — bash↔PowerShell таблица, winget-альтернативы
 - **DPA пробел задокументирован**: Vercel и Supabase помечены `🔴 Active (DPA не подписан)`; раздел с планом действий и юридическими последствиями
-- **Git secrets найдены**: `__dbcheck.mjs` в истории `0e20419` содержал хардкодный Supabase пароль (удалён в `907e98f`). Задокументировано в `docs/security.md`. **Требуется ротация пароля на Supabase.**
+- **Git secrets найдены**: `__dbcheck.mjs` в истории `0e20419` содержал хардкодный Supabase пароль (удалён в `907e98f`). Задокументировано в `docs/security-review.md`. **Требуется ротация пароля на Supabase.**
 - **Audit документы обновлены**: CSP finding `partial→done`, login footer links `broken→done`, MASTER-PLAN.md дата актуализирована
 
 ## 2026-05-22 — Автосжатие изображений в чатах и загрузках
@@ -1260,7 +1297,7 @@ Next steps:
 - `server/modules/learning/service.ts`
 - `server/modules/analytics/service.ts`
 - `docs/assumptions.md`
-- `docs/security.md`
+- `docs/security-review.md`
 - `docs/todo.md`
 
 Summary:
@@ -1405,7 +1442,7 @@ Next steps:
 - `lib/auth/rbac.ts`
 - `docs/api/openapi.yaml`
 - `docs/specification.md`
-- `docs/security.md`
+- `docs/security-review.md`
 - `docs/assumptions.md`
 - `services/*`
 
@@ -1492,7 +1529,7 @@ Next steps:
    - `app/admin/courses/page.tsx` — сетка курсов с кнопкой создания
    - `app/student/my-courses/page.tsx` — реальный список курсов
 
-8. **Документация** — `docs/QUICKSTART.md`
+8. **Документация** — `docs/DEVELOPER_GUIDE.md`
    - Docker setup, Prisma migrate, seed, тестовые аккаунты
 
 **Файлы (новые)**: 14 файлов
@@ -1796,5 +1833,240 @@ Next steps:
 
 - **Проблема**: На Vercel мутирующие API-запросы (PATCH/POST/DELETE) возвращали 403 с сообщением "CSRF: origin mismatch". Причина: `proxy.ts` сравнивает `origin` заголовок запроса с `APP_URL`, но на Vercel `APP_URL` не была задана, и fallback был `http://localhost:3000`, который не совпадает с `https://academic-silk-ten.vercel.app`.
 - **Фикс**: В `checkCsrfOrigin` (proxy.ts) и `verifyCsrf` (lib/http.ts) добавлен fallback на `VERCEL_URL` — переменную, автоматически устанавливаемую Vercel для каждого деплоя (`https://${VERCEL_URL}`).
+
+---
+
+## [EN] Historical entries (from update-log.md)
+
+### 2026-05-26 [EN] — Release Hardening Baseline
+
+- **Author:** Codex
+- **Scope:** Implement WP0 from the release-hardening optimization plan and make the remaining work packages enforceable.
+- **Fixed / Added:**
+  - Added `server/modules/release-hardening/readiness.ts` as the typed contract for 6 product roles, redirect priority, 10 AI-agent roles, 5 project skills, 14 installed technical skills, WP0-WP6, and release gates.
+  - Added `tests/unit/release-hardening-readiness.test.ts` to verify the contract against repository files and keep release readiness `partial` until scenario, privacy, and operations proof are complete.
+  - Added `docs/release.md` as the active execution baseline.
+  - Hardened lesson video/media access route errors: forbidden or locked lesson access now returns typed 403, missing lesson/media returns 404, and storage link failure returns 503 instead of leaking as generic 500.
+  - Extended `tests/unit/security-privacy.test.ts` with signed lesson media URL negative checks for missing enrollment, sequential lock, and guessed foreign media IDs.
+  - Updated `docs/implementation-plan.md`, `docs/work-plan.md`, `docs/full-project-audit.md`, and `docs/updates.md` to separate implemented domains from full release-ready evidence.
+- **Validation:**
+  - `npx vitest run tests/unit/security-privacy.test.ts` passed: 9/9 tests after adding signed media URL privacy coverage.
+  - `npx vitest run tests/unit/release-hardening-readiness.test.ts` passed: 6/6 tests.
+  - `npx vitest run` passed: 72/72 files, 449/449 tests.
+  - `npm run lint -- --max-warnings=0` passed.
+  - `npm run typecheck` passed.
+  - `npm run build` passed; local Sentry auth-token warnings remain expected without production secrets.
+  - `npm run test:e2e` was attempted and timed out after 5 minutes without useful output; WP1 remains `partial` and the E2E gate is not counted as passed.
+- **Status:** WP0 done; WP2 coverage expanded but still partial; overall release readiness remains partial until WP1-WP6 are proven.
+
+### 2026-05-24 [EN] — UX/UI P0 Implementation and Certificate PNG Upload Fix
+
+- **Author:** Codex
+- **Scope:** Implement the first audit batch: visual foundation, student dashboard hierarchy, responsive cleanup, and certificate background upload reliability.
+- **Fixed / Added:**
+  - Removed core decorative UI patterns from `app` and `components`: glass cards/panels, shine buttons, blurred/radial decorative backgrounds, gradient card strips, hover lifts, oversized radii and heavy ad-hoc shadows.
+  - Normalized shared primitives and surfaces.
+  - Kept `/student` learning-first.
+  - Fixed certificate PNG background upload resilience.
+  - Updated upload tests and metric-grid component tests.
+- **Validation:**
+  - `rg` banned-pattern smoke passed for `app` and `components`.
+  - `npm run test` passed: 424/424 tests.
+  - `npm run build` passed.
+  - Playwright responsive smoke against `next start` passed for `/login` and `/student` at 375, 768, 1024 and 1440 px.
+- **Status:** P0 visual foundation green; broader role-workspace redesign and full WCAG/keyboard proof remain partial.
+
+### 2026-05-24 [EN] — UX/UI 2026 Platform Audit
+
+- **Author:** Codex
+- **Scope:** Full-platform UX/UI audit against closed-academy product principles.
+- **Fixed / Added:**
+  - Added `docs/ux-ui-2026-audit.md` with the visual-system verdict, evidence register, 2026 target direction, role-level UX requirements, responsive/accessibility gates, banned visual patterns, and redesign roadmap.
+  - Updated `docs/full-project-audit.md` with a UX/UI 2026 addendum.
+  - Updated `docs/work-plan.md` with UX/UI tasks 10-13.
+- **Validation:** Source review, external references checked, lint/typecheck/test/build all green.
+- **Status:** audit complete; implementation not started in this pass.
+
+### 2026-05-24 [EN] — Compact Student Level and Achievements Block
+
+- **Author:** Codex
+- **Scope:** Reduce gamification height on `/student` and remove duplicated level/achievement blocks.
+- **Fixed / Added:**
+  - Removed the duplicate `ContinueLearningCard`, `XpDisplay`, and `StudentAchievements` rendering.
+  - Replaced two separate gamification cards with one compact `StudentAchievements` block.
+  - Moved achievement cards into a collapsed native accordion.
+- **Validation:** lint/typecheck/test/build green. Browser smoke: one `Уровень и достижения` block present, accordion closed by default, no overflow.
+- **Status:** green with dev-console caveat noted.
+
+### 2026-05-24 [EN] — Mobile Adaptation, DB Audit, Production Hardening
+
+- **Author:** AI Agent (Orchestrator + Technical Writer)
+- **Scope:** Deep database audit, GitHub project setup, production hardening, mobile adaptation.
+- **Fixed / Added:**
+  - DB audit: 12 missing FK indexes added, RLS disabled on all 56 tables, 9 obsolete policies dropped.
+  - Metadata: Russian title/description on all 105 `page.tsx`.
+  - loading.tsx: Created for all 84 route directories.
+  - Zod validation + try/catch: All 18 files in `server/actions/` covered.
+  - Student name anonymization across 8 action files + 6 page files.
+  - Mobile adaptation: Achievements accordion, onClick toggle, XP without hover.
+  - Corrupted files fixed after bad merge.
+- **Validation:** lint/typecheck/test/build all green. 422/422 tests.
+- **Status:** green.
+
+### 2026-05-23 [EN] — Student Dashboard Primary Learning Flow
+
+- **Author:** Codex
+- **Scope:** Reorder and tune the student dashboard for the primary learning action.
+- **Fixed / Added:**
+  - Moved `ContinueLearningCard` to the first content block on `/student`.
+  - Added first-position empty state.
+  - Placed gamification below the learning CTA.
+  - Improved responsive course tabs/cards.
+- **Validation:** lint/typecheck/test/build green, browser smoke passed.
+- **Status:** green.
+
+### 2026-05-23 [EN] — Certificate Background PNG Upload Repair
+
+- **Author:** Codex
+- **Scope:** Fix certificate designer PNG background upload through the shared media upload flow.
+- **Fixed / Added:**
+  - Fixed certificate designer to read enveloped upload response.
+  - Added PNG filename fallback, 5 MB size check.
+  - Updated shared upload wrapper.
+  - Added S3 availability check before presigned URL flow.
+- **Validation:** lint/typecheck/test/build green, 422/422 tests.
+- **Status:** green.
+
+### 2026-05-23 [EN] — Auth Session Dynamic Route Build Signal
+
+- **Author:** Codex
+- **Scope:** Keep Next.js App Router dynamic route classification errors out of application auth error logging.
+- **Fixed / Added:**
+  - Updated `getCurrentUser` to rethrow Next.js `DYNAMIC_SERVER_USAGE` framework errors.
+  - Added `tests/unit/auth-session.test.ts`.
+- **Validation:** lint/typecheck/test/build green, 420/420 tests, 52/52 e2e tests.
+- **Status:** green.
+
+### 2026-05-23 [EN] — UX Optimization and Gamification for Students and Curators
+
+- **Author:** Antigravity
+- **Scope:** Enhance UX, responsiveness, and control mechanics.
+- **Fixed / Added:**
+  - Created `XpDisplayClient`, `XpCenterModal` with level roadmap.
+  - Client-side tab filters in student dashboard.
+  - Learning pace forecast widget.
+  - Curator live search toolbar, risk level toggles, `RiskDiagnosticDialog`, intervention templates.
+- **Validation:** Type-safe integration across all files.
+- **Status:** green.
+
+### 2026-05-22 [EN] — Interactive Publish Checklist (M3)
+
+- **Author:** Antigravity
+- **Scope:** Interactive checklist dialog for course publishing.
+- **Fixed / Added:**
+  - Upgraded `getCourseBuilderPublishChecks` to return precise target paths.
+  - Implemented `PublishChecklist` Dialog with M3 styling.
+  - Added `handleChecklistNavigation` callback.
+- **Validation:** TypeScript types validated, tests pass.
+- **Status:** green.
+
+### 2026-05-22 [EN] — Cloud Fallback Upload Integration (Supabase Storage)
+
+- **Author:** Antigravity
+- **Scope:** Enable media uploads locally without Docker/MinIO.
+- **Fixed / Added:**
+  - Expanded `uploadFileToSupabase` to accept Buffer and ArrayBuffer.
+  - S3 down check in `/api/v1/media/uploads` — falls back to Supabase.
+  - Created `/api/v1/media/upload-fallback` proxy route.
+- **Validation:** Type safety maintained, build green.
+- **Status:** green.
+
+### 2026-05-22 [EN] — Defensive Data Normalization for Builder Render Loop
+
+- **Author:** Development Agent
+- **Scope:** Eliminate `Cannot read properties of undefined (reading 'length')` runtime crash.
+- **Root cause:** Some code paths left arrays as `undefined` instead of `[]`.
+- **Fixed:** Added `normalizeModules()`, defensive guards in 8+ files.
+- **Tests added:** 3 new tests in `course-builder-readiness.test.ts`.
+- **Validation:** lint/typecheck/test/build green, 377/377 tests.
+- **Status:** green.
+
+### 2026-05-22 [EN] — Builder Lesson Append and Error Boundary Repair
+
+- **Author:** Codex
+- **Scope:** Repair course-builder lesson creation failures and client error-boundary path.
+- **Fixed / Added:**
+  - Lesson creation retries Prisma order collisions.
+  - Course outline append computes next order from current maximum.
+  - Role error boundaries now render `PageError` without async `AppShell`.
+- **Validation:** lint/typecheck/test/build green.
+- **Status:** yellow until runtime refreshed.
+
+### 2026-05-22 [EN] — Demo Access Repair for Active DB
+
+- **Author:** Codex
+- **Scope:** Restore demo account access after DB schema drift.
+- **Fixed / Added:**
+  - Ran guarded remote repair: `db:push` and `db:seed`.
+  - Rechecked all demo accounts — all active.
+- **Remaining risk:** Prisma migration history not reconciled.
+- **Status:** yellow.
+
+### 2026-05-22 [EN] — P0 Lint, Seed Surface and Local DB Guard
+
+- **Author:** Codex
+- **Scope:** First P0 implementation pass after the full audit.
+- **Fixed / Added:**
+  - Removed zero-warning lint blockers in SCORM, attendance and video code.
+  - Removed `/api/seed-certificate` from HTTP app surface.
+  - Added `scripts/assert-local-database.ts` and tests.
+  - Restored public `/consent` route.
+- **Validation:** lint/typecheck/test/build green, 373/373 tests.
+- **Status:** yellow (Docker bootstrap blocked in this environment).
+
+### 2026-05-22 [EN] — Full Local + Repository Audit Baseline
+
+- **Author:** Codex
+- **Scope:** Product, documentation, route truth, code/security, infra, UX/UI smoke and readiness plan.
+- **Fixed / Added:**
+  - Added active `docs/full-project-audit.md` with verified facts and status tables.
+  - Added active `docs/work-plan.md` with P0-P4 work packages.
+- **Validation:** lint, typecheck, test, prisma validate/build all green. Browser smoke passed.
+- **Status:** yellow.
+
+### 2026-05-21 [EN] — Documentation Reorganization + MASTER-PLAN
+
+- **Author:** OpenAgent (Orchestrator)
+- **Scope:** Complete documentation overhaul.
+- **Fixed / Added:**
+  - Restructured `docs/` from 42 files into 3 groups: `archive/`, `legal/`, core.
+  - Created `docs/MASTER-PLAN.md`, updated `implementation-plan.md`, `specification.md`, `updates.md`.
+- **Status:** green.
+
+### 2026-05-21 [EN] — Certificate Pipeline Setup, Premium Asset Integration & Unique Number Configuration
+
+- **Author:** Antigravity
+- **Scope:** Fully configure certificate issuance and verification pipeline.
+- **Fixed / Added:** Premium graphics, Cyrillic support, unique number, verification page, demo seeding script.
+- **Validation:** 354 tests passed, build green.
+- **Status:** green.
+
+### 2026-05-21 [EN] — Admin Batch User Importer Implementation & Full Verification
+
+- **Author:** Antigravity
+- **Scope:** Interactive CSV batch user importer in Admin panel.
+- **Fixed / Added:** Frontend (drag-and-drop, validation, cohort select), Backend (server action, audit, password hashing), TypeScript unification.
+- **Validation:** lint/typecheck/test/build all green.
+- **Status:** green.
+
+### 2026-05-20 [EN] — UI Modernization, PWA Custom Prompts, and Student Settings Wiring
+
+- **Author:** Antigravity
+- **Scope:** PWA install prompts, responsive layout, student settings page.
+- **Status:** green.
+
+---
+
+> Earlier entries (prior to 2026-05-20) are in `docs/archive/update-log-archive.md`.
 - **Затронутые файлы**: `proxy.ts`, `lib/http.ts`
 - **Коммит**: `358c271`

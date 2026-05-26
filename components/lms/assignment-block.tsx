@@ -185,6 +185,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
             <button
               onClick={(e) => { e.stopPropagation(); removeFile(); }}
               className="ml-2 rounded-full p-1 text-m3-on-surface-variant hover:bg-m3-surface-container-high"
+              aria-label="Удалить файл"
             >
               <Icon name="close" size={16} />
             </button>

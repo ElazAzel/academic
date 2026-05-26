@@ -108,6 +108,7 @@ function ToolbarButton({
       type="button"
       onClick={onClick}
       title={title}
+      aria-label={title}
       className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
         active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}

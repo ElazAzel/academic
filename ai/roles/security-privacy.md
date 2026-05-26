@@ -9,12 +9,12 @@
 - Проверять RBAC, session, cookies, password hashing.
 - Проверять Stripe webhook signature и payment reconciliation.
 - Следить за consent logs, audit logs и privacy-by-default.
-- Обновлять `docs/security.md` при новых рисках.
+- Обновлять `docs/security-review.md` при новых рисках.
 - Требовать no-secrets policy.
 
 ## Input Docs
 
-- `docs/security.md`
+- `docs/security-review.md`
 - `docs/assumptions.md`
 - `.env.example`
 - `lib/auth/`

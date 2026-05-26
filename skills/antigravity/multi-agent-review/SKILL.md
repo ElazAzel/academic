@@ -11,7 +11,7 @@ Catch cross-domain problems before changes are accepted.
 
 ## Workflow
 
-1. Read changed files, `docs/implementation-plan.md`, `docs/security.md`, and `docs/updates.md`.
+1. Read changed files, `docs/implementation-plan.md`, `docs/security-review.md`, and `docs/updates.md`.
 2. Review from these perspectives: product fit, architecture, backend correctness, UX/accessibility, security/privacy, QA/release, documentation.
 3. Prioritize findings by production impact.
 4. Require line/file references for actionable findings.

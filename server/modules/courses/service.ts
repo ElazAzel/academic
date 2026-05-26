@@ -31,15 +31,15 @@ async function getNextLessonOrder(moduleId: string) {
 export async function assertInstructorOfCourse(actorId: string, courseId: string) {
   const user = await prisma.user.findUnique({
     where: { id: actorId },
-    include: { roles: { include: { role: { select: { key: true } } } } }
+    include: {
+      roles: { include: { role: { select: { key: true } } } },
+      courseInstructors: { where: { courseId } }
+    }
   });
   if (!user) throw new Error("Пользователь не найден");
   const roleKeys = user.roles.map((r) => r.role.key);
   if (roleKeys.includes("admin")) return;
-  const instructor = await prisma.courseInstructor.findUnique({
-    where: { courseId_userId: { courseId, userId: actorId } }
-  });
-  if (!instructor) {
+  if (user.courseInstructors.length === 0) {
     throw new ApiError("forbidden", "Вы не являетесь преподавателем этого курса", 403);
   }
 }
