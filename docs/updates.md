@@ -2,6 +2,22 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-26 — Fix archiver import for Turbopack compilation
+
+**Что сделано:**
+- Исправлена ошибка сборки Turbopack в `/api/v1/certificates/bulk/route.ts` из-за импорта CommonJS-модуля `archiver`.
+- ESM-импорт `import archiver from "archiver"` заменён на typed `require()` с `@typescript-eslint/no-require-imports` disable-комментарием для прохождения ESLint-проверок:
+  ```typescript
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const archiver = require("archiver") as typeof import("archiver");
+  ```
+- Выполнена полная проверка репозитория через `npm run verify` — линтинг, типизация, все 451 тест и production-сборка успешно пройдены.
+
+**Файлы изменены:**
+- `app/api/v1/certificates/bulk/route.ts` — Изменён ESM-импорт `archiver` на типизированный require с ESLint-комментарием.
+
+**Build:** ✅ Compiled, TypeScript (passed), Lint (passed), Tests (451 passed)
+
 ## 2026-05-26 — Skip-to-content + ToolbarButton a11y (P3 follow-up)
 
 **Что сделано:**
