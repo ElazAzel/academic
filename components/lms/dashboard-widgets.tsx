@@ -130,47 +130,93 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
 
 // ── Продолжить обучение ─────────────────────────────────────────────
 export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
+  const deadlineLabel =
+    data.deadlineDaysLeft != null ? formatLearningDeadline(data.deadlineDaysLeft) : null;
+  const deadlineStatus =
+    data.deadlineDaysLeft != null && data.deadlineDaysLeft < 0 ? "overdue" : "upcoming";
+
   return (
     <FadeIn>
-    <Card className="overflow-hidden border-m3-outline-variant">
+    <Card className="h-full overflow-hidden border-m3-outline-variant bg-m3-surface-container-lowest">
       <CardHeader className="pb-3">
-        <StatusBadge status="ACTIVE" label="Следующее действие" className="w-fit bg-m3-primary-fixed/30 text-m3-primary" />
-        <CardTitle className="text-headline-md text-m3-on-surface mt-2">Продолжить: {data.courseTitle}</CardTitle>
-        <CardDescription className="font-body-md text-body-md text-m3-on-surface-variant/90">
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge status="ACTIVE" label="Следующий шаг" className="w-fit bg-m3-primary-fixed/30 text-m3-primary" />
+          {deadlineLabel && (
+            <StatusBadge
+              status={deadlineStatus}
+              label={deadlineLabel}
+              className="w-fit"
+            />
+          )}
+        </div>
+        <CardTitle className="mt-3 line-clamp-2 text-headline-md text-m3-on-surface">
+          {data.courseTitle}
+        </CardTitle>
+        <CardDescription className="line-clamp-2 font-body-md text-body-md text-m3-on-surface-variant/90">
           {data.moduleTitle} · {data.lessonTitle}
-          {data.deadlineDaysLeft != null && ` · дедлайн через ${data.deadlineDaysLeft} дн.`}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between font-body-sm text-body-sm">
-            <span className="text-m3-on-surface-variant">Прогресс курса</span>
-            <span className="font-semibold text-m3-primary">{data.coursePercent}%</span>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low px-3 py-3">
+            <div className="flex items-center justify-between gap-3 font-body-sm text-body-sm">
+              <span className="text-m3-on-surface-variant">Курс</span>
+              <span className="font-semibold tabular-nums text-m3-primary">{data.coursePercent}%</span>
+            </div>
+            <Progress value={data.coursePercent} className="h-2 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
           </div>
-          <Progress value={data.coursePercent} className="bg-m3-surface-container-high h-2 [&>div]:bg-m3-primary" />
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between font-body-sm text-body-sm">
-            <span className="text-m3-on-surface-variant">Прогресс модуля</span>
-            <span className="font-semibold text-m3-primary">{data.modulePercent}%</span>
+          <div className="space-y-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low px-3 py-3">
+            <div className="flex items-center justify-between gap-3 font-body-sm text-body-sm">
+              <span className="text-m3-on-surface-variant">Модуль</span>
+              <span className="font-semibold tabular-nums text-m3-primary">{data.modulePercent}%</span>
+            </div>
+            <Progress value={data.modulePercent} className="h-2 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
           </div>
-          <Progress value={data.modulePercent} className="h-1.5 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2 border-t border-m3-outline-variant/30">
-          <p className="font-body-sm text-body-sm text-m3-on-surface-variant/80">
-            До сертификата: пройти {100 - data.coursePercent}% курса и сдать финальное задание.
+        <div className="flex flex-col gap-3 border-t border-m3-outline-variant/30 pt-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="max-w-xl font-body-sm text-body-sm text-m3-on-surface-variant/80">
+            Откройте урок, чтобы продолжить материалы, контрольные задания и поддержку куратора в текущем контексте курса.
           </p>
-          <Button asChild>
-            <Link href={`/student/lessons/${data.lessonId}`}>
-            Открыть урок
-            <Icon name="arrow_forward" className="text-[18px]" />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button asChild variant="secondary" className="whitespace-nowrap">
+            <Link href={`/student/courses/${data.courseId}`}>
+              Курс
+              <Icon name="menu_book" className="text-[18px]" />
             </Link>
           </Button>
+          <Button asChild className="whitespace-nowrap">
+            <Link href={`/student/lessons/${data.lessonId}`}>
+              Открыть урок
+              <Icon name="arrow_forward" className="text-[18px]" />
+            </Link>
+          </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
     </FadeIn>
   );
+}
+
+function formatLearningDeadline(daysLeft: number) {
+  if (daysLeft < 0) {
+    const overdueDays = Math.abs(daysLeft);
+    return `${overdueDays} ${pluralizeRu(overdueDays, "день", "дня", "дней")} назад`;
+  }
+
+  if (daysLeft === 0) return "Сегодня";
+  if (daysLeft === 1) return "Завтра";
+  return `${daysLeft} ${pluralizeRu(daysLeft, "день", "дня", "дней")}`;
+}
+
+function pluralizeRu(value: number, one: string, few: string, many: string) {
+  const abs = Math.abs(value);
+  const mod10 = abs % 10;
+  const mod100 = abs % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
 }
 
 // ── Сетка курсов с прогрессом ───────────────────────────────────────

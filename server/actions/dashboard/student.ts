@@ -47,6 +47,7 @@ export async function getStudentDashboard() {
       studentName: user.name ?? user.email,
       courseTitle: q.lesson.module.course.title,
       moduleTitle: q.lesson.module.title,
+      lessonId: q.lesson.id,
       lessonTitle: q.lesson.title,
       status: q.status as "open" | "answered",
       createdAt: q.createdAt.toISOString(),

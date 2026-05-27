@@ -159,40 +159,43 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
 
       {/* Answer textarea */}
       <textarea
-        className="min-h-[120px] w-full resize-none rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface outline-none focus:ring-2 focus:ring-m3-outline placeholder:text-m3-on-surface-variant/50"
-        placeholder="Ваш ответ..."
+        aria-label="Ответ на задание"
+        name="assignmentAnswer"
+        className="min-h-[120px] w-full resize-none rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest px-3 py-2 text-body-md font-body-md text-m3-on-surface placeholder:text-m3-on-surface-variant/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-m3-primary"
+        placeholder="Ваш ответ…"
         value={answerText}
         onChange={(e) => setAnswerText(e.target.value)}
       />
 
-      {/* File upload zone */}
       <div
         role="button"
         tabIndex={0}
-        className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-m3-outline-variant bg-m3-surface-container-lowest/50 p-4 transition-colors hover:border-m3-primary/30 hover:bg-m3-primary/5"
+        aria-label="Загрузить файл к заданию"
+        className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-m3-outline-variant bg-m3-surface-container-lowest/50 p-4 transition-colors hover:border-m3-primary/30 hover:bg-m3-primary/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-m3-primary"
         onClick={() => fileInputRef.current?.click()}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInputRef.current?.click(); } }}
       >
         {uploading ? (
           <div className="flex items-center gap-2">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-m3-primary border-t-transparent" />
-            <span className="text-body-sm text-m3-on-surface-variant">Загрузка...</span>
+            <span className="text-body-sm text-m3-on-surface-variant">Загрузка…</span>
           </div>
         ) : fileUrl ? (
           <div className="flex items-center gap-2">
-            <Icon name="description" className="text-m3-primary" size={20} />
+            <Icon name="description" className="text-m3-primary" size={20} aria-hidden="true" />
             <span className="text-body-sm font-medium text-m3-on-surface">{fileName ?? "Файл прикреплён"}</span>
             <button
+              type="button"
               onClick={(e) => { e.stopPropagation(); removeFile(); }}
-              className="ml-2 rounded-full p-1 text-m3-on-surface-variant hover:bg-m3-surface-container-high"
+              className="ml-2 rounded-full p-1 text-m3-on-surface-variant hover:bg-m3-surface-container-high focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-m3-primary"
               aria-label="Удалить файл"
             >
-              <Icon name="close" size={16} />
+              <Icon name="close" size={16} aria-hidden="true" />
             </button>
           </div>
         ) : (
           <div className="text-center">
-            <Icon name="upload_file" className="mx-auto mb-1 text-m3-on-surface-variant/40" size={24} />
+            <Icon name="upload_file" className="mx-auto mb-1 text-m3-on-surface-variant/40" size={24} aria-hidden="true" />
             <p className="text-body-sm text-m3-on-surface-variant">Нажмите, чтобы загрузить файл (PDF, изображение)</p>
           </div>
         )}
@@ -200,6 +203,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
       <input
         ref={fileInputRef}
         type="file"
+        name="assignmentFile"
         className="hidden"
         accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.zip,.doc,.docx"
         onChange={handleFileUpload}
@@ -212,7 +216,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
           size="sm"
         >
           <Icon name="send" size={16} className="mr-1" />
-          {submitting ? "Отправка..." : "Отправить"}
+          {submitting ? "Отправка…" : "Отправить"}
         </Button>
       </div>
     </div>

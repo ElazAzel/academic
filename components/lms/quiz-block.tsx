@@ -31,8 +31,9 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
   const [result, setResult] = useState<{ score: number; passed: boolean } | null>(null);
 
   const currentQuestion = quiz.questions[currentIndex];
+  const questionsCount = quiz.questions.length;
   const answeredTotal = quiz.questions.filter((q) => hasAnswer(answers[q.id])).length;
-  const progressPercent = Math.round((answeredTotal / quiz.questions.length) * 100);
+  const progressPercent = questionsCount === 0 ? 0 : Math.round((answeredTotal / questionsCount) * 100);
 
   const handleOptionChange = useCallback((questionId: string, option: string, type: string) => {
     if (isMultiChoice(type)) {
@@ -46,8 +47,6 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
       setAnswers((prev) => ({ ...prev, [questionId]: option }));
     }
   }, []);
-
-  const questionsCount = quiz.questions.length;
 
   const handleSubmit = useCallback(async () => {
     if (submitting) return;
@@ -104,14 +103,17 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
           {quiz.questions.map((q, i) => (
             <button
               key={q.id}
+              type="button"
               onClick={() => setCurrentIndex(i)}
+              aria-label={`Открыть вопрос ${i + 1}`}
+              aria-pressed={i === currentIndex}
               className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-label-sm font-label-sm transition-colors ${
                 i === currentIndex
                   ? "bg-m3-primary text-m3-on-primary"
                   : hasAnswer(answers[q.id])
                   ? "bg-m3-primary-container text-m3-primary"
                   : "bg-m3-surface-container-high text-m3-on-surface-variant"
-              }`}
+              } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-m3-primary`}
             >
               {i + 1}
             </button>
@@ -146,7 +148,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
               return (
                 <label
                   key={option}
-                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
                     selected
                       ? "border-m3-primary bg-m3-primary-container/20 ring-1 ring-m3-primary"
                       : "border-m3-outline-variant hover:bg-m3-surface-container-high"
@@ -159,7 +161,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
                     checked={selected}
                     onChange={() => handleOptionChange(currentQuestion.id, option, currentQuestion.type)}
                   />
-                  <span className="text-body-md font-body-md text-m3-on-surface">{option}</span>
+                  <span className="break-words text-body-md font-body-md text-m3-on-surface">{option}</span>
                 </label>
               );
             })}
@@ -189,7 +191,7 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
                 disabled={submitting}
               >
                 {submitting ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="check_circle" size={16} />}
-                {submitting ? "Отправка..." : "Завершить тест"}
+                {submitting ? "Отправка…" : "Завершить тест"}
               </Button>
             )}
           </div>

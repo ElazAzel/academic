@@ -270,6 +270,67 @@ a {
   border-color: var(--m3-outline-variant);
 }
 
+/* Critical student workspace layouts. These classes keep the main learning
+   surfaces stable even when a Tailwind responsive utility is not emitted. */
+.academy-shell-layout {
+  display: block;
+}
+
+.academy-shell-sidebar {
+  display: none;
+}
+
+.student-course-player-grid,
+.student-lesson-player-grid {
+  align-items: start;
+}
+
+.student-course-player-main,
+.student-lesson-player-main {
+  min-width: 0;
+}
+
+.student-lesson-player-aside {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .academy-shell-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .academy-shell-sidebar {
+    display: block;
+  }
+
+  .academy-shell-main {
+    padding-right: 0;
+    padding-left: 0;
+    padding-bottom: 2rem;
+  }
+
+  .student-course-player-grid {
+    grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
+  }
+
+  .student-course-player-sidebar {
+    position: sticky;
+    top: 6rem;
+  }
+
+  .student-lesson-player-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(248px, 280px);
+  }
+
+  .student-lesson-player-aside {
+    display: block;
+  }
+}
+
 @media (max-width: 767px) {
   .glass-panel {
     background: var(--m3-surface-container-lowest);
@@ -292,13 +353,13 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  background: hsl(var(--background) / 0.92);
+  background: hsl(var(--background));
   border-top: 1px solid hsl(var(--border));
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .dark .bottom-nav-bar {
-  background: rgba(26, 28, 30, 0.92);
+  background: hsl(var(--background));
 }
 
 @supports (padding-bottom: env(safe-area-inset-bottom)) {

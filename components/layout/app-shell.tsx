@@ -29,9 +29,9 @@ export function AppShell({
 
       {/* Desktop sidebar layout */}
       <div className="mx-auto w-full max-w-7xl px-0 lg:px-6">
-        <div className="lg:grid lg:grid-cols-[260px_1fr] lg:gap-6 lg:py-6">
+        <div className="academy-shell-layout">
           {/* Desktop sidebar — hidden on mobile */}
-          <aside className="hidden lg:block">
+          <aside className="academy-shell-sidebar hidden lg:block">
             <nav
               className="sticky top-24 flex flex-col rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-sm shadow-m3-soft"
               aria-label={`Кабинет: ${roleLabel}`}
@@ -55,7 +55,7 @@ export function AppShell({
           <main
             className={cn(
               "min-w-0 outline-none",
-              "px-4 pb-24 lg:px-0 lg:pb-8",
+              "academy-shell-main px-4 pb-24 lg:px-0 lg:pb-8",
               className
             )}
           >

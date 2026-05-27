@@ -38,7 +38,8 @@ describe("CourseHeroCard", () => {
     render(<CourseHeroCard detail={makeDetail()} />);
     expect(screen.getByText("Test Course")).toBeInTheDocument();
     expect(screen.getByText("50%")).toBeInTheDocument();
-    expect(screen.getByText("5/10 уроков")).toBeInTheDocument();
+    expect(screen.getByText("Завершено 5 из 10 уроков")).toBeInTheDocument();
+    expect(screen.getByText("Последовательный курс")).toBeInTheDocument();
   });
 
   it("shows placeholder when no coverUrl", () => {
@@ -63,7 +64,7 @@ describe("CourseHeroCard", () => {
   it("shows certificate placeholder when not eligible", () => {
     const detail = makeDetail({ certificateEligible: false, completionThreshold: 80 });
     render(<CourseHeroCard detail={detail} />);
-    expect(screen.getByText(/Сертификат после 80%/)).toBeInTheDocument();
+    expect(screen.getByText(/Сертификат откроется после 80% курса/)).toBeInTheDocument();
   });
 
   it("shows curator section with unanswered count", () => {
@@ -78,6 +79,6 @@ describe("CourseHeroCard", () => {
   it("shows paused badge when enrollment is PAUSED", () => {
     const detail = makeDetail({ enrollment: "PAUSED" });
     render(<CourseHeroCard detail={detail} />);
-    expect(screen.getByText("Приостановлено")).toBeInTheDocument();
+    expect(screen.getByText("Доступ приостановлен")).toBeInTheDocument();
   });
 });

@@ -349,6 +349,9 @@ export interface LessonPlayerCard {
   type: LessonType;
   durationMinutes: number;
   isRequired: boolean;
+  blockId?: string | null;
+  blockTitle?: string | null;
+  blockOrder?: number | null;
   status: ProgressStatus;
   lockReason?: string;
   hasQuiz: boolean;
@@ -548,6 +551,7 @@ export interface QuestionFromStudent {
   studentName: string;
   courseTitle: string;
   moduleTitle: string;
+  lessonId?: string;
   lessonTitle: string;
   status: "open" | "answered" | "forwarded";
   createdAt: string;

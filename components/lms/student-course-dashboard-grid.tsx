@@ -19,12 +19,14 @@ interface StudentCourseDashboardGridProps {
 const TABS = [
   { id: "all", label: "Все курсы", icon: "grid_view" },
   { id: "in_progress", label: "В процессе", icon: "hourglass_empty" },
-  { id: "completed", label: "Завершенные", icon: "check_circle" },
+  { id: "completed", label: "Завершённые", icon: "check_circle" },
   { id: "paused", label: "Приостановленные", icon: "pause_circle" },
-];
+] as const;
+
+type CourseTabId = (typeof TABS)[number]["id"];
 
 export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGridProps) {
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState<CourseTabId>("all");
 
   const filteredCourses = useMemo(() => {
     return courses.filter((c) => {
@@ -36,32 +38,16 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
     });
   }, [courses, activeTab]);
 
-  // Расчет прогноза окончания курса на основе процента прогресса
-  const getForecastText = (percent: number, status: string) => {
-    if (status === "BLOCKED") {
-      return "Обучение приостановлено";
-    }
-    if (percent >= 100) {
-      return "Курс полностью пройден";
-    }
-    const remaining = 100 - percent;
-    // Округляем до недель: например, 50% = 2 недели при среднем темпе 25% в неделю
-    const weeksRemaining = Math.max(1, Math.round(remaining / 25));
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + weeksRemaining * 7);
-    
-    const formattedDate = targetDate.toLocaleDateString("ru-RU", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-
-    return `Осталось: ~${weeksRemaining} нед. (завершение к ${formattedDate})`;
+  const getCourseStateText = (course: StudentProgress) => {
+    if (course.status === "BLOCKED") return "Доступ к обучению приостановлен";
+    if (course.percent >= 100 || course.status === "COMPLETED") return "Все обязательные уроки завершены";
+    if (course.currentLessonTitle) return `Следующий урок: ${course.currentLessonTitle}`;
+    if (course.currentModuleTitle) return `Текущий модуль: ${course.currentModuleTitle}`;
+    return "Откройте курс и выберите доступный урок";
   };
 
   return (
     <div className="space-y-4">
-      {/* Premium Tab Bar for Course Filtering */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-m3-outline-variant pb-2">
         <div className="flex flex-wrap gap-1.5">
           {TABS.map((tab) => {
@@ -76,9 +62,11 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
             return (
               <button
                 key={tab.id}
+                type="button"
+                aria-pressed={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors",
+                  "flex min-h-10 items-center gap-1.5 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-m3-primary",
                   activeTab === tab.id
                     ? "bg-m3-primary text-m3-on-primary"
                     : "text-m3-on-surface-variant hover:bg-m3-surface-container-high"
@@ -107,7 +95,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
             <Icon name="search_off" size={40} className="mx-auto text-m3-outline" />
             <p className="font-label-lg text-label-lg text-m3-on-surface">Нет курсов в этой категории</p>
             <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
-              Попробуйте выбрать другую вкладку или начните новый курс в каталоге.
+              Попробуйте выбрать другую вкладку или дождитесь назначения курса академией.
             </p>
           </CardContent>
         </Card>
@@ -130,7 +118,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
                     <CardDescription className="line-clamp-2 min-h-[2.5rem] font-body-sm text-body-sm text-m3-on-surface-variant/90">
                       {c.currentModuleTitle 
                         ? `${c.currentModuleTitle} ${c.currentLessonTitle ? `→ ${c.currentLessonTitle}` : ""}`
-                        : "Уроки еще не начаты"}
+                        : "Уроки ещё не начаты"}
                     </CardDescription>
                   </CardHeader>
 
@@ -143,7 +131,6 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
                       <Progress value={c.percent} className="h-1.5 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
                     </div>
 
-                    {/* Completion Forecast Block with dynamic micro-details */}
                     <div className="flex items-center gap-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-2.5 text-body-xs font-body-xs text-m3-on-surface-variant">
                       <Icon 
                         name={c.percent >= 100 ? "workspace_premium" : c.status === "BLOCKED" ? "pause" : "schedule"} 
@@ -152,7 +139,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
                           c.percent >= 100 ? "text-emerald-500" : c.status === "BLOCKED" ? "text-amber-500" : "text-m3-primary"
                         )}
                       />
-                      <span className="truncate">{getForecastText(c.percent, c.status)}</span>
+                      <span className="line-clamp-2 min-w-0">{getCourseStateText(c)}</span>
                     </div>
 
                     <Button asChild className="w-full" size="sm" variant={c.status === "BLOCKED" ? "secondary" : "primary"}>

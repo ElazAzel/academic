@@ -3,7 +3,7 @@ import type { StudentCoursePlayerDetail } from "@/types/domain";
 
 export function CourseSidebar({ detail }: { detail: StudentCoursePlayerDetail }) {
   return (
-    <aside className="sticky top-24">
+    <aside className="student-course-player-sidebar">
       <CourseHeroCard detail={detail} />
     </aside>
   );

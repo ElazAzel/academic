@@ -65,6 +65,7 @@ const coursePlayerInclude = (userId: string) => ({
           lessons: {
             orderBy: { order: "asc" as const },
             include: {
+              block: { select: { id: true, title: true, order: true } },
               progress: { where: { userId } },
               quizzes: { select: { id: true } },
               assignments: { select: { id: true } }
@@ -302,6 +303,9 @@ function buildCoursePlayerDetail(enrollment: CoursePlayerEnrollment): StudentCou
         type: lesson.type,
         durationMinutes: lesson.durationMinutes,
         isRequired: lesson.isRequired,
+        blockId: lesson.blockId,
+        blockTitle: lesson.block?.title ?? null,
+        blockOrder: lesson.block?.order ?? null,
         status: access.status,
         lockReason: access.lockReason ?? undefined,
         hasQuiz: lesson.quizzes.length > 0,

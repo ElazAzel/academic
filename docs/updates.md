@@ -2,6 +2,51 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-27 — Student course and lesson player UI
+
+**Что сделано:**
+- Улучшен `/student/courses/[courseId]`: добавлен блок "Следующий шаг", более явный прогресс курса и рабочая боковая панель с доступом, сертификатом и куратором.
+- В студенческий course player добавлены поля блока урока (`blockId`, `blockTitle`, `blockOrder`), чтобы интерфейс мог показывать структуру `Модуль → Блок → Урок` без миграции данных.
+- Обновлены `ModuleAccordion`, `LessonCard` и `CourseContentsDrawer`: уроки группируются по блокам, дедлайны форматируются через `Intl`, улучшены фокус-состояния и мобильная раскладка.
+- Переработан `/student/lessons/[lessonId]`: исправлены повреждённые русские строки, объединены прогресс, содержание курса, состав урока, тесты, задания, рейтинг и вопрос куратору в единую оболочку урока.
+- Убраны дубли рейтинга и чата куратора, если они уже опубликованы отдельными блоками урока.
+
+**Файлы изменены:**
+- `app/globals.css`
+- `app/student/courses/[courseId]/page.tsx`
+- `components/layout/app-shell.tsx`
+- `components/lms/course-hero-card.tsx`
+- `components/lms/course-sidebar.tsx`
+- `components/lms/module-accordion.tsx`
+- `components/lms/lesson-card.tsx`
+- `components/lms/course-contents-drawer.tsx`
+- `components/lms/lesson-player-shell.tsx`
+- `components/lms/lesson-navigation.tsx`
+- `components/lms/quiz-block.tsx`
+- `components/lms/assignment-block.tsx`
+- `server/modules/learning/service.ts`
+- `tests/unit/components/course-hero-card.test.tsx`
+- `types/domain.ts`
+
+**Проверки:** `npm run typecheck`, `npm run lint -- --max-warnings=0`, `npm run test`, `npm run build`
+
+## 2026-05-27 — Student dashboard UI: ближайшие действия
+
+**Что сделано:**
+- Улучшен основной экран студента `/student`: первый viewport теперь объединяет продолжение урока, дедлайны и ответы куратора в блоке ближайших действий.
+- Карточка "Продолжить обучение" стала точнее показывать контекст курса и модуля, дедлайн и две навигации: курс и следующий урок.
+- Карточки курсов больше не показывают вычисленный на клиенте прогноз даты завершения; вместо него выводится фактический учебный статус из текущего модуля/урока.
+- В DTO вопросов добавлен `lessonId`, чтобы студент мог открыть урок из ответа куратора.
+
+**Файлы изменены:**
+- `app/student/page.tsx`
+- `components/lms/dashboard-widgets.tsx`
+- `components/lms/student-course-dashboard-grid.tsx`
+- `server/actions/dashboard/student.ts`
+- `types/domain.ts`
+
+**Проверки:** `npm run typecheck`, `npm run lint -- --max-warnings=0`
+
 ## 2026-05-26 — Fix archiver import for Turbopack compilation
 
 **Что сделано:**
