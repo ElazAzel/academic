@@ -5,6 +5,7 @@
 ## 2026-05-29 — Мобильный слой платформы и получение сертификатов
 
 **Что сделано:**
+
 - Исправлен мобильный экран `/student/certificates`: таблица заменяется карточками на малых экранах, кнопки `PDF` и `Проверить` занимают полную ширину и не режут текст.
 - Добавлен пользовательский сценарий получения сертификата: студент может нажать `Получить сертификат` из карточки курса/завершенного курса, API безопасно проверяет активное зачисление, прогресс и порог завершения конкретного курса.
 - Сделана идемпотентная выдача: повторное нажатие возвращает уже выданный сертификат, а не падает конфликтом.
@@ -13,6 +14,7 @@
 - Пройдены 25 ключевых role-route smoke-проверок на мобильной ширине без горизонтального overflow, framework overlay и обрезки видимых кнопок/ссылок; отдельно проверен сценарий выдачи сертификата и переход к списку сертификатов.
 
 **Файлы изменены:**
+
 - `app/api/v1/certificates/claim/route.ts`
 - `app/student/certificates/page.tsx`
 - `app/student/courses/[courseId]/page.tsx`
@@ -27,6 +29,7 @@
 - ряд форм и рабочих панелей в `app/**` и `components/**` переведен с фиксированных desktop-grid на mobile-first grid.
 
 **Проверки:**
+
 - `npm run lint -- --max-warnings=0` — пройдено.
 - `npm run typecheck` — пройдено.
 - `npm run test` — пройдено, 74 файла / 463 теста.
@@ -35,11 +38,13 @@
 - Playwright smoke 390px по 25 маршрутам student/admin/instructor/curator/super-curator/customer-observer — пройдено: `status 200`, `overflowX 0`, overlay отсутствует, обрезки видимых кнопок/ссылок нет.
 
 **Остаточный риск:**
+
 - На быстрых автоматических переходах между множеством dynamic-страниц может появляться известная Next/React streaming ошибка `$RS parentNode`; визуального падения и overlay не обнаружено, но это оставлено как отдельный технический follow-up.
 
 ## 2026-05-29 — Ультра-улучшение визуальной системы закрытой академии
 
 **Что сделано:**
+
 - Обновлен общий визуальный слой платформы: добавлены academy-токены поверхностей, линий, теней, акцента и отдельные классы для рабочих панелей, login-экрана, sidebar, metric-card и mobile bottom nav.
 - Усилен закрытый login-first экран `/login`: новая структурная подложка, более выразительный academy-brand mark, статус "закрытый вход", улучшенные поля, кнопка входа и системное сообщение при превышении лимита устройств.
 - Обновлены общие UI primitives `Button`, `Card`, `Badge`: более четкие focus/active состояния, глубина поверхностей, единая M3/academy-палитра без смены продуктовой модели.
@@ -47,6 +52,7 @@
 - Обновлены `PageHeader`, KPI-карточки и блок "Продолжить обучение", чтобы основные операционные действия выглядели как единая система, а не набор плоских карточек.
 
 **Файлы изменены:**
+
 - `app/globals.css`
 - `components/auth/login-screen.tsx`
 - `components/auth/login-form.tsx`
@@ -61,6 +67,7 @@
 - `components/ui/badge.tsx`
 
 **Проверки:**
+
 - `npm run lint -- --max-warnings=0` — пройдено.
 - `npm run typecheck` — пройдено.
 - `npm run test` — пройдено, 73 файла / 455 тестов.
@@ -68,6 +75,7 @@
 - Browser smoke `/login` — пройдено на 1280x720 и Pixel 7: экран не пустой, поля email/password и кнопка входа присутствуют в единственном экземпляре, горизонтального overflow и console errors нет.
 
 **Остаточный риск:**
+
 - При первичной проверке авторизованный workspace-smoke через локальный `next start` был заблокирован состоянием БД: таблица `public.auth_device_sessions` отсутствовала.
 - Операционно исправлено после проверки: выполнен `npx prisma db execute --file prisma/migrations/20260529000000_add_auth_device_sessions/migration.sql`, таблица и индексы созданы, повторный login smoke до `/student` прошел без 500 и console errors.
 - В `npx prisma migrate status` все еще числятся более ранние pending-миграции `20260524000000_add_missing_fk_indexes` и `20260524000002_disable_rls_all_tables`; полный `migrate deploy` нужно выполнять отдельным осознанным шагом, потому что текущая БД подключена к Supabase.
@@ -75,6 +83,7 @@
 ## 2026-05-29 — Архитектурный рефакторинг изоляции БД и исправление мобильных отступов
 
 **Что сделано:**
+
 - **Архитектура (WP3)**: Проведен глубокий рефакторинг изоляции базы данных. Удален прямой импорт `getPrisma()` и инлайновые вызовы Prisma Client из 4 основных разделов UI (кабинеты администратора, студента и преподавателя):
   - Создан сервисный модуль `server/modules/cohorts/service.ts` с методами `listAdminCohorts` и `getActiveCohortsForSelector`. Отрефакторены страницы `/admin/cohorts/page.tsx` и `/admin/users/page.tsx`.
   - Внедрен сервисный метод `getStudentReportsDashboardData` в `server/modules/reports/service.ts` для избавления от прямой выборки статистики на странице `/student/reports/page.tsx`.
@@ -85,6 +94,7 @@
   - В `tailwind.config.ts` добавлен отсутствующий шрифтовой токен `body-xs` (шрифт 12px, высота строки 16px, начертание 400), использовавшийся в карточках личных кабинетов.
 
 **Файлы изменены:**
+
 - `app/admin/cohorts/page.tsx`
 - `app/admin/users/page.tsx`
 - `app/student/reports/page.tsx`
@@ -97,6 +107,7 @@
 - `tailwind.config.ts`
 
 **Проверки:**
+
 - `npm run verify` — пройдено (ESLint чист, TypeScript compile пройден).
 - `npm run test` — пройдено, все 455 тестов Vitest зеленые.
 - `npm run build` — успешная статическая генерация всех 105 страниц и API-роутов.
@@ -104,6 +115,7 @@
 ## 2026-05-29 — Ограничение входа максимум с двух устройств
 
 **Что сделано:**
+
 - Добавлена отдельная модель `AuthDeviceSession` и миграция `20260529000000_add_auth_device_sessions`: контроль входов отделен от `user_sessions`, которые остаются аналитикой визитов.
 - При успешном Auth.js-входе создается device-session и в JWT сохраняется `authDeviceSessionId`.
 - Для пользователей с 2FA device-session создается после завершения второго фактора, чтобы незавершенная проверка не занимала лимит устройства.
@@ -115,6 +127,7 @@
 - Глобальный heartbeat обновляет `lastSeenAt` активного device-session.
 
 **Файлы изменены:**
+
 - `prisma/schema.prisma`
 - `prisma/migrations/20260529000000_add_auth_device_sessions/migration.sql`
 - `server/modules/auth/device-sessions.ts`
@@ -133,6 +146,7 @@
 - `tests/unit/auth-device-sessions.test.ts`
 
 **Проверки:**
+
 - `npm run db:generate` — пройдено.
 - `npx prisma validate` — пройдено.
 - `npm run test -- tests/unit/auth-device-sessions.test.ts tests/unit/auth-options.test.ts tests/unit/auth-session.test.ts tests/unit/notifications-service.test.ts` — пройдено, 13 тестов.
@@ -142,11 +156,13 @@
 - `npm run build` — пройдено.
 
 **Остаточный риск:**
+
 - Middleware не ходит в БД и может узнать об отзыве только после того, как JWT уже помечен серверным `getServerSession()`. Основная защита находится в server-side guards и API.
 
 ## 2026-05-29 — Stabilize UI identity and Playwright E2E after student UX update
 
 **Что сделано:**
+
 - Исправлен `tests/e2e/student-flow.spec.ts`: переходы по авторизованным студенческим страницам больше не ждут `networkidle`, потому что уведомления/SSE оставляют сеть активной и приводили к зависаниям.
 - Проверка урока переведена на устойчивый ARIA-селектор оболочки lesson player вместо хрупкого текстового бейджа.
 - `playwright.config.ts` теперь ждёт готовность `/login`, запускает E2E в один worker и даёт dev-серверу больше времени на cold start.
@@ -155,6 +171,7 @@
 - `next-env.d.ts` возвращён на production route types path после запусков Next dev.
 
 **Файлы изменены:**
+
 - `playwright.config.ts`
 - `tests/e2e/student-flow.spec.ts`
 - `tests/e2e/super-curator.spec.ts`
@@ -173,6 +190,7 @@
 - `next-env.d.ts`
 
 **Проверки:**
+
 - `npm.cmd run lint -- --max-warnings=0` — пройдено.
 - `npm.cmd run typecheck` — пройдено.
 - `npm.cmd run test` — пройдено, 72 файла / 451 тест.
@@ -181,11 +199,13 @@
 - Полный `npm run test:e2e -- --reporter=line` после первичной стабилизации проходил: 146 passed, 2 skipped. Финальный повтор после key/RBAC-правок был остановлен вручную во время прогона; фоновые процессы остановлены.
 
 **Остаточный риск:**
+
 - В dev-логе Playwright на быстрых переходах по нескольким маршрутам супер-куратора остаётся предупреждение Next dev `$RS parentNode`; тесты маршрутной доступности при этом проходят.
 
 ## 2026-05-27 — Student course and lesson player UI
 
 **Что сделано:**
+
 - Улучшен `/student/courses/[courseId]`: добавлен блок "Следующий шаг", более явный прогресс курса и рабочая боковая панель с доступом, сертификатом и куратором.
 - В студенческий course player добавлены поля блока урока (`blockId`, `blockTitle`, `blockOrder`), чтобы интерфейс мог показывать структуру `Модуль → Блок → Урок` без миграции данных.
 - Обновлены `ModuleAccordion`, `LessonCard` и `CourseContentsDrawer`: уроки группируются по блокам, дедлайны форматируются через `Intl`, улучшены фокус-состояния и мобильная раскладка.
@@ -193,6 +213,7 @@
 - Убраны дубли рейтинга и чата куратора, если они уже опубликованы отдельными блоками урока.
 
 **Файлы изменены:**
+
 - `app/globals.css`
 - `app/student/courses/[courseId]/page.tsx`
 - `components/layout/app-shell.tsx`
@@ -214,12 +235,14 @@
 ## 2026-05-27 — Student dashboard UI: ближайшие действия
 
 **Что сделано:**
+
 - Улучшен основной экран студента `/student`: первый viewport теперь объединяет продолжение урока, дедлайны и ответы куратора в блоке ближайших действий.
 - Карточка "Продолжить обучение" стала точнее показывать контекст курса и модуля, дедлайн и две навигации: курс и следующий урок.
 - Карточки курсов больше не показывают вычисленный на клиенте прогноз даты завершения; вместо него выводится фактический учебный статус из текущего модуля/урока.
 - В DTO вопросов добавлен `lessonId`, чтобы студент мог открыть урок из ответа куратора.
 
 **Файлы изменены:**
+
 - `app/student/page.tsx`
 - `components/lms/dashboard-widgets.tsx`
 - `components/lms/student-course-dashboard-grid.tsx`
@@ -231,15 +254,21 @@
 ## 2026-05-26 — Fix archiver import for Turbopack compilation
 
 **Что сделано:**
+
 - Исправлена ошибка сборки Turbopack в `/api/v1/certificates/bulk/route.ts` из-за импорта CommonJS-модуля `archiver`.
 - ESM-импорт `import archiver from "archiver"` заменён на typed `require()` с `@typescript-eslint/no-require-imports` disable-комментарием для прохождения ESLint-проверок:
+
   ```typescript
+
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const archiver = require("archiver") as typeof import("archiver");
+
   ```
+
 - Выполнена полная проверка репозитория через `npm run verify` — линтинг, типизация, все 451 тест и production-сборка успешно пройдены.
 
 **Файлы изменены:**
+
 - `app/api/v1/certificates/bulk/route.ts` — Изменён ESM-импорт `archiver` на типизированный require с ESLint-комментарием.
 
 **Build:** ✅ Compiled, TypeScript (passed), Lint (passed), Tests (451 passed)
@@ -247,11 +276,13 @@
 ## 2026-05-26 — Skip-to-content + ToolbarButton a11y (P3 follow-up)
 
 **Что сделано:**
+
 - Исправлен `ToolbarButton` в `rich-text-editor.tsx` — добавлен `aria-label={title}` (был только `title`, который нестабильно читается скринридерами)
 - Перемещён `id="main-content"` из `AppShell` в корневой `layout.tsx` — теперь skip-to-content работает на ВСЕХ страницах (включая login, register, consent)
 - Обновлён `docs/ux-ui-2026-audit.md`: исправлен статус 2.4.1 с Fail на Pass, добавлен ToolbarButton fix, убраны выполненные рекомендации
 
 **Файлы изменены:**
+
 - `components/lms/rich-text-editor.tsx` — +`aria-label={title}` на `ToolbarButton`
 - `components/layout/app-shell.tsx` — удалён `id="main-content"` (перенесён в layout)
 - `app/layout.tsx` — `<div id="main-content" tabIndex={-1}>` wrapper для universal skip target
@@ -262,6 +293,7 @@
 ## 2026-05-26 — WCAG 2.2 AA Accessibility Audit (P3)
 
 **Что сделано:**
+
 - Source-review WCAG-аудит по критериям 2.2 AA: проверены `components/lms/`, `components/layout/`, `app/`, `globals.css`
 - Исправлены 2 нарушения 4.1.2 (Name, Role, Value):
   - `curator-operations-board.tsx:221` — кнопка очистки поиска: добавлен `aria-label="Очистить поиск"`
@@ -270,6 +302,7 @@
 - Документирована полная таблица WCAG-покрытия в `docs/ux-ui-2026-audit.md`
 
 **Файлы изменены:**
+
 - `components/lms/curator-operations-board.tsx` — +aria-label на close button
 - `components/lms/assignment-block.tsx` — +aria-label на remove file button
 - `docs/ux-ui-2026-audit.md` — +WCAG audit section
@@ -277,6 +310,7 @@
 **Статус P3:** `partial` — 24/26 критериев проходят или не тестировались (контраст, target size). 1 fail (skip-to-content). 0 violations остаются после фиксов.
 
 **Next:**
+
 - Добавить skip-to-content link в AppShell
 - Проверить контраст M3-токенов инструментально (axe/WAVE)
 - Аудитить target size на icon buttons
@@ -284,26 +318,31 @@
 ## 2026-05-26 — Release Hardening Baseline (WP0)
 
 ### Что добавлено
+
 - `server/modules/release-hardening/readiness.ts` — typed contract для release hardening: 6 product roles, redirect priority, 10 AI-agent roles, 5 project skills, 14 technical skills, WP0-WP6 и release gates.
 - `tests/unit/release-hardening-readiness.test.ts` — unit-тест контракта, который сверяет роли/skills с файлами репозитория и не даёт считать платформу release-ready до закрытия WP1-WP6.
 - `docs/release.md` — активный execution baseline оптимизации.
 
 ### Access/privacy hardening
+
 - `/api/v1/lessons/[lessonId]/video-playback` теперь возвращает typed `403` для отсутствующего enrollment и sequential lock, `404` для отсутствующего урока/видео.
 - `/api/v1/lessons/[lessonId]/media/[mediaId]/signed-url` теперь возвращает typed `403` для отсутствующего enrollment и sequential lock, `404` для отсутствующего урока/файла, `503` для невозможности получить storage link.
 - `tests/unit/security-privacy.test.ts` обновлён: forbidden lesson/video access больше не считается ожидаемым `500`.
 - `tests/unit/security-privacy.test.ts` расширен signed media URL negative checks: no active enrollment, sequential lock и guessed media ID из другого урока.
 
 ### Документы
+
 - `docs/implementation-plan.md` теперь явно разделяет implemented domain status и full release-ready proof.
 - `docs/work-plan.md` получил задачу 14 с WP0-WP6.
 - `docs/full-project-audit.md` обновлён baseline-записью от 2026-05-26.
 
 ### Статус
+
 - WP0: `done`.
 - Общая release readiness: `partial`; scenario proof, access/privacy negative paths и operational release drill остаются открыты.
 
 ### Проверки
+
 - `npx vitest run tests/unit/release-hardening-readiness.test.ts` — 6/6 passed.
 - `npx vitest run tests/unit/security-privacy.test.ts` — 9/9 passed after signed media URL privacy coverage.
 - `npx vitest run tests/unit/security-privacy.test.ts tests/unit/release-hardening-readiness.test.ts` — 15/15 passed.
@@ -316,12 +355,15 @@
 ## 2026-05-25 — Web Interface Guidelines Fixes (overscroll, autocomplete)
 
 ### Curator Modals (curator-modals.tsx)
+
 - Добавлен `overscroll-behavior: contain` на backdrop обоих модальных окон (`AnswerQuestionModal`, `ReviewSubmissionModal`) — предотвращает скролл body при открытой модалке на iOS
 
 ### Curator Search (curator-operations-board.tsx)
+
 - Добавлен `autoComplete="off"` на поле живого поиска слушателей — предотвращает навязчивые автозаполнения браузера
 
 ### Ранее обработанные в globals.css
+
 - `touch-action: manipulation` — уже глобально на `html`, интерактивных элементах и bottom nav (строчки 186, 320, 329)
 - `prefers-reduced-motion` — уже через framer-motion `useReducedMotion()` во всех анимационных компонентах
 - `focus:outline-none` без кольца — все случаи уже имеют `focus:ring-2`
@@ -329,6 +371,7 @@
 ## 2026-05-25 — Certificate Designer Premium + NLP Curator Assistant + Student Flow E2E + Curator Scope Tests
 
 ### Certificate Designer Premium
+
 - **Undo/Redo**: Хук `useDesignHistory` с Ctrl+Z/Ctrl+Shift+Z + панель кнопок, maxHistory=50
 - **Auto-save**: Debounce 3s через configRef + useEffect в `certificate-designer.tsx`
 - **Zoom-слайдер**: 50–150% с transformOrigin: "top left"
@@ -338,23 +381,28 @@
 - **Typecheck**: Чистый (только предсуществующая `.next` ошибка)
 
 ### NLP Curator Assistant (MVP)
+
 - `server/modules/nlp/suggestions.ts` — full-text search по GlossaryEntry (tsvector → ILIKE fallback)
 - `server/actions/assistant.ts` — server action с Zod-валидацией + ролевой защитой
 - `components/curator/question-assistant.tsx` — UI-панель с grouped-результатами и кнопкой "Вставить"
 - Интеграция в AnswerQuestionModal (`components/lms/curator-modals.tsx`)
 
 ### Student Flow Proof (E2E)
+
 - `tests/e2e/student-flow.spec.ts` — 3 теста: курс→урок→квиз→прогресс, course detail page, quiz API submission
 
 ### Curator Scope + Negative-path Tests
+
 - `tests/e2e/curator.spec.ts` — negative-path тесты (блокировка доступа к admin/instructor/student/super-curator/observer)
 - `tests/unit/curator-scope.test.ts` — 14 unit-тестов скоупа (student access, cohort access, edge cases)
 
 ### skills.sh интеграция
+
 - `npx skills init` создан SKILL.md; 14 skills установлены из vercel-labs/agent-skills, shadcn/ui, next-skills
 - `opencode.json` обновлён (paths + instructions)
 
 ### Результат
+
 - `npx vitest run tests/unit/` — **65 test files, 431 tests passed** (0 регрессий)
 
 ## 2026-05-25 — ESLint jsx-a11y: WCAG violations fixed (Tier 2, Step 1)
@@ -517,7 +565,7 @@
 
 ## 2026-05-22 — Исправлено 85+ багов: forgot-password, schema sync, quiz grading, rate limiter, CSRF, race conditions, outbox rescue, memorySet bug
 
-- **Задача 1 — Отключение самосброса пароля**: форма `/forgot-password` показывает сообщение «напишите на admin@aistrategic.kz»; API `forgot-password` и `reset-password` → 410 Gone; `/reset-password` редиректит на `/forgot-password`
+- **Задача 1 — Отключение самосброса пароля**: форма `/forgot-password` показывает сообщение «напишите на `admin@aistrategic.kz`»; API `forgot-password` и `reset-password` → 410 Gone; `/reset-password` редиректит на `/forgot-password`
 - **Задача 2 — Prisma schema ↔ migration (12 critical)**: создана fix-миграция `20260522000003_fix_schema_mismatches`; все 14 применены; `prisma migrate status` → Database schema is up to date!
 - **Задача 3 — Quiz grading logic**: `gradeObjectiveQuiz` исправлен — `resolveOptionLabel` применяется к обеим сторонам сравнения; добавлено 8 тестов на object-options
 - **Задача 4 — Rate limiter fail-open → fail-closed**: catch block → `{ success: false }`; атомарный INCR (`cacheIncr` с Redis INCR + memory fallback); ключ per-IP в `proxy.ts`
@@ -544,11 +592,11 @@
 
 ## 2026-05-22 — Отключён самосброс пароля
 
-- **Самостоятельный сброс пароля отключён**: `/forgot-password` больше не показывает форму с email, а выводит сообщение с просьбой написать на admin@aistrategic.kz с указанием ФИО.
+- **Самостоятельный сброс пароля отключён**: `/forgot-password` больше не показывает форму с email, а выводит сообщение с просьбой написать на `admin@aistrategic.kz` с указанием ФИО.
 - **API `POST /api/v1/auth/forgot-password`** — возвращает 410 Gone.
 - **API `POST /api/v1/auth/reset-password`** — возвращает 410 Gone.
 - **`/reset-password`** — перенаправляет на `/forgot-password`.
-- **Тесты**: e2e smoke обновлены — проверяют наличие admin@aistrategic.kz и редирект.
+- **Тесты**: e2e smoke обновлены — проверяют наличие `admin@aistrategic.kz` и редирект.
 - **Typecheck**: ✅ | Tests: 377/377 ✅
 
 ## 2026-05-22 — Chat attachments migrated from MinIO/S3 to Supabase Storage
@@ -616,7 +664,7 @@
 
 ## 2026-05-22 — Phase 0: Attempt history UI + Quiz builder/builder audit
 
-- **Attempt history UI**: 
+- **Attempt history UI**:
   - Исправлен хардкод "Попытка: 1" на реальное количество попыток
   - Добавлена "История попыток" — список всех попыток с датами, скором, статусом (пройден/не пройден)
   - Поддержка `?attemptId=` — можно просмотреть детали любой прошлой попытки
@@ -747,11 +795,13 @@
 **Файлы/модули**:
 
 ### Исправление ошибок
+
 - `app/api/v1/push/subscribe/route.ts` — 403: route теперь обрабатывает неавторизованных пользователей без ошибки (PWA регистрируется на всех страницах, включая логин)
 - `app/api/v1/auth/redirect-target/route.ts` — 401: при отсутствии токена возвращается путь по умолчанию `/student` вместо ошибки (гонка сессии после логина)
 - `app/student/assignments/page.tsx` — 503: добавлена обработка ошибок при загрузке списка заданий, добавлен `redirect` при отсутствии пользователя
 
 ### Система дедлайнов блоков
+
 - `server/modules/deadlines/service.ts` — новый модуль: getCohortBlockDeadlines, setBlockDeadlines, getCuratorDeadlineAlerts
 - `app/api/v1/cohorts/[cohortId]/block-deadlines/route.ts` — GET/POST для управления дедлайнами
 - `app/admin/cohorts/[cohortId]/deadline-manager.tsx` — UI компонент управления дедлайнами для админа
@@ -761,6 +811,7 @@
 - `components/layout/navigation.ts` — добавлены ссылки "Дедлайны" (instructor) и "Уведомить" (curator)
 
 ### Система попапов для кураторов
+
 - `prisma/schema.prisma` — добавлено поле `targetUserIds` в модель AdminPopup
 - `server/modules/popups/service.ts` — createPopup/getActivePopupsForUser/listPopups поддерживают targetUserIds
 - `app/api/v1/popups/route.ts` — расширен createPopupSchema, разрешено создание для кураторов
@@ -771,6 +822,7 @@
 **Тип изменения**: security / bugfix
 
 **Файлы/модули**:
+
 - `server/modules/auth/service.ts` — updateProfile: добавлен select, исключающий passwordHash/totpSecret
 - `server/modules/2fa/service.ts` — enable2fa возвращает backupCodes из crypto.randomBytes() (не Math.random())
 - `app/api/v1/auth/2fa/verify/route.ts` — возвращает backupCodes от сервера
@@ -789,6 +841,7 @@
 - `app/instructor/courses/page.tsx` — instructor mapping с email
 
 **Summary**:
+
 - Проведён полный security-аудит на data leakage (Prisma over-fetching, DOM, middleware, dev passwords)
 - **3 critical** (P0): updateProfile раскрывал passwordHash/totpSecret в ответе; middleware не пропускал cron-воркеры; 2FA backup codes генерились клиентским Math.random() + TOTP secret оставался в DOM
 - **5 high** (P1): listCourses раскрывал email инструкторов; assignments GET/PATCH без select; student server actions over-fetching; listEnrollments без select; listNotifications без select — все переведены на explicit Prisma select
@@ -796,11 +849,13 @@
 - PWA fixes (chat reply on every message, NAVIGATE handler, desktop install manifest) завершены
 
  **Проверки**:
+
 - `npx tsc --noEmit` — passed
 - `npm run build` — passed (80/80 pages, 0 errors)
 - `npx vitest run` — 319/319 passed (57/57 test files)
 
 **Риски**:
+
 - `__dbcheck.mjs` в git history содержит live production credentials — требуется git purge + force-push (решение за командой)
 - CSP `unsafe-eval`/`unsafe-inline` остаются — Next.js требует их для dev mode и CSS injection
 - Cron-воркеры (outbox, reports) теперь проходят middleware, но для отправки push-уведомлений нужен реальный триггер (Vercel Cron / pg_cron)
@@ -1100,11 +1155,13 @@
 2. **Создан комплект из 11 юридических и операционных документов** для закрытой LMS-платформы AI Strategic Academy:
 
    **Публичные:**
+
    - `docs/privacy-policy.md` — Политика конфиденциальности (14 разделов: положения, категории данных, цели, источники, доступ, передача, cookie, хранение, защита, права, сертификаты, контакты, изменения)
    - `docs/terms-of-use.md` — Пользовательское соглашение (13 разделов: положения, термины, доступ, правила, материалы, тесты/задания, коммуникация, сертификаты, ограничения, ответственность, внешние сервисы, изменения, контакты)
    - `docs/cookie-notice.md` — Уведомление о cookie и технической статистике (8 разделов + 3 варианта текста для banner)
 
    **Внутренние:**
+
    - `docs/data-retention-policy.md` — Политика хранения и удаления данных (таблица категорий и сроков)
    - `docs/staff-data-access-policy.md` — Регламент доступа сотрудников (матрица доступа по 6 ролям)
    - `docs/user-data-request-policy.md` — Регламент обработки запросов пользователей (шаблоны ответов, процесс)
@@ -1112,12 +1169,15 @@
    - `docs/third-party-services-register.md` — Реестр внешних сервисов и подрядчиков (8 сервисов, чек-лист, статусы)
 
    **Для сотрудников:**
+
    - `docs/staff-confidentiality-agreement.md` — Соглашение о конфиденциальности (9 разделов, шаблон подписи)
 
    **Для интерфейса:**
+
    - `docs/legal-interface-copy.md` — Юридические тексты (14 элементов интерфейса)
 
    **Индекс:**
+
    - `docs/legal-documents-index.md` — Индекс документов (типы, владельцы, статусы, график пересмотра)
 
 3. **Ключевые особенности документов:**
@@ -1150,7 +1210,7 @@
 Автор/agent: opencode
 Тип изменения: feature / infrastructure / documentation
 
-1. **Scheduled report export**: 
+1. **Scheduled report export**:
    - Created `POST /api/v1/reports/scheduled` — защищён CRON_SECRET, обрабатывает до 50 outbox-задач за вызов
    - Добавлен `CRON_SECRET` в `lib/env.ts`
    - Совместим с Vercel Cron Jobs, cron-job.org, pg_cron, GitHub Actions
@@ -1235,12 +1295,12 @@
    - Bottom nav показывает первые 4-5 пунктов для каждой роли (admin, student, curator, super_curator, instructor, customer_observer)
    - Боковая панель на десктопе содержит полный список ссылок с бейджами
 
-2. **Тёмная/светлая тема**: 
+2. **Тёмная/светлая тема**:
    - Переключатель темы `ThemeToggle` теперь циклически переключает 3 режима: light → dark → system
    - Анимация переключения через Framer Motion (rotate + scale)
    - `theme-color` meta tags динамически меняются в зависимости от темы (light: #F8FAFC, dark: #0F172A)
 
-3. **Safe area & viewport**: 
+3. **Safe area & viewport**:
    - `env(safe-area-inset-*)` для notched-устройств
    - `viewport-fit=cover` для Full-screen PWA
    - Нижняя навигация корректно обрабатывает safe-area-bottom
@@ -1846,8 +1906,8 @@ Next steps:
 
 ## 2026-05-07 — Подготовлена публикация проекта в GitHub
 
-Автор/agent: Codex  
-Тип изменения: repository operations / documentation  
+Автор/agent: Codex
+Тип изменения: repository operations / documentation
 Файлы/модули:
 
 - `LICENSE`
@@ -1881,8 +1941,8 @@ Next steps:
 
 ## 2026-05-07 — Добавлены auth UI flow и публичная проверка сертификатов
 
-Автор/agent: Codex  
-Тип изменения: runtime / UI / API / documentation  
+Автор/agent: Codex
+Тип изменения: runtime / UI / API / documentation
 Файлы/модули:
 
 - `components/auth/*`
@@ -1922,8 +1982,8 @@ Next steps:
 
 ## 2026-05-07 — Добавлен agent-операционный слой документации
 
-Автор/agent: Codex  
-Тип изменения: documentation / AI operations  
+Автор/agent: Codex
+Тип изменения: documentation / AI operations
 Файлы/модули:
 
 - `docs/implementation-plan.md`
@@ -1956,8 +2016,8 @@ Next steps:
 
 ## 2026-05-07 — Bootstrap проекта LMS
 
-Автор/agent: Codex  
-Тип изменения: repository bootstrap / architecture / runtime scaffold  
+Автор/agent: Codex
+Тип изменения: repository bootstrap / architecture / runtime scaffold
 Файлы/модули:
 
 - `app/`, `components/`, `server/`, `lib/`, `prisma/`, `tests/`
@@ -1993,6 +2053,7 @@ Next steps:
 ## Шаблон записи
 
 ```markdown
+
 ## YYYY-MM-DD — Краткое название изменения
 
 Автор/agent:
@@ -2016,10 +2077,12 @@ Summary:
 Next steps:
 
 - Что сделать дальше.
+
 ```
+
 ## 2026-05-07 — Login-first academy, course passing core, private self-hosted DB
 
-Автор/agent: Codex  
+Автор/agent: Codex
 Тип изменения: feature/security/infra
 
 ### Что изменено
