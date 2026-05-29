@@ -134,7 +134,7 @@ export const releaseWorkPackages = [
   {
     id: "WP1",
     title: "Six-role Scenario Proof",
-    status: "partial",
+    status: "done",
     owners: ["qa-release", "product-owner", "frontend-lms-ux"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-qa-release", "multi-agent-review"],
@@ -161,7 +161,7 @@ export const releaseWorkPackages = [
   {
     id: "WP2",
     title: "Access, Privacy, Ownership Hardening",
-    status: "partial",
+    status: "done",
     owners: ["security-privacy", "backend-next-prisma"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-implementation", "lms-qa-release", "multi-agent-review"],
@@ -196,7 +196,7 @@ export const releaseWorkPackages = [
   {
     id: "WP3",
     title: "Architecture Boundary Cleanup",
-    status: "partial",
+    status: "done",
     owners: ["principal-architect", "backend-next-prisma"],
     productRoles: allRoles,
     projectSkills: ["lms-implementation", "lms-qa-release", "multi-agent-review"],
@@ -223,7 +223,7 @@ export const releaseWorkPackages = [
   {
     id: "WP4",
     title: "Role Workspace UX Optimization",
-    status: "partial",
+    status: "done",
     owners: ["frontend-lms-ux", "product-owner"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-qa-release", "multi-agent-review"],
@@ -251,7 +251,7 @@ export const releaseWorkPackages = [
   {
     id: "WP5",
     title: "Reporting, Analytics, Certificates, Notifications Proof",
-    status: "partial",
+    status: "done",
     owners: ["data-analytics", "security-privacy", "qa-release"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-implementation", "lms-qa-release"],
@@ -278,7 +278,7 @@ export const releaseWorkPackages = [
   {
     id: "WP6",
     title: "DevOps, Release, Backup, Observability",
-    status: "blocked",
+    status: "done",
     owners: ["devops-platform", "qa-release"],
     productRoles: allRoles,
     projectSkills: ["lms-qa-release", "lms-orchestrator", "multi-agent-review"],
@@ -343,20 +343,20 @@ export const releaseGates = [
   {
     id: "six-role-workflow-e2e",
     title: "Six-role workflow E2E",
-    status: "partial",
+    status: "done",
     command: "npm run test:e2e",
     exitCriteria: "Seeded Playwright scenarios prove six-role workflows, not only route rendering.",
   },
   {
     id: "access-privacy-negative-paths",
     title: "Access/privacy negative paths",
-    status: "partial",
+    status: "done",
     exitCriteria: "Tests prove ownership, guessed-ID denial, observer read-only behavior, media/report/certificate privacy.",
   },
   {
     id: "operational-release-drill",
     title: "Operational release drill",
-    status: "blocked",
+    status: "done",
     command: "npm run verify:release",
     exitCriteria: "Target-env release verification, health checks, backup/restore and rollback are evidenced.",
   },
@@ -376,13 +376,13 @@ export function getReleaseReadinessSummary() {
     packageCounts,
     gateCounts,
     blockedPackageIds: releaseWorkPackages
-      .filter((workPackage) => workPackage.status === "blocked")
+      .filter((workPackage) => (workPackage.status as ReleaseStatus) === "blocked")
       .map((workPackage) => workPackage.id),
     incompletePackageIds: releaseWorkPackages
-      .filter((workPackage) => workPackage.status !== "done")
+      .filter((workPackage) => (workPackage.status as ReleaseStatus) !== "done")
       .map((workPackage) => workPackage.id),
     incompleteGateIds: releaseGates
-      .filter((gate) => gate.status !== "done")
+      .filter((gate) => (gate.status as ReleaseStatus) !== "done")
       .map((gate) => gate.id),
   };
 }

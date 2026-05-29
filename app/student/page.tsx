@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { ContinueLearningCard, MetricGrid } from "@/components/lms/dashboard-widgets";
 import { StudentCourseDashboardGrid } from "@/components/lms/student-course-dashboard-grid";
 import { StudentAchievements } from "@/components/lms/student-achievements";
+import { XpDisplayClient } from "@/components/lms/xp-display-client";
 import { getUserXp } from "@/server/actions/xp";
 import { getLevel } from "@/lib/xp-utils";
 import { PageHeader } from "@/components/lms/page-header";
@@ -72,6 +73,7 @@ async function withAchievements() {
   const questions = data.questions ?? [];
   const learningPaths = data.learningPaths ?? [];
   const deadlines = data.deadlines ?? [];
+  const weeklyTrack = data.weeklyTrack ?? [];
 
   const xp = await getUserXp(data.userId);
   const levelInfo = getLevel(xp);
@@ -98,20 +100,16 @@ async function withAchievements() {
        />
       )}
      </div>
-     <StudentNextActionsPanel
-      continueLearning={continueLearning}
-      coursesCount={coursesProgress.length}
-      deadlines={deadlines}
-      questions={questions}
-     />
+     <div className="space-y-4">
+      <XpDisplayClient xp={xp} levelInfo={levelInfo} />
+      <StudentNextActionsPanel
+       continueLearning={continueLearning}
+       coursesCount={coursesProgress.length}
+       deadlines={deadlines}
+       questions={questions}
+      />
+     </div>
     </section>
-
-    <StudentAchievements
-      xp={xp}
-      levelInfo={levelInfo}
-      coursesProgress={coursesProgress.map(c => ({ percent: c.percent, title: c.courseTitle }))}
-      questionsCount={questions.length}
-    />
 
    {metrics.length > 0 && (
     <MetricGrid metrics={metrics}/>
@@ -226,6 +224,14 @@ async function withAchievements() {
      />
     )}
    </section>
+
+   <StudentAchievements
+     xp={xp}
+     levelInfo={levelInfo}
+     coursesProgress={coursesProgress.map((c) => ({ percent: c.percent, title: c.courseTitle }))}
+     questionsCount={questions.length}
+     weeklyTrack={weeklyTrack}
+   />
   </div>
  );
 }

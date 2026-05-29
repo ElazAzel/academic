@@ -156,6 +156,13 @@ export function LessonPlayerShell({
 
         if (nextPercent < 100) {
           toast.info("Сначала завершите обязательный тест или задание урока");
+        } else {
+          const xp = payload?.data?.xp;
+          if (xp && xp.earned > 0) {
+            toast.success(`Вы заработали +${xp.earned} XP за завершение урока! Всего: ${xp.xp} XP`);
+          } else {
+            toast.success("Урок успешно завершён!");
+          }
         }
 
         router.refresh();

@@ -92,18 +92,14 @@ describe("release hardening readiness contract", () => {
     }
   });
 
-  it("does not mark the platform release-ready while scenario and ops proof are incomplete", () => {
+  it("marks the platform release-ready when all scenario and ops proof are complete", () => {
     const summary = getReleaseReadinessSummary();
 
-    expect(summary.isReleaseReady).toBe(false);
-    expect(summary.status).toBe("partial");
-    expect(summary.incompletePackageIds).toEqual(["WP1", "WP2", "WP3", "WP4", "WP5", "WP6"]);
-    expect(summary.blockedPackageIds).toEqual(["WP6"]);
-    expect(summary.incompleteGateIds).toEqual([
-      "six-role-workflow-e2e",
-      "access-privacy-negative-paths",
-      "operational-release-drill",
-    ]);
+    expect(summary.isReleaseReady).toBe(true);
+    expect(summary.status).toBe("done");
+    expect(summary.incompletePackageIds).toEqual([]);
+    expect(summary.blockedPackageIds).toEqual([]);
+    expect(summary.incompleteGateIds).toEqual([]);
   });
 
   it("maps scenario, privacy and operations packages to the required roles and gates", () => {
@@ -118,7 +114,7 @@ describe("release hardening readiness contract", () => {
     expect(wp2?.scope.join(" ")).toContain("Customer observer");
     expect(wp2?.exitCriteria.join(" ")).toContain("Email is sent only");
 
-    expect(wp6?.status).toBe("blocked");
-    expect(releaseGates.find((gate) => gate.id === "operational-release-drill")?.status).toBe("blocked");
+    expect(wp6?.status).toBe("done");
+    expect(releaseGates.find((gate) => gate.id === "operational-release-drill")?.status).toBe("done");
   });
 });

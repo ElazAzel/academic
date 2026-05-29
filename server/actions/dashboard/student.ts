@@ -17,8 +17,15 @@ export async function getStudentDashboard() {
   const user = await getCurrentUser();
   if (!user) return null;
 
+  const now = new Date();
+  const currentDay = now.getDay(); // 0 is Sunday, 1 is Monday, etc.
+  const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() + diffToMonday);
+  startOfWeek.setHours(0, 0, 0, 0);
+
   return withQueryFallback(async () => {
-    const [enrollments, coursesProgress, continueLearning, questions, certificatesCount, learningPaths] = await Promise.all([
+    const [enrollments, coursesProgress, continueLearning, questions, certificatesCount, learningPaths, weekSessions] = await Promise.all([
       prisma.enrollment.findMany({
         where: { userId: user.id, status: "ACTIVE" },
         include: {
@@ -39,6 +46,13 @@ export async function getStudentDashboard() {
       }),
       prisma.certificate.count({ where: { userId: user.id } }),
       getUserLearningPaths(user.id),
+      prisma.userSession.findMany({
+        where: {
+          userId: user.id,
+          startedAt: { gte: startOfWeek }
+        },
+        select: { startedAt: true }
+      })
     ]);
 
     const formattedQuestions: QuestionFromStudent[] = questions.map((q) => ({
@@ -66,7 +80,6 @@ export async function getStudentDashboard() {
 
     const openQuestionsCount = formattedQuestions.filter((q) => q.status === "open").length;
 
-    const now = new Date();
     const deadlines: CohortDeadline[] = enrollments.flatMap((e) =>
       e.cohort?.deadlines.map((d) => {
         const daysLeft = Math.ceil((d.dueAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -118,7 +131,22 @@ export async function getStudentDashboard() {
       },
     ];
 
-    return { userId: user.id, metrics, coursesProgress, continueLearning, questions: formattedQuestions, deadlines, learningPaths };
+    const activeDays = new Set((weekSessions ?? []).map((s) => {
+      const day = s.startedAt.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      return day === 0 ? 6 : day - 1; // map so that 0 = Monday, 1 = Tuesday, ..., 6 = Sunday
+    }));
+
+    const weeklyTrack = [
+      { day: "Пн", active: activeDays.has(0) },
+      { day: "Вт", active: activeDays.has(1) },
+      { day: "Ср", active: activeDays.has(2) },
+      { day: "Чт", active: activeDays.has(3) },
+      { day: "Пт", active: activeDays.has(4) },
+      { day: "Сб", active: activeDays.has(5) },
+      { day: "Вс", active: activeDays.has(6) },
+    ];
+
+    return { userId: user.id, metrics, coursesProgress, continueLearning, questions: formattedQuestions, deadlines, learningPaths, weeklyTrack };
   }, null);
 }
 

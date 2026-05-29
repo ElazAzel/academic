@@ -3,6 +3,7 @@ import { ApiError } from "@/lib/http";
 import { Prisma, EnrollmentStatus } from "@prisma/client";
 import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
+import { awardXp } from "@/server/actions/xp";
 
 const prisma = getPrisma();
 
@@ -86,13 +87,20 @@ export async function submitAssignment(input: {
       }
     });
   });
+  let xpResult = null;
+  try {
+    xpResult = await awardXp(input.userId, "assignment_submit");
+  } catch (err) {
+    console.error("Failed to award assignment XP:", err);
+  }
+
   await logAudit({
     actorId: input.userId,
     action: "assignment.submitted",
     entity: "assignment_submission",
     entityId: submission.id
   });
-  return submission;
+  return { ...submission, xp: xpResult };
 }
 
 export async function reviewSubmission(input: {

@@ -60,7 +60,12 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
       });
       if (res.ok) {
         setSubmitted(true);
-        toast.success("Задание отправлено на проверку");
+        const data = await res.json().catch(() => ({}));
+        if (data.xp && data.xp.earned > 0) {
+          toast.success(`Вы заработали +${data.xp.earned} XP за отправку задания! Всего: ${data.xp.xp} XP`);
+        } else {
+          toast.success("Задание отправлено на проверку");
+        }
         router.refresh();
       } else {
         const err = await res.json().catch(() => ({}));

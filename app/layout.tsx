@@ -24,6 +24,7 @@ export const metadata: Metadata = {
   title: "AI Strategic Academy",
   description: "Закрытая LMS академии для AI-стратегии, потоков, кураторов и отчётности.",
   metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
+  manifest: "/manifest.json",
   icons: {
     icon: "/favicon.ico",
     apple: "/icon.svg",

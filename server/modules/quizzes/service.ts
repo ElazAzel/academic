@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/http";
 import { toJsonValue } from "@/lib/json";
 import { logAudit } from "@/server/modules/audit/service";
 import { markLessonProgress } from "@/server/modules/progress/service";
+import { awardXp } from "@/server/actions/xp";
 import {
   canReadCourseAnswerKeys,
   quizReadWhereForActor,
@@ -277,10 +278,17 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
     metadata: { quizId, score: result.score, passed: result.passed }
   });
 
+  let xpResult = null;
+  try {
+    xpResult = await awardXp(userId, result.passed ? "quiz_pass" : "quiz_attempt");
+  } catch (err) {
+    console.error("Failed to award quiz XP:", err);
+  }
+
   if (result.passed && quiz.lessonId) {
     await markLessonProgress(userId, quiz.lessonId, 100);
   }
 
-  return { ...attempt, grading: result };
+  return { ...attempt, grading: result, xp: xpResult };
 }
 

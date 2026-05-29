@@ -14,10 +14,10 @@ interface XpCenterModalProps {
 }
 
 const XP_RULES = [
-  { id: "lesson", label: "Прохождение урока", xp: "+10 XP", icon: "auto_stories" },
-  { id: "quiz", label: "Идеальный тест", xp: "+15 XP", icon: "quiz" },
-  { id: "assignment", label: "Сдача задания", xp: "+20 XP", icon: "assignment_turned_in" },
-  { id: "discussion", label: "Активность", xp: "+5 XP", icon: "forum" },
+  { id: "lesson", label: "Прохождение урока", xp: "+50 XP", icon: "auto_stories" },
+  { id: "quiz", label: "Пройденный тест", xp: "+30 XP", icon: "quiz" },
+  { id: "assignment", label: "Сдача задания", xp: "+40 XP", icon: "assignment_turned_in" },
+  { id: "discussion", label: "Попытка теста", xp: "+5 XP", icon: "forum" },
 ];
 
 export function XpCenterModal({ isOpen, onClose, xp, levelInfo }: XpCenterModalProps) {

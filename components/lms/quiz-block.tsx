@@ -64,6 +64,9 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
         const data = await res.json();
         setResult({ score: data.grading?.score ?? data.score, passed: data.passed });
         setPhase("result");
+        if (data.xp && data.xp.earned > 0) {
+          toast.success(`Вы заработали +${data.xp.earned} XP! Всего: ${data.xp.xp} XP`);
+        }
         router.refresh();
       } else {
         const err = await res.json().catch(() => ({}));

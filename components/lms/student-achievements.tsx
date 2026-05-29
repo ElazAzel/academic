@@ -23,19 +23,20 @@ interface StudentAchievementsProps {
   levelInfo: { level: number; name: string; progress: number };
   coursesProgress: Array<{ percent: number; title: string }>;
   questionsCount: number;
+  weeklyTrack?: Array<{ day: string; active: boolean }>;
 }
 
-const weeklyTrack = [
-  { day: "Пн", active: true },
-  { day: "Вт", active: true },
+const defaultWeeklyTrack = [
+  { day: "Пн", active: false },
+  { day: "Вт", active: false },
   { day: "Ср", active: false },
-  { day: "Чт", active: true },
-  { day: "Пт", active: true },
-  { day: "Сб", active: true },
+  { day: "Чт", active: false },
+  { day: "Пт", active: false },
+  { day: "Сб", active: false },
   { day: "Вс", active: false },
 ];
 
-export function StudentAchievements({ xp, levelInfo, coursesProgress, questionsCount }: StudentAchievementsProps) {
+export function StudentAchievements({ xp, levelInfo, coursesProgress, questionsCount, weeklyTrack = defaultWeeklyTrack }: StudentAchievementsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const maxCourseProgress = coursesProgress.length > 0
