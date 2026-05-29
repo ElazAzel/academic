@@ -19,9 +19,12 @@ import {
 import { toast } from "sonner";
 
 interface StudentOperation {
+  assignmentId?: string;
   studentId: string;
   name: string;
   email: string;
+  cohortId?: string;
+  courseId?: string | null;
   courseTitle: string;
   progressPercent: number;
   daysSinceLogin: number | null;
@@ -32,6 +35,15 @@ interface StudentOperation {
 
 interface CuratorRadarProps {
   students: StudentOperation[];
+}
+
+function getStudentOperationKey(student: StudentOperation) {
+  return [
+    student.studentId,
+    student.cohortId ?? "cohort",
+    student.courseId ?? student.courseTitle,
+    student.assignmentId ?? "assignment",
+  ].join(":");
 }
 
 export function CuratorRadar({ students }: CuratorRadarProps) {
@@ -176,7 +188,7 @@ export function CuratorRadar({ students }: CuratorRadarProps) {
           <div className="divide-y">
             {filteredStudents.length > 0 ? (
               filteredStudents.map(s => (
-                <div key={s.studentId} className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 hover:bg-muted/30 transition-colors">
+                <div key={getStudentOperationKey(s)} className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 hover:bg-muted/30 transition-colors">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <p className="font-semibold text-sm text-m3-on-surface">{s.name}</p>

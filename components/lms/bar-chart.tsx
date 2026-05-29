@@ -19,10 +19,10 @@ export function BarChart({
 
   return (
     <div className={cn("space-y-3", className)}>
-      {items.map((item) => {
+      {items.map((item, index) => {
         const pct = Math.round((item.value / chartMax) * 100);
         return (
-          <div key={item.label} className="space-y-1">
+          <div key={`${item.label}-${index}`} className="space-y-1">
             <div className="flex items-center justify-between text-sm">
               <div>
                 <span className="font-medium">{item.label}</span>

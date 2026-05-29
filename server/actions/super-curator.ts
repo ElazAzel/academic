@@ -513,10 +513,10 @@ export async function getCuratorActivity(curatorId: string) {
   });
   if (!curator) return null;
 
-  const curatorStudentIds = (await prisma.curatorAssignment.findMany({
+  const curatorStudentIds = [...new Set((await prisma.curatorAssignment.findMany({
     where: { curatorId, active: true },
     select: { studentId: true },
-  })).map((a) => a.studentId);
+  })).map((a) => a.studentId))];
 
   const [questions, submissions, activityLogs, chatMsgs] = await Promise.all([
     prisma.lessonQuestion.findMany({

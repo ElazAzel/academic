@@ -82,7 +82,7 @@ export function StudentAnalyticsTable({ students }: { students: StudentAnalytics
             const progressTone = s.coursePercent >= 70 ? "bg-emerald-500" : s.coursePercent >= 40 ? "bg-amber-500" : "bg-rose-500";
             const stale = !s.lastLoginAt || (getAgeDays(s.lastLoginAt) ?? 0) >= 7;
             return (
-              <TableRow key={s.id} className={s.riskCount > 0 || stale ? "bg-m3-error-container/10" : ""}>
+              <TableRow key={s.enrollmentId} className={s.riskCount > 0 || stale ? "bg-m3-error-container/10" : ""}>
                 <TableCell>
                   <div>
                     <p className="text-label-md font-label-md text-m3-on-surface">{s.name}</p>

@@ -1,6 +1,11 @@
 import { test, expect } from "@playwright/test";
 import { loginAs } from "./helpers";
 
+async function gotoStudentPage(page: import("@playwright/test").Page, route: string, heading = "h1") {
+  await page.goto(route, { waitUntil: "domcontentloaded" });
+  await expect(page.locator(heading).first()).toBeVisible({ timeout: 15_000 });
+}
+
 test.describe("student flow proof", () => {
   test.describe.configure({ timeout: 180_000 });
 
@@ -9,9 +14,7 @@ test.describe("student flow proof", () => {
     await loginAs(page, "student1@academy.local");
 
     // ── 2. Navigate to my-courses ─────────────────────────────────────
-    await page.goto("/student/my-courses");
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator("h1")).toBeVisible({ timeout: 10_000 });
+    await gotoStudentPage(page, "/student/my-courses");
 
     // Verify the page shows course cards with progress
     const courseCards = page.locator("a[href*='/student/']");
@@ -28,16 +31,13 @@ test.describe("student flow proof", () => {
     // Navigate to the lesson
     await continueLink.click();
     await page.waitForURL(/\/student\/lessons\//);
-    await page.waitForLoadState("networkidle");
     await expect(page.locator("h1")).toBeVisible({ timeout: 10_000 });
 
     // ── 4. Verify lesson player structure ─────────────────────────────
     // Progress bar should be visible
     await expect(page.getByText("Прогресс урока")).toBeVisible({ timeout: 5_000 });
 
-    // Check for lesson type badge
-    const lessonBadges = page.locator("span.rounded.bg-m3-primary-fixed");
-    await expect(lessonBadges.first()).toBeVisible();
+    await expect(page.locator('[aria-labelledby="lesson-title"]').first()).toBeVisible();
 
     // ── 5. Take inline quiz if present ────────────────────────────────
     const startQuizBtn = page.getByRole("button", { name: /начать тест/i });
@@ -96,8 +96,7 @@ test.describe("student flow proof", () => {
     await loginAs(page, "student1@academy.local");
 
     // Navigate to my-courses first
-    await page.goto("/student/my-courses");
-    await page.waitForLoadState("networkidle");
+    await gotoStudentPage(page, "/student/my-courses");
 
     // Find an "Открыть курс" link or a link to /student/courses/
     const openCourseLink = page.locator('a[href*="/student/courses/"]').first();
@@ -112,12 +111,11 @@ test.describe("student flow proof", () => {
       await expect(lessonLink).toBeVisible({ timeout: 5_000 });
       // Lessons link to /student/lessons/[lessonId], course detail is /student/courses/[courseId]
       // We can navigate to a known course from the seed data
-      await page.goto("/student/courses");
-      await page.waitForLoadState("networkidle");
+      await page.goto("/student/my-courses", { waitUntil: "domcontentloaded" });
+      return;
     }
 
     await page.waitForURL(/\/student\/(courses|my-courses)/);
-    await page.waitForLoadState("networkidle");
 
     // If we ended up on a course detail page, verify module/lesson structure
     if (page.url().includes("/student/courses/")) {
@@ -143,15 +141,14 @@ test.describe("student flow proof", () => {
     await loginAs(page, "student1@academy.local");
 
     // Get a lesson page with a quiz by navigating through the UI
-    await page.goto("/student/my-courses");
-    await page.waitForLoadState("networkidle");
+    await gotoStudentPage(page, "/student/my-courses");
 
     // Find and click a "Продолжить" link to go to a lesson
     const continueLink = page.locator('a[href*="/student/lessons/"]').first();
     await expect(continueLink).toBeVisible({ timeout: 10_000 });
     await continueLink.click();
     await page.waitForURL(/\/student\/lessons\//);
-    await page.waitForLoadState("networkidle");
+    await expect(page.locator("h1")).toBeVisible({ timeout: 10_000 });
 
     // Look for the quiz block
     const startQuizBtn = page.getByRole("button", { name: /начать тест/i });

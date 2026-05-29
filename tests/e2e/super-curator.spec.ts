@@ -26,12 +26,11 @@ test.describe("super-curator", () => {
     }
   });
 
-  test("can access curator dashboard", async ({ page }) => {
+  test("blocked from curator dashboard", async ({ page }) => {
     await loginAs(page, "supercurator@academy.local");
     await page.waitForURL("/super-curator");
     await page.goto("/curator");
-    await expect(page).toHaveURL("/curator");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page).toHaveURL(/\/login|\/403/);
   });
 
   test("blocked from admin dashboard", async ({ page }) => {

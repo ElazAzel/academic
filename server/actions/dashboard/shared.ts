@@ -69,6 +69,9 @@ export async function getStudentAnalyticsDetail(studentIds: string[]): Promise<S
     const timeData = lessonTimeMap.get(e.user.id);
     return {
       id: e.user.id,
+      enrollmentId: e.id,
+      courseId: e.courseId,
+      cohortId: e.cohortId,
       name: isAdmin ? (e.user.name ?? e.user.email) : maskStudentName(e.user.id),
       email: e.user.email,
       courseTitle: e.course.title,

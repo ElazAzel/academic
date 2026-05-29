@@ -17,6 +17,8 @@ export const metadata = {
 
 
 interface StudentRow {
+  enrollmentId: string;
+  courseId: string;
   id: string;
   name: string;
   email: string;
@@ -120,7 +122,7 @@ export default async function InstructorStudentsPage() {
               {students.length === 0 ? (
                 <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Нет слушателей на ваших курсах.</TableCell></TableRow>
               ) : students.map((s) => (
-                <TableRow key={`${s.id}-${s.courseTitle}`}>
+                <TableRow key={s.enrollmentId}>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Avatar name={s.name} className="h-7 w-7 text-[10px]" />

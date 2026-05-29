@@ -206,6 +206,7 @@ export async function getInstructorAnalytics() {
 
     const moduleAnalytics = courses.flatMap(c =>
       c.modules.map(m => ({
+        id: m.id,
         title: m.title,
         courseTitle: c.title,
         avgProgress: avgProgressMap.get(m.id) ?? 0,
@@ -238,6 +239,7 @@ export async function getInstructorAnalytics() {
       const passed = passedStatsMap.get(q.id) ?? 0;
       const avgScore = Math.round(attempts?._avg.score ?? 0);
       return {
+        id: q.id,
         title: q.title,
         totalAttempts: total,
         passed,
@@ -344,6 +346,8 @@ export async function getInstructorStudents() {
     });
 
     return enrollments.map((e) => ({
+      enrollmentId: e.id,
+      courseId: e.courseId,
       id: e.user.id,
       name: maskStudentName(e.user.id),
       email: e.user.email,

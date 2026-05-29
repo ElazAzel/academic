@@ -14,7 +14,7 @@ export const ROLE_USERS: RoleUser[] = [
   { role: "instructor", email: "instructor1@academy.local", homePath: "/instructor", allowedPrefixes: ["/instructor"] },
   { role: "student", email: "student1@academy.local", homePath: "/student", allowedPrefixes: ["/student"] },
   { role: "curator", email: "curator@academy.local", homePath: "/curator", allowedPrefixes: ["/curator"] },
-  { role: "super_curator", email: "supercurator@academy.local", homePath: "/super-curator", allowedPrefixes: ["/curator", "/super-curator"] },
+  { role: "super_curator", email: "supercurator@academy.local", homePath: "/super-curator", allowedPrefixes: ["/super-curator"] },
   { role: "customer_observer", email: "observer@academy.local", homePath: "/customer-observer", allowedPrefixes: ["/customer-observer"] },
 ];
 

@@ -456,6 +456,9 @@ export interface StudentProgress {
 
 export interface StudentAnalyticsDetail {
   id: string;
+  enrollmentId: string;
+  courseId: string;
+  cohortId?: string | null;
   name: string;
   email: string;
   courseTitle: string;

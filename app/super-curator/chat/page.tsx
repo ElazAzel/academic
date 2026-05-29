@@ -90,7 +90,11 @@ export default async function SuperCuratorChatPage() {
     unreadCounts.map((row) => [`${row.receiverId}:${row.senderId}`, row._count._all]),
   );
 
-  const pairs = curatorAssignments.map((assignment) => {
+  const uniqueAssignments = Array.from(
+    new Map(curatorAssignments.map((assignment) => [`${assignment.curatorId}:${assignment.studentId}`, assignment])).values(),
+  );
+
+  const pairs = uniqueAssignments.map((assignment) => {
     const key = `${assignment.curatorId}:${assignment.studentId}`;
     const lastMsg = lastMessageByPair.get(key);
     return {
@@ -150,7 +154,7 @@ export default async function SuperCuratorChatPage() {
             <div className="space-y-2">
               {chats.map((chat) => (
                 <div
-                  key={`${chat.curatorId}-${chat.studentId}`}
+                  key={`${chat.curatorId}:${chat.studentId}`}
                   className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-background/40"
                 >
                   <div className="min-w-0 flex-1">

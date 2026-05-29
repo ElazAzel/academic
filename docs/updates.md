@@ -2,6 +2,45 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-29 — Stabilize UI identity and Playwright E2E after student UX update
+
+**Что сделано:**
+- Исправлен `tests/e2e/student-flow.spec.ts`: переходы по авторизованным студенческим страницам больше не ждут `networkidle`, потому что уведомления/SSE оставляют сеть активной и приводили к зависаниям.
+- Проверка урока переведена на устойчивый ARIA-селектор оболочки lesson player вместо хрупкого текстового бейджа.
+- `playwright.config.ts` теперь ждёт готовность `/login`, запускает E2E в один worker и даёт dev-серверу больше времени на cold start.
+- Исправлен E2E-дрифт по ролям: `super_curator` больше не ожидает доступ к кабинету `/curator`, потому что по продуктовой модели он работает через `/super-curator`.
+- Убраны нестабильные React key для повторяющихся студентов/зачислений в аналитике, кураторских очередях, чате супер-куратора и диаграммах.
+- `next-env.d.ts` возвращён на production route types path после запусков Next dev.
+
+**Файлы изменены:**
+- `playwright.config.ts`
+- `tests/e2e/student-flow.spec.ts`
+- `tests/e2e/super-curator.spec.ts`
+- `tests/e2e/helpers.ts`
+- `components/lms/bar-chart.tsx`
+- `components/lms/curator-operations-board.tsx`
+- `components/lms/curator-radar.tsx`
+- `components/lms/student-analytics-table.tsx`
+- `app/instructor/analytics/page.tsx`
+- `app/instructor/students/page.tsx`
+- `app/super-curator/chat/page.tsx`
+- `server/actions/dashboard/instructor.ts`
+- `server/actions/dashboard/shared.ts`
+- `server/actions/super-curator.ts`
+- `types/domain.ts`
+- `next-env.d.ts`
+
+**Проверки:**
+- `npm.cmd run lint -- --max-warnings=0` — пройдено.
+- `npm.cmd run typecheck` — пройдено.
+- `npm.cmd run test` — пройдено, 72 файла / 451 тест.
+- `npm.cmd run build` — пройдено.
+- `npm run test:e2e -- tests/e2e/super-curator.spec.ts --project=chromium --project=mobile --reporter=line` — пройдено, 8 тестов.
+- Полный `npm run test:e2e -- --reporter=line` после первичной стабилизации проходил: 146 passed, 2 skipped. Финальный повтор после key/RBAC-правок был остановлен вручную во время прогона; фоновые процессы остановлены.
+
+**Остаточный риск:**
+- В dev-логе Playwright на быстрых переходах по нескольким маршрутам супер-куратора остаётся предупреждение Next dev `$RS parentNode`; тесты маршрутной доступности при этом проходят.
+
 ## 2026-05-27 — Student course and lesson player UI
 
 **Что сделано:**

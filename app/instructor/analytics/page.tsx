@@ -86,7 +86,7 @@ export default async function InstructorAnalyticsPage() {
                     />
                     <div className="space-y-1 text-center">
                       {moduleAnalytics.map((m) => (
-                        <div key={m.title} className="flex items-center justify-between gap-4 font-body-sm text-body-sm">
+                        <div key={m.id} className="flex items-center justify-between gap-4 font-body-sm text-body-sm">
                           <span className="text-m3-on-surface-variant truncate max-w-[100px]">{m.title}</span>
                           <span className="font-label-md text-label-md text-m3-on-surface">{m.avgProgress}%</span>
                         </div>
@@ -133,7 +133,7 @@ export default async function InstructorAnalyticsPage() {
                     </div>
                     <div className="space-y-2 font-body-sm text-body-sm">
                       {quizStats.map((q) => (
-                        <div key={q.title} className="flex items-center justify-between">
+                        <div key={q.id} className="flex items-center justify-between">
                           <span className="text-m3-on-surface-variant truncate max-w-[140px]">{q.title}</span>
                           <span className="font-label-md text-label-md text-m3-on-surface">{q.avgScore}%</span>
                         </div>

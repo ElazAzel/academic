@@ -309,7 +309,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
         <div className="grid gap-4 xl:grid-cols-2">
           {filteredStudents.map((student) => (
             <article
-              key={student.assignmentId}
+              key={`${student.studentId}:${student.cohortId}:${student.courseId ?? "course"}:${student.assignmentId}`}
               className={cn(
                 "rounded-lg border p-4 transition-colors",
                 ACTION_TONE_CLASSES[student.nextAction.tone]
