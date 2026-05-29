@@ -1,6 +1,6 @@
 # TODO — AI Strategic Academy
 
-Дата актуализации: 2026-05-24
+Дата актуализации: 2026-05-29
 
 ## Ближайшие задачи
 
@@ -8,8 +8,8 @@
 |---|--------|-------|-----------|--------|
 | 1 | **Мониторинг Vercel auto-deploy** | DevOps | P1 | 🔄 После пуша в main |
 | 2 | **DPA подписание (Vercel + Supabase)** | Legal | P1 | 🔴 Не подписан |
-| 3 | **Ротация скомпрометированного Supabase пароля** | Security | P1 | 🔴 Инцидент в git history |
-| 4 | **Staging-окружение** | DevOps | P2 | 🟡 Не настроено |
+| 3 | **Ротация скомпрометированного Supabase пароля** | Security | P1 | 🔴 Инцидент в git history (рекомендуется) |
+| 4 | **Staging-окружение** | DevOps | P2 | ✅ Ветка staging и инструкция добавлены |
 | 5 | **Git purge __dbcheck.mjs из истории** | Security | P2 | 🟡 Требует force-push |
 | 6 | **CSP: nonce-based script-src** | Security | P2 | 🟡 unsafe-inline остаётся (Next.js hydration) |
 | 7 | **E2E full suite (все роли + сценарии)** | QA | P2 | 🟡 Только smoke (52/52) |
@@ -51,8 +51,8 @@
 
 | # | Задача | Фаза | Статус |
 |---|--------|------|--------|
-| 1 | Real-time уведомления (SSE) | 2 | 🟡 Outbox handler exists |
-| 2 | SCORM/xAPI import | 2 | 🟡 Schema + API созданы, ждёт ZIP-импорт |
+| 1 | Real-time уведомления (SSE) | 2 | ✅ Реализовано на ReadableStream, SSE endpoint + useNotifications hook |
+| 2 | SCORM/xAPI import | 2 | ✅ Реализовано (SCORM ZIP import, CMI backend, LRS) |
 | 3 | Video hosting (YouTube + Vimeo) | 2 | ✅ |
 | 4 | Forum/discussion per lesson | 2 | ✅ |
 | 5 | Attendance analytics | 2 | ✅ |
@@ -61,5 +61,5 @@
 | 8 | Search extraction (MeiliSearch/Elastic) | 3 | ❌ |
 | 9 | AI recommendations engine | 4 | ❌ |
 | 10 | Adaptive learning paths | 4 | ❌ |
-| 11 | NLP curator assistant | 4 | ❌ |
+| 11 | NLP curator assistant | 4 | ✅ Реализовано (MVP full-text search, assistant Server Action, UI panel) |
 | 12 | Mobile native app | 4 | ❌ |

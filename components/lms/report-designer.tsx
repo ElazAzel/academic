@@ -207,12 +207,12 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
                 className={cn(
                   "rounded-lg border px-4 py-2 text-sm font-medium transition-all text-left",
                   reportType === t.id
-                    ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
-                    : "border-border hover:border-primary/30 hover:bg-muted/50"
+                    ? "border-m3-primary bg-m3-primary/5 text-m3-primary ring-1 ring-m3-primary"
+                    : "border-m3-outline-variant text-m3-on-surface-variant hover:border-m3-primary/30 hover:bg-m3-surface-container-high/40"
                 )}
               >
                 <p>{t.title}</p>
-                <p className="text-[10px] text-muted-foreground font-normal mt-0.5">{t.desc}</p>
+                <p className="text-[10px] text-m3-on-surface-variant font-normal mt-0.5">{t.desc}</p>
               </button>
             ))}
           </div>
@@ -236,8 +236,8 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-all",
                     isSelected
-                      ? "border-primary/40 bg-primary/5 text-primary"
-                      : "border-border text-muted-foreground hover:border-muted-foreground/30"
+                      ? "border-m3-primary/40 bg-m3-primary/5 text-m3-primary"
+                      : "border-m3-outline-variant text-m3-on-surface-variant hover:border-m3-on-surface-variant/30 hover:bg-m3-surface-container-high/40"
                   )}
                 >
                   {isSelected ? <Check className="h-3 w-3" /> : null}
@@ -260,8 +260,8 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
                   className={cn(
                     "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all",
                     format === f.id
-                      ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
-                      : "border-border hover:border-primary/30 hover:bg-muted/50"
+                      ? "border-m3-primary bg-m3-primary/5 text-m3-primary ring-1 ring-m3-primary"
+                      : "border-m3-outline-variant text-m3-on-surface-variant hover:border-m3-primary/30 hover:bg-m3-surface-container-high/40"
                   )}
                 >
                   <FmtIcon className="h-4 w-4" />
@@ -300,18 +300,18 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
                 <span className="text-xs">Загрузка данных из базы...</span>
               </div>
             ) : previewError ? (
-              <div className="rounded-lg bg-red-50 p-4 text-xs text-red-800 border border-red-200">
+              <div className="rounded-lg bg-m3-error-container/10 p-4 text-xs text-m3-error border border-m3-error/20">
                 {previewError}
               </div>
             ) : previewRows.length === 0 ? (
-              <div className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
+              <div className="rounded-lg border border-dashed p-6 text-center text-xs text-m3-on-surface-variant">
                 Нет данных для отображения.
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-border shadow-inner max-h-[300px] overflow-y-auto">
+              <div className="overflow-x-auto rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-inner max-h-[300px] overflow-y-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-muted/50 border-b border-border sticky top-0">
+                    <tr className="bg-m3-surface-container-low border-b border-m3-outline-variant sticky top-0">
                       {currentType.columns.map((col) => {
                         if (!selectedColumns.has(col.key)) return null;
                         return (
@@ -324,7 +324,7 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
                   </thead>
                   <tbody>
                     {previewRows.map((row, idx) => (
-                      <tr key={idx} className="border-b border-border last:border-0 hover:bg-muted/10 transition-colors">
+                      <tr key={idx} className="border-b border-m3-outline-variant last:border-0 hover:bg-m3-surface-container-high/20 transition-colors">
                         {currentType.columns.map((col) => {
                           if (!selectedColumns.has(col.key)) return null;
                           const rawVal = row[col.key];
@@ -361,19 +361,26 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
               <Eye className="h-4 w-4 mr-2" />
               Показать превью
             </Button>
-            <a
-              href={downloadUrl}
-              download
-              onClick={() => {
-                setGenerating(true);
-                setTimeout(() => setGenerating(false), 3000);
-              }}
-            >
-              <Button disabled={selectedColumns.size === 0 || generating}>
+            {selectedColumns.size === 0 || generating ? (
+              <Button disabled>
                 <Download className="h-4 w-4 mr-2" />
                 {generating ? "Генерация..." : "Скачать"}
               </Button>
-            </a>
+            ) : (
+              <Button asChild>
+                <a
+                  href={downloadUrl}
+                  download
+                  onClick={() => {
+                    setGenerating(true);
+                    setTimeout(() => setGenerating(false), 3000);
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Скачать
+                </a>
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>
