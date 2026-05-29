@@ -44,7 +44,7 @@ export function LessonEditor({
           onChange={(e) => onChange({ summary: e.target.value })}
         />
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
           <label htmlFor="lessonType" className="text-xs font-semibold uppercase text-muted-foreground">Тип</label>
           <select

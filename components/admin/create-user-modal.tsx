@@ -52,7 +52,7 @@ export function CreateUserModal({
           </div>
           <fieldset className="space-y-2">
             <legend className="text-xs font-semibold uppercase text-muted-foreground">Роли</legend>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {assignableRoles.map((role) => (
                 <label key={role} className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted/50 cursor-pointer text-sm">
                   <input type="checkbox" name="roles" value={role} defaultChecked={role === "student"} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />

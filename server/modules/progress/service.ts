@@ -81,7 +81,7 @@ export async function markLessonProgress(userId: string, lessonId: string, perce
     // concurrent запросов прогресса (предотвращает race condition в sequential unlock
     // и в расчёте процента завершения модуля/курса)
     await tx.$queryRaw(
-      Prisma.sql`SELECT 1 FROM "enrollment" WHERE "user_id" = ${userId} AND "course_id" = ${course.id} FOR UPDATE`
+      Prisma.sql`SELECT 1 FROM "enrollments" WHERE "user_id" = ${userId} AND "course_id" = ${course.id} FOR UPDATE`
     );
 
     // Sequential unlock check — ВНУТРИ транзакции, чтобы гарантировать атомарность

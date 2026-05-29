@@ -214,7 +214,7 @@ export function AdminPopupManagerClient() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Ссылка (необязательно)</Label>
                 <Input

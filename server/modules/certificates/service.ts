@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage } from "pdf-lib";
+import { EnrollmentStatus } from "@prisma/client";
 import fontkit from "@pdf-lib/fontkit";
 import QRCode from "qrcode";
 import fs from "fs";
@@ -148,10 +149,14 @@ export async function issueCertificate(input: { userId: string; courseId: string
       });
     }
   } else {
-    if (!progress || progress.percent < env.CERTIFICATE_COMPLETION_THRESHOLD) {
+    if (!enrollment || enrollment.status !== EnrollmentStatus.ACTIVE) {
+      throw new ApiError("forbidden", "Нет активного доступа к курсу для выдачи сертификата", 403);
+    }
+
+    if (!progress) {
       throw new ApiError("forbidden", "Условия выдачи сертификата не выполнены", 403, {
         requiredPercent: env.CERTIFICATE_COMPLETION_THRESHOLD,
-        actualPercent: progress?.percent ?? 0
+        actualPercent: 0
       });
     }
     const course = await prisma.course.findUniqueOrThrow({
@@ -169,6 +174,12 @@ export async function issueCertificate(input: { userId: string; courseId: string
         },
       },
     });
+    if (progress.percent < course.completionThreshold) {
+      throw new ApiError("forbidden", "Условия выдачи сертификата не выполнены", 403, {
+        requiredPercent: course.completionThreshold,
+        actualPercent: progress.percent
+      });
+    }
 
     const gatedLessons = completionBasis(course.modules.flatMap((module) => module.lessons)).filter(
       (lesson) => lesson.quizzes.length > 0 || lesson.assignments.length > 0,
@@ -232,6 +243,32 @@ export async function issueCertificate(input: { userId: string; courseId: string
     }
   });
   return certificate;
+}
+
+export async function claimCertificateForCourse(userId: string, courseId: string) {
+  const existing = await prisma.certificate.findFirst({
+    where: { userId, courseId, revokedAt: null },
+    select: { id: true, number: true, courseId: true, userId: true, issuedAt: true, verificationCode: true },
+  });
+
+  if (existing) {
+    return { certificate: existing, alreadyIssued: true };
+  }
+
+  try {
+    const certificate = await issueCertificate({ userId, courseId }, userId);
+    return { certificate, alreadyIssued: false };
+  } catch (error) {
+    if (error instanceof ApiError && error.code === "conflict") {
+      const certificate = await prisma.certificate.findFirstOrThrow({
+        where: { userId, courseId, revokedAt: null },
+        select: { id: true, number: true, courseId: true, userId: true, issuedAt: true, verificationCode: true },
+      });
+      return { certificate, alreadyIssued: true };
+    }
+
+    throw error;
+  }
 }
 
 export async function revokeCertificate(certificateId: string, actorId: string) {

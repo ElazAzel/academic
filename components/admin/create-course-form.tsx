@@ -81,7 +81,7 @@ export function CreateCourseForm({
           placeholder="О чем этот курс (мин. 10 символов)..."
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
           <label htmlFor="durationHours" className="text-xs font-medium uppercase text-muted-foreground">Часы</label>
           <Input id="durationHours" name="durationHours" type="number" required min={0} defaultValue="10" />

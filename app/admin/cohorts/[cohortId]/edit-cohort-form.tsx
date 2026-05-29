@@ -49,7 +49,7 @@ export function EditCohortForm({
           ))}
         </select>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label htmlFor="startsAt" className="text-xs font-medium text-muted-foreground uppercase">Дата начала</label>
           <input id="startsAt" name="startsAt" type="date" defaultValue={cohort.startsAt?.toISOString().slice(0, 10) ?? ""} className="w-full h-10 rounded-lg border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />

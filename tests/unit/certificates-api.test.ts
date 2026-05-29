@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockRequireUser = vi.hoisted(() => vi.fn());
 const mockListCertificates = vi.hoisted(() => vi.fn());
 const mockIssueCertificate = vi.hoisted(() => vi.fn());
+const mockClaimCertificateForCourse = vi.hoisted(() => vi.fn());
 const mockGenerateCertificatePdf = vi.hoisted(() => vi.fn());
 const mockGetScopedStudentIdsForObserver = vi.hoisted(() => vi.fn());
 const mockCertificateFindMany = vi.hoisted(() => vi.fn());
@@ -15,6 +16,7 @@ vi.mock("@/server/modules/observer/scope", () => ({
 vi.mock("@/server/modules/certificates/service", () => ({
   listCertificates: mockListCertificates,
   issueCertificate: mockIssueCertificate,
+  claimCertificateForCourse: mockClaimCertificateForCourse,
   generateCertificatePdf: mockGenerateCertificatePdf,
 }));
 vi.mock("@/lib/security/rate-limit", () => ({
@@ -27,10 +29,11 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 const certificatesRoute = await import("@/app/api/v1/certificates/route");
+const claimRoute = await import("@/app/api/v1/certificates/claim/route");
 const bulkRoute = await import("@/app/api/v1/certificates/bulk/route");
 
-function jsonRequest(body: unknown) {
-  return new Request("http://localhost/api/v1/certificates/bulk", {
+function jsonRequest(body: unknown, url = "http://localhost/api/v1/certificates/bulk") {
+  return new Request(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
@@ -41,6 +44,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockListCertificates.mockResolvedValue([]);
   mockIssueCertificate.mockResolvedValue({ id: "issued-cert" });
+  mockClaimCertificateForCourse.mockResolvedValue({ certificate: { id: "issued-cert" }, alreadyIssued: false });
   mockGenerateCertificatePdf.mockResolvedValue(new Uint8Array([1, 2, 3]));
   mockGetScopedStudentIdsForObserver.mockResolvedValue(["student-allowed"]);
   mockCertificateFindMany.mockResolvedValue([]);
@@ -86,6 +90,43 @@ describe("certificates API scope", () => {
 
     expect(response.status).toBe(200);
     expect(mockListCertificates).toHaveBeenCalledWith({ userId: "student1" });
+  });
+
+  it("lets a student claim their own eligible certificate", async () => {
+    mockRequireUser.mockResolvedValue({ id: "student1", roles: ["student"] });
+
+    const response = await claimRoute.POST(
+      jsonRequest({ courseId: "course1" }, "http://localhost/api/v1/certificates/claim"),
+    );
+
+    expect(response.status).toBe(201);
+    expect(mockClaimCertificateForCourse).toHaveBeenCalledWith("student1", "course1");
+  });
+
+  it("returns existing own certificate claim idempotently", async () => {
+    mockRequireUser.mockResolvedValue({ id: "student1", roles: ["student"] });
+    mockClaimCertificateForCourse.mockResolvedValue({
+      certificate: { id: "existing-cert" },
+      alreadyIssued: true,
+    });
+
+    const response = await claimRoute.POST(
+      jsonRequest({ courseId: "course1" }, "http://localhost/api/v1/certificates/claim"),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockClaimCertificateForCourse).toHaveBeenCalledWith("student1", "course1");
+  });
+
+  it("does not let non-student roles use the self-claim endpoint", async () => {
+    mockRequireUser.mockResolvedValue({ id: "admin1", roles: ["admin"] });
+
+    const response = await claimRoute.POST(
+      jsonRequest({ courseId: "course1" }, "http://localhost/api/v1/certificates/claim"),
+    );
+
+    expect(response.status).toBe(403);
+    expect(mockClaimCertificateForCourse).not.toHaveBeenCalled();
   });
 
   it("scopes customer observer bulk downloads to permitted students", async () => {

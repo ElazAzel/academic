@@ -50,7 +50,7 @@ export default async function SuperCuratorCuratorsPage() {
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center text-xs">
                     <div className="rounded-lg bg-muted p-2">
                       <p className="font-bold text-sm">{cur.studentCount}</p>
                       <p className="text-muted-foreground">Слушателей</p>

@@ -57,7 +57,7 @@ export function RiskActions() {
                 {students.map((s) => <option key={s.id} value={s.id}>{s.name ?? s.email}</option>)}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label htmlFor="type" className="text-sm font-medium">Тип риска</label>
                 <select id="type" name="type" required className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">

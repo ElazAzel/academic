@@ -2,6 +2,41 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-29 — Мобильный слой платформы и получение сертификатов
+
+**Что сделано:**
+- Исправлен мобильный экран `/student/certificates`: таблица заменяется карточками на малых экранах, кнопки `PDF` и `Проверить` занимают полную ширину и не режут текст.
+- Добавлен пользовательский сценарий получения сертификата: студент может нажать `Получить сертификат` из карточки курса/завершенного курса, API безопасно проверяет активное зачисление, прогресс и порог завершения конкретного курса.
+- Сделана идемпотентная выдача: повторное нажатие возвращает уже выданный сертификат, а не падает конфликтом.
+- Исправлены raw SQL-блокировки enrollment после обновления схемы: обращения идут к таблице `enrollments`, а не к несуществующей `enrollment`.
+- Усилен общий адаптив: базовый `Table` на мобильном рендерится как список карточек, `TableCell` переносит длинный контент, базовый `Button` больше не обрезает длинные русские подписи на малых экранах.
+- Пройдены 25 ключевых role-route smoke-проверок на мобильной ширине без горизонтального overflow, framework overlay и обрезки видимых кнопок/ссылок; отдельно проверен сценарий выдачи сертификата и переход к списку сертификатов.
+
+**Файлы изменены:**
+- `app/api/v1/certificates/claim/route.ts`
+- `app/student/certificates/page.tsx`
+- `app/student/courses/[courseId]/page.tsx`
+- `components/lms/certificate-claim-button.tsx`
+- `components/lms/course-hero-card.tsx`
+- `components/ui/button.tsx`
+- `components/ui/table.tsx`
+- `server/modules/certificates/service.ts`
+- `server/modules/quizzes/service.ts`
+- `server/modules/progress/service.ts`
+- `server/modules/assignments/service.ts`
+- ряд форм и рабочих панелей в `app/**` и `components/**` переведен с фиксированных desktop-grid на mobile-first grid.
+
+**Проверки:**
+- `npm run lint -- --max-warnings=0` — пройдено.
+- `npm run typecheck` — пройдено.
+- `npm run test` — пройдено, 74 файла / 463 теста.
+- `npm run build` — пройдено.
+- Browser/Playwright smoke `/student/certificates` на мобильной ширине — пройдено: карточки отображаются, кнопки сертификата не сжимаются и не создают горизонтальный overflow.
+- Playwright smoke 390px по 25 маршрутам student/admin/instructor/curator/super-curator/customer-observer — пройдено: `status 200`, `overflowX 0`, overlay отсутствует, обрезки видимых кнопок/ссылок нет.
+
+**Остаточный риск:**
+- На быстрых автоматических переходах между множеством dynamic-страниц может появляться известная Next/React streaming ошибка `$RS parentNode`; визуального падения и overlay не обнаружено, но это оставлено как отдельный технический follow-up.
+
 ## 2026-05-29 — Ультра-улучшение визуальной системы закрытой академии
 
 **Что сделано:**
@@ -33,7 +68,9 @@
 - Browser smoke `/login` — пройдено на 1280x720 и Pixel 7: экран не пустой, поля email/password и кнопка входа присутствуют в единственном экземпляре, горизонтального overflow и console errors нет.
 
 **Остаточный риск:**
-- Авторизованный workspace-smoke через локальный `next start` заблокирован текущим состоянием БД: таблица `public.auth_device_sessions` отсутствует, потому миграция `20260529000000_add_auth_device_sessions` еще не применена к подключенной базе.
+- При первичной проверке авторизованный workspace-smoke через локальный `next start` был заблокирован состоянием БД: таблица `public.auth_device_sessions` отсутствовала.
+- Операционно исправлено после проверки: выполнен `npx prisma db execute --file prisma/migrations/20260529000000_add_auth_device_sessions/migration.sql`, таблица и индексы созданы, повторный login smoke до `/student` прошел без 500 и console errors.
+- В `npx prisma migrate status` все еще числятся более ранние pending-миграции `20260524000000_add_missing_fk_indexes` и `20260524000002_disable_rls_all_tables`; полный `migrate deploy` нужно выполнять отдельным осознанным шагом, потому что текущая БД подключена к Supabase.
 
 ## 2026-05-29 — Архитектурный рефакторинг изоляции БД и исправление мобильных отступов
 

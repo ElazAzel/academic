@@ -36,7 +36,7 @@ export function AssignmentBlockEditor({
           minHeight="100px"
         />
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label htmlFor="maxAttempts" className="text-xs text-muted-foreground">Макс. попыток</label>
           <input id="maxAttempts" type="number" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={maxAttempts} onChange={(e) => { setMaxAttempts(Number(e.target.value)); updateParent(); }} />

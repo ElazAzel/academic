@@ -973,7 +973,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {PRESET_THEMES.map(theme => (
                   <button
                     key={theme.name}
@@ -1049,7 +1049,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
             <CardContent className="p-4 space-y-4">
               <div>
                 <Label className="text-xs font-semibold">Выберите элемент для редактирования:</Label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                   {[
                     { key: "studentName", label: "ФИО" },
                     { key: "courseTitle", label: "Название курса" },
@@ -1071,7 +1071,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
               </div>
 
               <div className="border-t pt-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-xs">Координата X</Label>
                     <Input 

@@ -95,7 +95,7 @@ export function GlossaryEditor({
         <Card className="rounded-lg border-primary/20">
           <CardContent className="p-4">
             <form action={handleCreate} className="space-y-3">
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className="col-span-2">
                   <Input name="question" placeholder="Вопрос" required />
                 </div>
@@ -139,7 +139,7 @@ export function GlossaryEditor({
                     <CardContent className="p-4">
                       {editingId === entry.id ? (
                         <form action={handleUpdate} className="space-y-3">
-                          <div className="grid grid-cols-4 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                             <div className="col-span-2">
                               <Input name="question" defaultValue={entry.question} required />
                             </div>

@@ -38,7 +38,7 @@ export function QuizBlockEditor({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label htmlFor="quizTitle" className="text-xs text-muted-foreground">Название теста</label>
            <input id="quizTitle" className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm" value={title} onChange={(e) => { setTitle(e.target.value); updateParent(questions, e.target.value, passThreshold, maxAttempts); }} />

@@ -6,6 +6,7 @@ import { Breadcrumbs } from "@/components/lms/breadcrumbs";
 import { CourseSidebar } from "@/components/lms/course-sidebar";
 import { ModuleAccordion } from "@/components/lms/module-accordion";
 import { EmptyState } from "@/components/lms/empty-state";
+import { CertificateClaimButton } from "@/components/lms/certificate-claim-button";
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/http";
 import { requireRolePage } from "@/lib/auth/page-guards";
@@ -90,9 +91,7 @@ function StudentCourseNextStep({
               <p className="mt-1 text-body-sm font-body-sm text-emerald-800">Все доступные уроки курса пройдены.</p>
             </div>
           </div>
-          <Button asChild size="sm" variant="primary" className="w-full sm:w-auto">
-            <Link href="/student/certificates">Перейти к сертификатам</Link>
-          </Button>
+          <CertificateClaimButton courseId={courseId} size="sm" className="w-full sm:w-auto" />
         </div>
       </section>
     );

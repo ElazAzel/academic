@@ -250,7 +250,7 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
       // проверки лимита попыток (FOR UPDATE гарантирует, что второй concurrent
       // запрос дождётся коммита первого)
       await tx.$queryRaw(
-        Prisma.sql`SELECT 1 FROM "enrollment" WHERE "user_id" = ${userId} AND "course_id" = ${resolvedCourseId} FOR UPDATE`
+        Prisma.sql`SELECT 1 FROM "enrollments" WHERE "user_id" = ${userId} AND "course_id" = ${resolvedCourseId} FOR UPDATE`
       );
       const attempts = await tx.quizAttempt.count({ where: { quizId, userId } });
       if (attempts >= quiz.maxAttempts) {

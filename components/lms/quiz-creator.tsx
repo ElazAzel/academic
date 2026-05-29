@@ -107,7 +107,7 @@ export function QuizCreator({
   return (
     <div className="rounded-lg border bg-muted/10 p-4 space-y-4">
       <h4 className="text-sm font-semibold">Создание теста</h4>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label htmlFor="quizTitle" className="text-xs text-muted-foreground">Название</label>
           <Input id="quizTitle" name="quizTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Тест по теме" />

@@ -83,7 +83,7 @@ export function AssignmentCreator({
           placeholder="Опишите задание подробно..."
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label htmlFor="assignmentCreatorMaxAttempts" className="text-xs text-muted-foreground">Макс. попыток</label>
           <Input id="assignmentCreatorMaxAttempts" type="number" value={maxAttempts} onChange={(e) => setMaxAttempts(Number(e.target.value))} />

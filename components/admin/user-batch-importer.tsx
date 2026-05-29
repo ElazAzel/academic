@@ -233,7 +233,7 @@ export function UserBatchImporter({
                       <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help" />
                     </span>
                   </legend>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {assignableRoles.map((role) => (
                       <label 
                         key={role} 
@@ -471,7 +471,7 @@ export function UserBatchImporter({
                 Все выбранные записи были успешно обработаны на сервере.
               </p>
               
-              <div className="grid grid-cols-4 gap-2 pt-2 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-2 text-xs">
                 <div className="bg-background rounded-lg p-3 border">
                   <div className="font-bold text-emerald-600 text-lg">
                     {importResults.filter(r => r.status === "created").length}

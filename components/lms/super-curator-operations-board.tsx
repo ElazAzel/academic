@@ -126,7 +126,7 @@ export function SuperCuratorOperationsBoard({
                       </Button>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-center font-body-sm text-body-sm">
+                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 text-center font-body-sm text-body-sm">
                       <MetricCell value={curator.studentsCount} label="слуш." />
                       <MetricCell value={curator.openQuestions} label="вопросов" hot={curator.openQuestions > 0} />
                       <MetricCell value={curator.pendingReviews} label="работ" hot={curator.pendingReviews > 0} />
@@ -201,7 +201,7 @@ export function SuperCuratorOperationsBoard({
                         <Link href={cohort.nextActionHref}>{cohort.nextActionLabel}</Link>
                       </Button>
                     </div>
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-center font-body-sm text-body-sm md:grid-cols-6">
+                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 text-center font-body-sm text-body-sm md:grid-cols-6">
                       <MetricCell value={cohort.studentsCount} label="слуш." />
                       <MetricCell value={cohort.curatorCount} label="кур." />
                       <MetricCell value={`${cohort.avgProgress}%`} label="прогресс" />

@@ -6,6 +6,7 @@ const mockAssignmentSubmissionFindFirst = vi.hoisted(() => vi.fn());
 const mockLessonProgressCount = vi.hoisted(() => vi.fn());
 const mockCertificateCreate = vi.hoisted(() => vi.fn());
 const mockCertificateFindFirst = vi.hoisted(() => vi.fn());
+const mockCertificateFindFirstOrThrow = vi.hoisted(() => vi.fn());
 const mockCertificateFindUnique = vi.hoisted(() => vi.fn());
 const mockCertificateUpdate = vi.hoisted(() => vi.fn());
 const mockAuditLogCreate = vi.hoisted(() => vi.fn());
@@ -41,6 +42,7 @@ vi.mock("@/lib/prisma", () => ({
     certificate: {
       create: mockCertificateCreate,
       findFirst: mockCertificateFindFirst,
+      findFirstOrThrow: mockCertificateFindFirstOrThrow,
       findUnique: mockCertificateFindUnique,
       update: mockCertificateUpdate,
     },
@@ -52,7 +54,7 @@ vi.mock("@/lib/prisma", () => ({
   }),
 }));
 
-const { issueCertificate, revokeCertificate } = await import("@/server/modules/certificates/service");
+const { claimCertificateForCourse, issueCertificate, revokeCertificate } = await import("@/server/modules/certificates/service");
 
 describe("certificate notification and audit events", () => {
   beforeEach(() => {
@@ -63,7 +65,15 @@ describe("certificate notification and audit events", () => {
     mockAuditLogCreate.mockResolvedValue({ id: "audit-1" });
     mockLessonProgressCount.mockResolvedValue(0);
     mockCertificateFindFirst.mockResolvedValue(null);
-    mockEnrollmentFindUnique.mockResolvedValue({ id: "enrollment-1" });
+    mockCertificateFindFirstOrThrow.mockResolvedValue({
+      id: "certificate-1",
+      userId: "student-1",
+      courseId: "course-1",
+      number: "ASA-2026-TEST",
+      verificationCode: "verification-1",
+      issuedAt: new Date("2026-05-01T00:00:00.000Z"),
+    });
+    mockEnrollmentFindUnique.mockResolvedValue({ id: "enrollment-1", status: "ACTIVE" });
     mockEnrollmentCreate.mockResolvedValue({ id: "enrollment-1" });
   });
 
@@ -101,6 +111,45 @@ describe("certificate notification and audit events", () => {
         }),
       }),
     );
+  });
+
+  it("uses the course completion threshold when issuing certificates", async () => {
+    mockEnrollmentFindUnique.mockResolvedValue({ id: "enrollment-1", status: "ACTIVE" });
+    mockCourseProgressFindUnique.mockResolvedValue({ enrollmentId: "enrollment-1", percent: 75 });
+    mockCourseFindUniqueOrThrow.mockResolvedValue({
+      id: "course-1",
+      completionThreshold: 70,
+      finalAssignmentId: null,
+      modules: [],
+    });
+    mockCertificateCreate.mockResolvedValue({
+      id: "certificate-1",
+      userId: "student-1",
+      courseId: "course-1",
+      enrollmentId: "enrollment-1",
+      verificationCode: "verification-1",
+    });
+
+    await issueCertificate({ userId: "student-1", courseId: "course-1" }, "student-1");
+
+    expect(mockCertificateCreate).toHaveBeenCalled();
+  });
+
+  it("returns an existing certificate when the student claims it again", async () => {
+    const existingCertificate = {
+      id: "certificate-existing",
+      userId: "student-1",
+      courseId: "course-1",
+      number: "ASA-2026-EXIST",
+      verificationCode: "verification-existing",
+      issuedAt: new Date("2026-05-01T00:00:00.000Z"),
+    };
+    mockCertificateFindFirst.mockResolvedValue(existingCertificate);
+
+    const result = await claimCertificateForCourse("student-1", "course-1");
+
+    expect(result).toEqual({ certificate: existingCertificate, alreadyIssued: true });
+    expect(mockCertificateCreate).not.toHaveBeenCalled();
   });
 
   it("blocks certificates when required quiz or assignment lessons are not completed", async () => {

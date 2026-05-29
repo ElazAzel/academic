@@ -8,6 +8,13 @@ vi.mock("next/link", () => ({
   default: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props}>{children}</a>,
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
+
 function makeDetail(overrides?: Partial<StudentCoursePlayerDetail>): StudentCoursePlayerDetail {
   return {
     course: {
@@ -55,10 +62,10 @@ describe("CourseHeroCard", () => {
     expect(img).toHaveAttribute("src", "/cover.jpg");
   });
 
-  it("shows certificate button when eligible", () => {
+  it("shows certificate claim button when eligible", () => {
     const detail = makeDetail({ certificateEligible: true });
     render(<CourseHeroCard detail={detail} />);
-    expect(screen.getByText("Получить сертификат")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Получить сертификат" })).toBeInTheDocument();
   });
 
   it("shows certificate placeholder when not eligible", () => {

@@ -66,7 +66,7 @@ export async function submitAssignment(input: {
   const submission = await prisma.$transaction(async (tx) => {
     // FOR UPDATE на enrollment — mutex per-user-per-course против race condition
     await tx.$queryRaw(
-      Prisma.sql`SELECT 1 FROM "enrollment" WHERE "user_id" = ${input.userId} AND "course_id" = ${courseId} FOR UPDATE`
+      Prisma.sql`SELECT 1 FROM "enrollments" WHERE "user_id" = ${input.userId} AND "course_id" = ${courseId} FOR UPDATE`
     );
     const attemptNumber =
       (await tx.assignmentSubmission.count({

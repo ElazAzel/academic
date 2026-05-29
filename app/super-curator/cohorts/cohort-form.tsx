@@ -56,7 +56,7 @@ export function CreateCohortForm({ courses }: { courses: { id: string; title: st
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="startsAt" className="text-sm font-medium">Дата старта</label>
               <Input id="startsAt" name="startsAt" type="date" />
@@ -135,7 +135,7 @@ export function EditCohortForm({
             <label htmlFor="name" className="text-sm font-medium">Название</label>
             <Input id="name" name="name" defaultValue={cohort.name} required />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="startsAt" className="text-sm font-medium">Дата старта</label>
               <Input id="startsAt" name="startsAt" type="date" defaultValue={cohort.startsAt?.slice(0, 10) ?? ""} />

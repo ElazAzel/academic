@@ -122,7 +122,7 @@ export function CuratorLeaderboard({ curators }: { curators: CuratorLoad[] }) {
                 </div>
 
                 {/* Stats grid */}
-                <div className="grid grid-cols-3 gap-3 text-center shrink-0">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center shrink-0">
                   <div className="min-w-[60px]">
                     <p className="text-xs font-semibold">{c.questionsAnswered}</p>
                     <p className="text-[10px] text-muted-foreground">отвечено</p>

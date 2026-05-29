@@ -287,7 +287,7 @@ export function CuratorRadar({ students }: CuratorRadarProps) {
             <CardContent className="p-5 space-y-4">
               <div>
                 <span className="text-xs font-semibold text-slate-700">1. Выберите шаблон сообщения:</span>
-                <div className="grid grid-cols-3 gap-2 mt-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1.5">
                   {[
                     { type: "encouragement" as const, label: "Напомнить о себе" },
                     { type: "praise" as const, label: "Похвалить за успехи" },

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/lms/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { CertificateClaimButton } from "@/components/lms/certificate-claim-button";
 import type { StudentCoursePlayerDetail } from "@/types/domain";
 
 export function CourseHeroCard({ detail }: { detail: StudentCoursePlayerDetail }) {
@@ -48,12 +49,7 @@ export function CourseHeroCard({ detail }: { detail: StudentCoursePlayerDetail }
           </div>
 
           {certificateEligible ? (
-            <Button asChild variant="primary" size="sm" className="w-full">
-              <Link href="/student/certificates">
-                <Icon name="award_star" size={16} aria-hidden="true" />
-                Получить сертификат
-              </Link>
-            </Button>
+            <CertificateClaimButton courseId={course.id} className="w-full" />
           ) : (
             <div className="rounded-lg border border-dashed border-m3-outline-variant bg-m3-surface-container-low px-3 py-2 text-center">
               <p className="text-label-md font-label-md text-m3-on-surface-variant">
