@@ -4,7 +4,13 @@ import Link from "next/link";
 import { LoginForm } from "@/components/auth/login-form";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
 
-export function LoginScreen({ oauthProviders }: { oauthProviders: OAuthProviderFlags }) {
+export function LoginScreen({
+  oauthProviders,
+  reason,
+}: {
+  oauthProviders: OAuthProviderFlags;
+  reason?: "device-limit";
+}) {
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center justify-center bg-m3-background px-4 selection:bg-m3-primary/20 selection:text-m3-primary">
       <div className="flex w-full max-w-[420px] flex-col items-center">
@@ -22,6 +28,15 @@ export function LoginScreen({ oauthProviders }: { oauthProviders: OAuthProviderF
               Закрытая образовательная платформа
             </p>
           </div>
+
+          {reason === "device-limit" ? (
+            <div
+              className="rounded-lg border border-m3-error/30 bg-m3-error-container px-md py-sm text-body-sm font-body-sm text-m3-error"
+              role="alert"
+            >
+              Сеанс завершен: под этой учетной записью выполнен вход на третьем устройстве. Доступ разрешен максимум с двух устройств; не передавайте логин и пароль третьим лицам.
+            </div>
+          ) : null}
 
           <LoginForm oauthProviders={oauthProviders} />
         </div>

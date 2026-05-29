@@ -43,6 +43,7 @@ export interface AppSessionUser {
   email: string;
   name?: string | null;
   roles: RoleKey[];
+  authDeviceSessionId?: string;
 }
 
 // ── Курсы ───────────────────────────────────────────────────────────

@@ -264,6 +264,7 @@ model User {
   lessonRatings              LessonRating[]
   activityLogs               ActivityLog[]
   userSessions               UserSession[]
+  authDeviceSessions         AuthDeviceSession[]
   createdPopups              AdminPopup[]
   popupViews                 PopupView[]
   pushSubscriptions          PushSubscription[]
@@ -771,6 +772,25 @@ model UserSession {
   @@index([role, startedAt])
   @@index([startedAt])
   @@map("user_sessions")
+}
+
+model AuthDeviceSession {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  startedAt     DateTime  @default(now()) @map("started_at")
+  lastSeenAt    DateTime  @default(now()) @map("last_seen_at")
+  revokedAt     DateTime? @map("revoked_at")
+  revokedReason String?   @map("revoked_reason")
+  ipAddress     String?   @map("ip_address")
+  userAgent     String?   @map("user_agent")
+  source        String    @default("web")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt, startedAt], map: "idx_auth_device_sessions_user_revoked_started")
+  @@index([userId, lastSeenAt], map: "idx_auth_device_sessions_user_last_seen")
+  @@index([revokedAt], map: "idx_auth_device_sessions_revoked_at")
+  @@map("auth_device_sessions")
 }
 
 model LessonQuestion {

@@ -12,8 +12,45 @@ import { AUTH_ROUTES } from "@/lib/constants";
 import { env } from "@/lib/env";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { getEnabledOAuthProviders } from "@/server/auth/provider-flags";
+import {
+  isAuthDeviceSessionActive,
+  registerAuthDeviceSession,
+} from "@/server/modules/auth/device-sessions";
 
 const prisma = getPrisma();
+
+type HeaderBag = Headers | Record<string, string | string[] | undefined>;
+
+function readHeader(headers: HeaderBag | undefined, name: string) {
+  if (!headers) return null;
+  if (headers instanceof Headers) {
+    return headers.get(name);
+  }
+
+  const value = headers[name] ?? headers[name.toLowerCase()];
+  if (Array.isArray(value)) {
+    return value[0] ?? null;
+  }
+
+  return value ?? null;
+}
+
+function getLoginContext(request: unknown) {
+  const headers = typeof request === "object" && request !== null && "headers" in request
+    ? (request as { headers?: HeaderBag }).headers
+    : undefined;
+  const forwardedFor = readHeader(headers, "x-forwarded-for");
+  const ipAddress = forwardedFor?.split(",")[0]?.trim()
+    ?? readHeader(headers, "x-real-ip")
+    ?? null;
+  const userAgent = readHeader(headers, "user-agent");
+
+  return { ipAddress, userAgent };
+}
+
+function readString(value: unknown) {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
 
 const providers: NonNullable<AuthOptions["providers"]> = [
   CredentialsProvider({
@@ -22,7 +59,7 @@ const providers: NonNullable<AuthOptions["providers"]> = [
       email: { label: "Email", type: "email" },
       password: { label: "Password", type: "password" }
     },
-    async authorize(credentials) {
+    async authorize(credentials, request) {
       const email = credentials?.email?.toLowerCase().trim();
       const password = credentials?.password;
       if (!email || !password) {
@@ -48,13 +85,16 @@ const providers: NonNullable<AuthOptions["providers"]> = [
         data: { lastLoginAt: new Date() }
       });
       const roles: RoleKey[] = user.roles.map((entry) => entry.role.key);
+      const loginContext = getLoginContext(request);
 
       return {
         id: user.id,
         email: user.email,
         name: user.name,
         image: user.image,
-        roles
+        roles,
+        ...(loginContext.ipAddress ? { loginIpAddress: loginContext.ipAddress } : {}),
+        ...(loginContext.userAgent ? { loginUserAgent: loginContext.userAgent } : {}),
       };
     }
   })
@@ -133,15 +173,45 @@ export const authOptions: AuthOptions = {
           }
         }
       }
+
+      const tokenUserId = readString(token.id) ?? readString(token.sub);
+      const tokenDeviceSessionId = readString(token.authDeviceSessionId);
+      const shouldCreateDeviceSession = Boolean(user) || !tokenDeviceSessionId;
+      if (tokenUserId && !token.id) {
+        token.id = tokenUserId;
+      }
+
+      if (token.requires2fa === true && !tokenDeviceSessionId) {
+        return token;
+      }
+
+      if (tokenUserId && shouldCreateDeviceSession) {
+        const deviceSession = await registerAuthDeviceSession({
+          userId: tokenUserId,
+          ipAddress: readString(user?.loginIpAddress) ?? null,
+          userAgent: readString(user?.loginUserAgent) ?? null,
+        });
+        token.authDeviceSessionId = deviceSession.id;
+        token.authDeviceSessionStartedAt = deviceSession.startedAt.toISOString();
+        token.authDeviceSessionRevoked = false;
+      } else if (tokenUserId && tokenDeviceSessionId) {
+        const active = await isAuthDeviceSessionActive(tokenUserId, tokenDeviceSessionId);
+        token.authDeviceSessionRevoked = !active;
+      }
+
       return token;
     },
     async session({ session, token }) {
+      session.authDeviceSessionRevoked = token.authDeviceSessionRevoked === true;
+
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.roles = (token.roles as RoleKey[]) ?? [];
         session.user.email = token.email as string;
         session.user.name = token.name as string | null;
         session.user.image = token.picture as string | null;
+        session.user.authDeviceSessionId = token.authDeviceSessionId as string | undefined;
+        session.authDeviceSessionId = token.authDeviceSessionId as string | undefined;
         session.requires2fa = token.requires2fa as boolean | undefined;
       }
       return session;

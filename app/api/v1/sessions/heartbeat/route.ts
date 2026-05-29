@@ -1,6 +1,7 @@
 import { ApiError, errorResponse, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
+import { touchAuthDeviceSession } from "@/server/modules/auth/device-sessions";
 
 /**
  * POST /api/v1/sessions/heartbeat
@@ -29,10 +30,16 @@ export async function POST(request: Request) {
     }
 
     // Extend endedAt forward so end-of-session calculation can use it
-    await prisma.userSession.update({
-      where: { id: body.sessionId },
-      data: { endedAt: new Date() },
-    });
+    const now = new Date();
+    await Promise.all([
+      prisma.userSession.update({
+        where: { id: body.sessionId },
+        data: { endedAt: now },
+      }),
+      user.authDeviceSessionId
+        ? touchAuthDeviceSession(user.id, user.authDeviceSessionId)
+        : Promise.resolve(),
+    ]);
 
     return ok({ sessionId: session.id });
   } catch (error) {

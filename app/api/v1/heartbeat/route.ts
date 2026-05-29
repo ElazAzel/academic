@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/server/auth/options";
+import { getCurrentUser } from "@/lib/auth/session";
+import { touchAuthDeviceSession } from "@/server/modules/auth/device-sessions";
 
 const prisma = getPrisma();
 
@@ -11,16 +11,21 @@ const prisma = getPrisma();
  */
 export async function POST() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const user = await getCurrentUser();
+    if (!user?.id) {
       // Silently succeed for unauthenticated users (heartbeat runs globally)
       return NextResponse.json({ ok: true });
     }
 
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { lastLoginAt: new Date() },
-    });
+    await Promise.all([
+      prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      }),
+      user.authDeviceSessionId
+        ? touchAuthDeviceSession(user.id, user.authDeviceSessionId)
+        : Promise.resolve(),
+    ]);
 
     return NextResponse.json({ ok: true });
   } catch {

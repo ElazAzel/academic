@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 const HEARTBEAT_INTERVAL = 2 * 60 * 1000; // 2 минуты
 
@@ -43,11 +43,14 @@ export function VisitTracker() {
     const interval = setInterval(async () => {
       if (!sessionIdRef.current) return;
       try {
-        await fetch("/api/v1/sessions/heartbeat", {
+        const res = await fetch("/api/v1/sessions/heartbeat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sessionId: sessionIdRef.current }),
         });
+        if (res.status === 401 || res.status === 403) {
+          await signOut({ callbackUrl: "/login?reason=device-limit", redirect: true });
+        }
       } catch {
         // Игнорируем
       }

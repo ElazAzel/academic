@@ -90,6 +90,9 @@ export async function proxy(req: NextRequest) {
         req,
         secret: process.env.NEXTAUTH_SECRET,
       });
+      if (token?.authDeviceSessionRevoked) {
+        return NextResponse.next();
+      }
       if (token?.roles) {
         const roles = token.roles as string[];
         const homePath = getDefaultRolePath(roles as string[]);
@@ -109,6 +112,12 @@ export async function proxy(req: NextRequest) {
   if (!token) {
     const loginUrl = new URL(AUTH_ROUTES.LOGIN, req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (token.authDeviceSessionRevoked) {
+    const loginUrl = new URL(AUTH_ROUTES.LOGIN, req.url);
+    loginUrl.searchParams.set("reason", "device-limit");
     return NextResponse.redirect(loginUrl);
   }
 

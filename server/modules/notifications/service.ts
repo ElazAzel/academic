@@ -50,6 +50,7 @@ export type NotificationEvent =
   | "question_received"
   | "question_forwarded"
   | "password_changed"
+  | "device_limit_exceeded"
   | "profile_updated"
   | "popup"
   | "new_message"
@@ -58,6 +59,10 @@ export type NotificationEvent =
   | "curator_response_reminder";
 
 const templates: Record<NotificationEvent, { title: string; body: string }> = {
+  device_limit_exceeded: {
+    title: "Ограничение входа по устройствам",
+    body: "Выполнен вход на третьем устройстве. Один из предыдущих сеансов завершен. Не передавайте логин и пароль третьим лицам.",
+  },
   access_granted: { title: "Доступ выдан", body: "Вам открыт доступ к учебной программе." },
   course_opened: { title: "Курс открыт", body: "Можно начинать обучение." },
   new_lesson_available: { title: "Новый урок доступен", body: "Следующий урок уже открыт." },

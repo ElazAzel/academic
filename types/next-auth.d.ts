@@ -10,12 +10,17 @@ declare module "next-auth" {
       name?: string | null;
       image?: string | null;
       roles: RoleKey[];
+      authDeviceSessionId?: string;
     };
     requires2fa?: boolean;
+    authDeviceSessionId?: string;
+    authDeviceSessionRevoked?: boolean;
   }
 
   interface User {
     roles?: RoleKey[];
+    loginIpAddress?: string | null;
+    loginUserAgent?: string | null;
   }
 }
 
@@ -24,5 +29,8 @@ declare module "next-auth/jwt" {
     id?: string;
     roles?: RoleKey[];
     requires2fa?: boolean;
+    authDeviceSessionId?: string;
+    authDeviceSessionStartedAt?: string;
+    authDeviceSessionRevoked?: boolean;
   }
 }

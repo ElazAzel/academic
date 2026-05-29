@@ -5,6 +5,7 @@
 ## Security Model
 
 - Authentication is handled by Auth.js credentials login plus optional OAuth providers configured through env vars.
+- Authenticated access is bound to `auth_device_sessions`: one user can keep at most two active device sessions; a third login revokes the oldest previous device session, writes `auth.device_limit_exceeded` to audit log, and creates an in-app warning.
 - Public self-registration is disabled; academy operators provision issued credentials through `scripts/provision-users.ts`.
 - Passwords are hashed with Argon2id. Plain passwords are never stored or logged.
 - RBAC is enforced server-side through `requirePermission` before privileged mutations.
@@ -21,6 +22,7 @@
 | Tenant/role data leakage | Server-side permission checks, Prisma query scoping, audit logs |
 | Unauthorized page access | `requireRolePage` on role dashboards, `/403` redirects, middleware auth gate for private prefixes |
 | Password compromise | Argon2id hashing, reset tokens, no plaintext logs |
+| Credential sharing | Maximum two active device sessions per user, oldest previous device session revoked on third login, audit event and in-app warning |
 | Credentials CSV leakage | Provisioning output is written under ignored `var/credentials`; distribute through a protected channel and remove local copies after handoff |
 | OAuth secret leakage | Env-only secret handling, no committed keys |
 | CSRF on cookie flows | Auth.js CSRF for auth routes, server-side mutation validation |

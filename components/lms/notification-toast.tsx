@@ -21,7 +21,7 @@ interface NotificationItem {
 type ToastCategory = "message" | "progress" | "system" | "default";
 
 function getCategory(type: string, refType: string | null): ToastCategory {
-  if (refType === "popup" || type === "popup" || type === "access_granted" || type === "certificate_available" || type === "certificate_revoked" || type === "curator_assigned" || type === "student_assigned" || type === "password_changed" || type === "profile_updated" || type === "curator_response_reminder" || type === "user_inactive") return "system";
+  if (refType === "popup" || type === "popup" || type === "access_granted" || type === "certificate_available" || type === "certificate_revoked" || type === "curator_assigned" || type === "student_assigned" || type === "password_changed" || type === "device_limit_exceeded" || type === "profile_updated" || type === "curator_response_reminder" || type === "user_inactive") return "system";
   if (type === "new_message" || refType === "message" || type === "question_answered" || type === "question_received" || type === "question_forwarded") return "message";
   if (type === "block_completed" || type === "module_completed" || type === "course_opened" || type === "new_lesson_available") return "progress";
   return "default";
@@ -59,7 +59,7 @@ function getTypeIcon(type: string, refType: string | null) {
   if (type === "assignment_reviewed") return FileText;
   if (type === "certificate_available" || type === "certificate_revoked") return Award;
   if (type === "access_granted" || type === "curator_assigned" || type === "student_assigned") return UserPlus;
-  if (type === "user_inactive" || type === "curator_response_reminder") return AlertTriangle;
+  if (type === "user_inactive" || type === "curator_response_reminder" || type === "device_limit_exceeded") return AlertTriangle;
   if (type === "course_opened" || type === "new_lesson_available") return CheckCircle;
   return Bell;
 }

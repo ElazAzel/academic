@@ -2,6 +2,49 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-29 — Ограничение входа максимум с двух устройств
+
+**Что сделано:**
+- Добавлена отдельная модель `AuthDeviceSession` и миграция `20260529000000_add_auth_device_sessions`: контроль входов отделен от `user_sessions`, которые остаются аналитикой визитов.
+- При успешном Auth.js-входе создается device-session и в JWT сохраняется `authDeviceSessionId`.
+- Для пользователей с 2FA device-session создается после завершения второго фактора, чтобы незавершенная проверка не занимала лимит устройства.
+- Если у пользователя уже есть два активных device-session, новый вход остается активным, а самый старый предыдущий device-session отзывается с причиной `device_limit_exceeded`.
+- Событие превышения лимита фиксируется в audit log как `auth.device_limit_exceeded`.
+- Пользователь получает in-app уведомление `device_limit_exceeded` с предупреждением, что логин и пароль нельзя передавать третьим лицам; email по умолчанию не отправляется.
+- Серверные guards теперь проверяют, что `authDeviceSessionId` из JWT не отозван. Отозванная сессия перестает проходить `requireUser()` / `getCurrentUser()`.
+- Клиентский session heartbeat при 401/403 выполняет `signOut()` и отправляет старое устройство на `/login?reason=device-limit`, где показывается русское объяснение причины выхода.
+- Глобальный heartbeat обновляет `lastSeenAt` активного device-session.
+
+**Файлы изменены:**
+- `prisma/schema.prisma`
+- `prisma/migrations/20260529000000_add_auth_device_sessions/migration.sql`
+- `server/modules/auth/device-sessions.ts`
+- `server/auth/options.ts`
+- `lib/auth/session.ts`
+- `proxy.ts`
+- `app/api/v1/heartbeat/route.ts`
+- `app/api/v1/sessions/heartbeat/route.ts`
+- `app/login/page.tsx`
+- `components/auth/login-screen.tsx`
+- `components/lms/visit-tracker.tsx`
+- `components/lms/notification-toast.tsx`
+- `server/modules/notifications/service.ts`
+- `types/next-auth.d.ts`
+- `types/domain.ts`
+- `tests/unit/auth-device-sessions.test.ts`
+
+**Проверки:**
+- `npm run db:generate` — пройдено.
+- `npx prisma validate` — пройдено.
+- `npm run test -- tests/unit/auth-device-sessions.test.ts tests/unit/auth-options.test.ts tests/unit/auth-session.test.ts tests/unit/notifications-service.test.ts` — пройдено, 13 тестов.
+- `npm run typecheck` — пройдено.
+- `npm run lint -- --max-warnings=0` — пройдено.
+- `npm run test` — пройдено, 73 файла / 455 тестов.
+- `npm run build` — пройдено.
+
+**Остаточный риск:**
+- Middleware не ходит в БД и может узнать об отзыве только после того, как JWT уже помечен серверным `getServerSession()`. Основная защита находится в server-side guards и API.
+
 ## 2026-05-29 — Stabilize UI identity and Playwright E2E after student UX update
 
 **Что сделано:**

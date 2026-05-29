@@ -15,6 +15,7 @@ function isDynamicServerUsageError(error: unknown): boolean {
 
 async function revalidateSession(user: AppSessionUser): Promise<AppSessionUser | null> {
   if (typeof window !== "undefined") return user;
+  if (!user.authDeviceSessionId) return null;
 
   try {
     const { getPrisma } = await import("@/lib/prisma");
@@ -28,6 +29,14 @@ async function revalidateSession(user: AppSessionUser): Promise<AppSessionUser |
         roles: {
           select: { role: { select: { key: true } } },
         },
+        authDeviceSessions: {
+          where: {
+            id: user.authDeviceSessionId,
+            revokedAt: null,
+          },
+          select: { id: true },
+          take: 1,
+        },
       },
     });
 
@@ -35,14 +44,18 @@ async function revalidateSession(user: AppSessionUser): Promise<AppSessionUser |
       return null;
     }
 
+    if (dbUser.authDeviceSessions.length === 0) {
+      return null;
+    }
+
     const freshRoles = dbUser.roles.map((r) => r.role.key) as RoleKey[];
 
     return { ...user, roles: freshRoles };
   } catch (error) {
-    // If DB query fails (timeout, cold start on Vercel, etc.),
-    // fall back to JWT session roles instead of crashing the page
-    console.error("[revalidateSession] Failed to fetch roles from DB:", error);
-    return user;
+    // Device-session control is a server-side security check; if the DB cannot
+    // confirm it, fail closed and require a fresh login.
+    console.error("[revalidateSession] Failed to validate session from DB:", error);
+    return null;
   }
 }
 
@@ -54,6 +67,10 @@ export async function getCurrentUser(): Promise<AppSessionUser | null> {
     const { authOptions } = await import("@/server/auth/options");
 
     const session = await getServerSession(authOptions);
+    if (session?.authDeviceSessionRevoked) {
+      return null;
+    }
+
     const user = session?.user as AppSessionUser | undefined;
     if (!user?.id) {
       return null;
