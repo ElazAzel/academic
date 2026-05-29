@@ -16,7 +16,7 @@ import { UserManagementToolbar } from "@/components/admin/user-management-toolba
 import { EditUserDialog, DeleteUserButton } from "@/components/admin/edit-user-dialog";
 import { UserFilters } from "@/components/admin/user-filters";
 import { UserBatchImporter } from "@/components/admin/user-batch-importer";
-import { getPrisma } from "@/lib/prisma";
+import { getActiveCohortsForSelector } from "@/server/modules/cohorts/service";
 
 export const metadata = {
   title: "Пользователи — Администрирование",
@@ -47,12 +47,7 @@ export default async function AdminUsersPage(props: {
   const totalPages = Math.ceil(totalUsers / PAGE_SIZE);
   const assignableRoles = getAssignableRolesForActor(actor.roles);
 
-  const prisma = getPrisma();
-  const cohorts = await prisma.cohort.findMany({
-    where: { status: "active" },
-    select: { id: true, name: true, course: { select: { title: true } } },
-    orderBy: { createdAt: "desc" }
-  });
+  const cohorts = await getActiveCohortsForSelector();
 
   return (
     <AppShell role={actor.roles.includes("admin") ? "admin" : "super_curator"}>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/lms/status-badge";
 import { Plus, Users, Calendar } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { listAdminCohorts } from "@/server/modules/cohorts/service";
 import { EmptyState } from "@/components/lms/empty-state";
 import { DeleteCohortButton } from "./delete-cohort-button";
 
@@ -16,20 +16,12 @@ export const metadata = {
 };
 
 
-const prisma = getPrisma();
-
 export const dynamic = "force-dynamic";
 
 export default async function AdminCohortsPage() {
  await requireRolePage(["admin"]);
 
- const cohorts = await prisma.cohort.findMany({
-  orderBy: { createdAt: "desc" },
-  include: {
-    course: { select: { title: true } },
-    _count: { select: { enrollments: true, curatorAssignments: true } },
-  },
- });
+ const cohorts = await listAdminCohorts();
 
  return (
   <AppShell role="admin">
