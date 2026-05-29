@@ -78,25 +78,27 @@ export function NavLinks({ links }: { links: NavItem[] }) {
             href={item.href}
             prefetch={false}
             className={cn(
-              "group flex items-center gap-md rounded-lg px-md py-sm text-label-lg font-label-lg transition-all duration-200 ease-in-out",
+              "group relative flex items-center gap-sm rounded-lg border px-sm py-sm text-label-lg font-label-lg",
+              "transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out",
               isActive
-                ? "border-l-4 border-m3-secondary-container bg-m3-secondary-fixed/10 font-bold text-m3-primary"
-                : "border-l-4 border-transparent text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface"
+                ? "border-m3-primary/20 bg-m3-primary-fixed/45 font-bold text-m3-primary shadow-[inset_3px_0_0_var(--m3-primary),0_8px_18px_rgba(22,63,130,0.08)]"
+                : "border-transparent text-m3-on-surface-variant hover:border-m3-outline-variant/70 hover:bg-m3-surface-container-high/80 hover:text-m3-on-surface"
             )}
           >
-            <Icon
-              name={item.icon}
-              size={20}
+            <span
               className={cn(
-                "shrink-0 transition-colors",
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-[background-color,color,transform] duration-200",
                 isActive
-                  ? "text-m3-primary"
-                  : "text-m3-on-surface-variant group-hover:text-m3-on-surface"
+                  ? "bg-m3-surface-container-lowest text-m3-primary"
+                  : "bg-transparent text-m3-on-surface-variant group-hover:bg-m3-surface-container-lowest group-hover:text-m3-primary"
               )}
-            />
+              aria-hidden="true"
+            >
+              <Icon name={item.icon} size={20} />
+            </span>
             <span className="flex-1">{item.label}</span>
             {showBadge ? (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-m3-error px-1.5 text-[10px] font-bold text-white">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-m3-error px-1.5 text-[10px] font-bold text-white shadow-[0_4px_10px_rgba(186,26,26,0.2)]">
                 {badgeCount}
               </span>
             ) : null}
@@ -110,15 +112,13 @@ export function NavLinks({ links }: { links: NavItem[] }) {
             window.dispatchEvent(new CustomEvent("pwa-trigger-install"));
           }}
           className={cn(
-            "group flex items-center gap-md rounded-lg px-md py-sm text-label-lg font-label-lg transition-all duration-200 ease-in-out text-left mt-2",
-            "border-l-4 border-transparent text-m3-primary bg-m3-primary-container/10 hover:bg-m3-primary-container/20"
+            "group mt-2 flex items-center gap-sm rounded-lg border px-sm py-sm text-left text-label-lg font-label-lg transition-all duration-200 ease-out",
+            "border-m3-primary/15 bg-m3-primary-fixed/35 text-m3-primary hover:border-m3-primary/30 hover:bg-m3-primary-fixed/55"
           )}
         >
-          <Icon
-            name="download"
-            size={20}
-            className="shrink-0 text-m3-primary group-hover:scale-110 transition-transform"
-          />
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-m3-surface-container-lowest text-m3-primary">
+            <Icon name="download" size={20} className="transition-transform group-hover:scale-110" />
+          </span>
           <span className="flex-1 font-semibold">Установить приложение</span>
         </button>
       )}

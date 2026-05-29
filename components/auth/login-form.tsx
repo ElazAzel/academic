@@ -102,7 +102,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
             autoComplete="email"
             required
             placeholder="Введите ваш e-mail"
-            className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface placeholder:text-m3-outline transition-colors focus:border-m3-primary focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
+            className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest/90 py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] placeholder:text-m3-outline transition-[background-color,border-color,box-shadow] focus:border-m3-primary focus:bg-m3-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
             onChange={() => setError("")}
           />
         </div>
@@ -125,7 +125,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
             autoComplete="current-password"
             required
             placeholder="Введите пароль"
-            className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface placeholder:text-m3-outline transition-colors focus:border-m3-primary focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
+            className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest/90 py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] placeholder:text-m3-outline transition-[background-color,border-color,box-shadow] focus:border-m3-primary focus:bg-m3-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
             onChange={() => setError("")}
           />
         </div>
@@ -151,7 +151,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
       <button
         type="submit"
         disabled={pending || !hydrated}
-        className="mt-sm flex w-full items-center justify-center gap-sm rounded-lg bg-m3-primary py-md text-label-lg font-label-lg text-m3-on-primary transition-colors hover:bg-m3-primary-container disabled:opacity-50"
+        className="mt-sm flex w-full items-center justify-center gap-sm rounded-lg bg-m3-primary py-md text-label-lg font-label-lg text-m3-on-primary shadow-[0_10px_24px_rgba(22,63,130,0.22)] transition-[background-color,box-shadow,transform] hover:bg-m3-primary-container hover:shadow-[0_14px_28px_rgba(22,63,130,0.26)] active:translate-y-px disabled:opacity-50"
       >
         <span>{pending ? "Входим..." : "Войти в систему"}</span>
         <Icon name="arrow_forward" size={20} />
@@ -165,7 +165,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
               type="button"
               onClick={() => signIn("google")}
               aria-label="Google"
-              className="flex items-center justify-center gap-sm rounded border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
+              className="flex items-center justify-center gap-sm rounded-lg border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
             >
               <Icon name="login" size={20} />
               <span>Google</span>
@@ -176,7 +176,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
               type="button"
               onClick={() => signIn("github")}
               aria-label="GitHub"
-              className="flex items-center justify-center gap-sm rounded border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
+              className="flex items-center justify-center gap-sm rounded-lg border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
             >
               <Icon name="code" size={20} />
               <span>GitHub</span>

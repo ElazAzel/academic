@@ -77,7 +77,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
   const card = (
     <Card
       className={cn(
-        "flex min-h-[132px] h-full flex-col",
+        "academy-metric-card flex min-h-[132px] h-full flex-col",
         "px-5 py-4",
         metric.priority === "critical" && "ring-1 ring-m3-error/30",
         metric.priority === "elevated" && "ring-1 ring-amber-400/30",
@@ -137,7 +137,7 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
 
   return (
     <FadeIn>
-    <Card className="h-full overflow-hidden border-m3-outline-variant bg-m3-surface-container-lowest">
+    <Card className="academy-learning-panel h-full overflow-hidden border-m3-outline-variant">
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status="ACTIVE" label="Следующий шаг" className="w-fit bg-m3-primary-fixed/30 text-m3-primary" />
@@ -158,14 +158,14 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low px-3 py-3">
+          <div className="space-y-2 rounded-lg border border-m3-outline-variant/70 bg-m3-surface-container-lowest/70 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
             <div className="flex items-center justify-between gap-3 font-body-sm text-body-sm">
               <span className="text-m3-on-surface-variant">Курс</span>
               <span className="font-semibold tabular-nums text-m3-primary">{data.coursePercent}%</span>
             </div>
             <Progress value={data.coursePercent} className="h-2 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
           </div>
-          <div className="space-y-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low px-3 py-3">
+          <div className="space-y-2 rounded-lg border border-m3-outline-variant/70 bg-m3-surface-container-lowest/70 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
             <div className="flex items-center justify-between gap-3 font-body-sm text-body-sm">
               <span className="text-m3-on-surface-variant">Модуль</span>
               <span className="font-semibold tabular-nums text-m3-primary">{data.modulePercent}%</span>

@@ -29,7 +29,12 @@ export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
             className="bottom-nav-item relative"
             aria-current={isActive ? "page" : undefined}
           >
-            <div className="relative">
+            <div
+              className={cn(
+                "relative flex h-8 w-10 items-center justify-center rounded-lg transition-colors",
+                isActive ? "bg-m3-primary-fixed/65" : "bg-transparent"
+              )}
+            >
               <Icon
                 name={item.icon}
                 size={20}
@@ -43,7 +48,7 @@ export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
               {isActive && (
                 <motion.span
                   layoutId={shouldReduce ? undefined : "bottom-nav-indicator"}
-                  className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-m3-primary"
+                  className="absolute -bottom-1 left-1/2 h-1 w-4 -translate-x-1/2 rounded-full bg-m3-primary"
                   transition={shouldReduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 35 }}
                 />
               )}

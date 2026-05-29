@@ -33,12 +33,13 @@ export function AppShell({
           {/* Desktop sidebar — hidden on mobile */}
           <aside className="academy-shell-sidebar hidden lg:block">
             <nav
-              className="sticky top-24 flex flex-col rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-sm shadow-m3-soft"
+              className="academy-sidebar-panel sticky top-24 flex flex-col rounded-lg p-sm"
               aria-label={`Кабинет: ${roleLabel}`}
             >
               {/* Role label */}
-              <div className="mx-sm mb-xs border-b border-m3-outline-variant/30 px-sm pb-xs">
-                <span className="font-label-md text-label-md uppercase tracking-wider text-m3-on-surface-variant">
+              <div className="mx-sm mb-sm border-b border-m3-outline-variant/40 px-sm pb-sm">
+                <span className="flex items-center gap-2 font-label-md text-label-md text-m3-on-surface-variant">
+                  <span className="h-2 w-2 rounded-full bg-[var(--academy-accent)]" aria-hidden="true" />
                   {roleLabel}
                 </span>
               </div>

@@ -2,6 +2,68 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-29 — Ультра-улучшение визуальной системы закрытой академии
+
+**Что сделано:**
+- Обновлен общий визуальный слой платформы: добавлены academy-токены поверхностей, линий, теней, акцента и отдельные классы для рабочих панелей, login-экрана, sidebar, metric-card и mobile bottom nav.
+- Усилен закрытый login-first экран `/login`: новая структурная подложка, более выразительный academy-brand mark, статус "закрытый вход", улучшенные поля, кнопка входа и системное сообщение при превышении лимита устройств.
+- Обновлены общие UI primitives `Button`, `Card`, `Badge`: более четкие focus/active состояния, глубина поверхностей, единая M3/academy-палитра без смены продуктовой модели.
+- Улучшены `SiteHeader`, desktop sidebar, `NavLinks` и `MobileBottomNav`: навигация стала более читаемой, активные состояния получили явный контур, иконки и аккуратную рабочую плотность.
+- Обновлены `PageHeader`, KPI-карточки и блок "Продолжить обучение", чтобы основные операционные действия выглядели как единая система, а не набор плоских карточек.
+
+**Файлы изменены:**
+- `app/globals.css`
+- `components/auth/login-screen.tsx`
+- `components/auth/login-form.tsx`
+- `components/layout/site-header.tsx`
+- `components/layout/app-shell.tsx`
+- `components/layout/nav-links.tsx`
+- `components/layout/mobile-bottom-nav.tsx`
+- `components/lms/page-header.tsx`
+- `components/lms/dashboard-widgets.tsx`
+- `components/ui/button.tsx`
+- `components/ui/card.tsx`
+- `components/ui/badge.tsx`
+
+**Проверки:**
+- `npm run lint -- --max-warnings=0` — пройдено.
+- `npm run typecheck` — пройдено.
+- `npm run test` — пройдено, 73 файла / 455 тестов.
+- `npm run build` — пройдено.
+- Browser smoke `/login` — пройдено на 1280x720 и Pixel 7: экран не пустой, поля email/password и кнопка входа присутствуют в единственном экземпляре, горизонтального overflow и console errors нет.
+
+**Остаточный риск:**
+- Авторизованный workspace-smoke через локальный `next start` заблокирован текущим состоянием БД: таблица `public.auth_device_sessions` отсутствует, потому миграция `20260529000000_add_auth_device_sessions` еще не применена к подключенной базе.
+
+## 2026-05-29 — Архитектурный рефакторинг изоляции БД и исправление мобильных отступов
+
+**Что сделано:**
+- **Архитектура (WP3)**: Проведен глубокий рефакторинг изоляции базы данных. Удален прямой импорт `getPrisma()` и инлайновые вызовы Prisma Client из 4 основных разделов UI (кабинеты администратора, студента и преподавателя):
+  - Создан сервисный модуль `server/modules/cohorts/service.ts` с методами `listAdminCohorts` и `getActiveCohortsForSelector`. Отрефакторены страницы `/admin/cohorts/page.tsx` и `/admin/users/page.tsx`.
+  - Внедрен сервисный метод `getStudentReportsDashboardData` в `server/modules/reports/service.ts` для избавления от прямой выборки статистики на странице `/student/reports/page.tsx`.
+  - Добавлен метод `getInstructorCoursesForDeadlines` в `server/modules/deadlines/service.ts` для исключения инлайн-запросов курсов преподавателя на странице `/instructor/deadlines/page.tsx`.
+- **UI/UX & Мобильная верстка (WP4)**:
+  - В файле `app/globals.css` скорректирован медиа-запрос Safe Area Insets для мобильного меню навигации (`.bottom-nav-bar`). Добавлен комфортный микро-отступ `0.35rem` (~6px), предотвращающий наложение иконок нижнего меню на системный Home Bar в безрамочных устройствах iOS/Android.
+  - Устранена критическая ошибка HTML5/WCAG семантики в `components/lms/report-designer.tsx` (Nested Interactives), где `<Button>` находился внутри тега `<a>`. Стилизация ссылки `<a>` под кнопку заменена на Radix-слот `asChild`.
+  - В `tailwind.config.ts` добавлен отсутствующий шрифтовой токен `body-xs` (шрифт 12px, высота строки 16px, начертание 400), использовавшийся в карточках личных кабинетов.
+
+**Файлы изменены:**
+- `app/admin/cohorts/page.tsx`
+- `app/admin/users/page.tsx`
+- `app/student/reports/page.tsx`
+- `app/instructor/deadlines/page.tsx`
+- `server/modules/cohorts/service.ts` [NEW]
+- `server/modules/reports/service.ts`
+- `server/modules/deadlines/service.ts`
+- `app/globals.css`
+- `components/lms/report-designer.tsx`
+- `tailwind.config.ts`
+
+**Проверки:**
+- `npm run verify` — пройдено (ESLint чист, TypeScript compile пройден).
+- `npm run test` — пройдено, все 455 тестов Vitest зеленые.
+- `npm run build` — успешная статическая генерация всех 105 страниц и API-роутов.
+
 ## 2026-05-29 — Ограничение входа максимум с двух устройств
 
 **Что сделано:**

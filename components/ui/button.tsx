@@ -13,14 +13,16 @@ export function Button({ className, variant = "primary", size = "md", asChild, .
   return (
     <Comp
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors",
+        "inline-flex items-center justify-center gap-2 rounded-lg font-medium",
+        "transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out",
         "disabled:pointer-events-none disabled:opacity-50",
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary focus-visible:ring-offset-2 focus-visible:ring-offset-m3-background",
+        "active:translate-y-px",
         "min-h-[44px] md:min-h-0",
-        variant === "primary" && "bg-m3-primary text-m3-on-primary hover:bg-m3-primary-container",
-        variant === "secondary" && "border border-m3-outline-variant bg-m3-surface-container-lowest text-m3-on-surface hover:bg-m3-surface-container-low",
-        variant === "ghost" && "bg-transparent text-m3-on-surface hover:bg-m3-surface-container-low",
-        variant === "danger" && "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        variant === "primary" && "bg-m3-primary text-m3-on-primary shadow-[0_8px_18px_rgba(22,63,130,0.18)] hover:bg-m3-primary-container hover:shadow-[0_10px_24px_rgba(22,63,130,0.22)]",
+        variant === "secondary" && "border border-m3-outline-variant bg-m3-surface-container-lowest text-m3-on-surface shadow-[0_1px_2px_rgba(15,23,42,0.05)] hover:border-m3-primary/30 hover:bg-m3-surface-container-low",
+        variant === "ghost" && "bg-transparent text-m3-on-surface hover:bg-m3-surface-container-low hover:text-m3-primary",
+        variant === "danger" && "bg-destructive text-destructive-foreground shadow-[0_8px_18px_rgba(185,28,28,0.16)] hover:bg-destructive/90",
         size === "sm" && "h-9 px-3 text-sm",
         size === "md" && "h-11 px-4 text-sm md:h-10",
         size === "lg" && "h-12 px-5 text-base",

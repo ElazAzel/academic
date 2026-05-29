@@ -31,15 +31,20 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+    <header className="sticky top-0 z-30 border-b border-m3-outline-variant/70 bg-m3-surface-container-lowest/88 shadow-[0_8px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       <div className="mx-auto flex h-14 md:h-16 max-w-7xl items-center justify-between px-3 md:px-6">
         {/* Logo — compact on mobile */}
-        <Link href="/" className="flex items-center gap-2 font-semibold shrink-0">
-          <span className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-lg bg-m3-primary text-white">
+        <Link href="/" className="group flex shrink-0 items-center gap-2.5 font-semibold">
+          <span className="academy-brand-mark flex h-8 w-8 items-center justify-center rounded-lg text-white md:h-9 md:w-9">
             <Icon name="school" size={20} className="md:hidden" aria-hidden />
             <Icon name="school" size={24} className="hidden md:block" aria-hidden />
           </span>
-          <span className="hidden sm:inline text-sm md:text-base text-m3-primary">AI Strategic Academy</span>
+          <span className="hidden sm:flex sm:flex-col sm:leading-none">
+            <span className="text-sm text-m3-primary md:text-base">AI Strategic Academy</span>
+            <span className="mt-1 hidden text-[11px] font-medium text-m3-on-surface-variant md:inline">
+              закрытая академия
+            </span>
+          </span>
         </Link>
 
         {/* Desktop nav links — hidden on mobile (bottom nav handles it) */}
@@ -48,9 +53,9 @@ export async function SiteHeader() {
           const { links } = getHeaderLinks(user.roles);
           if (links.length === 0) return null;
           return (
-            <nav className="hidden lg:flex items-center gap-1" aria-label="Основная навигация">
+            <nav className="hidden items-center gap-1 rounded-lg border border-m3-outline-variant/60 bg-m3-surface-container-low/70 p-1 lg:flex" aria-label="Основная навигация">
               {links.map((item) => (
-                <Button key={item.href} asChild variant="ghost" size="sm">
+                <Button key={item.href} asChild variant="ghost" size="sm" className="h-8 min-h-8 px-3">
                   <Link href={item.href}>{item.label}</Link>
                 </Button>
               ))}
