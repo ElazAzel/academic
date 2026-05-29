@@ -6,8 +6,7 @@ import { DownloadReports } from "@/components/lms/download-reports";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { EmptyState } from "@/components/lms/empty-state";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
-import { getDisplayReportsForRole } from "@/server/modules/reports/service";
+import { getDisplayReportsForRole, getStudentReportsDashboardData } from "@/server/modules/reports/service";
 import { BarChart3 } from "lucide-react";
 import type { DashboardMetric } from "@/types/domain";
 
@@ -17,26 +16,13 @@ export const metadata = {
 };
 
 
-const prisma = getPrisma();
-
 export const dynamic = "force-dynamic";
 
 export default async function StudentReportsPage() {
   const user = await requireRolePage(["student"]);
 
-  const [enrollments, certificatesCount, quizAttempts, assignmentsSubmitted] = await Promise.all([
-    prisma.enrollment.findMany({
-      where: { userId: user.id, status: "ACTIVE" },
-      include: {
-        course: { select: { id: true, title: true } },
-        courseProgress: { select: { percent: true, status: true } },
-        cohort: { select: { name: true } },
-      },
-    }),
-    prisma.certificate.count({ where: { userId: user.id } }),
-    prisma.quizAttempt.count({ where: { userId: user.id } }),
-    prisma.assignmentSubmission.count({ where: { userId: user.id } }),
-  ]);
+  const { enrollments, certificatesCount, quizAttempts, assignmentsSubmitted } = 
+    await getStudentReportsDashboardData(user.id);
 
   const completedCourses = enrollments.filter(
     (e) => e.courseProgress[0]?.status === "COMPLETED",

@@ -264,3 +264,20 @@ export async function getCuratorDeadlineAlerts(curatorId: string) {
 
   return alerts.sort((a, b) => a.daysLeft - b.daysLeft);
 }
+
+export async function getInstructorCoursesForDeadlines(instructorId: string) {
+  return prisma.course.findMany({
+    where: {
+      instructors: { some: { userId: instructorId } },
+    },
+    select: {
+      id: true,
+      title: true,
+      cohorts: {
+        where: { status: { not: "archived" } },
+        select: { id: true, name: true },
+      },
+    },
+    orderBy: { title: "asc" },
+  });
+}

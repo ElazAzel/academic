@@ -2,7 +2,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getInstructorCoursesForDeadlines } from "@/server/modules/deadlines/service";
 import { InstructorDeadlinesClient } from "./client";
 
 export const metadata = {
@@ -11,28 +11,12 @@ export const metadata = {
 };
 
 
-const prisma = getPrisma();
-
 export const dynamic = "force-dynamic";
 
 export default async function InstructorDeadlinesPage() {
   const user = await requireRolePage(["instructor", "admin"]);
 
-  // Get instructor's courses with cohorts
-  const courses = await prisma.course.findMany({
-    where: {
-      instructors: { some: { userId: user.id } },
-    },
-    select: {
-      id: true,
-      title: true,
-      cohorts: {
-        where: { status: { not: "archived" } },
-        select: { id: true, name: true },
-      },
-    },
-    orderBy: { title: "asc" },
-  });
+  const courses = await getInstructorCoursesForDeadlines(user.id);
 
   return (
     <AppShell role="instructor">

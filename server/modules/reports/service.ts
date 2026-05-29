@@ -537,3 +537,26 @@ export async function getReportUser(userId: string): Promise<Pick<AppSessionUser
     roles: user.roles.map((entry) => entry.role.key as RoleKey) as DomainRoleKey[],
   };
 }
+
+export async function getStudentReportsDashboardData(studentId: string) {
+  const [enrollments, certificatesCount, quizAttempts, assignmentsSubmitted] = await Promise.all([
+    prisma.enrollment.findMany({
+      where: { userId: studentId, status: "ACTIVE" },
+      include: {
+        course: { select: { id: true, title: true } },
+        courseProgress: { select: { percent: true, status: true } },
+        cohort: { select: { name: true } },
+      },
+    }),
+    prisma.certificate.count({ where: { userId: studentId } }),
+    prisma.quizAttempt.count({ where: { userId: studentId } }),
+    prisma.assignmentSubmission.count({ where: { userId: studentId } }),
+  ]);
+
+  return {
+    enrollments,
+    certificatesCount,
+    quizAttempts,
+    assignmentsSubmitted,
+  };
+}
