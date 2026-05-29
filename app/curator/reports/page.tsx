@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
+import { ReportDesigner } from "@/components/lms/report-designer";
 import { Icon } from "@/components/ui/icon";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
@@ -90,6 +91,11 @@ export default async function CuratorReportsPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Report designer */}
+          <div className="mb-6">
+            <ReportDesigner userRoles={user.roles} defaultType="progress" />
+          </div>
 
           {/* Download reports */}
           <DownloadReports reports={getDisplayReportsForRole(user.roles)} />

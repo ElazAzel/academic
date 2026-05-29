@@ -135,7 +135,7 @@ export default async function AdminReportsPage() {
 
       {/* Report designer */}
       <div className="mb-6">
-        <ReportDesigner />
+        <ReportDesigner userRoles={user.roles} />
       </div>
 
       {/* Quick download */}

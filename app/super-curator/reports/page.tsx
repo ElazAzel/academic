@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
 import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
+import { ReportDesigner } from "@/components/lms/report-designer";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
@@ -69,6 +70,11 @@ export default async function SuperCuratorReportsPage() {
 
       <div className="mb-6">
         <MetricGrid metrics={metrics} />
+      </div>
+
+      {/* Report designer */}
+      <div className="mb-6">
+        <ReportDesigner userRoles={user.roles} defaultType="progress" />
       </div>
 
       <Tabs

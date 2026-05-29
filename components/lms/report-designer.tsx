@@ -107,9 +107,22 @@ const FORMATS: { id: FormatId; label: string; icon: typeof FileText }[] = [
   { id: "pdf", label: "PDF", icon: FileText },
 ];
 
-export function ReportDesigner({ defaultType = "progress" }: { defaultType?: ReportTypeDef["id"] }) {
+const ALLOWED_ROLES_MAP: Record<ReportTypeId, string[]> = {
+  progress: ["admin", "instructor", "curator", "super_curator", "customer_observer", "student"],
+  risk: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
+  certificates: ["admin", "instructor", "curator", "super_curator", "customer_observer", "student"],
+  assignments: ["admin", "instructor", "curator", "super_curator", "student"],
+  curator_workload: ["admin", "super_curator"],
+};
+
+export function ReportDesigner({
+  defaultType = "progress",
+  userRoles = ["admin"]
+}: {
+  defaultType?: ReportTypeDef["id"];
+  userRoles?: string[];
+}) {
   const [isOpen, setIsOpen] = useState(false);
-  const [reportType, setReportType] = useState<ReportTypeDef["id"]>(defaultType);
   const [format, setFormat] = useState<FormatId>("xlsx");
   const [selectedColumns, setSelectedColumns] = useState<Set<string>>(new Set());
   const [generating, setGenerating] = useState(false);
@@ -118,6 +131,16 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+
+  const allowedReportDefs = REPORT_TYPES.filter((t) =>
+    userRoles.some((role) => ALLOWED_ROLES_MAP[t.id]?.includes(role))
+  );
+
+  const initialType = allowedReportDefs.some((t) => t.id === defaultType)
+    ? defaultType
+    : (allowedReportDefs[0]?.id || "progress");
+
+  const [reportType, setReportType] = useState<ReportTypeDef["id"]>(initialType);
 
   const fetchPreview = async () => {
     setLoadingPreview(true);
@@ -138,7 +161,7 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
     }
   };
 
-  const currentType = REPORT_TYPES.find((t) => t.id === reportType) ?? REPORT_TYPES[0];
+  const currentType = allowedReportDefs.find((t) => t.id === reportType) ?? allowedReportDefs[0] ?? REPORT_TYPES[0];
 
   const openDesigner = useCallback(() => {
     setSelectedColumns(new Set(currentType.columns.filter((c) => c.defaultOn).map((c) => c.key)));
@@ -194,7 +217,7 @@ export function ReportDesigner({ defaultType = "progress" }: { defaultType?: Rep
         <div className="space-y-2">
           <span className="text-xs font-semibold uppercase text-muted-foreground">Тип отчёта</span>
           <div className="flex flex-wrap gap-2">
-            {REPORT_TYPES.map((t) => (
+            {allowedReportDefs.map((t) => (
               <button
                 key={t.id}
                 onClick={() => {
