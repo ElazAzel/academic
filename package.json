@@ -23,7 +23,8 @@
     "users:check-demo": "tsx scripts/check-demo-users.ts",
     "course:create-demo": "tsx scripts/create-demo-course.ts",
     "postinstall": "tsx scripts/check-assets.ts",
-    "verify": "npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npm run build",
+    "banned-patterns": "node scripts/check-banned-patterns.mjs",
+    "verify": "npm run banned-patterns && npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npm run build",
     "verify:release": "npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npx prisma validate && npm run db:generate && npm run build && npm run test:e2e"
   },
   "dependencies": {

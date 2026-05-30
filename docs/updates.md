@@ -2,6 +2,14 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-30 — Banned patterns CI check + verify pipeline
+
+**Что сделано:**
+
+- **Banned patterns checker**: Создан `scripts/check-banned-patterns.mjs` — автоматическая проверка запрещённых паттернов (debugger, @ts-ignore, secrets, английские строки в компонентах, hardcoded DB connection strings). Кодбаза чиста — 0 нарушений.
+- **verify pipeline**: Скрипт `banned-patterns` добавлен в `package.json` и интегрирован в `npm run verify` как первый шаг.
+- **SMTP email**: Проанализирована архитектура — реализация email-уведомлений уже полная (nodemailer, sendEmail, интеграция в createNotificationInternal). Отключена по умолчанию флагом `FEATURE_EMAIL_NOTIFICATIONS`. Изменений не требуется.
+
 ## 2026-05-30 — Responsive smoke E2E (375/768/1024/1440)
 
 **Что сделано:**
