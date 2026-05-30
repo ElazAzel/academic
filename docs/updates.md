@@ -2,7 +2,93 @@
 
 Правило: новые записи добавляются сверху.
 
-## 2026-05-30 — CSP nonce-based script-src (завершение)
+## 2026-05-30 — Font optimization, Virtual list, Prisma N+1 fix
+
+**Что сделано:**
+
+### Font Optimization
+- **Убраны preconnect ссылки** на Google Fonts из `<head>` в `app/layout.tsx` — next/font управляет подключением автоматически, лишние HTTP-запросы удалены
+- **Inter переключён на variable font**: удалён `weight: ["400", "500", "600", "700"]` — теперь используется один variable-файл вместо 4 статических, экономия ~80KB
+
+### Virtual List Audit
+- **Установлен `@tanstack/react-virtual`**: повторно (был удалён как неиспользуемый — теперь используется)
+- **Virtualized `StudentAnalyticsTable`**: компонент переведён на виртуализацию через `useVirtualizer`. При 1000 студентах в DOM только ~15 видимых строк + 10 overscan вместо всех 1000. Рендер 10 колонок виртуализирован, sticky header остаётся видимым при скролле
+  - Container `maxHeight: 600px` с `overflow: auto`
+  - Spacer-элементы (divs вне таблицы) для корректной высоты скролла
+  - `estimateSize: 60px` на строку, `overscan: 10`
+  - **Empty state** и **MetricGrid** не изменены
+- Аудит других таблиц: `/admin/users` уже с пагинацией (PAGE_SIZE=200), report export — серверный. Виртуализация не требуется
+
+### Prisma Query Audit (N+1 Fix)
+- **`getFullLessonDetails`**: Заменены `Promise.all(lesson.quizzes.map(q => getQuizForStudent(...)))` и аналогичный для assignments на batch-функции
+- **Новые batch-функции**: `getQuizzesForStudentBatch(userId, quizIds[])` и `getAssignmentsForStudentBatch(userId, assignmentIds[])` — один `findMany` с `where: { id: { in: ids } }` вместо N отдельных `findUnique` запросов
+- `assertLessonAccess` вызывается один раз (все quizzes/assignments принадлежат одному уроку)
+- Оригинальные `getQuizForStudent`/`getAssignmentForStudent` сохранены для других caller'ов
+
+### Результаты
+| Метрика | До | После |
+|---------|----|-------|
+| HTTP запросы (fonts) | 2 preconnect | 0 (next/font internal) |
+| Вес шрифтов Inter | 4 файла | 1 variable font |
+| DOM-узлы аналитики (1000 строк) | ~10000 | ~150-200 |
+| Prisma запросы quizzes | N отдельных | 1 batch |
+| Prisma запросы assignments | N отдельных | 1 batch |
+| Тесты | 465/465 ✅ | 465/465 ✅ |
+| Lint | 0 errors, 0 warnings | 0 errors, 0 warnings |
+| Typecheck | ✅ | ✅ |
+| Build | ✅ (77 routes) | ✅ (77 routes) |
+
+**Файлы изменены:**
+- `app/layout.tsx` — удалены preconnect, Inter variable font
+- `components/lms/student-analytics-table.tsx` — виртуализация через @tanstack/react-virtual
+- `server/modules/learning/service.ts` — batch-функции для quiz/assignment запросов
+- `package.json` — +@tanstack/react-virtual (2 пакета)
+- `docs/updates.md` — запись 2026-05-30
+
+## 2026-05-30 — Build & Performance Optimizations
+
+**Что сделано:**
+
+### Инструментарий
+- **@next/bundle-analyzer**: установлен, добавлен `npm run analyze` (ANALYZE=true next build)
+- **next.config.ts**: добавлен `withBundleAnalyzer` wrapper, удалён `recharts` из `optimizePackageImports` (recharts не используется в проекте — custom BarChart/DonutChart компоненты на SVG)
+
+### Удаление неиспользуемых зависимостей
+Удалены 7 пакетов (~63 transitive deps), которые нигде не импортировались:
+- `hls.js` (24 MB в node_modules) — видео через YouTube/Vimeo embed, не hls.js
+- `pdfmake` (15 MB) — только orphaned type declaration `types/pdfmake.d.ts`, без runtime-импортов
+- `canvas-confetti`, `cmdk`, `vaul`, `@tanstack/react-virtual`, `recharts` — ни одного импорта
+- Удалён файл `types/pdfmake.d.ts`
+
+### next/image миграция
+Все 6 `<img>` тегов заменены на `next/image`:
+- `course-hero-card.tsx` — coverUrl курса
+- `chat-panel.tsx` — вложения изображений
+- `certificate-designer.tsx` — фон сертификата
+- `course-builder-shell.tsx` — обложка в builder
+- `course-settings-panel.tsx` — превью обложки
+- `avatar.tsx` — аватар пользователя
+
+### ISR для публичных страниц
+- `/forgot-password` — статическая (`force-static`), 0ms TTFB
+- `/privacy` — ISR (`revalidate = 86400`), static generation
+- `/terms` — ISR (`revalidate = 86400`), static generation
+
+### Streaming SSR
+- `/admin/analytics` — 3 таба (StudentAnalyticsTab, VisitTab, ActivityTab) обёрнуты в `<Suspense>` с skeleton fallback
+- Каркас страницы (AppShell, PageHeader) рендерится мгновенно, контент табов стримится
+
+### Результаты
+| Метрика | До | После |
+|---------|----|-------|
+| Зависимостей | ~68 | ~61 (-7) |
+| node_modules | -63 transitive пакета | Cleaner |
+| `<img>` тегов | 6 | 0 (все next/image) |
+| Статические страницы | 1 (sitemap.xml) | 4 (+forgot, privacy, terms) |
+| Streaming | Нет | /admin/analytics — 3 Suspense границы |
+| Тесты | 465/465 ✅ | 465/465 ✅ |
+| Lint | 0 errors | 0 errors |
+| Build | ✅ | ✅ |
 
 **Что сделано:**
 

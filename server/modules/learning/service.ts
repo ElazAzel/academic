@@ -469,8 +469,8 @@ export async function getStudentLessonPlayerDetail(userId: string, lessonId: str
   const blocks = parseContentBlocks(lesson.content);
 
   const [quizDetails, assignmentDetails] = await Promise.all([
-    Promise.all(lesson.quizzes.map((q) => getQuizForStudent(userId, q.id))),
-    Promise.all(lesson.assignments.map((a) => getAssignmentForStudent(userId, a.id))),
+    getQuizzesForStudentBatch(userId, lesson.quizzes.map((q) => q.id)),
+    getAssignmentsForStudentBatch(userId, lesson.assignments.map((a) => a.id)),
   ]);
 
   return {
@@ -711,4 +711,93 @@ export async function getAssignmentForStudent(userId: string, assignmentId: stri
       submittedAt: submission.submittedAt.toISOString()
     } : null
   };
+}
+
+// ── Batch variants for N+1 prevention ────────────────────────────────
+
+async function getQuizzesForStudentBatch(userId: string, quizIds: string[]): Promise<StudentQuizDetail[]> {
+  if (quizIds.length === 0) return [];
+
+  const quizzes = await prisma.quiz.findMany({
+    where: { id: { in: quizIds } },
+    include: {
+      questions: { orderBy: { order: "asc" } },
+      course: { select: { id: true, title: true } },
+      lesson: { select: { id: true } },
+    },
+  });
+
+  // All quizzes belong to the same lesson, check access once
+  const firstQuiz = quizzes[0];
+  if (firstQuiz?.lessonId) {
+    await assertLessonAccess(userId, firstQuiz.lessonId);
+  }
+
+  return quizzes.map((quiz) => ({
+    id: quiz.id,
+    title: quiz.title,
+    passThreshold: quiz.passThreshold,
+    maxAttempts: quiz.maxAttempts,
+    questionsCount: quiz.questions.length,
+    courseId: quiz.courseId ?? "",
+    courseTitle: quiz.course?.title ?? "",
+    lessonId: quiz.lessonId ?? "",
+    questions: quiz.questions.map((q) => ({
+      id: q.id,
+      type: q.type,
+      text: q.prompt,
+      options: Array.isArray(q.options)
+        ? (q.options as Array<{ id?: string; label?: string }>).map((o) => o.label ?? o.id ?? String(o))
+        : [],
+    })),
+  }));
+}
+
+async function getAssignmentsForStudentBatch(userId: string, assignmentIds: string[]): Promise<StudentAssignmentDetail[]> {
+  if (assignmentIds.length === 0) return [];
+
+  const assignments = await prisma.assignment.findMany({
+    where: { id: { in: assignmentIds } },
+    include: {
+      course: { select: { id: true, title: true } },
+      lesson: { select: { id: true } },
+      submissions: {
+        where: { userId },
+        orderBy: { submittedAt: "desc" },
+        take: 1,
+      },
+    },
+  });
+
+  // All assignments belong to the same lesson, check access once
+  const firstAssignment = assignments[0];
+  if (firstAssignment?.lessonId) {
+    await assertLessonAccess(userId, firstAssignment.lessonId);
+  }
+
+  return assignments.map((assignment) => {
+    const submission = assignment.submissions[0];
+    return {
+      id: assignment.id,
+      title: assignment.title,
+      deadline: assignment.deadline?.toISOString() ?? null,
+      maxAttempts: assignment.maxAttempts,
+      submissionStatus: submission?.status ?? null,
+      courseId: assignment.courseId ?? "",
+      courseTitle: assignment.course?.title ?? "",
+      lessonId: assignment.lessonId ?? "",
+      instructions: assignment.instructions,
+      submission: submission
+        ? {
+            id: submission.id,
+            answerText: submission.answerText,
+            fileUrl: submission.fileUrl,
+            status: submission.status,
+            feedback: submission.feedback,
+            score: submission.score,
+            submittedAt: submission.submittedAt.toISOString(),
+          }
+        : null,
+    };
+  });
 }

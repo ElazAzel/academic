@@ -15,6 +15,7 @@ import { getAdminStudentAnalytics } from "@/server/actions/dashboard";
 import { getActivityAnalytics } from "@/server/actions/activity-analytics";
 import { ActivityFilters } from "@/components/admin/activity-filters";
 import { VisitAnalyticsBlock } from "@/components/admin/visit-analytics-block";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "Аналитика — Администрирование",
@@ -45,7 +46,7 @@ async function StudentAnalyticsTab() {
   );
 }
 
-async function ActivityTab(props: { searchParams?: Promise<{ days?: string; cohortId?: string; courseId?: string }> }) {
+async function ActivityTabWrapper(props: { searchParams?: Promise<{ days?: string; cohortId?: string; courseId?: string }> }) {
   const sp = await props.searchParams;
   const days = Math.min(Math.max(parseInt(sp?.days ?? "30", 10) || 30, 7), 180);
   const cohortId = sp?.cohortId || undefined;
@@ -120,7 +121,7 @@ async function ActivityTab(props: { searchParams?: Promise<{ days?: string; coho
   );
 }
 
-async function VisitTab(props: { searchParams?: Promise<{ days?: string; roleFilter?: string }> }) {
+async function VisitTabWrapper(props: { searchParams?: Promise<{ days?: string; roleFilter?: string }> }) {
   const sp = await props.searchParams;
   const days = Math.min(Math.max(parseInt(sp?.days ?? "30", 10) || 30, 1), 180);
   const roleFilter = sp?.roleFilter || undefined;
@@ -357,15 +358,27 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
           },
           {
             label: "По слушателям",
-            content: <StudentAnalyticsTab />,
+            content: (
+              <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted" />}>
+                <StudentAnalyticsTab />
+              </Suspense>
+            ),
           },
           {
             label: "Посещения",
-            content: <VisitTab searchParams={props.searchParams as Promise<{ days?: string; roleFilter?: string }>} />,
+            content: (
+              <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted" />}>
+                <VisitTabWrapper searchParams={props.searchParams as Promise<{ days?: string; roleFilter?: string }>} />
+              </Suspense>
+            ),
           },
           {
             label: "Активность",
-            content: <ActivityTab searchParams={props.searchParams} />,
+            content: (
+              <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted" />}>
+                <ActivityTabWrapper searchParams={props.searchParams} />
+              </Suspense>
+            ),
           },
         ]}/>
       </div>

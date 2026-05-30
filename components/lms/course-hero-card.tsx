@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/lms/status-badge";
@@ -16,8 +17,7 @@ export function CourseHeroCard({ detail }: { detail: StudentCoursePlayerDetail }
     <div className="space-y-4">
       <div className="overflow-hidden rounded-lg border border-m3-outline-variant bg-m3-surface-container-low">
         {course.coverUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={course.coverUrl} alt={course.title} width={640} height={360} className="aspect-video w-full object-cover" />
+          <Image src={course.coverUrl} alt={course.title} width={640} height={360} className="aspect-video w-full object-cover" />
         ) : (
           <div className="flex aspect-video items-center justify-center">
             <Icon name="image" size={40} className="text-m3-on-surface-variant/40" aria-hidden="true" />

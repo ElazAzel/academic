@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { 
   Award, 
   ArrowLeft, 
@@ -781,11 +782,12 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
               >
                 {/* Visual Background Image Layer */}
                 {config.backgroundUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img 
+                  <Image 
                     src={config.backgroundUrl} 
                     alt="Фон сертификата" 
-                    className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none"
+                    fill
+                    className="!absolute inset-0 !w-full !h-full object-fill pointer-events-none select-none"
+                    priority={false}
                   />
                 )}
                 {/* Visual Grid Lines overlay */}

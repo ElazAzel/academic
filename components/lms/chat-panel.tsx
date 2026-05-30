@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Icon } from "@/components/ui/icon";
@@ -356,17 +357,16 @@ export function ChatPanel({
                 )}
                 {m.text && <p className="whitespace-pre-wrap break-words text-body-md font-body-md [overflow-wrap:anywhere]">{m.text}</p>}
                 {m.attachmentUrl && m.attachmentType?.includes("image") ? (
-                  <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={m.attachmentUrl}
                     alt="Вложение"
+                    width={400}
+                    height={300}
                     className="mt-2 max-w-full rounded-lg border border-m3-outline-variant"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = "none";
                     }}
                   />
-                  </>
                 ) : m.attachmentUrl ? (
                   <a href={m.attachmentUrl} target="_blank" rel="noreferrer" className={`block mt-1 text-label-sm font-label-sm underline ${m.isMine ? "text-m3-on-primary/80" : "text-m3-primary"}`}>
                     📎 {m.attachmentType?.includes("pdf") ? "PDF"

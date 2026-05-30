@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -493,8 +494,7 @@ export function CourseBuilderShell({
                       <label htmlFor="cover-upload" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Обложка</label>
                       {detail.coverUrl && (
                         <div className="relative mb-2 overflow-hidden rounded-lg">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={detail.coverUrl} alt="Обложка курса" className="h-32 w-full object-cover" />
+                          <Image src={detail.coverUrl} alt="Обложка курса" width={512} height={128} className="h-32 w-full object-cover" />
                           <button
                             onClick={() => { setDetail((current) => ({ ...current, coverUrl: null })); setDirty(true); }}
                             className="absolute right-2 top-2 rounded-full bg-background/80 p-1 text-muted-foreground hover:text-destructive"

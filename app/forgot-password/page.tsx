@@ -7,6 +7,8 @@ export const metadata = {
   description: "Восстановите доступ к своей учётной записи.",
 };
 
+export const dynamic = "force-static";
+
 
 export default function ForgotPasswordPage() {
   return (

@@ -7,8 +7,8 @@ export const metadata = {
   description: "Политика обработки и защиты персональных данных.",
 };
 
-
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+export const revalidate = 86400; // 24 hours
 
 function renderMarkdown(md: string): string {
   const lines = md.split("\n");

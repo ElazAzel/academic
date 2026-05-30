@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export function Avatar({ name, image, className }: { name: string; image?: string | null; className?: string }) {
@@ -17,8 +18,7 @@ export function Avatar({ name, image, className }: { name: string; image?: strin
       aria-label={name}
     >
       {image ? (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img src={image} alt={name} className="h-full w-full object-cover" />
+        <Image src={image} alt={name} width={36} height={36} className="h-full w-full object-cover" />
       ) : (
         initials
       )}

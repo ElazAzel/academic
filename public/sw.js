@@ -1,5 +1,5 @@
-const CACHE_NAME = "ai-academy-v4";
-const STATIC_CACHE = "ai-academy-static-v4";
+const CACHE_NAME = "ai-academy-v5";
+const STATIC_CACHE = "ai-academy-static-v5";
 const OFFLINE_URL = "/offline";
 const BUILD_VERSION_URL = "/api/v1/build-version";
 const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -74,6 +74,11 @@ self.addEventListener("activate", (event) => {
           .map((k) => caches.delete(k))
       );
       await self.clients.claim();
+      // Notify all clients that a new version is available
+      const clients = await self.clients.matchAll();
+      clients.forEach((client) => {
+        client.postMessage({ type: "BUILD_UPDATED", version: Date.now() });
+      });
       // Start version check
       checkBuildVersion();
       setInterval(checkBuildVersion, VERSION_CHECK_INTERVAL);

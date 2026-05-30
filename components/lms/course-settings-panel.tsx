@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { CheckCircle2, XCircle } from "lucide-react";
 import type { CourseBuilderPublishCheck } from "@/lib/course-builder-readiness";
 import type { CourseBuilderDetail, BuilderModuleDetail, BuilderLessonDetail } from "@/types/domain";
@@ -72,8 +73,7 @@ export function CourseSettingsPanel({
         {detail.coverUrl && (
           <div className="space-y-2">
             <span className="text-xs text-muted-foreground">Обложка</span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={detail.coverUrl} alt="" className="w-full rounded-lg object-cover h-24" />
+            <Image src={detail.coverUrl} alt="" width={200} height={96} className="w-full rounded-lg object-cover h-24" />
           </div>
         )}
       </div>

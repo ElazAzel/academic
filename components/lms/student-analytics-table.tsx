@@ -1,8 +1,16 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+"use client";
+
+/* eslint-disable react-hooks/incompatible-library -- TanStack Virtual's useVirtualizer is a known false positive */
+
+import { useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Badge } from "@/components/ui/badge";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { EmptyState } from "@/components/lms/empty-state";
 import type { DashboardMetric, StudentAnalyticsDetail } from "@/types/domain";
+
+const ROW_HEIGHT = 60;
+const TABLE_MAX_HEIGHT = 600;
 
 function getAgeDays(dateStr?: string | null): number | null {
   if (!dateStr) return null;
@@ -18,6 +26,17 @@ function daysSince(dateStr: string): string {
 }
 
 export function StudentAnalyticsTable({ students }: { students: StudentAnalyticsDetail[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: students.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 10,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+
   if (students.length === 0) {
     return (
       <EmptyState icon="group" title="Нет данных по слушателям" description="В данной выборке пока нет зарегистрированных слушателей." />
@@ -58,81 +77,97 @@ export function StudentAnalyticsTable({ students }: { students: StudentAnalytics
     },
   ] satisfies DashboardMetric[];
 
+  const progressTone = (percent: number) =>
+    percent >= 70 ? "bg-emerald-500" : percent >= 40 ? "bg-amber-500" : "bg-rose-500";
+
   return (
     <div className="space-y-4">
       <MetricGrid metrics={metrics} />
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Слушатель</TableHead>
-            <TableHead>Курс</TableHead>
-            <TableHead>Поток</TableHead>
-            <TableHead>Прогресс</TableHead>
-            <TableHead>Модуль</TableHead>
-            <TableHead>Блок</TableHead>
-            <TableHead>Урок</TableHead>
-            <TableHead>Последний вход</TableHead>
-            <TableHead>Ср. время/урок</TableHead>
-            <TableHead>Риски</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {students.map((s) => {
-            const progressTone = s.coursePercent >= 70 ? "bg-emerald-500" : s.coursePercent >= 40 ? "bg-amber-500" : "bg-rose-500";
-            const stale = !s.lastLoginAt || (getAgeDays(s.lastLoginAt) ?? 0) >= 7;
-            return (
-              <TableRow key={s.enrollmentId} className={s.riskCount > 0 || stale ? "bg-m3-error-container/10" : ""}>
-                <TableCell>
-                  <div>
-                    <p className="text-label-md font-label-md text-m3-on-surface">{s.name}</p>
-                    <p className="text-body-sm font-body-sm text-m3-on-surface-variant">{s.email}</p>
-                  </div>
-                </TableCell>
-                <TableCell className="min-w-[180px] text-body-sm font-body-sm">{s.courseTitle}</TableCell>
-                <TableCell className="text-body-sm font-body-sm">{s.cohortName ?? "—"}</TableCell>
-                <TableCell>
-                  <div className="flex min-w-[120px] items-center gap-2">
-                    <div className="h-2.5 w-20 overflow-hidden rounded-full bg-m3-surface-variant">
-                      <div
-                        className={`h-full rounded-full transition-all ${progressTone}`}
-                        style={{ width: `${s.coursePercent}%` }}
-                      />
+      <div ref={scrollRef} className="overflow-auto rounded-md border" style={{ maxHeight: TABLE_MAX_HEIGHT }}>
+        {/* Top spacer */}
+        <div style={{ height: virtualItems[0]?.start ?? 0 }} />
+
+        <table className="w-full caption-bottom text-sm">
+          <thead className="sticky top-0 z-10 bg-background">
+            <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Слушатель</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Курс</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Поток</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Прогресс</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Модуль</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Блок</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Урок</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Последний вход</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Ср. время/урок</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Риски</th>
+            </tr>
+          </thead>
+          <tbody>
+            {virtualItems.map((virtualItem) => {
+              const s = students[virtualItem.index];
+              const stale = !s.lastLoginAt || (getAgeDays(s.lastLoginAt) ?? 0) >= 7;
+              return (
+                <tr
+                  key={s.enrollmentId}
+                  className={`border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted ${s.riskCount > 0 || stale ? "bg-m3-error-container/10" : ""}`}
+                >
+                  <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                    <div>
+                      <p className="text-label-md font-label-md text-m3-on-surface">{s.name}</p>
+                      <p className="text-body-sm font-body-sm text-m3-on-surface-variant">{s.email}</p>
                     </div>
-                    <span className="text-label-md font-label-md tabular-nums text-m3-on-surface">{s.coursePercent}%</span>
-                  </div>
-                </TableCell>
-                <TableCell className="max-w-[160px] truncate text-body-sm font-body-sm" title={s.moduleTitle ?? ""}>
-                  {s.moduleTitle ?? "—"}
-                </TableCell>
-                <TableCell className="max-w-[160px] truncate text-body-sm font-body-sm" title={s.blockTitle ?? ""}>
-                  {s.blockTitle ?? "—"}
-                </TableCell>
-                <TableCell className="max-w-[160px] truncate text-body-sm font-body-sm" title={s.lessonTitle ?? ""}>
-                  {s.lessonTitle ?? "—"}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-body-sm font-body-sm">
-                  {s.lastLoginAt ? daysSince(s.lastLoginAt) : "никогда"}
-                </TableCell>
-                <TableCell className="text-body-sm font-body-sm tabular-nums">
-                  {s.avgLessonMinutes > 0 ? `${s.avgLessonMinutes} мин` : "—"}
-                </TableCell>
-                <TableCell>
-                  {s.riskCount > 0 ? (
-                    <Badge className="border-rose-200 bg-rose-50 text-xs font-label-md text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300">
-                      {s.riskCount} риск.
-                    </Badge>
-                  ) : (
-                    <Badge className="border-emerald-200 bg-emerald-50 text-xs font-label-md text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-                      0
-                    </Badge>
-                  )}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                  </td>
+                  <td className="min-w-[180px] p-4 align-middle text-body-sm font-body-sm [&:has([role=checkbox])]:pr-0">{s.courseTitle}</td>
+                  <td className="p-4 align-middle text-body-sm font-body-sm [&:has([role=checkbox])]:pr-0">{s.cohortName ?? "—"}</td>
+                  <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                    <div className="flex min-w-[120px] items-center gap-2">
+                      <div className="h-2.5 w-20 overflow-hidden rounded-full bg-m3-surface-variant">
+                        <div
+                          className={`h-full rounded-full transition-all ${progressTone(s.coursePercent)}`}
+                          style={{ width: `${s.coursePercent}%` }}
+                        />
+                      </div>
+                      <span className="text-label-md font-label-md tabular-nums text-m3-on-surface">{s.coursePercent}%</span>
+                    </div>
+                  </td>
+                  <td className="max-w-[160px] truncate p-4 align-middle text-body-sm font-body-sm [&:has([role=checkbox])]:pr-0" title={s.moduleTitle ?? ""}>
+                    {s.moduleTitle ?? "—"}
+                  </td>
+                  <td className="max-w-[160px] truncate p-4 align-middle text-body-sm font-body-sm [&:has([role=checkbox])]:pr-0" title={s.blockTitle ?? ""}>
+                    {s.blockTitle ?? "—"}
+                  </td>
+                  <td className="max-w-[160px] truncate p-4 align-middle text-body-sm font-body-sm [&:has([role=checkbox])]:pr-0" title={s.lessonTitle ?? ""}>
+                    {s.lessonTitle ?? "—"}
+                  </td>
+                  <td className="whitespace-nowrap p-4 align-middle text-body-sm font-body-sm [&:has([role=checkbox])]:pr-0">
+                    {s.lastLoginAt ? daysSince(s.lastLoginAt) : "никогда"}
+                  </td>
+                  <td className="p-4 align-middle text-body-sm font-body-sm tabular-nums [&:has([role=checkbox])]:pr-0">
+                    {s.avgLessonMinutes > 0 ? `${s.avgLessonMinutes} мин` : "—"}
+                  </td>
+                  <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                    {s.riskCount > 0 ? (
+                      <Badge className="border-rose-200 bg-rose-50 text-xs font-label-md text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300">
+                        {s.riskCount} риск.
+                      </Badge>
+                    ) : (
+                      <Badge className="border-emerald-200 bg-emerald-50 text-xs font-label-md text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+                        0
+                      </Badge>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {/* Bottom spacer */}
+        {virtualItems.length > 0 && (
+          <div style={{ height: virtualizer.getTotalSize() - (virtualItems[virtualItems.length - 1]?.end ?? 0) }} />
+        )}
+      </div>
     </div>
   );
 }
