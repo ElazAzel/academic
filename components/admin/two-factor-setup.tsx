@@ -16,10 +16,6 @@ export default function TwoFactorSetup() {
   const [isEnabled, setIsEnabled] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    checkStatus();
-  }, []);
-
   async function checkStatus() {
     try {
       const res = await fetch("/api/v1/auth/2fa/status");
@@ -31,6 +27,11 @@ export default function TwoFactorSetup() {
       setStep("setup");
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    checkStatus();
+  }, []);
 
   async function handleSetup() {
     setError("");

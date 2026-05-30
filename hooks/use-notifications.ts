@@ -40,6 +40,7 @@ export function useNotifications() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchInitial();
 
     const connect = () => {

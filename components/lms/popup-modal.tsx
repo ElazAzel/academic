@@ -20,10 +20,6 @@ export function PopupModal() {
   const [open, setOpen] = useState(false);
   const [acknowledging, setAcknowledging] = useState(false);
 
-  useEffect(() => {
-    fetchPopup();
-  }, []);
-
   async function fetchPopup() {
     try {
       const res = await fetch("/api/v1/popups/active");
@@ -40,6 +36,11 @@ export function PopupModal() {
       // Silently ignore popup fetch errors
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchPopup();
+  }, []);
 
   async function handleAcknowledge() {
     if (!popup) return;

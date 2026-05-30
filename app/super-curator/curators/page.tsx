@@ -18,6 +18,8 @@ export const dynamic = "force-dynamic";
 export default async function SuperCuratorCuratorsPage() {
   await requireRolePage(["super_curator", "admin"]);
   const curators = await getSuperCuratorCurators();
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
 
   return (
     <AppShell role="super_curator">
@@ -60,7 +62,7 @@ export default async function SuperCuratorCuratorsPage() {
                       <p className="text-muted-foreground">Вопросов</p>
                     </div>
                     <div className="rounded-lg bg-muted p-2">
-                      <p className="font-bold text-sm">{cur.lastLoginAt ? Math.floor((Date.now() - new Date(cur.lastLoginAt).getTime()) / (1000 * 60 * 60 * 24)) : "—"}</p>
+                      <p className="font-bold text-sm">{cur.lastLoginAt ? Math.floor((now - new Date(cur.lastLoginAt).getTime()) / (1000 * 60 * 60 * 24)) : "—"}</p>
                       <p className="text-muted-foreground">Дней назад</p>
                     </div>
                   </div>

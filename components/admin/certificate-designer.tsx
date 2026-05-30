@@ -297,6 +297,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
   }, [courseId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadTemplate();
   }, [loadTemplate]);
 

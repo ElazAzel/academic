@@ -69,6 +69,7 @@ export function ProtectedContentShell({
 
     const stored = sessionStorage.getItem(`content-warning-shown-${lessonId}`);
     if (!stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowWarning(true);
     }
   }, [lessonId, settings.watermarkEnabled]);

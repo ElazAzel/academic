@@ -163,27 +163,27 @@ export function ReportDesigner({
 
   const currentType = allowedReportDefs.find((t) => t.id === reportType) ?? allowedReportDefs[0] ?? REPORT_TYPES[0];
 
-  const openDesigner = useCallback(() => {
+  function openDesigner() {
     setSelectedColumns(new Set(currentType.columns.filter((c) => c.defaultOn).map((c) => c.key)));
     setIsOpen(true);
-  }, [currentType]);
+  }
 
-  const toggleColumn = useCallback((key: string) => {
+  function toggleColumn(key: string) {
     setSelectedColumns((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
-  }, []);
+  }
 
-  const selectAll = useCallback(() => {
+  function selectAll() {
     setSelectedColumns(new Set(currentType.columns.map((c) => c.key)));
-  }, [currentType]);
+  }
 
-  const deselectAll = useCallback(() => {
+  function deselectAll() {
     setSelectedColumns(new Set<string>());
-  }, []);
+  }
 
   const downloadUrl = `/api/v1/reports?type=${reportType}&format=${format}&fields=${Array.from(selectedColumns).join(",")}`;
 

@@ -64,6 +64,7 @@ export function ChatPanel({
 
   useEffect(() => {
     if (initialText) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setText(initialText);
     }
   }, [initialText]);

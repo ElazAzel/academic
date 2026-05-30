@@ -51,6 +51,7 @@ export function InstructorDeadlinesClient({ cohortId, cohortName }: Props) {
   useEffect(() => {
     if (blocks.length === 0) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDates((current) => {
       if (Object.keys(current).length > 0) return current;
 

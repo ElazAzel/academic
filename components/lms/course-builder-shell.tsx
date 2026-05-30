@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -135,17 +135,18 @@ export function CourseBuilderShell({
   const [dirty, setDirty] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [mode, setMode] = useState<"edit" | "preview">("edit");
-  const [isMobile, setIsMobile] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<"outline" | "editor" | "settings">("editor");
   const [isChecklistOpen, setIsChecklistOpen] = useState(false);
 
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
+  const isMobile = useSyncExternalStore(
+    (callback) => {
+      const mq = window.matchMedia("(max-width: 767px)");
+      mq.addEventListener("change", callback);
+      return () => mq.removeEventListener("change", callback);
+    },
+    () => window.matchMedia("(max-width: 767px)").matches,
+    () => false,
+  );
 
   useBeforeUnload(dirty);
 

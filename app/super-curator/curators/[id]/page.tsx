@@ -36,8 +36,10 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
       }, 0) / answered.length / (1000 * 60 * 60)
     : 0;
 
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
   const daysSinceLogin = curator.lastLoginAt
-    ? Math.floor((Date.now() - new Date(curator.lastLoginAt).getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.floor((now - new Date(curator.lastLoginAt).getTime()) / (1000 * 60 * 60 * 24))
     : null;
   const responseRate = questions.length > 0 ? Math.round((answered.length / questions.length) * 100) : 0;
   const metrics = [

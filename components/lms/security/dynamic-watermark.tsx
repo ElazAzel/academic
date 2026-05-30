@@ -56,6 +56,13 @@ export function DynamicWatermark({
     [userName, userId],
   );
 
+  const [opacity] = useState(
+    () =>
+      CONTENT_PROTECTION.WATERMARK_OPACITY_MIN +
+      Math.random() *
+        (CONTENT_PROTECTION.WATERMARK_OPACITY_MAX - CONTENT_PROTECTION.WATERMARK_OPACITY_MIN),
+  );
+
   const cyclePosition = useCallback(() => {
     const positions = CONTENT_PROTECTION.WATERMARK_POSITIONS;
     const currentIndex = positions.indexOf(position);
@@ -95,8 +102,7 @@ export function DynamicWatermark({
         className,
       )}
       style={{
-        opacity: CONTENT_PROTECTION.WATERMARK_OPACITY_MIN +
-          Math.random() * (CONTENT_PROTECTION.WATERMARK_OPACITY_MAX - CONTENT_PROTECTION.WATERMARK_OPACITY_MIN),
+        opacity: opacity,
       }}
       aria-hidden="true"
     >

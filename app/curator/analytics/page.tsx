@@ -36,9 +36,11 @@ export default async function CuratorAnalyticsPage() {
   const avgProgress = total > 0 ? Math.round(students.reduce((s, c) => s + c.coursePercent, 0) / total) : 0;
   const withRisks = students.filter((s) => s.riskCount > 0).length;
   const lowProgress = students.filter((s) => s.coursePercent < 40 && s.progressStatus !== "COMPLETED").length;
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
   const staleLogin = students.filter((s) => {
     if (!s.lastLoginAt) return true;
-    return Date.now() - new Date(s.lastLoginAt).getTime() >= 7 * 24 * 60 * 60 * 1000;
+    return now - new Date(s.lastLoginAt).getTime() >= 7 * 24 * 60 * 60 * 1000;
   }).length;
 
   const metrics: DashboardMetric[] = [

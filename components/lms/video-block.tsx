@@ -101,7 +101,10 @@ function useYouTubePlayer(
   const destroyRef = useRef<(() => void) | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onProgressRef = useRef(onProgress);
-  onProgressRef.current = onProgress;
+
+  useEffect(() => {
+    onProgressRef.current = onProgress;
+  }, [onProgress]);
 
   useEffect(() => {
     const milestones = new Set<number>();

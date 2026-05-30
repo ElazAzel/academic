@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useSyncExternalStore } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X, Download, Share2, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,11 +41,13 @@ export function PWAInstallPrompt() {
   const [installEvent, setInstallEvent] = useState<Event | null>(null);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const shouldReduce = useReducedMotion();
   const platform = detectPlatform();
-
-  useEffect(() => { setMounted(true); }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
     const handler = (e: Event) => {
