@@ -2,6 +2,15 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-30 — Responsive smoke E2E (375/768/1024/1440)
+
+**Что сделано:**
+
+- **Responsive smoke тесты**: Создан `tests/e2e/responsive-smoke.spec.ts` — 30 тестов (6 public pages + student dashboard + login form в 4 viewport'ах). Проверяет: видимость h1, отсутствие горизонтального скролла (layout breakage), работу формы логина.
+- **Viewport'ы:** 375px (iPhone), 768px (iPad portrait), 1024px (iPad landscape), 1440px (desktop).
+
+**Проверка:** lint — 0 errors/0 warnings, typecheck — clean, tests — 464/464 (74 файла).
+
 ## 2026-05-30 — Meta-Harness итерация: чистка stderr, S3 таймаут, синхронизация docs
 
 **Что сделано:**
