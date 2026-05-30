@@ -25,7 +25,7 @@ export async function getStudentDashboard() {
   startOfWeek.setHours(0, 0, 0, 0);
 
   return withQueryFallback(async () => {
-    const [enrollments, coursesProgress, continueLearning, questions, certificatesCount, learningPaths, weekSessions] = await Promise.all([
+    const [enrollments, coursesProgress, continueLearning, questions, learningPaths, weekSessions] = await Promise.all([
       prisma.enrollment.findMany({
         where: { userId: user.id, status: "ACTIVE" },
         include: {
@@ -44,7 +44,6 @@ export async function getStudentDashboard() {
           lesson: { include: { module: { include: { course: true } } } },
         },
       }),
-      prisma.certificate.count({ where: { userId: user.id } }),
       getUserLearningPaths(user.id),
       prisma.userSession.findMany({
         where: {

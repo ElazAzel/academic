@@ -137,4 +137,37 @@ describe("createNotificationInternal (sync path)", () => {
       }),
     );
   });
+
+  it("bypasses preferences for security-critical events like device_limit_exceeded even if channel is disabled", async () => {
+    // Mock user preference as disabled for in_app
+    mockNotificationPreferenceFindMany.mockResolvedValue([
+      { channel: "in_app", enabled: false }
+    ]);
+
+    // Test a normal event (should be blocked)
+    const blockedRes = await createNotificationInternal({
+      userId: "student-1",
+      event: "access_granted",
+      channel: "in_app"
+    });
+    expect(blockedRes).toBeNull();
+    expect(mockNotificationCreate).not.toHaveBeenCalled();
+
+    // Test a security event (should bypass and succeed)
+    const successRes = await createNotificationInternal({
+      userId: "student-1",
+      event: "device_limit_exceeded",
+      channel: "in_app"
+    });
+    expect(successRes).not.toBeNull();
+    expect(mockNotificationCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: "student-1",
+          type: "device_limit_exceeded",
+          channel: "in_app"
+        })
+      })
+    );
+  });
 });

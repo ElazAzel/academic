@@ -157,12 +157,18 @@ export async function createNotificationInternal(input: {
   const channel = normalizeNotificationChannel(input.channel);
   // Проверяем настройки пользователя — если канал отключён, пропускаем
   const preferences = await getUserNotificationPreferences(input.userId);
-  const prefKey = channel === NOTIFICATION_CHANNELS.EMAIL || channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP
-    ? input.event
-    : channel;
+  
+  // Системные уведомления безопасности (вход с других устройств, изменение пароля, обновление профиля, отзыв сертификата) не отключаются!
+  const isSecurityEvent = ["device_limit_exceeded", "password_changed", "profile_updated", "certificate_revoked"].includes(input.event);
 
-  if (preferences[prefKey] === false) {
-    return null; // Пользователь отключил этот тип уведомлений
+  if (!isSecurityEvent) {
+    const prefKey = channel === NOTIFICATION_CHANNELS.EMAIL || channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP
+      ? input.event
+      : channel;
+
+    if (preferences[prefKey] === false) {
+      return null; // Пользователь отключил этот тип уведомлений
+    }
   }
 
   const eventKey = Object.keys(templates).includes(input.event) ? input.event as NotificationEvent : "profile_updated";
