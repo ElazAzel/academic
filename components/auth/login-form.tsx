@@ -133,13 +133,22 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
       </div>
 
       {/* Error */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {error ? (
           <motion.p
-            initial={{ opacity: 0, height: 0, scale: 0.95 }}
-            animate={{ opacity: 1, height: "auto", scale: 1 }}
-            exit={{ opacity: 0, height: 0, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
+            key={error}
+            initial={{ opacity: 0, height: 0, scale: 0.95, x: 0 }}
+            animate={{
+              opacity: 1,
+              height: "auto",
+              scale: 1,
+              x: [0, -10, 10, -8, 8, -4, 4, 0],
+            }}
+            exit={{ opacity: 0, height: 0, scale: 0.95, x: 0 }}
+            transition={{
+              duration: 0.3,
+              x: { duration: 0.5, ease: "easeInOut" },
+            }}
             className="overflow-hidden rounded-md bg-m3-error-container px-md py-sm text-body-sm font-body-sm text-m3-error"
             role="alert"
           >
@@ -148,40 +157,59 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
         ) : null}
       </AnimatePresence>
 
-      {/* Submit */}
-      <button
+        {/* Submit */}
+      <motion.button
         type="submit"
         disabled={pending || !hydrated}
-        className="mt-sm flex w-full items-center justify-center gap-sm rounded-lg bg-m3-primary py-md text-label-lg font-label-lg text-m3-on-primary shadow-[0_10px_24px_rgba(22,63,130,0.22)] transition-[background-color,box-shadow,transform] hover:bg-m3-primary-container hover:shadow-[0_14px_28px_rgba(22,63,130,0.26)] active:translate-y-px disabled:opacity-50"
+        className="mt-sm flex w-full items-center justify-center gap-sm rounded-lg bg-m3-primary py-md text-label-lg font-label-lg text-m3-on-primary shadow-[0_10px_24px_rgba(22,63,130,0.22)] transition-[background-color,box-shadow] hover:bg-m3-primary-container hover:shadow-[0_14px_28px_rgba(22,63,130,0.26)] disabled:opacity-50"
+        whileHover={!pending && hydrated ? { scale: 1.015 } : undefined}
+        whileTap={!pending && hydrated ? { scale: 0.98 } : undefined}
+        layout
       >
-        <span>{pending ? "Входим..." : "Войти в систему"}</span>
-        <Icon name="arrow_forward" size={20} />
-      </button>
+        <motion.span
+          key={pending ? "pending" : "idle"}
+          initial={{ opacity: 0, y: pending ? 8 : -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {pending ? "Входим..." : "Войти в систему"}
+        </motion.span>
+        <motion.span
+          animate={pending ? { rotate: 360 } : { rotate: 0 }}
+          transition={pending ? { duration: 1, ease: "linear", repeat: Infinity } : { duration: 0.3 }}
+        >
+          <Icon name={pending ? "progress_activity" : "arrow_forward"} size={20} />
+        </motion.span>
+      </motion.button>
 
       {/* OAuth */}
       {hasOAuth ? (
         <div className="mt-sm grid gap-2 sm:grid-cols-2">
           {oauthProviders.google ? (
-            <button
+            <motion.button
               type="button"
               onClick={() => signIn("google")}
               aria-label="Google"
               className="flex items-center justify-center gap-sm rounded-lg border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               <Icon name="login" size={20} />
               <span>Google</span>
-            </button>
+            </motion.button>
           ) : null}
           {oauthProviders.github ? (
-            <button
+            <motion.button
               type="button"
               onClick={() => signIn("github")}
               aria-label="GitHub"
               className="flex items-center justify-center gap-sm rounded-lg border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               <Icon name="code" size={20} />
               <span>GitHub</span>
-            </button>
+            </motion.button>
           ) : null}
         </div>
       ) : null}
