@@ -2,6 +2,13 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-30 — coverUrl snapshot test + финальный коммит итерации
+
+**Что сделано:**
+
+- **coverUrl snapshot test**: Добавлен тест `"persists coverUrl through snapshot"` в `course-builder-service.test.ts`. Проверяет, что `coverUrl` правильно передаётся через `saveCourseBuilderSnapshot` в `course.update`. Тесты: 465/465 (+1).
+- **Анализ coverUrl runtime**: Код `course-builder-shell.tsx` → `uploadMedia` → presigned URL → `setDetail({...detail, coverUrl: result.publicUrl})` → snapshot save → Prisma — вся цепочка корректна.
+
 ## 2026-05-30 — Banned patterns CI check + verify pipeline
 
 **Что сделано:**

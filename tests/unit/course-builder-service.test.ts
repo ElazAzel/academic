@@ -344,6 +344,49 @@ describe("saveCourseBuilderSnapshot", () => {
     expect(mockLessonUpdate).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "l1" } }));
   });
 
+  it("persists coverUrl through snapshot", async () => {
+    mockCourseFindUnique
+      .mockResolvedValueOnce({
+        id: "c1",
+        modules: [{ id: "m1", blocks: [], lessons: [] }],
+      })
+      .mockResolvedValueOnce({
+        id: "c1",
+        slug: "test-course",
+        title: "Course with Cover",
+        description: "Long enough course description for validation",
+        goal: null,
+        coverUrl: null,
+        durationHours: 10,
+        status: "DRAFT",
+        traversalMode: "sequential",
+        completionThreshold: 85,
+        modules: [],
+      });
+
+    const coverUrlValue = "https://storage.example.com/covers/abc123.jpg";
+
+    await saveCourseBuilderSnapshot(
+      "c1",
+      {
+        title: "Course with Cover",
+        description: "Long enough course description for validation",
+        durationHours: 10,
+        traversalMode: "sequential",
+        completionThreshold: 85,
+        coverUrl: coverUrlValue,
+        modules: [{ id: "m1", order: 0, title: "Module 1", description: null, recommendedDays: 7, status: "DRAFT", blocks: [], lessons: [] }],
+      },
+      "actor1",
+    );
+
+    expect(mockCourseUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ coverUrl: coverUrlValue }),
+      }),
+    );
+  });
+
   it("normalizes lesson orders across blocks and root lessons before saving", async () => {
     mockCourseFindUnique
       .mockResolvedValueOnce({
