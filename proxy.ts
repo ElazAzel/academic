@@ -56,10 +56,49 @@ function checkCsrfOrigin(req: NextRequest): NextResponse | null {
   return null;
 }
 
+// ── Content-Security-Policy (nonce-based) ──────────────────────────────
+// Next.js 16 использует nonce для своих inline-скриптов. Генерируем fresh
+// nonce на каждый запрос — unsafe-inline в script-src больше не нужен.
+
+function buildCspPolicy(nonce: string, isDev: boolean): string {
+  const devExtra = isDev
+    ? " 'unsafe-eval'"  // нужен для react-hot-loader / HMR
+    : "";
+
+  return [
+    "default-src 'self'",
+    `script-src 'nonce-${nonce}' 'strict-dynamic'${devExtra}`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: blob: https: http:",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    isDev
+      ? "connect-src 'self' https: http://localhost:* http://127.0.0.1:*"
+      : "connect-src 'self' https: wss:",
+    "frame-src https://www.youtube.com https://player.vimeo.com",
+    "frame-ancestors 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+  ].join("; ");
+}
+
+function setCspHeaders(response: NextResponse, nonce: string): void {
+  const isDev = process.env.NODE_ENV === "development";
+  const csp = buildCspPolicy(nonce, isDev);
+  response.headers.set("Content-Security-Policy", csp);
+  // Nonce передаётся в layout для Next.js inline-скриптов
+  response.headers.set("x-csp-nonce", nonce);
+}
+
 // ── Main proxy handler ─────────────────────────────────────────────────
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // CSP nonce генерируется на каждый запрос
+  const nonce = crypto.randomUUID();
 
   // CSRF check for mutating API requests (POST/PUT/PATCH/DELETE)
   // Исключаем webhooks и cron — у них нет browser origin
@@ -91,17 +130,23 @@ export async function proxy(req: NextRequest) {
         secret: process.env.NEXTAUTH_SECRET,
       });
       if (token?.authDeviceSessionRevoked) {
-        return NextResponse.next();
+        const resp1 = NextResponse.next();
+        setCspHeaders(resp1, nonce);
+        return resp1;
       }
       if (token?.roles) {
         const roles = token.roles as string[];
         const homePath = getDefaultRolePath(roles as string[]);
         if (homePath !== FORBIDDEN_ROUTE) {
-          return NextResponse.redirect(new URL(homePath, req.url));
+          const resp2 = NextResponse.redirect(new URL(homePath, req.url));
+          setCspHeaders(resp2, nonce);
+          return resp2;
         }
       }
     }
-    return NextResponse.next();
+    const resp3 = NextResponse.next();
+    setCspHeaders(resp3, nonce);
+    return resp3;
   }
 
   const token = await getToken({
@@ -112,13 +157,17 @@ export async function proxy(req: NextRequest) {
   if (!token) {
     const loginUrl = new URL(AUTH_ROUTES.LOGIN, req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+    const resp4 = NextResponse.redirect(loginUrl);
+    setCspHeaders(resp4, nonce);
+    return resp4;
   }
 
   if (token.authDeviceSessionRevoked) {
     const loginUrl = new URL(AUTH_ROUTES.LOGIN, req.url);
     loginUrl.searchParams.set("reason", "device-limit");
-    return NextResponse.redirect(loginUrl);
+    const resp5 = NextResponse.redirect(loginUrl);
+    setCspHeaders(resp5, nonce);
+    return resp5;
   }
 
   // ── 2FA check ────────────────────────────────────────────────────────
@@ -134,7 +183,9 @@ export async function proxy(req: NextRequest) {
       (p) => pathname === p || pathname.startsWith(p),
     );
     if (!isAllowed2faPath) {
-      return NextResponse.redirect(new URL("/auth/2fa", req.url));
+      const resp6 = NextResponse.redirect(new URL("/auth/2fa", req.url));
+      setCspHeaders(resp6, nonce);
+      return resp6;
     }
   }
 
@@ -142,10 +193,14 @@ export async function proxy(req: NextRequest) {
   const allowedRoles = getRouteRoles(pathname);
 
   if (allowedRoles && !allowedRoles.some((r) => roles.includes(r))) {
-    return NextResponse.redirect(new URL(FORBIDDEN_ROUTE, req.url));
+    const resp7 = NextResponse.redirect(new URL(FORBIDDEN_ROUTE, req.url));
+    setCspHeaders(resp7, nonce);
+    return resp7;
   }
 
-  return NextResponse.next();
+  const resp8 = NextResponse.next();
+  setCspHeaders(resp8, nonce);
+  return resp8;
 }
 
 export const config = {

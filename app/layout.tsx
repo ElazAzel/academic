@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-page-custom-font */
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { PWARegister } from "@/components/lms/pwa-register";
@@ -53,7 +54,11 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Nonce for CSP — устанавливается middleware (proxy.ts) на каждый запрос.
+  // Next.js автоматически добавляет nonce к своим инлайн-скриптам.
+  const nonce = (await headers()).get("x-csp-nonce") ?? "";
+
   return (
     <html lang="ru" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
@@ -64,7 +69,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.variable} ${jetBrainsMono.variable}`}>
+      <body className={`${inter.variable} ${jetBrainsMono.variable}`} nonce={nonce}>
         <a
           href="#main-content"
           aria-label="Перейти к основному содержимому"
