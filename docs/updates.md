@@ -10,6 +10,7 @@
 - **Fix: stderr warning в assignments.test.ts**: Добавлен `user.update` в mock Prisma-клиента для `awardXp`. Теперь тесты не выводят `[awardXp] TypeError: user.update is not a function` в stderr.
 - **S3 таймаут 3s → 10s**: В `lib/storage.ts` `requestTimeout` увеличен с 3_000 до 10_000 мс для уменьшения ложных fallback'ов на Supabase при временных сетевых задержках.
 - **services/ в tsconfig**: Проанализирован и признан преднамеренным архитектурным решением (микросервисные стабы-extraction targets), а не debt. Изменение не требуется.
+- **Keyboard smoke E2E тесты**: Создан `tests/e2e/keyboard-smoke.spec.ts` — 4 теста для проверки Tab-навигации на странице логина, дашборда студента, ошибки аутентификации и ссылки «Забыли пароль».
 - **Синхронизация docs**: Обновлены даты и статистика в `MASTER-PLAN.md` (422→464 теста, 69→74 файла), `implementation-plan.md` (дата).
 
 **Проверка:** lint — 0 errors/0 warnings, typecheck — clean, tests — 464/464 (74 файла).
