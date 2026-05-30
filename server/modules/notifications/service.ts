@@ -121,6 +121,7 @@ export async function createNotification(input: {
   data?: Record<string, unknown>;
   refType?: string;
   refId?: string;
+  persist?: boolean;
 }): Promise<{ id: string }> {
   const notification = await createNotificationInternal({
     userId: input.userId,
@@ -131,6 +132,7 @@ export async function createNotification(input: {
     data: input.data,
     refType: input.refType,
     refId: input.refId,
+    persist: input.persist,
   });
 
   if (notification) {
@@ -153,8 +155,12 @@ export async function createNotificationInternal(input: {
   data?: Record<string, unknown>;
   refType?: string;
   refId?: string;
+  persist?: boolean;
 }) {
   const channel = normalizeNotificationChannel(input.channel);
+  // По умолчанию persist = true — сохраняем в БД
+  const persist = input.persist !== false;
+
   // Проверяем настройки пользователя — если канал отключён, пропускаем
   const preferences = await getUserNotificationPreferences(input.userId);
   
@@ -174,19 +180,23 @@ export async function createNotificationInternal(input: {
   const eventKey = Object.keys(templates).includes(input.event) ? input.event as NotificationEvent : "profile_updated";
   const rendered = renderNotificationTemplate(eventKey, { title: input.title, body: input.body });
 
-  const notification = await prisma.notification.create({
-    data: {
-      userId: input.userId,
-      type: input.event,
-      channel,
-      title: rendered.title,
-      body: rendered.body,
-      status: "SENT",
-      data: toJsonValue(input.data ?? {}),
-      refType: input.refType ?? null,
-      refId: input.refId ?? null,
-    }
-  });
+  // persist=false — отправляем email/push без сохранения в БД (silent notification)
+  let notification: Record<string, unknown> | null = null;
+  if (persist) {
+    notification = await prisma.notification.create({
+      data: {
+        userId: input.userId,
+        type: input.event,
+        channel,
+        title: rendered.title,
+        body: rendered.body,
+        status: "SENT",
+        data: toJsonValue(input.data ?? {}),
+        refType: input.refType ?? null,
+        refId: input.refId ?? null,
+      }
+    });
+  }
 
   // Fetch user to get their email address
   const user = await prisma.user.findUnique({
@@ -215,7 +225,7 @@ export async function createNotificationInternal(input: {
         title: rendered.title,
         body: rendered.body,
         url: notificationData?.url ?? notificationData?.link,
-        tag: `${input.event}-${notification.id}`,
+        tag: notification ? `${input.event}-${notification.id}` : `${input.event}-${Date.now()}`,
       });
     } catch (error) {
       console.error("[Push] Failed to send push notification:", error);

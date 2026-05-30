@@ -110,11 +110,12 @@ export async function registerAuthDeviceSession(input: {
       await createNotification({
         userId: input.userId,
         event: DEVICE_LIMIT_REVOKE_REASON,
-        channel: "in_app",
+        channel: "push",
         title: DEVICE_LIMIT_NOTIFICATION.title,
         body: DEVICE_LIMIT_NOTIFICATION.body,
         refType: "auth_device_session",
         refId: result.id,
+        persist: false, // не сохраняем в БД — только push-уведомление
         data: {
           maxActiveDeviceSessions: MAX_ACTIVE_DEVICE_SESSIONS,
           revokedSessionIds: result.revokedSessionIds,
