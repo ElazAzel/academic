@@ -371,7 +371,7 @@ export async function getLesson(lessonId: string, stripAnswerKeys = true) {
   if (stripAnswerKeys && lesson.quizzes) {
     lesson.quizzes = lesson.quizzes.map((quiz) => ({
       ...quiz,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       questions: quiz.questions.map(({ correctAnswer, ...rest }) => rest),
     })) as typeof lesson.quizzes;
   }

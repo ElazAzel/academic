@@ -133,7 +133,7 @@ function stripAnswerKeys(quizzes: unknown[]): unknown[] {
     const quiz = q as Record<string, unknown>;
     if (Array.isArray(quiz.questions)) {
       quiz.questions = quiz.questions.map((question: Record<string, unknown>) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         const { correctAnswer, ...rest } = question;
         return rest;
       });

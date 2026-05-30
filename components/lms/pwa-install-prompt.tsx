@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 type Platform = "android" | "ios" | "other";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type BeforeInstallPromptEvent = any;
 
 interface IOSNavigator extends Navigator {
@@ -52,7 +52,7 @@ export function PWAInstallPrompt() {
       e.preventDefault();
       setInstallEvent(e);
       if (typeof window !== "undefined") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (window as any).deferredPrompt = e;
         window.dispatchEvent(new CustomEvent("pwa-installable"));
       }
@@ -66,7 +66,7 @@ export function PWAInstallPrompt() {
       setShowIOSInstructions(true);
       return;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const ev = installEvent || (typeof window !== "undefined" && (window as any).deferredPrompt);
     if (!ev) return;
     const e = ev as BeforeInstallPromptEvent;
@@ -75,7 +75,7 @@ export function PWAInstallPrompt() {
     if (result.outcome === "accepted") {
       setInstallEvent(null);
       if (typeof window !== "undefined") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (window as any).deferredPrompt = null;
       }
     }
@@ -94,7 +94,7 @@ export function PWAInstallPrompt() {
     const handleAppInstalled = () => {
       setInstallEvent(null);
       if (typeof window !== "undefined") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (window as any).deferredPrompt = null;
       }
     };

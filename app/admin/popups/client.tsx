@@ -41,7 +41,7 @@ const ALL_ROLES: RoleKey[] = ["admin", "super_curator", "curator", "instructor",
 export function AdminPopupManagerClient() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const [showCohortPicker, setShowCohortPicker] = useState(false);
   const [form, setForm] = useState({
     title: "",

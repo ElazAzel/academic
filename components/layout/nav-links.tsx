@@ -47,9 +47,9 @@ export function NavLinks({ links }: { links: NavItem[] }) {
       const ua = navigator.userAgent.toLowerCase();
       const isIOS = /iphone|ipad|ipod/.test(ua);
       const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (navigator as any).standalone === true;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const hasDeferred = !!(window as any).deferredPrompt;
       setIsInstallable(!isStandalone && (hasDeferred || isIOS));
     };

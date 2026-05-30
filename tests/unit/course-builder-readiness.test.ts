@@ -122,7 +122,7 @@ describe("course builder readiness", () => {
     const course = corruptModuleCourse();
     course.modules[0] = {
       ...course.modules[0],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       blocks: [{ id: "b1", order: 0, title: "Block 1", description: null }] as any,
     };
     // После as any — block.lessons undefined
