@@ -37,7 +37,7 @@ test.describe("curator", () => {
     await page.waitForURL("/curator");
     await page.goto("/curator/students");
     await expect(page).toHaveURL("/curator/students");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("can view assignments for review", async ({ page }) => {
@@ -45,7 +45,7 @@ test.describe("curator", () => {
     await page.waitForURL("/curator");
     await page.goto("/curator/assignments");
     await expect(page).toHaveURL("/curator/assignments");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("settings page loads", async ({ page }) => {
@@ -53,7 +53,7 @@ test.describe("curator", () => {
     await page.waitForURL("/curator");
     await page.goto("/curator/settings");
     await expect(page).toHaveURL("/curator/settings");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 });
 

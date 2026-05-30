@@ -38,7 +38,7 @@ test.describe("instructor", () => {
     await page.waitForURL("/instructor");
     await page.goto("/instructor/courses");
     await expect(page).toHaveURL("/instructor/courses");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("can view quiz constructor", async ({ page }) => {
@@ -46,7 +46,7 @@ test.describe("instructor", () => {
     await page.waitForURL("/instructor");
     await page.goto("/instructor/quizzes");
     await expect(page).toHaveURL("/instructor/quizzes");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("can view students", async ({ page }) => {
@@ -54,6 +54,6 @@ test.describe("instructor", () => {
     await page.waitForURL("/instructor");
     await page.goto("/instructor/students");
     await expect(page).toHaveURL("/instructor/students");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 });

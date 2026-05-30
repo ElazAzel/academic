@@ -45,6 +45,6 @@ test.describe("super-curator", () => {
     await page.waitForURL("/super-curator");
     await page.goto("/super-curator/curators");
     await expect(page).toHaveURL("/super-curator/curators");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 });

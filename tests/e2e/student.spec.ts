@@ -27,7 +27,7 @@ test.describe("student", () => {
   test("dashboard shows learning sections", async ({ page }) => {
     await loginAs(page, "student1@academy.local");
     await page.waitForURL("/student");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
     await expect(page.locator("h2").first()).toBeVisible();
   });
 
@@ -36,7 +36,7 @@ test.describe("student", () => {
     await page.waitForURL("/student");
     await page.goto("/student/my-courses");
     await expect(page).toHaveURL("/student/my-courses");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("settings page loads", async ({ page }) => {
@@ -44,7 +44,7 @@ test.describe("student", () => {
     await page.waitForURL("/student");
     await page.goto("/student/settings");
     await expect(page).toHaveURL("/student/settings");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("notification preferences loads", async ({ page }) => {
@@ -52,7 +52,7 @@ test.describe("student", () => {
     await page.waitForURL("/student");
     await page.goto("/student/settings/notifications");
     await expect(page).toHaveURL("/student/settings/notifications");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("certificates page loads", async ({ page }) => {
@@ -60,6 +60,6 @@ test.describe("student", () => {
     await page.waitForURL("/student");
     await page.goto("/student/certificates");
     await expect(page).toHaveURL("/student/certificates");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 });

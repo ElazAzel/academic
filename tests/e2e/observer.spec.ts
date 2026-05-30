@@ -27,7 +27,7 @@ test.describe("customer-observer", () => {
     await page.waitForURL("/customer-observer");
     await page.goto("/customer-observer/settings", { timeout: 45_000 });
     await expect(page).toHaveURL("/customer-observer/settings");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("can view reports", async ({ page }) => {
@@ -35,7 +35,7 @@ test.describe("customer-observer", () => {
     await page.waitForURL("/customer-observer");
     await page.goto("/customer-observer/reports");
     await expect(page).toHaveURL("/customer-observer/reports");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 
   test("blocked from student dashboard", async ({ page }) => {

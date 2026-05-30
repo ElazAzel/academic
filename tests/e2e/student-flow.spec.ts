@@ -31,7 +31,7 @@ test.describe("student flow proof", () => {
     // Navigate to the lesson
     await continueLink.click();
     await page.waitForURL(/\/student\/lessons\//);
-    await expect(page.locator("h1")).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("h1").first()).toBeVisible({ timeout: 10_000 });
 
     // ── 4. Verify lesson player structure ─────────────────────────────
     // Progress bar should be visible
@@ -57,6 +57,10 @@ test.describe("student flow proof", () => {
       // Submit the quiz
       const submitBtn = page.getByRole("button", { name: /завершить тест/i });
       await expect(submitBtn).toBeVisible({ timeout: 3_000 });
+      // Accept confirm dialog if present
+      page.once("dialog", (dialog) => {
+        dialog.accept().catch(() => {});
+      });
       await submitBtn.click();
 
       // Wait for result phase — should show score as a percentage
@@ -120,7 +124,7 @@ test.describe("student flow proof", () => {
     // If we ended up on a course detail page, verify module/lesson structure
     if (page.url().includes("/student/courses/")) {
       // Course title should be visible
-      await expect(page.locator("h1")).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator("h1").first()).toBeVisible({ timeout: 10_000 });
 
       // Should have module accordion sections (Модуль 1: Стратегия)
       const moduleTitle = page.getByText(/модуль 1/i);
@@ -148,7 +152,7 @@ test.describe("student flow proof", () => {
     await expect(continueLink).toBeVisible({ timeout: 10_000 });
     await continueLink.click();
     await page.waitForURL(/\/student\/lessons\//);
-    await expect(page.locator("h1")).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("h1").first()).toBeVisible({ timeout: 10_000 });
 
     // Look for the quiz block
     const startQuizBtn = page.getByRole("button", { name: /начать тест/i });
@@ -172,6 +176,10 @@ test.describe("student flow proof", () => {
     await expect(firstRadio).toBeChecked();
 
     // Submit the quiz
+    // Accept confirm dialog if present
+    page.once("dialog", (dialog) => {
+      dialog.accept().catch(() => {});
+    });
     await page.getByRole("button", { name: /завершить тест/i }).click();
 
     // Wait for the result phase — check for either score display or result actions
