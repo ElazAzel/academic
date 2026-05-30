@@ -11,7 +11,7 @@
 | 3 | **Ротация скомпрометированного Supabase пароля** | Security | P1 | 🔴 Инцидент в git history (рекомендуется) |
 | 4 | **Staging-окружение** | DevOps | P2 | ✅ Ветка staging и инструкция добавлены |
 | 5 | **Git purge __dbcheck.mjs из истории** | Security | P2 | 🟡 Требует force-push |
-| 6 | **CSP: nonce-based script-src** | Security | P2 | 🟡 unsafe-inline остаётся (Next.js hydration) |
+| 6 | **CSP: nonce-based script-src** | Security | P2 | ✅ nonce-based, без unsafe-inline в production |
 | 7 | **E2E full suite (все роли + сценарии)** | QA | P2 | 🟡 Только smoke (52/52) |
 | 8 | **Email notifications (SMTP wiring)** | Notifications | P2 | 🟡 Firebase push работает, SMTP pending |
 | 9 | **WCAG 2.1 AA full audit** | UX | P2 | 🟡 Lighthouse asserts настроены |
