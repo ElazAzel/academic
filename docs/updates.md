@@ -2,6 +2,13 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-30 — WCAG accessibility audit (axe-core Playwright)
+
+**Что сделано:**
+
+- **Установлен `@axe-core/playwright`** — интеграция axe accessibility engine в Playwright E2E тесты.
+- **Accessibility smoke**: Создан `tests/e2e/accessibility-smoke.spec.ts` — 12 тестов (6 public + 6 authenticated страниц). Проверяет WCAG 2.0 AA + 2.1 AA на критическом/серьёзном уровне. В CI — fail только на critical+serious, в dev — строже.
+
 ## 2026-05-30 — coverUrl snapshot test + финальный коммит итерации
 
 **Что сделано:**
