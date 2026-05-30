@@ -1,6 +1,6 @@
 # План реализации AI Strategic Academy
 
-Дата актуализации: 2026-05-26
+Дата актуализации: 2026-05-30
 Статус документа: operational source of truth для реализации.
 
 ## Release-hardening baseline на 2026-05-26

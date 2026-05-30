@@ -8,6 +8,7 @@ const mockUpdate = vi.hoisted(() => vi.fn());
 const mockAuditCreate = vi.hoisted(() => vi.fn());
 const mockSubmissionFindUnique = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockUserUpdate = vi.hoisted(() => vi.fn());
 const mockCourseInstructorFindUnique = vi.hoisted(() => vi.fn());
 const mockCuratorAssignmentFindFirst = vi.hoisted(() => vi.fn());
 const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
@@ -34,7 +35,7 @@ vi.mock("@/lib/prisma", () => ({
     enrollment: { findUnique: mockEnrollmentFindUnique },
     assignmentSubmission: { count: mockCount, create: mockCreate, update: mockUpdate, findUnique: mockSubmissionFindUnique },
     auditLog: { create: mockAuditCreate },
-    user: { findUnique: mockUserFindUnique },
+    user: { findUnique: mockUserFindUnique, update: mockUserUpdate },
     courseInstructor: { findUnique: mockCourseInstructorFindUnique },
     curatorAssignment: { findFirst: mockCuratorAssignmentFindFirst },
     notificationPreference: { findMany: mockNotificationPreferenceFindMany },
@@ -86,6 +87,7 @@ describe("submitAssignment", () => {
       attemptNumber: 1,
       status: "SUBMITTED",
     });
+    mockUserUpdate.mockResolvedValue({ xp: 40 });
 
     const result = await submitAssignment({ assignmentId: "a1", userId: "u1", answerText: "hello" });
     expect(result.attemptNumber).toBe(1);
@@ -104,6 +106,7 @@ describe("submitAssignment", () => {
       attemptNumber: 1,
       status: "SUBMITTED",
     });
+    mockUserUpdate.mockResolvedValue({ xp: 40 });
 
     const result = await submitAssignment({ assignmentId: "a1", userId: "u1", fileUrl: "/uploads/doc.pdf" });
     expect(result.fileUrl).toBe("/uploads/doc.pdf");

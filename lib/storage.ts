@@ -43,7 +43,8 @@ export function getS3Client(): S3Client | null {
           secretAccessKey: env.S3_SECRET_KEY,
         },
         forcePathStyle: env.S3_FORCE_PATH_STYLE,
-        requestHandler: { requestTimeout: 3_000 },
+        // 10s — увеличен с 3s для уменьшения ложных fallback'ов при временных сетевых задержках
+        requestHandler: { requestTimeout: 10_000 },
       });
     }
     return s3Client;
