@@ -7,7 +7,8 @@
 **Что сделано:**
 
 - **Установлен `@axe-core/playwright`** — интеграция axe accessibility engine в Playwright E2E тесты.
-- **Accessibility smoke**: Создан `tests/e2e/accessibility-smoke.spec.ts` — 12 тестов (6 public + 6 authenticated страниц). Проверяет WCAG 2.0 AA + 2.1 AA на критическом/серьёзном уровне. В CI — fail только на critical+serious, в dev — строже.
+- **Accessibility smoke**: Создан `tests/e2e/accessibility-smoke.spec.ts` — 13 тестов (6 public + 6 authenticated + skip-link). Проверяет WCAG 2.0 AA + 2.1 AA на critical/serious уровне. В CI — fail только на critical+serious.
+- **Skip-to-content**: Улучшена семантика — добавлен `role="main"` на контентный div, `aria-label` на skip-link, тест проверяет Tab-фокус и переход по ссылке.
 
 ## 2026-05-30 — coverUrl snapshot test + финальный коммит итерации
 

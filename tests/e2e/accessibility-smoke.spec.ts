@@ -2,6 +2,20 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { loginAs } from "./helpers";
 
+test.describe("skip-to-content link", () => {
+  test("exists on login page", async ({ page }) => {
+    await page.goto("/login", { waitUntil: "networkidle" });
+    const skipLink = page.locator('a[href="#main-content"]');
+    await expect(skipLink).toBeVisible();
+    await expect(skipLink).toHaveAttribute("aria-label", "Перейти к основному содержимому");
+    // Focus and verify it becomes visible
+    await page.keyboard.press("Tab");
+    await expect(skipLink).toBeFocused();
+    await skipLink.press("Enter");
+    await expect(page.locator("#main-content")).toBeFocused();
+  });
+});
+
 test.describe("accessibility — public pages", () => {
   test.describe.configure({ timeout: 60_000 });
 

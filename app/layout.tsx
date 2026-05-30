@@ -67,11 +67,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${inter.variable} ${jetBrainsMono.variable}`}>
         <a
           href="#main-content"
+          aria-label="Перейти к основному содержимому"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-primary focus:shadow-m3-modal focus:outline-none focus:ring-2 focus:ring-primary"
         >
           Перейти к содержимому
         </a>
-        <div id="main-content" tabIndex={-1} className="outline-none">
+        <div id="main-content" role="main" tabIndex={-1} className="outline-none">
           <Providers>{children}</Providers>
         </div>
         <PWARegister />
