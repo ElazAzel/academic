@@ -16,9 +16,11 @@
 ## Workflow
 
 1. Read the relevant role from `ai/roles/` before starting a task
-2. Check `docs/implementation-plan.md` for current status
-3. Update `docs/updates.md` after each change
-4. Follow the role's input docs and forbidden shortcuts
+2. Read the system instructions in [ai-agent-instructions.md](file:///c:/Users/i.azelkhanov/Documents/Strategic%20Academy/docs/ai-agent-instructions.md) to understand current constraints
+3. Check `docs/implementation-plan.md` for current status
+4. Update `docs/updates.md` after each change
+5. Update `docs/ai-agent-instructions.md` if any major architectural/product changes are made
+6. Follow the role's input docs and forbidden shortcuts
 
 ## Key Conventions
 

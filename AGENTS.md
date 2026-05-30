@@ -1,4 +1,4 @@
-﻿# AGENTS.md — AI Strategic Academy
+# AGENTS.md — AI Strategic Academy
 
 ## Commands
 
@@ -59,6 +59,7 @@ proxy.ts        — Next.js middleware (route guard, CSRF, rate limit)
 - `docs/implementation-plan.md` — current status
 - `docs/release.md` — release plan + verification runbook
 - `docs/security-review.md` — security model + OWASP/WCAG audit
+- `docs/ai-agent-instructions.md` — **AI Agent System Instructions** (must be updated after implementing major architectural or product features)
 
 ## Test quirks
 
