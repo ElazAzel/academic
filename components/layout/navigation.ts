@@ -24,7 +24,6 @@ export const NAV_BY_ROLE: Record<RoleKey, NavItem[]> = {
     { href: "/student", label: "Дашборд", icon: "dashboard" },
     { href: "/student/my-courses", label: "Мои курсы", icon: "menu_book" },
     { href: "/student/certificates", label: "Сертификаты", icon: "verified_user" },
-    { href: "/student/reports", label: "Отчёты", icon: "bar_chart" },
     { href: "/student/notifications", label: "Уведомления", icon: "notifications" },
   ],
   curator: [

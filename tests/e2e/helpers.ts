@@ -40,7 +40,7 @@ const INSTRUCTOR_ROUTES = [
 
 const STUDENT_ROUTES = [
   "/student", "/student/my-courses", "/student/quizzes",
-  "/student/assignments", "/student/reports",
+  "/student/assignments",
   "/student/certificates", "/student/notifications",
   "/student/settings", "/student/settings/notifications",
 ];
@@ -83,7 +83,7 @@ export const ALL_ROLE_PREFIXES = [
 
 export async function loginAs(page: Page, email: string, password: string = PASSWORD) {
   await page.context().clearCookies();
-  await page.goto("/login", { waitUntil: "networkidle" });
+  await page.goto("/login", { waitUntil: "domcontentloaded" });
   if (!page.url().includes("/login")) {
     await page.goto("/api/auth/signout");
     await page.click('button[type="submit"]');

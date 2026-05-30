@@ -31,7 +31,7 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-m3-outline-variant/70 bg-m3-surface-container-lowest/88 shadow-[0_8px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-m3-outline-variant/70 bg-m3-surface-container-lowest/88 shadow-[0_8px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl site-header">
       <div className="mx-auto flex h-14 md:h-16 max-w-7xl items-center justify-between px-3 md:px-6">
         {/* Logo — compact on mobile */}
         <Link href="/" className="group flex shrink-0 items-center gap-2.5 font-semibold">

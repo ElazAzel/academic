@@ -607,3 +607,9 @@ img[loading="lazy"]:not([src=""]) {
     background: hsl(var(--muted-foreground) / 0.35);
   }
 }
+
+/* Header notch/safe-area top inset support */
+.site-header {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+

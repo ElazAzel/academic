@@ -123,12 +123,6 @@ export async function getStudentDashboard() {
         tone: openQuestionsCount > 0 ? "info" : "success",
         detail: `${formattedQuestions.length} всего в истории`,
       },
-      {
-        label: "Сертификаты",
-        value: certificatesCount,
-        tone: "success",
-        href: "/student/certificates",
-      },
     ];
 
     const activeDays = new Set((weekSessions ?? []).map((s) => {
