@@ -8,8 +8,10 @@
 
 - **CSP перемещён из `next.config.ts` в `proxy.ts`**: `Content-Security-Policy` header теперь устанавливается в middleware per-request, а не статически в конфиге.
 - **Nonce-based script-src**: В `script-src` используется `'nonce-{uuid}' 'strict-dynamic'` вместо `'unsafe-inline'` в production. В dev — добавлен `'unsafe-eval'` для HMR.
-- **Генерация nonce**: `crypto.randomUUID()` на каждый запрос в middleware. Nonce передаётся через `x-csp-nonce` response header.
-- **Root layout**: `app/layout.tsx` теперь async, читает `x-csp-nonce` через `headers()`, передаёт в `<body nonce={nonce}>`. Next.js автоматически добавляет nonce к своим inline-скриптам.
+- **Генерация nonce**: `crypto.randomUUID()` на каждый запрос в proxy.ts.
+- **Root layout**: `app/layout.tsx` async, читает `x-nonce` request header (устанавливается в proxy.ts через `NextResponse.next({ request: { headers } })`).
+- **Nonce propagation**: Next.js 16 извлекает nonce из `Content-Security-Policy` request header во время SSR (парсит `'nonce-{value}'` в script-src). Nonce автоматически добавляется ко всем framework-скриптам и page-бандлам. `<body nonce={nonce}>` остаётся для ручных `<Script>` компонентов.
+- **Fix CSP in production**: Ранее CSP устанавливался только в response headers. Next.js не читает `x-csp-nonce` response header — ему нужен CSP в request headers. Добавлены `nextWithCsp()` (CSP на request + response) и `redirectWithCsp()` (только response).
 - **Все page-ответы**: CSP headers применяются ко всем `NextResponse.next()` и `NextResponse.redirect()` в proxy. API JSON-ответы не получают CSP (не требуется).
 - **Политика**: `default-src 'self'`, `img-src` включает `https: http:` для внешних изображений, `frame-src` только YouTube/Vimeo, `connect-src` ограничен `self` + `wss:` в production. `unsafe-inline` в `style-src` оставлен для shadcn/ui.
 - **Изменённые файлы**: `next.config.ts`, `proxy.ts`, `app/layout.tsx`

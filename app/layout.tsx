@@ -55,9 +55,10 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // Nonce for CSP — устанавливается middleware (proxy.ts) на каждый запрос.
-  // Next.js автоматически добавляет nonce к своим инлайн-скриптам.
-  const nonce = (await headers()).get("x-csp-nonce") ?? "";
+  // Nonce for CSP — устанавливается в proxy.ts на каждый запрос.
+  // Next.js автоматически добавляет nonce к своим скриптам, извлекая его
+  // из Content-Security-Policy request header во время SSR.
+  const nonce = (await headers()).get("x-nonce") ?? "";
 
   return (
     <html lang="ru" suppressHydrationWarning data-scroll-behavior="smooth">

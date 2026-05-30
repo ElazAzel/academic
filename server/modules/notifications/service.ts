@@ -136,7 +136,7 @@ export async function createNotification(input: {
   });
 
   if (notification) {
-    return { id: notification.id };
+    return { id: notification.id as string };
   }
 
   return { id: "" };

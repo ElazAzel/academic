@@ -57,8 +57,10 @@ function checkCsrfOrigin(req: NextRequest): NextResponse | null {
 }
 
 // ── Content-Security-Policy (nonce-based) ──────────────────────────────
-// Next.js 16 использует nonce для своих inline-скриптов. Генерируем fresh
-// nonce на каждый запрос — unsafe-inline в script-src больше не нужен.
+// Next.js 16 извлекает nonce из Content-Security-Policy request header во
+// время SSR (парсит `'nonce-{value}'` в script-src). Поэтому CSP нужно
+// передавать в request headers, а не только в response.
+// Для браузера CSP дублируется в response headers.
 
 function buildCspPolicy(nonce: string, isDev: boolean): string {
   const devExtra = isDev
@@ -84,12 +86,25 @@ function buildCspPolicy(nonce: string, isDev: boolean): string {
   ].join("; ");
 }
 
-function setCspHeaders(response: NextResponse, nonce: string): void {
+// Для страниц (NextResponse.next()): CSP на request (SSR nonce) + response (browser)
+function nextWithCsp(req: NextRequest, nonce: string): NextResponse {
   const isDev = process.env.NODE_ENV === "development";
   const csp = buildCspPolicy(nonce, isDev);
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", csp);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy", csp);
-  // Nonce передаётся в layout для Next.js inline-скриптов
-  response.headers.set("x-csp-nonce", nonce);
+  return response;
+}
+
+// Для редиректов: CSP только на response (браузерный)
+function redirectWithCsp(url: URL, nonce: string): NextResponse {
+  const isDev = process.env.NODE_ENV === "development";
+  const csp = buildCspPolicy(nonce, isDev);
+  const response = NextResponse.redirect(url);
+  response.headers.set("Content-Security-Policy", csp);
+  return response;
 }
 
 // ── Main proxy handler ─────────────────────────────────────────────────
@@ -130,23 +145,17 @@ export async function proxy(req: NextRequest) {
         secret: process.env.NEXTAUTH_SECRET,
       });
       if (token?.authDeviceSessionRevoked) {
-        const resp1 = NextResponse.next();
-        setCspHeaders(resp1, nonce);
-        return resp1;
+        return nextWithCsp(req, nonce);
       }
       if (token?.roles) {
         const roles = token.roles as string[];
         const homePath = getDefaultRolePath(roles as string[]);
         if (homePath !== FORBIDDEN_ROUTE) {
-          const resp2 = NextResponse.redirect(new URL(homePath, req.url));
-          setCspHeaders(resp2, nonce);
-          return resp2;
+          return redirectWithCsp(new URL(homePath, req.url), nonce);
         }
       }
     }
-    const resp3 = NextResponse.next();
-    setCspHeaders(resp3, nonce);
-    return resp3;
+    return nextWithCsp(req, nonce);
   }
 
   const token = await getToken({
@@ -157,17 +166,13 @@ export async function proxy(req: NextRequest) {
   if (!token) {
     const loginUrl = new URL(AUTH_ROUTES.LOGIN, req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
-    const resp4 = NextResponse.redirect(loginUrl);
-    setCspHeaders(resp4, nonce);
-    return resp4;
+    return redirectWithCsp(loginUrl, nonce);
   }
 
   if (token.authDeviceSessionRevoked) {
     const loginUrl = new URL(AUTH_ROUTES.LOGIN, req.url);
     loginUrl.searchParams.set("reason", "device-limit");
-    const resp5 = NextResponse.redirect(loginUrl);
-    setCspHeaders(resp5, nonce);
-    return resp5;
+    return redirectWithCsp(loginUrl, nonce);
   }
 
   // ── 2FA check ────────────────────────────────────────────────────────
@@ -183,9 +188,7 @@ export async function proxy(req: NextRequest) {
       (p) => pathname === p || pathname.startsWith(p),
     );
     if (!isAllowed2faPath) {
-      const resp6 = NextResponse.redirect(new URL("/auth/2fa", req.url));
-      setCspHeaders(resp6, nonce);
-      return resp6;
+      return redirectWithCsp(new URL("/auth/2fa", req.url), nonce);
     }
   }
 
@@ -193,14 +196,10 @@ export async function proxy(req: NextRequest) {
   const allowedRoles = getRouteRoles(pathname);
 
   if (allowedRoles && !allowedRoles.some((r) => roles.includes(r))) {
-    const resp7 = NextResponse.redirect(new URL(FORBIDDEN_ROUTE, req.url));
-    setCspHeaders(resp7, nonce);
-    return resp7;
+    return redirectWithCsp(new URL(FORBIDDEN_ROUTE, req.url), nonce);
   }
 
-  const resp8 = NextResponse.next();
-  setCspHeaders(resp8, nonce);
-  return resp8;
+  return nextWithCsp(req, nonce);
 }
 
 export const config = {
