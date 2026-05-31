@@ -133,7 +133,8 @@ describe("auth device sessions", () => {
       expect.objectContaining({
         userId: "user-1",
         event: DEVICE_LIMIT_REVOKE_REASON,
-        channel: "in_app",
+        channel: "push",
+        persist: false,
         refType: "auth_device_session",
         refId: "session-new",
       }),
