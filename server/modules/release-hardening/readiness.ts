@@ -1,4 +1,4 @@
-export const releaseHardeningContractVersion = "2026-05-26";
+export const releaseHardeningContractVersion = "2026-05-31";
 
 export type ReleaseStatus = "done" | "partial" | "blocked" | "planned";
 export type EvidenceKind = "docs" | "unit" | "e2e" | "browser" | "gate" | "ops" | "code";
@@ -134,7 +134,7 @@ export const releaseWorkPackages = [
   {
     id: "WP1",
     title: "Six-role Scenario Proof",
-    status: "done",
+    status: "partial",
     owners: ["qa-release", "product-owner", "frontend-lms-ux"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-qa-release", "multi-agent-review"],
@@ -161,7 +161,7 @@ export const releaseWorkPackages = [
   {
     id: "WP2",
     title: "Access, Privacy, Ownership Hardening",
-    status: "done",
+    status: "partial",
     owners: ["security-privacy", "backend-next-prisma"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-implementation", "lms-qa-release", "multi-agent-review"],
@@ -223,7 +223,7 @@ export const releaseWorkPackages = [
   {
     id: "WP4",
     title: "Role Workspace UX Optimization",
-    status: "done",
+    status: "partial",
     owners: ["frontend-lms-ux", "product-owner"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-qa-release", "multi-agent-review"],
@@ -251,7 +251,7 @@ export const releaseWorkPackages = [
   {
     id: "WP5",
     title: "Reporting, Analytics, Certificates, Notifications Proof",
-    status: "done",
+    status: "partial",
     owners: ["data-analytics", "security-privacy", "qa-release"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-implementation", "lms-qa-release"],
@@ -278,7 +278,7 @@ export const releaseWorkPackages = [
   {
     id: "WP6",
     title: "DevOps, Release, Backup, Observability",
-    status: "done",
+    status: "blocked",
     owners: ["devops-platform", "qa-release"],
     productRoles: allRoles,
     projectSkills: ["lms-qa-release", "lms-orchestrator", "multi-agent-review"],
@@ -343,20 +343,20 @@ export const releaseGates = [
   {
     id: "six-role-workflow-e2e",
     title: "Six-role workflow E2E",
-    status: "done",
+    status: "partial",
     command: "npm run test:e2e",
     exitCriteria: "Seeded Playwright scenarios prove six-role workflows, not only route rendering.",
   },
   {
     id: "access-privacy-negative-paths",
     title: "Access/privacy negative paths",
-    status: "done",
+    status: "partial",
     exitCriteria: "Tests prove ownership, guessed-ID denial, observer read-only behavior, media/report/certificate privacy.",
   },
   {
     id: "operational-release-drill",
     title: "Operational release drill",
-    status: "done",
+    status: "blocked",
     command: "npm run verify:release",
     exitCriteria: "Target-env release verification, health checks, backup/restore and rollback are evidenced.",
   },

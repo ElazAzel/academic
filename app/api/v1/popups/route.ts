@@ -31,7 +31,10 @@ export async function GET() {
   try {
     const user = await requireUser();
     assertPermission(user.roles, "notifications:write");
-    const popups = await listPopups(true);
+    const popups = await listPopups(
+      true,
+      user.roles.includes("admin" as RoleKey) ? undefined : { createdById: user.id },
+    );
     return ok(popups);
   } catch (error) {
     return errorResponse(error);
@@ -46,6 +49,14 @@ export async function POST(request: Request) {
     const body = await parseJson(request, createPopupSchema);
 
     const targetUserIds = body.targetUserIds ?? [];
+    const targetRoles = body.targetRoles ?? [];
+    const targetCohortIds = body.targetCohortIds ?? [];
+    const isAdmin = user.roles.includes("admin" as RoleKey);
+
+    if (!isAdmin && (targetRoles.length > 0 || targetCohortIds.length > 0)) {
+      throw new ApiError("forbidden", "Только администратор может отправлять попапы по ролям или потокам", 403);
+    }
+
     // If curator creates popup for specific students, verify they're assigned to them
     if (targetUserIds.length > 0 && !user.roles.includes("admin" as RoleKey)) {
       const assignedStudents = await prisma.curatorAssignment.findMany({
@@ -70,8 +81,8 @@ export async function POST(request: Request) {
         imageUrl: body.imageUrl,
         linkUrl: body.linkUrl,
         linkText: body.linkText,
-        targetRoles: body.targetRoles as RoleKey[],
-        targetCohortIds: body.targetCohortIds ?? [],
+        targetRoles: targetRoles as RoleKey[],
+        targetCohortIds,
         targetUserIds: targetUserIds,
         isActive: body.isActive,
       },

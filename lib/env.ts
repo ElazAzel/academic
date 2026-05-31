@@ -56,11 +56,6 @@ const envSchema = z.object({
   VAPID_EMAIL: z.string().email().optional(),
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
 
-  // Firebase (legacy, kept for backwards compatibility)
-  FIREBASE_CLIENT_EMAIL: z.string().optional(),
-  FIREBASE_PRIVATE_KEY: z.string().optional(),
-  FIREBASE_PROJECT_ID: z.string().optional(),
-
   // Supabase (Realtime)
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),

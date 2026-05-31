@@ -1,6 +1,6 @@
 # Code Optimization Analysis
 
-> AI Strategic Academy — 2026-05-26
+> AI Strategic Academy — 2026-05-26; актуализация dependency hygiene — 2026-05-31
 
 ---
 
@@ -17,23 +17,22 @@
 
 ---
 
-## 🔴 Critical Issues
+## ✅ Dependency Hygiene Closed
 
-### 1. `firebase-admin` — полностью мёртвая зависимость, 13MB+
+### 1. `firebase-admin` — удалено 2026-05-31
 
 - **Локация**: `package.json` dependencies
-- **Проблема**: `firebase-admin@13.10.0` установлен, но **ноль импортов** во всём коде. `rg -r "firebase"` — 0 совпадений.
-- **Риски**:
-  - +13MB в `node_modules/` на каждый деплой (Vercel, Docker)
-  - Лишняя поверхность атаки (Firebase Admin SDK имеет доступ к Google APIs)
-  - Увеличивает время `npm ci` в CI
-- **Фикс**: `npm uninstall firebase-admin`
+- **Было**: `firebase-admin@13.10.0` был установлен без runtime-импортов во всём коде.
+- **Фикс**: выполнено `npm uninstall firebase-admin`; `package.json` и `package-lock.json` больше не содержат зависимость.
+- **Текущий push-стек**: `server/modules/notifications/push.ts` использует `web-push` + VAPID (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`).
+- **Эффект**: меньше dependency surface и нет расхождения между кодом, env-контрактом и deployment checklist.
 
-### 2. `archiver` — используется, но не объявлен в dependencies
+### 2. `archiver` — явно объявлен в dependencies
 
 - **Локация**: `app/api/v1/certificates/bulk/route.ts:8` — `import archiver from "archiver"`
-- **Проблема**: Пакет не указан явно в `dependencies`. Он приходит транзитивно через `exceljs@4.4.0`. Если `exceljs` обновится и уберёт `archiver` из своих зависимостей, bulk-certificate endpoint упадёт с runtime-ошибкой.
-- **Фикс**: `npm install archiver`
+- **Было**: пакет приходил транзитивно через `exceljs@4.4.0`, что создавало риск runtime-ошибки при обновлении ExcelJS.
+- **Текущее состояние**: `archiver@^7.0.1` и `@types/archiver@^7.0.0` объявлены явно.
+- **Статус**: закрыто; endpoint bulk certificates больше не зависит от транзитивной зависимости ExcelJS.
 
 ---
 
@@ -51,23 +50,21 @@
 | `server/modules/deadlines/service.ts` | 7 | — | Средний |
 | `server/modules/certificates/service.ts` | 6 | — | Низкий |
 
-**Деталь**: `assertInstructorOfCourse()` (courses/service.ts:32-44) делает 2 последовательных `findUnique` вместо одного с `include`. Вызывается во всех instructor-scoped операциях (createBlock, updateBlock, createLesson, updateLesson и т.д.) — каждая мутация добавляет +1 round trip.
+**Статус 2026-05-31**: исходный hotspot `assertInstructorOfCourse()` закрыт. Функция теперь делает один `findUnique` с `include` для ролей и `courseInstructors`, поэтому instructor/admin проверка не добавляет второй round trip.
 
 ```typescript
-// Current (2 queries):
-const user = await prisma.user.findUnique({ where: { id }, include: { roles: ... } });
-const instructor = await prisma.courseInstructor.findUnique({ where: { courseId_userId: ... } });
-
-// Optimized (1 query with include):
+// Current optimized shape:
 const user = await prisma.user.findUnique({
   where: { id },
   include: { roles: ..., courseInstructors: { where: { courseId } } }
 });
 ```
 
-### 🟡 Direct Prisma in `app/` pages (WP3 не начат)
+**Оставшийся аудит**: module/lesson lookup paths в `server/modules/courses/service.ts` ещё стоит держать в performance backlog, но это уже не критичный duplicate-query blocker.
 
-**27 page files** in `app/` импортируют Prisma напрямую вместо server modules:
+### ✅ Direct Prisma in `app/` pages (WP3 закрыт 2026-05-30)
+
+На момент аудита 2026-05-26 было найдено **27 page files** в `app/`, которые импортировали Prisma напрямую вместо server modules:
 
 - `app/admin/` — 8 pages (analytics, audit, certificates, cohorts x3, reports, users)
 - `app/instructor/` — 5 pages (assignments, deadlines, quizzes, quizzes/edit, reports)
@@ -75,7 +72,7 @@ const user = await prisma.user.findUnique({
 - `app/student/` — 2 pages (reports, quizzes/result)
 - `app/super-curator/` — 3 pages (chat, cohorts, questions)
 
-**Проблема**: Каждая такая page тянет Prisma Client в server component bundle. Принцип "Prisma only in server/modules" нарушен (архитектурное решение WP3). Прямые запросы в pages сложнее тестировать и реиспользовать.
+**Текущее состояние:** WP3 закрыт 2026-05-30. Прямой Prisma Client удалён из `app/**/page.tsx` и `components/**`, общие page queries вынесены в `server/modules/page-data/service.ts`, а `tests/unit/release-hardening-readiness.test.ts` блокирует возврат `@/lib/prisma`, `getPrisma()` и `prisma.*` в UI-слой.
 
 ### 🟡 `cache()` — используется только 3 раза
 
@@ -132,7 +129,7 @@ const { getPrisma } = await import("@/lib/prisma");
 
 | Артефакт | Размер | Статус |
 |---|---|---|
-| `firebase-admin` в dependencies | ~13MB | 🔴 Полностью мёртв |
+| `firebase-admin` в dependencies | ~13MB | ✅ Удалено 2026-05-31 |
 | `services/` директория | 5 микросервисов | 🟡 Reference architecture, не компилируется |
 | `locales/` директория | ? | 🟡 Проверить, используется ли i18n (UI Russian-only) |
 
@@ -159,15 +156,15 @@ const { getPrisma } = await import("@/lib/prisma");
 
 ### Priority 1 (Immediate — <1 час)
 
-1. **🔴 Удалить `firebase-admin`**: `npm uninstall firebase-admin` — экономит ~13MB в каждом деплое
-2. **🔴 Добавить `archiver` в dependencies**: `npm install archiver` — предотвращает потенциальный runtime failure
-3. **🟡 Оптимизировать `assertInstructorOfCourse`**: Один `findUnique` с `include` вместо двух (courses/service.ts:32-44)
+1. **✅ `firebase-admin` удалён**: активный push-стек зафиксирован как Web Push/VAPID.
+2. **✅ `archiver` добавлен в dependencies**: bulk-certificate endpoint не зависит от транзитивного пакета ExcelJS.
+3. **✅ `assertInstructorOfCourse` оптимизирован**: один `findUnique` с `include` вместо двух запросов.
 
 ### Priority 2 (Эта неделя)
 
 4. **🟡 Сократить client components**: Перевести 5-7 простых компонентов в Server Components — уменьшит JS бандл
 5. **🟡 Добавить `cache()` в learning & certificates services**: Дополнить `cache()` для типовых `findUnique` вызовов
-6. **🟡 Начать WP3**: Вынести Prisma из `app/admin/*`, `app/instructor/*`, `app/curator/*` pages в server/modules
+6. **✅ WP3 закрыт**: сохранить regression guard для запрета Prisma в `app/**/page.tsx` и `components/**`
 
 ### Priority 3 (Nice to Have)
 
@@ -181,9 +178,9 @@ const { getPrisma } = await import("@/lib/prisma");
 
 | Изменение | Impact |
 |---|---|
-| Удаление firebase-admin | -13MB node_modules, -30s npm ci, -риск |
-| AssertInstructorOfCourse | -1 DB round trip на каждую instructor-мутацию |
-| WP3 (Prisma в server modules) | Чистая архитектура, тестируемость, переиспользование |
+| Удаление firebase-admin | ✅ Выполнено 2026-05-31: меньше node_modules, быстрее install, ниже dependency risk |
+| AssertInstructorOfCourse | ✅ Закрыто: -1 DB round trip на каждую instructor/admin scope-проверку |
+| WP3 (Prisma в server modules) | ✅ Закрыто 2026-05-30: чистая архитектура, тестируемость, переиспользование |
 | `cache()` на типовые запросы | До -2x DB round trips на страницу при рендеринге |
 | Конвертация в Server Components | -JS бандл ~5-15%, быстрее FCP |
 
@@ -196,7 +193,7 @@ const { getPrisma } = await import("@/lib/prisma");
 | `npm run lint -- --max-warnings=0` | ✅ 0 errors, 0 warnings |
 | `npm run typecheck` | ✅ Clean |
 | `npm run test` | ✅ 451/451 passed |
-| Prisma in UI pages | ⚠️ 27 pages need migration to server/modules |
-| N+1 detection | ⚠️ 3 confirmed cases in courses/service.ts |
-| Dead code (firebase-admin) | 🔴 Confirmed dead |
+| Prisma in UI pages | ✅ WP3 cleanup closed 2026-05-30, unit-guard added |
+| N+1 detection | 🟡 Основной `assertInstructorOfCourse` hotspot закрыт; module/lesson lookup paths остаются backlog |
+| Dead code (firebase-admin) | ✅ Removed 2026-05-31 |
 | Unused deps detection | ✅ No other unused deps found |

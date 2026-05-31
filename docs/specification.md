@@ -15,7 +15,7 @@ AI Strategic Academy — закрытая LMS одной академии для
 | Invite-only access | done | Инвайт-ссылки; Stripe — `410 Gone` |
 | Аналитика/отчёты | done | CSV/XLSX/PDF, per-role scope, scheduled export |
 | Поиск | done | PostgreSQL full-text |
-| Уведомления | done | In-app + push (Firebase), SMTP pending wiring |
+| Уведомления | done | In-app + Web Push/VAPID, SMTP pending wiring |
 | Чат | done | Студент ↔ куратор, S3 presigned uploads |
 | Риски | done | Deadline-based flags, curator/super-curator views |
 | Глоссарий | done | Категории, поиск, admin/super-curator наполнение |
@@ -65,7 +65,7 @@ AI Strategic Academy — закрытая LMS одной академии для
 | Tailwind/shadcn | UI | Production |
 | Redis (Upstash) | Rate limiting, cache | Production |
 | S3 (Supabase/MinIO) | File storage | Production |
-| Firebase Admin | Push notifications | Production |
+| web-push / VAPID | Push notifications | Production |
 
 # API
 
@@ -143,6 +143,8 @@ proxy.ts               # Middleware (auth gate, CSRF)
 # Связанные документы
 
 - `docs/MASTER-PLAN.md` — полный план развития
+- `docs/FULL-OPTIMIZATION-GOAL.md` — долгосрочная цель полной оптимизации и доказанной работоспособности
+- `docs/READINESS.md` — текущая матрица release-readiness и блокеров
 - `docs/implementation-plan.md` — операционный план
 - `docs/security-review.md` — security checklist
 - `docs/DEVELOPER_GUIDE.md` — инструкция для разработчиков

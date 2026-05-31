@@ -1,6 +1,5 @@
 import { errorResponse, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
-import { assertPermission } from "@/lib/auth/rbac";
 import { togglePopupStatus, deletePopup, listPopups } from "@/server/modules/popups/service";
 
 // POST /api/v1/popups/:id/toggle — toggle active status (admin only)
@@ -9,8 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUser();
-    assertPermission(user.roles, "notifications:write");
+    await requireUser("settings:manage");
     const { id } = await params;
 
     const popups = await listPopups(true);
@@ -32,8 +30,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUser();
-    assertPermission(user.roles, "notifications:write");
+    await requireUser("settings:manage");
     const { id } = await params;
     await deletePopup(id);
     return ok({ success: true });

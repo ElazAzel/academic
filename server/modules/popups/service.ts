@@ -242,10 +242,14 @@ export async function acknowledgePopup(popupId: string, userId: string) {
 }
 
 /**
- * List all popups (for admin management).
+ * List popups for management screens.
+ * Admin callers pass no createdById; curator callers must be scoped by creator.
  */
-export async function listPopups(includeInactive = false) {
-  const where = includeInactive ? {} : { isActive: true };
+export async function listPopups(includeInactive = false, filter?: { createdById?: string }) {
+  const where = {
+    ...(includeInactive ? {} : { isActive: true }),
+    ...(filter?.createdById ? { createdById: filter.createdById } : {}),
+  };
   const popups = await prisma.adminPopup.findMany({
     where,
     orderBy: { createdAt: "desc" },

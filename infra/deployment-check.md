@@ -16,8 +16,9 @@ Check all required env vars are set in the target environment:
 - [ ] `FEATURE_EMAIL_NOTIFICATIONS=true` — Enable email sending
 - [ ] `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` — SMTP credentials
 - [ ] `EMAIL_FROM` — Sender email address
-- [ ] `FEATURE_PUSH_NOTIFICATIONS` — Enable push notifications
-- [ ] `FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY` / `FIREBASE_PROJECT_ID` — Firebase credentials
+- [ ] `FEATURE_PUSH_NOTIFICATIONS=true` — Enable push notifications
+- [ ] `VAPID_PUBLIC_KEY` / `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — Web Push public key (same value)
+- [ ] `VAPID_PRIVATE_KEY` / `VAPID_EMAIL` — Web Push private key and sender contact
 - [ ] `REDIS_URL` — Redis for rate limiting
 - [ ] `SENTRY_DSN` — Error monitoring
 - [ ] `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` / `S3_BUCKET_NAME` — S3 uploads

@@ -1,263 +1,214 @@
-# Meta-Harness — методология непрерывного улучшения платформы
+# Meta-Harness — операционный протокол непрерывного улучшения
 
-> **Источник:** Stanford / MIT / KRAFTON — [arXiv 2603.28052](https://arxiv.org/abs/2603.28052)
-> **Авторы:** Yoonho Lee, Roshen Nair, Qizheng Zhang, Kangwook Lee, Omar Khattab, Chelsea Finn
-> **Дата внедрения:** 2026-05-30
-> **Статус:** Активный процесс
+> **Источник подхода:** Stanford / MIT / KRAFTON — [arXiv 2603.28052](https://arxiv.org/abs/2603.28052)
 > **Артефакт:** [github.com/stanford-iris-lab/meta-harness-tbench2-artifact](https://github.com/stanford-iris-lab/meta-harness-tbench2-artifact)
+> **Дата внедрения:** 2026-05-30
+> **Дата актуализации протокола:** 2026-05-31
+> **Статус:** активный процесс
 
----
+Meta-Harness для AI Strategic Academy — это не отдельная фича и не замена release-плана. Это дисциплина работы: каждое улучшение начинается с доказуемого контекста, заканчивается evidence, а весь опыт сохраняется так, чтобы следующая итерация не начиналась с нуля.
 
-## 1. Что такое Meta-Harness (оригинал)
+## 1. Оригинальная идея
 
-Meta-Harness — **outer-loop система**, которая автоматически ищет оптимальную «обвязку» (harness) для LLM-приложений.
+Оригинальный Meta-Harness оптимизирует LLM harness: код, который решает, какую информацию хранить, извлекать и показывать модели. Вместо короткого summary proposer-агент получает доступ к файловой системе с исходниками, scores и execution traces предыдущих кандидатов.
 
-**Проблема, которую решает:** Производительность LLM-систем зависит не только от весов модели, но и от *кода* обвязки — того, что определяет, какую информацию хранить, извлекать и показывать модели. Ранее обвязки проектировались вручную, а существующие текстовые оптимизаторы сжимали обратную связь слишком агрессивно (работали только со скалярными скоров, бездиагностическими шаблонами или короткими суммариями).
+Важные идеи, которые переносим в проект:
 
-**Ключевая идея:** Meta-Harness даёт **proposer-агенту** (coding agent, Claude Code с Opus-4.6) доступ к полной файловой системе, содержащей *исходный код, execution traces и скоринг* всех предыдущих кандидатов. Это позволяет proposer-у читать до **10,000,000 токенов диагностической информации** за шаг — примерно в 1000× больше, чем у предшествующих методов.
+- сохранять сырой опыт, а не только финальное резюме;
+- давать агенту возможность самому выбирать релевантные артефакты;
+- оценивать изменения через gates, а не через впечатление;
+- разделять рабочий search set и финальный holdout/release gate.
 
-**Результаты из paper:**
+## 2. Адаптация для Strategic Academy
 
-| Домен | Результат |
-|-------|-----------|
-| Online text classification (LawBench, USPTO-50k, Symptom2Disease) | +7.7 points над ACE, **4× меньше контекстных токенов**, точность next-best метода за 4 эвалюации вместо 60 |
-| Retrieval-augmented math reasoning (200 IMO-level задач) | Средний прирост **+4.7 points** на 5 held-out моделях |
-| Agentic coding (TerminalBench-2, 89 Dockerized задач) | #1 среди Haiku 4.5, превзошёл Terminus-KIRA: **76.4%** pass rate на Opus 4.6 |
+| Аспект | Оригинал | Наша адаптация |
+|---|---|---|
+| Что улучшаем | Prompt/retrieval/memory/orchestration harness | Код, тесты, UX, безопасность, документацию, infra |
+| Proposer | Coding agent | AI/coding agent или разработчик |
+| История опыта | Source, traces, scores предыдущих harness-кандидатов | `docs/updates.md`, `docs/READINESS.md`, session artifacts, test logs, diffs |
+| Search set | Набор задач для итеративной обратной связи | Scoped checks: lint/typecheck/unit/build/targeted Playwright |
+| Holdout gate | Скрытый test set | `npm run verify:release` на staging + six-role scenarios + ops drill |
+| Pareto frontier | Лучшие кандидаты | Проверенные атомарные изменения и отклонённые гипотезы с причинами |
 
----
+## 3. Источники истины
 
-## 2. Search Loop (оригинальный алгоритм)
+Перед крупной итерацией читать в таком порядке:
 
-Meta-Harness работает в цикле **propose → evaluate → log**:
+1. `docs/READINESS.md` — текущий итоговый статус.
+2. `docs/updates.md` — свежие изменения сверху вниз.
+3. `docs/release.md` — release-hardening baseline и gates.
+4. `docs/work-plan.md` — WP0-WP6 и текущие рабочие пакеты.
+5. `docs/full-project-audit.md` — риски, дрейфы, блокеры.
+6. `docs/platform-functional-overview.md` — продуктовая логика без технических деталей.
+7. `docs/ai-agent-instructions.md` — hard rules для агентов.
 
-```
-  ┌─────────────────────────────────────────────────────┐
-  │  Файловая система D (растёт с каждой итерацией)    │
-  │  ┌──────────┐ ┌──────────┐ ┌──────────┐           │
-  │  │ iter_01  │ │ iter_02  │ │ iter_N   │  ...      │
-  │  │ source/  │ │ source/  │ │ source/  │           │
-  │  │ traces/  │ │ traces/  │ │ traces/  │           │
-  │  │ scores/  │ │ scores/  │ │ scores/  │           │
-  │  └──────────┘ └──────────┘ └──────────┘           │
-  └──────────────────────┬──────────────────────────────┘
-                         │ proposer (Claude Code)
-                         │ читает через grep/cat только
-                         │ то, что нужно (медиана 82
-                         │ файла за итерацию)
-                         ▼
-              ┌──────────────────────┐
-              │ Diagnose → Propose   │
-              │ Новый кандидат H'    │
-              └──────────┬───────────┘
-                         │
-                         ▼
-              ┌──────────────────────┐
-              │ Evaluate H'          │
-              │ на search set        │
-              └──────────┬───────────┘
-                         │
-                         ▼
-              ┌──────────────────────┐
-              │ Log → store в D     │
-              │ Обновить Pareto      │
-              │ frontier             │
-              └──────────────────────┘
+Если документы расходятся:
+
+1. Проверить фактический код и последние gates.
+2. Локализовать drift.
+3. Исправить источник статуса или явно зафиксировать расхождение.
+4. Не повышать статус до `done` без evidence.
+
+## 4. Цикл итерации
+
+```text
+Scan -> Prioritize -> Fix -> Verify -> Evidence -> Log -> Next
 ```
 
-**Формальная постановка:** Задача оптимизации обвязки — найти обвязку H, максимизирующую ожидаемый reward на дистрибуции задач X:
+### 4.1 Scan
 
-```
-H* = argmax_H  E[ x~X, τ~pM(H,x)  r(τ, x) ]
-```
+Скан бывает двух уровней:
 
-**Ключевые элементы:**
+| Тип | Когда применять | Что входит |
+|---|---|---|
+| Scoped scan | Обычная задача, багфикс, локальная фича | Затронутые docs/code/tests, недавние `updates.md`, релевантные gates |
+| Full meta-scan | Перед релизом, после миграции, после крупного refactor, раз в 2-4 недели | Code, tests, UX, security, docs, infra, release gates, blocker register |
 
-1. **Proposer** — coding agent (Claude Code), решает: какие артефакты смотреть, какие failure modes адресовать, делать локальный фикс или большую переработку
-2. **Filesystem** — единственный канал обратной связи: исходники, скоры, execution traces (промпты, вызовы инструментов, вывод модели, ошибки)
-3. **Pareto frontier** — proposer волен смотреть любые prior кандидаты, нет parent-selection rules
-4. **Search set** — proposer никогда не видит test-set, только search-set для обратной связи
+Полный скан перед каждым мелким фикс-PR не требуется: он создаёт шум и замедляет delivery. Но отсутствие scoped scan перед изменением — нарушение протокола.
 
-**Почему это работает:** В отличие от OpenEvolve и TTT-Discover (сжимают историю в фиксированный промпт), Meta-Harness *сохраняет весь сырой опыт* в файловой системе — proposer сам решает, что и когда смотреть.
+### 4.2 Prioritize
 
----
+Приоритеты:
 
-## 3. Адаптация для платформы (Strategic Academy)
+| Уровень | Смысл |
+|---|---|
+| P0 | Секреты, доступ, data leak, build breaker, потеря данных |
+| P1 | Core learning flow, RBAC, certificate/report/privacy proof, operational release blockers |
+| P2 | Accessibility, performance, UX role-workspaces, docs drift |
+| P3 | Scale extraction, polish, strategic extensions |
 
-### 3.1. Отличие от оригинального подхода
+Новые фичи не должны обгонять WP1/WP2/WP6, если они увеличивают release risk.
 
-| Аспект | Оригинал (LLM harness) | Наша адаптация |
-|--------|----------------------|----------------|
-| **Что улучшаем** | Промпты, retrieval, memory, orchestration | Код, тесты, UX, безопасность, docs, infra |
-| **Proposer** | Claude Code с Opus-4.6 | Coding AI agent |
-| **Файловая система** | Итерации эволюции кандидатов | Директория `.tmp/sessions/` |
-| **Обратная связь** | Execution traces, scores | Lint → typecheck → test → build → E2E |
-| **Search loop** | Propose → Evaluate → Log | Scan → Prioritize → Fix → Verify → Evidence |
-| **Pareto frontier** | Множество кандидатов | Разовые атомарные коммиты |
+### 4.3 Fix
 
-### 3.2. Search Loop для платформы
+Одна итерация должна быть атомарной:
 
-```
-  ┌─────────────────────────────────────────────┐
-  │  Meta-Scan: все фронты платформы            │
-  │  (code, tests, UX, security, docs, infra)   │
-  └──────────────────┬──────────────────────────┘
-                     ▼
-  ┌─────────────────────────────────────────────┐
-  │  Prioritize: evidence-based приоритеты      │
-  │  P0: Security & Secrets                     │
-  │  P1: Testing harness, Accessibility         │
-  │  P2: Performance, Code quality, Docs        │
-  └──────────────────┬──────────────────────────┘
-                     ▼
-  ┌─────────────────────────────────────────────┐
-  │  Fix: одно изменение, атомарно              │
-  └──────────────────┬──────────────────────────┘
-                     ▼
-  ┌─────────────────────────────────────────────┐
-  │  Verify: lint --max-warnings=0              │
-  │          + typecheck + test + build          │
-  │          + E2E smoke                         │
-  └──────────────────┬──────────────────────────┘
-                     ▼
-  ┌─────────────────────────────────────────────┐
-  │  Evidence: статус `done` только при         │
-  │  code/test/browser/gate/docs/ops            │
-  └──────────────────┬──────────────────────────┘
-                     ▼
-  ┌─────────────────────────────────────────────┐
-  │  Log в docs/updates.md + коммит             │
-  └──────────────────┬──────────────────────────┘
-                     ▼
-               ← Next iteration →
-```
+- один понятный outcome;
+- минимальный затронутый blast radius;
+- без побочных refactor, если они не нужны для результата;
+- без изменения статусов в документах "на будущее".
 
----
+### 4.4 Verify
 
-## 4. Evidence Model (доказательство завершения)
+Минимальный gate выбирается по риску:
 
-Каждый пункт итерации считается `done` только при наличии evidence из источников:
+| Изменение | Минимальная проверка |
+|---|---|
+| Только docs | Link/path sanity + review diff |
+| Server/business logic | `npm run typecheck`, targeted unit tests, при риске — `npm run verify` |
+| UI/route | `npm run lint`, `npm run typecheck`, targeted Playwright/accessibility smoke |
+| Auth/RBAC/privacy/certificates/reports | Targeted negative tests + `npm run verify` |
+| Release candidate | `npm run verify:release` в целевом окружении |
+
+`npm run verify` остаётся стандартным repo-local gate перед утверждением code-ready статуса. `npm run verify:release` нужен для release-ready, если есть staging/disposable env.
+
+### 4.5 Evidence
+
+Статус `done` разрешён только при evidence:
 
 | Evidence | Что требуется |
-|----------|---------------|
-| **code** | Код изменён, прочитан, diff проверен |
-| **test** | `vitest run` — зелёный, нет новых stderr warnings |
-| **lint** | `eslint . --max-warnings=0` — 0 errors, 0 warnings |
-| **typecheck** | `tsc --noEmit` — чисто |
-| **browser** | Playwright smoke (хотя бы для затронутых страниц) |
-| **gate** | Линт + typecheck + тест + сборка — все зелёные |
-| **docs** | `docs/updates.md` обновлён |
-| **ops** | Если затрагивает infra — скрипты/конфиги синхронизированы |
+|---|---|
+| code | Diff проверен, нет секретов, blast radius понятен |
+| lint | 0 errors / 0 warnings, если затронут код |
+| typecheck | TypeScript clean, если затронут TS/TSX |
+| test | Unit/integration/negative tests покрывают заявленное поведение |
+| browser | Playwright/browser smoke для затронутых пользовательских путей |
+| gate | `npm run verify` или `verify:release`, когда применимо |
+| docs | `docs/updates.md` обновлён; `READINESS.md` обновлён при смене статуса |
+| ops | Env, backup, deploy, rollback, monitoring evidence записаны при infra/release изменениях |
 
-**Правило:** Нет evidence → статус `in_progress`. Статус `done` проставляется только после прохода всех применимых gates.
+Нет evidence -> статус `partial` или `in_progress`.
 
----
+### 4.6 Log
 
-## 5. Original Paper: Experimental Results
+Каждая значимая итерация обновляет `docs/updates.md`. Если меняется готовность платформы, обновляется `docs/READINESS.md`. Если меняется release baseline, обновляются `docs/release.md` и `docs/work-plan.md`.
 
-### 5.1. Text Classification (online)
+## 5. Session Artifacts
 
-| Метод | Accuracy | Контекстных токенов |
-|-------|----------|---------------------|
-| Zero-shot | 28.5% | — |
-| ACE (state-of-the-art) | 40.9% | 4× |
-| **Meta-Harness (best)** | **48.6%** | **1× baseline** |
-| OpenEvolve (60 proposals) | ~38% | — |
-| TTT-Discover (60 proposals) | ~38% | — |
+Для крупных итераций создаётся директория:
 
-Meta-Harness достигает точности next-best метода после **4 proposals**, а не 60 — ускорение **10×**.
-
-### 5.2. Retrieval-Augmented Math Reasoning
-
-Ablation: что происходит, если ограничить proposer-у доступ к информации.
-
-| Условие | Median accuracy | Best accuracy |
-|---------|----------------|---------------|
-| Scores only | 34.6% | 41.3% |
-| Scores + summary | 34.9% | 38.7% |
-| **Full filesystem (Meta-Harness)** | **выше** | **выше** |
-
-Один обнаруженный retrieval harness улучшил точность на 200 IMO-level задачах на **+4.7 points** в среднем по 5 held-out моделям.
-
-### 5.3. Agentic Coding (TerminalBench-2)
-
-| Агент | Haiku 4.5 | Opus 4.6 |
-|-------|-----------|----------|
-| Terminus-KIRA | 35.5% | 74.7% |
-| **Meta-Harness** | **37.6%** | **76.4%** |
-| Goose | 35.5% | — |
-
-Meta-Harness — **#1 среди всех Haiku 4.5** агентов и #2 среди Opus 4.6.
-
----
-
-## 6. Правила работы
-
-| Правило | Описание |
-|---------|----------|
-| **Ничего не ломать** | Каждое изменение проходит `lint --max-warnings=0` + `typecheck` + `test` |
-| **Одна итерация за раз** | Перед переходом к следующей — verify всей текущей |
-| **Evidence > intuition** | Статус `done` только при наличии доказательств (code/test/browser/gate/docs/ops) |
-| **Сначала безопасность** | P0/P1 задачи имеют приоритет над новыми фичами |
-| **Документация в ногу** | `docs/updates.md` и `docs/META-HARNESS.md` обновляются после каждой итерации |
-| **Full scan перед стартом** | Каждая итерация начинается со скана всех фронтов |
-| **Корневые причины, не симптомы** | Не чинить симптом — найти источник и устранить его |
-
----
-
-## 7. Когда запускать Meta-Harness
-
-- После любого крупного изменения (релиз, миграция, рефакторинг)
-- Периодически — раз в 2-4 недели для профилактики
-- При появлении новых external зависимостей
-- Перед production-релизом
-- Когда codebase начала «шуршать» (stderr warnings, медленные тесты, устаревшие docs)
-
----
-
-## 8. Принципы для разработчиков
-
-1. **Не оставляй мусор** — каждый PR чистит за собой (var/, логи, комменты)
-2. **Тестируй негативные сценарии** — forbidden, not-found, bad-request должны быть покрыты
-3. **Документируй решение** — если потратил >30 минут на баг, напиши почему и как исправил
-4. **Не копируй секреты** — пароли, токены, ключи — только в env/vault, никогда в git
-5. **Одна итерация — один коммит** — каждый verify-проход коммитится атомарно
-6. **Полный scan перед фиксом** — не лечи симптом, найди корень
-7. **Читай execution traces** — stderr и логи тестов — ценнейший diagnostic signal
-
----
-
-## 9. Структура итерации (checklist)
-
-```markdown
-## Итерация X.Y: {короткое название}
-
-**Evidence перед стартом:**
-- [ ] Meta-scan всех фронтов выполнен
-- [ ] Приоритеты определены
-
-**Выполнение:**
-- [ ] Fix реализован
-- [ ] lint --max-warnings=0 — чист
-- [ ] tsc --noEmit — чист
-- [ ] vitest run — зелёный (N/M passed)
-- [ ] build — зелёный
-
-**Evidence:**
-- [ ] code — diff проверен, нет секретов
-- [ ] test — все тесты проходят
-- [ ] lint — 0 errors, 0 warnings
-- [ ] typecheck — clean
-- [ ] docs — updates.md обновлён
-
-**Коммит:** `git commit -m "Meta-Harness: {описание}"`
+```text
+.tmp/sessions/YYYY-MM-DD-{slug}/
 ```
 
----
+Рекомендуемая структура:
 
-## 10. Ссылки
+```text
+scan.md           # что просмотрено и почему
+hypotheses.md     # возможные причины/решения
+decision.md       # выбранный подход и tradeoffs
+commands.log      # команды и краткий результат
+evidence.json     # machine-readable evidence
+diff-summary.md   # изменённые файлы и смысл diff
+followups.md      # что осталось, без повышения статуса
+```
+
+`var/`, секреты, персональные данные и raw production logs туда не складываются.
+
+## 6. Redaction Policy
+
+В session artifacts, docs и logs запрещено сохранять:
+
+- реальные пароли, API keys, tokens, cookies, connection strings;
+- Supabase service keys и полные `DATABASE_URL`;
+- email/телефоны реальных пользователей, если они не обезличены;
+- файлы заданий студентов и приватный учебный контент;
+- PDF сертификатов с персональными данными;
+- raw production request logs без очистки IP/user-agent/session identifiers.
+
+Допустимые формы:
+
+- `REDACTED`;
+- `user@example.invalid`;
+- `student-001`;
+- последние 4 символа идентификатора только если это нужно для отладки.
+
+## 7. Release-Hardening Alignment
+
+Meta-Harness не повышает release status сам по себе. Статусы берутся из `docs/READINESS.md`.
+
+Текущие ключевые блоки:
+
+- WP1: full six-role scenario proof;
+- WP2: access/privacy/ownership negative paths;
+- WP4: role workspace UX proof;
+- WP5: reports/certificates/notifications proof;
+- WP6: staging release drill, backup/restore/rollback, secrets, observability.
+
+Стратегические фичи из `MASTER-PLAN.md` и `scale-path.md` выполняются только после стабилизации core truth, если не закрывают release blocker напрямую.
+
+## 8. Checklist итерации
+
+```markdown
+## Итерация: {название}
+
+**Scope**
+- [ ] Цель сформулирована одним outcome
+- [ ] Scoped/full scan выполнен
+- [ ] Blast radius определён
+
+**Implementation**
+- [ ] Изменение реализовано атомарно
+- [ ] Секреты/PII не добавлены
+- [ ] Empty/error/loading states учтены, если есть UI
+
+**Verification**
+- [ ] Минимальные targeted checks выполнены
+- [ ] `npm run verify` выполнен или явно не применим
+- [ ] Browser/Playwright smoke выполнен или явно не применим
+
+**Evidence**
+- [ ] Diff проверен
+- [ ] `docs/updates.md` обновлён
+- [ ] `docs/READINESS.md` обновлён, если изменился статус
+- [ ] Follow-ups записаны без ложного `done`
+```
+
+## 9. Ссылки
 
 - Paper: [arXiv 2603.28052](https://arxiv.org/abs/2603.28052)
-- Artifact (TerminalBench-2): [github.com/stanford-iris-lab/meta-harness-tbench2-artifact](https://github.com/stanford-iris-lab/meta-harness-tbench2-artifact)
-- Авторский сайт: [yoonholee.com/meta-harness](https://yoonholee.com/meta-harness/)
-- Наш план: `docs/improvement-plan.md`
-- Наш журнал: `docs/updates.md`
+- Artifact: [github.com/stanford-iris-lab/meta-harness-tbench2-artifact](https://github.com/stanford-iris-lab/meta-harness-tbench2-artifact)
+- Текущая готовность: `docs/READINESS.md`
+- Release baseline: `docs/release.md`
+- Рабочий план: `docs/work-plan.md`
+- Журнал: `docs/updates.md`

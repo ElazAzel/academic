@@ -6,6 +6,26 @@
 
 ---
 
+## Цель 15: Полная оптимизация и доказанная работоспособность платформы
+
+**Статус:** 🟡 Активная долгосрочная цель
+**Источник:** `docs/FULL-OPTIMIZATION-GOAL.md`, `docs/READINESS.md`
+
+Цель: довести AI Strategic Academy до состояния, где весь основной функционал платформы оптимизирован, работает end-to-end для всех ролей и подтверждён code/test/browser/gate/docs/ops evidence.
+
+| Фаза | Действие | Статус |
+|-----|----------|--------|
+| A | Truth & Gates: единый readiness baseline, отсутствие дрейфа статусов, evidence-first правило | 🟡 |
+| B | Six-role Functional Proof: сценарии всех 6 ролей через Playwright на seeded/disposable env | 🟡 |
+| C | Security/Privacy/Ownership: negative-path coverage для guessed IDs, observer scope, media/report/certificate boundaries | 🟡 |
+| D | UX/Accessibility/Responsive: рабочие очереди ролей, keyboard paths, axe/responsive proof | 🟡 |
+| E | Performance & Architecture Optimization: N+1, bounded queries, bundle/dependency/client-component audit | 🟡 |
+| F | Ops & Release: staging `verify:release`, backup/restore, rollback, monitoring, DPA, secret rotation | ⛔ |
+
+Definition of Done и правило остановки описаны в `docs/FULL-OPTIMIZATION-GOAL.md`.
+
+---
+
 ## Задача 14: Release hardening до доказуемой готовности
 
 **Статус:** 🟡 В работе (baseline создан 2026-05-26)

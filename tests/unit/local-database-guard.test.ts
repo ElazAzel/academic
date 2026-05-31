@@ -27,6 +27,14 @@ describe("local database mutation guard", () => {
     ).toThrow(/non-local database host "db\.example\.com"/);
   });
 
+  it("refuses e2e runs against remote databases because the suite mutates seeded data", () => {
+    expect(() =>
+      assertLocalDatabaseMutation("test:e2e", {
+        DATABASE_URL: "postgresql://academy:secret@db.example.com:5432/academy",
+      })
+    ).toThrow(/Refusing test:e2e/);
+  });
+
   it("uses the migration URL for db:push and accepts an explicit remote override", () => {
     expect(
       getMutationDatabaseUrl("db:push", {
