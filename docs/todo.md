@@ -1,6 +1,6 @@
 # TODO — AI Strategic Academy
 
-Дата актуализации: 2026-05-30
+Дата актуализации: 2026-05-31
 
 ## Ближайшие задачи
 
@@ -8,9 +8,9 @@
 | --- | -------- | ------- | ----------- | -------- |
 | 1 | **Мониторинг Vercel auto-deploy** | DevOps | P1 | 🔄 После пуша в main |
 | 2 | **DPA подписание (Vercel + Supabase)** | Legal | P1 | 🔴 Не подписан |
-| 3 | **Ротация скомпрометированного Supabase пароля** | Security | P1 | 🔴 Инцидент в git history (рекомендуется) |
+| 3 | **Ротация скомпрометированного Supabase пароля** | Security | P1 | 🔴 Требуется вручную в дашборде Supabase |
 | 4 | **Staging-окружение** | DevOps | P2 | ✅ Ветка staging и инструкция добавлены |
-| 5 | **Git purge __dbcheck.mjs из истории** | Security | P2 | 🟡 Требует force-push |
+| 5 | **Git purge __dbcheck.mjs из истории** | Security | P2 | ✅ `git filter-branch` + rebase — файл удалён из всей истории, force-push выполнен |
 | 6 | **CSP: nonce-based script-src** | Security | P2 | ✅ nonce-based, без unsafe-inline в production |
 | 7 | **E2E full suite (все роли + сценарии)** | QA | P2 | 🟡 Только smoke (52/52) |
 | 8 | **Email notifications (SMTP wiring)** | Notifications | P2 | 🟡 Firebase push работает, SMTP pending |

@@ -2,6 +2,17 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-31 — CSP Nonce Propagation Fix: <html nonce> from middleware
+
+**Что сделано:**
+- Исправлен баг production, при котором Next.js chunks блокировались Content-Security-Policy (`script-src 'nonce-...' 'strict-dynamic'`).
+- **Корневая причина:** middleware генерировала nonce и ставила `Content-Security-Policy` на response (для браузера) и request (для Next.js SSR), но React/Next.js автоматически не извлекает nonce из CSP request header. SSR рендерил `<script>` без атрибута `nonce`, браузер блокировал все скрипты.
+- **Фикс:** `app/layout.tsx` теперь импортирует `headers()` из `next/headers`, читает `x-nonce` header (устанавливается middleware) и передаёт его в `<html nonce={nonce}>`. React автоматически применяет nonce ко всем `<script>` и `<style>` элементам при SSR.
+- Побочный эффект: RootLayout стал динамическим (`ƒ`), что отключает static generation для всех страниц — это необходимый трейд-офф для per-request nonce-based CSP.
+
+**Проверка:**
+- `npm run verify` — banned-patterns ✅, lint 0/0 ✅, typecheck ✅, tests 466/466 ✅, build 77 routes ✅
+
 ## 2026-05-31 — Hardening Server Action Boundaries and RBAC Exceptions
 
 **Что сделано:**

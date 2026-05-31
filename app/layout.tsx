@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-page-custom-font */
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { PWARegister } from "@/components/lms/pwa-register";
@@ -51,9 +52,13 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Nonce пробрасывается из middleware через x-nonce request header.
+  // React автоматически применяет nonce ко всем <script> тегам при SSR.
+  const nonce = (await headers()).get("x-nonce") ?? "";
+
   return (
-    <html lang="ru" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="ru" nonce={nonce} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..200&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..200&display=swap"
