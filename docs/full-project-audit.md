@@ -1,6 +1,6 @@
 # Full Project Audit: AI Strategic Academy
 
-Date: 2026-05-26 (updated - release-hardening baseline)
+Date: 2026-05-31 (updated - readiness baseline)
 Scope: local repository, local build/test gates, non-mutating Browser smoke, active and archived documentation.  
 Readiness target: full roadmap readiness, with release blockers separated from later strategic work.
 
@@ -22,7 +22,7 @@ That is not the same as a fully working platform. The audit found:
 - several server pages and API handlers need boundary/access/validation review before they can be claimed production-hardened;
 - end-to-end role scenarios, file privacy, notification email opt-in, exports, real certificate issuance, revoke visibility, backup/restore, and external Supabase policy state were not proven by this local audit.
 
-Current overall status: `partial`.
+Current overall status: `partial`. Short live status is maintained in `docs/READINESS.md`.
 
 ## 2026-05-30 Boundary Cleanup Update
 
@@ -86,11 +86,11 @@ Evidence levels:
 | `npm run db:generate` | `done` | Prisma client generation passed. |
 | `npm run build` | `done` | Next.js production build completed: 87 pages / 102 API routes. |
 | Build observability note | `done` | Build reports missing Sentry auth token for sourcemap upload and dynamic-server-usage logs for dynamic pages. Build still succeeds. This is expected — `SENTRY_AUTH_TOKEN` not in local `.env`, sourcemaps uploaded only in CI/production. |
-| Local seeded role/e2e run | `done` | E2E smoke tests (52/52) pass against remote Supabase DB. |
+| Local seeded role/e2e run | `partial` | Historical E2E smoke passed against remote Supabase DB, but that is not accepted as disposable release proof. `npm run test:e2e` now blocks remote DB hosts unless `ALLOW_REMOTE_DATABASE_MUTATION=true` is explicit. |
 
 ### Browser smoke + E2E smoke
 
-The Browser smoke used the local dev server only for non-mutating public and unauthenticated checks. E2E smoke tests pass 52/52 (Chromium desktop + Pixel 7 mobile).
+The Browser smoke used the local dev server only for non-mutating public and unauthenticated checks. Historical E2E smoke passed 52/52 (Chromium desktop + Pixel 7 mobile), but current release proof requires local/disposable or explicitly approved staging data because E2E mutates seeded records.
 
 | Scenario | Result | Evidence |
 | --- | --- | --- |
@@ -246,7 +246,7 @@ Official Supabase guidance checked during this audit:
 
 | Area | Evidence | Status | Finding |
 | --- | --- | --- | --- |
-| Local bootstrap | `docker-compose.yml`, guarded DB scripts and local command attempts. | `partial` | Docker-based bootstrap scripts now run DB setup inside the app container and DB mutation scripts reject remote hosts by default. Docker is still unavailable on this audit machine, so the full compose run remains blocked here. |
+| Local bootstrap | `docker-compose.yml`, guarded DB scripts and local command attempts. | `partial` | Docker-based bootstrap scripts now run DB setup inside the app container and DB mutation/E2E scripts reject remote hosts by default. Docker is still unavailable on this audit machine, so the full compose run remains blocked here. |
 | Environment contract | `.env.example`, config reads and local `.env` inspection. | `partial` | Storage, SMTP, push, Redis, Sentry, cron and DB contracts exist, but local disposable defaults are not safe/proven on this machine. |
 | CI | `.github/workflows/ci.yml`. | `partial` | CI defines PostgreSQL, schema push/seed, typecheck/lint/test/e2e/build flow; current local lint failure must be reconciled with CI claims. |
 | Deployment configs | Vercel config and Kubernetes manifests. | `partial` | Deployment shapes exist; real deploy verification, secret injection and rollback were not run. |
@@ -272,7 +272,7 @@ Official Supabase guidance checked during this audit:
 | --- | --- | --- |
 | Zero-warning lint | `done` | `npm run lint -- --max-warnings=0` passes. |
 | Type/build/unit/schema baseline | `done` | Keep `typecheck`, `test`, Prisma validate/generate and build green. |
-| Disposable local scenario environment | `partial` | Guarded Docker bootstrap is documented and blocks the current remote `.env` for seed; verify a full compose bootstrap when Docker is available. |
+| Disposable local scenario environment | `partial` | Guarded Docker bootstrap is documented and now blocks the current remote `.env` for seed and E2E; verify a full compose bootstrap when Docker is available. |
 | Security cleanup of seed surfaces | `done` | Release surface contains no demo mutation route that can issue progress/certificates from HTTP. |
 | Six-role workflow smoke | `partial` | Public E2E smoke (26/26) passes. |
 | Access/privacy negative paths | `blocked` | Tests prove role scope, ownership, guessed-ID denial, observer read-only behavior, media/report/certificate privacy. |

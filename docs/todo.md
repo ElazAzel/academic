@@ -2,10 +2,13 @@
 
 Дата актуализации: 2026-05-31
 
+Итоговый статус готовности и WP0-WP6 см. в `docs/READINESS.md`.
+
 ## Ближайшие задачи
 
 | # | Задача | Домен | Приоритет | Статус |
 | --- | -------- | ------- | ----------- | -------- |
+| 0 | **Полная оптимизация и доказанная работоспособность платформы** | Program | P0 | 🟡 Цель создана: `docs/FULL-OPTIMIZATION-GOAL.md` |
 | 1 | **Мониторинг Vercel auto-deploy** | DevOps | P1 | 🔄 После пуша в main |
 | 2 | **DPA подписание (Vercel + Supabase)** | Legal | P1 | 🔴 Не подписан |
 | 3 | **Ротация скомпрометированного Supabase пароля** | Security | P1 | 🔴 Требуется вручную в дашборде Supabase |
@@ -13,7 +16,7 @@
 | 5 | **Git purge __dbcheck.mjs из истории** | Security | P2 | ✅ `git filter-branch` + rebase — файл удалён из всей истории, force-push выполнен |
 | 6 | **CSP: nonce-based script-src** | Security | P2 | ✅ nonce-based, без unsafe-inline в production |
 | 7 | **E2E full suite (все роли + сценарии)** | QA | P2 | 🟡 Только smoke (52/52) |
-| 8 | **Email notifications (SMTP wiring)** | Notifications | P2 | 🟡 Firebase push работает, SMTP pending |
+| 8 | **Email notifications (SMTP wiring)** | Notifications | P2 | 🟡 Web Push/VAPID работает, SMTP pending |
 | 9 | **WCAG 2.1 AA full audit** | UX | P2 | 🟡 Lighthouse asserts настроены |
 
 ## Выполнено (Phase 0)
@@ -26,7 +29,7 @@
 - [x] Задания (submissions, review)
 - [x] Сертификаты (PDF, unique number, verification)
 - [x] Чат (студент ↔ куратор, вложения)
-- [x] Уведомления (in-app + push Firebase)
+- [x] Уведомления (in-app + Web Push/VAPID)
 - [x] Аналитика / отчёты (CSV, XLSX, PDF)
 - [x] Риски (flags, filters, curator/super-curator)
 - [x] Глоссарий (категории, поиск)

@@ -2,6 +2,100 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-31 — Popup API закрыт по server-side scope
+
+**Что сделано:**
+- `/api/v1/popups` больше не отдаёт все popup-записи кураторам: admin видит полный список, non-admin с `notifications:write` видит только записи, созданные им.
+- Non-admin больше не может отправлять popup по ролям или потокам; кураторский сценарий ограничен `targetUserIds` и проверкой закрепления слушателей.
+- `/api/v1/popups/[id]/toggle` `POST/DELETE` теперь требует `settings:manage`, то есть admin-only, вместо общего `notifications:write`.
+- Добавлен `tests/unit/popups-api.test.ts` с negative-path проверками list scope, broad targeting и toggle permission.
+- `docs/release.md` и `docs/platform-functional-overview.md` синхронизированы с фактическим popup scope.
+
+**Проверка:**
+- `npm run test -- tests/unit/popups-api.test.ts` — 5/5 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 473/473 Vitest tests, production build.
+
+## 2026-05-31 — `test:e2e` защищён от remote DB без явного override
+
+**Что сделано:**
+- `package.json`: `npm run test:e2e` теперь сначала выполняет `tsx scripts/assert-local-database.ts test:e2e`.
+- `tests/unit/local-database-guard.test.ts` расширен кейсом: E2E против remote DB запрещён, потому что suite мутирует seeded data.
+- `AGENTS.md`, `docs/DEVELOPER_GUIDE.md`, `docs/ai-agent-instructions.md`, `docs/release.md`, `docs/full-project-audit.md` обновлены: E2E должен идти против local/disposable DB или явно подтверждённого staging с `ALLOW_REMOTE_DATABASE_MUTATION=true`.
+- Текущая audit-машина не имеет `docker` и локальных PostgreSQL binaries, а `.env` указывает на remote Postgres; поэтому E2E остаётся release blocker, но теперь блокируется безопасно до старта Playwright.
+
+**Проверка:**
+- `npm run test -- tests/unit/local-database-guard.test.ts` — 4/4 passed.
+- `npm run typecheck` — passed.
+- `npm run test:e2e -- --list` — guard blocked remote host before Playwright startup as expected.
+
+## 2026-05-31 — Security notification для device limit переведён в persistent in-app
+
+**Что сделано:**
+- `server/modules/auth/device-sessions.ts` больше не отправляет `device_limit_exceeded` как `push` с `persist: false`.
+- При превышении лимита устройств теперь создаётся persistent `in_app` security-уведомление, которое соответствует правилу: критические события безопасности нельзя отключить пользовательскими настройками.
+- Web Push остаётся дополнительным каналом доставки через общий `createNotificationInternal`, если включён `FEATURE_PUSH_NOTIFICATIONS`.
+- `tests/unit/auth-device-sessions.test.ts` обновлён: тест теперь закрепляет аудит события и persistent security notification.
+- `docs/code-optimization-analysis.md` дополнительно синхронизирован: `assertInstructorOfCourse` уже оптимизирован одним `findUnique` с `include`.
+
+**Проверка:**
+- `npm run test -- tests/unit/auth-device-sessions.test.ts tests/unit/notifications-service.test.ts` — 12/12 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 467/467 Vitest tests, production build.
+
+## 2026-05-31 — Удалён `firebase-admin`, push-стек синхронизирован на Web Push/VAPID
+
+**Что сделано:**
+- Выполнено `npm uninstall firebase-admin`: зависимость удалена из `package.json` и `package-lock.json`.
+- `lib/env.ts` очищен от устаревших `FIREBASE_*` переменных; актуальный push-контракт — `VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`.
+- `docs/ai-agent-instructions.md`, `docs/implementation-plan.md`, `docs/specification.md`, `docs/todo.md`, `docs/scale-path.md`, `infra/deployment-check.md` синхронизированы с фактическим Web Push/VAPID-стеком.
+- `docs/code-optimization-analysis.md` обновлён: `firebase-admin` и явная зависимость `archiver` отмечены как закрытые dependency hygiene пункты.
+
+**Проверка:**
+- `npm run typecheck` — passed.
+- `npm run test -- tests/unit/notifications-service.test.ts tests/unit/notifications.test.ts tests/unit/auth-device-sessions.test.ts tests/unit/release-hardening-readiness.test.ts` — 21/21 passed.
+- `npm run banned-patterns` — passed.
+- `git diff --check` — passed; только предупреждения Git о будущей CRLF-нормализации.
+
+## 2026-05-31 — Release readiness contract синхронизирован с FULL-OPTIMIZATION-GOAL
+
+**Что сделано:**
+- `server/modules/release-hardening/readiness.ts` обновлён до версии `2026-05-31`.
+- Машинно-читаемый контракт больше не помечает платформу release-ready без evidence:
+  - WP0/WP3 остаются `done`;
+  - WP1/WP2/WP4/WP5 — `partial`;
+  - WP6 — `blocked`;
+  - gates `six-role-workflow-e2e` и `access-privacy-negative-paths` — `partial`;
+  - gate `operational-release-drill` — `blocked`.
+- `tests/unit/release-hardening-readiness.test.ts` обновлён: теперь проверяет `partial` summary, incomplete WP/gates и синхронизацию с `docs/READINESS.md` + `docs/FULL-OPTIMIZATION-GOAL.md`.
+
+**Проверка:**
+- `npm run test -- tests/unit/release-hardening-readiness.test.ts` — 8/8 passed.
+
+## 2026-05-31 — Full Optimization Goal создана
+
+**Что сделано:**
+- Создан `docs/FULL-OPTIMIZATION-GOAL.md` — долгосрочная цель полной оптимизации и доказанной работоспособности всего функционала платформы.
+- Зафиксированы scope, Definition of Done, фазы A-F: Truth & Gates, Six-role Functional Proof, Security/Privacy/Ownership, UX/Accessibility/Responsive, Performance/Architecture Optimization, Ops & Release.
+- Цель связана с `docs/READINESS.md`, `docs/work-plan.md`, `docs/todo.md`, `docs/MASTER-PLAN.md`, `docs/specification.md`, `docs/DEVELOPER_GUIDE.md`.
+
+**Проверка:**
+- Документационная правка; code gates не запускались.
+
+## 2026-05-31 — Readiness baseline и Meta-Harness operational protocol
+
+**Что сделано:**
+- Создан `docs/READINESS.md` — единая матрица release-readiness, gates, WP0-WP6 и открытых блокеров.
+- `docs/META-HARNESS.md` переписан из методологического описания в операционный протокол: scoped/full scan, search set vs holdout gate, session artifacts, evidence model, redaction policy.
+- Исправлена битая ссылка на отсутствующий `docs/improvement-plan.md`; текущие источники: `READINESS.md`, `release.md`, `work-plan.md`, `updates.md`.
+- `docs/release.md` синхронизирован: исторический зелёный repo-local/static gate отделён от текущего `partial` release-ready статуса.
+- `docs/backup-restore-runbook.md` понижен до `partial`, потому что Supabase PITR и полный staging rollback drill ещё требуют evidence.
+- `docs/code-optimization-analysis.md` обновлён после закрытия WP3: direct Prisma cleanup теперь отмечен как закрытый и закреплённый unit-guard.
+- `docs/platform-functional-overview.md` уточнён: customer observer не имеет legacy/global fallback, только разрешённый project/cohort scope.
+- `docs/MASTER-PLAN.md`, `docs/implementation-plan.md`, `docs/full-project-audit.md`, `docs/todo.md`, `docs/ai-agent-instructions.md`, `docs/specification.md`, `docs/DEVELOPER_GUIDE.md` связаны с новым readiness baseline.
+
+**Проверка:**
+- Документационный link/path sanity через `rg`: удалены активные ссылки на `docs/improvement-plan.md`, `docs/assumptions.md`, старый WP3-status и противоречивый release-green текст.
+- Code gates не запускались: изменения затрагивают только Markdown-документацию.
+
 ## 2026-05-31 — Task 3.4-3.5: Ачивки/Streak/Лидерборд в XpCenterModal, финальный verify
 
 **Что сделано:**

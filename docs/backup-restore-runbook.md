@@ -1,8 +1,8 @@
 # Backup / Restore Runbook
 
 > **Единый источник истины для всех процедур бэкапа.**
-> Дата: 2026-05-24
-> Статус: ✅ Проверено на staging
+> Дата: 2026-05-31
+> Статус: `partial` — pg_dump/local restore документированы, Supabase PITR и полный staging rollback drill требуют evidence.
 
 Связанные файлы:
 - Скрипты автоматизации: `infra/backup/scripts/daily-backup.sh`, `infra/backup/backup.sh`, `infra/backup/restore.sh`

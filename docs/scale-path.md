@@ -20,7 +20,7 @@ Modular monolith with clear domain boundaries:
 | Data | `Notification`, `NotificationPreference`, `PushSubscription` | Separate PostgreSQL or Redis |
 | API | In-process calls | gRPC or REST |
 | Transport | Direct function calls | Outbox → Message Broker |
-| Push | Firebase Admin SDK | Standalone push worker |
+| Push | Web Push/VAPID sender | Standalone push worker |
 
 **Steps:**
 1. Extract `server/modules/notifications/` → `services/notification-service/`

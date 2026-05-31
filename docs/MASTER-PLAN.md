@@ -1,7 +1,9 @@
 # Master Plan — AI Strategic Academy
 
 > Единый план развития: от текущего состояния до стратегического roadmap.
-> Дата актуализации: 2026-05-30
+> Дата актуализации: 2026-05-31
+> Release-readiness статус см. в `docs/READINESS.md`.
+> Долгосрочная цель полной оптимизации: `docs/FULL-OPTIMIZATION-GOAL.md`.
 
 ---
 
@@ -12,10 +14,12 @@
 **Масштаб:**
 
 - 6 ролей: admin, instructor, student, curator, super_curator, customer_observer
-- 87+ страниц, 464 теста (74 файла), build 0 ошибок, lint — 0 errors/0 warnings
+- 87+ страниц, 466 unit/integration тестов по последнему `docs/updates.md`, build 0 ошибок, lint — 0 errors/0 warnings
 - Vercel auto-deploy, Sentry monitoring, PWA, 56 таблиц (RLS отключён)
 
 **Все базовые домены реализованы:** auth, RBAC, курсы, уроки, тесты, задания, прогресс, сертификаты, чат, уведомления (in-app + push), аналитика, отчёты, риски, глоссарий, администрирование, PWA.
+
+Важно: "реализовано" не равно "release-ready". Текущий production-readiness итог остаётся `partial`, пока не закрыты WP1/WP2/WP4/WP5/WP6 из `docs/READINESS.md`.
 
 **Глубокий аудит БД (2026-05-24):**
 - Добавлены 12 недостающих FK-индексов

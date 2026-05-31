@@ -6,7 +6,7 @@
 |---|---|---|
 | `npm run dev` | Starts Docker Postgres then `next dev` | Requires Docker running |
 | `npm run test` | Vitest (node env, not jsdom) | Tests in `tests/**/*.test.{ts,tsx}` |
-| `npm run test:e2e` | Playwright (Chromium + Pixel 7) | Needs DB seeded, `tests/e2e/` |
+| `npm run test:e2e` | Guarded Playwright (Chromium + Pixel 7) | Needs seeded local/disposable DB; refuses remote DB unless `ALLOW_REMOTE_DATABASE_MUTATION=true` |
 | `npm run test:watch` | Vitest watch mode | — |
 | `npm run typecheck` | `tsc --noEmit` | — |
 | `npm run build` | `clean-next-dev-types.mjs` → `prisma generate` → `next build` | Build order matters |
@@ -67,6 +67,6 @@ proxy.ts        — Next.js middleware (route guard, CSRF, rate limit)
 - Vitest: `environment: "node"` (NOT jsdom — but jsdom is available as dev dep)
 - Setup: `tests/setup.ts` imports `@testing-library/jest-dom/vitest`
 - Playwright: `webServer` runs `npm run dev`, reuses existing server locally
-- E2E requires seeded database and seeded test users
+- E2E requires seeded database and seeded test users; the command is guarded because the suite mutates seeded data
 - Checking `tests/security-privacy.test.ts` for negative-path patterns
 - Do not use Playwright `networkidle`; SSE keeps the network active, so use explicit locators after `domcontentloaded`.

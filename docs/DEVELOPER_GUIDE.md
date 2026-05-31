@@ -38,7 +38,7 @@ Linux/macOS shell:
 sh scripts/bootstrap.sh
 ```
 
-Скрипты поднимают зависимости через Docker Compose и выполняют Prisma generate, `db:push` и `db:seed` внутри app-контейнера. `db:push`, `db:seed` и `certificate:issue-demo` блокируют remote DB host по умолчанию; `ALLOW_REMOTE_DATABASE_MUTATION=true` нужен только для явно подтверждённой remote-мутации.
+Скрипты поднимают зависимости через Docker Compose и выполняют Prisma generate, `db:push` и `db:seed` внутри app-контейнера. `db:push`, `db:seed`, `test:e2e` и `certificate:issue-demo` блокируют remote DB host по умолчанию; `ALLOW_REMOTE_DATABASE_MUTATION=true` нужен только для явно подтверждённой remote-мутации или staging E2E-прогона.
 
 ### 3. Запуск зависимостей (Docker Compose)
 
@@ -150,7 +150,7 @@ npm run dev
 | `npm run typecheck` | Проверка типов TypeScript |
 | `npm run test` | Запуск unit-тестов (Vitest) |
 | `npm run test:watch` | Тесты в режиме watch |
-| `npm run test:e2e` | E2E тесты (Playwright) |
+| `npm run test:e2e` | E2E тесты (Playwright) с preflight guard против remote DB |
 | `npm run db:generate` | Генерация Prisma Client |
 | `npm run db:migrate` | Применение миграций БД |
 | `npm run db:push` | Push схемы БД (для разработки) |
@@ -347,6 +347,8 @@ npm run test:e2e
 
 Конфигурация: [`playwright.config.ts`](playwright.config.ts)
 
+E2E-suite мутирует seeded data (например, quiz attempts), поэтому `npm run test:e2e` сначала проверяет `DATABASE_URL` через `scripts/assert-local-database.ts`. Для локальной разработки используйте disposable/local DB. Для осознанного staging-прогона задайте `ALLOW_REMOTE_DATABASE_MUTATION=true` и убедитесь, что база не содержит production-данных.
+
 ---
 
 ## Развёртывание
@@ -410,10 +412,12 @@ docker compose up app
 
 ## Документация
 
-- [Assumptions](docs/assumptions.md) — предположения и ограничения
+- [READINESS](docs/READINESS.md) — текущая матрица release-readiness, gates и блокеров
+- [Full Optimization Goal](docs/FULL-OPTIMIZATION-GOAL.md) — цель полной оптимизации и доказанной работоспособности
 - [Specification](docs/specification.md) — полная спецификация системы
 - [Security](docs/security-review.md) — модель безопасности и аудит
-- [TODO](docs/todo.md) — план развития
+- [Work Plan](docs/work-plan.md) — рабочие пакеты и текущий план
+- [TODO](docs/todo.md) — ближайшие ручные и внешние задачи
 - [AI Agent Roles](docs/archive/ai-agent-roles.md) — роли AI-агентов (архив)
 - [Updates](docs/updates.md) — журнал обновлений
 - [MASTER-PLAN](docs/MASTER-PLAN.md) — стратегический план

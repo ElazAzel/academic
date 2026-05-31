@@ -1,7 +1,7 @@
 # План реализации AI Strategic Academy
 
-Дата актуализации: 2026-05-30
-Статус документа: operational source of truth для реализации.
+Дата актуализации: 2026-05-31
+Статус документа: operational source of truth для реализации доменов. Итоговый release-readiness статус вынесен в `docs/READINESS.md`.
 
 ## Release-hardening baseline на 2026-05-26
 
@@ -58,7 +58,7 @@
 | Задания (submissions, review service) | done | Enrollment check, courseId resolution |
 | Сертификаты (unique number, premium PDF, verification) | done | Premium assets, Cyrillic fonts, QR |
 | Чат (студент↔куратор, S3 вложения) | done | 503 fix, attachment previews |
-| Уведомления (in-app + push Firebase + SSE) | done | Channel filtering fix, SSE real-time stream |
+| Уведомления (in-app + Web Push/VAPID + SSE) | done | Channel filtering fix, SSE real-time stream |
 | Аналитика/отчёты (CSV/XLSX/PDF, per-role scope) | done | Dynamic report config |
 | Риски (флаги, фильтры, curator/super-curator) | done | Deadline integration |
 | Глоссарий (категории, поиск) | done | — |

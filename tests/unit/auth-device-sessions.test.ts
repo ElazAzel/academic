@@ -84,7 +84,7 @@ describe("auth device sessions", () => {
     expect(mockCreateNotification).not.toHaveBeenCalled();
   });
 
-  it("revokes the oldest previous session, audits the event, and sends a push-only notification (no in-app)", async () => {
+  it("revokes the oldest previous session, audits the event, and creates a persistent security notification", async () => {
     const startedAt = new Date("2026-05-29T10:00:00.000Z");
     mockAuthDeviceSessionCreate.mockResolvedValue({ id: "session-new", startedAt });
     mockAuthDeviceSessionFindMany.mockResolvedValue([
@@ -133,8 +133,7 @@ describe("auth device sessions", () => {
       expect.objectContaining({
         userId: "user-1",
         event: DEVICE_LIMIT_REVOKE_REASON,
-        channel: "push",
-        persist: false,
+        channel: "in_app",
         refType: "auth_device_session",
         refId: "session-new",
       }),

@@ -96,7 +96,7 @@ describe("release hardening readiness contract", () => {
   });
 
   it("tracks all seven release hardening work packages with owners and evidence", () => {
-    expect(releaseHardeningContractVersion).toBe("2026-05-26");
+    expect(releaseHardeningContractVersion).toBe("2026-05-31");
     expect(releaseWorkPackages.map((workPackage) => workPackage.id)).toEqual([
       "WP0",
       "WP1",
@@ -115,14 +115,32 @@ describe("release hardening readiness contract", () => {
     }
   });
 
-  it("marks the platform release-ready when all scenario and ops proof are complete", () => {
+  it("keeps the docs readiness baseline aligned with the machine-readable contract", () => {
+    const readinessDoc = readFileSync(path.join(root, "docs", "READINESS.md"), "utf8");
+    const optimizationGoalDoc = readFileSync(path.join(root, "docs", "FULL-OPTIMIZATION-GOAL.md"), "utf8");
+
+    expect(readinessDoc).toContain("**Текущий итог:** `partial`");
+    expect(readinessDoc).toContain("| WP1 | Six-role Scenario Proof | `partial` |");
+    expect(readinessDoc).toContain("| WP2 | Access, Privacy, Ownership Hardening | `partial` |");
+    expect(readinessDoc).toContain("| WP3 | Architecture Boundary Cleanup | `done` |");
+    expect(readinessDoc).toContain("| WP6 | DevOps, Release, Backup, Observability | `blocked` |");
+
+    expect(optimizationGoalDoc).toContain("Довести AI Strategic Academy до состояния полной оптимизации");
+    expect(optimizationGoalDoc).toContain("`docs/READINESS.md` итоговый статус `done`");
+  });
+
+  it("keeps the platform below release-ready until scenario and ops proof are complete", () => {
     const summary = getReleaseReadinessSummary();
 
-    expect(summary.isReleaseReady).toBe(true);
-    expect(summary.status).toBe("done");
-    expect(summary.incompletePackageIds).toEqual([]);
-    expect(summary.blockedPackageIds).toEqual([]);
-    expect(summary.incompleteGateIds).toEqual([]);
+    expect(summary.isReleaseReady).toBe(false);
+    expect(summary.status).toBe("partial");
+    expect(summary.incompletePackageIds).toEqual(["WP1", "WP2", "WP4", "WP5", "WP6"]);
+    expect(summary.blockedPackageIds).toEqual(["WP6"]);
+    expect(summary.incompleteGateIds).toEqual([
+      "six-role-workflow-e2e",
+      "access-privacy-negative-paths",
+      "operational-release-drill",
+    ]);
   });
 
   it("maps scenario, privacy and operations packages to the required roles and gates", () => {
@@ -137,7 +155,7 @@ describe("release hardening readiness contract", () => {
     expect(wp2?.scope.join(" ")).toContain("Customer observer");
     expect(wp2?.exitCriteria.join(" ")).toContain("Email is sent only");
 
-    expect(wp6?.status).toBe("done");
-    expect(releaseGates.find((gate) => gate.id === "operational-release-drill")?.status).toBe("done");
+    expect(wp6?.status).toBe("blocked");
+    expect(releaseGates.find((gate) => gate.id === "operational-release-drill")?.status).toBe("blocked");
   });
 });
