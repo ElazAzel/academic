@@ -31,7 +31,7 @@
 | Overbroad admin actions | Audit logs for privileged actions |
 | Student name privacy | Имена студентов заменяются на `Слушатель #XXXXX` для всех не-admin ролей |
 | PII over-retention | Consent log, export/delete documentation, configurable retention policy |
-| Credentials in git history | `__dbcheck.mjs` содержал хардкодный Supabase connection string с паролем (`NFM3KJJzS2DxmIg6`). Файл удалён (`907e98f`), но пароль виден в истории. **Требуется ротация пароля Supabase.** |
+| Credentials in git history | `__dbcheck.mjs` содержал хардкодный Supabase connection string с паролем (`REDACTED`). Файл удалён (`907e98f`), но пароль виден в истории. **Требуется ротация пароля Supabase.** |
 | Abuse of public endpoints | Rate-limit scaffold, validation, audit trail |
 
 ## Security Checklist
