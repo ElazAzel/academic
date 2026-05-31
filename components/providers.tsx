@@ -4,6 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { useState, useEffect } from "react";
 import { Toaster } from "sonner";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { CommandPalette } from "@/components/lms/command-palette";
 import { PopupModal } from "@/components/lms/popup-modal";
 import { ConsentModal } from "@/components/lms/consent-modal";
@@ -40,7 +41,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <SessionProvider refetchOnWindowFocus={false}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          {children}
+          <NuqsAdapter>
+            {children}
+          </NuqsAdapter>
           <Toaster position="top-right" closeButton
             toastOptions={{
               duration: 5000,

@@ -2,6 +2,21 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-31 — Установка библиотек: recharts, usehooks-ts, nuqs, vaul, hls.js
+
+**Что сделано:**
+- Установлены и настроены 5 бесплатных библиотек с минимальной конфигурацией:
+  - **recharts** — графики для ReportDesigner (интерактивные отчёты кураторов, админа, обсервера)
+  - **usehooks-ts** — 40+ React хуков (useDebounce, useCopyToClipboard, useMediaQuery, useLocalStorage) — zero config
+  - **nuqs** — type-safe URL search params для Next.js App Router (пагинация, фильтры, сортировка)
+  - **vaul** — нативные drawer-панели для мобильных устройств
+  - **hls.js** — HLS-видеоплеер для потокового воспроизведения уроков
+- **Настройка:** recharts добавлен в `optimizePackageImports` в `next.config.ts`, `NuqsAdapter` добавлен в `components/providers.tsx`
+- Все библиотеки указаны в `docs/ai-agent-instructions.md` как часть архитектуры
+
+**Проверка:**
+- `npm run build` ✅ (Compiled successfully, 77 routes)
+
 ## 2026-05-31 — CSP Nonce Propagation Fix: <html nonce> from middleware
 
 **Что сделано:**

@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
     ]
   },
   experimental: {
-    optimizePackageImports: ["lucide-react", "framer-motion", "date-fns", "@radix-ui/react-*"],
+    optimizePackageImports: ["lucide-react", "framer-motion", "date-fns", "recharts", "@radix-ui/react-*"],
   },
   outputFileTracingIncludes: {
     "app/api/v1/certificates/[certificateId]/pdf/route": [
