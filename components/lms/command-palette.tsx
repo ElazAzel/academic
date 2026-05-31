@@ -9,16 +9,20 @@ import { NAV_BY_ROLE } from "@/components/layout/navigation";
 import { useSession } from "next-auth/react";
 import type { RoleKey } from "@/types/domain";
 
+const SEARCH_DEBOUNCE_MS = 300;
+
+interface SearchResultsData {
+  courses: Array<{ id: string; title: string; description: string }>;
+  lessons: Array<{ id: string; title: string; summary: string | null }>;
+  users: Array<{ id: string; name: string | null; email: string }>;
+}
+
 export function CommandPalette() {
   const router = useRouter();
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<{
-    courses: Array<{ id: string; title: string; description: string }>;
-    lessons: Array<{ id: string; title: string; summary: string | null }>;
-    users: Array<{ id: string; name: string | null; email: string }>;
-  }>({ courses: [], lessons: [], users: [] });
+  const [searchResults, setSearchResults] = useState<SearchResultsData>({ courses: [], lessons: [], users: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -63,19 +67,33 @@ export function CommandPalette() {
   useEffect(() => {
     if (!open) return;
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Enter" && filtered.length > 0) {
-        handleSelect(filtered[0].href);
+      if (e.key === "Enter") {
+        if (showSearchResults && !isSearching && !searchError) {
+          const { courses, lessons, users } = searchResults;
+          const firstResult = courses[0] || lessons[0] || users[0];
+          if (firstResult) {
+            let href = "";
+            if (courses.includes(firstResult as any)) href = `/courses/${firstResult.id}`;
+            else if (lessons.includes(firstResult as any)) href = `/lessons/${firstResult.id}`;
+            else href = `/users/${firstResult.id}`;
+            handleSelect(href);
+          }
+        } else if (filtered.length > 0) {
+          handleSelect(filtered[0].href);
+        }
       }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, filtered, handleSelect]);
+  }, [open, filtered, handleSelect, showSearchResults, isSearching, searchError, searchResults]);
 
-  const [debouncedQuery] = useDebounceValue(query, 300);
+  const [debouncedQuery] = useDebounceValue(query, SEARCH_DEBOUNCE_MS);
 
   const isAdmin = roles.includes("admin");
 
   useEffect(() => {
+    const controller = new AbortController();
+
     if (!debouncedQuery.trim()) {
       setSearchResults({ courses: [], lessons: [], users: [] });
       setShowSearchResults(false);
@@ -87,7 +105,7 @@ export function CommandPalette() {
     setIsSearching(true);
     setSearchError(false);
 
-    fetch(`/api/v1/search?q=${encodeURIComponent(debouncedQuery)}`)
+    fetch(`/api/v1/search?q=${encodeURIComponent(debouncedQuery)}`, { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error("Search failed");
         return res.json();
@@ -96,10 +114,13 @@ export function CommandPalette() {
         setSearchResults(data);
         setIsSearching(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
         setSearchError(true);
         setIsSearching(false);
       });
+
+    return () => controller.abort();
   }, [debouncedQuery, isAdmin]);
 
   return (
