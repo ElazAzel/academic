@@ -3,18 +3,75 @@
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <html lang="ru">
-      <body className="flex min-h-screen items-center justify-center bg-background px-6 antialiased">
-        <section className="max-w-md rounded-lg bg-card p-8 text-center shadow-panel">
-          <h1 className="text-2xl font-semibold">Критическая ошибка</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            {error.message || "Произошла критическая ошибка приложения. Попробуйте обновить страницу."}
-          </p>
-          <button
-            onClick={() => reset()}
-            className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+      <head>
+        <title>Критическая ошибка — AI Strategic Academy</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F8FA] px-6 antialiased">
+        {/* Decorative gradient blobs */}
+        <div
+          className="pointer-events-none absolute -left-28 -top-28 h-96 w-96 rounded-full opacity-50"
+          style={{ background: "radial-gradient(circle, rgba(220,38,38,0.08), transparent 70%)" }}
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -bottom-40 -right-40 h-[30rem] w-[30rem] rounded-full opacity-50"
+          style={{ background: "radial-gradient(circle, rgba(101,67,186,0.06), transparent 70%)" }}
+          aria-hidden
+        />
+
+        <section className="relative z-10 mx-auto max-w-lg text-center">
+          {/* Large 500 */}
+          <p
+            className="select-none text-[8rem] font-bold leading-none tracking-tighter sm:text-[10rem]"
+            style={{ color: "rgba(220,38,38,0.10)" }}
+            aria-hidden
           >
-            Обновить страницу
-          </button>
+            500
+          </p>
+
+          {/* Icon */}
+          <div
+            className="mx-auto -mt-12 mb-6 flex h-20 w-20 items-center justify-center rounded-2xl shadow-sm sm:-mt-16 sm:h-24 sm:w-24"
+            style={{ background: "rgba(220,38,38,0.08)" }}
+          >
+            <svg className="h-8 w-8 sm:h-10 sm:w-10" style={{ color: "#DC2626" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl" style={{ color: "#1C1C1E" }}>
+            Критическая ошибка
+          </h1>
+
+          <p className="mt-3 text-sm leading-relaxed sm:text-base" style={{ color: "#6B7280" }}>
+            {error.message && error.message !== "Application error"
+              ? error.message
+              : "Произошла критическая ошибка приложения. Попробуйте обновить страницу."}
+          </p>
+
+          {error.digest && (
+            <p className="mt-4 text-xs" style={{ color: "rgba(107,114,128,0.6)" }}>
+              Код ошибки: <code className="font-mono" style={{ color: "rgba(220,38,38,0.7)" }}>{error.digest}</code>
+            </p>
+          )}
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <button
+              onClick={() => reset()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-medium shadow-[0_8px_18px_rgba(22,63,130,0.18)] transition-all duration-150 ease-out hover:shadow-[0_10px_24px_rgba(22,63,130,0.22)] active:translate-y-px"
+              style={{ background: "#1E3A5F", color: "#FFFFFF" }}
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+              </svg>
+              Обновить страницу
+            </button>
+          </div>
         </section>
       </body>
     </html>

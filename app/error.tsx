@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -13,15 +14,46 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   }, [error]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6">
-      <section className="max-w-md rounded-lg bg-white p-8 text-center shadow-panel">
-        <h1 className="text-2xl font-semibold">Что-то пошло не так</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          {error.message || "Мы сохранили контекст ошибки. Попробуйте обновить экран."}
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6">
+      {/* Decorative gradient blobs */}
+      <div className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-destructive/5 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute -bottom-32 -right-32 h-[26rem] w-[26rem] rounded-full bg-m3-tertiary/5 blur-3xl" aria-hidden />
+
+      <section className="relative z-10 mx-auto max-w-lg text-center">
+        {/* Large error code */}
+        <p className="select-none text-[8rem] font-bold leading-none tracking-tighter text-destructive/10 sm:text-[10rem]"
+           aria-hidden>
+          500
         </p>
-        <Button className="mt-6" onClick={reset}>Повторить</Button>
+
+        {/* Icon */}
+        <div className="mx-auto -mt-12 mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-destructive/10 shadow-sm sm:-mt-16 sm:h-24 sm:w-24">
+          <AlertTriangle className="h-8 w-8 text-destructive sm:h-10 sm:w-10" aria-hidden />
+        </div>
+
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          Что-то пошло не так
+        </h1>
+
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
+          {error.message && error.message !== "Application error"
+            ? error.message
+            : "Мы уже получили сигнал об ошибке. Попробуйте обновить страницу."}
+        </p>
+
+        {error.digest && (
+          <p className="mt-4 text-xs text-muted-foreground/60">
+            Код ошибки: <code className="font-mono text-destructive/70">{error.digest}</code>
+          </p>
+        )}
+
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Button size="lg" onClick={reset}>
+            <RefreshCw className="h-4 w-4" aria-hidden />
+            Повторить
+          </Button>
+        </div>
       </section>
     </main>
   );
 }
-
