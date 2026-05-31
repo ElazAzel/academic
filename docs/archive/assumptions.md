@@ -1,7 +1,7 @@
 # Assumptions
 
 - Flags: `--stack=nextjs`, `--primary-stack=nextjs`, `--mode=full`, `--arch=both`, `--api=both`, `--deploy=all`, `--locale=ru`, `--profile=academy-ru-closed`, `--full-all=false`.
-- Existing `info.md` and `info — копия.md` are preserved as source/reference documents and are not edited.
+- Existing `info.md` was preserved as a source/reference document. It was later moved to `docs/info.md`. The `info — копия.md` was a Windows auto-copy artifact and was removed.
 - Primary implementation is a modular monolith. Microservices are reference runnable scaffolds with contracts and tests.
 - Next.js `16.2.5`, React `19.2.4`, Prisma `6.16.2`, and NextAuth `4.24.11` are pinned for repeatable installs.
 - `.npmrc` enables `legacy-peer-deps=true` because NextAuth stable `4.24.x` has a peer range that does not yet include Next `16`, while the project intentionally targets the current Next.js line. Replace this with Auth.js v5+ once the stable adapter path is accepted.

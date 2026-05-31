@@ -54,7 +54,7 @@ proxy.ts        — Next.js middleware (route guard, CSRF, rate limit)
 ## Docs (loaded by opencode.json)
 
 - `AI.md` — project guide, conventions, roles
-- `SKILL.md` — tech stack, architecture, code quality rules
+- `docs/SKILL.md` — tech stack, architecture, code quality rules
 - `ai/roles/README.md` — agent role definitions
 - `docs/updates.md` — changelog (update after each change)
 - `docs/implementation-plan.md` — current status

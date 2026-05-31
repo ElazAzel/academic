@@ -13,7 +13,7 @@
 
 ## Input Docs
 
-- `info.md`
+- `docs/info.md`
 - `docs/specification.md`
 - `docs/implementation-plan.md`
 - `locales/ru.json`

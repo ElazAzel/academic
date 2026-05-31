@@ -12,6 +12,8 @@ test-results/
 !.env.example
 *.tsbuildinfo
 *.log
+.codex-temp/
+next-env.d.ts
 .DS_Store
 Thumbs.db
 storage/
