@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getPublishedCourseOptions } from "@/server/modules/page-data/service";
 import { CreateCohortForm } from "./create-cohort-form";
 
 export const metadata = {
@@ -14,18 +14,12 @@ export const metadata = {
 };
 
 
-const prisma = getPrisma();
-
 export const dynamic = "force-dynamic";
 
 export default async function NewCohortPage() {
  await requireRolePage(["admin"]);
 
- const courses = await prisma.course.findMany({
-  where: { status: "PUBLISHED" },
-  select: { id: true, title: true },
-  orderBy: { title: "asc" },
- });
+ const courses = await getPublishedCourseOptions();
 
  return (
   <AppShell role="admin">

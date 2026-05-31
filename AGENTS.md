@@ -27,6 +27,7 @@
 - All server actions (`server/actions/`) must have Zod validation
 - All route directories need `loading.tsx` and `metadata` export
 - RBAC: `requirePermission()` / `requireRolePage()` in all server code
+- Prisma Client is forbidden in `app/**/page.tsx` and `components/**`; page data belongs in `server/modules/**` or Server Actions. The guard lives in `tests/unit/release-hardening-readiness.test.ts`.
 
 ## Project structure
 
@@ -45,7 +46,7 @@ proxy.ts        — Next.js middleware (route guard, CSRF, rate limit)
 - `services/` excluded from `tsconfig.json` — not compiled
 - Sentry wraps `next.config.ts` via `withSentryConfig`
 - VAPID keys must be in **both** `VAPID_PUBLIC_KEY` (server) and `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (client) — same value
-- CSP uses `'unsafe-inline'` for scripts — required by Next.js App Router
+- CSP uses per-request nonce-based `script-src`; keep `'unsafe-inline'` only in `style-src`
 - `var/` dir is gitignored (credentials output, temp files)
 - `__dbcheck.mjs` in git history contained hardcoded Supabase password — do not commit secrets
 - `docker-compose.yml` does **not** publish PostgreSQL port to host
@@ -68,3 +69,4 @@ proxy.ts        — Next.js middleware (route guard, CSRF, rate limit)
 - Playwright: `webServer` runs `npm run dev`, reuses existing server locally
 - E2E requires seeded database and seeded test users
 - Checking `tests/security-privacy.test.ts` for negative-path patterns
+- Do not use Playwright `networkidle`; SSE keeps the network active, so use explicit locators after `domcontentloaded`.

@@ -7,9 +7,8 @@ import { ReportDesigner } from "@/components/lms/report-designer";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getPrisma } from "@/lib/prisma";
 import { getDisplayReportsForRole } from "@/server/modules/reports/service";
-import { QuestionStatus, SubmissionStatus } from "@prisma/client";
+import { getInstructorReportsPageData } from "@/server/modules/page-data/service";
 import type { DashboardMetric } from "@/types/domain";
 
 export const metadata = {
@@ -18,8 +17,6 @@ export const metadata = {
 };
 
 
-const prisma = getPrisma();
-
 export const dynamic = "force-dynamic";
 
 export default async function InstructorReportsPage() {
@@ -27,44 +24,15 @@ export default async function InstructorReportsPage() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const courses = await prisma.course.findMany({
-    where: { instructors: { some: { userId: user.id } } },
-    select: {
-      id: true,
-      title: true,
-      _count: { select: { enrollments: true } },
-      courseProgress: { select: { percent: true, status: true } },
-    },
-  });
-
-  const courseIds = courses.map((course) => course.id);
-  const totalStudents = courses.reduce((s, c) => s + c._count.enrollments, 0);
-  const completed = courses.reduce((s, c) => s + c.courseProgress.filter((p) => p.status === "COMPLETED").length, 0);
-  const avgProgress = totalStudents > 0
-    ? Math.round(courses.reduce((s, c) => s + c.courseProgress.reduce((a, p) => a + p.percent, 0), 0) / totalStudents)
-    : 0;
-  const [forwardedQuestions, reviewBacklog, quizAttempts, passedQuizAttempts] = await Promise.all([
-    prisma.lessonQuestion.count({
-      where: {
-        lesson: { module: { courseId: { in: courseIds } } },
-        status: QuestionStatus.FORWARDED,
-      },
-    }),
-    prisma.assignmentSubmission.count({
-      where: {
-        status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.IN_REVIEW] },
-        assignment: {
-          OR: [
-            { courseId: { in: courseIds } },
-            { lesson: { module: { courseId: { in: courseIds } } } },
-          ],
-        },
-      },
-    }),
-    prisma.quizAttempt.count({ where: { quiz: { courseId: { in: courseIds } } } }),
-    prisma.quizAttempt.count({ where: { quiz: { courseId: { in: courseIds } }, passed: true } }),
-  ]);
-  const passRate = quizAttempts > 0 ? Math.round((passedQuizAttempts / quizAttempts) * 100) : 0;
+  const {
+    courses,
+    totalStudents,
+    completed,
+    avgProgress,
+    forwardedQuestions,
+    reviewBacklog,
+    passRate,
+  } = await getInstructorReportsPageData(user.id);
   const metrics = [
     {
       label: "Курсов",

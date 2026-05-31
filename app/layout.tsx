@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-page-custom-font */
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { headers } from "next/headers";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { PWARegister } from "@/components/lms/pwa-register";
@@ -45,7 +44,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#F8FAFC" },
@@ -53,12 +51,7 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // Nonce for CSP — устанавливается в proxy.ts на каждый запрос.
-  // Next.js автоматически добавляет nonce к своим скриптам, извлекая его
-  // из Content-Security-Policy request header во время SSR.
-  const nonce = (await headers()).get("x-nonce") ?? "";
-
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ru" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
@@ -67,7 +60,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.variable} ${jetBrainsMono.variable}`} nonce={nonce}>
+      <body className={`${inter.variable} ${jetBrainsMono.variable}`}>
         <a
           href="#main-content"
           aria-label="Перейти к основному содержимому"

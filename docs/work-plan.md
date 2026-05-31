@@ -18,7 +18,7 @@
 | WP0 | Truth Sync: синхронизировать документы, AI-agent roles, product roles, project skills, technical skills и release gates | Orchestrator, Technical Writer | ✅ |
 | WP1 | Six-role Scenario Proof: доказать сценарии `admin`, `instructor`, `student`, `curator`, `super_curator`, `customer_observer` через Playwright на seeded/disposable env | QA Release, Product Owner, Frontend LMS UX | 🟡 |
 | WP2 | Access/Privacy/Ownership: закрыть guessed IDs, observer read-only, curator/instructor scope, media/report/certificate privacy | Security Privacy, Backend Next Prisma | 🟡 |
-| WP3 | Architecture Boundary Cleanup: вынести критичные Prisma/domain queries из UI routes/components в server modules/actions | Principal Architect, Backend Next Prisma | 🟡 |
+| WP3 | Architecture Boundary Cleanup: вынести критичные Prisma/domain queries из UI routes/components в server modules/actions | Principal Architect, Backend Next Prisma | ✅ |
 | WP4 | Role Workspace UX: перестроить кабинеты вокруг рабочих очередей и next actions, а не декоративных метрик | Frontend LMS UX, Product Owner | 🟡 |
 | WP5 | Reporting/Analytics/Certificates/Notifications Proof: доказать scoped exports, revoked certificates и channel rules | Data Analytics, Security Privacy, QA Release | 🟡 |
 | WP6 | DevOps/Release/Backup/Observability: выполнить `verify:release` в целевом окружении, health, backup/restore, rollback | DevOps Platform, QA Release | ⛔ blocked |
@@ -29,6 +29,12 @@
 - Начат WP2: lesson video/media access больше не возвращает generic 500 для ожидаемых forbidden/not-found случаев; тесты обновлены на корректный 403.
 - WP2 расширен: signed lesson media URL покрыт negative checks для отсутствующего enrollment, sequential lock и guessed foreign media ID.
 - `done` для release-ready теперь требует явного evidence; route rendering больше не считается достаточным доказательством.
+
+**Текущее изменение 2026-05-30:**
+- WP3 закрыт для текущего repo-local состояния: прямой Prisma Client удален из `app/**/page.tsx` и `components/**`.
+- Добавлен guard в `tests/unit/release-hardening-readiness.test.ts`, который блокирует возврат `@/lib/prisma`, `getPrisma()` и `prisma.*` в страницы и UI-компоненты.
+- Playwright E2E больше не использует `networkidle`; навигация переведена на `domcontentloaded` для совместимости с SSE.
+- Внешние release-задачи DPA, ротации Supabase-пароля и git purge остаются runbook-задачами WP6/Security.
 
 ---
 

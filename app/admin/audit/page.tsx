@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getAdminAuditPageData } from "@/server/modules/page-data/service";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Search, Activity, ShieldCheck, Users, BookOpen, Award, FileText, Settings, Mail, MessageCircle, HelpCircle, ClipboardCheck } from "lucide-react";
@@ -16,7 +16,6 @@ export const metadata = {
 };
 
 
-const prisma = getPrisma();
 export const dynamic = "force-dynamic";
 
 const ACTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -86,30 +85,7 @@ export default async function AdminAuditPage(props: {
   const limit = Math.min(100, Math.max(1, parseInt(sp?.limit ?? "25", 10)));
   const search = (sp?.search ?? "").trim().toLowerCase();
 
-  const where = search
-    ? {
-        OR: [
-          { action: { contains: search, mode: "insensitive" as const } },
-          { entity: { contains: search, mode: "insensitive" as const } },
-          { actor: { name: { contains: search, mode: "insensitive" as const } } },
-          { actor: { email: { contains: search, mode: "insensitive" as const } } },
-          { entityId: { contains: search, mode: "insensitive" as const } },
-        ],
-      }
-    : {};
-
-  const [logs, total] = await Promise.all([
-    prisma.auditLog.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
-      include: { actor: { select: { id: true, email: true, name: true } } },
-    }),
-    prisma.auditLog.count({ where }),
-  ]);
-
-  const pages = Math.ceil(total / limit);
+  const { logs, total, pages } = await getAdminAuditPageData({ page, limit, search });
 
   return (
     <AppShell role="admin">

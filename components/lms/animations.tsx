@@ -4,17 +4,17 @@ import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const fadeIn: Variants = {
-  hidden: { opacity: 0, y: 12 },
+  hidden: { opacity: 1, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
 const slideUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 1, y: 24 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
 const scaleIn: Variants = {
-  hidden: { opacity: 0, scale: 0.95 },
+  hidden: { opacity: 1, scale: 0.95 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: "easeOut" } },
 };
 
@@ -97,7 +97,7 @@ export function PageTransition({ children, className }: { children: React.ReactN
   const shouldReduce = useReducedMotion();
   return (
     <motion.div
-      initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 8 }}
+      initial={shouldReduce ? { opacity: 1 } : { opacity: 1, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={shouldReduce ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
       className={className}

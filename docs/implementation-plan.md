@@ -90,7 +90,7 @@
 | Область | Задача | Приоритет | Статус | Примечание |
 |---------|--------|-----------|--------|------------|
 | DevOps | Production deployment validation runbook | P2 | ✅ | `verify:release` выполнен 2026-05-22 (статический гейт зелёный, e2e требует staging) |
-| Безопасность | CSP hardening (unsafe-eval в production) | P2 | ✅ | `unsafe-eval` удалён из production CSP. `unsafe-inline` остаётся (Next.js hydration). |
+| Безопасность | CSP hardening (unsafe-eval/unsafe-inline в production scripts) | P2 | ✅ | `script-src` переведён на nonce + `strict-dynamic`; `unsafe-inline` остаётся только в `style-src`. |
 | Инфра | MinIO/S3 uploads локально | P3 | ❌ | Требует Docker (не установлен) — upload падает с ERR_CONNECTION_REFUSED |
 | БД | FK-индексы (12 шт) | P1 | ✅ | Добавлены через миграцию `20260524000000_add_missing_fk_indexes` |
 | БД | RLS отключён | P2 | ✅ | RLS отключён на всех 56 таблицах — приложение использует Prisma server-side |

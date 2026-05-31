@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getStudentQuizResultPageData } from "@/server/modules/page-data/service";
 
 export const metadata = {
   title: "Результат теста — Студент",
@@ -91,27 +91,13 @@ export default async function QuizResultPage({
   const user = await requireRolePage(["student"]);
   const { quizId } = await params;
   const sp = await searchParams;
-  const prisma = getPrisma();
-
-  const quiz = await prisma.quiz.findUnique({
-    where: { id: quizId },
-    include: {
-      lesson: true,
-      questions: { orderBy: { order: "asc" } },
-      _count: { select: { questions: true } },
-    },
+  const { quiz, allAttempts, attempt } = await getStudentQuizResultPageData({
+    quizId,
+    userId: user.id,
+    attemptId: sp?.attemptId,
   });
 
   if (!quiz) notFound();
-
-  const allAttempts = await prisma.quizAttempt.findMany({
-    where: { quizId, userId: user.id },
-    orderBy: { startedAt: "desc" },
-  });
-
-  const attempt = sp?.attemptId
-    ? allAttempts.find((a) => a.id === sp.attemptId) ?? allAttempts[0] ?? null
-    : allAttempts[0] ?? null;
 
   if (!attempt) {
     return (

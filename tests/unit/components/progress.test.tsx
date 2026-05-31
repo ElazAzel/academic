@@ -12,9 +12,9 @@ describe("Progress", () => {
 
   it("clamps value to 0-100 range", () => {
     const { rerender } = render(<Progress value={150} />);
-    expect(screen.getByLabelText("Прогресс 150%")).toBeInTheDocument();
+    expect(screen.getByLabelText("Прогресс 100%")).toHaveAttribute("aria-valuenow", "100");
 
     rerender(<Progress value={-10} />);
-    expect(screen.getByLabelText("Прогресс -10%")).toBeInTheDocument();
+    expect(screen.getByLabelText("Прогресс 0%")).toHaveAttribute("aria-valuenow", "0");
   });
 });

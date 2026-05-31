@@ -95,7 +95,7 @@ export async function loginAs(page: Page, email: string, password: string = PASS
   const submitButton = loginForm.locator('button[type="submit"]');
   await expect(loginForm).toHaveAttribute("data-auth-ready", "true");
   await expect(submitButton).toBeEnabled();
-  const navigation = page.waitForURL((url) => url.pathname !== "/login", { timeout: 25_000 })
+  const navigation = page.waitForURL((url) => url.pathname !== "/login" && !url.pathname.startsWith("/api/auth"), { timeout: 25_000 })
     .then(() => "navigated" as const)
     .catch(() => "timeout" as const);
   const loginError = loginForm.locator('[role="alert"]').waitFor({ state: "visible", timeout: 25_000 })
@@ -108,7 +108,7 @@ export async function loginAs(page: Page, email: string, password: string = PASS
     throw new Error(`Login failed for ${email}: ${errorText}`);
   }
   const currentPath = new URL(page.url()).pathname;
-  if (currentPath !== "/login") return;
+  if (currentPath !== "/login" && !currentPath.startsWith("/api/auth")) return;
   const buttonText = (await submitButton.textContent().catch(() => null)) ?? "unknown";
   throw new Error(`Login did not complete for ${email}; still on ${page.url()} with submit text: ${buttonText}`);
 }

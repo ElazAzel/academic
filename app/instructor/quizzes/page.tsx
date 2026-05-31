@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getInstructorQuizzesPageData } from "@/server/modules/page-data/service";
 import Link from "next/link";
 import { createQuizAction } from "@/server/actions/quiz-assignment";
 
@@ -19,19 +19,8 @@ export const dynamic = "force-dynamic";
 
 export default async function InstructorQuizzesPage() {
  const user = await requireRolePage(["instructor", "admin"]);
- const prisma = getPrisma();
 
- const quizzes = await prisma.quiz.findMany({
-  where: {
-   course: { instructors: { some: { userId: user.id } } }
-  },
-  include: {
-   course: true,
-   lesson: true,
-   _count: { select: { questions: true } }
-  },
-  orderBy: { createdAt: "desc" }
- });
+ const quizzes = await getInstructorQuizzesPageData(user.id);
 
  return (
   <AppShell role="instructor">

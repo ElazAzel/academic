@@ -54,6 +54,7 @@ export function QuizView({ quiz }: { quiz: StudentQuizDetail }) {
     try {
       const response = await fetch(`/api/v1/quizzes/${quiz.id}/attempts`, {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers }),
       });

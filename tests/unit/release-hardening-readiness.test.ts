@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -16,6 +16,13 @@ import {
 } from "@/server/modules/release-hardening/readiness";
 
 const root = process.cwd();
+
+function listFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((entry) => {
+    const fullPath = path.join(dir, entry);
+    return statSync(fullPath).isDirectory() ? listFiles(fullPath) : [fullPath];
+  });
+}
 
 const projectSkillPaths: Record<ProjectSkillId, string> = {
   "lms-domain-rules": "skills/shared/lms-domain-rules/SKILL.md",
@@ -70,6 +77,22 @@ describe("release hardening readiness contract", () => {
     for (const skill of technicalSkills) {
       expect(existsSync(path.join(root, ".agents", "skills", skill, "SKILL.md")), skill).toBe(true);
     }
+  });
+
+  it("keeps Prisma Client out of App Router pages and UI components", () => {
+    const files = [
+      ...listFiles(path.join(root, "app")).filter((file) => file.endsWith(`${path.sep}page.tsx`)),
+      ...listFiles(path.join(root, "components")).filter((file) => file.endsWith(".tsx")),
+    ];
+
+    const offenders = files
+      .filter((file) => {
+        const source = readFileSync(file, "utf8");
+        return source.includes("@/lib/prisma") || /\bgetPrisma\s*\(/.test(source) || /\bprisma\./.test(source);
+      })
+      .map((file) => path.relative(root, file).replaceAll(path.sep, "/"));
+
+    expect(offenders).toEqual([]);
   });
 
   it("tracks all seven release hardening work packages with owners and evidence", () => {

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/lms/status-badge";
 import { ArrowLeft, Users, Calendar } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getAdminCohortEditPageData } from "@/server/modules/page-data/service";
 import { EditCohortForm } from "./edit-cohort-form";
 import { DeadlineManager } from "./deadline-manager";
 
@@ -17,28 +17,13 @@ export const metadata = {
 };
 
 
-const prisma = getPrisma();
-
 export const dynamic = "force-dynamic";
 
 export default async function EditCohortPage({ params }: { params: Promise<{ cohortId: string }> }) {
  await requireRolePage(["admin"]);
  const { cohortId } = await params;
 
- const [cohort, courses] = await Promise.all([
-  prisma.cohort.findUnique({
-   where: { id: cohortId },
-   include: {
-    course: { select: { title: true } },
-    _count: { select: { enrollments: true, curatorAssignments: true } },
-   },
-  }),
-  prisma.course.findMany({
-   where: { status: "PUBLISHED" },
-   select: { id: true, title: true },
-   orderBy: { title: "asc" },
-  }),
- ]);
+ const { cohort, courses } = await getAdminCohortEditPageData(cohortId);
 
  if (!cohort) notFound();
 

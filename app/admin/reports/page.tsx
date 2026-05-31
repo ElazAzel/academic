@@ -6,10 +6,8 @@ import { DownloadReports } from "@/components/lms/download-reports";
 import { ReportDesigner } from "@/components/lms/report-designer";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
-import { QUERY_LIMITS } from "@/lib/query-limits";
 import { getDisplayReportsForRole } from "@/server/modules/reports/service";
-import { CourseStatus, ProgressStatus, SubmissionStatus } from "@prisma/client";
+import { getAdminReportsPageData } from "@/server/modules/page-data/service";
 import type { DashboardMetric } from "@/types/domain";
 
 export const metadata = {
@@ -18,64 +16,22 @@ export const metadata = {
 };
 
 
-const prisma = getPrisma();
-
 export const dynamic = "force-dynamic";
 
 export default async function AdminReportsPage() {
   const user = await requireRolePage(["admin"]);
 
-  const [
+  const {
     totalUsers,
     totalEnrollments,
     completedCourses,
     certsCount,
-    courseStats,
-    progressByCourse,
-    completedByCourse,
     publishedCourses,
     draftCourses,
     openRisks,
     pendingReviews,
-  ] = await Promise.all([
-    prisma.user.count(),
-    prisma.enrollment.count({ where: { status: "ACTIVE" } }),
-    prisma.courseProgress.count({ where: { status: ProgressStatus.COMPLETED } }),
-    prisma.certificate.count(),
-    prisma.course.findMany({
-      select: {
-        id: true,
-        title: true,
-        _count: { select: { enrollments: true } },
-      },
-      orderBy: { title: "asc" },
-      take: QUERY_LIMITS.reportSummaryCourses,
-    }),
-    prisma.courseProgress.groupBy({
-      by: ["courseId"],
-      _avg: { percent: true },
-    }),
-    prisma.courseProgress.groupBy({
-      by: ["courseId"],
-      where: { status: ProgressStatus.COMPLETED },
-      _count: { _all: true },
-    }),
-    prisma.course.count({ where: { status: CourseStatus.PUBLISHED } }),
-    prisma.course.count({ where: { status: CourseStatus.DRAFT } }),
-    prisma.riskFlag.count({ where: { status: "open", resolvedAt: null } }),
-    prisma.assignmentSubmission.count({
-      where: { status: { in: [SubmissionStatus.SUBMITTED, SubmissionStatus.IN_REVIEW] } },
-    }),
-  ]);
-
-  const avgProgressByCourse = new Map(progressByCourse.map((row) => [row.courseId, Math.round(row._avg.percent ?? 0)]));
-  const completedCountByCourse = new Map(completedByCourse.map((row) => [row.courseId, row._count._all]));
-
-  const coursesChart = courseStats.map((c) => {
-    const completed = completedCountByCourse.get(c.id) ?? 0;
-    const avgProgress = avgProgressByCourse.get(c.id) ?? 0;
-    return { label: c.title, value: avgProgress, sublabel: `${completed}/${c._count.enrollments} завершили`, color: avgProgress > 75 ? "#16a34a" : avgProgress > 40 ? "#ca8a04" : "#dc2626" };
-  });
+    coursesChart,
+  } = await getAdminReportsPageData();
   const metrics = [
     {
       label: "Пользователей",

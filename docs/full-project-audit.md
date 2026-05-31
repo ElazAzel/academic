@@ -24,6 +24,17 @@ That is not the same as a fully working platform. The audit found:
 
 Current overall status: `partial`.
 
+## 2026-05-30 Boundary Cleanup Update
+
+WP3 repo-local boundary cleanup is closed for the current codebase:
+
+- Direct Prisma Client usage was removed from `app/**/page.tsx` and `components/**`.
+- Shared page queries now live in `server/modules/page-data/service.ts`.
+- `tests/unit/release-hardening-readiness.test.ts` includes a regression guard for `@/lib/prisma`, `getPrisma()` and `prisma.*` in App Router pages and UI components.
+- Playwright E2E navigation no longer uses `networkidle`; SSE-compatible waits use `domcontentloaded` plus page assertions.
+
+Status impact: architecture-boundary drift is resolved locally. The audit status remains `partial` until the full release/staging evidence is rerun and external operational items such as DPA, secret rotation and git history purge are completed through their runbooks.
+
 ## 2026-05-26 Release-hardening Baseline
 
 The active execution baseline is now `docs/release.md`.
@@ -208,7 +219,7 @@ Detailed audit: [`docs/ux-ui-2026-audit.md`](./ux-ui-2026-audit.md).
 | P1 | Media privacy | Signed-url and video-playback handlers inspect enrollment and lesson ordering. | `partial` | Test signed URL access for owner/non-owner/locked lesson and confirm bucket policy in deployed storage. |
 | P1 | Notifications | Outbox/notification code and env contract exist; cron endpoints fail closed without `CRON_SECRET`. | `partial` | Prove default `in_app` channel and explicit email opt-in on real notification events. |
 | P2 | Seed temp route | `/api/seed-temp` is production-disabled/token protected in code but remains part of public middleware route prefixes. | `partial` | Keep local-only usage explicit and ensure production tests deny it. |
-| P2 | CSP | Production CSP: `script-src 'unsafe-inline'` (без `unsafe-eval`), `connect-src 'self' https:`. | `done` | `unsafe-eval` удалён из production. `unsafe-inline` обязателен для Next.js hydration. |
+| P2 | CSP | Production CSP: nonce-based `script-src 'nonce-{uuid}' 'strict-dynamic'` (без `unsafe-inline`/`unsafe-eval`), `connect-src 'self' https:`. | `done` | Next.js получает nonce из request CSP header; `unsafe-inline` оставлен только в `style-src`. |
 | P2 | Student name masking | `done` | Имена студентов заменяются на `Слушатель #XXXXX` для не-admin ролей. Все 14 action-файлов и 6 page-файлов обновлены. |
 | P2 | Mobile adaptation | `done` | Achievements: accordion (collapsed on mobile). XP: без hover-only анимаций (touch). |
 | P2 | Metadata + loading.tsx | `done` | 105 page.tsx с русскими title/description. 84 loading.tsx с skeleton. |

@@ -3,8 +3,8 @@ import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, BookOpen, Calendar } from "lucide-react";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
 import { getSuperCuratorCohorts } from "@/server/actions/super-curator";
+import { getCourseOptions } from "@/server/modules/page-data/service";
 import { CreateCohortForm } from "./cohort-form";
 
 export const metadata = {
@@ -12,15 +12,12 @@ export const metadata = {
   description: "Управление когортами.",
 };
 
-
-const prisma = getPrisma();
-
 export const dynamic = "force-dynamic";
 
 export default async function SuperCuratorCohortsPage() {
   await requireRolePage(["super_curator", "admin"]);
   const cohorts = await getSuperCuratorCohorts();
-  const courses = await prisma.course.findMany({ select: { id: true, title: true } });
+  const courses = await getCourseOptions();
 
   return (
     <AppShell role="super_curator">

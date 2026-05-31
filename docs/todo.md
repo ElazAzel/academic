@@ -1,6 +1,6 @@
 # TODO — AI Strategic Academy
 
-Дата актуализации: 2026-05-29
+Дата актуализации: 2026-05-30
 
 ## Ближайшие задачи
 
@@ -46,6 +46,8 @@
 - [x] **Mobile adaptation** — Achievements accordion, XP touch ✅
 - [x] **GitHub Release v1.0.0** ✅
 - [x] **CHANGELOG.md** ✅
+- [x] **Prisma boundary cleanup** — direct Prisma удален из `app/**/page.tsx` и `components/**`, добавлен unit-guard ✅
+- [x] **E2E wait cleanup** — `networkidle` удален из Playwright smoke-тестов, навигация совместима с SSE ✅
 
 ## Стратегические задачи (Phase 1-4)
 

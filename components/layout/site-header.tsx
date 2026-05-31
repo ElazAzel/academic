@@ -34,7 +34,11 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-30 border-b border-m3-outline-variant/70 bg-m3-surface-container-lowest/88 shadow-[0_8px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl site-header">
       <div className="mx-auto flex h-14 md:h-16 max-w-7xl items-center justify-between px-3 md:px-6">
         {/* Logo — compact on mobile */}
-        <Link href="/" className="group flex shrink-0 items-center gap-2.5 font-semibold">
+        <Link
+          href="/"
+          aria-label="На главную AI Strategic Academy"
+          className="group flex shrink-0 items-center gap-2.5 font-semibold"
+        >
           <span className="academy-brand-mark flex h-8 w-8 items-center justify-center rounded-lg text-white md:h-9 md:w-9">
             <Icon name="school" size={20} className="md:hidden" aria-hidden />
             <Icon name="school" size={24} className="hidden md:block" aria-hidden />
@@ -73,7 +77,7 @@ export async function SiteHeader() {
             </>
           ) : (
             <Button asChild size="sm">
-              <Link href={AUTH_ROUTES.LOGIN}>
+              <Link href={AUTH_ROUTES.LOGIN} aria-label="Войти">
                 <Icon name="login" size={16} className="mr-1.5" aria-hidden />
                 <span className="hidden sm:inline">Войти</span>
               </Link>

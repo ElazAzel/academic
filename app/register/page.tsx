@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AUTH_ROUTES } from "@/lib/constants";
 
@@ -14,7 +14,7 @@ export default function RegisterPage() {
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Регистрация закрыта</CardTitle>
+          <h1 className="text-2xl font-semibold text-m3-on-surface">Регистрация закрыта</h1>
           <CardDescription>
             AI Strategic Academy работает по выданным аккаунтам. Логин и пароль выдаёт администратор академии.
           </CardDescription>

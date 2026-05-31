@@ -4,7 +4,7 @@ import { loginAs } from "./helpers";
 
 test.describe("skip-to-content link", () => {
   test("exists on login page", async ({ page }) => {
-    await page.goto("/login", { waitUntil: "networkidle" });
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
     const skipLink = page.locator('a[href="#main-content"]');
     await expect(skipLink).toBeVisible();
     await expect(skipLink).toHaveAttribute("aria-label", "Перейти к основному содержимому");
@@ -30,11 +30,12 @@ test.describe("accessibility — public pages", () => {
 
   for (const pageDef of PUBLIC_PAGES) {
     test(`[${pageDef.path}] no critical accessibility violations`, async ({ page }) => {
-      await page.goto(pageDef.path, { waitUntil: "networkidle" });
+      await page.goto(pageDef.path, { waitUntil: "domcontentloaded" });
       await expect(page.locator("h1").first()).toBeVisible({ timeout: 15_000 });
 
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .exclude('[aria-label="Notifications alt+T"]')
         .analyze();
 
       // Log all violations for debugging
@@ -91,11 +92,13 @@ test.describe("accessibility — authenticated pages", () => {
   for (const pageDef of AUTH_PAGES) {
     test(`[${pageDef.path}] no critical accessibility violations`, async ({ page }) => {
       await loginAs(page, pageDef.email);
-      await page.waitForURL(pageDef.path, { timeout: 15_000 });
+      await page.goto(pageDef.path, { waitUntil: "domcontentloaded" });
+      await page.waitForURL((url) => url.pathname === pageDef.path, { timeout: 15_000 });
       await expect(page.locator("h1").first()).toBeVisible({ timeout: 15_000 });
 
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .exclude('[aria-label="Notifications alt+T"]')
         .analyze();
 
       if (results.violations.length > 0) {

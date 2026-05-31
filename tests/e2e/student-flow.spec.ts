@@ -1,15 +1,80 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+import { getPrisma } from "@/lib/prisma";
 import { loginAs } from "./helpers";
 
-async function gotoStudentPage(page: import("@playwright/test").Page, route: string, heading = "h1") {
+async function gotoStudentPage(page: Page, route: string, heading = "h1") {
   await page.goto(route, { waitUntil: "domcontentloaded" });
   await expect(page.locator(heading).first()).toBeVisible({ timeout: 15_000 });
+}
+
+async function resetStudentQuizAttempts(email: string) {
+  const prisma = getPrisma();
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+  if (!user) throw new Error(`Test user ${email} was not found`);
+
+  await prisma.quizAttempt.deleteMany({
+    where: { userId: user.id },
+  });
+
+  return user.id;
+}
+
+function answerFromCorrectAnswer(correctAnswer: unknown) {
+  if (correctAnswer && typeof correctAnswer === "object" && !Array.isArray(correctAnswer)) {
+    const answer = correctAnswer as Record<string, unknown>;
+    if ("values" in answer) return answer.values;
+    if ("value" in answer) return answer.value;
+    if ("index" in answer) return answer.index;
+  }
+  return correctAnswer;
+}
+
+async function prepareQuizApiFixture(email: string) {
+  const prisma = getPrisma();
+  const userId = await resetStudentQuizAttempts(email);
+
+  const enrollments = await prisma.enrollment.findMany({
+    where: { userId, status: "ACTIVE" },
+    select: { courseId: true },
+  });
+  const courseIds = enrollments.map((enrollment) => enrollment.courseId);
+  if (courseIds.length === 0) throw new Error(`Test user ${email} has no active enrollments`);
+
+  const quiz = await prisma.quiz.findFirst({
+    where: {
+      questions: { some: {} },
+      OR: [
+        { courseId: { in: courseIds } },
+        { lesson: { is: { module: { is: { courseId: { in: courseIds } } } } } },
+      ],
+    },
+    include: {
+      questions: {
+        orderBy: { order: "asc" },
+        select: { id: true, correctAnswer: true },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+  if (!quiz) throw new Error(`No quiz fixture available for ${email}`);
+
+  return {
+    quizId: quiz.id,
+    answers: Object.fromEntries(
+      quiz.questions.map((question) => [question.id, answerFromCorrectAnswer(question.correctAnswer)])
+    ),
+  };
 }
 
 test.describe("student flow proof", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("course → lesson → quiz → progress", async ({ page }) => {
+    await resetStudentQuizAttempts("student1@academy.local");
+
     // ── 1. Login as student1 (has 45% progress on all courses) ────────
     await loginAs(page, "student1@academy.local");
 
@@ -65,10 +130,14 @@ test.describe("student flow proof", () => {
 
       // Wait for result phase — should show score as a percentage
       // After submission, the quiz transitions to "result" phase
-      await expect(page.getByText(/%/).or(page.getByRole("button", { name: /продолжить урок/i }))).toBeVisible({ timeout: 15_000 });
+      const quizRegion = page.getByRole("region", { name: /Тест урока/i });
+      await expect(
+        quizRegion.getByRole("button", { name: /посмотреть ответы|продолжить урок|повторить тест/i }).first()
+      ).toBeVisible({ timeout: 15_000 });
+      await expect(quizRegion.getByText(/\d+%/).first()).toBeVisible({ timeout: 5_000 });
 
       // Verify pass/fail indicator appeared
-      await expect(page.getByRole("button", { name: /посмотреть ответы/i })).toBeVisible({ timeout: 5_000 });
+      await expect(quizRegion.getByRole("button", { name: /посмотреть ответы/i })).toBeVisible({ timeout: 5_000 });
     }
 
     // ── 6. Mark lesson as completed ───────────────────────────────────
@@ -141,56 +210,26 @@ test.describe("student flow proof", () => {
   });
 
   test("quiz submission via API", async ({ page }) => {
-    // This test directly validates the quiz attempt API
+    const fixture = await prepareQuizApiFixture("student1@academy.local");
     await loginAs(page, "student1@academy.local");
 
-    // Get a lesson page with a quiz by navigating through the UI
-    await gotoStudentPage(page, "/student/my-courses");
+    const apiResult = await page.evaluate(async ({ quizId, answers }) => {
+      const response = await fetch(`/api/v1/quizzes/${quizId}/attempts`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers }),
+      });
+      return {
+        status: response.status,
+        text: await response.text(),
+      };
+    }, fixture);
 
-    // Find and click a "Продолжить" link to go to a lesson
-    const continueLink = page.locator('a[href*="/student/lessons/"]').first();
-    await expect(continueLink).toBeVisible({ timeout: 10_000 });
-    await continueLink.click();
-    await page.waitForURL(/\/student\/lessons\//);
-    await expect(page.locator("h1").first()).toBeVisible({ timeout: 10_000 });
-
-    // Look for the quiz block
-    const startQuizBtn = page.getByRole("button", { name: /начать тест/i });
-    const hasQuiz = await startQuizBtn.isVisible({ timeout: 5_000 }).catch(() => false);
-
-    if (!hasQuiz) {
-      // Navigate to second lesson of a module which has quizzes
-      // Extract current lesson ID and navigate to another URL
-      test.skip(hasQuiz === false, "No quiz found on this lesson — skipping quiz-specific test");
-      return;
-    }
-
-    await startQuizBtn.click();
-
-    // Verify quiz UI is interactive
-    await expect(page.locator('input[type="radio"]').first()).toBeVisible({ timeout: 5_000 });
-
-    // Select first option for the first question
-    const firstRadio = page.locator('input[type="radio"]').first();
-    await firstRadio.check();
-    await expect(firstRadio).toBeChecked();
-
-    // Submit the quiz
-    // Accept confirm dialog if present
-    page.once("dialog", (dialog) => {
-      dialog.accept().catch(() => {});
-    });
-    await page.getByRole("button", { name: /завершить тест/i }).click();
-
-    // Wait for the result phase — check for either score display or result actions
-    await expect(
-      page.getByRole("button", { name: /посмотреть ответы/i }).or(
-        page.getByRole("button", { name: /продолжить урок|повторить тест/i })
-      )
-    ).toBeVisible({ timeout: 15_000 });
-
-    // Verify score is shown (percentage number visible)
-    const scoreVisible = await page.getByText(/\d+%/).isVisible({ timeout: 5_000 }).catch(() => false);
-    expect(scoreVisible).toBeTruthy();
+    expect(apiResult.status, apiResult.text.slice(0, 1_000)).toBe(201);
+    const body = JSON.parse(apiResult.text);
+    const result = body.data ?? body;
+    expect(result.passed).toBe(true);
+    expect(result.grading?.score ?? result.score).toBe(100);
   });
 });

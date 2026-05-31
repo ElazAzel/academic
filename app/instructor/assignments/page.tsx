@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getInstructorAssignmentsPageData } from "@/server/modules/page-data/service";
 import Link from "next/link";
 import { createAssignmentAction } from "@/server/actions/quiz-assignment";
 
@@ -20,19 +20,8 @@ export const dynamic = "force-dynamic";
 
 export default async function InstructorAssignmentsPage() {
  const user = await requireRolePage(["instructor", "admin"]);
- const prisma = getPrisma();
 
- const assignments = await prisma.assignment.findMany({
-  where: {
-   course: { instructors: { some: { userId: user.id } } }
-  },
-  include: {
-   course: true,
-   lesson: true,
-   _count: { select: { submissions: { where: { status: "SUBMITTED" } } } }
-  },
-  orderBy: { createdAt: "desc" }
- });
+ const assignments = await getInstructorAssignmentsPageData(user.id);
 
  return (
   <AppShell role="instructor">

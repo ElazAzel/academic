@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/lms/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getAdminManagementPageData } from "@/server/modules/page-data/service";
 import { UserPlus, Users2, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import type { DashboardMetric } from "@/types/domain";
@@ -18,30 +18,12 @@ export const metadata = {
 };
 
 
-const prisma = getPrisma();
 export const dynamic = "force-dynamic";
 
 export default async function AdminManagementPage() {
   await requireRolePage(["admin"]);
 
-  const [users, cohorts, enrollments] = await Promise.all([
-    prisma.user.findMany({
-      select: {
-        id: true, name: true, email: true, status: true, createdAt: true,
-        roles: { select: { role: { select: { key: true } } } },
-        enrollments: { select: { id: true, course: { select: { title: true } }, status: true, cohort: { select: { name: true } } } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 200,
-    }),
-    prisma.cohort.findMany({
-      select: { id: true, name: true, status: true, _count: { select: { enrollments: true } } },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.enrollment.count({ where: { status: "ACTIVE" } }),
-  ]);
-
-  const totalEnrollments = enrollments;
+  const { users, cohorts, totalEnrollments } = await getAdminManagementPageData();
   const activeUsers = users.filter((user) => user.status === "ACTIVE").length;
   const blockedUsers = users.filter((user) => user.status === "BLOCKED").length;
   const activeCohorts = cohorts.filter((cohort) => cohort.status === "active").length;

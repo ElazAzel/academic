@@ -1,9 +1,8 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { maskStudentName } from "@/lib/utils";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
+import { getCuratorPopupStudents } from "@/server/modules/page-data/service";
 import { CuratorPopupClient } from "./client";
 
 export const metadata = {
@@ -12,31 +11,12 @@ export const metadata = {
 };
 
 
-const prisma = getPrisma();
-
 export const dynamic = "force-dynamic";
 
 export default async function CuratorPopupsPage() {
   const user = await requireRolePage(["curator"]);
 
-  // Get students assigned to this curator
-  const assignments = await prisma.curatorAssignment.findMany({
-    where: { curatorId: user.id, active: true },
-    select: {
-      studentId: true,
-      student: { select: { id: true, name: true, email: true } },
-      cohort: { select: { id: true, name: true, course: { select: { title: true } } } },
-    },
-    orderBy: { assignedAt: "desc" },
-  });
-
-  const students = assignments.map((a) => ({
-    id: a.student.id,
-    name: maskStudentName(a.student.id),
-    email: a.student.email,
-    cohortName: a.cohort.name,
-    courseTitle: a.cohort.course?.title ?? "",
-  }));
+  const students = await getCuratorPopupStudents(user.id);
 
   return (
     <AppShell role="curator">

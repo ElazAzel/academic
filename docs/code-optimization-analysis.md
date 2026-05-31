@@ -92,7 +92,7 @@ const user = await prisma.user.findUnique({
 | Проблема | Статус |
 |---|---|
 | Supabase password в git history (`__dbcheck.mjs`) | ⚠️ Требуется ротация |
-| CSP с `'unsafe-inline'` | ✅ Необходимо для App Router |
+| CSP scripts без `'unsafe-inline'` | ✅ Nonce-based `script-src`; `'unsafe-inline'` остаётся только для `style-src` |
 | CSRF guard в proxy.ts | ✅ Работает |
 | Argon2id | ✅ |
 | RBAC через requirePermission / requireRolePage | ✅ |

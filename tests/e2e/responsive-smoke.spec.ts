@@ -82,12 +82,12 @@ test.describe("responsive smoke — login form", () => {
   for (const vp of VIEWPORTS) {
     test(`[${vp.label}] login form — input fills and submit works`, async ({ page }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto("/login", { waitUntil: "networkidle" });
+      await page.goto("/login", { waitUntil: "domcontentloaded" });
 
       // Form fields should be visible at all viewports
-      const emailInput = page.locator('input[name="email"]');
-      const passwordInput = page.locator('input[name="password"]');
-      const submitBtn = page.locator('button[type="submit"]');
+      const emailInput = page.locator('input[name="email"]:visible');
+      const passwordInput = page.locator('input[name="password"]:visible');
+      const submitBtn = page.locator('button[type="submit"]:not([disabled]):visible');
 
       await expect(emailInput).toBeVisible({ timeout: 10_000 });
       await expect(passwordInput).toBeVisible();

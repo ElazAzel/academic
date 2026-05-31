@@ -2,6 +2,37 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-31 — WCAG viewport zoom cleanup
+
+**Что сделано:**
+- Убран `maximumScale: 1` из `viewport` в `app/layout.tsx`, чтобы мобильные браузеры не запрещали пользовательское масштабирование.
+- Это закрывает повторяющийся axe-warning `meta-viewport (moderate): Zooming and scaling must not be disabled` в accessibility smoke.
+
+**Проверка:**
+- `npx playwright test tests/e2e/accessibility-smoke.spec.ts --project=mobile --reporter=line`
+- `npm run verify`
+
+## 2026-05-30 — Release v1 boundary cleanup
+
+**Что сделано:**
+- Вынесены прямые Prisma-запросы из `app/**/page.tsx` и `components/**` в `server/modules/page-data/service.ts`.
+- Добавлен unit-guard, запрещающий `@/lib/prisma`, `getPrisma()` и `prisma.*` в App Router pages и UI-компонентах.
+- Playwright E2E больше не использует `networkidle`; навигация переведена на `domcontentloaded`, чтобы SSE не блокировал тесты.
+- Убран `nonce` с `<body>` в `app/layout.tsx`: Next.js получает nonce из request CSP header, а body-атрибут создавал dev hydration mismatch.
+- Входные анимации карточек больше не уменьшают opacity текста, чтобы axe/WCAG не ловил transient color-contrast нарушения.
+- Мобильная шапка получила явные accessible names для ссылок логотипа и входа, чтобы иконки без видимого текста не нарушали `link-name` в axe.
+- E2E `student-flow` стабилизирован: логин-хелпер больше не принимает промежуточные `/api/auth/*` URL за успешный вход, quiz-попытки тестового студента сбрасываются перед проверкой, а authenticated quiz POST явно отправляет `credentials: "same-origin"`.
+- Документы релизной готовности синхронизированы: repo-local v1 gate отделен от внешних runbook-задач DPA, ротации секретов и git purge.
+
+**Проверка:**
+- `rg "@/lib/prisma|lib/prisma|getPrisma\\(|prisma\\." app components -g page.tsx -g *.tsx`
+- `rg "networkidle" tests/e2e -g *.ts`
+- `npx playwright test tests/e2e/accessibility-smoke.spec.ts --project=mobile --reporter=line`
+- `npx playwright test tests/e2e/student-flow.spec.ts -g "quiz submission via API" --project=mobile --reporter=line`
+- `npx playwright test tests/e2e/student-flow.spec.ts --project=chromium --project=mobile --reporter=line`
+- `npm run test:e2e` — 246/246 passed
+- `npm run verify` — banned patterns, ESLint, typecheck, 466 unit-тестов и production build passed
+
 ## 2026-05-30 — Font optimization, Virtual list, Prisma N+1 fix
 
 **Что сделано:**
@@ -95,8 +126,8 @@
 - **CSP перемещён из `next.config.ts` в `proxy.ts`**: `Content-Security-Policy` header теперь устанавливается в middleware per-request, а не статически в конфиге.
 - **Nonce-based script-src**: В `script-src` используется `'nonce-{uuid}' 'strict-dynamic'` вместо `'unsafe-inline'` в production. В dev — добавлен `'unsafe-eval'` для HMR.
 - **Генерация nonce**: `crypto.randomUUID()` на каждый запрос в proxy.ts.
-- **Root layout**: `app/layout.tsx` async, читает `x-nonce` request header (устанавливается в proxy.ts через `NextResponse.next({ request: { headers } })`).
-- **Nonce propagation**: Next.js 16 извлекает nonce из `Content-Security-Policy` request header во время SSR (парсит `'nonce-{value}'` в script-src). Nonce автоматически добавляется ко всем framework-скриптам и page-бандлам. `<body nonce={nonce}>` остаётся для ручных `<Script>` компонентов.
+- **Root layout**: `app/layout.tsx` не читает `x-nonce` и не рендерит `nonce` на `<body>`, чтобы не создавать React hydration mismatch.
+- **Nonce propagation**: Next.js 16 извлекает nonce из `Content-Security-Policy` request header во время SSR (парсит `'nonce-{value}'` в script-src). Nonce автоматически добавляется ко всем framework-скриптам и page-бандлам.
 - **Fix CSP in production**: Ранее CSP устанавливался только в response headers. Next.js не читает `x-csp-nonce` response header — ему нужен CSP в request headers. Добавлены `nextWithCsp()` (CSP на request + response) и `redirectWithCsp()` (только response).
 - **Все page-ответы**: CSP headers применяются ко всем `NextResponse.next()` и `NextResponse.redirect()` в proxy. API JSON-ответы не получают CSP (не требуется).
 - **Политика**: `default-src 'self'`, `img-src` включает `https: http:` для внешних изображений, `frame-src` только YouTube/Vimeo, `connect-src` ограничен `self` + `wss:` в production. `unsafe-inline` в `style-src` оставлен для shadcn/ui.

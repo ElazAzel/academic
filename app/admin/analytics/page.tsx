@@ -6,13 +6,11 @@ import { BarChart, DonutChart } from "@/components/lms/bar-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { Icon } from "@/components/ui/icon";
-import { QUERY_LIMITS } from "@/lib/query-limits";
 import type { DashboardMetric } from "@/types/domain";
-import { ProgressStatus, UserAccountStatus } from "@prisma/client";
 import { requireRolePage } from "@/lib/auth/page-guards";
-import { getPrisma } from "@/lib/prisma";
 import { getAdminStudentAnalytics } from "@/server/actions/dashboard";
 import { getActivityAnalytics } from "@/server/actions/activity-analytics";
+import { getAdminAnalyticsPageData } from "@/server/modules/page-data/service";
 import { ActivityFilters } from "@/components/admin/activity-filters";
 import { VisitAnalyticsBlock } from "@/components/admin/visit-analytics-block";
 import { Suspense } from "react";
@@ -130,79 +128,20 @@ async function VisitTabWrapper(props: { searchParams?: Promise<{ days?: string; 
 
 export default async function AdminAnalyticsPage(props: { searchParams?: Promise<{ days?: string; cohortId?: string; courseId?: string }> }) {
   await requireRolePage(["admin"]);
-  const prisma = getPrisma();
 
-  const [
+  const {
     activeUsersCount,
-    avgProgressAgg,
     completedCount,
     certsCount,
-    coursesDb,
     totalUsers,
-    usersByStatus,
+    activeFromStatus,
+    inactiveFromStatus,
     recentUsers,
     roleGroups,
-  ] = await Promise.all([
-    prisma.user.count({ where: { status: UserAccountStatus.ACTIVE } }),
-    prisma.courseProgress.aggregate({ _avg: { percent: true } }),
-    prisma.courseProgress.count({ where: { status: ProgressStatus.COMPLETED } }),
-    prisma.certificate.count(),
-    prisma.course.findMany({
-      orderBy: { title: "asc" },
-      take: QUERY_LIMITS.reportSummaryCourses,
-      include: {
-        _count: { select: { enrollments: true } },
-      }
-    }),
-    prisma.user.count(),
-    prisma.user.groupBy({
-      by: ["status"],
-      _count: { _all: true },
-    }),
-    prisma.user.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      select: { name: true, email: true, status: true, createdAt: true },
-    }),
-    prisma.userRole.groupBy({
-      by: ["roleId"],
-      _count: { _all: true },
-      orderBy: { _count: { userId: "desc" } },
-      take: 10,
-    }),
-  ]);
-
-  const roleIds = roleGroups.map((r) => r.roleId);
-  const roles = roleIds.length > 0 ? await prisma.role.findMany({
-    where: { id: { in: roleIds } },
-    select: { id: true, name: true },
-  }) : [];
-  const roleMap = new Map(roles.map((r) => [r.id, r]));
-  const courseIds = coursesDb.map((course) => course.id);
-  const [courseProgressAverages, courseCompletedCounts] = courseIds.length > 0
-    ? await Promise.all([
-        prisma.courseProgress.groupBy({
-          by: ["courseId"],
-          where: { courseId: { in: courseIds } },
-          _avg: { percent: true },
-        }),
-        prisma.courseProgress.groupBy({
-          by: ["courseId"],
-          where: { courseId: { in: courseIds }, status: ProgressStatus.COMPLETED },
-          _count: { _all: true },
-        }),
-      ])
-    : [[], []] as const;
-  const avgProgressByCourse = new Map(
-    courseProgressAverages.map((row) => [row.courseId, Math.round(row._avg.percent ?? 0)]),
-  );
-  const completedByCourse = new Map(
-    courseCompletedCounts.map((row) => [row.courseId, row._count._all]),
-  );
-
-  const activeFromStatus = usersByStatus.find((u) => u.status === UserAccountStatus.ACTIVE)?._count._all ?? 0;
-  const inactiveFromStatus = usersByStatus.find((u) => u.status === UserAccountStatus.INACTIVE)?._count._all ?? 0;
-  const avgProgress = Math.round(avgProgressAgg._avg.percent ?? 0);
+    avgProgress,
+    courseStats,
+    bestCourse,
+  } = await getAdminAnalyticsPageData();
 
   const metrics: DashboardMetric[] = [
     {
@@ -216,7 +155,7 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
       label: "Средний прогресс",
       value: `${avgProgress}%`,
       tone: avgProgress >= 70 ? "success" : avgProgress >= 40 ? "warning" : "danger",
-      detail: `${courseIds.length} курсов в срезе`,
+      detail: `${courseStats.length} курсов в срезе`,
     },
     {
       label: "Завершивших курс",
@@ -231,15 +170,6 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
       detail: `${activeFromStatus} активных по статусу`,
     },
   ];
-
-  const courseStats = coursesDb.map(c => {
-    const enrollments = c._count.enrollments;
-    const completed = completedByCourse.get(c.id) ?? 0;
-    const avgProgress = avgProgressByCourse.get(c.id) ?? 0;
-    return { title: c.title, enrolled: enrollments, completed, avgProgress };
-  });
-
-  const bestCourse = [...courseStats].sort((a, b) => b.avgProgress - a.avgProgress)[0];
 
   return (
     <AppShell role="admin">
@@ -314,8 +244,8 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
                   <CardContent>
                     <BarChart
                       items={roleGroups.map((rg) => ({
-                        label: roleMap.get(rg.roleId)?.name ?? rg.roleId,
-                        value: rg._count._all,
+                        label: rg.name,
+                        value: rg.count,
                       }))}
                     />
                   </CardContent>
@@ -344,8 +274,8 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
                         recentUsers.map((u) => (
                           <div key={u.email} className="flex items-center justify-between font-body-sm text-body-sm">
                             <span className="truncate max-w-[120px] text-m3-on-surface">{u.name ?? u.email}</span>
-                            <span className={u.status === UserAccountStatus.ACTIVE ? "text-m3-primary" : "text-m3-error"}>
-                              {u.status === UserAccountStatus.ACTIVE ? "Активен" : u.status === UserAccountStatus.INACTIVE ? "Неактивен" : u.status === UserAccountStatus.BLOCKED ? "Заблокирован" : "Удален"}
+                            <span className={u.status === "ACTIVE" ? "text-m3-primary" : "text-m3-error"}>
+                              {u.status === "ACTIVE" ? "Активен" : u.status === "INACTIVE" ? "Неактивен" : u.status === "BLOCKED" ? "Заблокирован" : "Удален"}
                             </span>
                           </div>
                         ))
