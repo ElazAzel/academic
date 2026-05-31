@@ -4,6 +4,7 @@ import { Prisma, EnrollmentStatus } from "@prisma/client";
 import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
 import { awardXp } from "@/server/actions/xp";
+import { checkAndAward } from "@/server/modules/gamification/achievements";
 
 const prisma = getPrisma();
 
@@ -92,6 +93,12 @@ export async function submitAssignment(input: {
     xpResult = await awardXp(input.userId, "assignment_submit");
   } catch (err) {
     console.error("Failed to award assignment XP:", err);
+  }
+
+  try {
+    await checkAndAward(input.userId, "assignment_submit");
+  } catch (err) {
+    console.error("Failed to check achievements for assignment:", err);
   }
 
   await logAudit({

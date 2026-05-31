@@ -3,6 +3,8 @@ import { requireUser } from "@/lib/auth/session";
 import { progressSchema } from "@/lib/validation";
 import { getProgressSnapshot, markLessonProgress } from "@/server/modules/progress/service";
 import { awardXp } from "@/server/actions/xp";
+import { checkAndAward } from "@/server/modules/gamification/achievements";
+import { recordStreakActivity } from "@/server/modules/gamification/streak";
 
 export async function GET() {
   try {
@@ -24,6 +26,8 @@ export async function POST(request: Request) {
     let xpResult = null;
     if (lessonCompleted) {
       xpResult = await awardXp(user.id, "lesson_complete");
+      await recordStreakActivity(user.id);
+      await checkAndAward(user.id, "lesson_complete");
     }
 
     return ok({ ...result, xp: xpResult });

@@ -7,6 +7,7 @@ import { toJsonValue } from "@/lib/json";
 import { logAudit } from "@/server/modules/audit/service";
 import { markLessonProgress } from "@/server/modules/progress/service";
 import { awardXp } from "@/server/actions/xp";
+import { checkAndAward } from "@/server/modules/gamification/achievements";
 import {
   canReadCourseAnswerKeys,
   quizReadWhereForActor,
@@ -283,6 +284,15 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
     xpResult = await awardXp(userId, result.passed ? "quiz_pass" : "quiz_attempt");
   } catch (err) {
     console.error("Failed to award quiz XP:", err);
+  }
+
+  try {
+    await checkAndAward(userId, result.passed ? "quiz_pass" : "lesson_complete");
+    if (result.passed && result.earned === result.total) {
+      await checkAndAward(userId, "quiz_perfect");
+    }
+  } catch (err) {
+    console.error("Failed to check achievements for quiz:", err);
   }
 
   if (result.passed && quiz.lessonId) {
