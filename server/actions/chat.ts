@@ -116,7 +116,7 @@ export async function getConversation(studentId: string, lessonId?: string) {
   try {
     const parsed = GetConversationSchema.safeParse({ studentId, lessonId });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const user = await requireRole(["curator", "super_curator", "admin", "student"]);

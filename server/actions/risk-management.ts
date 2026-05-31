@@ -30,7 +30,7 @@ export async function getRiskOverview(filters?: {
   try {
     const parsed = GetRiskOverviewSchema.safeParse(filters ?? {});
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const actor = await requireRole(["super_curator", "admin"]);

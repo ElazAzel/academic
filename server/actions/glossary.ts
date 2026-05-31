@@ -17,7 +17,7 @@ export async function getGlossaryEntries(search?: string) {
   try {
     const parsed = GetGlossaryEntriesSchema.safeParse({ search });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     await requireRole(["curator", "super_curator", "admin"]);

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
+import { ApiError } from "@/lib/http";
 import crypto from "crypto";
 
 const prisma = getPrisma();
@@ -19,7 +20,7 @@ export async function uploadLessonMediaAction(lessonId: string, type: string, fi
   try {
     const parsed = UploadLessonMediaActionSchema.safeParse({ lessonId, type, fileUrl, filename });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const actor = await requireRole(["admin", "instructor"]);

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { maskStudentName } from "@/lib/utils";
 import { getPrisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/session";
+import { ApiError } from "@/lib/http";
 
 export interface LessonAttendanceRow {
   lessonId: string;
@@ -36,7 +37,7 @@ export async function getCourseAttendance(courseId: string): Promise<LessonAtten
   try {
     const parsed = GetCourseAttendanceSchema.safeParse({ courseId });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     await requireUser("courses:read");
@@ -103,7 +104,7 @@ export async function getLessonAttendanceDetail(lessonId: string): Promise<Stude
   try {
     const parsed = GetLessonAttendanceDetailSchema.safeParse({ lessonId });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     await requireUser("courses:read");

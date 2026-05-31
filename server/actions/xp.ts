@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { getPrisma } from "@/lib/prisma";
+import { ApiError } from "@/lib/http";
 
 const XP_LESSON_COMPLETE = 50;
 const XP_QUIZ_PASS = 30;
@@ -22,7 +23,7 @@ export async function awardXp(userId: string, action: XpAction): Promise<{ xp: n
   try {
     const parsed = AwardXpSchema.safeParse({ userId, action });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const earned = getXpForAction(action);
@@ -65,7 +66,7 @@ export async function getUserXp(userId: string): Promise<number> {
   try {
     const parsed = GetUserXpSchema.safeParse({ userId });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const user = await getPrisma().user.findUnique({

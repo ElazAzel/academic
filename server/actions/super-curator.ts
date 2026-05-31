@@ -171,7 +171,7 @@ export async function getCohortDetail(cohortId: string) {
   try {
     const parsed = GetCohortDetailSchema.safeParse({ cohortId });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const actor = await requireRole(["super_curator", "admin"]);
@@ -500,7 +500,7 @@ export async function getCuratorActivity(curatorId: string) {
   try {
     const parsed = GetCuratorActivitySchema.safeParse({ curatorId });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const actor = await requireRole(["super_curator", "admin"]);

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { getPrisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -79,7 +80,7 @@ export async function getVisitAnalytics(
   try {
     const parsed = GetVisitAnalyticsSchema.safeParse({ days, roleFilter });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const maxDays = Math.min(Math.max(days, 1), 180);
@@ -207,7 +208,7 @@ export async function getUserVisitDetail(
   try {
     const parsed = GetUserVisitDetailSchema.safeParse({ userId, days });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const maxDays = Math.min(Math.max(days, 1), 180);
@@ -219,7 +220,7 @@ export async function getUserVisitDetail(
       select: { id: true, name: true },
     });
     if (!user) {
-      throw new Error("Пользователь не найден");
+      throw new ApiError("not_found", "Пользователь не найден", 404);
     }
 
     const sessions = await prisma.userSession.findMany({
@@ -291,7 +292,7 @@ export async function getTimingAnalytics(days = 30): Promise<TimingAnalytics> {
   try {
     const parsed = GetTimingAnalyticsSchema.safeParse({ days });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const maxDays = Math.min(Math.max(days, 1), 180);

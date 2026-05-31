@@ -33,7 +33,7 @@ export async function generateReportAction(projectId: string, type: string) {
   try {
     const parsed = GenerateReportActionSchema.safeParse({ projectId, type });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const actor = await requireRole(["admin", "instructor", "super_curator", "customer_observer"]);
@@ -73,7 +73,7 @@ export async function createRiskFlagAction(userId: string, type: string, courseI
   try {
     const parsed = CreateRiskFlagActionSchema.safeParse({ userId, type, courseId, cohortId });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const actor = await requireRole(["admin", "super_curator", "curator"]);
@@ -114,7 +114,7 @@ export async function resolveRiskFlagAction(flagId: string) {
   try {
     const parsed = ResolveRiskFlagActionSchema.safeParse({ flagId });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const actor = await requireRole(["admin", "super_curator", "curator"]);

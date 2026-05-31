@@ -2,6 +2,17 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-31 — Hardening Server Action Boundaries and RBAC Exceptions
+
+**Что сделано:**
+- Проведен тотальный аудит и рефакторинг обработчиков исключений (Exceptions) на границах Next.js Server Actions и в централизованных проверках прав доступа (RBAC).
+- Обычные исключения `new Error` заменены на типизированные `ApiError` с правильными HTTP-кодами (`401 Unauthorized`, `403 Forbidden`, `422 Unprocessable Entity`) во всех ключевых файлах Server Actions (`analytics.ts`, `attendance.ts`, `chat.ts`, `curator.ts`, `files.ts`, `glossary.ts`, `risk-management.ts`, `super-curator.ts`, `visit-analytics.ts`, `xp.ts`, `activity-analytics.ts`).
+- Обеспечено безопасное прохождение и отображение детальных русскоязычных сообщений об ошибках на стороне клиента вместо маскирования их стандартными Next.js-ошибками в production.
+- Выполнен полный цикл верификации: banned-patterns, ESLint, TypeScript-проверка типов (`tsc --noEmit`), Vitest-тесты и Next.js production build завершились с абсолютным успехом.
+
+**Проверка:**
+- `npm run verify`
+
 ## 2026-05-31 — WCAG viewport zoom cleanup
 
 **Что сделано:**

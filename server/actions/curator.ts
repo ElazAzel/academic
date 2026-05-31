@@ -219,7 +219,7 @@ export async function getSubmissionDetail(submissionId: string) {
   try {
     const parsed = GetSubmissionDetailSchema.safeParse({ submissionId });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     const actor = await requireRole(["curator", "super_curator", "admin"]);

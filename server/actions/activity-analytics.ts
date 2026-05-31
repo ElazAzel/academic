@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -17,7 +18,7 @@ export async function getActivityAnalytics(days = 30, cohortId?: string, courseI
   try {
     const parsed = GetActivityAnalyticsSchema.safeParse({ days, cohortId, courseId });
     if (!parsed.success) {
-      throw new Error(parsed.error.errors[0]?.message || "Ошибка валидации");
+      throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
     await requireRole(["admin", "super_curator"]);
