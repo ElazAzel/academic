@@ -4,6 +4,7 @@ import { useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import type { LessonVideo } from "@/types/domain";
+import { HlsPlayer } from "./hls-player";
 
 export interface VideoBlockProps {
   video?: LessonVideo;
@@ -231,6 +232,8 @@ export function VideoBlock({ video, videoUrl, title, duration, onProgress, showW
     : null;
 
   const isPrivate = resolvedVideo?.isPrivate ?? false;
+  const isUpload = resolvedVideo?.provider === "upload";
+  const isHls = isUpload && (resolvedVideo?.providerVideoId?.endsWith(".m3u8") ?? false);
   const canWatch = !isPrivate || !!session?.user;
 
   useYouTubePlayer(
@@ -254,7 +257,20 @@ export function VideoBlock({ video, videoUrl, title, duration, onProgress, showW
     <div className="overflow-hidden rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft transition-all duration-200 ease-in-out hover:shadow-m3-soft-hover">
       <div className="relative aspect-video bg-m3-surface-container-high">
         {canWatch ? (
-          useIFrameAPI ? (
+          isUpload ? (
+            isHls ? (
+              <HlsPlayer url={resolvedVideo!.providerVideoId} />
+            ) : (
+              <video
+                src={resolvedVideo!.providerVideoId}
+                controls
+                className="absolute inset-0 h-full w-full"
+                playsInline
+              >
+                <track kind="captions" />
+              </video>
+            )
+          ) : useIFrameAPI ? (
             <div ref={playerContainerRef} className="absolute inset-0" />
           ) : plainEmbedUrl ? (
             <iframe

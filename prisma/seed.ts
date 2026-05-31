@@ -1,6 +1,7 @@
 import { RoleKey, CourseStatus, LessonType, QuestionType } from "@prisma/client";
 import { getPrisma } from "../lib/prisma";
 import { hashPassword } from "../lib/auth/password";
+import { ACHIEVEMENT_DEFS } from "../server/modules/gamification/achievements";
 
 const prisma = getPrisma();
 
@@ -341,6 +342,21 @@ async function main() {
       metadata: { courses: 3, students: 10, observer: observer.email }
     }
   });
+
+  await prisma.achievement.deleteMany();
+  for (const def of ACHIEVEMENT_DEFS) {
+    await prisma.achievement.create({
+      data: {
+        slug: def.slug,
+        title: def.title,
+        description: def.description,
+        icon: def.icon,
+        xpReward: def.xpReward,
+        sortOrder: def.sortOrder,
+      },
+    });
+  }
+  console.log(`Seeded ${ACHIEVEMENT_DEFS.length} achievements`);
 }
 
 main()

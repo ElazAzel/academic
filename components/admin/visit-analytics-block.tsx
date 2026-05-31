@@ -1,4 +1,4 @@
-import { BarChart } from "@/components/lms/bar-chart";
+import { VisitBarChart } from "@/components/charts/visit-bar-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { getVisitAnalytics, getTimingAnalytics, type VisitAnalytics, type TimingAnalytics } from "@/server/actions/visit-analytics";
@@ -124,8 +124,8 @@ export async function VisitAnalyticsBlock({
           <CardTitle className="font-label-lg text-label-lg text-m3-on-surface">По ролям</CardTitle>
         </CardHeader>
         <CardContent>
-          <BarChart
-            items={visitData.byRole.map((r) => ({
+          <VisitBarChart
+            data={visitData.byRole.map((r) => ({
               label: r.role === "admin" ? "Администраторы"
                 : r.role === "super_curator" ? "Супер-кураторы"
                 : r.role === "curator" ? "Кураторы"
@@ -149,8 +149,8 @@ export async function VisitAnalyticsBlock({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <BarChart
-            items={visitData.hourlyDistribution.map((h) => ({
+          <VisitBarChart
+            data={visitData.hourlyDistribution.map((h) => ({
               label: HourLabel(h.hour),
               value: h.count,
               color: h.count > 0 ? "#2563eb" : "#e2e8f0",
@@ -168,8 +168,8 @@ export async function VisitAnalyticsBlock({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <BarChart
-            items={visitData.timeSlotDistribution.map((s) => ({
+          <VisitBarChart
+            data={visitData.timeSlotDistribution.map((s) => ({
               label: SLOT_LABELS[s.slot] ?? s.slot,
               value: s.count,
             }))}
@@ -186,8 +186,8 @@ export async function VisitAnalyticsBlock({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <BarChart
-            items={visitData.dailyVisits.map((d) => ({
+          <VisitBarChart
+            data={visitData.dailyVisits.map((d) => ({
               label: d.date,
               value: d.users,
               sublabel: `${d.sessions} сессий`,
@@ -210,8 +210,8 @@ export async function VisitAnalyticsBlock({
             <h4 className="font-label-md text-label-md text-m3-on-surface mb-3 flex items-center gap-2">
               <Icon name="chat" className="text-[18px]" /> Сообщения
             </h4>
-            <BarChart
-              items={timingData.messagesByHour.map((m) => ({
+            <VisitBarChart
+              data={timingData.messagesByHour.map((m) => ({
                 label: HourLabel(m.hour),
                 value: m.student + m.curator,
                 sublabel: `${m.student} студенты · ${m.curator} кураторы`,
@@ -222,8 +222,8 @@ export async function VisitAnalyticsBlock({
             <h4 className="font-label-md text-label-md text-m3-on-surface mb-3 flex items-center gap-2">
               <Icon name="school" className="text-[18px]" /> Занятия
             </h4>
-            <BarChart
-              items={timingData.lessonsByHour.map((l) => ({
+            <VisitBarChart
+              data={timingData.lessonsByHour.map((l) => ({
                 label: HourLabel(l.hour),
                 value: l.count,
               }))}
@@ -233,8 +233,8 @@ export async function VisitAnalyticsBlock({
             <h4 className="font-label-md text-label-md text-m3-on-surface mb-3 flex items-center gap-2">
               <Icon name="quiz" className="text-[18px]" /> Тесты
             </h4>
-            <BarChart
-              items={timingData.quizzesByHour.map((q) => ({
+            <VisitBarChart
+              data={timingData.quizzesByHour.map((q) => ({
                 label: HourLabel(q.hour),
                 value: q.count,
               }))}

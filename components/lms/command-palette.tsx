@@ -23,10 +23,16 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResultsData>({ courses: [], lessons: [], users: [] });
-  const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState(false);
-  const [showSearchResults, setShowSearchResults] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [debouncedQuery] = useDebounceValue(query, SEARCH_DEBOUNCE_MS);
+  const isSearching = debouncedQuery.trim().length > 0
+    && searchResults.courses.length === 0
+    && searchResults.lessons.length === 0
+    && searchResults.users.length === 0
+    && !searchError;
+  const showSearchResults = debouncedQuery.trim().length > 0;
 
   useEffect(() => {
     if (open && inputRef.current) {
@@ -87,23 +93,14 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, filtered, handleSelect, showSearchResults, isSearching, searchError, searchResults]);
 
-  const [debouncedQuery] = useDebounceValue(query, SEARCH_DEBOUNCE_MS);
-
   const isAdmin = roles.includes("admin");
 
   useEffect(() => {
     const controller = new AbortController();
 
     if (!debouncedQuery.trim()) {
-      setSearchResults({ courses: [], lessons: [], users: [] });
-      setShowSearchResults(false);
-      setSearchError(false);
       return;
     }
-
-    setShowSearchResults(true);
-    setIsSearching(true);
-    setSearchError(false);
 
     fetch(`/api/v1/search?q=${encodeURIComponent(debouncedQuery)}`, { signal: controller.signal })
       .then((res) => {
@@ -112,12 +109,10 @@ export function CommandPalette() {
       })
       .then((data) => {
         setSearchResults(data);
-        setIsSearching(false);
       })
       .catch((err) => {
         if (err.name === 'AbortError') return;
         setSearchError(true);
-        setIsSearching(false);
       });
 
     return () => controller.abort();

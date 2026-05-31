@@ -2,6 +2,39 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-05-31 — Task 3.4-3.5: Ачивки/Streak/Лидерборд в XpCenterModal, финальный verify
+
+**Что сделано:**
+- `server/actions/gamification.ts` — Server Action для параллельной загрузки ачивок, streak, тепловой карты
+- `components/lms/xp-center-modal.tsx` — реструктурирован с Tabs: 4 вкладки (Прогресс, Ачивки, Streak, Топ)
+- Вкладка «Ачивки» рендерит `AchievementsGrid`, «Streak» — `StreakWidget`, «Топ» — `LeaderboardPanel`
+- Исправлен `react-hooks/set-state-in-effect` в `command-palette.tsx`: `isSearching` сделан производным, setState вынесен в async-колбэки
+- Все 3 плана завершены: 15/15 задач
+
+**Проверка:**
+- `npm run verify` — banned-patterns ✅, lint 0 errors ✅, typecheck ✅, 466/466 tests ✅, build (87 routes) ✅
+
+**Новые файлы:**
+- `server/actions/gamification.ts` — Server Action
+
+**Изменённые файлы:**
+- `components/lms/xp-center-modal.tsx` — 4 вкладки геймификации
+- `components/lms/command-palette.tsx` — фикс set-state-in-effect
+
+## 2026-05-31 — Task 1.2: recharts вместо самодельных BarChart/DonutChart
+
+**Что сделано:**
+- Созданы 3 recharts-компонента в `components/charts/`:
+  - `activity-area-chart.tsx` — AreaChart для временных рядов
+  - `visit-bar-chart.tsx` — BarChart с per-bar цветом, sublabel в tooltip
+  - `distribution-pie-chart.tsx` — Donut-диаграмма с Legend
+- `components/admin/visit-analytics-block.tsx` переписан: 7 графиков заменены с `<BarChart items={}>` на `<VisitBarChart data={}>`
+- Старый `components/lms/bar-chart.tsx` пока сохранён — используется в 9 других страницах (admin, curator, instructor, super-curator, customer-observer reports/analytics)
+
+**Проверка:**
+- `npm run typecheck` ✅
+- `npm run lint` ✅ (0 новых ошибок)
+
 ## 2026-05-31 — Установка библиотек: recharts, usehooks-ts, nuqs, vaul, hls.js
 
 **Что сделано:**
