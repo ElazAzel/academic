@@ -271,6 +271,8 @@ model User {
   learningPathEnrollments    LearningPathEnrollment[]
   discussionPosts            DiscussionPost[]
   scormLaunches              ScormLaunch[]
+  userAchievements           UserAchievement[]
+  dailyActivities            DailyActivity[]
 
   @@map("users")
 }
@@ -1360,4 +1362,48 @@ model XapiStatement {
 
   @@index([userId])
   @@map("xapi_statements")
+}
+
+// ── Gamification (Phase 2) ──────────────────────────────────────────────
+
+model Achievement {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  icon        String
+  xpReward    Int      @default(0)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  achievedAt    DateTime    @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@map("user_achievements")
+}
+
+model DailyActivity {
+  id       String   @id @default(cuid())
+  userId   String
+  date     DateTime @map("date")
+  xpEarned Int      @default(0)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@map("daily_activities")
 }
