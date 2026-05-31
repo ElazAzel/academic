@@ -147,7 +147,7 @@ export function CommandPalette() {
                   ) : (
                     <div className="space-y-3">
                       {searchResults.courses.length > 0 && (
-                        <SectionGroup title="Курсы" icon={BookOpen}>
+                        <SectionGroup title="Курсы" icon={GraduationCap}>
                           {searchResults.courses.map((course) => (
                             <SearchItem
                               key={course.id}
@@ -159,7 +159,7 @@ export function CommandPalette() {
                         </SectionGroup>
                       )}
                       {searchResults.lessons.length > 0 && (
-                        <SectionGroup title="Уроки" icon={GraduationCap}>
+                        <SectionGroup title="Уроки" icon={BookOpen}>
                           {searchResults.lessons.map((lesson) => (
                             <SearchItem
                               key={lesson.id}
@@ -170,7 +170,7 @@ export function CommandPalette() {
                           ))}
                         </SectionGroup>
                       )}
-                      {searchResults.users.length > 0 && (
+                      {isAdmin && searchResults.users.length > 0 && (
                         <SectionGroup title="Пользователи" icon={User}>
                           {searchResults.users.map((user) => (
                             <SearchItem
