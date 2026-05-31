@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { Pencil, FileQuestion, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LessonBlockEditor } from "@/components/lms/lesson-block-editor";
 import { QuizCreator } from "@/components/lms/quiz-creator";
@@ -97,23 +99,65 @@ export function LessonEditor({
       </div>
 
       {/* Quiz / Assignment toolbar */}
-      <div className="flex flex-wrap gap-2 border-t pt-4">
+      <div className="space-y-4 border-t pt-4">
         {(lesson.quizzes?.length ?? 0) > 0 && (
-          <div className="w-full mb-2">
-            <p className="text-xs text-muted-foreground mb-1">Тесты в уроке: {(lesson.quizzes ?? []).map((q) => q.title).join(", ")}</p>
+          <div className="w-full space-y-2">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Тесты в уроке</p>
+            <div className="space-y-1.5">
+              {(lesson.quizzes ?? []).map((q) => (
+                <div key={q.id} className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileQuestion className="h-4 w-4 text-primary shrink-0" />
+                    <span className="font-medium truncate">{q.title}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">(Попыток: {q.maxAttempts}, {q.passThreshold}%)</span>
+                  </div>
+                  <Link
+                    href={`/instructor/quizzes/${q.id}/edit`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium shrink-0 ml-2"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    Редактировать
+                  </Link>
+                </div>
+              ))}
+            </div>
           </div>
         )}
-        <Button size="sm" variant="secondary" onClick={() => setShowQuizCreator(!showQuizCreator)}>
-          {showQuizCreator ? "Закрыть" : "Добавить тест"}
-        </Button>
+        
         {(lesson.assignments?.length ?? 0) > 0 && (
-          <div className="w-full mb-2">
-            <p className="text-xs text-muted-foreground mb-1">Задания в уроке: {(lesson.assignments ?? []).map((a) => a.title).join(", ")}</p>
+          <div className="w-full space-y-2">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Задания в уроке</p>
+            <div className="space-y-1.5">
+              {(lesson.assignments ?? []).map((a) => (
+                <div key={a.id} className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="h-4 w-4 text-primary shrink-0" />
+                    <span className="font-medium truncate">{a.title}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">(Попыток: {a.maxAttempts})</span>
+                  </div>
+                  <Link
+                    href={`/instructor/assignments/${a.id}/edit`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium shrink-0 ml-2"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    Редактировать
+                  </Link>
+                </div>
+              ))}
+            </div>
           </div>
         )}
-        <Button size="sm" variant="secondary" onClick={() => setShowAssignmentCreator(!showAssignmentCreator)}>
-          {showAssignmentCreator ? "Закрыть" : "Добавить задание"}
-        </Button>
+
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="secondary" onClick={() => setShowQuizCreator(!showQuizCreator)}>
+            {showQuizCreator ? "Закрыть" : "Добавить тест"}
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setShowAssignmentCreator(!showAssignmentCreator)}>
+            {showAssignmentCreator ? "Закрыть" : "Добавить задание"}
+          </Button>
+        </div>
       </div>
 
       {showQuizCreator && courseId && (
