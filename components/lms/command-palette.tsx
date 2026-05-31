@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Search } from "lucide-react";
+import { Search, GraduationCap, BookOpen, User, Loader2 } from "lucide-react";
+import { useDebounceValue } from "usehooks-ts";
 import { Dialog, DialogPortal, DialogOverlay } from "@/components/ui/dialog";
 import { NAV_BY_ROLE } from "@/components/layout/navigation";
 import { useSession } from "next-auth/react";
@@ -13,6 +14,14 @@ export function CommandPalette() {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{
+    courses: Array<{ id: string; title: string; description: string }>;
+    lessons: Array<{ id: string; title: string; summary: string | null }>;
+    users: Array<{ id: string; name: string | null; email: string }>;
+  }>({ courses: [], lessons: [], users: [] });
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -62,6 +71,37 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, filtered, handleSelect]);
 
+  const [debouncedQuery] = useDebounceValue(query, 300);
+
+  const isAdmin = roles.includes("admin");
+
+  useEffect(() => {
+    if (!debouncedQuery.trim()) {
+      setSearchResults({ courses: [], lessons: [], users: [] });
+      setShowSearchResults(false);
+      setSearchError(false);
+      return;
+    }
+
+    setShowSearchResults(true);
+    setIsSearching(true);
+    setSearchError(false);
+
+    fetch(`/api/v1/search?q=${encodeURIComponent(debouncedQuery)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Search failed");
+        return res.json();
+      })
+      .then((data) => {
+        setSearchResults(data);
+        setIsSearching(false);
+      })
+      .catch(() => {
+        setSearchError(true);
+        setIsSearching(false);
+      });
+  }, [debouncedQuery, isAdmin]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogPortal>
@@ -87,27 +127,117 @@ export function CommandPalette() {
               </kbd>
             </div>
             <div className="max-h-72 overflow-y-auto p-2">
-              {filtered.length > 0 ? (
-                <div className="space-y-0.5">
-                  {filtered.map((item) => (
-                    <button
-                      key={item.href}
-                      onClick={() => handleSelect(item.href)}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-left transition-colors hover:bg-muted"
-                    >
-                      <span className="text-muted-foreground">{item.label}</span>
-                    </button>
-                  ))}
-                </div>
+              {showSearchResults ? (
+                <>
+                  {isSearching ? (
+                    <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Поиск...
+                    </div>
+                  ) : searchError ? (
+                    <p className="py-6 text-center text-sm text-destructive">
+                      Ошибка поиска
+                    </p>
+                  ) : searchResults.courses.length === 0 &&
+                    searchResults.lessons.length === 0 &&
+                    searchResults.users.length === 0 ? (
+                    <p className="py-6 text-center text-sm text-muted-foreground">
+                      Ничего не найдено
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {searchResults.courses.length > 0 && (
+                        <SectionGroup title="Курсы" icon={BookOpen}>
+                          {searchResults.courses.map((course) => (
+                            <SearchItem
+                              key={course.id}
+                              label={course.title}
+                              sublabel={course.description}
+                              onClick={() => handleSelect(`/courses/${course.id}`)}
+                            />
+                          ))}
+                        </SectionGroup>
+                      )}
+                      {searchResults.lessons.length > 0 && (
+                        <SectionGroup title="Уроки" icon={GraduationCap}>
+                          {searchResults.lessons.map((lesson) => (
+                            <SearchItem
+                              key={lesson.id}
+                              label={lesson.title}
+                              sublabel={lesson.summary ?? undefined}
+                              onClick={() => handleSelect(`/lessons/${lesson.id}`)}
+                            />
+                          ))}
+                        </SectionGroup>
+                      )}
+                      {searchResults.users.length > 0 && (
+                        <SectionGroup title="Пользователи" icon={User}>
+                          {searchResults.users.map((user) => (
+                            <SearchItem
+                              key={user.id}
+                              label={user.name ?? user.email}
+                              sublabel={user.name ? user.email : undefined}
+                              onClick={() => handleSelect(`/users/${user.id}`)}
+                            />
+                          ))}
+                        </SectionGroup>
+                      )}
+                    </div>
+                  )}
+                </>
               ) : (
-                <p className="py-6 text-center text-sm text-muted-foreground">
-                  Ничего не найдено
-                </p>
+                <>
+                  {filtered.length > 0 ? (
+                    <div className="space-y-0.5">
+                      {filtered.map((item) => (
+                        <button
+                          key={item.href}
+                          onClick={() => handleSelect(item.href)}
+                          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-left transition-colors hover:bg-muted"
+                        >
+                          <span className="text-muted-foreground">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="py-6 text-center text-sm text-muted-foreground">
+                      Ничего не найдено
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </div>
         </div>
       </DialogPortal>
     </Dialog>
+  );
+}
+
+function SectionGroup({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 px-1 py-1.5">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
+      </div>
+      <div className="space-y-0.5">{children}</div>
+    </div>
+  );
+}
+
+function SearchItem({ label, sublabel, onClick }: { label: string; sublabel?: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-left transition-colors hover:bg-muted"
+    >
+      <div className="min-w-0 flex-1">
+        <span className="block truncate font-medium">{label}</span>
+        {sublabel && (
+          <span className="block truncate text-xs text-muted-foreground">{sublabel}</span>
+        )}
+      </div>
+    </button>
   );
 }
