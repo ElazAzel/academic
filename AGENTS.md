@@ -3,7 +3,7 @@
 ## Commands
 
 | Command | What it does | Caveat |
-|---|---|---|
+| --- | --- | --- |
 | `npm run dev` | Starts Docker Postgres then `next dev` | Requires Docker running |
 | `npm run test` | Vitest (node env, not jsdom) | Tests in `tests/**/*.test.{ts,tsx}` |
 | `npm run test:e2e` | Guarded Playwright (Chromium + Pixel 7) | Needs seeded local/disposable DB; refuses remote DB unless `ALLOW_REMOTE_DATABASE_MUTATION=true` |
@@ -27,11 +27,13 @@
 - All server actions (`server/actions/`) must have Zod validation
 - All route directories need `loading.tsx` and `metadata` export
 - RBAC: `requirePermission()` / `requireRolePage()` in all server code
-- Prisma Client is forbidden in `app/**/page.tsx` and `components/**`; page data belongs in `server/modules/**` or Server Actions. The guard lives in `tests/unit/release-hardening-readiness.test.ts`.
+- Prisma Client is forbidden in `app/**/page.tsx` and `components/**`; page data
+  belongs in `server/modules/**` or Server Actions. The guard lives in
+  `tests/unit/release-hardening-readiness.test.ts`.
 
 ## Project structure
 
-```
+```text
 app/            — App Router pages + API route handlers
 server/actions/ — Server Actions (Zod)
 server/modules/ — Business logic services
@@ -45,10 +47,13 @@ proxy.ts        — Next.js middleware (route guard, CSRF, rate limit)
 
 - `services/` excluded from `tsconfig.json` — not compiled
 - Sentry wraps `next.config.ts` via `withSentryConfig`
-- VAPID keys must be in **both** `VAPID_PUBLIC_KEY` (server) and `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (client) — same value
-- CSP uses per-request nonce-based `script-src`; keep `'unsafe-inline'` only in `style-src`
+- VAPID keys must be in **both** `VAPID_PUBLIC_KEY` (server) and
+  `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (client) — same value
+- CSP uses per-request nonce-based `script-src`; keep `'unsafe-inline'` only in
+  `style-src`
 - `var/` dir is gitignored (credentials output, temp files)
-- `__dbcheck.mjs` in git history contained hardcoded Supabase password — do not commit secrets
+- `__dbcheck.mjs` in git history contained hardcoded Supabase password — do not
+  commit secrets
 - `docker-compose.yml` does **not** publish PostgreSQL port to host
 
 ## Docs (loaded by opencode.json)
@@ -60,13 +65,16 @@ proxy.ts        — Next.js middleware (route guard, CSRF, rate limit)
 - `docs/implementation-plan.md` — current status
 - `docs/release.md` — release plan + verification runbook
 - `docs/security-review.md` — security model + OWASP/WCAG audit
-- `docs/ai-agent-instructions.md` — **AI Agent System Instructions** (must be updated after implementing major architectural or product features)
+- `docs/ai-agent-instructions.md` — **AI Agent System Instructions** (must be
+  updated after implementing major architectural or product features)
 
 ## Test quirks
 
 - Vitest: `environment: "node"` (NOT jsdom — but jsdom is available as dev dep)
 - Setup: `tests/setup.ts` imports `@testing-library/jest-dom/vitest`
 - Playwright: `webServer` runs `npm run dev`, reuses existing server locally
-- E2E requires seeded database and seeded test users; the command is guarded because the suite mutates seeded data
+- E2E requires seeded database and seeded test users; the command is guarded
+  because the suite mutates seeded data
 - Checking `tests/security-privacy.test.ts` for negative-path patterns
-- Do not use Playwright `networkidle`; SSE keeps the network active, so use explicit locators after `domcontentloaded`.
+- Do not use Playwright `networkidle`; SSE keeps the network active, so use
+  explicit locators after `domcontentloaded`.

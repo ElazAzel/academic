@@ -9,7 +9,7 @@
 | # | Задача | Домен | Приоритет | Статус |
 | --- | -------- | ------- | ----------- | -------- |
 | 0 | **Полная оптимизация и доказанная работоспособность платформы** | Program | P0 | 🟡 Цель создана: `docs/FULL-OPTIMIZATION-GOAL.md` |
-| 1 | **Мониторинг Vercel auto-deploy** | DevOps | P1 | 🔄 После пуша в main |
+| 1 | **Мониторинг Vercel auto-deploy** | DevOps | P1 | 🔄 После пуша in main |
 | 2 | **DPA подписание (Vercel + Supabase)** | Legal | P1 | 🔴 Не подписан |
 | 3 | **Ротация скомпрометированного Supabase пароля** | Security | P1 | 🔴 Требуется вручную в дашборде Supabase |
 | 4 | **Staging-окружение** | DevOps | P2 | ✅ Ветка staging и инструкция добавлены |
@@ -49,8 +49,10 @@
 - [x] **Mobile adaptation** — Achievements accordion, XP touch ✅
 - [x] **GitHub Release v1.0.0** ✅
 - [x] **CHANGELOG.md** ✅
-- [x] **Prisma boundary cleanup** — direct Prisma удален из `app/**/page.tsx` и `components/**`, добавлен unit-guard ✅
-- [x] **E2E wait cleanup** — `networkidle` удален из Playwright smoke-тестов, навигация совместима с SSE ✅
+- [x] **Prisma boundary cleanup** — direct Prisma удален из `app/**/page.tsx`
+  и `components/**`, добавлен unit-guard ✅
+- [x] **E2E wait cleanup** — `networkidle` удален из Playwright smoke-тестов,
+  навигация совместима с SSE ✅
 
 ## Стратегические задачи (Phase 1-4)
 

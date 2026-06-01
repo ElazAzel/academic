@@ -5,24 +5,29 @@
 ## 2026-05-31 — Добавление возможности редактирования тестов и заданий в конструкторе уроков
 
 **Что сделано:**
+
 - `components/lms/lesson-editor.tsx`: Простой список тестов и заданий урока в виде запятых переписан на полноценные интерактивные списки-карточки. Для каждого теста и задания теперь отображается кнопка «Редактировать» с иконкой карандаша, ведущая на страницы редактирования тестов (`/instructor/quizzes/[id]/edit`) и заданий (`/instructor/assignments/[id]/edit`) в новой вкладке.
 - Интегрированы иконки `Pencil`, `FileQuestion`, `FileText` из `lucide-react` и компонент `Link` из `next/link`.
 
 **Проверка:**
+
 - `npm run verify` — успешно пройдено: линтинг, проверка типов, все 473 Vitest-теста и Next.js production build завершились с абсолютным успехом.
 
 ## 2026-05-31 — Отключено сохранение уведомлений о превышении лимита устройств в БД
 
 **Что сделано:**
+
 - `server/modules/auth/device-sessions.ts`: Уведомления о превышении лимита устройств (`device_limit_exceeded`) возвращены на тип канала доставки `push` и параметр `persist: false`. Это означает, что уведомление только всплывает у пользователя на устройстве в реальном времени, но не сохраняется в базе данных и не захламляет историю во вкладке уведомлений.
 - `tests/unit/auth-device-sessions.test.ts`: Тесты обновлены под проверку возврата к чистому push-каналу и отсутствию персистентности.
 
 **Проверка:**
+
 - `npm run verify` — успешно пройдено: линтинг, проверка типов, 473/473 Vitest-теста и Next.js production build завершились с абсолютным успехом.
 
 ## 2026-05-31 — Popup API закрыт по server-side scope
 
 **Что сделано:**
+
 - `/api/v1/popups` больше не отдаёт все popup-записи кураторам: admin видит полный список, non-admin с `notifications:write` видит только записи, созданные им.
 - Non-admin больше не может отправлять popup по ролям или потокам; кураторский сценарий ограничен `targetUserIds` и проверкой закрепления слушателей.
 - `/api/v1/popups/[id]/toggle` `POST/DELETE` теперь требует `settings:manage`, то есть admin-only, вместо общего `notifications:write`.
@@ -30,18 +35,21 @@
 - `docs/release.md` и `docs/platform-functional-overview.md` синхронизированы с фактическим popup scope.
 
 **Проверка:**
+
 - `npm run test -- tests/unit/popups-api.test.ts` — 5/5 passed.
 - `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 473/473 Vitest tests, production build.
 
 ## 2026-05-31 — `test:e2e` защищён от remote DB без явного override
 
 **Что сделано:**
+
 - `package.json`: `npm run test:e2e` теперь сначала выполняет `tsx scripts/assert-local-database.ts test:e2e`.
 - `tests/unit/local-database-guard.test.ts` расширен кейсом: E2E против remote DB запрещён, потому что suite мутирует seeded data.
 - `AGENTS.md`, `docs/DEVELOPER_GUIDE.md`, `docs/ai-agent-instructions.md`, `docs/release.md`, `docs/full-project-audit.md` обновлены: E2E должен идти против local/disposable DB или явно подтверждённого staging с `ALLOW_REMOTE_DATABASE_MUTATION=true`.
 - Текущая audit-машина не имеет `docker` и локальных PostgreSQL binaries, а `.env` указывает на remote Postgres; поэтому E2E остаётся release blocker, но теперь блокируется безопасно до старта Playwright.
 
 **Проверка:**
+
 - `npm run test -- tests/unit/local-database-guard.test.ts` — 4/4 passed.
 - `npm run typecheck` — passed.
 - `npm run test:e2e -- --list` — guard blocked remote host before Playwright startup as expected.
@@ -49,6 +57,7 @@
 ## 2026-05-31 — Security notification для device limit переведён в persistent in-app
 
 **Что сделано:**
+
 - `server/modules/auth/device-sessions.ts` больше не отправляет `device_limit_exceeded` как `push` с `persist: false`.
 - При превышении лимита устройств теперь создаётся persistent `in_app` security-уведомление, которое соответствует правилу: критические события безопасности нельзя отключить пользовательскими настройками.
 - Web Push остаётся дополнительным каналом доставки через общий `createNotificationInternal`, если включён `FEATURE_PUSH_NOTIFICATIONS`.
@@ -56,18 +65,21 @@
 - `docs/code-optimization-analysis.md` дополнительно синхронизирован: `assertInstructorOfCourse` уже оптимизирован одним `findUnique` с `include`.
 
 **Проверка:**
+
 - `npm run test -- tests/unit/auth-device-sessions.test.ts tests/unit/notifications-service.test.ts` — 12/12 passed.
 - `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 467/467 Vitest tests, production build.
 
 ## 2026-05-31 — Удалён `firebase-admin`, push-стек синхронизирован на Web Push/VAPID
 
 **Что сделано:**
+
 - Выполнено `npm uninstall firebase-admin`: зависимость удалена из `package.json` и `package-lock.json`.
 - `lib/env.ts` очищен от устаревших `FIREBASE_*` переменных; актуальный push-контракт — `VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`.
 - `docs/ai-agent-instructions.md`, `docs/implementation-plan.md`, `docs/specification.md`, `docs/todo.md`, `docs/scale-path.md`, `infra/deployment-check.md` синхронизированы с фактическим Web Push/VAPID-стеком.
 - `docs/code-optimization-analysis.md` обновлён: `firebase-admin` и явная зависимость `archiver` отмечены как закрытые dependency hygiene пункты.
 
 **Проверка:**
+
 - `npm run typecheck` — passed.
 - `npm run test -- tests/unit/notifications-service.test.ts tests/unit/notifications.test.ts tests/unit/auth-device-sessions.test.ts tests/unit/release-hardening-readiness.test.ts` — 21/21 passed.
 - `npm run banned-patterns` — passed.
@@ -76,6 +88,7 @@
 ## 2026-05-31 — Release readiness contract синхронизирован с FULL-OPTIMIZATION-GOAL
 
 **Что сделано:**
+
 - `server/modules/release-hardening/readiness.ts` обновлён до версии `2026-05-31`.
 - Машинно-читаемый контракт больше не помечает платформу release-ready без evidence:
   - WP0/WP3 остаются `done`;
@@ -86,21 +99,25 @@
 - `tests/unit/release-hardening-readiness.test.ts` обновлён: теперь проверяет `partial` summary, incomplete WP/gates и синхронизацию с `docs/READINESS.md` + `docs/FULL-OPTIMIZATION-GOAL.md`.
 
 **Проверка:**
+
 - `npm run test -- tests/unit/release-hardening-readiness.test.ts` — 8/8 passed.
 
 ## 2026-05-31 — Full Optimization Goal создана
 
 **Что сделано:**
+
 - Создан `docs/FULL-OPTIMIZATION-GOAL.md` — долгосрочная цель полной оптимизации и доказанной работоспособности всего функционала платформы.
 - Зафиксированы scope, Definition of Done, фазы A-F: Truth & Gates, Six-role Functional Proof, Security/Privacy/Ownership, UX/Accessibility/Responsive, Performance/Architecture Optimization, Ops & Release.
 - Цель связана с `docs/READINESS.md`, `docs/work-plan.md`, `docs/todo.md`, `docs/MASTER-PLAN.md`, `docs/specification.md`, `docs/DEVELOPER_GUIDE.md`.
 
 **Проверка:**
+
 - Документационная правка; code gates не запускались.
 
 ## 2026-05-31 — Readiness baseline и Meta-Harness operational protocol
 
 **Что сделано:**
+
 - Создан `docs/READINESS.md` — единая матрица release-readiness, gates, WP0-WP6 и открытых блокеров.
 - `docs/META-HARNESS.md` переписан из методологического описания в операционный протокол: scoped/full scan, search set vs holdout gate, session artifacts, evidence model, redaction policy.
 - Исправлена битая ссылка на отсутствующий `docs/improvement-plan.md`; текущие источники: `READINESS.md`, `release.md`, `work-plan.md`, `updates.md`.
@@ -111,12 +128,14 @@
 - `docs/MASTER-PLAN.md`, `docs/implementation-plan.md`, `docs/full-project-audit.md`, `docs/todo.md`, `docs/ai-agent-instructions.md`, `docs/specification.md`, `docs/DEVELOPER_GUIDE.md` связаны с новым readiness baseline.
 
 **Проверка:**
+
 - Документационный link/path sanity через `rg`: удалены активные ссылки на `docs/improvement-plan.md`, `docs/assumptions.md`, старый WP3-status и противоречивый release-green текст.
 - Code gates не запускались: изменения затрагивают только Markdown-документацию.
 
 ## 2026-05-31 — Task 3.4-3.5: Ачивки/Streak/Лидерборд в XpCenterModal, финальный verify
 
 **Что сделано:**
+
 - `server/actions/gamification.ts` — Server Action для параллельной загрузки ачивок, streak, тепловой карты
 - `components/lms/xp-center-modal.tsx` — реструктурирован с Tabs: 4 вкладки (Прогресс, Ачивки, Streak, Топ)
 - Вкладка «Ачивки» рендерит `AchievementsGrid`, «Streak» — `StreakWidget`, «Топ» — `LeaderboardPanel`
@@ -124,18 +143,22 @@
 - Все 3 плана завершены: 15/15 задач
 
 **Проверка:**
+
 - `npm run verify` — banned-patterns ✅, lint 0 errors ✅, typecheck ✅, 466/466 tests ✅, build (87 routes) ✅
 
 **Новые файлы:**
+
 - `server/actions/gamification.ts` — Server Action
 
 **Изменённые файлы:**
+
 - `components/lms/xp-center-modal.tsx` — 4 вкладки геймификации
 - `components/lms/command-palette.tsx` — фикс set-state-in-effect
 
 ## 2026-05-31 — Task 1.2: recharts вместо самодельных BarChart/DonutChart
 
 **Что сделано:**
+
 - Созданы 3 recharts-компонента в `components/charts/`:
   - `activity-area-chart.tsx` — AreaChart для временных рядов
   - `visit-bar-chart.tsx` — BarChart с per-bar цветом, sublabel в tooltip
@@ -144,12 +167,14 @@
 - Старый `components/lms/bar-chart.tsx` пока сохранён — используется в 9 других страницах (admin, curator, instructor, super-curator, customer-observer reports/analytics)
 
 **Проверка:**
+
 - `npm run typecheck` ✅
 - `npm run lint` ✅ (0 новых ошибок)
 
 ## 2026-05-31 — Установка библиотек: recharts, usehooks-ts, nuqs, vaul, hls.js
 
 **Что сделано:**
+
 - Установлены и настроены 5 бесплатных библиотек с минимальной конфигурацией:
   - **recharts** — графики для ReportDesigner (интерактивные отчёты кураторов, админа, обсервера)
   - **usehooks-ts** — 40+ React хуков (useDebounce, useCopyToClipboard, useMediaQuery, useLocalStorage) — zero config
@@ -160,43 +185,51 @@
 - Все библиотеки указаны в `docs/ai-agent-instructions.md` как часть архитектуры
 
 **Проверка:**
+
 - `npm run build` ✅ (Compiled successfully, 77 routes)
 
-## 2026-05-31 — CSP Nonce Propagation Fix: <html nonce> from middleware
+## 2026-05-31 — CSP Nonce Propagation Fix: `<html nonce>` from middleware
 
 **Что сделано:**
+
 - Исправлен баг production, при котором Next.js chunks блокировались Content-Security-Policy (`script-src 'nonce-...' 'strict-dynamic'`).
 - **Корневая причина:** middleware генерировала nonce и ставила `Content-Security-Policy` на response (для браузера) и request (для Next.js SSR), но React/Next.js автоматически не извлекает nonce из CSP request header. SSR рендерил `<script>` без атрибута `nonce`, браузер блокировал все скрипты.
 - **Фикс:** `app/layout.tsx` теперь импортирует `headers()` из `next/headers`, читает `x-nonce` header (устанавливается middleware) и передаёт его в `<html nonce={nonce}>`. React автоматически применяет nonce ко всем `<script>` и `<style>` элементам при SSR.
 - Побочный эффект: RootLayout стал динамическим (`ƒ`), что отключает static generation для всех страниц — это необходимый трейд-офф для per-request nonce-based CSP.
 
 **Проверка:**
+
 - `npm run verify` — banned-patterns ✅, lint 0/0 ✅, typecheck ✅, tests 466/466 ✅, build 77 routes ✅
 
 ## 2026-05-31 — Hardening Server Action Boundaries and RBAC Exceptions
 
 **Что сделано:**
+
 - Проведен тотальный аудит и рефакторинг обработчиков исключений (Exceptions) на границах Next.js Server Actions и в централизованных проверках прав доступа (RBAC).
 - Обычные исключения `new Error` заменены на типизированные `ApiError` с правильными HTTP-кодами (`401 Unauthorized`, `403 Forbidden`, `422 Unprocessable Entity`) во всех ключевых файлах Server Actions (`analytics.ts`, `attendance.ts`, `chat.ts`, `curator.ts`, `files.ts`, `glossary.ts`, `risk-management.ts`, `super-curator.ts`, `visit-analytics.ts`, `xp.ts`, `activity-analytics.ts`).
 - Обеспечено безопасное прохождение и отображение детальных русскоязычных сообщений об ошибках на стороне клиента вместо маскирования их стандартными Next.js-ошибками в production.
 - Выполнен полный цикл верификации: banned-patterns, ESLint, TypeScript-проверка типов (`tsc --noEmit`), Vitest-тесты и Next.js production build завершились с абсолютным успехом.
 
 **Проверка:**
+
 - `npm run verify`
 
 ## 2026-05-31 — WCAG viewport zoom cleanup
 
 **Что сделано:**
+
 - Убран `maximumScale: 1` из `viewport` в `app/layout.tsx`, чтобы мобильные браузеры не запрещали пользовательское масштабирование.
 - Это закрывает повторяющийся axe-warning `meta-viewport (moderate): Zooming and scaling must not be disabled` в accessibility smoke.
 
 **Проверка:**
+
 - `npx playwright test tests/e2e/accessibility-smoke.spec.ts --project=mobile --reporter=line`
 - `npm run verify`
 
 ## 2026-05-30 — Release v1 boundary cleanup
 
 **Что сделано:**
+
 - Вынесены прямые Prisma-запросы из `app/**/page.tsx` и `components/**` в `server/modules/page-data/service.ts`.
 - Добавлен unit-guard, запрещающий `@/lib/prisma`, `getPrisma()` и `prisma.*` в App Router pages и UI-компонентах.
 - Playwright E2E больше не использует `networkidle`; навигация переведена на `domcontentloaded`, чтобы SSE не блокировал тесты.
@@ -207,6 +240,7 @@
 - Документы релизной готовности синхронизированы: repo-local v1 gate отделен от внешних runbook-задач DPA, ротации секретов и git purge.
 
 **Проверка:**
+
 - `rg "@/lib/prisma|lib/prisma|getPrisma\\(|prisma\\." app components -g page.tsx -g *.tsx`
 - `rg "networkidle" tests/e2e -g *.ts`
 - `npx playwright test tests/e2e/accessibility-smoke.spec.ts --project=mobile --reporter=line`
@@ -220,10 +254,12 @@
 **Что сделано:**
 
 ### Font Optimization
+
 - **Убраны preconnect ссылки** на Google Fonts из `<head>` в `app/layout.tsx` — next/font управляет подключением автоматически, лишние HTTP-запросы удалены
 - **Inter переключён на variable font**: удалён `weight: ["400", "500", "600", "700"]` — теперь используется один variable-файл вместо 4 статических, экономия ~80KB
 
 ### Virtual List Audit
+
 - **Установлен `@tanstack/react-virtual`**: повторно (был удалён как неиспользуемый — теперь используется)
 - **Virtualized `StudentAnalyticsTable`**: компонент переведён на виртуализацию через `useVirtualizer`. При 1000 студентах в DOM только ~15 видимых строк + 10 overscan вместо всех 1000. Рендер 10 колонок виртуализирован, sticky header остаётся видимым при скролле
   - Container `maxHeight: 600px` с `overflow: auto`
@@ -233,14 +269,16 @@
 - Аудит других таблиц: `/admin/users` уже с пагинацией (PAGE_SIZE=200), report export — серверный. Виртуализация не требуется
 
 ### Prisma Query Audit (N+1 Fix)
+
 - **`getFullLessonDetails`**: Заменены `Promise.all(lesson.quizzes.map(q => getQuizForStudent(...)))` и аналогичный для assignments на batch-функции
 - **Новые batch-функции**: `getQuizzesForStudentBatch(userId, quizIds[])` и `getAssignmentsForStudentBatch(userId, assignmentIds[])` — один `findMany` с `where: { id: { in: ids } }` вместо N отдельных `findUnique` запросов
 - `assertLessonAccess` вызывается один раз (все quizzes/assignments принадлежат одному уроку)
 - Оригинальные `getQuizForStudent`/`getAssignmentForStudent` сохранены для других caller'ов
 
 ### Результаты
+
 | Метрика | До | После |
-|---------|----|-------|
+| --- | --- | --- |
 | HTTP запросы (fonts) | 2 preconnect | 0 (next/font internal) |
 | Вес шрифтов Inter | 4 файла | 1 variable font |
 | DOM-узлы аналитики (1000 строк) | ~10000 | ~150-200 |
@@ -252,6 +290,7 @@
 | Build | ✅ (77 routes) | ✅ (77 routes) |
 
 **Файлы изменены:**
+
 - `app/layout.tsx` — удалены preconnect, Inter variable font
 - `components/lms/student-analytics-table.tsx` — виртуализация через @tanstack/react-virtual
 - `server/modules/learning/service.ts` — batch-функции для quiz/assignment запросов
@@ -263,18 +302,23 @@
 **Что сделано:**
 
 ### Инструментарий
+
 - **@next/bundle-analyzer**: установлен, добавлен `npm run analyze` (ANALYZE=true next build)
 - **next.config.ts**: добавлен `withBundleAnalyzer` wrapper, удалён `recharts` из `optimizePackageImports` (recharts не используется в проекте — custom BarChart/DonutChart компоненты на SVG)
 
 ### Удаление неиспользуемых зависимостей
+
 Удалены 7 пакетов (~63 transitive deps), которые нигде не импортировались:
+
 - `hls.js` (24 MB в node_modules) — видео через YouTube/Vimeo embed, не hls.js
 - `pdfmake` (15 MB) — только orphaned type declaration `types/pdfmake.d.ts`, без runtime-импортов
 - `canvas-confetti`, `cmdk`, `vaul`, `@tanstack/react-virtual`, `recharts` — ни одного импорта
 - Удалён файл `types/pdfmake.d.ts`
 
 ### next/image миграция
+
 Все 6 `<img>` тегов заменены на `next/image`:
+
 - `course-hero-card.tsx` — coverUrl курса
 - `chat-panel.tsx` — вложения изображений
 - `certificate-designer.tsx` — фон сертификата
@@ -283,17 +327,20 @@
 - `avatar.tsx` — аватар пользователя
 
 ### ISR для публичных страниц
+
 - `/forgot-password` — статическая (`force-static`), 0ms TTFB
 - `/privacy` — ISR (`revalidate = 86400`), static generation
 - `/terms` — ISR (`revalidate = 86400`), static generation
 
 ### Streaming SSR
+
 - `/admin/analytics` — 3 таба (StudentAnalyticsTab, VisitTab, ActivityTab) обёрнуты в `<Suspense>` с skeleton fallback
 - Каркас страницы (AppShell, PageHeader) рендерится мгновенно, контент табов стримится
 
 ### Результаты
+
 | Метрика | До | После |
-|---------|----|-------|
+| --- | --- | --- |
 | Зависимостей | ~68 | ~61 (-7) |
 | node_modules | -63 transitive пакета | Cleaner |
 | `<img>` тегов | 6 | 0 (все next/image) |
@@ -371,7 +418,7 @@
   - `recharts` (премиальные интерактивные графики и визуализация статистики на дашбордах аналитики).
   - `hls.js` (поддержка качественного потокового видео с адаптивным битрейтом HLS/.m3u8).
   - `sharp` (высокопроизводительная оптимизация изображений на стороне сервера).
-- **Обход настроек для уведомлений безопасности**: Устранена проблема, из-за которой критические уведомления о безопасности (предупреждения о превышении лимита сессий `device_limit_exceeded` при входе с других устройств, изменении пароля `password_changed`, обновлении профиля `profile_updated` и отзыве сертификата `certificate_revoked`) не сохранялись в БД из-за дефолтных настроек. 
+- **Обход настроек для уведомлений безопасности**: Устранена проблема, из-за которой критические уведомления о безопасности (предупреждения о превышении лимита сессий `device_limit_exceeded` при входе с других устройств, изменении пароля `password_changed`, обновлении профиля `profile_updated` и отзыве сертификата `certificate_revoked`) не сохранялись в БД из-за дефолтных настроек.
   - Обновлен метод `createNotificationInternal` в `server/modules/notifications/service.ts`, который теперь полностью пропускает проверку пользовательских предпочтений для этих четырех категорий событий, гарантируя их обязательную запись в базу данных и отображение.
   - Добавлены соответствующие модульные тесты в `tests/unit/notifications-service.test.ts`.
 - **Устранение предупреждений линтера**: Удалена неиспользуемая переменная `certificatesCount` из деструктуризации Promise.all в файле `server/actions/dashboard/student.ts`, возникшая при оптимизации метрик. Это полностью очистило проект от предупреждений и привело сборку к идеальному состоянию.
@@ -1706,7 +1753,7 @@
 6. **Заполнены реквизиты организации:**
    - ТОО «DESWAY (ДИСВЭЙ)», БИН 221140019814
    - Юридический адрес: г. Алматы, ул. Шолохова, д. 20
-   - Email: admin@aistrategicacademy.com
+   - Email: <admin@aistrategicacademy.com>
    - Руководитель: Каримова Аружан Спартакқызы
    - Дата документов: 01.03.2026
    - Несовершеннолетние: нет
@@ -2883,5 +2930,6 @@ Next steps:
 ---
 
 > Earlier entries (prior to 2026-05-20) are in `docs/archive/update-log-archive.md`.
+
 - **Затронутые файлы**: `proxy.ts`, `lib/http.ts`
 - **Коммит**: `358c271`
