@@ -2,6 +2,143 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-01 — Reports API закрыт на `reports:read`
+
+**Что сделано:**
+
+- `GET /api/v1/reports`, `GET /api/v1/reports/preview`, `POST /api/v1/reports/job` и `GET /api/v1/reports/job/status` теперь требуют `reports:read` на route-level; студент без права отчётов больше не может получить meta, preview, экспорт, поставить async-задачу отчёта или опрашивать report job через прямой URL.
+- `server/modules/reports/service.ts` и `ReportDesigner` синхронизированы с продуктовым контрактом: student больше не входит в allow-list отчётов, так как `/student/reports` удалён из интерфейса.
+- Ожидаемые `ApiError`-отказы в reports routes больше не пишутся в `console.error`, чтобы negative-path тесты не создавали шум harness.
+- Добавлены `tests/unit/reports-api-route.test.ts` и `tests/unit/reports-job-api.test.ts`, расширен `tests/unit/reports-job-status-api.test.ts` для download/meta/preview/async-job/status permission boundaries и обновлён `tests/unit/reports-service.test.ts`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/reports-job-api.test.ts tests/unit/reports-job-status-api.test.ts tests/unit/reports-api-route.test.ts tests/unit/reports-service.test.ts tests/unit/release-hardening-readiness.test.ts` — 26/26 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 508/508 Vitest tests, production build.
+
+## 2026-06-01 — Certificate designer preview закрыт на route-level
+
+**Что сделано:**
+
+- `/api/v1/certificates/designer/[courseId]/preview` теперь требует `courses:write` до проверки владения курсом и генерации draft PDF.
+- Роли без права редактирования курсов отсекаются до любых DB-запросов и до `generateDraftCertificatePdf()`.
+- Ownership-проверка преподавателя конкретного курса сохранена: instructor может рендерить preview только для своего курса.
+- Добавлен `tests/unit/certificate-designer-preview-api.test.ts` для successful instructor path, permission negative-path и foreign-course negative-path.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/certificate-designer-preview-api.test.ts tests/unit/security-privacy.test.ts tests/unit/certificates-api.test.ts` — 26/26 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 500/500 Vitest tests, production build.
+
+## 2026-06-01 — Report job status отдаёт только безопасный download URL
+
+**Что сделано:**
+
+- `/api/v1/reports/job/status` теперь возвращает `downloadUrl` только если он является внутренним `/api/v1/reports` URL с допустимыми `type` и `format`.
+- Внешние, абсолютные или malformed URL из outbox payload не попадают в ответ даже владельцу job.
+- `tests/unit/reports-job-status-api.test.ts` расширен проверкой отбрасывания внешнего download URL.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/reports-job-status-api.test.ts tests/unit/reports-service.test.ts` — 10/10 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 497/497 Vitest tests, production build.
+
+## 2026-06-01 — Certificate PDF учитывает scope заказчика
+
+**Что сделано:**
+
+- `/api/v1/certificates/[certificateId]/pdf` теперь разрешает `customer_observer` скачивать PDF сертификата только для слушателей из его разрешенного observer scope.
+- Вне scope заказчика одиночный PDF-download возвращает `403` и не вызывает генерацию PDF, закрывая guessed-ID путь для сертификатов.
+- Owner/admin/instructor доступ сохранён: владелец сертификата, админ и преподаватель курса по-прежнему могут скачать разрешенный PDF.
+- `tests/unit/security-privacy.test.ts` расширен проверками scoped observer PDF-download и отказа вне scope.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/security-privacy.test.ts tests/unit/certificates-api.test.ts tests/unit/observer-scope.test.ts` — 30/30 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 496/496 Vitest tests, production build.
+
+## 2026-06-01 — Report job status закрыт от guessed-ID доступа
+
+**Что сделано:**
+
+- `/api/v1/reports/job/status` теперь считает report jobs без корректного `payload.userId` admin-only и не отдаёт статус/download URL обычным ролям при угадывании `jobId`.
+- Проверка owner/admin стала строгой: любой не-admin пользователь получает `403`, если job не принадлежит ему или payload повреждён/legacy.
+- Добавлен `tests/unit/reports-job-status-api.test.ts` для owner-path, чужого job, legacy job без owner и admin-inspection.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/reports-job-status-api.test.ts tests/unit/reports-service.test.ts tests/unit/release-hardening-readiness.test.ts` — 17/17 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 494/494 Vitest tests, production build.
+
+## 2026-06-01 — Chat upload сохраняет корректные auth/error статусы
+
+**Что сделано:**
+
+- `/api/v1/chat/upload` переведён на `ApiError`/`errorResponse`: ошибки авторизации больше не маскируются как `500`, а возвращают исходный `401/403`.
+- Ошибки отсутствующего файла, превышения 15MB, неподдерживаемого MIME-типа и недоступного storage теперь имеют стабильный API error shape.
+- Успешный ответ `{ publicUrl, attachmentType }` сохранён без изменения, чтобы не ломать `ChatPanel`.
+- Добавлен `tests/unit/chat-upload-route.test.ts` для auth negative-path, MIME negative-path и успешной загрузки под префиксом текущего пользователя.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/chat-upload-route.test.ts tests/unit/actions-chat.test.ts` — 14/14 passed.
+- `npm run test -- tests/unit/chat-upload-route.test.ts tests/unit/course-builder-inline-api.test.ts tests/unit/popups-diag-api.test.ts tests/unit/cohorts-api.test.ts tests/unit/cohort-block-deadlines-api.test.ts tests/unit/deadlines-service.test.ts tests/unit/release-hardening-readiness.test.ts` — 25/25 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 490/490 Vitest tests, production build.
+
+## 2026-06-01 — Inline quiz/assignment API закрыт на route-level
+
+**Что сделано:**
+
+- `/api/v1/course-builder/quiz` и `/api/v1/course-builder/assignment` теперь требуют `courses:write` до чтения тела запроса и вызова service-layer.
+- Ownership-проверка преподавателя конкретного курса остаётся в `createQuizInline()` / `createAssignmentInline()`, но роли без права редактирования курса отсекаются раньше.
+- Добавлен `tests/unit/course-builder-inline-api.test.ts`: проверяет route-level permission для тестов и заданий, а также negative-path без вызова service-layer.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/course-builder-inline-api.test.ts tests/unit/security-privacy.test.ts tests/unit/course-builder-service.test.ts` — 25/25 passed.
+- `npm run verify` — passed вне sandbox: banned-patterns, lint 0 warnings, typecheck, 487/487 Vitest tests, production build.
+
+## 2026-06-01 — Popup diagnostics закрыт для администраторов
+
+**Что сделано:**
+
+- `/api/v1/popups/diag` теперь требует `settings:manage`; диагностические counts по popup/notification/enrollment больше не доступны любой авторизованной роли.
+- Ожидаемые `ApiError`-отказы больше не пишутся в `console.error`, чтобы negative-path тесты не создавали лишний шум harness.
+- Добавлен `tests/unit/popups-diag-api.test.ts`: проверяет admin-path и запрет без `settings:manage` до любых DB-count запросов.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/popups-diag-api.test.ts` — 2/2 passed.
+
+## 2026-06-01 — Block deadlines API закрыт по владению курсом
+
+**Что сделано:**
+
+- `GET/POST /api/v1/cohorts/[cohortId]/block-deadlines` теперь требуют `courses:write` на route-level вместо общего факта авторизации.
+- `getCohortBlockDeadlines()` принимает `actorId` и проверяет тот же server-side scope, что и запись дедлайнов: admin или преподаватель конкретного курса потока.
+- Чтение дедлайнов больше не доходит до выборки модулей, если роль не имеет права управлять дедлайнами этого курса.
+- Англоязычное validation-сообщение заменено на русскоязычное.
+- Добавлены `tests/unit/cohort-block-deadlines-api.test.ts` и `tests/unit/deadlines-service.test.ts` для route-level permission и service-level ownership negative paths.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/cohort-block-deadlines-api.test.ts tests/unit/deadlines-service.test.ts tests/unit/cohorts-api.test.ts tests/unit/popups-api.test.ts tests/unit/release-hardening-readiness.test.ts` — 22/22 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed вне sandbox: banned-patterns, lint 0 warnings, typecheck, 482/482 Vitest tests, production build.
+
+## 2026-06-01 — Cohorts API закрыт для админского таргетинга
+
+**Что сделано:**
+
+- `/api/v1/cohorts` больше не отдаёт список потоков любому авторизованному пользователю; endpoint требует `settings:manage`, потому что используется админским UI для таргетинга popup-уведомлений.
+- Прямой Prisma-запрос удалён из route handler; выборка перенесена в `server/modules/cohorts/service.ts` через `listPopupTargetingCohorts()`.
+- Добавлен `tests/unit/cohorts-api.test.ts`: проверяет успешный admin-path и negative-path, где роль без `settings:manage` получает `403`, а сервис выборки когорт не вызывается.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/cohorts-api.test.ts` — 2/2 passed.
+- `npm run verify` — passed вне sandbox после `spawn EPERM` в sandbox: banned-patterns, lint 0 warnings, typecheck, 475/475 Vitest tests, production build.
+
 ## 2026-05-31 — Добавление возможности редактирования тестов и заданий в конструкторе уроков
 
 **Что сделано:**

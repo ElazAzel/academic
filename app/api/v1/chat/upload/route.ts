@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth/session";
+import { ApiError, errorResponse } from "@/lib/http";
 import { buildStorageKey, uploadFileToSupabase } from "@/lib/storage";
 
 const ALLOWED_ATTACHMENT_TYPES = new Set([
@@ -12,15 +13,8 @@ const ALLOWED_ATTACHMENT_TYPES = new Set([
   "text/plain",
 ]);
 
-const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB
+const MAX_FILE_SIZE = 15 * 1024 * 1024;
 
-/**
- * POST /api/v1/chat/upload
- *
- * Загружает файл в Supabase Storage.
- * Принимает multipart/form-data с полем "file".
- * Возвращает { publicUrl: string }.
- */
 export async function POST(request: Request) {
   try {
     const user = await requireUser();
@@ -29,17 +23,22 @@ export async function POST(request: Request) {
     const file = formData.get("file");
 
     if (!file || !(file instanceof File)) {
-      return Response.json({ error: "Файл не передан" }, { status: 400 });
+      throw new ApiError("bad_request", "Файл не передан", 400);
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return Response.json({ error: "Файл слишком большой. Максимум 15MB" }, { status: 413 });
+      throw new ApiError(
+        "bad_request",
+        "Файл слишком большой. Максимум 15MB",
+        413,
+      );
     }
 
     if (!ALLOWED_ATTACHMENT_TYPES.has(file.type)) {
-      return Response.json(
-        { error: "Формат не поддерживается. Разрешены: PNG, JPEG, GIF, WebP, PDF, DOC, DOCX, TXT" },
-        { status: 415 },
+      throw new ApiError(
+        "bad_request",
+        "Формат не поддерживается. Разрешены: PNG, JPEG, GIF, WebP, PDF, DOC, DOCX, TXT",
+        415,
       );
     }
 
@@ -47,12 +46,11 @@ export async function POST(request: Request) {
     const publicUrl = await uploadFileToSupabase(key, file);
 
     if (!publicUrl) {
-      return Response.json({ error: "Хранилище недоступно" }, { status: 503 });
+      throw new ApiError("service_unavailable", "Хранилище недоступно", 503);
     }
 
     return Response.json({ publicUrl, attachmentType: file.type });
   } catch (error) {
-    console.error("Chat upload error:", error);
-    return Response.json({ error: "Ошибка загрузки файла" }, { status: 500 });
+    return errorResponse(error);
   }
 }

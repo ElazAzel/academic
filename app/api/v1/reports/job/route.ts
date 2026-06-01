@@ -13,7 +13,7 @@ const createJobSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requireUser();
+    const user = await requireUser("reports:read");
 
     const rl = await checkRateLimit(`reports:job:${user.id}`);
     if (!rl.allowed) {

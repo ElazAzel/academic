@@ -10,7 +10,7 @@ type Context = { params: Promise<{ courseId: string }> };
 
 export async function POST(request: Request, context: Context) {
   try {
-    const user = await requireUser();
+    const user = await requireUser("courses:write");
     const { courseId } = await context.params;
 
     // Проверка прав: только админ или преподаватель данного курса

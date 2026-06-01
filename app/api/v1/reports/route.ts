@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
-import { errorResponse } from "@/lib/http";
+import { ApiError, errorResponse } from "@/lib/http";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { generateReportDownload, getAvailableReportsForRoles, parseReportFormat } from "@/server/modules/reports/service";
 import type { ReportFormat } from "@/lib/reports/types";
@@ -45,7 +45,7 @@ function respond(content: string | Buffer | Uint8Array | ArrayBuffer, format: Re
 
 export async function GET(request: Request) {
   try {
-    const user = await requireUser();
+    const user = await requireUser("reports:read");
     const { searchParams } = new URL(request.url);
     const format = parseReportFormat(searchParams.get("format"));
 
@@ -84,7 +84,9 @@ export async function GET(request: Request) {
     }
     return response;
   } catch (err) {
-    console.error("Reports API error:", err);
+    if (!(err instanceof ApiError)) {
+      console.error("Reports API error:", err);
+    }
     return errorResponse(err);
   }
 }

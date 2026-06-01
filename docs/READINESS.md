@@ -1,6 +1,6 @@
 # Release Readiness — AI Strategic Academy
 
-Дата актуализации: 2026-05-31
+Дата актуализации: 2026-06-01
 
 Этот документ — единая рабочая матрица готовности платформы. Он не заменяет подробные планы, а фиксирует текущую операционную правду: что уже доказано, что только реализовано в коде, и что блокирует production-ready статус.
 
@@ -50,11 +50,11 @@
 | Banned patterns | `done` | Включён в `npm run verify` |
 | Zero-warning lint | `done` | Последние записи `updates.md` фиксируют 0 errors / 0 warnings |
 | TypeScript | `done` | Последние repo-local проверки зелёные |
-| Unit/integration tests | `done` | Последняя запись: 466/466 |
-| Production build | `done` | Последняя запись: build 87 routes |
+| Unit/integration tests | `done` | Последний `npm run verify`: 508/508 Vitest tests |
+| Production build | `done` | Последний `npm run verify`: production build зелёный |
 | E2E smoke | `partial` | Smoke есть, но full six-role workflow proof ещё не закрыт |
 | Accessibility smoke | `partial` | Axe smoke есть; full WCAG/keyboard proof не закрыт |
-| Security negative paths | `partial` | Часть media/access tests закрыта; весь observer/report/certificate/privacy scope ещё не доказан |
+| Security negative paths | `partial` | Часть media/access tests закрыта; reports API/preview/async job/status, certificate designer preview, certificate PDF observer scope, report job status owner/safe-download URL, chat upload errors, course-builder inline mutations, popup diagnostics/targeting, cohort targeting и cohort deadline reads дополнительно ограничены server-side; весь observer/report/certificate/privacy scope ещё не доказан |
 | Operational drill | `blocked` | Требует staging/production env, backup/restore/rollback evidence |
 
 ## Открытые блокеры

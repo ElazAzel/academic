@@ -20,10 +20,42 @@ type DeadlineTargetRow = {
   deadline: { id: string; dueAt: Date } | null;
 };
 
+type CohortDeadlineScope = {
+  courseId: string | null;
+};
+
+async function assertCanManageCohortDeadlines(
+  cohort: CohortDeadlineScope,
+  actorId: string,
+) {
+  const actor = await prisma.user.findUnique({
+    where: { id: actorId },
+    include: { roles: { include: { role: { select: { key: true } } } } },
+  });
+  if (!actor) throw new ApiError("unauthorized", "Пользователь не найден", 401);
+
+  const roleKeys = actor.roles.map((r) => r.role.key);
+  if (roleKeys.includes("admin")) return;
+
+  if (!roleKeys.includes("instructor") || !cohort.courseId) {
+    throw new ApiError("forbidden", "Недостаточно прав", 403);
+  }
+
+  const instructor = await prisma.courseInstructor.findUnique({
+    where: { courseId_userId: { courseId: cohort.courseId, userId: actorId } },
+  });
+  if (!instructor) {
+    throw new ApiError("forbidden", "Вы не преподаватель этого курса", 403);
+  }
+}
+
 /**
  * Get all block deadlines for a cohort with block details.
  */
-export async function getCohortBlockDeadlines(cohortId: string) {
+export async function getCohortBlockDeadlines(
+  cohortId: string,
+  actorId: string,
+) {
   const cohort = await prisma.cohort.findUnique({
     where: { id: cohortId },
     select: {
@@ -33,6 +65,8 @@ export async function getCohortBlockDeadlines(cohortId: string) {
     },
   });
   if (!cohort) throw new ApiError("not_found", "Поток не найден", 404);
+
+  await assertCanManageCohortDeadlines(cohort, actorId);
 
   const modules = await prisma.module.findMany({
     where: { courseId: cohort.courseId! },
@@ -56,16 +90,18 @@ export async function getCohortBlockDeadlines(cohortId: string) {
 
   return modules.flatMap<DeadlineTargetRow>((courseModule) => {
     if (courseModule.blocks.length === 0) {
-      return [{
-        id: courseModule.id,
-        targetType: "module" as const,
-        title: courseModule.title,
-        order: courseModule.order,
-        moduleId: courseModule.id,
-        moduleTitle: courseModule.title,
-        moduleOrder: courseModule.order,
-        deadline: courseModule.deadlines[0] ?? null,
-      }];
+      return [
+        {
+          id: courseModule.id,
+          targetType: "module" as const,
+          title: courseModule.title,
+          order: courseModule.order,
+          moduleId: courseModule.id,
+          moduleTitle: courseModule.title,
+          moduleOrder: courseModule.order,
+          deadline: courseModule.deadlines[0] ?? null,
+        },
+      ];
     }
 
     return courseModule.blocks.map((block) => ({
@@ -95,28 +131,7 @@ export async function setBlockDeadlines(
   });
   if (!cohort) throw new ApiError("not_found", "Поток не найден", 404);
 
-  // Verify actor is admin or instructor of the course
-  const actor = await prisma.user.findUnique({
-    where: { id: actorId },
-    include: { roles: { include: { role: { select: { key: true } } } } },
-  });
-  if (!actor) throw new ApiError("unauthorized", "Пользователь не найден", 401);
-
-  const roleKeys = actor.roles.map((r) => r.role.key);
-  const isAdmin = roleKeys.includes("admin");
-  const isInstructor = roleKeys.includes("instructor");
-
-  if (!isAdmin) {
-    if (!isInstructor || !cohort.courseId) {
-      throw new ApiError("forbidden", "Недостаточно прав", 403);
-    }
-    const instructor = await prisma.courseInstructor.findUnique({
-      where: { courseId_userId: { courseId: cohort.courseId, userId: actorId } },
-    });
-    if (!instructor) {
-      throw new ApiError("forbidden", "Вы не преподаватель этого курса", 403);
-    }
-  }
+  await assertCanManageCohortDeadlines(cohort, actorId);
 
   // Upsert each deadline
   const results = [];
@@ -126,7 +141,8 @@ export async function setBlockDeadlines(
         where: { id: d.blockId, module: { courseId: cohort.courseId! } },
         select: { id: true },
       });
-      if (!block) throw new ApiError("not_found", "Блок не найден в курсе потока", 404);
+      if (!block)
+        throw new ApiError("not_found", "Блок не найден в курсе потока", 404);
 
       const existing = await prisma.blockCohortDeadline.findUnique({
         where: { cohortId_blockId: { cohortId, blockId: d.blockId } },
@@ -156,7 +172,8 @@ export async function setBlockDeadlines(
         where: { id: d.moduleId, courseId: cohort.courseId! },
         select: { id: true },
       });
-      if (!courseModule) throw new ApiError("not_found", "Модуль не найден в курсе потока", 404);
+      if (!courseModule)
+        throw new ApiError("not_found", "Модуль не найден в курсе потока", 404);
 
       const existing = await prisma.cohortDeadline.findUnique({
         where: { cohortId_moduleId: { cohortId, moduleId: d.moduleId } },
@@ -181,7 +198,11 @@ export async function setBlockDeadlines(
       continue;
     }
 
-    throw new ApiError("bad_request", "Укажите блок или модуль для дедлайна", 400);
+    throw new ApiError(
+      "bad_request",
+      "Укажите блок или модуль для дедлайна",
+      400,
+    );
   }
 
   return results;
@@ -244,7 +265,9 @@ export async function getCuratorDeadlineAlerts(curatorId: string) {
     });
 
     for (const dl of deadlines) {
-      const daysLeft = Math.ceil((dl.dueAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const daysLeft = Math.ceil(
+        (dl.dueAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      );
       if (daysLeft > 14) continue; // Only show if within 2 weeks or overdue
 
       alerts.push({

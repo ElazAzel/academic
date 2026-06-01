@@ -20,6 +20,7 @@ const mockObserverProjectFindMany = vi.hoisted(() => vi.fn());
 const mockObserverCohortFindMany = vi.hoisted(() => vi.fn());
 const mockCohortFindMany = vi.hoisted(() => vi.fn());
 const mockEnrollmentFindMany = vi.hoisted(() => vi.fn());
+const mockGenerateCertificatePdf = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
@@ -68,7 +69,7 @@ vi.mock("@/lib/security/rate-limit", () => ({
 }));
 
 vi.mock("@/server/modules/certificates/service", () => ({
-  generateCertificatePdf: vi.fn().mockResolvedValue(Buffer.from("%PDF-mock-data")),
+  generateCertificatePdf: mockGenerateCertificatePdf,
 }));
 
 // Import target API routes
@@ -88,6 +89,7 @@ describe("Platform Negative Security Boundaries", () => {
     mockObserverCohortFindMany.mockResolvedValue([]);
     mockCohortFindMany.mockResolvedValue([]);
     mockEnrollmentFindMany.mockResolvedValue([]);
+    mockGenerateCertificatePdf.mockResolvedValue(Buffer.from("%PDF-mock-data"));
   });
 
   describe("Certificate Access Hardening", () => {
@@ -157,6 +159,51 @@ describe("Platform Negative Security Boundaries", () => {
 
       expect(response.status).toBe(404);
       expect(data.error.message).toContain("не найдены");
+    });
+
+    it("lets a customer observer download a certificate for a scoped student", async () => {
+      mockRequireUser.mockResolvedValue({ id: "observer-1", email: "observer@test.com", roles: ["customer_observer"] });
+      mockCertificateFindUnique.mockResolvedValue({
+        userId: "student-1",
+        courseId: "course-1",
+        number: "CERT-001",
+        revokedAt: null,
+        user: { name: "Test Student" },
+        course: { title: "Test Course" },
+      });
+      mockObserverCohortFindMany.mockResolvedValue([{ cohortId: "cohort-1" }]);
+      mockEnrollmentFindMany.mockResolvedValue([{ userId: "student-1" }]);
+
+      const response = await getCertificatePdf(new Request("http://localhost"), {
+        params: Promise.resolve({ certificateId: "cert-1" }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe("application/pdf");
+      expect(mockGenerateCertificatePdf).toHaveBeenCalledWith("cert-1");
+    });
+
+    it("blocks a customer observer from downloading a certificate outside their scope", async () => {
+      mockRequireUser.mockResolvedValue({ id: "observer-1", email: "observer@test.com", roles: ["customer_observer"] });
+      mockCertificateFindUnique.mockResolvedValue({
+        userId: "student-outside",
+        courseId: "course-1",
+        number: "CERT-001",
+        revokedAt: null,
+        user: { name: "Outside Student" },
+        course: { title: "Test Course" },
+      });
+      mockObserverCohortFindMany.mockResolvedValue([{ cohortId: "cohort-1" }]);
+      mockEnrollmentFindMany.mockResolvedValue([{ userId: "student-allowed" }]);
+
+      const response = await getCertificatePdf(new Request("http://localhost"), {
+        params: Promise.resolve({ certificateId: "cert-outside" }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error.message).toContain("Нет доступа");
+      expect(mockGenerateCertificatePdf).not.toHaveBeenCalled();
     });
   });
 

@@ -23,3 +23,18 @@ export async function getActiveCohortsForSelector() {
     orderBy: { createdAt: "desc" },
   });
 }
+
+export async function listPopupTargetingCohorts() {
+  return prisma.cohort.findMany({
+    where: {
+      status: { not: "archived" },
+    },
+    select: {
+      id: true,
+      name: true,
+      course: { select: { title: true } },
+      status: true,
+    },
+    orderBy: { name: "asc" },
+  });
+}

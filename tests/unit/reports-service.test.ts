@@ -155,5 +155,7 @@ describe("reports service access and scope", () => {
 
     const superCuratorReports = getAvailableReportsForRoles(["super_curator"]).map((report) => report.type);
     expect(superCuratorReports).toContain("curator_workload");
+
+    expect(getAvailableReportsForRoles(["student"])).toEqual([]);
   });
 });

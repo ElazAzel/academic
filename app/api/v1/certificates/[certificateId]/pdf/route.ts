@@ -3,6 +3,7 @@ import { errorResponse, ApiError } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { generateCertificatePdf } from "@/server/modules/certificates/service";
+import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 
 const prisma = getPrisma();
 
@@ -31,13 +32,21 @@ export async function GET(_request: Request, context: Context) {
       throw new ApiError("forbidden", "Сертификат отозван и более недоступен для скачивания", 403);
     }
 
-    const isOwner = certificate.userId === user.id;
-    const isAdmin = user.roles.includes("admin");
-    const isInstructor = await prisma.courseInstructor.findFirst({
-      where: { courseId: certificate.courseId, userId: user.id },
-    });
+    let hasAccess = certificate.userId === user.id || user.roles.includes("admin");
 
-    if (!isOwner && !isAdmin && !isInstructor) {
+    if (!hasAccess && user.roles.includes("instructor")) {
+      const isInstructor = await prisma.courseInstructor.findFirst({
+        where: { courseId: certificate.courseId, userId: user.id },
+      });
+      hasAccess = Boolean(isInstructor);
+    }
+
+    if (!hasAccess && user.roles.includes("customer_observer")) {
+      const scopedStudentIds = await getScopedStudentIdsForObserver(user.id);
+      hasAccess = (scopedStudentIds ?? []).includes(certificate.userId);
+    }
+
+    if (!hasAccess) {
       throw new ApiError("forbidden", "Нет доступа к сертификату", 403);
     }
 

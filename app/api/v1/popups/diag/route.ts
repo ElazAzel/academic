@@ -1,11 +1,11 @@
-import { errorResponse, ok } from "@/lib/http";
+import { ApiError, errorResponse, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 
 // GET /api/v1/popups/diag — diagnostic endpoint to check DB connectivity
 export async function GET() {
   try {
-    const user = await requireUser();
+    const user = await requireUser("settings:manage");
     const prisma = getPrisma();
 
     // Test 1: User query
@@ -21,10 +21,14 @@ export async function GET() {
     const popupCount = await prisma.adminPopup.count();
 
     // Test 3: Notifications table
-    const notifCount = await prisma.notification.count({ where: { userId: user.id } });
+    const notifCount = await prisma.notification.count({
+      where: { userId: user.id },
+    });
 
     // Test 4: Enrollments (count only, no PII exposure)
-    const enrollmentCount = await prisma.enrollment.count({ where: { userId: user.id } });
+    const enrollmentCount = await prisma.enrollment.count({
+      where: { userId: user.id },
+    });
 
     return ok({
       userFound: !!dbUser,
@@ -35,7 +39,9 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("[popups/diag] Fatal error:", error);
+    if (!(error instanceof ApiError)) {
+      console.error("[popups/diag] Fatal error:", error);
+    }
     return errorResponse(error);
   }
 }

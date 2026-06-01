@@ -88,7 +88,7 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     icon: "trending_up",
     owner: "Academic operations",
     decision: "Кто проходит курс, где есть отставание и какой поток требует внимания.",
-    allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer", "student"],
+    allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
   },
   risk: {
     type: "risk",
@@ -108,7 +108,7 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     icon: "checklist",
     owner: "Review operations",
     decision: "Какие работы ждут проверки, где нужна доработка и кто проверяет.",
-    allowedRoles: ["admin", "instructor", "curator", "super_curator", "student"],
+    allowedRoles: ["admin", "instructor", "curator", "super_curator"],
   },
   certificates: {
     type: "certificates",
@@ -118,7 +118,7 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     icon: "verified",
     owner: "Certification",
     decision: "Какие сертификаты выпущены в разрешенном scope.",
-    allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer", "student"],
+    allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
   },
   curator_workload: {
     type: "curator_workload",

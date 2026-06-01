@@ -108,10 +108,10 @@ const FORMATS: { id: FormatId; label: string; icon: typeof FileText }[] = [
 ];
 
 const ALLOWED_ROLES_MAP: Record<ReportTypeId, string[]> = {
-  progress: ["admin", "instructor", "curator", "super_curator", "customer_observer", "student"],
+  progress: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
   risk: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
-  certificates: ["admin", "instructor", "curator", "super_curator", "customer_observer", "student"],
-  assignments: ["admin", "instructor", "curator", "super_curator", "student"],
+  certificates: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
+  assignments: ["admin", "instructor", "curator", "super_curator"],
   curator_workload: ["admin", "super_curator"],
 };
 
