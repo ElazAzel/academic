@@ -15,6 +15,12 @@ import { QuestionStatus } from "@prisma/client";
 
 const prisma = getPrisma();
 
+function throwCuratorActionError(error: unknown, label: string): never {
+  if (error instanceof ApiError) throw error;
+  console.error(label, error);
+  throw new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+}
+
 async function assertCuratorStudentAccess(actor: { id: string; roles: string[] }, studentId: string) {
   if (actor.roles.includes("admin")) return;
   const assignment = await prisma.curatorAssignment.findFirst({
@@ -91,8 +97,7 @@ export async function answerQuestionAction(questionId: string, answer: string) {
     revalidatePath("/curator/questions");
     return { success: true };
   } catch (error) {
-    console.error("[answerQuestionAction]", error);
-    throw error;
+    throwCuratorActionError(error, "[answerQuestionAction]");
   }
 }
 
@@ -166,8 +171,7 @@ export async function reviewSubmissionAction(submissionId: string, input: {
     revalidatePath("/student/assignments");
     return { success: true };
   } catch (error) {
-    console.error("[reviewSubmissionAction]", error);
-    throw error;
+    throwCuratorActionError(error, "[reviewSubmissionAction]");
   }
 }
 
@@ -206,8 +210,7 @@ export async function markSubmissionInReview(submissionId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("[markSubmissionInReview]", error);
-    throw error;
+    throwCuratorActionError(error, "[markSubmissionInReview]");
   }
 }
 
@@ -294,8 +297,7 @@ export async function getSubmissionDetail(submissionId: string) {
       },
     };
   } catch (error) {
-    console.error("[getSubmissionDetail]", error);
-    throw error;
+    throwCuratorActionError(error, "[getSubmissionDetail]");
   }
 }
 
@@ -400,8 +402,7 @@ export async function forwardQuestionAction(questionId: string) {
     revalidatePath("/instructor");
     return { success: true };
   } catch (error) {
-    console.error("[forwardQuestionAction]", error);
-    throw error;
+    throwCuratorActionError(error, "[forwardQuestionAction]");
   }
 }
 
@@ -479,8 +480,7 @@ export async function answerForwardedQuestionAction(formData: FormData) {
     revalidatePath("/instructor/questions");
     revalidatePath("/curator");
   } catch (error) {
-    console.error("[answerForwardedQuestionAction]", error);
-    throw error;
+    throwCuratorActionError(error, "[answerForwardedQuestionAction]");
   }
 }
 

@@ -17,6 +17,11 @@ import type { RoleKey } from "@/types/domain";
 const prisma = getPrisma();
 const MAX_CHAT_MESSAGE_LENGTH = 10_000;
 
+function throwChatActionError(error: unknown, label: string): never {
+  if (error instanceof ApiError) throw error;
+  console.error(label, error);
+  throw new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+}
 
 const ALLOWED_ATTACHMENT_TYPES = new Set([
   "image/png",
@@ -175,8 +180,7 @@ export async function getConversation(studentId: string, lessonId?: string) {
       replyToSenderName: m.replyTo ? maskChatName(m.replyTo.sender.name, m.replyTo.senderId, roles, user.id, getRoleKeys(m.replyTo.sender)) : null,
     }));
   } catch (error) {
-    console.error("[getConversation]", error);
-    throw error;
+    throwChatActionError(error, "[getConversation]");
   }
 }
 
@@ -260,8 +264,7 @@ export async function getMyConversations() {
 
     return Array.from(convMap.values()).sort((a, b) => b.lastDate.localeCompare(a.lastDate));
   } catch (error) {
-    console.error("[getMyConversations]", error);
-    throw error;
+    throwChatActionError(error, "[getMyConversations]");
   }
 }
 
@@ -396,11 +399,11 @@ export async function sendMessageAction(formData: FormData) {
     }
     return { success: true };
   } catch (error) {
-    console.error("[sendMessageAction]", error);
     if (error instanceof z.ZodError) {
       return { success: false, error: "Ошибка валидации данных" };
     }
     if (error instanceof ApiError) throw error;
+    console.error("[sendMessageAction]", error);
     return { success: false, error: "Произошла ошибка при отправке сообщения" };
   }
 }
@@ -409,8 +412,7 @@ export async function getUploadUrl() {
   try {
     return getUploadUrlForFile("image.png", "image/png");
   } catch (error) {
-    console.error("[getUploadUrl]", error);
-    throw error;
+    throwChatActionError(error, "[getUploadUrl]");
   }
 }
 
@@ -441,8 +443,7 @@ export async function getUploadUrlForFile(filename: string, contentType: string)
     }
     return result;
   } catch (error) {
-    console.error("[getUploadUrlForFile]", error);
-    throw error;
+    throwChatActionError(error, "[getUploadUrlForFile]");
   }
 }
 

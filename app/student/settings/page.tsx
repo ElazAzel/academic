@@ -145,6 +145,7 @@ export default async function StudentSettingsPage() {
                           <p className="text-xs text-muted-foreground">{item.desc}</p>
                         </div>
                         <label aria-label={item.label} className="relative inline-flex cursor-pointer items-center">
+                          <input type="hidden" name={`notification_${item.key}`} value="false" />
                           <input
                             type="checkbox"
                             name={`notification_${item.key}`}

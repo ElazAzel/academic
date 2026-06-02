@@ -7,7 +7,16 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { requireRole } from "@/lib/auth/page-guards";
 import { maskStudentName } from "@/lib/utils";
 import type { CourseSummary, DashboardMetric } from "@/types/domain";
-import { ProgressStatus, QuestionStatus, SubmissionStatus } from "@prisma/client";
+import { Prisma, ProgressStatus, QuestionStatus, SubmissionStatus } from "@prisma/client";
+
+function quizWhereForCourseIds(courseIds: string[]): Prisma.QuizWhereInput {
+  return {
+    OR: [
+      { courseId: { in: courseIds } },
+      { lesson: { module: { courseId: { in: courseIds } } } },
+    ],
+  };
+}
 
 export async function getInstructorDashboard() {
   await requireRole(["instructor"]);
@@ -166,7 +175,7 @@ export async function getInstructorAnalytics() {
         where: { courseId: { in: courseIds }, status: ProgressStatus.COMPLETED }
       }),
       prisma.quizAttempt.aggregate({
-        where: { quiz: { courseId: { in: courseIds } } },
+        where: { quiz: quizWhereForCourseIds(courseIds) },
         _avg: { score: true }
       }),
       prisma.lessonRating.aggregate({
@@ -190,7 +199,7 @@ export async function getInstructorAnalytics() {
         _count: { _all: true }
       }),
       prisma.quiz.findMany({
-        where: { courseId: { in: courseIds } },
+        where: quizWhereForCourseIds(courseIds),
         select: { id: true, title: true },
         orderBy: { createdAt: "desc" },
         take: QUERY_LIMITS.dashboardQueue,

@@ -118,7 +118,15 @@ describe("ReportData with CertificateRow", () => {
       title: "Отчёт по сертификатам",
       filename: "certs.csv",
       rows: [
-        { number: "ASA-001", studentName: "Alice", email: "a@t.com", course: "AI 101", issuedAt: "2026-05-01" },
+        {
+          number: "ASA-001",
+          studentName: "Alice",
+          email: "a@t.com",
+          course: "AI 101",
+          issuedAt: "2026-05-01",
+          status: "Действителен",
+          revokedAt: null,
+        },
       ],
       grouped: new Map(),
       summary: { total: 1 },
@@ -126,6 +134,7 @@ describe("ReportData with CertificateRow", () => {
 
     expect(certData.rows[0].number).toBe("ASA-001");
     expect(certData.rows[0].issuedAt).toBe("2026-05-01");
+    expect(certData.rows[0].status).toBe("Действителен");
     expect(certData.summary.total).toBe(1);
   });
 });

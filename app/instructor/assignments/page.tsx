@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 export default async function InstructorAssignmentsPage() {
  const user = await requireRolePage(["instructor", "admin"]);
 
- const assignments = await getInstructorAssignmentsPageData(user.id);
+ const assignments = await getInstructorAssignmentsPageData(user.id, user.roles);
 
  return (
   <AppShell role="instructor">
@@ -44,7 +44,7 @@ export default async function InstructorAssignmentsPage() {
          <div className="flex-1 min-w-0">
           <p className="font-label-lg text-label-lg text-m3-on-surface">{a.title}</p>
           <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
-           {a.course?.title} {a.lesson ? `· ${a.lesson.title}` : ""} · макс. {a.maxAttempts} попытки · макс. балл {a.maxScore}
+           {a.course?.title ?? a.lesson?.module.course.title ?? ""} {a.lesson ? `· ${a.lesson.title}` : ""} · макс. {a.maxAttempts} попытки · макс. балл {a.maxScore}
           </p>
          </div>
           {a._count.submissions > 0 && (

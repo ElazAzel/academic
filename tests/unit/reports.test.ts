@@ -100,7 +100,15 @@ describe("generateRiskCsv", () => {
 
 describe("generateCertificateCsv", () => {
   const rows = [
-    { number: "C001", studentName: "Alice", email: "alice@test.com", course: "AI 101", issuedAt: "2026-05-01" },
+    {
+      number: "C001",
+      studentName: "Alice",
+      email: "alice@test.com",
+      course: "AI 101",
+      issuedAt: "2026-05-01",
+      status: "Действителен",
+      revokedAt: null,
+    },
   ];
 
   it("includes BOM and title", () => {
@@ -225,6 +233,7 @@ describe("fetchCertificateData", () => {
         user: { name: "Alice", email: "alice@test.com" },
         course: { title: "AI 101" },
         issuedAt: new Date("2026-05-01"),
+        revokedAt: null,
       },
     ]);
 
@@ -236,6 +245,8 @@ describe("fetchCertificateData", () => {
       email: "alice@test.com",
       course: "AI 101",
       issuedAt: "2026-05-01",
+      status: "Действителен",
+      revokedAt: null,
     });
   });
 
@@ -247,10 +258,31 @@ describe("fetchCertificateData", () => {
         user: { name: null, email: "bob@test.com" },
         course: { title: "ML 201" },
         issuedAt: new Date("2026-05-02"),
+        revokedAt: null,
       },
     ]);
 
     const rows = await fetchCertificateData();
     expect(rows[0].studentName).toBe("bob@test.com");
+  });
+
+  it("marks revoked certificates explicitly in report rows", async () => {
+    mockCertificateFindMany.mockResolvedValue([
+      {
+        number: "ASA-2026-0003",
+        userId: "u3",
+        user: { name: "Charlie", email: "charlie@test.com" },
+        course: { title: "AI 101" },
+        issuedAt: new Date("2026-05-03"),
+        revokedAt: new Date("2026-05-10"),
+      },
+    ]);
+
+    const rows = await fetchCertificateData();
+    expect(rows[0]).toMatchObject({
+      number: "ASA-2026-0003",
+      status: "Отозван",
+      revokedAt: "2026-05-10",
+    });
   });
 });

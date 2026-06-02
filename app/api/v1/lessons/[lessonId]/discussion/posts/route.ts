@@ -2,8 +2,13 @@ import { errorResponse, ok, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { createDiscussionPost, deleteDiscussionPost } from "@/server/modules/discussion/service";
 import { createDiscussionPostSchema } from "@/lib/validation";
+import { z } from "zod";
 
 type Context = { params: Promise<{ lessonId: string }> };
+
+const deleteDiscussionPostSchema = z.object({
+  postId: z.string().min(1, "postId обязателен"),
+});
 
 /**
  * POST /api/v1/lessons/:lessonId/discussion/posts
@@ -34,12 +39,8 @@ export async function DELETE(request: Request, context: Context) {
   try {
     const user = await requireUser("courses:read");
     const { lessonId } = await context.params;
-    const body = await request.json().catch(() => ({}));
-    const postId = body.postId as string;
-    if (!postId) {
-      return ok({ error: "postId обязателен" }, 400);
-    }
-    await deleteDiscussionPost(user.id, lessonId, postId);
+    const input = await parseJson(request, deleteDiscussionPostSchema);
+    await deleteDiscussionPost(user.id, lessonId, input.postId);
     return ok({ success: true });
   } catch (error) {
     return errorResponse(error);

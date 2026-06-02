@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/lib/http";
 
 const mockRequireRole = vi.hoisted(() => vi.fn());
 const mockRevalidatePath = vi.hoisted(() => vi.fn());
@@ -75,10 +76,34 @@ beforeEach(() => {
 
 describe("chat actions", () => {
   it("blocks a curator from reading an unassigned student chat", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     mockCuratorAssignmentFindFirst.mockResolvedValue(null);
 
     await expect(getConversation("student1")).rejects.toMatchObject({ code: "forbidden", status: 403 });
     expect(mockMessageFindMany).not.toHaveBeenCalled();
+    expect(consoleSpy).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+
+  it("wraps unexpected conversation read errors without leaking details", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockMessageFindMany.mockRejectedValue(new Error("postgres://secret-chat-read"));
+
+    let caught: unknown;
+    try {
+      await getConversation("student1");
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toMatchObject({
+      code: "internal_error",
+      status: 500,
+      message: "Внутренняя ошибка сервера",
+    } satisfies Partial<ApiError>);
+    expect((caught as Error).message).not.toContain("secret-chat-read");
+    expect(consoleSpy).toHaveBeenCalledWith("[getConversation]", expect.any(Error));
+    consoleSpy.mockRestore();
   });
 
   it("returns lesson context for conversation messages", async () => {
@@ -319,12 +344,15 @@ describe("chat actions", () => {
   });
 
   it("rejects oversized text messages before creating a message", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const formData = new FormData();
     formData.set("receiverId", "student1");
     formData.set("text", "x".repeat(10_001));
 
     await expect(sendMessageAction(formData)).rejects.toMatchObject({ code: "bad_request", status: 400 });
     expect(mockMessageCreate).not.toHaveBeenCalled();
+    expect(consoleSpy).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 
   it("marks only messages received by the current user as read", async () => {
@@ -347,10 +375,13 @@ describe("chat actions", () => {
   });
 
   it("rejects unsupported upload content types", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     await expect(getUploadUrlForFile("script.js", "application/javascript")).rejects.toMatchObject({
       code: "bad_request",
       status: 400,
     });
     expect(mockCreatePresignedUploadUrl).not.toHaveBeenCalled();
+    expect(consoleSpy).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });

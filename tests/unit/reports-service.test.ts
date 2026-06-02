@@ -66,7 +66,8 @@ vi.mock("@/lib/reports/pdf-generator", () => ({
   generateCuratorWorkloadPdf: () => new Uint8Array([1]),
 }));
 
-const { generateReportDownload, getAvailableReportsForRoles } = await import("@/server/modules/reports/service");
+const { generateReportDownload, generateReportPreview, getAvailableReportsForRoles, parseReportFormat } =
+  await import("@/server/modules/reports/service");
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -106,6 +107,41 @@ describe("reports service access and scope", () => {
     });
 
     expect(mockFetchCertificateData).toHaveBeenCalledWith({
+      studentIds: ["student-allowed"],
+      cohortIds: ["cohort-1"],
+      courseIds: ["course-allowed"],
+    });
+  });
+
+  it("scopes customer observer progress exports to permitted students and cohorts", async () => {
+    mockGetObserverScope.mockResolvedValue({ isUnrestricted: false, projectIds: ["project-1"], cohortIds: ["cohort-1"] });
+    mockGetScopedStudentIdsForObserver.mockResolvedValue(["student-allowed"]);
+    mockCohortFindMany.mockResolvedValue([{ courseId: "course-allowed" }]);
+
+    await generateReportDownload({
+      user: { id: "observer-1", roles: ["customer_observer"] },
+      type: "progress",
+      format: "csv",
+    });
+
+    expect(mockFetchProgressData).toHaveBeenCalledWith({
+      studentIds: ["student-allowed"],
+      cohortIds: ["cohort-1"],
+      courseIds: ["course-allowed"],
+    });
+  });
+
+  it("scopes customer observer risk previews to permitted students and cohorts", async () => {
+    mockGetObserverScope.mockResolvedValue({ isUnrestricted: false, projectIds: ["project-1"], cohortIds: ["cohort-1"] });
+    mockGetScopedStudentIdsForObserver.mockResolvedValue(["student-allowed"]);
+    mockCohortFindMany.mockResolvedValue([{ courseId: "course-allowed" }]);
+
+    await generateReportPreview({
+      user: { id: "observer-1", roles: ["customer_observer"] },
+      type: "risk",
+    });
+
+    expect(mockFetchRiskData).toHaveBeenCalledWith({
       studentIds: ["student-allowed"],
       cohortIds: ["cohort-1"],
       courseIds: ["course-allowed"],
@@ -157,5 +193,15 @@ describe("reports service access and scope", () => {
     expect(superCuratorReports).toContain("curator_workload");
 
     expect(getAvailableReportsForRoles(["student"])).toEqual([]);
+  });
+
+  it("returns a Russian ApiError for unsupported report formats", () => {
+    expect(() => parseReportFormat("html")).toThrowError(
+      expect.objectContaining({
+        code: "bad_request",
+        status: 400,
+        message: "Неподдерживаемый формат отчёта. Используйте csv, xlsx или pdf.",
+      }),
+    );
   });
 });

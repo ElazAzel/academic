@@ -1,7 +1,12 @@
-import { ApiError, errorResponse, ok } from "@/lib/http";
+import { z } from "zod";
+import { ApiError, errorResponse, ok, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 import { touchAuthDeviceSession } from "@/server/modules/auth/device-sessions";
+
+const sessionPayloadSchema = z.object({
+  sessionId: z.string().trim().min(1, "Не указан sessionId"),
+});
 
 /**
  * POST /api/v1/sessions/heartbeat
@@ -12,12 +17,7 @@ export async function POST(request: Request) {
     const user = await requireUser();
     const prisma = getPrisma();
 
-    const body = (await request.json()) as { sessionId: string };
-    if (!body.sessionId) {
-      return errorResponse(
-        new ApiError("validation_error", "Не указан sessionId", 400),
-      );
-    }
+    const body = await parseJson(request, sessionPayloadSchema);
 
     const session = await prisma.userSession.findFirst({
       where: { id: body.sessionId, userId: user.id, durationSec: null },
@@ -29,17 +29,24 @@ export async function POST(request: Request) {
       );
     }
 
+    if (user.authDeviceSessionId) {
+      const touched = await touchAuthDeviceSession(user.id, user.authDeviceSessionId);
+      if (touched.count === 0) {
+        throw new ApiError(
+          "forbidden",
+          "Сессия устройства отозвана. Войдите снова.",
+          403,
+          { reason: "device-limit" },
+        );
+      }
+    }
+
     // Extend endedAt forward so end-of-session calculation can use it
     const now = new Date();
-    await Promise.all([
-      prisma.userSession.update({
-        where: { id: body.sessionId },
-        data: { endedAt: now },
-      }),
-      user.authDeviceSessionId
-        ? touchAuthDeviceSession(user.id, user.authDeviceSessionId)
-        : Promise.resolve(),
-    ]);
+    await prisma.userSession.update({
+      where: { id: body.sessionId },
+      data: { endedAt: now },
+    });
 
     return ok({ sessionId: session.id });
   } catch (error) {

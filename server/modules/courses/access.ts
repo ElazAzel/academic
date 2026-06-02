@@ -7,6 +7,7 @@ import type { AppSessionUser } from "@/types/domain";
 const prisma = getPrisma();
 
 export type CourseAccessActor = Pick<AppSessionUser, "id" | "roles">;
+const COURSE_ANALYTICS_ROLES = new Set(["admin", "instructor", "curator", "super_curator", "customer_observer"]);
 
 function hasRole(actor: CourseAccessActor, role: string) {
   return actor.roles.includes(role as CourseAccessActor["roles"][number]);
@@ -141,6 +142,70 @@ export async function assertCourseReadAccess(actor: CourseAccessActor, courseId:
   if (!allowed) {
     throw new ApiError("forbidden", "Нет доступа к этому курсу", 403);
   }
+}
+
+export async function assertCourseAnalyticsAccess(actor: CourseAccessActor, courseId: string) {
+  if (!actor.roles.some((role) => COURSE_ANALYTICS_ROLES.has(role))) {
+    throw new ApiError("forbidden", "Нет доступа к аналитике курса", 403);
+  }
+
+  await assertCourseReadAccess(actor, courseId);
+}
+
+export async function assertLearningContentAccess(actor: CourseAccessActor, courseId: string) {
+  if (hasRole(actor, "admin")) {
+    return;
+  }
+
+  if (hasRole(actor, "instructor")) {
+    const instructor = await prisma.courseInstructor.findUnique({
+      where: { courseId_userId: { courseId, userId: actor.id } },
+      select: { courseId: true },
+    });
+    if (instructor) return;
+  }
+
+  if (hasRole(actor, "student")) {
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { userId_courseId: { userId: actor.id, courseId } },
+      select: { status: true },
+    });
+    if (enrollment?.status === EnrollmentStatus.ACTIVE) return;
+  }
+
+  if (hasRole(actor, "curator")) {
+    const scopedEnrollment = await prisma.enrollment.findFirst({
+      where: {
+        courseId,
+        status: EnrollmentStatus.ACTIVE,
+        user: {
+          curatorAssignments: {
+            some: { curatorId: actor.id, active: true },
+          },
+        },
+      },
+      select: { id: true },
+    });
+    if (scopedEnrollment) return;
+  }
+
+  if (hasRole(actor, "super_curator")) {
+    const scopedEnrollment = await prisma.enrollment.findFirst({
+      where: {
+        courseId,
+        status: EnrollmentStatus.ACTIVE,
+        user: {
+          curatorAssignments: {
+            some: { superCuratorId: actor.id, active: true },
+          },
+        },
+      },
+      select: { id: true },
+    });
+    if (scopedEnrollment) return;
+  }
+
+  throw new ApiError("forbidden", "Нет доступа к учебному контенту", 403);
 }
 
 export async function canReadCourseAnswerKeys(actor: CourseAccessActor, courseId: string) {

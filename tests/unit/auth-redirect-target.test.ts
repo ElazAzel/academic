@@ -35,6 +35,19 @@ describe("auth redirect target", () => {
     expect(mockUserFindUnique).not.toHaveBeenCalled();
   });
 
+  it("uses product role priority when JWT has several roles", async () => {
+    mockGetToken.mockResolvedValue({
+      roles: ["student", "customer_observer", "instructor"],
+      email: "multi@academy.local",
+    });
+
+    const response = await GET(request());
+    const body = await response.json();
+
+    expect(body.data.path).toBe("/instructor");
+    expect(mockUserFindUnique).not.toHaveBeenCalled();
+  });
+
   it("falls back to database roles when token roles are not propagated yet", async () => {
     mockGetToken.mockResolvedValue({ email: "supercurator@academy.local" });
     mockUserFindUnique.mockResolvedValue({
@@ -53,6 +66,32 @@ describe("auth redirect target", () => {
         roles: { select: { role: { select: { key: true } } } },
       },
     });
+  });
+
+  it("applies product role priority to database fallback roles", async () => {
+    mockGetToken.mockResolvedValue({ email: "fallback@academy.local" });
+    mockUserFindUnique.mockResolvedValue({
+      status: "ACTIVE",
+      roles: [{ role: { key: "student" } }, { role: { key: "curator" } }],
+    });
+
+    const response = await GET(request());
+    const body = await response.json();
+
+    expect(body.data.path).toBe("/curator");
+  });
+
+  it("does not use database roles for inactive users", async () => {
+    mockGetToken.mockResolvedValue({ email: "blocked@academy.local" });
+    mockUserFindUnique.mockResolvedValue({
+      status: "blocked",
+      roles: [{ role: { key: "admin" } }],
+    });
+
+    const response = await GET(request());
+    const body = await response.json();
+
+    expect(body.data.path).toBe("/403");
   });
 
   it("returns forbidden when neither token nor database roles are available", async () => {

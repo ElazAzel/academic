@@ -16,7 +16,7 @@ const bulkSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requireUser();
+    const user = await requireUser("certificates:read");
     const isAdmin = user.roles.includes("admin");
     const isObserver = user.roles.includes("customer_observer");
     if (!isAdmin && !isObserver) {

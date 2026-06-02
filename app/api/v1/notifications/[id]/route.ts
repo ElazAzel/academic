@@ -1,4 +1,4 @@
-import { errorResponse, ok } from "@/lib/http";
+import { ApiError, errorResponse, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getNotificationById } from "@/server/modules/notifications/service";
 
@@ -13,7 +13,7 @@ export async function GET(
     const notification = await getNotificationById(id, user.id);
 
     if (!notification) {
-      return errorResponse(Object.assign(new Error("Уведомление не найдено"), { code: "not_found", status: 404 }));
+      return errorResponse(new ApiError("not_found", "Уведомление не найдено", 404));
     }
 
     return ok(notification);

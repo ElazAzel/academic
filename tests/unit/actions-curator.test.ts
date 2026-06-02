@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { ApiError } from "@/lib/http";
 
 const mockRequireRole = vi.hoisted(() => vi.fn());
 const mockRevalidatePath = vi.hoisted(() => vi.fn());
@@ -37,6 +38,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockRequireRole.mockResolvedValue(curatorUser);
   mockCuratorAssignmentFindFirst.mockResolvedValue({ id: "ass1" });
+  mockLessonQuestionUpdate.mockResolvedValue({ id: "q1" });
+  mockAssignmentSubmissionUpdate.mockResolvedValue({ id: "s1", userId: "u1", assignment: { lessonId: "l1" } });
+  mockCreateNotification.mockResolvedValue(undefined);
+  mockMarkLessonProgress.mockResolvedValue(undefined);
+  mockLogAudit.mockResolvedValue(undefined);
 });
 
 describe("answerQuestionAction", () => {
@@ -66,6 +72,29 @@ describe("answerQuestionAction", () => {
     mockCuratorAssignmentFindFirst.mockResolvedValue(null);
     await expect(answerQuestionAction("q1", "answer")).rejects.toThrow("Доступ запрещен");
   });
+
+  it("wraps unexpected update errors without leaking details", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockLessonQuestionFindUnique.mockResolvedValue({ id: "q1", studentId: "u1", lessonId: "l1" });
+    mockLessonQuestionUpdate.mockRejectedValue(new Error("postgres://secret-curator-answer"));
+
+    let caught: unknown;
+    try {
+      await answerQuestionAction("q1", "answer");
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toMatchObject({
+      code: "internal_error",
+      status: 500,
+      message: "Внутренняя ошибка сервера",
+    } satisfies Partial<ApiError>);
+    expect((caught as Error).message).not.toContain("secret-curator-answer");
+    expect(consoleSpy).toHaveBeenCalledWith("[answerQuestionAction]", expect.any(Error));
+
+    consoleSpy.mockRestore();
+  });
 });
 
 describe("reviewSubmissionAction", () => {
@@ -85,8 +114,11 @@ describe("reviewSubmissionAction", () => {
   });
 
   it("throws if submission not found", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     mockAssignmentSubmissionFindUnique.mockResolvedValue(null);
     await expect(reviewSubmissionAction("s1", { status: "ACCEPTED", score: 90 })).rejects.toThrow("Запись не найдена");
+    expect(consoleSpy).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 
   it("throws if no access to student", async () => {

@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 export default async function InstructorQuizzesPage() {
  const user = await requireRolePage(["instructor", "admin"]);
 
- const quizzes = await getInstructorQuizzesPageData(user.id);
+ const quizzes = await getInstructorQuizzesPageData(user.id, user.roles);
 
  return (
   <AppShell role="instructor">
@@ -40,7 +40,7 @@ export default async function InstructorQuizzesPage() {
          <div className="flex-1 min-w-0">
           <p className="text-sm font-medium">{q.title}</p>
           <p className="text-xs text-muted-foreground">
-           {q.course?.title} {q.lesson ? `· ${q.lesson.title}` : ""} · {q._count.questions} вопросов · порог {q.passThreshold}% · {q.maxAttempts} попытки
+           {q.course?.title ?? q.lesson?.module.course.title ?? ""} {q.lesson ? `· ${q.lesson.title}` : ""} · {q._count.questions} вопросов · порог {q.passThreshold}% · {q.maxAttempts} попытки
           </p>
          </div>
          <Button size="sm" variant="secondary" asChild>

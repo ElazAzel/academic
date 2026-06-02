@@ -27,6 +27,8 @@ export interface CertificateRow {
   email: string;
   course: string;
   issuedAt: string;
+  status: string;
+  revokedAt: string | null;
 }
 
 export interface AssignmentRow {

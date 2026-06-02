@@ -54,7 +54,8 @@ vi.mock("@/lib/prisma", () => ({
   }),
 }));
 
-const { claimCertificateForCourse, issueCertificate, revokeCertificate } = await import("@/server/modules/certificates/service");
+const { claimCertificateForCourse, issueCertificate, revokeCertificate, verifyCertificateByCode } =
+  await import("@/server/modules/certificates/service");
 
 describe("certificate notification and audit events", () => {
   beforeEach(() => {
@@ -217,5 +218,101 @@ describe("certificate notification and audit events", () => {
         }),
       }),
     );
+  });
+
+  it("returns null for unknown public verification codes", async () => {
+    mockCertificateFindUnique.mockResolvedValue(null);
+
+    await expect(verifyCertificateByCode("missing-code")).resolves.toBeNull();
+    expect(mockCertificateFindUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { verificationCode: "missing-code" },
+      }),
+    );
+  });
+
+  it("returns only public certificate data for valid verification codes", async () => {
+    mockCertificateFindUnique.mockResolvedValue({
+      id: "certificate-private-id",
+      userId: "student-private-id",
+      courseId: "course-private-id",
+      number: "ASA-2026-PUBLIC",
+      verificationCode: "valid-code",
+      verificationUrl: "https://academy.local/certificates/verify/valid-code",
+      issuedAt: new Date("2026-05-20T00:00:00.000Z"),
+      revokedAt: null,
+      user: {
+        id: "student-private-id",
+        name: "Иван Иванов",
+        email: "ivan@example.com",
+        organization: null,
+      },
+      course: {
+        id: "course-private-id",
+        title: "Стратегия AI",
+        durationHours: 24,
+      },
+    });
+
+    const result = await verifyCertificateByCode("valid-code");
+
+    expect(result).toEqual({
+      valid: true,
+      number: "ASA-2026-PUBLIC",
+      verificationCode: "valid-code",
+      verificationUrl: "https://academy.local/certificates/verify/valid-code",
+      studentName: "Иван Иванов",
+      courseTitle: "Стратегия AI",
+      durationHours: 24,
+      issuedAt: new Date("2026-05-20T00:00:00.000Z"),
+      revokedAt: null,
+    });
+    expect(result).not.toHaveProperty("id");
+    expect(result).not.toHaveProperty("userId");
+    expect(result).not.toHaveProperty("courseId");
+    expect(result).not.toHaveProperty("email");
+  });
+
+  it("marks revoked public verification results as invalid without exposing private identifiers", async () => {
+    const revokedAt = new Date("2026-05-21T00:00:00.000Z");
+    mockCertificateFindUnique.mockResolvedValue({
+      id: "certificate-private-id",
+      userId: "student-private-id",
+      courseId: "course-private-id",
+      number: "ASA-2026-REVOKED",
+      verificationCode: "revoked-code",
+      verificationUrl: "https://academy.local/certificates/verify/revoked-code",
+      issuedAt: new Date("2026-05-20T00:00:00.000Z"),
+      revokedAt,
+      user: {
+        id: "student-private-id",
+        name: "Иван Иванов",
+        email: "ivan@example.com",
+        organization: "AI Strategic Academy",
+      },
+      course: {
+        id: "course-private-id",
+        title: "Стратегия AI",
+        durationHours: 24,
+      },
+    });
+
+    const result = await verifyCertificateByCode("revoked-code");
+
+    expect(result).toEqual({
+      valid: false,
+      number: "ASA-2026-REVOKED",
+      verificationCode: "revoked-code",
+      verificationUrl: "https://academy.local/certificates/verify/revoked-code",
+      studentName: "AI Strategic Academy",
+      courseTitle: "Стратегия AI",
+      durationHours: 24,
+      issuedAt: new Date("2026-05-20T00:00:00.000Z"),
+      revokedAt,
+    });
+    expect(result).not.toHaveProperty("id");
+    expect(result).not.toHaveProperty("userId");
+    expect(result).not.toHaveProperty("courseId");
+    expect(result).not.toHaveProperty("email");
   });
 });

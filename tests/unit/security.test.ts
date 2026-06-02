@@ -19,7 +19,7 @@ describe("RBAC", () => {
       "users:read", "users:write", "roles:manage",
       "courses:read", "courses:write", "lessons:write",
       "enrollments:write", "progress:write", "quizzes:write",
-      "assignments:review", "certificates:issue", "invites:manage",
+      "assignments:review", "certificates:read", "certificates:issue", "invites:manage",
       "analytics:read", "audit:read", "settings:manage",
       "notifications:write", "reports:read"
     ] as const;
@@ -31,6 +31,7 @@ describe("RBAC", () => {
   it("student has limited permissions", () => {
     expect(hasPermission(["student"], "courses:read")).toBe(true);
     expect(hasPermission(["student"], "progress:write")).toBe(true);
+    expect(hasPermission(["student"], "certificates:read")).toBe(true);
     expect(hasPermission(["student"], "certificates:issue")).toBe(false);
     expect(hasPermission(["student"], "settings:manage")).toBe(false);
     expect(hasPermission(["student"], "users:write")).toBe(false);
@@ -44,6 +45,7 @@ describe("RBAC", () => {
 
   it("customer_observer has read-only permissions", () => {
     expect(hasPermission(["customer_observer"], "courses:read")).toBe(true);
+    expect(hasPermission(["customer_observer"], "certificates:read")).toBe(true);
     expect(hasPermission(["customer_observer"], "analytics:read")).toBe(true);
     expect(hasPermission(["customer_observer"], "reports:read")).toBe(true);
     expect(hasPermission(["customer_observer"], "users:write")).toBe(false);

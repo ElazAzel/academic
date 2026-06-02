@@ -11,7 +11,7 @@ type Context = { params: Promise<{ certificateId: string }> };
 
 export async function GET(_request: Request, context: Context) {
   try {
-    const user = await requireUser();
+    const user = await requireUser("certificates:read");
     const { certificateId } = await context.params;
 
     const certificate = await prisma.certificate.findUnique({

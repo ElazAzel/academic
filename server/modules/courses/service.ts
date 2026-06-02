@@ -1,11 +1,12 @@
 import { cache } from "react";
-import { CourseStatus, LessonType } from "@prisma/client";
+import { CourseStatus, LessonType, type Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import { toJsonValue } from "@/lib/json";
 import { slugify } from "@/lib/utils";
 import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
+import { courseReadWhereForActor, type CourseAccessActor } from "@/server/modules/courses/access";
 
 const prisma = getPrisma();
 const LESSON_ORDER_CREATE_ATTEMPTS = 3;
@@ -44,43 +45,68 @@ export async function assertInstructorOfCourse(actorId: string, courseId: string
   }
 }
 
-export const listCourses = cache(async (status?: CourseStatus, instructorId?: string, courseIds?: string[]) => {
-  return prisma.course.findMany({
-    take: 50,
-    where: {
-      ...(status ? { status } : {}),
-      ...(instructorId ? { instructors: { some: { userId: instructorId } } } : {}),
-      ...(courseIds ? { id: { in: courseIds } } : {})
-    },
-    orderBy: { createdAt: "desc" },
+const courseListSelect = {
+  id: true,
+  title: true,
+  slug: true,
+  description: true,
+  coverUrl: true,
+  durationHours: true,
+  status: true,
+  traversalMode: true,
+  completionThreshold: true,
+  publishedAt: true,
+  archivedAt: true,
+  createdAt: true,
+  modules: {
+    orderBy: { order: "asc" },
     select: {
       id: true,
+      order: true,
       title: true,
-      slug: true,
-      description: true,
-      coverUrl: true,
-      durationHours: true,
       status: true,
-      traversalMode: true,
-      completionThreshold: true,
-      publishedAt: true,
-      archivedAt: true,
-      createdAt: true,
-      modules: {
+      lessons: {
         orderBy: { order: "asc" },
-        select: {
-          id: true,
-          order: true,
-          title: true,
-          status: true,
-          lessons: {
-            orderBy: { order: "asc" },
-            select: { id: true, order: true, title: true, type: true, isRequired: true }
-          }
-        }
-      },
-      instructors: { select: { user: { select: { id: true, name: true, email: true } } } }
+        select: { id: true, order: true, title: true, type: true, isRequired: true }
+      }
     }
+  },
+  instructors: { select: { user: { select: { id: true, name: true, email: true } } } }
+} satisfies Prisma.CourseSelect;
+
+function findCourseList(where: Prisma.CourseWhereInput) {
+  return prisma.course.findMany({
+    take: 50,
+    where,
+    orderBy: { createdAt: "desc" },
+    select: courseListSelect
+  });
+}
+
+export const listCourses = cache(async (status?: CourseStatus, instructorId?: string, courseIds?: string[]) => {
+  return findCourseList({
+    ...(status ? { status } : {}),
+    ...(instructorId ? { instructors: { some: { userId: instructorId } } } : {}),
+    ...(courseIds ? { id: { in: courseIds } } : {})
+  });
+});
+
+function isPublishedOnlyCourseReader(actor: CourseAccessActor) {
+  return actor.roles.includes("student") || actor.roles.includes("customer_observer");
+}
+
+export const listCoursesForActor = cache(async (actor: CourseAccessActor, status?: CourseStatus) => {
+  if (isPublishedOnlyCourseReader(actor) && status && status !== CourseStatus.PUBLISHED) {
+    return [];
+  }
+
+  const statusFilter = isPublishedOnlyCourseReader(actor) ? CourseStatus.PUBLISHED : status;
+
+  return findCourseList({
+    AND: [
+      courseReadWhereForActor(actor),
+      ...(statusFilter ? [{ status: statusFilter }] : []),
+    ],
   });
 });
 

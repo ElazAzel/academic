@@ -78,6 +78,17 @@ describe("reports API route scope", () => {
     expect(mockGenerateReportDownload).not.toHaveBeenCalled();
   });
 
+  it("returns structured rate-limit errors before generating report downloads", async () => {
+    mockCheckRateLimit.mockResolvedValue({ allowed: false, remaining: 0, resetAt: Date.now() + 60000 });
+
+    const response = await reportsRoute.GET(new Request("http://localhost/api/v1/reports?type=progress&format=csv"));
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body.error.code).toBe("too_many_requests");
+    expect(mockGenerateReportDownload).not.toHaveBeenCalled();
+  });
+
   it("requires reports read permission for report previews", async () => {
     const response = await previewRoute.GET(new Request("http://localhost/api/v1/reports/preview?type=progress"));
     const body = await response.json();
@@ -96,6 +107,17 @@ describe("reports API route scope", () => {
     expect(response.status).toBe(403);
     expect(body.error.code).toBe("forbidden");
     expect(mockCheckRateLimit).not.toHaveBeenCalled();
+    expect(mockGenerateReportPreview).not.toHaveBeenCalled();
+  });
+
+  it("returns structured rate-limit errors before generating report previews", async () => {
+    mockCheckRateLimit.mockResolvedValue({ allowed: false, remaining: 0, resetAt: Date.now() + 60000 });
+
+    const response = await previewRoute.GET(new Request("http://localhost/api/v1/reports/preview?type=progress"));
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body.error.code).toBe("too_many_requests");
     expect(mockGenerateReportPreview).not.toHaveBeenCalled();
   });
 });

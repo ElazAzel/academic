@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { requireUser } from "@/lib/auth/session";
 import { verifyPassword } from "@/lib/auth/password";
 import { getPrisma } from "@/lib/prisma";
 import { disable2fa } from "@/server/modules/2fa/service";
 import { checkRateLimit } from "@/lib/security/rate-limit";
-import { ApiError, errorResponse } from "@/lib/http";
+import { ApiError, errorResponse, parseJson } from "@/lib/http";
 
 const prisma = getPrisma();
+
+const Disable2faSchema = z.object({
+  password: z.string().min(1, "Укажите пароль"),
+});
 
 /**
  * POST /api/v1/auth/2fa/disable
@@ -23,11 +28,7 @@ export async function POST(req: Request) {
       throw new ApiError("too_many_requests", "Слишком много попыток. Попробуйте позже.", 429);
     }
 
-    const { password } = await req.json();
-
-    if (!password) {
-      throw new ApiError("bad_request", "Password is required", 400);
-    }
+    const { password } = await parseJson(req, Disable2faSchema);
 
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },

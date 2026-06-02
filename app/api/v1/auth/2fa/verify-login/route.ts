@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getToken, encode } from "next-auth/jwt";
+import { z, ZodError } from "zod";
 import { verifyTotp, verifyAndConsumeBackupCode } from "@/server/modules/2fa/service";
 import { getPrisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/security/rate-limit";
+import { ApiError, errorResponse, parseJson } from "@/lib/http";
 
 const prisma = getPrisma();
+
+const VerifyLogin2faSchema = z
+  .object({
+    token: z.string().trim().min(1, "Укажите код подтверждения").optional(),
+    backupCode: z.string().trim().min(1, "Укажите резервный код").optional(),
+  })
+  .refine((input) => Boolean(input.token || input.backupCode), {
+    message: "Укажите код подтверждения",
+  });
 
 /**
  * POST /api/v1/auth/2fa/verify-login
@@ -12,10 +24,9 @@ const prisma = getPrisma();
  */
 export async function POST(req: Request) {
   try {
-    const { token, backupCode } = await req.json();
     const secret = process.env.NEXTAUTH_SECRET;
     if (!secret) {
-      return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+      throw new ApiError("internal_error", "Сервер временно не настроен", 500);
     }
 
     // Construct a minimal request-like object for getToken
@@ -38,10 +49,16 @@ export async function POST(req: Request) {
     });
 
     if (!jwtToken?.sub) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      throw new ApiError("unauthorized", "Требуется вход", 401);
     }
 
     const userId = jwtToken.sub;
+    const rl = await checkRateLimit(`2fa-login:${userId}`);
+    if (!rl.allowed) {
+      throw new ApiError("too_many_requests", "Слишком много попыток. Попробуйте позже.", 429);
+    }
+
+    const { token, backupCode } = await parseJson(req, VerifyLogin2faSchema);
 
     // Verify TOTP or backup code
     let valid = false;
@@ -58,14 +75,10 @@ export async function POST(req: Request) {
     }
 
     if (!valid) {
-      return NextResponse.json(
-        { error: "Неверный код. Попробуйте снова." },
-        { status: 400 },
-      );
+      throw new ApiError("bad_request", "Неверный код. Попробуйте снова.", 400);
     }
 
     // Issue new JWT without requires2fa flag
-    const { encode } = await import("next-auth/jwt");
     const newToken = { ...jwtToken, requires2fa: false };
     const newJwt = await encode({ token: newToken, secret });
 
@@ -80,7 +93,9 @@ export async function POST(req: Request) {
 
     return response;
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (error instanceof ApiError || error instanceof ZodError) {
+      return errorResponse(error);
+    }
+    return errorResponse(new ApiError("internal_error", "Внутренняя ошибка сервера", 500));
   }
 }

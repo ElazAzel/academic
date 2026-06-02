@@ -1,6 +1,8 @@
 import { errorResponse, ok, parseJson, ApiError } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
+import { assertInstructorOfCourse } from "@/server/modules/courses/service";
+import { assertCourseReadAccess } from "@/server/modules/courses/access";
 import { z } from "zod";
 
 type Context = { params: Promise<{ assignmentId: string }> };
@@ -16,7 +18,7 @@ const updateAssignmentSchema = z.object({
 
 export async function GET(_request: Request, context: Context) {
   try {
-    await requireUser("courses:read");
+    const user = await requireUser("courses:read");
     const { assignmentId } = await context.params;
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
@@ -30,28 +32,31 @@ export async function GET(_request: Request, context: Context) {
         lessonId: true,
         createdAt: true,
         updatedAt: true,
+        lesson: {
+          select: {
+            module: { select: { courseId: true } },
+          },
+        },
       }
     });
     if (!assignment) throw new ApiError("not_found", "Задание не найдено", 404);
-    return ok(assignment);
+    const courseId = assignment.courseId ?? assignment.lesson?.module.courseId;
+    if (!courseId) throw new ApiError("bad_request", "Задание не привязано к курсу", 400);
+    await assertCourseReadAccess(user, courseId);
+    return ok({
+      id: assignment.id,
+      title: assignment.title,
+      instructions: assignment.instructions,
+      maxScore: assignment.maxScore,
+      maxAttempts: assignment.maxAttempts,
+      courseId: assignment.courseId,
+      lessonId: assignment.lessonId,
+      createdAt: assignment.createdAt,
+      updatedAt: assignment.updatedAt,
+    });
   } catch (error) {
     return errorResponse(error);
   }
-}
-
-async function assertCourseInstructor(userId: string, courseId: string | null | undefined) {
-  if (!courseId) return;
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { roles: { include: { role: { select: { key: true } } } } }
-  });
-  if (!user) throw new ApiError("forbidden", "Пользователь не найден", 403);
-  const roleKeys = user.roles.map((r) => r.role.key);
-  if (roleKeys.includes("admin")) return;
-  const instructor = await prisma.courseInstructor.findUnique({
-    where: { courseId_userId: { courseId, userId } }
-  });
-  if (!instructor) throw new ApiError("forbidden", "Вы не являетесь преподавателем этого курса", 403);
 }
 
 export async function PATCH(request: Request, context: Context) {
@@ -66,7 +71,8 @@ export async function PATCH(request: Request, context: Context) {
     });
     if (!assignment) throw new ApiError("not_found", "Задание не найдено", 404);
     const courseId = assignment.courseId ?? assignment.lesson?.module.courseId;
-    await assertCourseInstructor(user.id, courseId);
+    if (!courseId) throw new ApiError("bad_request", "Задание не привязано к курсу", 400);
+    await assertInstructorOfCourse(user.id, courseId);
 
     const updated = await prisma.assignment.update({
       where: { id: assignmentId },
@@ -101,7 +107,8 @@ export async function DELETE(_request: Request, context: Context) {
     });
     if (!assignment) throw new ApiError("not_found", "Задание не найдено", 404);
     const courseId = assignment.courseId ?? assignment.lesson?.module.courseId;
-    await assertCourseInstructor(user.id, courseId);
+    if (!courseId) throw new ApiError("bad_request", "Задание не привязано к курсу", 400);
+    await assertInstructorOfCourse(user.id, courseId);
 
     await prisma.assignment.delete({ where: { id: assignmentId } });
     return ok({ success: true });

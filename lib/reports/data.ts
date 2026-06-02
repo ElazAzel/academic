@@ -202,6 +202,8 @@ export async function fetchCertificateData(input?: ReportDataScope | string[]) {
     email: c.user.email,
     course: c.course.title,
     issuedAt: c.issuedAt.toISOString().slice(0, 10),
+    status: c.revokedAt ? "Отозван" : "Действителен",
+    revokedAt: c.revokedAt?.toISOString().slice(0, 10) ?? null,
   }));
 
   return rows;

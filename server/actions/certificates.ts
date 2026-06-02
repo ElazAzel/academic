@@ -65,13 +65,15 @@ export async function getCertificateTemplateAction(courseId: string) {
       } : null
     };
   } catch (err) {
-    throw err instanceof Error ? err : new ApiError("internal_error", "Failed to retrieve template", 500);
+    if (err instanceof ApiError) throw err;
+    console.error("[getCertificateTemplateAction]", err);
+    throw new ApiError("internal_error", "Не удалось получить шаблон сертификата", 500);
   }
 }
 
 const SaveCertificateTemplateActionSchema = z.object({
   courseId: z.string().min(1, "ID курса обязателен"),
-  config: z.any(),
+  config: z.record(z.unknown()),
 });
 
 export async function saveCertificateTemplateAction(courseId: string, config: unknown) {
@@ -111,6 +113,8 @@ export async function saveCertificateTemplateAction(courseId: string, config: un
     revalidatePath(`/instructor/courses/${courseId}/certificate`);
     return { success: true };
   } catch (err) {
-    throw err instanceof Error ? err : new ApiError("internal_error", "Failed to save template", 500);
+    if (err instanceof ApiError) throw err;
+    console.error("[saveCertificateTemplateAction]", err);
+    throw new ApiError("internal_error", "Не удалось сохранить шаблон сертификата", 500);
   }
 }

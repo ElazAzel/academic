@@ -18,6 +18,7 @@ vi.mock("@/server/modules/notifications/outbox-handler", () => ({
 }));
 
 const outboxRoute = await import("@/app/api/v1/outbox/process/route");
+const scheduledRoute = await import("@/app/api/v1/reports/scheduled/route");
 
 describe("cron route — authorized", () => {
   beforeEach(() => {
@@ -51,8 +52,10 @@ describe("cron route — authorized", () => {
         headers: { authorization: "Bearer wrong-secret" },
       }),
     );
+    const body = await response.json();
 
     expect(response.status).toBe(401);
+    expect(body.error.code).toBe("unauthorized");
     expect(mockProcessReportJobs).not.toHaveBeenCalled();
     expect(mockProcessNotificationEvents).not.toHaveBeenCalled();
   });
@@ -61,7 +64,42 @@ describe("cron route — authorized", () => {
     const response = await outboxRoute.POST(
       new Request("http://localhost/api/v1/outbox/process", { method: "POST" }),
     );
+    const body = await response.json();
 
     expect(response.status).toBe(401);
+    expect(body.error.code).toBe("unauthorized");
+  });
+
+  it("rejects scheduled reports with wrong CRON_SECRET", async () => {
+    const response = await scheduledRoute.POST(
+      new Request("http://localhost/api/v1/reports/scheduled", {
+        method: "POST",
+        headers: { authorization: "Bearer wrong-secret" },
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body.error.code).toBe("unauthorized");
+    expect(mockProcessReportJobs).not.toHaveBeenCalled();
+  });
+
+  it("does not leak raw processor errors from the outbox endpoint", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockProcessReportJobs.mockRejectedValueOnce(new Error("database connection details"));
+
+    const response = await outboxRoute.POST(
+      new Request("http://localhost/api/v1/outbox/process", {
+        method: "POST",
+        headers: { authorization: "Bearer this-is-a-32-plus-char-secret-for-cron-jobs!" },
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error.code).toBe("internal_error");
+    expect(body.error.message).not.toContain("database connection details");
+    expect(consoleSpy).toHaveBeenCalledWith("[Outbox Processor] Error:", expect.any(Error));
+    consoleSpy.mockRestore();
   });
 });

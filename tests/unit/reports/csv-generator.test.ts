@@ -123,13 +123,29 @@ describe("generateRiskCsv", () => {
 
 describe("generateCertificateCsv", () => {
   const rows: CertificateRow[] = [
-    { number: "ASA-001", studentName: "Alice", email: "alice@test.com", course: "AI 101", issuedAt: "2026-05-01" },
-    { number: "ASA-002", studentName: "Bob", email: "bob@test.com", course: "ML 201", issuedAt: "2026-05-15" },
+    {
+      number: "ASA-001",
+      studentName: "Alice",
+      email: "alice@test.com",
+      course: "AI 101",
+      issuedAt: "2026-05-01",
+      status: "Действителен",
+      revokedAt: null,
+    },
+    {
+      number: "ASA-002",
+      studentName: "Bob",
+      email: "bob@test.com",
+      course: "ML 201",
+      issuedAt: "2026-05-15",
+      status: "Отозван",
+      revokedAt: "2026-05-20",
+    },
   ];
 
-  it("has correct columns: number, name, email, course, date", () => {
+  it("has correct columns: number, name, email, course, dates and status", () => {
     const csv = generateCertificateCsv(rows);
-    expect(csv).toContain("Номер,Слушатель,Email,Курс,Дата выдачи");
+    expect(csv).toContain("Номер,Слушатель,Email,Курс,Дата выдачи,Статус,Дата отзыва");
     const lines = csv.split("\n");
     const dataLine = lines.find((l) => l.startsWith("ASA-001"));
     expect(dataLine).toBeDefined();
@@ -142,6 +158,9 @@ describe("generateCertificateCsv", () => {
   it("includes total count", () => {
     const csv = generateCertificateCsv(rows);
     expect(csv).toContain("Всего сертификатов,2");
+    expect(csv).toContain("Действующих,1");
+    expect(csv).toContain("Отозвано,1");
+    expect(csv).toContain("ASA-002,Bob,bob@test.com,ML 201,2026-05-15,Отозван,2026-05-20");
   });
 
   it("handles empty rows", () => {

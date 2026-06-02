@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockFindUnique = vi.hoisted(() => vi.fn());
+const mockAssignmentFindMany = vi.hoisted(() => vi.fn());
 const mockEnrollmentFindUnique = vi.hoisted(() => vi.fn());
 const mockCount = vi.hoisted(() => vi.fn());
 const mockCreate = vi.hoisted(() => vi.fn());
@@ -14,6 +15,9 @@ const mockCuratorAssignmentFindFirst = vi.hoisted(() => vi.fn());
 const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockOutboxEventCreate = vi.hoisted(() => vi.fn());
+const mockAchievementUpsert = vi.hoisted(() => vi.fn());
+const mockUserAchievementFindUnique = vi.hoisted(() => vi.fn());
+const mockUserAchievementCreate = vi.hoisted(() => vi.fn());
 
 const mockTx$queryRaw = vi.hoisted(() => vi.fn());
 const mockTxCount = vi.hoisted(() => vi.fn());
@@ -31,7 +35,7 @@ vi.mock("@/lib/env", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
-    assignment: { findUnique: mockFindUnique },
+    assignment: { findUnique: mockFindUnique, findMany: mockAssignmentFindMany },
     enrollment: { findUnique: mockEnrollmentFindUnique },
     assignmentSubmission: { count: mockCount, create: mockCreate, update: mockUpdate, findUnique: mockSubmissionFindUnique },
     auditLog: { create: mockAuditCreate },
@@ -41,6 +45,8 @@ vi.mock("@/lib/prisma", () => ({
     notificationPreference: { findMany: mockNotificationPreferenceFindMany },
     notification: { create: mockNotificationCreate },
     outboxEvent: { create: mockOutboxEventCreate },
+    achievement: { upsert: mockAchievementUpsert },
+    userAchievement: { findUnique: mockUserAchievementFindUnique, create: mockUserAchievementCreate },
     $transaction: vi.fn(async (arg: unknown) => {
       if (typeof arg === "function") {
         return (arg as (tx: Record<string, unknown>) => unknown)({
@@ -54,7 +60,72 @@ vi.mock("@/lib/prisma", () => ({
   }),
 }));
 
-const { submitAssignment, reviewSubmission } = await import("@/server/modules/assignments/service");
+const { submitAssignment, reviewSubmission, listAssignments } = await import("@/server/modules/assignments/service");
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockAchievementUpsert.mockResolvedValue({ id: "achievement-first-assignment" });
+  mockUserAchievementFindUnique.mockResolvedValue({ id: "existing-achievement" });
+  mockUserAchievementCreate.mockResolvedValue({ id: "user-achievement-1" });
+});
+
+describe("listAssignments", () => {
+  beforeEach(() => {
+    mockAssignmentFindMany.mockResolvedValue([]);
+  });
+
+  it("scopes student assignment lists through course-level and lesson-level enrollments", async () => {
+    await listAssignments("student-1", ["student"]);
+
+    expect(mockAssignmentFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          OR: [
+            {
+              course: {
+                enrollments: {
+                  some: {
+                    userId: "student-1",
+                    status: { in: ["ACTIVE", "COMPLETED"] },
+                  },
+                },
+              },
+            },
+            {
+              lesson: {
+                module: {
+                  course: {
+                    enrollments: {
+                      some: {
+                        userId: "student-1",
+                        status: { in: ["ACTIVE", "COMPLETED"] },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      }),
+    );
+  });
+
+  it("scopes instructor assignment lists through owned course-level and lesson-level assignments", async () => {
+    await listAssignments("instructor-1", ["instructor"]);
+
+    expect(mockAssignmentFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          OR: [
+            { course: { instructors: { some: { userId: "instructor-1" } } } },
+            { lesson: { module: { course: { instructors: { some: { userId: "instructor-1" } } } } } },
+          ],
+        },
+      }),
+    );
+  });
+});
 
 describe("submitAssignment", () => {
   it("throws 404 when assignment does not exist", async () => {

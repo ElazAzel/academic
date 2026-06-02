@@ -133,7 +133,7 @@ export async function GET(_request: Request, context: Context) {
       }
     }
 
-    if (!signedUrl && media.url) {
+    if (!media.storageKey && media.url) {
       signedUrl = media.url;
     }
 

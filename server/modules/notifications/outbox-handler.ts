@@ -11,6 +11,8 @@
 import { dequeuePendingEvents, markFailed, markSent } from "@/server/modules/outbox/service";
 import { createNotificationInternal } from "@/server/modules/notifications/service";
 
+const NOTIFICATION_PROCESSING_ERROR = "Не удалось обработать уведомление";
+
 export async function processNotificationEvents(batchSize = 50): Promise<number> {
   const events = await dequeuePendingEvents(batchSize);
   const notificationEvents = events.filter((e) => e.eventType === "notification.send");
@@ -31,7 +33,7 @@ export async function processNotificationEvents(batchSize = 50): Promise<number>
       };
 
       if (!payload.userId || !payload.event) {
-        await markFailed(event.id, `Invalid notification payload: missing userId or event`);
+        await markFailed(event.id, "Некорректный payload уведомления: отсутствует userId или event");
         continue;
       }
 
@@ -48,9 +50,8 @@ export async function processNotificationEvents(batchSize = 50): Promise<number>
 
       processedIds.push(event.id);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      console.error(`[Notifications Outbox] Failed event ${event.id}:`, msg);
-      await markFailed(event.id, msg);
+      console.error(`[Notifications Outbox] Failed event ${event.id}:`, err);
+      await markFailed(event.id, NOTIFICATION_PROCESSING_ERROR);
     }
   }
 

@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { requireUser } from "@/lib/auth/session";
 import { verifyTotp, enable2fa } from "@/server/modules/2fa/service";
 import { checkRateLimit } from "@/lib/security/rate-limit";
-import { ApiError, errorResponse } from "@/lib/http";
+import { ApiError, errorResponse, parseJson } from "@/lib/http";
+
+const Verify2faSchema = z.object({
+  secret: z.string().trim().min(1, "Укажите секрет 2FA"),
+  token: z.string().trim().min(1, "Укажите код подтверждения"),
+});
 
 /**
  * POST /api/v1/auth/2fa/verify
@@ -19,11 +25,7 @@ export async function POST(req: Request) {
       throw new ApiError("too_many_requests", "Слишком много попыток. Попробуйте позже.", 429);
     }
 
-    const { secret, token } = await req.json();
-
-    if (!secret || !token) {
-      throw new ApiError("bad_request", "Secret and token are required", 400);
-    }
+    const { secret, token } = await parseJson(req, Verify2faSchema);
 
     if (!verifyTotp(token, secret)) {
       throw new ApiError("bad_request", "Неверный код. Попробуйте снова.", 400);

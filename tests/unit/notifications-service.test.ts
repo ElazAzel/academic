@@ -138,6 +138,22 @@ describe("createNotificationInternal (sync path)", () => {
     );
   });
 
+  it("does not persist silent non-security notifications", async () => {
+    const result = await createNotificationInternal({
+      userId: "student-1",
+      event: "access_granted",
+      persist: false,
+    });
+
+    expect(result).toBeNull();
+    expect(mockNotificationCreate).not.toHaveBeenCalled();
+    expect(mockUserFindUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "student-1" },
+      }),
+    );
+  });
+
   it("bypasses preferences for security-critical events like device_limit_exceeded even if channel is disabled", async () => {
     // Mock user preference as disabled for in_app
     mockNotificationPreferenceFindMany.mockResolvedValue([
@@ -168,6 +184,35 @@ describe("createNotificationInternal (sync path)", () => {
           channel: "in_app"
         })
       })
+    );
+  });
+
+  it("forces persistence for certificate_revoked even when persist is false and preferences are disabled", async () => {
+    mockNotificationPreferenceFindMany.mockResolvedValue([
+      { channel: "in_app", enabled: false },
+      { channel: "certificate_revoked", enabled: false },
+    ]);
+
+    const result = await createNotificationInternal({
+      userId: "student-1",
+      event: "certificate_revoked",
+      channel: "in_app",
+      persist: false,
+      refType: "certificate",
+      refId: "certificate-1",
+    });
+
+    expect(result).toEqual({ id: "notification-1" });
+    expect(mockNotificationCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: "student-1",
+          type: "certificate_revoked",
+          channel: "in_app",
+          refType: "certificate",
+          refId: "certificate-1",
+        }),
+      }),
     );
   });
 });

@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { z } from "zod";
-import { parseJson, ApiError } from "@/lib/http";
+import { parseJson, ApiError, errorResponse } from "@/lib/http";
 
 describe("http utils", () => {
   describe("parseJson", () => {
@@ -52,6 +52,34 @@ describe("http utils", () => {
       } catch (error) {
         expect(error).toBeInstanceOf(z.ZodError);
       }
+    });
+  });
+
+  describe("errorResponse", () => {
+    it("preserves controlled ApiError messages", async () => {
+      const response = errorResponse(new ApiError("forbidden", "Нет доступа", 403));
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.error).toMatchObject({
+        code: "forbidden",
+        message: "Нет доступа",
+      });
+    });
+
+    it("does not leak raw generic internal error messages", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const response = errorResponse(new Error("postgres://secret-http-error"));
+      const body = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(body.error).toMatchObject({
+        code: "internal_error",
+        message: "Внутренняя ошибка сервера",
+      });
+      expect(JSON.stringify(body)).not.toContain("secret-http-error");
+      expect(consoleSpy).toHaveBeenCalledWith("[API Error]", expect.any(Error));
+      consoleSpy.mockRestore();
     });
   });
 });

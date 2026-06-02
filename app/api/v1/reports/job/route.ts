@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
     const rl = await checkRateLimit(`reports:job:${user.id}`);
     if (!rl.allowed) {
-      return NextResponse.json({ error: "Слишком много запросов. Попробуйте позже." }, { status: 429 });
+      throw new ApiError("too_many_requests", "Слишком много запросов. Попробуйте позже.", 429);
     }
 
     const payload = await parseJson(request, createJobSchema);

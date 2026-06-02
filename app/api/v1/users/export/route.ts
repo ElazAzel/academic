@@ -2,14 +2,21 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
+import { ApiError, errorResponse } from "@/lib/http";
 
 const prisma = getPrisma();
+
+function csvCell(value: Date | string | null | undefined) {
+  const raw = value instanceof Date ? value.toISOString().slice(0, 10) : value ?? "";
+  const protectedValue = /^[=+\-@]/.test(raw) ? `'${raw}` : raw;
+  return `"${protectedValue.replace(/"/g, '""')}"`;
+}
 
 export async function GET(request: Request) {
   try {
     const user = await requireUser("users:read");
     if (!user.roles.includes("admin") && !user.roles.includes("super_curator")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      throw new ApiError("forbidden", "Экспорт пользователей доступен только администратору или супер-куратору", 403);
     }
 
     const { searchParams } = new URL(request.url);
@@ -31,7 +38,14 @@ export async function GET(request: Request) {
 
     const header = "Имя,Email,Реальное имя,Статус,Последний вход,Дата создания";
     const rows = users.map((u) =>
-      `"${u.name ?? ""}","${u.email}","${u.organization ?? ""}","${u.status}","${u.lastLoginAt?.toISOString().slice(0, 10) ?? ""}","${u.createdAt.toISOString().slice(0, 10)}"`
+      [
+        csvCell(u.name),
+        csvCell(u.email),
+        csvCell(u.organization),
+        csvCell(u.status),
+        csvCell(u.lastLoginAt),
+        csvCell(u.createdAt),
+      ].join(",")
     ).join("\n");
 
     return new NextResponse(`\uFEFF${header}\n${rows}`, {
@@ -40,7 +54,12 @@ export async function GET(request: Request) {
         "Content-Disposition": `attachment; filename="users_export.csv"`,
       },
     });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return errorResponse(error);
+    }
+
+    console.error("[Users Export] Error:", error);
+    return errorResponse(new ApiError("internal_error", "Не удалось экспортировать пользователей", 500));
   }
 }

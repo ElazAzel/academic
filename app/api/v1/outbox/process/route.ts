@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
+import { ApiError, errorResponse } from "@/lib/http";
 import { processReportJobs } from "@/server/modules/reports/processor";
 import { processNotificationEvents } from "@/server/modules/notifications/outbox-handler";
 
@@ -27,14 +28,17 @@ export async function POST(request: Request) {
   const expectedSecret = env.CRON_SECRET;
 
   if (!expectedSecret) {
-    return NextResponse.json(
-      { error: "Сервер не настроен: CRON_SECRET не задан. Обработка отключена." },
-      { status: 503 }
+    return errorResponse(
+      new ApiError(
+        "service_unavailable",
+        "Сервер не настроен: CRON_SECRET не задан. Обработка отключена.",
+        503,
+      ),
     );
   }
 
   if (!auth || !auth.startsWith("Bearer ") || auth.slice(7) !== expectedSecret) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return errorResponse(new ApiError("unauthorized", "Недействительный CRON_SECRET", 401));
   }
 
   try {
@@ -51,9 +55,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[Outbox Processor] Error:", error);
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 },
-    );
+    return errorResponse(new ApiError("internal_error", "Не удалось обработать фоновые задачи", 500));
   }
 }

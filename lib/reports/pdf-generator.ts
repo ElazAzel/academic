@@ -428,6 +428,11 @@ export async function generateCertificatePdf(rows: CertificateRow[], fields?: st
     x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3),
   });
   y -= 14;
+  const revoked = rows.filter((r) => r.revokedAt).length;
+  page.drawText(`- Действующих: ${rows.length - revoked} | Отозвано: ${revoked}`, {
+    x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3),
+  });
+  y -= 14;
 
   // Unique courses
   const uniqueCourses = new Set(rows.map((r) => r.course)).size;
@@ -437,11 +442,13 @@ export async function generateCertificatePdf(rows: CertificateRow[], fields?: st
   y -= 22;
 
   const columns: TableColumn[] = [
-    { header: "Номер", key: "number", width: 80 },
-    { header: "Слушатель", key: "studentName", width: 100 },
-    { header: "Email", key: "email", width: 100 },
-    { header: "Курс", key: "course", width: 120 },
-    { header: "Дата", key: "issuedAt", width: 56, align: "center" },
+    { header: "Номер", key: "number", width: 72 },
+    { header: "Слушатель", key: "studentName", width: 86 },
+    { header: "Email", key: "email", width: 95 },
+    { header: "Курс", key: "course", width: 102 },
+    { header: "Выдан", key: "issuedAt", width: 48, align: "center" },
+    { header: "Статус", key: "status", width: 58, align: "center" },
+    { header: "Отозван", key: "revokedAt", width: 50, align: "center" },
   ];
   const activeCols = fields ? columns.filter((c) => fields.includes(c.key)) : columns;
 
@@ -451,6 +458,8 @@ export async function generateCertificatePdf(rows: CertificateRow[], fields?: st
     email: r.email,
     course: r.course,
     issuedAt: r.issuedAt,
+    status: r.status,
+    revokedAt: r.revokedAt ?? "",
   }));
 
   drawTable(doc, pages, activeCols, tableRows, font, boldFont, y);

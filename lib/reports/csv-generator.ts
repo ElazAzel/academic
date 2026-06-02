@@ -158,9 +158,12 @@ export function generateCertificateCsv(rows: CertificateRow[], fields?: string[]
   lines.push(...headerBlock("ОТЧЁТ ПО СЕРТИФИКАТАМ"));
 
   const uniqueCourses = new Set(rows.map((r) => r.course)).size;
+  const revoked = rows.filter((r) => r.revokedAt).length;
 
   lines.push("=== СВОДКА ===");
   lines.push(`Всего сертификатов,${rows.length}`);
+  lines.push(`Действующих,${rows.length - revoked}`);
+  lines.push(`Отозвано,${revoked}`);
   lines.push(`По курсам,${uniqueCourses}`);
   lines.push("");
   lines.push(separator());
@@ -171,6 +174,8 @@ export function generateCertificateCsv(rows: CertificateRow[], fields?: string[]
     { key: "email", label: "Email", get: (r: CertificateRow) => esc(r.email) },
     { key: "course", label: "Курс", get: (r: CertificateRow) => esc(r.course) },
     { key: "issuedAt", label: "Дата выдачи", get: (r: CertificateRow) => r.issuedAt },
+    { key: "status", label: "Статус", get: (r: CertificateRow) => esc(r.status) },
+    { key: "revokedAt", label: "Дата отзыва", get: (r: CertificateRow) => r.revokedAt ?? "" },
   ];
   const activeCols = fields ? COLS.filter(c => fields!.includes(c.key)) : COLS;
 

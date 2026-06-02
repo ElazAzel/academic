@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { ApiError } from "@/lib/http";
 
 const mockRequireRole = vi.hoisted(() => vi.fn());
 const mockLogAudit = vi.hoisted(() => vi.fn());
@@ -26,6 +27,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockRequireRole.mockResolvedValue(adminUser);
   mockCuratorAssignmentFindFirst.mockResolvedValue({ id: "ass1" });
+  mockReportCreate.mockResolvedValue({ id: "rpt1", projectId: "p1", type: "progress", status: "ready", url: "/api/v1/reports?type=progress&format=csv" });
+  mockRiskFlagCreate.mockResolvedValue({ id: "flag1", userId: "u1", type: "inactive_login", severity: "high", status: "open" });
+  mockRiskFlagUpdate.mockResolvedValue({ id: "flag1", status: "resolved" });
+  mockLogAudit.mockResolvedValue(undefined);
 });
 
 describe("generateReportAction", () => {
@@ -40,6 +45,28 @@ describe("generateReportAction", () => {
     );
     expect(mockLogAudit).toHaveBeenCalledWith(expect.objectContaining({ action: "report.generated" }));
     expect(result.id).toBe("rpt1");
+  });
+
+  it("wraps unexpected report errors without leaking details", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockReportCreate.mockRejectedValue(new Error("postgres://secret-analytics-report"));
+
+    let caught: unknown;
+    try {
+      await generateReportAction("p1", "progress");
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toMatchObject({
+      code: "internal_error",
+      status: 500,
+      message: "Внутренняя ошибка сервера",
+    } satisfies Partial<ApiError>);
+    expect((caught as Error).message).not.toContain("secret-analytics-report");
+    expect(consoleSpy).toHaveBeenCalledWith("[generateReportAction]", expect.any(Error));
+
+    consoleSpy.mockRestore();
   });
 });
 
@@ -79,7 +106,10 @@ describe("resolveRiskFlagAction", () => {
   });
 
   it("throws if flag not found", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     mockRiskFlagFindUnique.mockResolvedValue(null);
     await expect(resolveRiskFlagAction("bad-id")).rejects.toThrow("Флаг риска не найден");
+    expect(consoleSpy).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });

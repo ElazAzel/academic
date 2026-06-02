@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { CourseStatus } from "@prisma/client";
 
 const mockCourseCreate = vi.hoisted(() => vi.fn());
+const mockCourseFindMany = vi.hoisted(() => vi.fn());
 const mockCourseFindUnique = vi.hoisted(() => vi.fn());
 const mockModuleFindUnique = vi.hoisted(() => vi.fn());
 const mockLessonCreate = vi.hoisted(() => vi.fn());
@@ -26,6 +28,7 @@ vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
     course: {
       create: mockCourseCreate,
+      findMany: mockCourseFindMany,
       findUnique: mockCourseFindUnique,
     },
     module: {
@@ -48,7 +51,37 @@ vi.mock("@/lib/prisma", () => ({
   }),
 }));
 
-const { createCourse, createLesson, getCourse, enrollStudent } = await import("@/server/modules/courses/service");
+const { createCourse, createLesson, getCourse, enrollStudent, listCoursesForActor } = await import("@/server/modules/courses/service");
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+describe("listCoursesForActor", () => {
+  it("scopes student course lists to readable published courses", async () => {
+    mockCourseFindMany.mockResolvedValue([]);
+
+    await listCoursesForActor({ id: "student-1", roles: ["student"] });
+
+    expect(mockCourseFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [
+            expect.objectContaining({ OR: expect.any(Array) }),
+            { status: CourseStatus.PUBLISHED },
+          ],
+        },
+      }),
+    );
+  });
+
+  it("does not query draft course lists for student actors", async () => {
+    const result = await listCoursesForActor({ id: "student-1", roles: ["student"] }, CourseStatus.DRAFT);
+
+    expect(result).toEqual([]);
+    expect(mockCourseFindMany).not.toHaveBeenCalled();
+  });
+});
 
 describe("createCourse", () => {
   it("creates a course with a generated slug", async () => {

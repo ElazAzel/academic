@@ -105,4 +105,37 @@ describe("course-builder inline creation API scope", () => {
     expect(mockCreateQuizInline).not.toHaveBeenCalled();
     expect(mockCreateAssignmentInline).not.toHaveBeenCalled();
   });
+
+  it("rejects invalid inline quiz payloads before calling the service", async () => {
+    const response = await quizRoute.POST(
+      jsonRequest("/api/v1/course-builder/quiz", {
+        courseId: "course-1",
+        title: "Тест",
+        passThreshold: 80,
+        maxAttempts: 3,
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(body.error.code).toBe("validation_error");
+    expect(mockCreateQuizInline).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid inline assignment payloads before calling the service", async () => {
+    const response = await assignmentRoute.POST(
+      jsonRequest("/api/v1/course-builder/assignment", {
+        lessonId: "lesson-1",
+        courseId: "course-1",
+        title: "Задание",
+        maxAttempts: 2,
+        maxScore: 100,
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(body.error.code).toBe("validation_error");
+    expect(mockCreateAssignmentInline).not.toHaveBeenCalled();
+  });
 });

@@ -195,17 +195,24 @@ export async function deleteDiscussionPost(
     select: {
       userId: true,
       discussion: {
-        select: { lesson: { select: { module: { select: { courseId: true } } } } },
+        select: {
+          lessonId: true,
+          lesson: { select: { module: { select: { courseId: true } } } },
+        },
       },
     },
   });
   if (!post) throw new ApiError("not_found", "Пост не найден", 404);
+  if (post.discussion.lessonId !== lessonId) {
+    throw new ApiError("not_found", "Пост не найден", 404);
+  }
 
   const isAuthor = post.userId === userId;
-  const isMod = await isInstructorOrAdmin(userId, post.discussion.lesson.module.courseId);
-
-  if (!isAuthor && !isMod) {
-    throw new ApiError("forbidden", "Нет прав на удаление", 403);
+  if (!isAuthor) {
+    const isMod = await isInstructorOrAdmin(userId, post.discussion.lesson.module.courseId);
+    if (!isMod) {
+      throw new ApiError("forbidden", "Нет прав на удаление", 403);
+    }
   }
 
   await getPrisma().discussionPost.delete({ where: { id: postId } });

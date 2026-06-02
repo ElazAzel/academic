@@ -1,6 +1,7 @@
-import { ScormLaunchStatus } from "@prisma/client";
+import { EnrollmentStatus, ScormLaunchStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
+import type { AppSessionUser } from "@/types/domain";
 
 /* ── Types ──────────────────────────────────────────────────────────── */
 
@@ -23,6 +24,14 @@ export interface ScormLaunchInfo {
   success: string;
   createdAt: string;
 }
+
+export interface ScormPackageAccessContext {
+  id: string;
+  lessonId: string;
+  courseId: string;
+}
+
+type ScormRuntimeActor = Pick<AppSessionUser, "id" | "roles">;
 
 /* ── Service ────────────────────────────────────────────────────────── */
 
@@ -49,6 +58,82 @@ export async function getScormPackage(lessonId: string): Promise<ScormPackageInf
     scormVersion: pkg.scormVersion,
     createdAt: pkg.createdAt.toISOString(),
   };
+}
+
+/**
+ * Получить контекст доступа к SCORM-пакету по packageId.
+ */
+export async function getScormPackageAccessContext(packageId: string): Promise<ScormPackageAccessContext | null> {
+  const pkg = await getPrisma().scormPackage.findUnique({
+    where: { id: packageId },
+    select: {
+      id: true,
+      lessonId: true,
+      lesson: {
+        select: {
+          module: {
+            select: { courseId: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!pkg) return null;
+
+  return {
+    id: pkg.id,
+    lessonId: pkg.lessonId,
+    courseId: pkg.lesson.module.courseId,
+  };
+}
+
+export async function getScormLessonCourseId(lessonId: string): Promise<string> {
+  const lesson = await getPrisma().lesson.findUnique({
+    where: { id: lessonId },
+    select: {
+      module: {
+        select: { courseId: true },
+      },
+    },
+  });
+
+  if (!lesson) {
+    throw new ApiError("not_found", "Урок не найден", 404);
+  }
+
+  return lesson.module.courseId;
+}
+
+export async function assertScormRuntimeAccess(
+  actor: ScormRuntimeActor,
+  context: { lessonId: string; courseId: string },
+) {
+  const prisma = getPrisma();
+
+  if (actor.roles.includes("admin")) {
+    return;
+  }
+
+  if (actor.roles.includes("instructor")) {
+    const instructor = await prisma.courseInstructor.findUnique({
+      where: { courseId_userId: { courseId: context.courseId, userId: actor.id } },
+      select: { courseId: true },
+    });
+
+    if (instructor) return;
+  }
+
+  if (actor.roles.includes("student")) {
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { userId_courseId: { userId: actor.id, courseId: context.courseId } },
+      select: { status: true },
+    });
+
+    if (enrollment?.status === EnrollmentStatus.ACTIVE) return;
+  }
+
+  throw new ApiError("forbidden", "Нет доступа к SCORM-пакету", 403);
 }
 
 /**

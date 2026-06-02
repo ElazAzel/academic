@@ -19,6 +19,18 @@ import { createNotification } from "@/server/modules/notifications/service";
 
 const prisma = getPrisma();
 
+function throwAdminActionError(error: unknown, label: string): never {
+  if (error instanceof ApiError) throw error;
+  console.error(label, error);
+  throw new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+}
+
+function toSafeImportUserError(error: unknown) {
+  if (error instanceof ApiError) return error.message;
+  console.error("[importUsersAction:item]", error);
+  return "Не удалось создать или обновить пользователя";
+}
+
 async function notifyCuratorAssignment(input: { studentId: string; curatorId: string; cohortId: string }) {
   await Promise.all([
     createNotification({
@@ -96,7 +108,7 @@ export async function enrollStudentAction(formData: FormData) {
     revalidatePath("/admin/enrollments");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[enrollStudentAction]");
   }
 }
 
@@ -136,7 +148,7 @@ export async function assignCuratorAction(input: { studentId: string; curatorId:
     revalidatePath("/admin/enrollments");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new Error("Внутренняя ошибка сервера");
+    throwAdminActionError(error, "[assignCuratorAction]");
   }
 }
 
@@ -171,7 +183,7 @@ export async function pauseEnrollmentAction(enrollmentId: string) {
     revalidatePath("/admin/enrollments");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[pauseEnrollmentAction]");
   }
 }
 
@@ -206,7 +218,7 @@ export async function resumeEnrollmentAction(enrollmentId: string) {
     revalidatePath("/admin/enrollments");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[resumeEnrollmentAction]");
   }
 }
 
@@ -244,7 +256,7 @@ export async function deleteEnrollmentAction(enrollmentId: string) {
     revalidatePath("/admin/enrollments");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[deleteEnrollmentAction]");
   }
 }
 
@@ -314,7 +326,7 @@ export async function assignCuratorFromSupervisorAction(formData: FormData) {
     revalidatePath("/super-curator");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[assignCuratorFromSupervisorAction]");
   }
 }
 
@@ -351,7 +363,7 @@ export async function createCohortAction(formData: FormData) {
     revalidatePath("/admin/cohorts");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[createCohortAction]");
   }
 }
 
@@ -391,7 +403,7 @@ export async function updateCohortAction(formData: FormData) {
     revalidatePath("/admin/cohorts");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[updateCohortAction]");
   }
 }
 
@@ -414,7 +426,7 @@ export async function deleteCohortAction(id: string) {
     revalidatePath("/admin/cohorts");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[deleteCohortAction]");
   }
 }
 
@@ -436,7 +448,7 @@ export async function createUserAction(formData: FormData) {
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[createUserAction]");
   }
 }
 
@@ -470,7 +482,7 @@ export async function updateUserAction(formData: FormData) {
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[updateUserAction]");
   }
 }
 
@@ -496,7 +508,7 @@ export async function deleteUserAction(userId: string) {
     revalidatePath("/admin/users");
     return { success: true };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[deleteUserAction]");
   }
 }
 
@@ -658,7 +670,7 @@ export async function importUsersAction(
           email,
           name: name || "",
           status: "failed" as const,
-          error: err instanceof Error ? err.message : "Неизвестная ошибка при создании"
+          error: toSafeImportUserError(err),
         });
       }
     }
@@ -666,7 +678,7 @@ export async function importUsersAction(
     revalidatePath("/admin/users");
     return { success: true, results };
   } catch (error) {
-    throw error instanceof Error ? error : new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+    throwAdminActionError(error, "[importUsersAction]");
   }
 }
 

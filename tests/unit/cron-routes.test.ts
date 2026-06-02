@@ -23,16 +23,20 @@ const scheduledRoute = await import("@/app/api/v1/reports/scheduled/route");
 describe("cron route authentication", () => {
   it("does not process outbox jobs when CRON_SECRET is unset", async () => {
     const response = await outboxRoute.POST(new Request("http://localhost/api/v1/outbox/process", { method: "POST" }));
+    const body = await response.json();
 
     expect(response.status).toBe(503);
+    expect(body.error.code).toBe("service_unavailable");
     expect(mockProcessReportJobs).not.toHaveBeenCalled();
     expect(mockProcessNotificationEvents).not.toHaveBeenCalled();
   });
 
   it("does not process scheduled reports when CRON_SECRET is unset", async () => {
     const response = await scheduledRoute.POST(new Request("http://localhost/api/v1/reports/scheduled", { method: "POST" }));
+    const body = await response.json();
 
     expect(response.status).toBe(503);
+    expect(body.error.code).toBe("service_unavailable");
     expect(mockProcessReportJobs).not.toHaveBeenCalled();
   });
 });

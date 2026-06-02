@@ -171,7 +171,7 @@ function normalizeReportType(type: string | null): ReportType {
 export function parseReportFormat(format: string | null): ReportFormat {
   const normalized = format || "csv";
   if (normalized === "csv" || normalized === "xlsx" || normalized === "pdf") return normalized;
-  throw new ApiError("bad_request", "Unsupported format. Use csv, xlsx, or pdf.", 400);
+  throw new ApiError("bad_request", "Неподдерживаемый формат отчёта. Используйте csv, xlsx или pdf.", 400);
 }
 
 async function getCourseIdsForCohorts(cohortIds: string[]) {

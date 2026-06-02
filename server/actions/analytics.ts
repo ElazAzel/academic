@@ -8,6 +8,12 @@ import { ApiError } from "@/lib/http";
 
 const prisma = getPrisma();
 
+function throwAnalyticsActionError(error: unknown, label: string): never {
+  if (error instanceof ApiError) throw error;
+  console.error(label, error);
+  throw new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
+}
+
 async function assertCuratorStudentAccess(actor: { id: string; roles: string[] }, studentId: string) {
   if (actor.roles.includes("admin")) return;
   const assignment = await prisma.curatorAssignment.findFirst({
@@ -57,8 +63,7 @@ export async function generateReportAction(projectId: string, type: string) {
 
     return report;
   } catch (error) {
-    console.error("[generateReportAction]", error);
-    throw error;
+    throwAnalyticsActionError(error, "[generateReportAction]");
   }
 }
 
@@ -101,8 +106,7 @@ export async function createRiskFlagAction(userId: string, type: string, courseI
 
     return flag;
   } catch (error) {
-    console.error("[createRiskFlagAction]", error);
-    throw error;
+    throwAnalyticsActionError(error, "[createRiskFlagAction]");
   }
 }
 
@@ -146,7 +150,6 @@ export async function resolveRiskFlagAction(flagId: string) {
 
     return updated;
   } catch (error) {
-    console.error("[resolveRiskFlagAction]", error);
-    throw error;
+    throwAnalyticsActionError(error, "[resolveRiskFlagAction]");
   }
 }

@@ -33,6 +33,7 @@ describe("uploadMedia", () => {
         data: {
           url: "/api/v1/media/upload-fallback?key=certificates/1710000000000-abcdef12.png&contentType=image%2Fpng",
           publicUrl: "https://storage.example/initial.png",
+          key: "certificates/1710000000000-abcdef12.png",
         },
       }), {
         status: 200,
@@ -51,6 +52,7 @@ describe("uploadMedia", () => {
     const result = await uploadMedia(file, "certificates");
 
     expect(result.publicUrl).toBe("https://storage.example/fallback.png");
+    expect(result.storageKey).toBe("certificates/1710000000000-abcdef12.png");
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
       "/api/v1/media/uploads",
@@ -92,6 +94,7 @@ describe("uploadMedia", () => {
           url: "https://storage.example/upload",
           publicUrl: "https://storage.example/initial.png",
           fallbackUrl: "/api/v1/media/upload-fallback?key=certificates/1710000000000-abcdef12.png&contentType=image%2Fpng",
+          key: "certificates/1710000000000-abcdef12.png",
         },
       }), {
         status: 200,
@@ -111,6 +114,7 @@ describe("uploadMedia", () => {
     const result = await uploadMedia(file, "certificates");
 
     expect(result.publicUrl).toBe("https://storage.example/fallback.png");
+    expect(result.storageKey).toBe("certificates/1710000000000-abcdef12.png");
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       "https://storage.example/upload",

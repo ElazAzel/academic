@@ -181,19 +181,38 @@ export async function getQuizForActor(actor: CourseAccessActor, quizId: string) 
 export async function importQuestions(quizId: string, questionIds: string[], actorId: string) {
   const quiz = await prisma.quiz.findUnique({
     where: { id: quizId },
-    include: { course: { select: { id: true } } },
+    include: {
+      course: { select: { id: true } },
+      lesson: { select: { module: { select: { courseId: true } } } },
+    },
   });
   if (!quiz) throw new ApiError("not_found", "Тест не найден", 404);
-  if (!quiz.course) throw new ApiError("bad_request", "Тест не привязан к курсу", 400);
+  const courseId = quiz.courseId ?? quiz.lesson?.module.courseId;
+  if (!courseId) throw new ApiError("bad_request", "Тест не привязан к курсу", 400);
 
   const { assertInstructorOfCourse } = await import("@/server/modules/course-builder/service");
-  await assertInstructorOfCourse(actorId, quiz.course.id);
+  await assertInstructorOfCourse(actorId, courseId);
+
+  const uniqueQuestionIds = [...new Set(questionIds)];
 
   const sourceQuestions = await prisma.quizQuestion.findMany({
-    where: { id: { in: questionIds } },
+    where: {
+      id: { in: uniqueQuestionIds },
+      quiz: {
+        OR: [
+          { courseId },
+          { lesson: { module: { courseId } } },
+        ],
+      },
+    },
   });
 
-  if (sourceQuestions.length === 0) throw new ApiError("bad_request", "Вопросы не найдены", 400);
+  if (sourceQuestions.length !== uniqueQuestionIds.length) {
+    throw new ApiError("not_found", "Вопросы не найдены или недоступны", 404);
+  }
+
+  const sourceById = new Map(sourceQuestions.map((question) => [question.id, question]));
+  const orderedSourceQuestions = uniqueQuestionIds.map((id) => sourceById.get(id)!);
 
   const maxOrder = await prisma.quizQuestion.aggregate({
     where: { quizId },
@@ -203,7 +222,7 @@ export async function importQuestions(quizId: string, questionIds: string[], act
   let order = (maxOrder._max.order ?? -1) + 1;
 
   const created = await prisma.$transaction(
-    sourceQuestions.map((q) =>
+    orderedSourceQuestions.map((q) =>
       prisma.quizQuestion.create({
         data: {
           id: randomUUID(),

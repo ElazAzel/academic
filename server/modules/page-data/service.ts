@@ -4,9 +4,44 @@ import { buildMessagePreview } from "@/lib/chat/utils";
 import { getPrisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
 import { maskStudentName } from "@/lib/utils";
-import type { SubmissionForReview } from "@/types/domain";
+import type { RoleKey, SubmissionForReview } from "@/types/domain";
 
 const prisma = getPrisma();
+
+function hasGlobalInstructorPageAccess(roleKeys: RoleKey[]) {
+  return roleKeys.includes("admin");
+}
+
+function instructorAssignmentWhere(userId: string, roleKeys: RoleKey[]): Prisma.AssignmentWhereInput {
+  if (hasGlobalInstructorPageAccess(roleKeys)) return {};
+
+  return {
+    OR: [
+      { course: { instructors: { some: { userId } } } },
+      { lesson: { module: { course: { instructors: { some: { userId } } } } } },
+    ],
+  };
+}
+
+function instructorQuizWhere(userId: string, roleKeys: RoleKey[]): Prisma.QuizWhereInput {
+  if (hasGlobalInstructorPageAccess(roleKeys)) return {};
+
+  return {
+    OR: [
+      { course: { instructors: { some: { userId } } } },
+      { lesson: { module: { course: { instructors: { some: { userId } } } } } },
+    ],
+  };
+}
+
+function quizWhereForCourseIds(courseIds: string[]): Prisma.QuizWhereInput {
+  return {
+    OR: [
+      { courseId: { in: courseIds } },
+      { lesson: { module: { courseId: { in: courseIds } } } },
+    ],
+  };
+}
 
 export async function getAdminAnalyticsPageData() {
   const [
@@ -421,44 +456,50 @@ export async function getCuratorPopupStudents(curatorId: string) {
   }));
 }
 
-export async function getInstructorAssignmentsPageData(userId: string) {
+export async function getInstructorAssignmentsPageData(userId: string, roleKeys: RoleKey[]) {
   return prisma.assignment.findMany({
-    where: {
-      course: { instructors: { some: { userId } } },
-    },
+    where: instructorAssignmentWhere(userId, roleKeys),
     include: {
       course: true,
-      lesson: true,
+      lesson: { include: { module: { select: { courseId: true, course: { select: { id: true, title: true } } } } } },
       _count: { select: { submissions: { where: { status: "SUBMITTED" } } } },
     },
     orderBy: { createdAt: "desc" },
   });
 }
 
-export async function getInstructorAssignmentEditData(assignmentId: string) {
-  return prisma.assignment.findUnique({
-    where: { id: assignmentId },
+export async function getInstructorAssignmentEditData(assignmentId: string, userId: string, roleKeys: RoleKey[]) {
+  return prisma.assignment.findFirst({
+    where: {
+      id: assignmentId,
+      ...instructorAssignmentWhere(userId, roleKeys),
+    },
   });
 }
 
-export async function getInstructorQuizzesPageData(userId: string) {
+export async function getInstructorQuizzesPageData(userId: string, roleKeys: RoleKey[]) {
   return prisma.quiz.findMany({
-    where: {
-      course: { instructors: { some: { userId } } },
-    },
+    where: instructorQuizWhere(userId, roleKeys),
     include: {
       course: true,
-      lesson: true,
+      lesson: { include: { module: { select: { courseId: true, course: { select: { id: true, title: true } } } } } },
       _count: { select: { questions: true } },
     },
     orderBy: { createdAt: "desc" },
   });
 }
 
-export async function getInstructorQuizEditData(quizId: string) {
-  return prisma.quiz.findUnique({
-    where: { id: quizId },
-    include: { questions: { orderBy: { order: "asc" } }, course: { select: { id: true } } },
+export async function getInstructorQuizEditData(quizId: string, userId: string, roleKeys: RoleKey[]) {
+  return prisma.quiz.findFirst({
+    where: {
+      id: quizId,
+      ...instructorQuizWhere(userId, roleKeys),
+    },
+    include: {
+      questions: { orderBy: { order: "asc" } },
+      course: { select: { id: true } },
+      lesson: { select: { module: { select: { courseId: true } } } },
+    },
   });
 }
 
@@ -500,8 +541,8 @@ export async function getInstructorReportsPageData(userId: string) {
         },
       },
     }),
-    prisma.quizAttempt.count({ where: { quiz: { courseId: { in: courseIds } } } }),
-    prisma.quizAttempt.count({ where: { quiz: { courseId: { in: courseIds } }, passed: true } }),
+    prisma.quizAttempt.count({ where: { quiz: quizWhereForCourseIds(courseIds) } }),
+    prisma.quizAttempt.count({ where: { quiz: quizWhereForCourseIds(courseIds), passed: true } }),
   ]);
 
   return {

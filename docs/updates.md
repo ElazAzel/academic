@@ -2,6 +2,609 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-02 — Dead `/student/reports` route artifact удалён
+
+**Что сделано:**
+
+- Удалён остаточный `app/student/reports/loading.tsx`; страница отчётов студента остаётся полностью скрытой и отсутствует в route tree.
+- `tests/unit/navigation.test.ts` теперь проверяет, что `/student/reports` отсутствует в desktop-nav, bottom-nav, `page.tsx` и `loading.tsx`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/navigation.test.ts` — 3/3 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 698/698 Vitest tests, production build; route list no longer contains `/student/reports`.
+
+## 2026-06-02 — Certificate/report privacy proof и статус отозванных сертификатов в отчётах
+
+**Что сделано:**
+
+- `GET /api/v1/certificates/[certificateId]/pdf` закреплён route-level тестами: чужой студент, заказчик вне scope и отозванный сертификат не доходят до `generateCertificatePdf()`, а заказчик внутри scope и назначенный преподаватель получают PDF только после проверки доступа.
+- `CertificateRow` теперь содержит `status` и `revokedAt`; `fetchCertificateData()` явно помечает отозванные сертификаты как `Отозван`.
+- CSV/XLSX/PDF-отчёты по сертификатам показывают статус, дату отзыва и сводку `Действующих` / `Отозвано`, поэтому revoked certificate больше не выглядит как обычный действующий сертификат в экспортах.
+- `tests/unit/reports-service.test.ts` дополнен проверками, что customer observer получает progress export и risk preview только в пределах `studentIds`/`cohortIds`/`courseIds`.
+- `tests/unit/reports.test.ts` и generator suites закрепляют новый contract отчётов по сертификатам.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/certificates-api.test.ts tests/unit/reports-service.test.ts tests/unit/reports.test.ts tests/unit/reports/csv-generator.test.ts tests/unit/reports/xlsx-generator.test.ts tests/unit/reports/pdf-generator.test.ts tests/unit/reports/types.test.ts` — 92/92 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 697/697 Vitest tests, production build.
+
+## 2026-06-02 — Chat/quiz action noise и assignment achievement test mock закрыты
+
+**Что сделано:**
+
+- `server/actions/chat.ts` больше не пишет controlled `ApiError` в `console.error`; неожиданные read/upload errors возвращаются как safe `internal_error`, а `sendMessageAction()` сохраняет прежний `{ success: false }` контракт для unexpected send failures.
+- `server/actions/quiz-assignment.ts` сохраняет Next.js redirect digest и controlled `ApiError`, но wrap unexpected create errors в safe `internal_error` без raw backend details.
+- `tests/unit/assignments.test.ts` получил полноценные Prisma mocks для `achievement.upsert` и `userAchievement.*`, поэтому `submitAssignment()` больше не печатает ложный TypeError из achievements subsystem.
+- `tests/unit/actions-chat.test.ts` и `tests/unit/quiz-assignment-actions.test.ts` расширены no-noise/no-leak проверками.
+- No-leak tests для HTTP generic errors, users export, cron outbox processor и media fallback теперь глушат ожидаемые diagnostic logs через spies и одновременно проверяют, что production logging path сохраняется.
+- `tests/unit/components/login-form.test.tsx` стабилизирован jsdom-stub для `window.scrollTo`, чтобы ошибка входа не печатала `Not implemented` в stderr.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/actions-chat.test.ts tests/unit/quiz-assignment-actions.test.ts tests/unit/assignments.test.ts` — 28/28 passed.
+- `npm run test -- tests/unit/cron-routes-success.test.ts tests/unit/users-export-api.test.ts tests/unit/http.test.ts tests/unit/media-upload-routes.test.ts` — 21/21 passed.
+- `npm run test -- tests/unit/components/login-form.test.tsx` — 6/6 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 688/688 Vitest tests, production build.
+
+## 2026-06-02 — Curator/analytics actions убрали harness-noise и raw error leak
+
+**Что сделано:**
+
+- `server/actions/curator.ts` и `server/actions/analytics.ts` теперь сохраняют controlled `ApiError` без `console.error`, поэтому expected negative-path tests больше не засоряют stderr.
+- Неожиданные persistence/service errors в этих actions логируются серверно с technical label и возвращаются наружу как безопасный `internal_error` с сообщением `Внутренняя ошибка сервера`.
+- `tests/unit/actions-curator.test.ts` и `tests/unit/actions-analytics.test.ts` расширены no-leak/no-noise проверками для controlled и unexpected error paths.
+- `docs/META-HARNESS.md` получил явную Noise Policy: expected domain-denials не пишутся в stderr, raw backend details не уходят в user-visible contracts.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/actions-curator.test.ts tests/unit/actions-analytics.test.ts` — 20/20 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 686/686 Vitest tests, production build.
+
+## 2026-06-02 — Admin actions закрыты safe-error контрактом
+
+**Что сделано:**
+
+- `server/actions/admin.ts` теперь использует единый `throwAdminActionError()` для admin/super-curator mutations: controlled `ApiError` сохраняется, а неожиданные Prisma/service errors логируются серверно и наружу возвращают русскоязычный `internal_error` без raw backend details.
+- `importUsersAction()` больше не показывает raw exception message в ошибке отдельной строки bulk import; пользователь видит безопасное сообщение `Не удалось создать или обновить пользователя`, а детали остаются только в server log.
+- `tests/unit/actions-admin.test.ts` расширен до 25 тестов: добавлены no-leak checks для назначения куратора, создания потока и per-row ошибки импорта пользователей.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/actions-admin.test.ts` — 25/25 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 684/684 Vitest tests, production build.
+
+## 2026-06-02 — HTTP errorResponse больше не раскрывает raw generic errors
+
+**Что сделано:**
+
+- `lib/http.errorResponse()` теперь сохраняет подробные сообщения только для controlled `ApiError` и Zod validation errors; произвольные `Error` в 500-ответах возвращают фиксированное русское сообщение `Внутренняя ошибка сервера` без raw message, stack или details.
+- `GET /api/v1/notifications/[id]` и `POST /api/v1/popups/[id]/toggle` больше не передают plain `Error` с приклеенными `code/status`; missing notification/popup возвращают настоящий structured `not_found`.
+- Добавлен `tests/unit/notifications-api.test.ts`; `tests/unit/http.test.ts` и `tests/unit/popups-api.test.ts` расширены no-leak и structured 404 проверками.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/http.test.ts tests/unit/popups-api.test.ts tests/unit/notifications-api.test.ts` — 13/13 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 681/681 Vitest tests, production build.
+
+## 2026-06-02 — Settings actions и notification preferences закрыты safe-error контрактом
+
+**Что сделано:**
+
+- `server/actions/settings.ts` больше не пробрасывает наружу произвольные `Error` из profile/password/notification/app-settings actions; controlled `ApiError` сохраняется, Zod-ошибки становятся `bad_request`, а неожиданные persistence errors возвращаются как русскоязычный `internal_error` без raw message.
+- `updatePasswordAction()` получил Zod-валидацию FormData и больше не падает TypeError на отсутствующих password fields до проверки пользователя в БД.
+- `updateNotificationPreferencesAction()` теперь принимает только известные notification channels и значения `true`/`false`; неизвестные `notification_*` payload отклоняются до записи.
+- Role settings формы для student/instructor/curator/super_curator/customer_observer теперь отправляют hidden `false` перед checkbox, а action схлопывает duplicate fields по последнему значению, поэтому отключение уведомлений реально сохраняется.
+- `tests/unit/actions-settings.test.ts` расширен до 21 теста: safe-error checks, invalid notification payload, missing password fields, build-version action и duplicate checkbox semantics.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/actions-settings.test.ts` — 21/21 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 676/676 Vitest tests, production build.
+
+## 2026-06-02 — Certificate template actions закрыты строгой валидацией
+
+**Что сделано:**
+
+- `saveCertificateTemplateAction()` теперь принимает только объектный `config` через Zod `z.record(z.unknown())`; строковые, массивные и другие не-объектные payload отклоняются до `requireUser()` и до любых записей в БД.
+- `getCertificateTemplateAction()` и `saveCertificateTemplateAction()` сохраняют controlled `ApiError`, но неожиданные persistence errors больше не пробрасываются наружу с raw message и возвращаются как русскоязычный `internal_error`.
+- Instructor ownership для шаблонов сертификатов остаётся привязанным к `courseInstructor`, а `admin` сохраняет явный bypass.
+- Добавлен `tests/unit/certificate-actions.test.ts` с проверками owned course read, invalid config no-write, update/revalidate path и safe error contract.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/certificate-actions.test.ts` — 4/4 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 666/666 Vitest tests, production build.
+
+## 2026-06-02 — Lesson media actions закрыты ownership-проверкой
+
+**Что сделано:**
+
+- `uploadLessonMediaAction()` теперь резолвит `lessonId -> lesson.module.courseId` до `lessonMedia.create()` и проверяет, что instructor ведет курс; `admin` сохраняет bypass.
+- `deleteLessonMediaAction()` больше не удаляет по одному `mediaId`: сначала загружается `lessonMedia -> lesson.module.courseId`, затем выполняется ownership check и только после этого `delete`.
+- Audit metadata для upload/delete lesson media теперь содержит course/lesson контекст, что связывает файловое действие с учебным курсом.
+- ApiError в delete action больше не логируется как неожиданный сбой, а возвращается как controlled `{ success: false }`.
+- `tests/unit/actions-files.test.ts` расширен до 6 тестов: upload/delete positive path, forbidden upload, forbidden delete и storage-key boundaries.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/actions-files.test.ts` — 6/6 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 662/662 Vitest tests, production build.
+
+## 2026-06-02 — Quiz/assignment create actions больше не создают orphan content
+
+**Что сделано:**
+
+- `createQuizAction()` и `createAssignmentAction()` больше не создают записи без `courseId`/`lessonId`; при отсутствии явного `courseId` выбирается последний доступный курс текущего автора.
+- Для явного `courseId` добавлена проверка instructor ownership через `courseInstructor.findUnique()`; `admin` сохраняет admin-bypass без лишнего ownership lookup.
+- Вход server actions валидируется Zod-схемой `createLinkedContentSchema`, а audit events `quiz.created` / `assignment.created` теперь сохраняют `metadata.courseId`.
+- Если у автора нет доступного курса, action fail-closed с `not_found`, а чужой `courseId` для instructor возвращает `forbidden`.
+- Добавлен `tests/unit/quiz-assignment-actions.test.ts`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/quiz-assignment-actions.test.ts` — 4/4 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 660/660 Vitest tests, production build.
+
+## 2026-06-02 — Instructor page-data и analytics закрыты для lesson-level quiz/assignment
+
+**Что сделано:**
+
+- `getInstructorAssignmentsPageData()` и `getInstructorQuizzesPageData()` теперь строят instructor scope через единый `OR` по прямому `course.instructors` и `lesson.module.course.instructors`, поэтому lesson-level задания и тесты видны в кабинетах инструкторов.
+- Edit-данные `/instructor/assignments/[assignmentId]/edit` и `/instructor/quizzes/[quizId]/edit` больше не читаются по одному `id`: `findFirst()` привязан к текущему `user.id` и ролям, с admin-bypass только для `admin`.
+- Lesson-level quiz edit больше не превращается в 404 из-за пустого `quiz.course`; `courseId` берется из `quiz.course.id` или `quiz.lesson.module.courseId`.
+- Instructor report page-data и `getInstructorAnalytics()` считают quiz attempts и список тестов по course-level и lesson-level quiz scope, чтобы аналитика не теряла встроенные в урок тесты.
+- Добавлены `tests/unit/page-data-service.test.ts` и `tests/unit/instructor-dashboard-actions.test.ts`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/page-data-service.test.ts tests/unit/instructor-dashboard-actions.test.ts` — 7/7 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 656/656 Vitest tests, production build.
+
+## 2026-06-02 — Discussion delete и assignment list закрыты по lesson-level контексту
+
+**Что сделано:**
+
+- `deleteDiscussionPost()` теперь проверяет, что `postId` действительно принадлежит `lessonId` из URL через `post.discussion.lessonId === lessonId`; cross-lesson удаление собственного поста больше не проходит через доступ к другому уроку.
+- Для автора поста удаление больше не делает лишний moderator lookup; instructor/admin проверка выполняется только когда actor не является автором.
+- `listAssignments()` теперь строит единый `assignmentReadWhere()` для course-level и lesson-level заданий: student scope идет через активное/завершенное enrollment, instructor scope — через owned course, admin остается глобальным.
+- Роли без assignment-list scope получают невозможный `id="__no_assignment_access__"`, вместо случайного общего списка.
+- Добавлен `tests/unit/discussion-service.test.ts`; `tests/unit/assignments.test.ts` расширен проверками lesson-level assignment scope.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/assignments.test.ts tests/unit/discussion-service.test.ts tests/unit/discussion-posts-api.test.ts` — 16/16 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 649/649 Vitest tests, production build.
+
+## 2026-06-02 — Course list и leaderboard закрыты actor scope
+
+**Что сделано:**
+
+- `GET /api/v1/courses` больше не вызывает общий `listCourses(status)` для всех ролей; route использует `listCoursesForActor()` и `courseReadWhereForActor()`.
+- Для `student` и `customer_observer` course list дополнительно ограничен опубликованными курсами; запрос `status=DRAFT` для этих ролей возвращает пустой список без DB lookup.
+- `GET /api/v1/leaderboard` больше не возвращает глобальный XP-топ всем пользователям с `courses:read`; route вызывает `getLeaderboardForActor()`.
+- Leaderboard scope: admin видит глобальный топ, student — общий топ только по общим активным когортам или cohortless active courses, instructor — студентов своих курсов, curator/super_curator — закрепленных студентов, customer observer — участников наблюдаемых когорт/проектов.
+- `LeaderboardPanel` теперь разворачивает стандартный API envelope `{ data }`, а не пытается отрисовать весь JSON-ответ как массив.
+- Добавлены `tests/unit/course-list-route.test.ts`, `tests/unit/leaderboard-api.test.ts`, `tests/unit/xp-leaderboard.test.ts`; `tests/unit/courses-service.test.ts` расширен проверками actor-scoped course list.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/courses-service.test.ts tests/unit/course-list-route.test.ts tests/unit/leaderboard-api.test.ts tests/unit/xp-leaderboard.test.ts` — 15/15 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 645/645 Vitest tests, production build.
+
+## 2026-06-02 — Lesson visibility logging закрыт learning-content scope
+
+**Что сделано:**
+
+- `POST /api/v1/lessons/log-visibility` теперь валидирует payload через Zod до lookup урока и security logging.
+- Route резолвит `lessonId -> courseId` и вызывает `assertLearningContentAccess()` перед `logVisibilityChange()`, чтобы студент/куратор/преподаватель проходили только через реальный learning-content scope.
+- При некорректном `state` route возвращает `422 validation_error` без чтения урока и без записи события.
+- Добавлен `tests/unit/lesson-log-visibility-api.test.ts`: invalid payload, denied learning-content scope и успешная запись после подтверждения доступа.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/lesson-log-visibility-api.test.ts` — 3/3 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 637/637 Vitest tests, production build.
+
+## 2026-06-02 — Academy search теперь ограничен course scope пользователя
+
+**Что сделано:**
+
+- `searchAcademy()` теперь принимает actor и использует `courseReadWhereForActor()` для поиска курсов и уроков.
+- Удален глобальный raw SQL full-text search по всем `courses`/`lessons`, который мог раскрывать чужие course/lesson titles пользователю с обычным `courses:read`.
+- `GET /api/v1/search` передает текущего пользователя в search service; поиск пользователей по-прежнему включается только для admin.
+- `tests/unit/search-service.test.ts` расширен проверкой, что lesson search проходит через readable course scope.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/search-service.test.ts` — 6/6 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 634/634 Vitest tests, production build.
+
+## 2026-06-02 — Course/lesson/attendance read-scope hardening
+
+**Что сделано:**
+
+- `GET /api/v1/courses/[courseId]` больше не считает instructor/curator/super_curator глобально elevated: route использует общий `assertCourseReadAccess()`, а student/customer observer не видят draft courses даже при наличии формального scope.
+- `GET /api/v1/assignments/[assignmentId]` теперь резолвит `assignment.courseId` или `assignment.lesson.module.courseId`, вызывает `assertCourseReadAccess()` и не возвращает внутренний `lesson.module` в payload.
+- Добавлен `assertLearningContentAccess()`: учебный lesson content отделен от общего course read scope; `customer_observer` не может открыть lesson content, а instructor/student/curator/super_curator проходят только через назначение или активный enrollment/scope.
+- `GET /api/v1/lessons/[lessonId]` теперь использует `assertLearningContentAccess()` до `getLesson()`, закрывая прежний broad instructor/super_curator shortcut.
+- Добавлен `assertCourseAnalyticsAccess()`: course/lesson attendance actions теперь доступны только operational/reporting ролям с course scope; student с `courses:read` не может читать attendance analytics.
+- Добавлены `tests/unit/course-route.test.ts`, `tests/unit/course-access.test.ts`, `tests/unit/lesson-route.test.ts`, `tests/unit/attendance-actions.test.ts`; `tests/unit/assignment-route.test.ts` расширен read-scope тестами.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/course-route.test.ts tests/unit/assignment-route.test.ts` — 9/9 passed.
+- `npm run test -- tests/unit/course-access.test.ts tests/unit/lesson-route.test.ts tests/unit/attendance-actions.test.ts` — 9/9 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 633/633 Vitest tests, production build.
+
+## 2026-06-02 — Quiz/assignment ownership hardening для lesson-level контента
+
+**Что сделано:**
+
+- `importQuestions()` теперь резолвит target quiz course через `quiz.courseId` или `quiz.lesson.module.courseId`, проверяет `assertInstructorOfCourse()` и копирует source questions только из того же курса; чужие или неизвестные `questionIds` возвращают structured `404 not_found`.
+- `POST /api/v1/quizzes/[quizId]/questions`, `PATCH /api/v1/quizzes/[quizId]/questions/[questionId]` и `DELETE /api/v1/quizzes/[quizId]/questions/[questionId]` теперь проверяют lesson-level quiz course через общий `assertInstructorOfCourse()`.
+- `PATCH/DELETE` question routes дополнительно связывают `questionId` с `quizId` из URL, чтобы вопрос нельзя было мутировать через путь другого квиза.
+- `PATCH/DELETE /api/v1/assignments/[assignmentId]` теперь fail-closed для задания без course context и использует общий instructor course scope вместо локального guard с `if (!courseId) return`.
+- Добавлены `tests/unit/quiz-question-routes.test.ts` и `tests/unit/assignment-route.test.ts`; `tests/unit/quiz.test.ts` расширен import-scope тестами.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/assignment-route.test.ts tests/unit/quiz-question-routes.test.ts tests/unit/quiz.test.ts` — 33/33 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 618/618 Vitest tests, production build.
+
+## 2026-06-02 — SCORM runtime access отделен от общего course read scope
+
+**Что сделано:**
+
+- Добавлен `assertScormRuntimeAccess()`: SCORM runtime теперь доступен только admin, instructor of course или student с `ACTIVE` enrollment; `customer_observer` больше не наследует доступ к учебному SCORM-контенту через общий `courses:read`.
+- `GET /api/v1/scorm/serve/[...path]` использует новый runtime access helper вместо широкого `assertCourseReadAccess()`.
+- `POST /api/v1/lessons/[lessonId]/scorm/launch` теперь проверяет `lessonId -> courseId`, вызывает `assertScormRuntimeAccess()` до lookup пакета и `createScormLaunch()`, а отсутствие пакета возвращает structured `404 not_found` вместо success envelope `{ error }`.
+- Добавлены `tests/unit/scorm-service-access.test.ts` и `tests/unit/scorm-launch-start-api.test.ts`; `tests/unit/scorm-serve-api.test.ts` обновлен под runtime access contract.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/scorm-service-access.test.ts tests/unit/scorm-serve-api.test.ts tests/unit/scorm-launch-start-api.test.ts tests/unit/scorm-package-api.test.ts tests/unit/scorm-launch-api.test.ts` — 24/24 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 609/609 Vitest tests, production build.
+
+## 2026-06-02 — SCORM package/import routes получили instructor course scope
+
+**Что сделано:**
+
+- `POST /api/v1/lessons/[lessonId]/scorm/import` теперь резолвит `lessonId -> courseId` через `getScormLessonCourseId()` и вызывает `assertInstructorOfCourse()` до чтения `FormData` и импорта пакета.
+- `GET/DELETE /api/v1/lessons/[lessonId]/scorm/package` теперь проверяют тот же course ownership до чтения metadata, удаления storage directory и удаления записи `ScormPackage`.
+- Missing import file больше не возвращает success envelope с `{ error }`; route возвращает structured `400 bad_request`.
+- Добавлен `tests/unit/scorm-package-api.test.ts`: 5 тестов покрывают foreign-course denial before import/read, structured missing file, successful scoped import и scoped delete.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/scorm-package-api.test.ts` — 5/5 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 601/601 Vitest tests, production build.
+
+## 2026-06-02 — Outbox processors больше не сохраняют raw exception messages
+
+**Что сделано:**
+
+- `processNotificationEvents()` больше не пишет `err.message` в `outbox_event.error`; raw details остаются только в server log, а состояние outbox получает безопасное русское сообщение `Не удалось обработать уведомление`.
+- Invalid notification payload теперь маркируется русским сообщением `Некорректный payload уведомления: отсутствует userId или event`.
+- `processReportJobs()` больше не сохраняет raw report generation errors и убрал fallback `Unknown error`; failed jobs получают безопасное `Не удалось сформировать отчет`.
+- Invalid report payload и missing report user теперь маркируются русскими failure messages без Zod/raw details в outbox state.
+- Добавлен `tests/unit/reports-processor.test.ts`; `tests/unit/outbox-handler.test.ts` обновлен под safe failure contract.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/outbox-handler.test.ts tests/unit/reports-processor.test.ts` — 9/9 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 596/596 Vitest tests, production build.
+
+## 2026-06-02 — SCORM serve proxy закрыт от unauthenticated file access
+
+**Что сделано:**
+
+- `GET /api/v1/scorm/serve/[...path]` больше не отдает SCORM-файлы без активной сессии: route требует `requireUser("courses:read")` до lookup пакета и storage access.
+- Доступ к SCORM-пакету теперь проверяется до storage access: `getScormPackageAccessContext()` находит курс по `packageId`, а route вызывает SCORM runtime access helper до отдачи HTML/assets.
+- Unsafe path segments (`.`, `..`, `\`) отклоняются structured `400 bad_request` до обращения к storage.
+- Entry point (`index.html`/`index.htm`) всегда получает tracked `ScormLaunch`; при ошибке launch/storage route не отдает сырой `"Internal server error"` и возвращает русский `internal_error`.
+- Кэширование SCORM proxy перестало быть публичным: entry point отдается с `Cache-Control: private, no-store`, assets — с `private, max-age=300`.
+- Добавлен `tests/unit/scorm-serve-api.test.ts`: 6 тестов покрывают auth boundary, unsafe path, course scope, tracked launch, asset serving без extra launch и no raw storage error leakage.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/scorm-serve-api.test.ts` — 6/6 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 593/593 Vitest tests, production build.
+
+## 2026-06-02 — SCORM launch/CMI endpoints получили route-level validation
+
+**Что сделано:**
+
+- `PATCH /api/v1/lessons/[lessonId]/scorm/launch/[launchId]` больше не принимает raw JSON без контракта: body валидируется через `parseJson()` и Zod, включая `status`, числовые `score`/`maxScore`, `suspendData`, `completion` и `success`.
+- `GET /api/v1/lessons/[lessonId]/scorm/launch/[launchId]/cmi` при отсутствии query-параметра `name` возвращает structured `400 bad_request` с русским сообщением.
+- `POST /api/v1/lessons/[lessonId]/scorm/launch/[launchId]/cmi` валидирует `values` как `Record<string, string>` и отклоняет некорректный payload до вызова `setCmiValues()`.
+- Добавлен `tests/unit/scorm-launch-api.test.ts`: 5 тестов покрывают invalid launch status, нормализацию числового score, missing CMI name, invalid CMI values и успешную запись string-map.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/scorm-launch-api.test.ts` — 5/5 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 587/587 Vitest tests, production build.
+
+## 2026-06-02 — Certificate designer preview получил явный JSON contract
+
+**Что сделано:**
+
+- `POST /api/v1/certificates/designer/[courseId]/preview` больше не использует `request.json().catch(() => ({}))`.
+- Draft preview body остаётся гибким passthrough-object для шаблонов сертификата, но invalid JSON возвращает `400 bad_request`, а non-object payload возвращает `422 validation_error`.
+- Ошибочный body больше не запускает `generateDraftCertificatePdf()`.
+- `tests/unit/certificate-designer-preview-api.test.ts` расширен до 5 тестов: permission gate, instructor-course scope, invalid JSON, non-object payload и успешный PDF preview.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/certificate-designer-preview-api.test.ts` — 5/5 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 582/582 Vitest tests, production build.
+
+## 2026-06-02 — Discussion post delete больше не допускает silent invalid payload
+
+**Что сделано:**
+
+- `DELETE /api/v1/lessons/[lessonId]/discussion/posts` больше не читает raw `request.json().catch(() => ({}))`.
+- Payload удаления валидируется через Zod-схему `postId`; пустой или отсутствующий `postId` возвращает стандартный `422 validation_error`.
+- Некорректный payload теперь не вызывает `deleteDiscussionPost()`, поэтому route не делает тихий no-op и не смешивает success envelope с error body.
+- Добавлен `tests/unit/discussion-posts-api.test.ts`: 3 теста покрывают `courses:read` gate, validation before service и успешное удаление через discussion service.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/discussion-posts-api.test.ts` — 3/3 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 580/580 Vitest tests, production build.
+
+## 2026-06-02 — Report API rate-limit и format errors унифицированы
+
+**Что сделано:**
+
+- `GET /api/v1/reports`, `GET /api/v1/reports/preview` и `POST /api/v1/reports/job` теперь возвращают rate-limit через общий `ApiError` envelope (`too_many_requests`) вместо plain `{ error: string }`.
+- Rate-limit останавливает download/preview/job до вызова report generation, preview generation или outbox enqueue.
+- `parseReportFormat()` больше не отдаёт английскую ошибку `Unsupported format`; неподдерживаемый формат возвращает русский `bad_request`.
+- Расширены `tests/unit/reports-api-route.test.ts`, `tests/unit/reports-job-api.test.ts` и `tests/unit/reports-service.test.ts`: 16 targeted tests покрывают structured 429 для download/preview/job и русский unsupported-format contract.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/reports-api-route.test.ts tests/unit/reports-job-api.test.ts tests/unit/reports-service.test.ts` — 16/16 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 577/577 Vitest tests, production build.
+
+## 2026-06-02 — Users export API закрыт от raw error leakage и CSV injection
+
+**Что сделано:**
+
+- `GET /api/v1/users/export` больше не превращает auth/RBAC ошибки из `requireUser("users:read")` в `500`.
+- Export-only restriction теперь возвращает structured `forbidden` через `ApiError`; выгрузка разрешена только `admin` и `super_curator`.
+- Prisma/DB failures возвращают русский generic `internal_error` без раскрытия raw connection/error details в response.
+- CSV-выгрузка экранирует кавычки и запятые, сохраняет UTF-8 BOM и защищает ячейки, начинающиеся с `=`, `+`, `-`, `@`, от spreadsheet formula injection.
+- Добавлен `tests/unit/users-export-api.test.ts`: 4 теста покрывают auth error passthrough, export-only role gate, search-filtered escaped CSV и no-raw-database-error response.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/users-export-api.test.ts` — 4/4 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 573/573 Vitest tests, production build.
+
+## 2026-06-02 — Cron endpoints переведены на structured error envelope
+
+**Что сделано:**
+
+- `POST /api/v1/outbox/process` и `POST /api/v1/reports/scheduled` больше не возвращают plain `{ error: "Unauthorized" }`.
+- Ошибки отсутствующего `CRON_SECRET` возвращаются как `service_unavailable`, а неверный/отсутствующий bearer token как `unauthorized` через общий `ApiError` envelope.
+- Ошибки processor layer больше не отдаются наружу raw message; response получает русский `internal_error`, а подробности остаются только в server log.
+- `tests/unit/cron-routes.test.ts` и `tests/unit/cron-routes-success.test.ts` расширены до проверки structured error body, scheduled-report unauthorized boundary и no-raw-error leakage для outbox processor.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/cron-routes.test.ts tests/unit/cron-routes-success.test.ts` — 7/7 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 569/569 Vitest tests, production build.
+
+## 2026-06-02 — Push subscribe API получил строгий unsubscribe contract
+
+**Что сделано:**
+
+- `POST /api/v1/push/subscribe` теперь возвращает rate-limit через общий `ApiError` envelope (`too_many_requests`) вместо plain `{ error: string }`.
+- `DELETE /api/v1/push/subscribe` больше не глотает произвольный raw JSON и не считает пустой payload успешной отпиской.
+- Unsubscribe payload валидируется через Zod-схему `endpoint: url`; некорректный endpoint возвращает `422 validation_error` до обращения к `pushSubscription.updateMany()`.
+- Успешная отписка деактивирует только endpoint текущего пользователя (`where: { userId, endpoint }`).
+- Добавлен `tests/unit/push-subscribe-api.test.ts`: 4 теста покрывают structured rate-limit, успешный upsert, validation before unsubscribe и user-scoped endpoint deactivation.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/push-subscribe-api.test.ts` — 4/4 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 567/567 Vitest tests, production build.
+
+## 2026-06-02 — xAPI statements API приведён к typed validation
+
+**Что сделано:**
+
+- `POST /api/v1/xapi/statements` больше не читает raw JSON напрямую и не полагается на ручную проверку структуры.
+- Endpoint принимает одиночный statement или непустой batch через Zod-схему, сохраняя passthrough-поля xAPI, но требуя базовые `id`, `actor.objectType`, `verb.id` и `object.id`.
+- Неавторизованный доступ теперь возвращает русский structured `ApiError` envelope для JWT/API-key boundary, а некорректный payload возвращает `422 validation_error` до вызова `storeStatements()`.
+- Успешная запись возвращает пустой `204 No Content` response без JSON-тела.
+- Добавлен `tests/unit/xapi-statements-api.test.ts`: 4 теста покрывают отсутствие JWT/API-key, validation before storage, одиночный authenticated statement и batch с валидным xAPI key.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/xapi-statements-api.test.ts` — 4/4 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 563/563 Vitest tests, production build.
+
+## 2026-06-02 — Visit session end/heartbeat payload валидируется через Zod
+
+**Что сделано:**
+
+- `POST /api/v1/sessions/heartbeat` и `POST /api/v1/sessions/end` больше не кастят raw `request.json()` вручную.
+- Оба route handlers используют `parseJson()` + Zod-схему `sessionId`, поэтому пустой или некорректный payload возвращает стандартный `422 validation_error`.
+- Heartbeat validation теперь происходит до поиска visit session и до `touchAuthDeviceSession()`, чтобы не продлевать и не трогать device-session при некорректном payload.
+- `tests/unit/session-heartbeat-api.test.ts` расширен до 9 тестов: payload validation для heartbeat/end, successful end-session path и прежние revoked-device boundaries.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/session-heartbeat-api.test.ts` — 9/9 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 559/559 Vitest tests, production build.
+
+## 2026-06-02 — Inline course-builder mutations валидируются Zod-схемами
+
+**Что сделано:**
+
+- `POST /api/v1/course-builder/quiz` и `POST /api/v1/course-builder/assignment` больше не читают raw `request.json()` напрямую.
+- Оба route handlers используют `parseJson()` и Zod-схемы до вызова `createQuizInline()` / `createAssignmentInline()`.
+- Inline quiz payload нормализует `questions` и `options`, чтобы service contract всегда получал массивы.
+- `tests/unit/course-builder-inline-api.test.ts` расширен negative-path проверками: невалидные quiz/assignment payloads возвращают `422 validation_error` и не вызывают service layer.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/course-builder-inline-api.test.ts` — 5/5 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 556/556 Vitest tests, production build.
+
+## 2026-06-02 — Redirect-target закреплён по приоритету ролей
+
+**Что сделано:**
+
+- `tests/unit/auth-redirect-target.test.ts` расширен regression-тестами для multi-role пользователей.
+- Доказан продуктовый приоритет редиректа из JWT: `admin` → `super_curator` → `curator` → `instructor` → `customer_observer` → `student`; пример `student + customer_observer + instructor` ведёт в `/instructor`.
+- Доказан тот же приоритет при DB fallback, когда roles ещё не попали в JWT после логина.
+- Доказано, что DB fallback не использует роли неактивного пользователя и возвращает `/403`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/auth-redirect-target.test.ts` — 6/6 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 554/554 Vitest tests, production build.
+
+## 2026-06-02 — Public auth reset/email verification закреплены тестами
+
+**Что сделано:**
+
+- `POST /api/v1/auth/forgot-password` и `POST /api/v1/auth/reset-password` закреплены unit-тестами как закрытые self-service endpoints: оба возвращают `410 gone` с русскоязычным объяснением обращения к администратору.
+- `POST /api/v1/auth/verify-email` больше не использует единый глобальный rate-limit bucket `verify-email`.
+- Email verification теперь сначала валидирует token через Zod, затем применяет rate-limit к hashed token key `verify-email:<sha256-prefix>`, чтобы одна попытка не могла затормозить все чужие подтверждения.
+- Добавлен `tests/unit/auth-public-routes.test.ts`: 5 тестов покрывают disabled reset contract, token validation before rate-limit, token-scoped rate-limit и отказ без расходования verification token при `429`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/auth-public-routes.test.ts` — 5/5 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 551/551 Vitest tests, production build.
+
+## 2026-06-02 — 2FA auth routes приведены к строгому API-контракту
+
+**Что сделано:**
+
+- `POST /api/v1/auth/2fa/verify-login` больше не читает raw JSON напрямую: тело валидируется Zod-схемой, а ошибки возвращаются через единый `ApiError`/`errorResponse` envelope.
+- Login-проверка второго фактора теперь имеет per-user rate limit `2fa-login:<userId>` до TOTP/backup-code проверки, поэтому неверные коды не идут без ограничения.
+- Убраны англоязычные пользовательские ошибки из 2FA login/setup-disable/status routes; неожиданные ошибки login verification больше не раскрывают внутреннее сообщение наружу.
+- `POST /api/v1/auth/2fa/verify` и `POST /api/v1/auth/2fa/disable` переведены на `parseJson()` + Zod-схемы вместо ручных `req.json()` проверок.
+- `GET /api/v1/auth/2fa/status` теперь возвращает структурированный API error envelope вместо plain `{ error: string }`.
+- Добавлен `tests/unit/auth-2fa-routes.test.ts`: 13 тестов покрывают unauth boundary, per-user rate limit, Zod validation, успешный TOTP, backup code, отказ на неверный код, enable/disable и structured status error.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/auth-2fa-routes.test.ts` — 13/13 passed.
+- `npm run typecheck` — passed.
+- `npm run lint -- --max-warnings=0` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 546/546 Vitest tests, production build.
+
+## 2026-06-02 — Device-session heartbeat разлогинивает отозванные устройства
+
+**Что сделано:**
+
+- `/api/v1/sessions/heartbeat` теперь возвращает `403` с `reason: "device-limit"`, если `touchAuthDeviceSession()` не смог обновить текущую `AuthDeviceSession` из-за отзыва.
+- `/api/v1/heartbeat` больше не маскирует отозванную device session как `{ ok: true }`: для обычного отсутствия сессии остаётся тихий OK, но для `authDeviceSessionRevoked` или невалидного `authDeviceSessionId` возвращается `403`.
+- Глобальный `Heartbeat` на клиенте теперь обрабатывает `401/403` и вызывает `signOut({ callbackUrl: "/login?reason=device-limit" })`; public/static prerender защищён от отсутствующего SessionProvider state.
+- Добавлен `tests/unit/session-heartbeat-api.test.ts`, который доказывает: revoked device session не продлевает visit session/`lastLoginAt`, активная session обновляется штатно, а unauthenticated global heartbeat остаётся тихим.
+- `tests/unit/certificates-api.test.ts` дополнительно закрепил revoke route contract: `DELETE /api/v1/certificates/[certificateId]` требует `certificates:issue` до вызова `revokeCertificate()`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/session-heartbeat-api.test.ts tests/unit/auth-device-sessions.test.ts tests/unit/auth-session.test.ts` — 11/11 passed.
+- `npm run test -- tests/unit/certificates-api.test.ts tests/unit/certificates-service.test.ts tests/unit/security-privacy.test.ts tests/unit/security.test.ts tests/unit/rbac.test.ts` — 65/65 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 533/533 Vitest tests, production build.
+
+## 2026-06-02 — Security notifications принудительно сохраняются в БД
+
+**Что сделано:**
+
+- `createNotificationInternal()` теперь считает security events (`device_limit_exceeded`, `password_changed`, `profile_updated`, `certificate_revoked`) до обработки `persist` и пользовательских preferences.
+- Для security events принудительно включается `persist`, поэтому `persist: false` больше не может отключить запись критического уведомления в БД.
+- Email preference suppression больше не применяется к security events внутри email-ветки; обычные уведомления сохраняют прежнее поведение.
+- `tests/unit/notifications-service.test.ts` расширен regression-тестами: silent non-security notification остаётся без записи, а `certificate_revoked` с `persist: false` и disabled preferences всё равно создаёт in-app запись.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/notifications-service.test.ts tests/unit/certificates-service.test.ts tests/unit/auth-service-notifications.test.ts tests/unit/auth-device-sessions.test.ts` — 23/23 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 525/525 Vitest tests, production build.
+
+## 2026-06-02 — Public certificate verification закреплён privacy-тестами
+
+**Что сделано:**
+
+- Добавлены unit/API tests для `/api/v1/certificates/verify/[verificationCode]` и `verifyCertificateByCode()`: неизвестный код возвращает `404/not_found`, действующий сертификат возвращает публичный payload без авторизации, отозванный сертификат возвращается как `valid: false`.
+- Публичный verification payload теперь зафиксирован тестами как privacy contract: наружу не выходят `id`, `userId`, `courseId`, email и другие внутренние идентификаторы.
+- `docs/READINESS.md`, `docs/release.md` и `docs/full-project-audit.md` синхронизированы с новым evidence: certificate public verify valid/revoked уже покрыт unit/API proof, но seeded browser workflow proof остаётся частью общего `partial` статуса.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/certificates-service.test.ts tests/unit/certificates-api.test.ts tests/unit/security-privacy.test.ts tests/unit/security.test.ts tests/unit/rbac.test.ts` — 63/63 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 523/523 Vitest tests, production build.
+
+## 2026-06-02 — Managed lesson media больше не падает в public URL fallback
+
+**Что сделано:**
+
+- `GET /api/v1/lessons/[lessonId]/media/[mediaId]/signed-url` больше не возвращает `media.url`, если у файла есть `storageKey`, но Supabase/S3 signing не смог выдать подписанную ссылку.
+- Для managed storage теперь сохраняется строгий privacy boundary: при сбое signing endpoint возвращает `503 service_unavailable`, а не бессрочный/public fallback URL.
+- Legacy/external media без `storageKey` по-прежнему может отдавать сохранённый `url`, чтобы не ломать явно внешние материалы.
+- `uploadMedia()` теперь сохраняет `key` из upload ticket как `storageKey`, а `uploadLessonMediaAction()` принимает и валидирует этот managed key вместо создания фиктивного `local_*`.
+- `VideoUploadField` переведён на общий `uploadMedia(file, "course-builder")`: исправлен невалидный prefix `lesson-videos` и неверное чтение `publicUrl` из API envelope.
+- `tests/unit/security-privacy.test.ts` расширен проверками managed-storage отказа и legacy external success path; добавлен `tests/unit/actions-files.test.ts` для хранения managed key и запрета `submissions/*` в lesson media.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/security-privacy.test.ts` — 16/16 passed.
+- `npm run test -- tests/unit/actions-files.test.ts tests/unit/upload-with-compress.test.ts tests/unit/security-privacy.test.ts tests/unit/media-upload-routes.test.ts` — 29/29 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 518/518 Vitest tests, production build.
+
+## 2026-06-02 — Certificate read RBAC выровнен с privacy boundary
+
+**Что сделано:**
+
+- В `lib/auth/rbac.ts` добавлено явное право `certificates:read`; оно выдано ролям, которым продуктово разрешен просмотр сертификатов: admin через полный набор, instructor, student и customer_observer.
+- `GET /api/v1/certificates`, `GET /api/v1/certificates/[certificateId]/pdf` и `POST /api/v1/certificates/bulk` теперь требуют `certificates:read` на route-level до scope-логики, rate limit, DB lookup и генерации PDF/ZIP.
+- Существующие scope-правила сохранены: студент видит только свои сертификаты, customer_observer только scoped students, instructor может скачать PDF сертификата по своему курсу, bulk download остается только для admin/customer_observer.
+- Добавлены negative-path тесты, доказывающие отказ до чтения БД/генерации PDF/ZIP при отсутствии `certificates:read`, и расширены RBAC assertions.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/certificates-api.test.ts tests/unit/security-privacy.test.ts tests/unit/security.test.ts tests/unit/rbac.test.ts` — 51/51 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 512/512 Vitest tests, production build.
+
 ## 2026-06-01 — Reports API закрыт на `reports:read`
 
 **Что сделано:**

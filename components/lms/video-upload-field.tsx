@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { FileVideo, X, Loader2 } from "lucide-react";
 import { uploadLessonMediaAction } from "@/server/actions/files";
+import { uploadMedia } from "@/lib/upload-with-compress";
 
 interface VideoUploadFieldProps {
   lessonId: string;
@@ -22,18 +23,9 @@ export function VideoUploadField({ lessonId, onUploaded }: VideoUploadFieldProps
     setUploading(true);
     setError(null);
     try {
-      const res = await fetch("/api/v1/media/uploads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prefix: "lesson-videos",
-          filename: file.name,
-          contentType: file.type || "video/mp4",
-        }),
-      });
-      const { publicUrl } = await res.json();
-      await uploadLessonMediaAction(lessonId, "video", publicUrl, file.name);
-      onUploaded(publicUrl);
+      const result = await uploadMedia(file, "course-builder");
+      await uploadLessonMediaAction(lessonId, "video", result.publicUrl, result.fileName, result.storageKey);
+      onUploaded(result.publicUrl);
     } catch {
       setError("Ошибка загрузки видео");
     } finally {

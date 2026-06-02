@@ -35,7 +35,7 @@ export function LeaderboardPanel() {
   useEffect(() => {
     fetch("/api/v1/leaderboard")
       .then((r) => r.json())
-      .then((data) => { setLeaders(data); setLoading(false); })
+      .then((payload) => { setLeaders(Array.isArray(payload?.data) ? payload.data : []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 

@@ -12,6 +12,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: mockReplace }) 
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.stubGlobal("scrollTo", vi.fn());
   mockSignIn.mockResolvedValue({ error: null });
   mockReplace.mockImplementation(() => undefined);
 });

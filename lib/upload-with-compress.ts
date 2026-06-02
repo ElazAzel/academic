@@ -10,6 +10,7 @@ import { compressImage, formatBytes } from "@/lib/client-image-compress";
 
 export interface UploadMediaResult {
   publicUrl: string;
+  storageKey?: string;
   fileName: string;
   compressed: boolean;
   originalSize: number;
@@ -33,7 +34,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: string; fallbackUrl?: string } {
+function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: string; fallbackUrl?: string; key?: string } {
   const envelope = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
 
   if (!isRecord(envelope) || typeof envelope.url !== "string" || typeof envelope.publicUrl !== "string") {
@@ -44,6 +45,7 @@ function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: st
     url: envelope.url,
     publicUrl: envelope.publicUrl,
     fallbackUrl: typeof envelope.fallbackUrl === "string" ? envelope.fallbackUrl : undefined,
+    key: typeof envelope.key === "string" ? envelope.key : undefined,
   };
 }
 
@@ -96,7 +98,7 @@ export async function uploadMedia(
     throw new Error(err.error?.message ?? "Ошибка при подготовке загрузки");
   }
 
-  const { url, publicUrl, fallbackUrl } = readUploadTicketPayload(await presignRes.json());
+  const { url, publicUrl, fallbackUrl, key } = readUploadTicketPayload(await presignRes.json());
 
   // 3. Upload compressed file to S3/MinIO, then retry through the same-origin proxy if direct PUT is blocked.
   let uploadedPublicUrl: string;
@@ -111,6 +113,7 @@ export async function uploadMedia(
 
   return {
     publicUrl: uploadedPublicUrl,
+    storageKey: key,
     fileName: uploadFile.name,
     compressed: result.compressed,
     originalSize: result.originalSize,

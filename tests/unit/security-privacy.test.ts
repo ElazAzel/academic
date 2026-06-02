@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { ApiError } from "@/lib/http";
 
 // Mocking required session, prisma, and rate-limiting modules
 const mockRequireUser = vi.hoisted(() => vi.fn());
@@ -16,11 +17,14 @@ const mockEnrollmentFindUnique = vi.hoisted(() => vi.fn());
 const mockLessonFindMany = vi.hoisted(() => vi.fn());
 const mockLessonProgressCount = vi.hoisted(() => vi.fn());
 const mockAuditLogCreate = vi.hoisted(() => vi.fn());
+const mockAuditLogCount = vi.hoisted(() => vi.fn());
 const mockObserverProjectFindMany = vi.hoisted(() => vi.fn());
 const mockObserverCohortFindMany = vi.hoisted(() => vi.fn());
 const mockCohortFindMany = vi.hoisted(() => vi.fn());
 const mockEnrollmentFindMany = vi.hoisted(() => vi.fn());
 const mockGenerateCertificatePdf = vi.hoisted(() => vi.fn());
+const mockGetSupabaseStorageSignedUrl = vi.hoisted(() => vi.fn());
+const mockCreateSignedDownloadUrl = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
@@ -51,6 +55,7 @@ vi.mock("@/lib/prisma", () => ({
     },
     auditLog: {
       create: mockAuditLogCreate,
+      count: mockAuditLogCount,
     },
     observerProject: {
       findMany: mockObserverProjectFindMany,
@@ -72,6 +77,11 @@ vi.mock("@/server/modules/certificates/service", () => ({
   generateCertificatePdf: mockGenerateCertificatePdf,
 }));
 
+vi.mock("@/lib/storage", () => ({
+  getSupabaseStorageSignedUrl: mockGetSupabaseStorageSignedUrl,
+  createSignedDownloadUrl: mockCreateSignedDownloadUrl,
+}));
+
 // Import target API routes
 import { GET as getCertificatePdf } from "@/app/api/v1/certificates/[certificateId]/pdf/route";
 import { POST as postBulkCertificates } from "@/app/api/v1/certificates/bulk/route";
@@ -84,15 +94,33 @@ describe("Platform Negative Security Boundaries", () => {
     vi.clearAllMocks();
     // Configure default resolved values for safety
     mockAuditLogCreate.mockResolvedValue({ id: "audit-1" });
+    mockAuditLogCount.mockResolvedValue(0);
     mockUserFindUnique.mockResolvedValue({ id: "admin", roles: [{ role: { key: "admin" } }] });
     mockObserverProjectFindMany.mockResolvedValue([]);
     mockObserverCohortFindMany.mockResolvedValue([]);
     mockCohortFindMany.mockResolvedValue([]);
     mockEnrollmentFindMany.mockResolvedValue([]);
     mockGenerateCertificatePdf.mockResolvedValue(Buffer.from("%PDF-mock-data"));
+    mockGetSupabaseStorageSignedUrl.mockResolvedValue("https://storage.example/signed");
+    mockCreateSignedDownloadUrl.mockResolvedValue("https://s3.example/signed");
   });
 
   describe("Certificate Access Hardening", () => {
+    it("requires certificate read permission before PDF lookup", async () => {
+      mockRequireUser.mockRejectedValue(new ApiError("forbidden", "Недостаточно прав", 403));
+
+      const response = await getCertificatePdf(new Request("http://localhost"), {
+        params: Promise.resolve({ certificateId: "cert-1" }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error.code).toBe("forbidden");
+      expect(mockRequireUser).toHaveBeenCalledWith("certificates:read");
+      expect(mockCertificateFindUnique).not.toHaveBeenCalled();
+      expect(mockGenerateCertificatePdf).not.toHaveBeenCalled();
+    });
+
     it("returns 403 Forbidden when trying to download a revoked certificate", async () => {
       mockRequireUser.mockResolvedValue({ id: "student-1", email: "student@test.com", roles: ["student"] });
       mockCertificateFindUnique.mockResolvedValue({
@@ -341,6 +369,82 @@ describe("Platform Negative Security Boundaries", () => {
 
       expect(response.status).toBe(404);
       expect(data.error.code).toBe("not_found");
+    });
+
+    it("does not fall back to a public media URL when managed storage signing fails", async () => {
+      mockRequireUser.mockResolvedValue({ id: "student-1", email: "student@test.com", roles: ["student"] });
+      mockLessonFindUnique.mockResolvedValue({
+        id: "lesson-1",
+        moduleId: "module-1",
+        module: {
+          id: "module-1",
+          courseId: "course-1",
+          course: { traversalMode: "open" },
+        },
+      });
+      mockEnrollmentFindUnique.mockResolvedValue({ status: "ACTIVE" });
+      mockLessonMediaFindUnique.mockResolvedValue({
+        id: "media-1",
+        lessonId: "lesson-1",
+        storageKey: "lesson-media/private.pdf",
+        url: "https://storage.example/public/lesson-media/private.pdf",
+        filename: "private.pdf",
+        mimeType: "application/pdf",
+        sizeBytes: 1024,
+      });
+      mockGetSupabaseStorageSignedUrl.mockResolvedValue(null);
+      mockCreateSignedDownloadUrl.mockResolvedValue(null);
+
+      const response = await getLessonMediaSignedUrl(new Request("http://localhost"), {
+        params: Promise.resolve({ lessonId: "lesson-1", mediaId: "media-1" }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(503);
+      expect(data.error.code).toBe("service_unavailable");
+      expect(data).not.toMatchObject({
+        data: expect.objectContaining({
+          url: "https://storage.example/public/lesson-media/private.pdf",
+        }),
+      });
+      expect(mockAuditLogCreate).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: "lesson.file_signed_url_issued",
+        }),
+      );
+    });
+
+    it("allows legacy external media URLs only when no storage key is present", async () => {
+      mockRequireUser.mockResolvedValue({ id: "student-1", email: "student@test.com", roles: ["student"] });
+      mockLessonFindUnique.mockResolvedValue({
+        id: "lesson-1",
+        moduleId: "module-1",
+        module: {
+          id: "module-1",
+          courseId: "course-1",
+          course: { traversalMode: "open" },
+        },
+      });
+      mockEnrollmentFindUnique.mockResolvedValue({ status: "ACTIVE" });
+      mockLessonMediaFindUnique.mockResolvedValue({
+        id: "media-legacy",
+        lessonId: "lesson-1",
+        storageKey: null,
+        url: "https://cdn.example.com/public-guide.pdf",
+        filename: "public-guide.pdf",
+        mimeType: "application/pdf",
+        sizeBytes: 2048,
+      });
+
+      const response = await getLessonMediaSignedUrl(new Request("http://localhost"), {
+        params: Promise.resolve({ lessonId: "lesson-1", mediaId: "media-legacy" }),
+      });
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.data.url).toBe("https://cdn.example.com/public-guide.pdf");
+      expect(mockGetSupabaseStorageSignedUrl).not.toHaveBeenCalled();
+      expect(mockCreateSignedDownloadUrl).not.toHaveBeenCalled();
     });
   });
 

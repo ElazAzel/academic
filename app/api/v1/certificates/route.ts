@@ -6,7 +6,7 @@ import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope"
 
 export async function GET() {
   try {
-    const user = await requireUser();
+    const user = await requireUser("certificates:read");
     if (user.roles.includes("admin")) {
       return ok(await listCertificates());
     }

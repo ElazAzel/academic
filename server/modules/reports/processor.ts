@@ -5,6 +5,8 @@ import { z } from "zod";
 
 const prisma = getPrisma();
 
+const REPORT_PROCESSING_ERROR = "Не удалось сформировать отчет";
+
 const reportJobPayloadSchema = z.object({
   reportType: z.string(),
   format: z.string(),
@@ -24,7 +26,7 @@ export async function processReportJobs(batchSize = 10) {
     try {
       const parsed = reportJobPayloadSchema.safeParse(event.payload);
       if (!parsed.success) {
-        await markFailed(event.id, `Invalid payload: ${parsed.error.message}`);
+        await markFailed(event.id, "Некорректный payload отчета");
         continue;
       }
 
@@ -33,7 +35,7 @@ export async function processReportJobs(batchSize = 10) {
 
       const user = await getReportUser(userId);
       if (!user) {
-        await markFailed(event.id, `Report user not found: ${userId}`);
+        await markFailed(event.id, "Пользователь для отчета не найден");
         continue;
       }
 
@@ -63,9 +65,8 @@ export async function processReportJobs(batchSize = 10) {
         },
       });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      console.error(`[Reports Processor] Failed job ${event.id}:`, msg);
-      await markFailed(event.id, msg);
+      console.error(`[Reports Processor] Failed job ${event.id}:`, err);
+      await markFailed(event.id, REPORT_PROCESSING_ERROR);
     }
   }
 

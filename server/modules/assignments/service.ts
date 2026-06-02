@@ -8,26 +8,49 @@ import { checkAndAward } from "@/server/modules/gamification/achievements";
 
 const prisma = getPrisma();
 
+function assignmentReadWhere(userId: string, roleKeys: string[]): Prisma.AssignmentWhereInput {
+  const isAdmin = roleKeys.includes("admin");
+  const isInstructor = roleKeys.includes("instructor");
+  const isStudent = roleKeys.includes("student");
+
+  if (isAdmin) return {};
+
+  if (isInstructor) {
+    const instructorCourseScope = { instructors: { some: { userId } } };
+    return {
+      OR: [
+        { course: instructorCourseScope },
+        { lesson: { module: { course: instructorCourseScope } } },
+      ],
+    };
+  }
+
+  if (isStudent) {
+    const activeEnrollmentScope = {
+      enrollments: {
+        some: {
+          userId,
+          status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
+        },
+      },
+    };
+    return {
+      OR: [
+        { course: activeEnrollmentScope },
+        { lesson: { module: { course: activeEnrollmentScope } } },
+      ],
+    };
+  }
+
+  return { id: "__no_assignment_access__" };
+}
+
 export async function listAssignments(userId: string, roleKeys: string[]) {
   const isAdmin = roleKeys.includes("admin");
   const isInstructor = roleKeys.includes("instructor");
 
-  const where: Record<string, unknown> = {};
-
-  if (!isAdmin) {
-    if (isInstructor) {
-      where.course = {
-        instructors: { some: { userId } }
-      };
-    } else {
-      where.course = {
-        enrollments: { some: { userId, status: { in: ["ACTIVE", "COMPLETED"] } } }
-      };
-    }
-  }
-
   return prisma.assignment.findMany({
-    where,
+    where: assignmentReadWhere(userId, roleKeys),
     include: {
       course: { select: { id: true, title: true } },
       lesson: { select: { id: true, title: true } },

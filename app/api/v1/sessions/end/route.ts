@@ -1,6 +1,11 @@
-import { ApiError, errorResponse, ok } from "@/lib/http";
+import { z } from "zod";
+import { ApiError, errorResponse, ok, parseJson } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
+
+const sessionPayloadSchema = z.object({
+  sessionId: z.string().trim().min(1, "Не указан sessionId"),
+});
 
 /**
  * POST /api/v1/sessions/end
@@ -11,12 +16,7 @@ export async function POST(request: Request) {
     const user = await requireUser();
     const prisma = getPrisma();
 
-    const body = (await request.json()) as { sessionId: string };
-    if (!body.sessionId) {
-      return errorResponse(
-        new ApiError("validation_error", "Не указан sessionId", 400),
-      );
-    }
+    const body = await parseJson(request, sessionPayloadSchema);
 
     const session = await prisma.userSession.findFirst({
       where: { id: body.sessionId, userId: user.id, durationSec: null },

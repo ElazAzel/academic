@@ -164,4 +164,18 @@ describe("popups API scope", () => {
     expect(mockRequireUser).toHaveBeenCalledWith("settings:manage");
     expect(mockAdminPopupUpdate).not.toHaveBeenCalled();
   });
+
+  it("returns structured not_found when popup toggle target is missing", async () => {
+    mockRequireUser.mockResolvedValue({ id: "admin-1", roles: ["admin"] });
+    mockAdminPopupFindMany.mockResolvedValue([]);
+
+    const response = await toggleRoute.POST(new Request("http://localhost"), {
+      params: Promise.resolve({ id: "missing-popup" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body.error.code).toBe("not_found");
+    expect(mockAdminPopupUpdate).not.toHaveBeenCalled();
+  });
 });

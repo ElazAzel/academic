@@ -1,4 +1,4 @@
-import { errorResponse, ok } from "@/lib/http";
+import { ApiError, errorResponse, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { togglePopupStatus, deletePopup, listPopups } from "@/server/modules/popups/service";
 
@@ -14,7 +14,7 @@ export async function POST(
     const popups = await listPopups(true);
     const popup = popups.find((p) => p.id === id);
     if (!popup) {
-      return errorResponse(Object.assign(new Error("Попап не найден"), { code: "not_found", status: 404 }));
+      return errorResponse(new ApiError("not_found", "Попап не найден", 404));
     }
 
     const updated = await togglePopupStatus(id, !popup.isActive);

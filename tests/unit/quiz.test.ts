@@ -2,18 +2,35 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockQuizFindMany = vi.hoisted(() => vi.fn());
 const mockQuizFindFirst = vi.hoisted(() => vi.fn());
+const mockQuizFindUnique = vi.hoisted(() => vi.fn());
 const mockCourseInstructorFindUnique = vi.hoisted(() => vi.fn());
+const mockQuizQuestionFindMany = vi.hoisted(() => vi.fn());
+const mockQuizQuestionAggregate = vi.hoisted(() => vi.fn());
+const mockQuizQuestionCreate = vi.hoisted(() => vi.fn());
+const mockPrismaTransaction = vi.hoisted(() => vi.fn());
+const mockAssertInstructorOfCourse = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
     quiz: {
       findMany: mockQuizFindMany,
       findFirst: mockQuizFindFirst,
+      findUnique: mockQuizFindUnique,
+    },
+    quizQuestion: {
+      findMany: mockQuizQuestionFindMany,
+      aggregate: mockQuizQuestionAggregate,
+      create: mockQuizQuestionCreate,
     },
     courseInstructor: {
       findUnique: mockCourseInstructorFindUnique,
     },
+    $transaction: mockPrismaTransaction,
   }),
+}));
+
+vi.mock("@/server/modules/course-builder/service", () => ({
+  assertInstructorOfCourse: mockAssertInstructorOfCourse,
 }));
 
 vi.mock("@/server/modules/audit/service", () => ({
@@ -24,10 +41,14 @@ vi.mock("@/server/modules/progress/service", () => ({
   markLessonProgress: vi.fn(),
 }));
 
-const { gradeObjectiveQuiz, getQuizForActor, listQuizzes } = await import("@/server/modules/quizzes/service");
+const { gradeObjectiveQuiz, getQuizForActor, importQuestions, listQuizzes } = await import("@/server/modules/quizzes/service");
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockAssertInstructorOfCourse.mockResolvedValue(undefined);
+  mockQuizQuestionAggregate.mockResolvedValue({ _max: { order: 0 } });
+  mockQuizQuestionCreate.mockImplementation(({ data }: { data: Record<string, unknown> }) => Promise.resolve({ ...data }));
+  mockPrismaTransaction.mockImplementation((operations: Array<Promise<unknown>>) => Promise.all(operations));
 });
 
 describe("quiz grading", () => {
@@ -357,5 +378,71 @@ describe("quiz read API shaping", () => {
     const result = await getQuizForActor({ id: "instructor-1", roles: ["instructor"] }, "quiz-1");
 
     expect(JSON.stringify(result)).toContain("correctAnswer");
+  });
+});
+
+describe("quiz question import scope", () => {
+  it("resolves lesson-level quiz course and imports questions from that course only", async () => {
+    mockQuizFindUnique.mockResolvedValue({
+      id: "target-quiz",
+      courseId: null,
+      course: null,
+      lesson: { module: { courseId: "course-1" } },
+    });
+    mockQuizQuestionFindMany.mockResolvedValue([
+      {
+        id: "source-question",
+        type: "SINGLE_CHOICE",
+        prompt: "Question",
+        options: ["a", "b"],
+        correctAnswer: { value: "a" },
+        points: 2,
+      },
+    ]);
+    mockQuizQuestionAggregate.mockResolvedValue({ _max: { order: 2 } });
+
+    const result = await importQuestions("target-quiz", ["source-question"], "instructor-1");
+
+    expect(mockAssertInstructorOfCourse).toHaveBeenCalledWith("instructor-1", "course-1");
+    expect(mockQuizQuestionFindMany).toHaveBeenCalledWith({
+      where: {
+        id: { in: ["source-question"] },
+        quiz: {
+          OR: [
+            { courseId: "course-1" },
+            { lesson: { module: { courseId: "course-1" } } },
+          ],
+        },
+      },
+    });
+    expect(mockQuizQuestionCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          quizId: "target-quiz",
+          prompt: "Question",
+          order: 3,
+        }),
+      }),
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it("does not import source questions outside the target course scope", async () => {
+    mockQuizFindUnique.mockResolvedValue({
+      id: "target-quiz",
+      courseId: "course-1",
+      course: { id: "course-1" },
+      lesson: null,
+    });
+    mockQuizQuestionFindMany.mockResolvedValue([]);
+
+    await expect(importQuestions("target-quiz", ["foreign-question"], "instructor-1")).rejects.toMatchObject({
+      code: "not_found",
+      status: 404,
+    });
+
+    expect(mockAssertInstructorOfCourse).toHaveBeenCalledWith("instructor-1", "course-1");
+    expect(mockQuizQuestionCreate).not.toHaveBeenCalled();
+    expect(mockPrismaTransaction).not.toHaveBeenCalled();
   });
 });

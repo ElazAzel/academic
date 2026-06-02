@@ -73,8 +73,24 @@ describe("generateRiskXlsx", () => {
 
 describe("generateCertificateXlsx", () => {
   const rows: CertificateRow[] = [
-    { number: "ASA-001", studentName: "Alice", email: "alice@test.com", course: "AI 101", issuedAt: "2026-05-01" },
-    { number: "ASA-002", studentName: "Bob", email: "bob@test.com", course: "ML 201", issuedAt: "2026-05-15" },
+    {
+      number: "ASA-001",
+      studentName: "Alice",
+      email: "alice@test.com",
+      course: "AI 101",
+      issuedAt: "2026-05-01",
+      status: "Действителен",
+      revokedAt: null,
+    },
+    {
+      number: "ASA-002",
+      studentName: "Bob",
+      email: "bob@test.com",
+      course: "ML 201",
+      issuedAt: "2026-05-15",
+      status: "Отозван",
+      revokedAt: "2026-05-20",
+    },
   ];
 
   it("produces valid XLSX binary", async () => {

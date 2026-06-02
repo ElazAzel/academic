@@ -14,12 +14,14 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function InstructorEditQuizPage({ params }: { params: Promise<{ quizId: string }> }) {
- await requireRolePage(["instructor", "admin"]);
+ const user = await requireRolePage(["instructor", "admin"]);
  const { quizId } = await params;
 
-  const quiz = await getInstructorQuizEditData(quizId);
+  const quiz = await getInstructorQuizEditData(quizId, user.id, user.roles);
 
-  if (!quiz || !quiz.course) notFound();
+  const courseId = quiz?.course?.id ?? quiz?.lesson?.module.courseId;
+
+  if (!quiz || !courseId) notFound();
 
  return (
   <AppShell role="instructor">
@@ -29,7 +31,7 @@ export default async function InstructorEditQuizPage({ params }: { params: Promi
   />
 
    <div className="mt-8">
-    <QuizEditForm quiz={quiz as unknown as Parameters<typeof QuizEditForm>[0]["quiz"]} courseId={quiz.course.id}/>
+    <QuizEditForm quiz={quiz as unknown as Parameters<typeof QuizEditForm>[0]["quiz"]} courseId={courseId}/>
    </div>
   </AppShell>
  );

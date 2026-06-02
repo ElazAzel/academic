@@ -1,8 +1,10 @@
 "use server";
 
+import { EnrollmentStatus, type Prisma } from "@prisma/client";
 import { z } from "zod";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
+import type { CourseAccessActor } from "@/server/modules/courses/access";
 
 const XP_LESSON_COMPLETE = 50;
 const XP_QUIZ_PASS = 30;
@@ -93,6 +95,136 @@ export async function getLeaderboard(limit = 10) {
     });
   } catch (error) {
     console.error("[getLeaderboard]", error);
+    throw error;
+  }
+}
+
+function hasRole(actor: CourseAccessActor, role: string) {
+  return actor.roles.includes(role as CourseAccessActor["roles"][number]);
+}
+
+function leaderboardVisibilityWhere(actor: CourseAccessActor): Prisma.UserWhereInput {
+  if (hasRole(actor, "admin")) {
+    return {};
+  }
+
+  const OR: Prisma.UserWhereInput[] = [];
+
+  if (hasRole(actor, "student")) {
+    OR.push({
+      enrollments: {
+        some: {
+          status: EnrollmentStatus.ACTIVE,
+          OR: [
+            {
+              cohort: {
+                is: {
+                  enrollments: {
+                    some: {
+                      userId: actor.id,
+                      status: EnrollmentStatus.ACTIVE,
+                    },
+                  },
+                },
+              },
+            },
+            {
+              cohortId: null,
+              course: {
+                enrollments: {
+                  some: {
+                    userId: actor.id,
+                    status: EnrollmentStatus.ACTIVE,
+                    cohortId: null,
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  if (hasRole(actor, "instructor")) {
+    OR.push({
+      enrollments: {
+        some: {
+          status: EnrollmentStatus.ACTIVE,
+          course: {
+            instructors: {
+              some: { userId: actor.id },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  if (hasRole(actor, "curator")) {
+    OR.push({
+      curatorAssignments: {
+        some: {
+          curatorId: actor.id,
+          active: true,
+        },
+      },
+    });
+  }
+
+  if (hasRole(actor, "super_curator")) {
+    OR.push({
+      curatorAssignments: {
+        some: {
+          superCuratorId: actor.id,
+          active: true,
+        },
+      },
+    });
+  }
+
+  if (hasRole(actor, "customer_observer")) {
+    OR.push({
+      enrollments: {
+        some: {
+          status: EnrollmentStatus.ACTIVE,
+          cohort: {
+            is: {
+              OR: [
+                { observerCohorts: { some: { userId: actor.id } } },
+                {
+                  project: {
+                    is: {
+                      observerProjects: {
+                        some: { userId: actor.id },
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+  }
+
+  return OR.length > 0 ? { OR } : { id: "__no_leaderboard_access__" };
+}
+
+export async function getLeaderboardForActor(actor: CourseAccessActor, limit = 10) {
+  try {
+    return getPrisma().user.findMany({
+      where: {
+        xp: { gt: 0 },
+        ...leaderboardVisibilityWhere(actor),
+      },
+      orderBy: { xp: "desc" },
+      take: limit,
+      select: { id: true, name: true, xp: true },
+    });
+  } catch (error) {
+    console.error("[getLeaderboardForActor]", error);
     throw error;
   }
 }

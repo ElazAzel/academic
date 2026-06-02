@@ -6,9 +6,8 @@ export async function GET(request: Request) {
   try {
     const user = await requireUser("courses:read");
     const includeUsers = user.roles.includes("admin");
-    return ok(await searchAcademy(getSearchParam(request, "q"), includeUsers));
+    return ok(await searchAcademy(getSearchParam(request, "q"), user, includeUsers));
   } catch (error) {
     return errorResponse(error);
   }
 }
-

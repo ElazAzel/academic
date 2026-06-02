@@ -278,6 +278,8 @@ export async function generateCertificateXlsx(rows: CertificateRow[], fields?: s
     { header: "Email", key: "email", width: 32 },
     { header: "Курс", key: "course", width: 38 },
     { header: "Дата выдачи", key: "issuedAt", width: 16 },
+    { header: "Статус", key: "status", width: 16 },
+    { header: "Дата отзыва", key: "revokedAt", width: 16 },
   ];
 
   const filteredCols = fields ? ws.columns.filter(c => fields!.includes(c.key!)) : ws.columns;
@@ -296,6 +298,8 @@ export async function generateCertificateXlsx(rows: CertificateRow[], fields?: s
       email: r.email,
       course: r.course,
       issuedAt: r.issuedAt,
+      status: r.status,
+      revokedAt: r.revokedAt ?? "",
     };
     const row = ws.addRow(colKeys.map(key => values[key]));
     row.eachCell((cell) => {
@@ -314,8 +318,11 @@ export async function generateCertificateXlsx(rows: CertificateRow[], fields?: s
   styleHeader(ss);
 
   const uniqueCourses = new Set(rows.map((r) => r.course)).size;
+  const revoked = rows.filter((r) => r.revokedAt).length;
   const summaryData = [
     ["Всего сертификатов", rows.length],
+    ["Действующих", rows.length - revoked],
+    ["Отозвано", revoked],
     ["По курсам", uniqueCourses],
   ];
 

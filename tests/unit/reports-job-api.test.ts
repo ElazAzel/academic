@@ -78,6 +78,18 @@ describe("reports job API access", () => {
     });
   });
 
+  it("returns structured rate-limit errors before parsing and queuing report jobs", async () => {
+    mockCheckRateLimit.mockResolvedValue({ allowed: false, remaining: 0, resetAt: Date.now() + 60000 });
+
+    const response = await POST(jobRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body.error.code).toBe("too_many_requests");
+    expect(mockGetAvailableReportsForRoles).not.toHaveBeenCalled();
+    expect(mockWriteOutboxEvent).not.toHaveBeenCalled();
+  });
+
   it("does not queue jobs for report types unavailable to the user's roles", async () => {
     mockGetAvailableReportsForRoles.mockReturnValue([]);
 

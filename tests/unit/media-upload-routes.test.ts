@@ -82,6 +82,7 @@ describe("media upload routes", () => {
   });
 
   it("returns Supabase fallback upload URL for certificate PNG backgrounds when S3 is unavailable", async () => {
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     mockCreatePresignedUploadUrl.mockResolvedValueOnce(null);
 
     const response = await createUploadUrl(new Request("http://localhost/api/v1/media/uploads", {
@@ -100,6 +101,8 @@ describe("media upload routes", () => {
     expect(mockBuildStorageKey).toHaveBeenCalledWith("certificates", "certificate-background.png");
     expect(data.data.url).toContain("/api/v1/media/upload-fallback");
     expect(data.data.publicUrl).toContain("/storage/v1/object/public/academy-media/certificates/");
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("[Storage Fallback] S3 offline"));
+    consoleSpy.mockRestore();
   });
 
   it("applies the same permission policy in fallback uploads", async () => {

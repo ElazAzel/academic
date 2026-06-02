@@ -5,6 +5,7 @@ import { maskStudentName } from "@/lib/utils";
 import { getPrisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/session";
 import { ApiError } from "@/lib/http";
+import { assertCourseAnalyticsAccess } from "@/server/modules/courses/access";
 
 export interface LessonAttendanceRow {
   lessonId: string;
@@ -40,7 +41,8 @@ export async function getCourseAttendance(courseId: string): Promise<LessonAtten
       throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
-    await requireUser("courses:read");
+    const user = await requireUser("courses:read");
+    await assertCourseAnalyticsAccess(user, courseId);
 
     // Получаем все уроки курса
     const lessons = await getPrisma().lesson.findMany({
@@ -107,7 +109,7 @@ export async function getLessonAttendanceDetail(lessonId: string): Promise<Stude
       throw new ApiError("validation_error", parsed.error.errors[0]?.message || "Ошибка валидации", 422);
     }
 
-    await requireUser("courses:read");
+    const user = await requireUser("courses:read");
 
     const lesson = await getPrisma().lesson.findUnique({
       where: { id: lessonId },
@@ -117,6 +119,8 @@ export async function getLessonAttendanceDetail(lessonId: string): Promise<Stude
       },
     });
     if (!lesson) return [];
+
+    await assertCourseAnalyticsAccess(user, lesson.module.courseId);
 
     // Студенты, enrolled в курс
     const enrollments = await getPrisma().enrollment.findMany({

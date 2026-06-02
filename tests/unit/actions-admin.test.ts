@@ -1,4 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { RoleKey } from "@prisma/client";
+import { ApiError } from "@/lib/http";
 
 const mockRequireRole = vi.hoisted(() => vi.fn());
 const mockRevalidatePath = vi.hoisted(() => vi.fn());
@@ -6,18 +8,24 @@ const mockLogAudit = vi.hoisted(() => vi.fn());
 const mockEnrollStudent = vi.hoisted(() => vi.fn());
 const mockCreateUserFn = vi.hoisted(() => vi.fn());
 const mockCreateNotification = vi.hoisted(() => vi.fn());
+const mockHashPassword = vi.hoisted(() => vi.fn());
 
 const mockCohortCreate = vi.hoisted(() => vi.fn());
 const mockCohortUpdate = vi.hoisted(() => vi.fn());
+const mockCohortFindUnique = vi.hoisted(() => vi.fn());
 const mockEnrollmentFindUnique = vi.hoisted(() => vi.fn());
 const mockEnrollmentFindFirst = vi.hoisted(() => vi.fn());
 const mockEnrollmentUpdate = vi.hoisted(() => vi.fn());
 const mockEnrollmentDelete = vi.hoisted(() => vi.fn());
+const mockEnrollmentCreate = vi.hoisted(() => vi.fn());
 const mockUserFindFirst = vi.hoisted(() => vi.fn());
+const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockUserCreate = vi.hoisted(() => vi.fn());
 const mockCuratorAssignmentUpsert = vi.hoisted(() => vi.fn());
 const mockCuratorAssignmentDeleteMany = vi.hoisted(() => vi.fn());
 const mockCuratorAssignmentFindUnique = vi.hoisted(() => vi.fn());
 const mockCuratorAssignmentFindMany = vi.hoisted(() => vi.fn());
+const mockRoleFindMany = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth/page-guards", () => ({ requireRole: mockRequireRole }));
 vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
@@ -25,17 +33,25 @@ vi.mock("@/server/modules/audit/service", () => ({ logAudit: mockLogAudit }));
 vi.mock("@/server/modules/courses/service", () => ({ enrollStudent: mockEnrollStudent }));
 vi.mock("@/server/modules/users/service", () => ({ createUser: mockCreateUserFn }));
 vi.mock("@/server/modules/notifications/service", () => ({ createNotification: mockCreateNotification }));
+vi.mock("@/lib/auth/password", () => ({ hashPassword: mockHashPassword }));
 vi.mock("@/lib/prisma", () => ({
   getPrisma: () => ({
-    cohort: { create: mockCohortCreate, update: mockCohortUpdate },
-    user: { findFirst: mockUserFindFirst },
-    enrollment: { findUnique: mockEnrollmentFindUnique, findFirst: mockEnrollmentFindFirst, update: mockEnrollmentUpdate, delete: mockEnrollmentDelete },
+    cohort: { create: mockCohortCreate, update: mockCohortUpdate, findUnique: mockCohortFindUnique },
+    user: { findFirst: mockUserFindFirst, findUnique: mockUserFindUnique, create: mockUserCreate },
+    enrollment: {
+      findUnique: mockEnrollmentFindUnique,
+      findFirst: mockEnrollmentFindFirst,
+      update: mockEnrollmentUpdate,
+      delete: mockEnrollmentDelete,
+      create: mockEnrollmentCreate,
+    },
     curatorAssignment: {
       upsert: mockCuratorAssignmentUpsert,
       deleteMany: mockCuratorAssignmentDeleteMany,
       findUnique: mockCuratorAssignmentFindUnique,
       findMany: mockCuratorAssignmentFindMany,
     },
+    role: { findMany: mockRoleFindMany },
   }),
 }));
 
@@ -43,6 +59,7 @@ const {
   enrollStudentAction, assignCuratorAction, pauseEnrollmentAction,
   resumeEnrollmentAction, deleteEnrollmentAction, createCohortAction,
   updateCohortAction, deleteCohortAction, createUserAction, assignCuratorFromSupervisorAction,
+  importUsersAction,
 } = await import("@/server/actions/admin");
 
 const adminUser = { id: "admin1", email: "admin@test.com", name: "Admin", roles: ["admin"] };
@@ -50,12 +67,29 @@ const adminUser = { id: "admin1", email: "admin@test.com", name: "Admin", roles:
 beforeEach(() => {
   vi.clearAllMocks();
   mockRequireRole.mockResolvedValue(adminUser);
+  mockCohortCreate.mockResolvedValue({ id: "coh1" });
+  mockCohortUpdate.mockResolvedValue({ id: "coh1" });
+  mockEnrollmentUpdate.mockResolvedValue({ id: "enrollment1" });
+  mockEnrollmentDelete.mockResolvedValue({ id: "enrollment1" });
   mockUserFindFirst.mockResolvedValue({ id: "cur1" });
   mockEnrollmentFindFirst.mockResolvedValue({ id: "enrollment1" });
+  mockCuratorAssignmentUpsert.mockResolvedValue({ id: "assignment1" });
+  mockCuratorAssignmentDeleteMany.mockResolvedValue({ count: 1 });
   mockCuratorAssignmentFindUnique.mockResolvedValue(null);
   mockCuratorAssignmentFindMany.mockResolvedValue([
     { studentId: "u1", curatorId: "cur1", cohortId: "coh1" },
   ]);
+  mockHashPassword.mockResolvedValue("hashed-password");
+  mockRoleFindMany.mockResolvedValue([
+    { id: "role-student", key: "student" },
+    { id: "role-curator", key: "curator" },
+    { id: "role-admin", key: "admin" },
+    { id: "role-super-curator", key: "super_curator" },
+  ]);
+  mockUserFindUnique.mockResolvedValue(null);
+  mockUserCreate.mockResolvedValue({ id: "new-user-1", name: "New User" });
+  mockCohortFindUnique.mockResolvedValue({ courseId: "course-1" });
+  mockEnrollmentCreate.mockResolvedValue({ id: "enrollment-new" });
 });
 
 describe("enrollStudentAction", () => {
@@ -102,6 +136,22 @@ describe("assignCuratorAction", () => {
     expect(mockLogAudit).toHaveBeenCalledWith(expect.objectContaining({ action: "curator.assigned" }));
     expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: "u1", event: "curator_assigned" }));
     expect(mockCreateNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: "cur1", event: "student_assigned" }));
+  });
+
+  it("wraps unexpected storage errors without leaking details", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockCuratorAssignmentUpsert.mockRejectedValue(new Error("postgres://secret-admin-curator"));
+
+    await expect(assignCuratorAction({ studentId: "u1", curatorId: "cur1", cohortId: "coh1" })).rejects.toMatchObject({
+      code: "internal_error",
+      status: 500,
+      message: "Внутренняя ошибка сервера",
+    } satisfies Partial<ApiError>);
+    await expect(assignCuratorAction({ studentId: "u1", curatorId: "cur1", cohortId: "coh1" })).rejects.not.toThrow(
+      "secret-admin-curator",
+    );
+
+    consoleSpy.mockRestore();
   });
 });
 
@@ -211,6 +261,22 @@ describe("createCohortAction", () => {
     fd.set("name", "Cohort A");
     await expect(createCohortAction(fd)).rejects.toThrow("Название и курс обязательны");
   });
+
+  it("wraps unexpected create errors without exposing backend details", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockCohortCreate.mockRejectedValue(new Error("postgres://secret-admin-cohort"));
+    const fd = new FormData();
+    fd.set("name", "Cohort A"); fd.set("courseId", "c1");
+
+    await expect(createCohortAction(fd)).rejects.toMatchObject({
+      code: "internal_error",
+      status: 500,
+      message: "Внутренняя ошибка сервера",
+    } satisfies Partial<ApiError>);
+    await expect(createCohortAction(fd)).rejects.not.toThrow("secret-admin-cohort");
+
+    consoleSpy.mockRestore();
+  });
 });
 
 describe("updateCohortAction", () => {
@@ -253,5 +319,28 @@ describe("createUserAction", () => {
   it("throws without email", async () => {
     const fd = new FormData();
     await expect(createUserAction(fd)).rejects.toThrow("Email обязателен");
+  });
+});
+
+describe("importUsersAction", () => {
+  it("does not expose raw per-row import errors", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockUserCreate.mockRejectedValue(new Error("postgres://secret-import-row"));
+
+    const result = await importUsersAction([
+      { email: "student@example.com", name: "Student", roleKeys: [RoleKey.student] },
+    ]);
+
+    expect(result.success).toBe(true);
+    expect(result.results).toHaveLength(1);
+    expect(result.results[0]).toMatchObject({
+      email: "student@example.com",
+      name: "Student",
+      status: "failed",
+      error: "Не удалось создать или обновить пользователя",
+    });
+    expect(result.results[0]?.error).not.toContain("secret-import-row");
+
+    consoleSpy.mockRestore();
   });
 });

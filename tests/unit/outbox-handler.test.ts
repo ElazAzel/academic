@@ -22,6 +22,7 @@ const { processNotificationEvents } = await import(
 describe("processNotificationEvents", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
   });
 
   it("processes notification.send events and creates notifications", async () => {
@@ -126,7 +127,7 @@ describe("processNotificationEvents", () => {
     expect(mockCreateNotificationInternal).not.toHaveBeenCalled();
     expect(mockMarkFailed).toHaveBeenCalledWith(
       "event-1",
-      "Invalid notification payload: missing userId or event",
+      "Некорректный payload уведомления: отсутствует userId или event",
     );
     expect(mockMarkSent).not.toHaveBeenCalled();
   });
@@ -145,7 +146,7 @@ describe("processNotificationEvents", () => {
 
     expect(result).toBe(1);
     expect(mockCreateNotificationInternal).toHaveBeenCalledTimes(1);
-    expect(mockMarkFailed).toHaveBeenCalledWith("event-1", "DB error");
+    expect(mockMarkFailed).toHaveBeenCalledWith("event-1", "Не удалось обработать уведомление");
   });
 
   it("returns 0 when there are no pending events", async () => {

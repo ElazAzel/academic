@@ -14,10 +14,10 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function InstructorEditAssignmentPage({ params }: { params: Promise<{ assignmentId: string }> }) {
- await requireRolePage(["instructor", "admin"]);
+ const user = await requireRolePage(["instructor", "admin"]);
  const { assignmentId } = await params;
 
- const assignment = await getInstructorAssignmentEditData(assignmentId);
+ const assignment = await getInstructorAssignmentEditData(assignmentId, user.id, user.roles);
 
  if (!assignment) notFound();
 

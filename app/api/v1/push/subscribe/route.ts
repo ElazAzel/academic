@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
-import { errorResponse, parseJson } from "@/lib/http";
+import { ApiError, errorResponse, parseJson } from "@/lib/http";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { z } from "zod";
 
@@ -15,6 +15,10 @@ const subscriptionSchema = z.object({
   }),
 });
 
+const unsubscribeSchema = z.object({
+  endpoint: z.string().url(),
+});
+
 export async function POST(request: Request) {
   try {
     const user = await requireUser().catch(() => null);
@@ -25,7 +29,7 @@ export async function POST(request: Request) {
 
     const rl = await checkRateLimit(`push-subscribe:${user.id}`);
     if (!rl.allowed) {
-      return NextResponse.json({ error: "Слишком много запросов" }, { status: 429 });
+      throw new ApiError("too_many_requests", "Слишком много запросов. Попробуйте позже.", 429);
     }
 
     const input = await parseJson(request, subscriptionSchema);
@@ -59,15 +63,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, reason: "unauthenticated" });
     }
 
-    const body = await request.json().catch(() => ({ endpoint: "" }));
-    const endpoint = body.endpoint;
+    const input = await parseJson(request, unsubscribeSchema);
 
-    if (endpoint) {
-      await prisma.pushSubscription.updateMany({
-        where: { userId: user.id, endpoint },
-        data: { active: false },
-      });
-    }
+    await prisma.pushSubscription.updateMany({
+      where: { userId: user.id, endpoint: input.endpoint },
+      data: { active: false },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -29,6 +29,14 @@ function previewRequest(body: unknown = {}) {
   });
 }
 
+function rawPreviewRequest(body: string) {
+  return new Request("http://localhost/api/v1/certificates/designer/course-1/preview", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body,
+  });
+}
+
 describe("certificate designer preview API scope", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -72,6 +80,28 @@ describe("certificate designer preview API scope", () => {
 
     expect(response.status).toBe(403);
     expect(body.error.message).toContain("Нет доступа");
+    expect(mockGenerateDraftCertificatePdf).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid JSON before rendering a certificate preview", async () => {
+    const response = await previewRoute.POST(rawPreviewRequest("{"), {
+      params: Promise.resolve({ courseId: "course-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("bad_request");
+    expect(mockGenerateDraftCertificatePdf).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-object preview payloads before rendering a certificate preview", async () => {
+    const response = await previewRoute.POST(previewRequest([]), {
+      params: Promise.resolve({ courseId: "course-1" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(body.error.code).toBe("validation_error");
     expect(mockGenerateDraftCertificatePdf).not.toHaveBeenCalled();
   });
 });

@@ -93,6 +93,12 @@ export function renderNotificationTemplate(event: NotificationEvent, overrides?:
 type NotificationDeliveryChannel = (typeof NOTIFICATION_CHANNELS)[keyof typeof NOTIFICATION_CHANNELS];
 
 const deliveryChannels = new Set<string>(Object.values(NOTIFICATION_CHANNELS));
+const securityNotificationEvents = new Set([
+  "device_limit_exceeded",
+  "password_changed",
+  "profile_updated",
+  "certificate_revoked",
+]);
 
 export function normalizeNotificationChannel(channel?: string): NotificationDeliveryChannel {
   if (channel && deliveryChannels.has(channel)) {
@@ -158,15 +164,14 @@ export async function createNotificationInternal(input: {
   persist?: boolean;
 }) {
   const channel = normalizeNotificationChannel(input.channel);
+  const isSecurityEvent = securityNotificationEvents.has(input.event);
   // По умолчанию persist = true — сохраняем в БД
-  const persist = input.persist !== false;
+  const persist = isSecurityEvent || input.persist !== false;
 
   // Проверяем настройки пользователя — если канал отключён, пропускаем
   const preferences = await getUserNotificationPreferences(input.userId);
   
   // Системные уведомления безопасности (вход с других устройств, изменение пароля, обновление профиля, отзыв сертификата) не отключаются!
-  const isSecurityEvent = ["device_limit_exceeded", "password_changed", "profile_updated", "certificate_revoked"].includes(input.event);
-
   if (!isSecurityEvent) {
     const prefKey = channel === NOTIFICATION_CHANNELS.EMAIL || channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP
       ? input.event
@@ -207,7 +212,7 @@ export async function createNotificationInternal(input: {
   // Проверяем email-подписку отдельно
   if (user?.email && (channel === NOTIFICATION_CHANNELS.EMAIL || channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP)) {
     const emailPrefKey = `email_${input.event}`;
-    if (preferences[emailPrefKey] !== false) {
+    if (isSecurityEvent || preferences[emailPrefKey] !== false) {
       try {
         await sendEmail(user.email, rendered.title, rendered.body);
       } catch (error) {
