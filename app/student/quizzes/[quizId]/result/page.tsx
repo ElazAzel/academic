@@ -47,25 +47,25 @@ function resolveOptionLabel(val: unknown, options: unknown[]): string {
   return strVal;
 }
 
-function resolveCorrectAnswer(correct: unknown, options: unknown[]): string[] {
-  if (correct === null || correct === undefined) return [];
-
-  let rawExpected: unknown;
-  if (typeof correct === "object" && !Array.isArray(correct)) {
+/** Recursive extract — mirrors extractCorrectAnswer in quizzes/service.ts */
+function extractCorrectAnswer(correct: unknown): unknown {
+  if (correct === null || correct === undefined) return correct;
+  while (typeof correct === "object" && !Array.isArray(correct)) {
     const obj = correct as Record<string, unknown>;
-    if ("values" in obj) {
-      rawExpected = obj.values;
-    } else if ("value" in obj) {
-      rawExpected = obj.value;
-    } else if ("index" in obj) {
-      rawExpected = obj.index;
-    } else {
-      rawExpected = correct;
+    if ("values" in obj) return obj.values;
+    if ("value" in obj) {
+      correct = obj.value;
+      continue;
     }
-  } else {
-    rawExpected = correct;
+    if ("index" in obj) return obj.index;
+    break;
   }
+  return correct;
+}
 
+function resolveCorrectAnswer(correct: unknown, options: unknown[]): string[] {
+  const rawExpected = extractCorrectAnswer(correct);
+  if (rawExpected === null || rawExpected === undefined) return [];
   const vals = Array.isArray(rawExpected) ? rawExpected : [rawExpected];
   return vals.map((v) => resolveOptionLabel(v, options)).sort();
 }

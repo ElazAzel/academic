@@ -69,6 +69,34 @@ function toComparableStrings(value: unknown, options: unknown[]): string[] {
   return vals.map((v) => resolveOptionLabel(v, options)).sort();
 }
 
+/**
+ * Recursively extract the raw expected answer value(s) from a correctAnswer field.
+ *
+ * Handles all known storage formats:
+ *   { value: "a" }              → "a"
+ *   { values: ["b", "c"] }      → ["b", "c"]
+ *   { index: 0 }                → 0
+ *   { value: { index: 1 } }     → 1          (nested — happens when createQuizInline
+ *                                               double-wraps an already-formatted object)
+ *   "Paris"                     → "Paris"
+ *   0                           → 0
+ */
+function extractCorrectAnswer(correct: unknown): unknown {
+  if (correct === null || correct === undefined) return correct;
+
+  while (typeof correct === "object" && !Array.isArray(correct)) {
+    const obj = correct as Record<string, unknown>;
+    if ("values" in obj) return obj.values;
+    if ("value" in obj) {
+      correct = obj.value;
+      continue; // may be nested again (e.g. { value: { index: 1 } })
+    }
+    if ("index" in obj) return obj.index;
+    break;
+  }
+  return correct;
+}
+
 export function gradeObjectiveQuiz(
   questions: (ObjectiveQuestion & { options?: unknown })[],
   answers: Record<string, unknown>,
@@ -78,25 +106,7 @@ export function gradeObjectiveQuiz(
   const earned = questions.reduce((sum, question) => {
     const correct = question.correctAnswer;
     const opts = Array.isArray(question.options) ? question.options : [];
-
-    // Extract raw expected value(s) from correctAnswer (handles all formats)
-    let rawExpected: unknown;
-    if (correct !== null && correct !== undefined) {
-      if (typeof correct === "object" && !Array.isArray(correct)) {
-        const obj = correct as Record<string, unknown>;
-        if ("values" in obj) {
-          rawExpected = obj.values;
-        } else if ("value" in obj) {
-          rawExpected = obj.value;
-        } else if ("index" in obj) {
-          rawExpected = obj.index;
-        } else {
-          rawExpected = correct;
-        }
-      } else {
-        rawExpected = correct;
-      }
-    }
+    const rawExpected = extractCorrectAnswer(correct);
 
     const actual = answers[question.id];
     const expectedStrs = toComparableStrings(rawExpected, opts);

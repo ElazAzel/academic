@@ -610,7 +610,7 @@ export async function createQuizInline(
     description?: string;
     passThreshold: number;
     maxAttempts: number;
-    questions: Array<{ type: string; prompt: string; options: string[]; correctAnswer: string | string[]; points: number }>;
+    questions: Array<{ type: string; prompt: string; options: string[]; correctAnswer: string | string[] | Record<string, unknown>; points: number }>;
     courseId: string;
   },
   actorId: string
@@ -630,7 +630,13 @@ export async function createQuizInline(
           type: mapQuestionType(q.type) as never,
           prompt: q.prompt,
           options: toJsonValue(q.options),
-          correctAnswer: toJsonValue(Array.isArray(q.correctAnswer) ? { values: q.correctAnswer } : { value: q.correctAnswer }),
+          correctAnswer: toJsonValue(
+            typeof q.correctAnswer === "object" && q.correctAnswer !== null
+              ? q.correctAnswer
+              : Array.isArray(q.correctAnswer)
+                ? { values: q.correctAnswer }
+                : { value: q.correctAnswer }
+          ),
           points: q.points,
           order: i,
         })),
