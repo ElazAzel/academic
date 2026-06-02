@@ -61,15 +61,28 @@ function checkCsrfOrigin(req: NextRequest): NextResponse | null {
 // время SSR (парсит `'nonce-{value}'` в script-src). Поэтому CSP нужно
 // передавать в request headers, а не только в response.
 // Для браузера CSP дублируется в response headers.
+//
+// CSP reporting: /api/v1/csp-report принимает POST от браузера.
+// Если добавлен хэш скрипта, его нужно обновлять при редеплое (хэш RSC
+// flight data меняется per-request, но bootstrap скрипты стабильны).
+//
+// Известные хэши (production 2026-06):
+// - sha256-J9cZHZf5nVZbsm7Pqxc8RsURv1AIXkMgbhfrZvoOs/A= — inline скрипт
+//   на /student/certificates без nonce (вероятно RSC flight data)
 
 function buildCspPolicy(nonce: string, isDev: boolean): string {
   const devExtra = isDev
     ? " 'unsafe-eval'"  // нужен для react-hot-loader / HMR
     : "";
 
+  // addenv: Если хэш меняется на новом деплое — замени значение ниже.
+  // Можно удалить когда nonce propagation будет чинить во всех Next.js-
+  // скриптах.
+  const scriptHash = " 'sha256-J9cZHZf5nVZbsm7Pqxc8RsURv1AIXkMgbhfrZvoOs/A='";
+
   return [
     "default-src 'self'",
-    `script-src 'nonce-${nonce}' 'strict-dynamic'${devExtra}`,
+    `script-src 'nonce-${nonce}' 'strict-dynamic'${scriptHash}${devExtra}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https: http:",
     "font-src 'self' data: https://fonts.gstatic.com",
@@ -83,6 +96,7 @@ function buildCspPolicy(nonce: string, isDev: boolean): string {
     "form-action 'self'",
     "worker-src 'self' blob:",
     "manifest-src 'self'",
+    "report-uri /api/v1/csp-report",
   ].join("; ");
 }
 
@@ -117,7 +131,7 @@ export async function proxy(req: NextRequest) {
 
   // CSRF check for mutating API requests (POST/PUT/PATCH/DELETE)
   // Исключаем webhooks и cron — у них нет browser origin
-  const CSRF_BYPASS_PREFIXES = ["/api/v1/webhooks/stripe", "/api/v1/outbox/process", "/api/v1/reports/scheduled"];
+  const CSRF_BYPASS_PREFIXES = ["/api/v1/webhooks/stripe", "/api/v1/outbox/process", "/api/v1/reports/scheduled", "/api/v1/csp-report"];
   const isCsrfBypass = CSRF_BYPASS_PREFIXES.some((p) => pathname.startsWith(p));
   if (pathname.startsWith("/api/") && !isCsrfBypass) {
     const csrfError = checkCsrfOrigin(req);

@@ -2,6 +2,21 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-02 — CSP fix: report-uri + хэш заблокированного inline-скрипта на /student/certificates
+
+**Что сделано:**
+
+- В `buildCspPolicy` (proxy.ts) добавлен хэш `sha256-J9cZHZf5nVZbsm7Pqxc8RsURv1AIXkMgbhfrZvoOs/A=` — inline-скрипт на `/student/certificates`, который не получает nonce (вероятно RSC flight data Next.js 16).
+- В CSP добавлен `report-uri /api/v1/csp-report` для мониторинга нарушений.
+- Создан эндпоинт `app/api/v1/csp-report/route.ts` — принимает POST от браузера, логирует blocked-uri, document-uri и script-sample.
+- Эндпоинт добавлен в `CSRF_BYPASS_PREFIXES` (не требует CSRF — репорты не содержат sensitive данных и не меняют состояние).
+
+**Проверка:**
+- `npm run typecheck` — passed.
+- `npm run lint` — 0 warnings.
+- После деплоя проверить `/student/certificates` — CSP-ошибка должна исчезнуть.
+- Если ошибка появится с новым хэшем — заменить значение `scriptHash` в `buildCspPolicy`.
+
 ## 2026-06-02 — Dead `/student/reports` route artifact удалён
 
 **Что сделано:**
