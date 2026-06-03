@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
-import { ApiError, errorResponse } from "@/lib/http";
+import { ApiError, errorResponse, getSafeErrorMetadata } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
       return errorResponse(error);
     }
 
-    console.error("[Users Export] Error:", error);
+    console.error("[Users Export] Error", getSafeErrorMetadata(error));
     return errorResponse(new ApiError("internal_error", "Не удалось экспортировать пользователей", 500));
   }
 }

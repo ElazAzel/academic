@@ -14,6 +14,33 @@ import { EmptyState } from "@/components/lms/empty-state";
 import { toast } from "sonner";
 
 type Entry = { id: string; question: string; answer: string; category: string; direction: string };
+type GlossaryActionResult = { success: boolean; error?: string };
+
+const CREATE_GLOSSARY_ENTRY_ERROR = "Не удалось добавить запись в глоссарий";
+const UPDATE_GLOSSARY_ENTRY_ERROR = "Не удалось обновить запись глоссария";
+const DELETE_GLOSSARY_ENTRY_ERROR = "Не удалось удалить запись глоссария";
+
+const SAFE_GLOSSARY_ERROR_MESSAGES = new Set([
+  "Вопрос и ответ обязательны",
+  "Все поля обязательны",
+  "ID записи обязателен",
+  "Ошибка валидации",
+  "Произошла ошибка при создании записи",
+  "Произошла ошибка при обновлении записи",
+  "Произошла ошибка при удалении записи",
+]);
+
+function readGlossaryResultError(result: GlossaryActionResult, fallback: string) {
+  return result.error && SAFE_GLOSSARY_ERROR_MESSAGES.has(result.error) ? result.error : fallback;
+}
+
+function getSafeGlossaryErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && SAFE_GLOSSARY_ERROR_MESSAGES.has(error.message)) {
+    return error.message;
+  }
+
+  return fallback;
+}
 
 export function GlossaryEditor({
   entries,
@@ -43,12 +70,16 @@ export function GlossaryEditor({
   async function handleCreate(formData: FormData) {
     setPending(true);
     try {
-      await createGlossaryEntryAction(formData);
+      const result = await createGlossaryEntryAction(formData);
+      if (!result.success) {
+        toast.error(readGlossaryResultError(result, CREATE_GLOSSARY_ENTRY_ERROR));
+        return;
+      }
       toast.success("Запись добавлена");
       setNewForm(false);
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeGlossaryErrorMessage(err, CREATE_GLOSSARY_ENTRY_ERROR));
     } finally { setPending(false); }
   }
 
@@ -56,12 +87,16 @@ export function GlossaryEditor({
     formData.set("id", editingId!);
     setPending(true);
     try {
-      await updateGlossaryEntryAction(formData);
+      const result = await updateGlossaryEntryAction(formData);
+      if (!result.success) {
+        toast.error(readGlossaryResultError(result, UPDATE_GLOSSARY_ENTRY_ERROR));
+        return;
+      }
       toast.success("Запись обновлена");
       setEditingId(null);
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeGlossaryErrorMessage(err, UPDATE_GLOSSARY_ENTRY_ERROR));
     } finally { setPending(false); }
   }
 
@@ -69,11 +104,15 @@ export function GlossaryEditor({
     if (!confirm("Удалить запись?")) return;
     setPending(true);
     try {
-      await deleteGlossaryEntryAction(id);
+      const result = await deleteGlossaryEntryAction(id);
+      if (!result.success) {
+        toast.error(readGlossaryResultError(result, DELETE_GLOSSARY_ENTRY_ERROR));
+        return;
+      }
       toast.success("Запись удалена");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeGlossaryErrorMessage(err, DELETE_GLOSSARY_ENTRY_ERROR));
     } finally { setPending(false); }
   }
 

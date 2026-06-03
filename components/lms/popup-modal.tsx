@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { X, Bell, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { getSafeClientErrorMetadata } from "@/lib/client-error";
 
 interface PopupData {
   id: string;
@@ -46,14 +48,20 @@ export function PopupModal() {
     if (!popup) return;
     setAcknowledging(true);
     try {
-      await fetch("/api/v1/popups/acknowledge", {
+      const res = await fetch("/api/v1/popups/acknowledge", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ popupId: popup.id }),
       });
+      if (!res.ok) {
+        console.error("[PopupModal] Failed to acknowledge popup", { statusCode: res.status });
+        toast.error("Не удалось подтвердить сообщение");
+        return;
+      }
       setOpen(false);
     } catch (err) {
-      console.error("[PopupModal] Failed to acknowledge popup:", err);
+      console.error("[PopupModal] Failed to acknowledge popup", getSafeClientErrorMetadata(err));
+      toast.error("Не удалось подтвердить сообщение");
     } finally {
       setAcknowledging(false);
     }

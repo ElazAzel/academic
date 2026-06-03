@@ -7,6 +7,53 @@ Status: `partial` for implementation readiness, `partial` for visual-system cons
 
 ## Implementation Progress
 
+2026-06-03 AI assistant hardening follow-up:
+
+- curator assistant action is now role-gated before validation and glossary lookup;
+- controlled access/validation errors no longer create stderr noise;
+- assistant remains a contextual curator/super-curator/admin workflow aid, not a public or student-facing AI surface.
+
+2026-06-03 Russian-first error copy follow-up:
+
+- media upload schema/routes, admin popup manager and chat upload fallback no longer expose English fallback errors in user-facing negative paths;
+- focused tests cover Russian upload errors for unsupported types, unmanaged storage keys, empty files, oversized files and storage fallback failures.
+- curator popups, lesson discussion, notifications, deadline alerts, instructor/admin deadline managers and upload-with-compress now use Russian runtime fallback errors for loading/upload failures;
+- `tests/unit/russian-first-runtime-copy.test.ts` keeps common English fallback strings from returning to these runtime files.
+- admin/instructor settings, attendance, certificate issue, user create/edit and bulk import screens now use Russian visible labels for the selected operational strings;
+- `tests/unit/russian-first-admin-copy.test.ts` guards those selected labels against English copy regressions.
+- report preview labels now distinguish full row counts from capped samples, so operators see when a report preview reached `QUERY_LIMITS.reportRows`;
+- component and service tests cover capped preview metadata and the `Показано строк: N из лимита M` UI label.
+- curator assistant now rejects oversized question text with controlled Russian validation before running glossary search, keeping the AI-adjacent workflow bounded and predictable.
+- command palette search fallback now uses Russian copy and is covered by the shared runtime-copy guard.
+- disabled checkout and Stripe webhook endpoints now return Russian `410 Gone` payloads and are covered by service/route tests plus the shared runtime-copy guard.
+- SCORM import now uses Russian manifest validation copy and a Russian fallback package title, while raw XML parser details are kept out of the user-facing error response.
+- CSRF failures now expose Russian structured reasons for missing, malformed and mismatched request source instead of English fallback strings.
+- readiness failures now return Russian `База данных недоступна` copy instead of English infrastructure fallback text.
+- chat action boundary failures now use Russian controlled copy for unassigned student chats and missing message receiver.
+- admin enrollments page no longer contains a raw English unauthorized throw after the page guard.
+- GraphQL scaffold route/resolvers now use Russian not-implemented/scaffold copy instead of English fallback messages.
+- lesson media/video security audit reasons now use Russian metadata copy, so admin/audit surfaces do not inherit English no-enrollment, sequential-lock or guessed-media messages.
+- shared `WorkspacePage` no longer exposes service terminology (`MVP`, scaffold, REST contracts, server modules, React Query) inside the interface; its placeholder copy is now a neutral Russian empty state.
+- GraphQL `not_implemented` response copy no longer uses mixed English technical wording such as `GraphQL runtime` or `REST endpoints MVP`.
+- PWA push subscribe/unsubscribe background responses now use Russian silent unauthenticated copy instead of exposing `reason: "unauthenticated"` in JSON.
+- admin visit analytics error state now shows a stable Russian recovery hint instead of raw technical `error.message` text from server actions.
+- certificate designer now shows only controlled local upload/preview errors or safe Russian fallbacks, not raw server action/API exception messages.
+- CertificatesDashboard now reads standard API envelopes and keeps raw network/API exception text out of the visible certificate issue/revoke error state.
+- ReportDesigner preview now preserves controlled API error copy while replacing raw network failures and malformed payloads with safe Russian fallback text.
+- profile/password settings and notification preferences now keep raw action/network exception text out of toast messages while preserving expected password-domain errors.
+- glossary create/update/delete flows now surface controlled failure-result messages and avoid leaking raw action exceptions in admin toast copy.
+- admin cohort create/edit flows now surface controlled failure-result messages and avoid leaking raw action exceptions in toast copy.
+- super-curator cohort create/edit/archive dialogs now include descriptions for assistive technologies and avoid leaking raw action exceptions in toast copy.
+- admin user edit/delete dialog now includes accessible names for icon-only controls, a dialog description, and safe Russian error fallbacks.
+- admin create user modal now uses a safe Russian inline fallback for raw action failures and gives the close icon button an accessible name.
+- admin enrollment forms now use safe Russian inline/toast fallbacks for raw action failures and give the delete enrollment icon button an accessible name.
+- super-curator assignment forms now use safe Russian toast fallbacks, avoid visible English email labels, and add dialog descriptions plus a labeled curator select.
+- super-curator risk actions now use safe Russian toast fallbacks, add a dialog description and an accessible close-risk button name, and avoid the React `selected` option warning.
+- student assignment upload now keeps expected upload-domain errors visible, hides raw upload exceptions behind safe Russian copy, and labels upload/remove file controls for assistive technologies.
+- deadline and popup clients now keep raw action/network exception text out of toast messages, while date inputs, popup icon buttons and clickable role/cohort/student controls have accessible names plus keyboard/pressed-state metadata.
+- lesson discussion now renders the empty state from the standard API envelope and keeps raw post-create/delete exception text out of toast messages; new-post and reply textareas have accessible names.
+- error boundaries now show stable Russian recovery copy instead of raw exception text and remove decorative gradient blobs from recovery screens.
+
 2026-05-24 P0 pass completed:
 
 - removed core glass/shine/blob/gradient/default hover-lift patterns from `app` and `components`;

@@ -21,7 +21,7 @@ export const mediaUploadSchema = z.object({
   filename: z.string().min(1).max(255),
   contentType: z.string().min(1).refine(
     (value) => ALLOWED_CONTENT_TYPES.includes(value as (typeof ALLOWED_CONTENT_TYPES)[number]),
-    { message: "Unsupported file type" },
+    { message: "Недопустимый тип файла" },
   ),
   fileSize: z.number().int().min(1).max(MAX_FILE_SIZE).optional(),
   prefix: z.enum(MEDIA_UPLOAD_PREFIXES).default("uploads"),
@@ -29,11 +29,11 @@ export const mediaUploadSchema = z.object({
 
 export const fallbackUploadParamsSchema = z.object({
   key: z.string().min(1).max(512).refine((value) => MANAGED_KEY_PATTERN.test(value), {
-    message: "Unsupported storage key",
+    message: "Недопустимый ключ хранилища",
   }),
   contentType: z.string().min(1).refine(
     (value) => ALLOWED_CONTENT_TYPES.includes(value as (typeof ALLOWED_CONTENT_TYPES)[number]),
-    { message: "Unsupported file type" },
+    { message: "Недопустимый тип файла" },
   ),
 });
 

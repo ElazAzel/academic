@@ -91,7 +91,7 @@ export function NotificationsList() {
     queryKey: ["notifications"],
     queryFn: async () => {
       const res = await fetch("/api/v1/notifications");
-      if (!res.ok) throw new Error("Failed to fetch");
+      if (!res.ok) throw new Error("Не удалось загрузить уведомления");
       const json = await res.json();
       return json.data ?? [];
     },

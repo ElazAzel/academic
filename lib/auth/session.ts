@@ -1,4 +1,4 @@
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 import { assertPermission, type Permission } from "@/lib/auth/rbac";
 import { isActiveUserStatus } from "@/lib/auth/user-status";
 import type { AppSessionUser, RoleKey } from "@/types/domain";
@@ -54,7 +54,7 @@ async function revalidateSession(user: AppSessionUser): Promise<AppSessionUser |
   } catch (error) {
     // Device-session control is a server-side security check; if the DB cannot
     // confirm it, fail closed and require a fresh login.
-    console.error("[revalidateSession] Failed to validate session from DB:", error);
+    console.error("[revalidateSession] Failed to validate session from DB:", getSafeErrorMetadata(error));
     return null;
   }
 }
@@ -83,7 +83,7 @@ export async function getCurrentUser(): Promise<AppSessionUser | null> {
 
     // If anything fails (import error, NextAuth crash, DB timeout),
     // return null so the page redirects to login instead of 500
-    console.error("[getCurrentUser] Failed to get session:", error);
+    console.error("[getCurrentUser] Failed to get session:", getSafeErrorMetadata(error));
     return null;
   }
 }

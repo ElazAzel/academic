@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { createUserAction } from "@/server/actions/admin";
 import { Loader2, X } from "lucide-react";
 import { ROLE_LABELS, type RoleKey } from "@/types/domain";
+import { CREATE_USER_ERROR, getSafeUserActionError, readUserActionResultError } from "./user-action-errors";
 
 export function CreateUserModal({ 
   onClose,
@@ -24,11 +25,13 @@ export function CreateUserModal({
     try {
       const formData = new FormData(event.currentTarget);
       const result = await createUserAction(formData);
-      if (result.success) {
-        onClose();
+      if (!result.success) {
+        setError(readUserActionResultError(result, CREATE_USER_ERROR));
+        return;
       }
+      onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка при создании");
+      setError(getSafeUserActionError(err, CREATE_USER_ERROR));
     } finally {
       setPending(false);
     }
@@ -39,7 +42,7 @@ export function CreateUserModal({
       <div className="w-full max-w-md overflow-hidden rounded-lg border border-m3-outline-variant bg-card shadow-m3-modal animate-in fade-in zoom-in duration-200">
         <div className="p-6 border-b flex justify-between items-center">
           <h3 className="text-lg font-bold">Добавить пользователя</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground" aria-label="Закрыть окно создания пользователя"><X className="h-5 w-5" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-2">
@@ -47,7 +50,7 @@ export function CreateUserModal({
             <Input id="name" name="name" placeholder="Иван Иванов" />
           </div>
           <div className="space-y-2">
-            <label htmlFor="email" className="text-xs font-semibold uppercase text-muted-foreground">Email</label>
+            <label htmlFor="email" className="text-xs font-semibold uppercase text-muted-foreground">Эл. почта</label>
             <Input id="email" name="email" type="email" required placeholder="ivan@example.com" />
           </div>
           <fieldset className="space-y-2">

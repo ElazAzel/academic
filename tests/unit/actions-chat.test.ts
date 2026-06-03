@@ -79,7 +79,11 @@ describe("chat actions", () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     mockCuratorAssignmentFindFirst.mockResolvedValue(null);
 
-    await expect(getConversation("student1")).rejects.toMatchObject({ code: "forbidden", status: 403 });
+    await expect(getConversation("student1")).rejects.toMatchObject({
+      code: "forbidden",
+      message: "Слушатель не закреплен за этим куратором",
+      status: 403,
+    });
     expect(mockMessageFindMany).not.toHaveBeenCalled();
     expect(consoleSpy).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
@@ -292,6 +296,21 @@ describe("chat actions", () => {
       }),
     );
     expect(mockRevalidatePath).toHaveBeenCalledWith("/curator/chat");
+  });
+
+  it("rejects curator messages without receiver id with a Russian reason", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const formData = new FormData();
+    formData.set("text", "Проверьте комментарий");
+
+    await expect(sendMessageAction(formData)).rejects.toMatchObject({
+      code: "bad_request",
+      message: "ID получателя обязателен",
+      status: 400,
+    });
+    expect(mockMessageCreate).not.toHaveBeenCalled();
+    expect(consoleSpy).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 
   it("routes a student message to the assigned curator with lesson origin", async () => {

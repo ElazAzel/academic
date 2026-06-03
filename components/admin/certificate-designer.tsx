@@ -198,8 +198,10 @@ function applyConfigFromBody(body: Record<string, unknown>, fallback: TemplateCo
   return config;
 }
 
+class CertificateDesignerUserError extends Error {}
+
 function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback;
+  return error instanceof CertificateDesignerUserError ? error.message : fallback;
 }
 
 async function readUploadPublicUrl(response: Response, fallback: string): Promise<string> {
@@ -214,7 +216,7 @@ function readUploadTicketPayload(payload: unknown): { url: string; publicUrl: st
   const envelope = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
 
   if (!isRecord(envelope) || typeof envelope.url !== "string" || typeof envelope.publicUrl !== "string") {
-    throw new Error("Некорректный ответ сервера загрузки");
+    throw new CertificateDesignerUserError("Некорректный ответ сервера загрузки");
   }
 
   return {
@@ -231,7 +233,7 @@ async function uploadCertificateBackgroundFile(url: string, file: File, contentT
     body: file,
   });
 
-  if (!uploadRes.ok) throw new Error("Не удалось загрузить файл в облако");
+  if (!uploadRes.ok) throw new CertificateDesignerUserError("Не удалось загрузить файл в облако");
 
   return readUploadPublicUrl(uploadRes, publicUrl);
 }
@@ -448,7 +450,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
         }),
       });
 
-      if (!res.ok) throw new Error("Не удалось создать ссылку для загрузки");
+      if (!res.ok) throw new CertificateDesignerUserError("Не удалось создать ссылку для загрузки");
       const { url, publicUrl, fallbackUrl } = readUploadTicketPayload(await res.json());
 
       let uploadRes: Response;
@@ -477,7 +479,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
           setTimeout(() => setSuccess(null), 3000);
           return;
         }
-        throw new Error("Не удалось загрузить файл в облако");
+        throw new CertificateDesignerUserError("Не удалось загрузить файл в облако");
       }
 
       const uploadedPublicUrl = await readUploadPublicUrl(uploadRes, publicUrl);
@@ -520,7 +522,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
       });
 
       if (!res.ok) {
-        throw new Error("Не удалось сгенерировать предпросмотр PDF");
+        throw new CertificateDesignerUserError("Не удалось сгенерировать предпросмотр PDF");
       }
 
       const blob = await res.blob();

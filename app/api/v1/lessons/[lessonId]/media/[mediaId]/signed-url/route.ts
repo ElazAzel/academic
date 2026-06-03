@@ -33,7 +33,7 @@ export async function GET(_request: Request, context: Context) {
         userId: user.id,
         lessonId,
         mediaId,
-        reason: "Lesson not found",
+        reason: "Урок не найден",
       });
       return errorResponse(new ApiError("not_found", "Урок не найден", 404));
     }
@@ -49,7 +49,7 @@ export async function GET(_request: Request, context: Context) {
         userId: user.id,
         lessonId,
         mediaId,
-        reason: "No active enrollment",
+        reason: "Нет активного зачисления",
       });
       return errorResponse(new ApiError("forbidden", "Нет доступа к этому уроку", 403));
     }
@@ -80,7 +80,7 @@ export async function GET(_request: Request, context: Context) {
             userId: user.id,
             lessonId,
             courseId,
-            reason: "Sequential lock: previous required lessons not completed",
+            reason: "Последовательная блокировка: предыдущие обязательные уроки не завершены",
           });
           return errorResponse(new ApiError("forbidden", "Сначала завершите предыдущие обязательные уроки", 403));
         }
@@ -96,7 +96,7 @@ export async function GET(_request: Request, context: Context) {
         userId: user.id,
         lessonId,
         mediaId,
-        reason: "Media does not belong to lesson",
+        reason: "Файл не относится к этому уроку",
       });
       return errorResponse(new ApiError("not_found", "Файл не найден", 404));
     }
@@ -115,7 +115,7 @@ export async function GET(_request: Request, context: Context) {
       await logSuspiciousAccess({
         userId: user.id,
         lessonId,
-        reason: `Repeated signed URL requests: >${CONTENT_PROTECTION.SUSPICIOUS_REQUEST_THRESHOLD} in ${CONTENT_PROTECTION.SUSPICIOUS_REQUEST_WINDOW_MINUTES}min`,
+        reason: `Повторные запросы подписанной ссылки: >${CONTENT_PROTECTION.SUSPICIOUS_REQUEST_THRESHOLD} за ${CONTENT_PROTECTION.SUSPICIOUS_REQUEST_WINDOW_MINUTES} мин`,
       });
     }
 

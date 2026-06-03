@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PopupNotificationViewer } from "@/components/lms/popup-notification-viewer";
 import { useNotifications } from "@/hooks/use-notifications";
+import { getSafeClientErrorMetadata } from "@/lib/client-error";
 
 interface NotificationItem {
   id: string;
@@ -70,13 +71,14 @@ export function NotificationsDropdown() {
         body: JSON.stringify({ action: "markAllRead" }),
       });
       if (!res.ok) {
-        console.error("Failed to mark all as read:", await res.text());
+        console.error("[NotificationsDropdown] Failed to mark all as read", { statusCode: res.status });
+        toast.error("Не удалось отметить уведомления как прочитанные");
         return;
       }
       // Обновляем UI только после успешного ответа от сервера
       setNotifications((prev) => prev.map((n) => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
     } catch (err) {
-      console.error("Failed to mark all as read:", err);
+      console.error("[NotificationsDropdown] Failed to mark all as read", getSafeClientErrorMetadata(err));
       toast.error("Не удалось отметить уведомления как прочитанные");
     }
   }

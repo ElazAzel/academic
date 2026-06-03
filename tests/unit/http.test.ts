@@ -78,7 +78,8 @@ describe("http utils", () => {
         message: "Внутренняя ошибка сервера",
       });
       expect(JSON.stringify(body)).not.toContain("secret-http-error");
-      expect(consoleSpy).toHaveBeenCalledWith("[API Error]", expect.any(Error));
+      expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("secret-http-error");
+      expect(consoleSpy).toHaveBeenCalledWith("[API Error]", expect.objectContaining({ errorType: "Error" }));
       consoleSpy.mockRestore();
     });
   });

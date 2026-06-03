@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
+const ERROR_FALLBACK_DESCRIPTION = "Произошла непредвиденная ошибка. Попробуйте обновить страницу.";
+
 export function ErrorFallback({
   error,
   reset,
@@ -20,8 +22,13 @@ export function ErrorFallback({
           </div>
           <CardTitle>Что-то пошло не так</CardTitle>
           <CardDescription>
-            {error.message || "Произошла непредвиденная ошибка. Попробуйте обновить страницу."}
+            {ERROR_FALLBACK_DESCRIPTION}
           </CardDescription>
+          {error.digest && (
+            <p className="text-xs text-muted-foreground/70">
+              Код ошибки: <code className="font-mono">{error.digest}</code>
+            </p>
+          )}
         </CardHeader>
         <CardContent className="flex justify-center gap-3">
           {reset && (

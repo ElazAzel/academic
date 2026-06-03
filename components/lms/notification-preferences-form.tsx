@@ -25,6 +25,8 @@ const CHANNEL_LABELS: Record<string, string> = {
 };
 
 const DISPLAY_CHANNELS = Object.keys(CHANNEL_LABELS);
+const LOAD_NOTIFICATION_PREFERENCES_ERROR = "Не удалось загрузить настройки уведомлений";
+const SAVE_NOTIFICATION_PREFERENCE_ERROR = "Не удалось сохранить настройку уведомлений";
 
 export function NotificationPreferencesForm() {
   const queryClient = useQueryClient();
@@ -33,7 +35,7 @@ export function NotificationPreferencesForm() {
     queryKey: ["notification-preferences"],
     queryFn: async () => {
       const res = await fetch("/api/v1/notification-preferences");
-      if (!res.ok) throw new Error("Не удалось загрузить настройки");
+      if (!res.ok) throw new Error(LOAD_NOTIFICATION_PREFERENCES_ERROR);
       const json = await res.json();
       return json.data ?? {};
     },
@@ -46,15 +48,15 @@ export function NotificationPreferencesForm() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ preferences: [{ channel, enabled }] }),
       });
-      if (!res.ok) throw new Error("Не удалось сохранить настройку");
+      if (!res.ok) throw new Error(SAVE_NOTIFICATION_PREFERENCE_ERROR);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
       toast.success("Настройка сохранена");
     },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Ошибка при сохранении");
+    onError: () => {
+      toast.error(SAVE_NOTIFICATION_PREFERENCE_ERROR);
     },
   });
 

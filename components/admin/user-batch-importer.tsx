@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { importUsersAction } from "@/server/actions/admin";
 import { RoleKey } from "@prisma/client";
 import { ROLE_LABELS } from "@/types/domain";
+import { getSafeClientErrorMetadata } from "@/lib/client-error";
 import { 
   Upload, 
   CheckCircle, 
@@ -58,6 +59,7 @@ export function UserBatchImporter({
   const [defaultRoles, setDefaultRoles] = useState<RoleKey[]>([RoleKey.student]);
   const [parsedUsers, setParsedUsers] = useState<ParsedUser[]>([]);
   const [importResults, setImportResults] = useState<ImportResult[]>([]);
+  const [importError, setImportError] = useState<string | null>(null);
   
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -65,6 +67,7 @@ export function UserBatchImporter({
 
   // Parse CSV function
   const handleParse = (textToParse: string) => {
+    setImportError(null);
     const lines = textToParse.split(/\r?\n/);
     const parsed: ParsedUser[] = [];
     
@@ -151,6 +154,7 @@ export function UserBatchImporter({
     if (selectedToImport.length === 0) return;
 
     setLoading(true);
+    setImportError(null);
     try {
       const payload = selectedToImport.map(u => ({
         email: u.email,
@@ -162,9 +166,12 @@ export function UserBatchImporter({
       if (res.success && res.results) {
         setImportResults(res.results as ImportResult[]);
         setStep(3);
+      } else {
+        setImportError("Не удалось импортировать пользователей");
       }
     } catch (err) {
-      console.error(err);
+      console.error("[UserBatchImporter] Failed to import users", getSafeClientErrorMetadata(err));
+      setImportError("Не удалось импортировать пользователей");
     } finally {
       setLoading(false);
     }
@@ -379,12 +386,22 @@ export function UserBatchImporter({
               </div>
             </div>
 
+            {importError && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{importError}</span>
+              </div>
+            )}
+
             <div className="border rounded-lg overflow-hidden max-h-[350px] overflow-y-auto">
               <Table>
                 <TableHeader className="bg-muted/30 sticky top-0 z-10">
                   <TableRow>
                     <TableHead className="w-12"></TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead>Эл. почта</TableHead>
                     <TableHead>ФИО / Название</TableHead>
                     <TableHead>Роли</TableHead>
                     <TableHead>Статус</TableHead>
@@ -520,7 +537,7 @@ export function UserBatchImporter({
                 <Table>
                   <TableHeader className="bg-muted/30">
                     <TableRow>
-                      <TableHead>Email</TableHead>
+                      <TableHead>Эл. почта</TableHead>
                       <TableHead>ФИО</TableHead>
                       <TableHead>Статус</TableHead>
                       <TableHead>Временный пароль / Ошибка</TableHead>

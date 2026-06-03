@@ -89,6 +89,25 @@ describe("reports API route scope", () => {
     expect(mockGenerateReportDownload).not.toHaveBeenCalled();
   });
 
+  it("does not log raw report download errors", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockGenerateReportDownload.mockRejectedValueOnce(new Error("postgres://secret-report-api"));
+
+    const response = await reportsRoute.GET(new Request("http://localhost/api/v1/reports?type=progress&format=csv"));
+    const body = await response.json();
+    const logged = JSON.stringify(consoleSpy.mock.calls);
+
+    expect(response.status).toBe(500);
+    expect(body.error.code).toBe("internal_error");
+    expect(JSON.stringify(body)).not.toContain("secret-report-api");
+    expect(logged).not.toContain("secret-report-api");
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[Reports API] Error",
+      expect.objectContaining({ errorType: "Error" }),
+    );
+    consoleSpy.mockRestore();
+  });
+
   it("requires reports read permission for report previews", async () => {
     const response = await previewRoute.GET(new Request("http://localhost/api/v1/reports/preview?type=progress"));
     const body = await response.json();
@@ -119,5 +138,24 @@ describe("reports API route scope", () => {
     expect(response.status).toBe(429);
     expect(body.error.code).toBe("too_many_requests");
     expect(mockGenerateReportPreview).not.toHaveBeenCalled();
+  });
+
+  it("does not log raw report preview errors", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockGenerateReportPreview.mockRejectedValueOnce(new Error("postgres://secret-report-preview-api"));
+
+    const response = await previewRoute.GET(new Request("http://localhost/api/v1/reports/preview?type=progress"));
+    const body = await response.json();
+    const logged = JSON.stringify(consoleSpy.mock.calls);
+
+    expect(response.status).toBe(500);
+    expect(body.error.code).toBe("internal_error");
+    expect(JSON.stringify(body)).not.toContain("secret-report-preview-api");
+    expect(logged).not.toContain("secret-report-preview-api");
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[Reports Preview API] Error",
+      expect.objectContaining({ errorType: "Error" }),
+    );
+    consoleSpy.mockRestore();
   });
 });

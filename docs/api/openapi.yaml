@@ -167,16 +167,16 @@ paths:
           description: Certificate not found
   /payments/checkout:
     post:
-      summary: Disabled checkout endpoint for invite-only access
+      summary: Отключенный checkout endpoint для доступа по инвайтам
       responses:
         "410":
-          description: Payments are disabled for the invite-only academy profile
+          description: Платежи отключены для закрытой академии
   /webhooks/stripe:
     post:
-      summary: Disabled Stripe webhook endpoint for invite-only access
+      summary: Отключенный Stripe webhook endpoint для доступа по инвайтам
       responses:
         "410":
-          description: Stripe webhooks are disabled for the invite-only academy profile
+          description: Stripe-вебхуки отключены для закрытой академии
   /analytics:
     get:
       summary: Admin analytics overview

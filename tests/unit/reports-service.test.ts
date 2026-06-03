@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { reportCache } from "@/lib/cache";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 
 const mockCourseFindMany = vi.hoisted(() => vi.fn());
 const mockCohortFindMany = vi.hoisted(() => vi.fn());
@@ -11,6 +12,11 @@ const mockFetchRiskData = vi.hoisted(() => vi.fn());
 const mockFetchAssignmentData = vi.hoisted(() => vi.fn());
 const mockFetchCertificateData = vi.hoisted(() => vi.fn());
 const mockFetchCuratorWorkloadData = vi.hoisted(() => vi.fn());
+const mockGenerateProgressCsv = vi.hoisted(() =>
+  vi.fn((_: unknown, fields?: string[]) => `progress:${fields?.join("|") ?? "all"}`),
+);
+const mockGenerateProgressXlsx = vi.hoisted(() => vi.fn(async () => new Uint8Array([1])));
+const mockGenerateProgressPdf = vi.hoisted(() => vi.fn(async () => new Uint8Array([1])));
 
 const mockGetObserverScope = vi.hoisted(() => vi.fn());
 const mockGetScopedStudentIdsForObserver = vi.hoisted(() => vi.fn());
@@ -43,7 +49,7 @@ vi.mock("@/lib/reports/data", () => ({
 }));
 
 vi.mock("@/lib/reports/csv-generator", () => ({
-  generateProgressCsv: () => "progress,csv",
+  generateProgressCsv: mockGenerateProgressCsv,
   generateRiskCsv: () => "risk,csv",
   generateAssignmentCsv: () => "assignment,csv",
   generateCertificateCsv: () => "certificate,csv",
@@ -51,7 +57,7 @@ vi.mock("@/lib/reports/csv-generator", () => ({
 }));
 
 vi.mock("@/lib/reports/xlsx-generator", () => ({
-  generateProgressXlsx: () => new Uint8Array([1]),
+  generateProgressXlsx: mockGenerateProgressXlsx,
   generateRiskXlsx: () => new Uint8Array([1]),
   generateAssignmentXlsx: () => new Uint8Array([1]),
   generateCertificateXlsx: () => new Uint8Array([1]),
@@ -59,14 +65,14 @@ vi.mock("@/lib/reports/xlsx-generator", () => ({
 }));
 
 vi.mock("@/lib/reports/pdf-generator", () => ({
-  generateProgressPdf: () => new Uint8Array([1]),
+  generateProgressPdf: mockGenerateProgressPdf,
   generateRiskPdf: () => new Uint8Array([1]),
   generateAssignmentPdf: () => new Uint8Array([1]),
   generateCertificatePdf: () => new Uint8Array([1]),
   generateCuratorWorkloadPdf: () => new Uint8Array([1]),
 }));
 
-const { generateReportDownload, generateReportPreview, getAvailableReportsForRoles, parseReportFormat } =
+const { generateReportDownload, generateReportPreview, getAvailableReportsForRoles, getDisplayReportsForRole, parseReportFormat } =
   await import("@/server/modules/reports/service");
 
 beforeEach(() => {
@@ -78,6 +84,8 @@ beforeEach(() => {
   mockFetchCertificateData.mockResolvedValue([]);
   mockFetchCuratorWorkloadData.mockResolvedValue([]);
   mockCohortFindMany.mockResolvedValue([]);
+  mockGenerateProgressXlsx.mockResolvedValue(new Uint8Array([1]));
+  mockGenerateProgressPdf.mockResolvedValue(new Uint8Array([1]));
 });
 
 describe("reports service access and scope", () => {
@@ -93,6 +101,47 @@ describe("reports service access and scope", () => {
     expect(report.definition.type).toBe("progress");
     expect(mockFetchProgressData).toHaveBeenCalledWith({ courseIds: ["course-owned"] });
     expect(report.access.scopeLabel).toContain("Курсы преподавателя");
+  });
+
+  it("keeps custom report field selections isolated in the download cache", async () => {
+    mockCourseFindMany.mockResolvedValue([{ id: "course-owned" }]);
+
+    const first = await generateReportDownload({
+      user: { id: "instructor-1", roles: ["instructor"] },
+      type: "progress",
+      format: "csv",
+      fields: ["studentName"],
+    });
+    const second = await generateReportDownload({
+      user: { id: "instructor-1", roles: ["instructor"] },
+      type: "progress",
+      format: "csv",
+      fields: ["studentName", "email"],
+    });
+
+    expect(first.content).toBe("progress:studentName");
+    expect(second.content).toBe("progress:studentName|email");
+    expect(mockGenerateProgressCsv).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not log raw report renderer errors when falling back to CSV", async () => {
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mockFetchProgressData.mockResolvedValue([{ studentName: "student-1" }]);
+    mockGenerateProgressPdf.mockRejectedValueOnce(new Error("postgres://secret-report-render"));
+
+    const report = await generateReportDownload({
+      user: { id: "admin-1", roles: ["admin"] },
+      type: "progress",
+      format: "pdf",
+    });
+
+    expect(report.format).toBe("csv");
+    expect(report.fallbackReason).toBeTruthy();
+    expect(JSON.stringify(consoleWarn.mock.calls)).not.toContain("secret-report-render");
+    expect(consoleWarn).toHaveBeenCalledWith(
+      "[Reports] Report generation failed, falling back to CSV",
+      expect.objectContaining({ format: "pdf", errorType: "Error" }),
+    );
   });
 
   it("scopes customer observer certificate exports to permitted students and cohorts", async () => {
@@ -148,6 +197,22 @@ describe("reports service access and scope", () => {
     });
   });
 
+  it("marks report previews as truncated when the bounded report row limit is reached", async () => {
+    mockFetchProgressData.mockResolvedValue(
+      Array.from({ length: QUERY_LIMITS.reportRows }, (_, index) => ({ studentName: `student-${index}` })),
+    );
+
+    const preview = await generateReportPreview({
+      user: { id: "admin-1", roles: ["admin"] },
+      type: "progress",
+    });
+
+    expect(preview.totalRowsCount).toBe(QUERY_LIMITS.reportRows);
+    expect(preview.isTruncated).toBe(true);
+    expect(preview.rowLimit).toBe(QUERY_LIMITS.reportRows);
+    expect(preview.previewRows).toHaveLength(5);
+  });
+
   it("denies assignment exports to customer observers", async () => {
     mockGetObserverScope.mockResolvedValue({ isUnrestricted: false, projectIds: [], cohortIds: [] });
     mockGetScopedStudentIdsForObserver.mockResolvedValue([]);
@@ -159,6 +224,31 @@ describe("reports service access and scope", () => {
         format: "csv",
       }),
     ).rejects.toMatchObject({ code: "forbidden", status: 403 });
+  });
+
+  it("returns Russian ApiErrors for missing and unknown report types", async () => {
+    await expect(
+      generateReportDownload({
+        user: { id: "curator-1", roles: ["curator"] },
+        type: null,
+        format: "csv",
+      }),
+    ).rejects.toMatchObject({
+      code: "bad_request",
+      status: 400,
+      message: "Не указан тип отчёта",
+    });
+
+    await expect(
+      generateReportPreview({
+        user: { id: "curator-1", roles: ["curator"] },
+        type: "unknown",
+      }),
+    ).rejects.toMatchObject({
+      code: "bad_request",
+      status: 400,
+      message: "Неизвестный тип отчёта",
+    });
   });
 
   it("scopes super-curator workload to assigned operational area", async () => {
@@ -193,6 +283,21 @@ describe("reports service access and scope", () => {
     expect(superCuratorReports).toContain("curator_workload");
 
     expect(getAvailableReportsForRoles(["student"])).toEqual([]);
+  });
+
+  it("builds Russian-first display metadata for downloadable reports", () => {
+    const observerReports = getDisplayReportsForRole(["customer_observer"]);
+
+    expect(observerReports.map((report) => report.owner)).toEqual([
+      "Наблюдатель",
+      "Наблюдатель",
+      "Наблюдатель",
+    ]);
+    expect(observerReports.map((report) => report.scope)).toEqual([
+      "Только разрешенные проекты",
+      "Только разрешенные проекты",
+      "Только разрешенные проекты",
+    ]);
   });
 
   it("returns a Russian ApiError for unsupported report formats", () => {

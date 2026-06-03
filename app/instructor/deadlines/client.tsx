@@ -7,6 +7,7 @@ import { Save, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { ru } from "date-fns/locale";
+import { getSafeDeadlineActionError } from "@/components/lms/deadline-action-errors";
 
 interface BlockDeadline {
   id: string;
@@ -41,7 +42,7 @@ export function InstructorDeadlinesClient({ cohortId, cohortName }: Props) {
     queryKey: ["instructor-block-deadlines", cohortId],
     queryFn: async () => {
       const res = await fetch(`/api/v1/cohorts/${cohortId}/block-deadlines`);
-      if (!res.ok) throw new Error("Failed to fetch");
+      if (!res.ok) throw new Error("Не удалось загрузить дедлайны");
       const json = await res.json();
       return json.data ?? [];
     },
@@ -97,7 +98,7 @@ export function InstructorDeadlinesClient({ cohortId, cohortName }: Props) {
       toast.success(`Дедлайны для потока "${cohortName}" сохранены`);
     },
     onError: (error) => {
-      toast.error(`Ошибка: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`);
+      toast.error(getSafeDeadlineActionError(error));
     },
   });
 
@@ -122,6 +123,11 @@ export function InstructorDeadlinesClient({ cohortId, cohortName }: Props) {
             </span>
             <input
               type="date"
+              aria-label={
+                block.targetType === "module"
+                  ? `Дата дедлайна для модуля ${block.moduleTitle}`
+                  : `Дата дедлайна для блока ${block.title}`
+              }
               value={dates[block.id] ?? ""}
               onChange={(e) =>
                 setDates((prev) => ({ ...prev, [block.id]: e.target.value }))

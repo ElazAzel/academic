@@ -31,6 +31,20 @@ describe("parseManifest", () => {
   });
 
   it("throws on missing manifest root", () => {
-    expect(() => parseManifest("<root/>")).toThrow("Invalid SCORM manifest");
+    expect(() => parseManifest("<root/>")).toThrow("Некорректный манифест SCORM");
+  });
+
+  it("uses a Russian fallback title when manifest metadata has no title", () => {
+    const result = parseManifest(`<?xml version="1.0"?>
+<manifest identifier="test" version="1">
+  <metadata>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+  <resources>
+    <resource identifier="res1" href="index.html" type="webcontent"/>
+  </resources>
+</manifest>`);
+
+    expect(result.title).toBe("SCORM-пакет");
   });
 });

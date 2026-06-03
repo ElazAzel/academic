@@ -4,10 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { UserPlus } from "lucide-react";
 import { addStudentToCohortAction } from "@/server/actions/super-curator";
 import { toast } from "sonner";
+import {
+  ADD_STUDENT_TO_COHORT_ERROR,
+  getSafeSuperCuratorActionError,
+  readSuperCuratorActionResultError,
+} from "@/app/super-curator/action-errors";
 
 export function AddStudentForm({
   cohortId,
@@ -31,9 +36,11 @@ export function AddStudentForm({
         toast.success("Слушатель добавлен в поток");
         setOpen(false);
         router.refresh();
+      } else {
+        toast.error(readSuperCuratorActionResultError(result, ADD_STUDENT_TO_COHORT_ERROR));
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeSuperCuratorActionError(err, ADD_STUDENT_TO_COHORT_ERROR));
     } finally {
       setPending(false);
     }
@@ -50,6 +57,7 @@ export function AddStudentForm({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Добавить участника в поток</DialogTitle>
+          <DialogDescription>Укажите почту существующего слушателя, чтобы добавить его в выбранный поток.</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div>
@@ -63,9 +71,9 @@ export function AddStudentForm({
             <input type="hidden" name="courseId" value={courseId ?? ""} />
           </div>
           <div>
-            <label htmlFor="email" className="text-sm font-medium">Email слушателя</label>
+            <label htmlFor="email" className="text-sm font-medium">Почта слушателя</label>
             <Input id="email" name="email" type="email" required placeholder="student@example.com" />
-            <p className="text-xs text-muted-foreground mt-1">Введите email пользователя с ролью &laquo;Слушатель&raquo;.</p>
+            <p className="text-xs text-muted-foreground mt-1">Введите почту пользователя с ролью &laquo;Слушатель&raquo;.</p>
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Отмена</Button>

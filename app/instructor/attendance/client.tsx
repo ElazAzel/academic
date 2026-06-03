@@ -171,7 +171,7 @@ function LessonDetail({
           <TableHeader>
             <TableRow>
               <TableHead>Студент</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead>Эл. почта</TableHead>
               <TableHead>Последний просмотр</TableHead>
               <TableHead className="text-right">Прогресс</TableHead>
             </TableRow>

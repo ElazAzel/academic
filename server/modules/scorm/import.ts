@@ -1,7 +1,7 @@
 import { getPrisma } from "@/lib/prisma";
 import { UPLOAD } from "@/lib/constants";
 import { ApiError } from "@/lib/http";
-import { parseManifest } from "./manifest-parser";
+import { parseManifest, SCORM_MANIFEST_ROOT_ERROR } from "./manifest-parser";
 import { uploadScormFile } from "./storage";
 import { createId } from "@paralleldrive/cuid2";
 import AdmZip from "adm-zip";
@@ -53,7 +53,11 @@ export async function importScormPackage(lessonId: string, zipBuffer: Buffer) {
   try {
     manifest = parseManifest(manifestEntry.getData().toString("utf-8"));
   } catch (err) {
-    throw new ApiError("bad_request", "Ошибка парсинга imsmanifest.xml: " + (err instanceof Error ? err.message : "невалидный XML"), 422);
+    const reason =
+      err instanceof Error && err.message === SCORM_MANIFEST_ROOT_ERROR
+        ? err.message
+        : "не удалось разобрать XML";
+    throw new ApiError("bad_request", `Ошибка парсинга imsmanifest.xml: ${reason}`, 422);
   }
 
   const packageId = createId();

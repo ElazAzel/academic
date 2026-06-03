@@ -4,10 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Pencil } from "lucide-react";
 import { createCohortAction, updateCohortAction, deleteCohortAction } from "@/server/actions/super-curator";
 import { toast } from "sonner";
+import {
+  ARCHIVE_COHORT_ERROR,
+  CREATE_COHORT_ERROR,
+  UPDATE_COHORT_ERROR,
+  getSafeCohortActionError,
+  readCohortActionResultError,
+} from "./cohort-form-errors";
 
 export function CreateCohortForm({ courses }: { courses: { id: string; title: string }[] }) {
   const router = useRouter();
@@ -18,13 +25,15 @@ export function CreateCohortForm({ courses }: { courses: { id: string; title: st
     setPending(true);
     try {
       const result = await createCohortAction(formData);
-      if (result.success) {
-        toast.success("Поток создан");
-        setOpen(false);
-        router.refresh();
+      if (!result.success) {
+        toast.error(readCohortActionResultError(result, CREATE_COHORT_ERROR));
+        return;
       }
+      toast.success("Поток создан");
+      setOpen(false);
+      router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeCohortActionError(err, CREATE_COHORT_ERROR));
     } finally {
       setPending(false);
     }
@@ -41,6 +50,7 @@ export function CreateCohortForm({ courses }: { courses: { id: string; title: st
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Создать поток</DialogTitle>
+          <DialogDescription>Укажите курс, даты и название учебного потока.</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div>
@@ -92,13 +102,15 @@ export function EditCohortForm({
     setPending(true);
     try {
       const result = await updateCohortAction(formData);
-      if (result.success) {
-        toast.success("Поток обновлён");
-        setOpen(false);
-        router.refresh();
+      if (!result.success) {
+        toast.error(readCohortActionResultError(result, UPDATE_COHORT_ERROR));
+        return;
       }
+      toast.success("Поток обновлён");
+      setOpen(false);
+      router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeCohortActionError(err, UPDATE_COHORT_ERROR));
     } finally {
       setPending(false);
     }
@@ -109,13 +121,15 @@ export function EditCohortForm({
     setPending(true);
     try {
       const result = await deleteCohortAction(cohort.id);
-      if (result.success) {
-        toast.success("Поток архивирован");
-        setOpen(false);
-        router.refresh();
+      if (!result.success) {
+        toast.error(readCohortActionResultError(result, ARCHIVE_COHORT_ERROR));
+        return;
       }
+      toast.success("Поток архивирован");
+      setOpen(false);
+      router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeCohortActionError(err, ARCHIVE_COHORT_ERROR));
     } finally {
       setPending(false);
     }
@@ -129,6 +143,7 @@ export function EditCohortForm({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Редактировать поток</DialogTitle>
+          <DialogDescription>Измените параметры потока или архивируйте его без удаления слушателей из курса.</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div>

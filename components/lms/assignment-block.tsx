@@ -9,6 +9,7 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { StatusBadge } from "@/components/lms/status-badge";
 import type { BadgeStatus } from "@/components/lms/status-badge";
 import { uploadMedia } from "@/lib/upload-with-compress";
+import { getSafeAssignmentUploadError } from "@/components/lms/assignment-upload-errors";
 import type { StudentAssignmentDetail } from "@/types/domain";
 
 export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentDetail }) {
@@ -34,7 +35,7 @@ export function AssignmentBlock({ assignment }: { assignment: StudentAssignmentD
       setFileName(result.fileName);
       toast.success("Файл загружен");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка сети при загрузке файла");
+      toast.error(getSafeAssignmentUploadError(err));
     } finally {
       setUploading(false);
     }

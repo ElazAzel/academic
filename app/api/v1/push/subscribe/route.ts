@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const user = await requireUser().catch(() => null);
     if (!user) {
       // Not authenticated — skip silently (PWA registers on every page including login)
-      return NextResponse.json({ success: false, reason: "unauthenticated" });
+      return NextResponse.json({ success: false, reason: "Требуется вход" });
     }
 
     const rl = await checkRateLimit(`push-subscribe:${user.id}`);
@@ -60,7 +60,7 @@ export async function DELETE(request: Request) {
   try {
     const user = await requireUser().catch(() => null);
     if (!user) {
-      return NextResponse.json({ success: false, reason: "unauthenticated" });
+      return NextResponse.json({ success: false, reason: "Требуется вход" });
     }
 
     const input = await parseJson(request, unsubscribeSchema);

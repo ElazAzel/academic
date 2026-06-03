@@ -1,6 +1,6 @@
 # Full Project Audit: AI Strategic Academy
 
-Date: 2026-05-31 (updated - readiness baseline)
+Date: 2026-06-03 (updated - storage/push safe logging)
 Scope: local repository, local build/test gates, non-mutating Browser smoke, active and archived documentation.  
 Readiness target: full roadmap readiness, with release blockers separated from later strategic work.
 
@@ -24,15 +24,81 @@ That is not the same as a fully working platform. The audit found:
 
 Current overall status: `partial`. Short live status is maintained in `docs/READINESS.md`.
 
-## 2026-06-02 Certificate/Report Privacy Update
+## 2026-06-03 Certificate/Report Privacy Update
 
 WP2/WP5 proof improved for certificate and report boundaries:
 
 - certificate PDF route is covered by negative-path tests for missing permission, guessed student ID, customer observer outside scope, revoked certificates and instructor course assignment before PDF rendering;
 - customer observer report service scope is now tested for progress export, risk preview and certificate export through `studentIds`/`cohortIds`/`courseIds`;
 - certificate report rows now include `status` and `revokedAt`, and CSV/XLSX/PDF exports show active/revoked summary and revoked date so revoked certificates are visibly invalid in reports.
+- `ReportDesigner` now includes `status` and `revokedAt` in the default certificate report selection, with component tests covering certificate fields and forbidden default report fallback for `customer_observer`.
+- `DownloadReports` and report display metadata now use Russian owner/scope labels instead of visible English labels such as `Customer observer` and `Scope:`.
+- Report API negative-path messages for missing/unknown report type and fallback generation reasons are now Russian structured errors instead of visible English strings.
+- Report download caching now includes selected `fields`, preventing custom CSV/XLSX/PDF exports from receiving stale cached content generated for a different column set.
+- Async report jobs now preserve selected `fields` through queue payload, processor generation and sanitized status download URL, while unsafe field tokens and non-report URLs are rejected before queueing or client exposure.
+- `ReportDesigner` now hides itself when a role has no allowed report types, preventing a misleading fallback download action if the component is mounted outside the approved report pages.
 
 Status impact: certificate/report privacy evidence is stronger, but the audit remains `partial` until full six-role seeded E2E, browser report/certificate scenarios, operational drill, DPA and secret-rotation evidence are complete.
+
+## 2026-06-03 AI Assistant Update
+
+WP2/WP4 proof improved for the curator assistant surface:
+
+- `getQuestionSuggestionsAction()` now checks `curator`/`super_curator`/`admin` role access before validation and glossary lookup.
+- Controlled `ApiError` paths are returned without stderr noise, while unexpected failures are wrapped in a safe Russian `internal_error` message.
+- `tests/unit/actions-assistant.test.ts` covers role gate, validation no-service-call, successful glossary suggestions and raw backend error suppression in the action response.
+
+Status impact: the assistant remains a contextual curator workflow aid rather than a broad student/public AI surface. The overall audit remains `partial` until seeded role workflows, accessibility proof and operational release drills are complete.
+
+## 2026-06-03 Russian-First Error Contract Update
+
+WP2/WP4 proof improved for upload and popup/chat negative paths:
+
+- media upload policy and fallback routes no longer expose English messages for unsupported file types, unmanaged storage keys, oversized/empty files or storage fallback failures;
+- admin popup manager no longer uses English fallback errors for fetch/create/toggle/delete operations;
+- chat upload fallback copy now uses Russian fallback text;
+- `tests/unit/media-upload.test.ts` and `tests/unit/media-upload-routes.test.ts` cover Russian schema/API errors for the affected upload paths.
+- curator popups, lesson discussion, notifications, deadline alerts, instructor/admin deadline managers and upload-with-compress no longer use common English runtime fallback messages such as `Failed to fetch`, `Failed to load discussion` or `Upload failed`;
+- `tests/unit/russian-first-runtime-copy.test.ts` guards the affected runtime files against reintroducing these English fallback strings.
+- visible admin/instructor operational labels in settings, attendance, certificate issue, user create/edit and bulk import screens now use Russian copy for selected labels previously shown as `Email`, `Feature Flags`, `Email & SMTP`, `SMTP Host`, `SMTP Port` and `Bypass progress requirements`;
+- `tests/unit/russian-first-admin-copy.test.ts` guards those operational files against reintroducing the selected English labels.
+- report preview responses now expose `isTruncated` and `rowLimit`, and `ReportDesigner` labels capped previews as a limited sample instead of presenting a bounded result as the full row count;
+- `tests/unit/reports-service.test.ts` and `tests/unit/components/report-designer.test.tsx` cover the truncation metadata and UI label.
+- curator assistant input now has a 2000-character max-length guard before `getAnswerSuggestions()` and PostgreSQL FTS/glossary search;
+- `tests/unit/actions-assistant.test.ts` covers oversized input as a controlled Russian `bad_request` with no service call and no stderr noise.
+- command palette search fallback no longer uses `Search failed`; the shared runtime-copy guard now includes `components/lms/command-palette.tsx`.
+- disabled billing endpoints for checkout and Stripe webhooks now return Russian `410 Gone` payloads through shared constants, with route/service tests and runtime-copy guard coverage preventing return of `Payments are disabled` / `Stripe webhooks are disabled`.
+- SCORM manifest parser now uses Russian root-missing errors and `SCORM-пакет` fallback title; import service returns a safe Russian parse reason instead of raw parser details, with parser/import tests and runtime-copy guard coverage.
+- `verifyCsrf()` now returns Russian structured `403` reasons for missing source, malformed source and origin mismatch, with comparison logic separated from URL parsing so mismatch is no longer collapsed into invalid-origin handling.
+- `/api/readyz` and `/api/v1/readyz` now return Russian `503 service_unavailable` messages when the database is unavailable, and route tests assert raw backend details are not present in the response.
+- chat action student/receiver boundary errors now use Russian controlled messages, with action tests and runtime-copy guard coverage for the prior English strings.
+- `/admin/enrollments` now uses the `requireRolePage(["admin"])` return value directly and no longer carries a raw English `Unauthorized` throw after the page guard.
+- GraphQL scaffold route/resolvers now use Russian runtime/scaffold copy instead of English fallback messages, with route test and shared runtime-copy guard coverage.
+- Lesson video/media access routes now write Russian security/audit `metadata.reason` values for no enrollment, sequential lesson lock, missing lessons, guessed media IDs and repeated signed URL requests, with security/privacy assertions and runtime-copy guard coverage for the prior English reasons.
+- Shared `WorkspacePage` no longer exposes visible service terminology such as `MVP`, `production scaffold`, `REST-контракты`, `server modules` or `React Query`; the placeholder state is now neutral Russian UX copy and guarded by the visible-copy test.
+- GraphQL `501 not_implemented` copy no longer uses the mixed-language `GraphQL runtime` / `REST endpoints MVP` phrasing and is guarded by the route/runtime-copy tests.
+- Push subscribe/unsubscribe background paths keep silent `200` behavior for unauthenticated PWA registration attempts, but now return Russian `reason` copy and avoid rate-limit/storage side effects; POST/DELETE paths are covered by unit tests and runtime-copy guard.
+- Admin visit analytics error state no longer exposes raw `error.message` from analytics server actions; users see a stable Russian recovery hint while technical details stay in server logs, with component and admin-copy guard tests.
+- Certificate designer now separates expected local user-facing upload/preview failures from unknown action/API exceptions, preventing raw `error.message` leakage in the visible constructor error state.
+- CertificatesDashboard now consumes the standard `{ data }` / `{ error }` API envelope for manual certificate issue/revoke flows and avoids showing raw network exception text in the visible admin error state.
+- ReportDesigner preview now consumes the standard preview API envelope, validates minimal payload shape, preserves controlled API `error.message`, and replaces raw network exceptions with safe Russian fallback copy.
+- Profile/password settings and notification preferences now avoid exposing arbitrary raw `Error.message` text in toast copy; expected password domain errors remain visible through a whitelist, while network/runtime failures use safe Russian fallbacks.
+- `GlossaryEditor` now handles failed glossary action results, shows only controlled domain errors, and replaces raw action exceptions with safe Russian toast fallbacks.
+- Admin cohort create/edit forms now handle failed action results and replace raw create/update action exceptions with safe Russian toast fallbacks.
+- Super-curator cohort create/edit/archive dialog now handles failed action results, replaces raw action exceptions with safe Russian toast fallbacks, and includes `DialogDescription` for accessibility.
+- Admin user edit/delete dialog now handles failed action results, replaces raw action exceptions with safe Russian toast fallbacks, and adds accessible names/descriptions for icon-only controls and dialog content.
+- Admin create user modal now handles failed action results, replaces raw action exceptions with a safe Russian inline fallback, and adds an accessible name for the close icon button.
+- Admin enrollment forms now handle failed action results, replace raw enroll/delete exceptions with safe Russian inline/toast fallbacks, and add an accessible name for the delete enrollment icon button.
+- Super-curator assignment forms now handle failed action results, replace raw add-student/add-curator/assign-curator exceptions with safe Russian toast fallbacks, remove visible English `Email` labels, and add accessible descriptions/labels.
+- Super-curator `RiskActions` now handles failed risk action results, hides raw student-list/create/resolve exceptions behind safe Russian toast fallbacks, adds dialog/button accessibility metadata, and removes the React `selected` option warning.
+- Student assignment upload components now whitelist expected upload-domain errors, hide raw `uploadMedia()` exceptions behind a safe Russian fallback, and add accessible names for the assignment upload/remove controls.
+- Admin/instructor deadline clients and admin/curator popup clients now hide raw action/network exceptions behind safe Russian fallback messages, preserve controlled domain errors through allow-lists, and add accessible names/keyboard handling for date inputs, icon-only popup actions and clickable role/cohort/student controls.
+- `LessonDiscussion` now reads the standard `{ data }` API envelope for discussion GET responses, shows the empty state correctly, and hides raw post-create/delete exceptions behind safe Russian fallback messages while preserving controlled discussion-domain errors.
+- `/api/v1/sessions/start` now avoids logging raw persistence `error.message`/stack values in the server console payload and has no-leak route coverage for response and console output.
+- App/global/component error boundaries now show stable Russian recovery copy instead of raw `error.message`, keep only safe digest output visible, and avoid raw message/stack values in console payloads.
+- Storage and Web Push logging now avoids raw provider messages, exception objects and push endpoint tokens; focused tests cover Supabase upload/signed-url errors plus Web Push provider/expired-subscription failures.
+
+Status impact: Russian-first evidence is stronger for user-facing error states, but the platform still needs seeded browser proof across the full role workflow set.
 
 ## 2026-05-30 Boundary Cleanup Update
 

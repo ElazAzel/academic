@@ -1,4 +1,4 @@
-import { ApiError, errorResponse, ok } from "@/lib/http";
+import { ApiError, errorResponse, getSafeErrorMetadata, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/prisma";
 
@@ -40,7 +40,7 @@ export async function GET() {
     });
   } catch (error) {
     if (!(error instanceof ApiError)) {
-      console.error("[popups/diag] Fatal error:", error);
+      console.error("[popups/diag] Fatal error", getSafeErrorMetadata(error));
     }
     return errorResponse(error);
   }

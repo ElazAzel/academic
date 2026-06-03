@@ -60,7 +60,7 @@ export default async function InstructorSettingsPage() {
             <input id="name" name="name" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" defaultValue={profile?.name ?? ""}/>
           </div>
           <div>
-            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <label htmlFor="email" className="text-sm font-medium">Эл. почта</label>
             <input id="email" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" defaultValue={profile?.email} disabled/>
           </div>
           <div>

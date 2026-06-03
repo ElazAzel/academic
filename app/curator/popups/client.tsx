@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Send, Plus, Check, Eye, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
+import { getSafePopupActionError } from "@/components/lms/popup-client-errors";
 
 interface Student {
   id: string;
@@ -48,7 +49,7 @@ export function CuratorPopupClient({ students, curatorId }: Props) {
     queryKey: ["curator-popups"],
     queryFn: async () => {
       const res = await fetch("/api/v1/popups");
-      if (!res.ok) throw new Error("Failed to fetch");
+      if (!res.ok) throw new Error("Не удалось загрузить попапы");
       const json = await res.json();
       // Filter to only show popups created by this curator
       return (json.data ?? []).filter((p: Popup) => p.createdBy?.id === curatorId);
@@ -87,7 +88,7 @@ export function CuratorPopupClient({ students, curatorId }: Props) {
       toast.success("Уведомление отправлено слушателям");
     },
     onError: (error) => {
-      toast.error(`Ошибка: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`);
+      toast.error(getSafePopupActionError(error, "Не удалось отправить уведомление"));
     },
   });
 
@@ -131,6 +132,8 @@ export function CuratorPopupClient({ students, curatorId }: Props) {
                     key={student.id}
                     role="button"
                     tabIndex={0}
+                    aria-pressed={selectedStudents.includes(student.id)}
+                    aria-label={`${selectedStudents.includes(student.id) ? "Убрать слушателя" : "Выбрать слушателя"} ${student.name}`}
                     className={`flex items-center gap-2 rounded-md px-3 py-2 cursor-pointer text-sm transition-colors ${
                       selectedStudents.includes(student.id)
                         ? "bg-primary/10 border border-primary/30"

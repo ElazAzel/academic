@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { updateCohortAction } from "@/server/actions/admin";
 import { toast } from "sonner";
+import { UPDATE_COHORT_ERROR, getSafeCohortActionError, readCohortActionResultError } from "../cohort-form-errors";
 
 export function EditCohortForm({
   cohort,
@@ -22,12 +23,14 @@ export function EditCohortForm({
     try {
       const formData = new FormData(event.currentTarget);
       const result = await updateCohortAction(formData);
-      if (result.success) {
-        toast.success("Поток обновлён");
-        router.refresh();
+      if (!result.success) {
+        toast.error(readCohortActionResultError(result, UPDATE_COHORT_ERROR));
+        return;
       }
+      toast.success("Поток обновлён");
+      router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeCohortActionError(err, UPDATE_COHORT_ERROR));
     } finally {
       setPending(false);
     }

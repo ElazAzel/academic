@@ -64,6 +64,8 @@ const REPORT_TYPES: ReportTypeDef[] = [
       { key: "email", label: "Email", defaultOn: true },
       { key: "course", label: "Курс", defaultOn: true },
       { key: "issuedAt", label: "Дата выдачи", defaultOn: true },
+      { key: "status", label: "Статус", defaultOn: true },
+      { key: "revokedAt", label: "Дата отзыва", defaultOn: true },
     ],
   },
   {
@@ -115,6 +117,43 @@ const ALLOWED_ROLES_MAP: Record<ReportTypeId, string[]> = {
   curator_workload: ["admin", "super_curator"],
 };
 
+const REPORT_PREVIEW_ERROR = "Не удалось загрузить предварительный просмотр";
+
+class ReportDesignerUserError extends Error {}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readReportPreviewError(payload: unknown) {
+  if (isRecord(payload) && isRecord(payload.error) && typeof payload.error.message === "string") {
+    return payload.error.message;
+  }
+  return REPORT_PREVIEW_ERROR;
+}
+
+function readReportPreviewData(payload: unknown) {
+  if (!isRecord(payload) || !isRecord(payload.data)) {
+    throw new ReportDesignerUserError(REPORT_PREVIEW_ERROR);
+  }
+
+  const { data } = payload;
+  if (!Array.isArray(data.previewRows) || typeof data.totalRowsCount !== "number") {
+    throw new ReportDesignerUserError(REPORT_PREVIEW_ERROR);
+  }
+
+  return {
+    previewRows: data.previewRows.filter(isRecord),
+    totalRowsCount: data.totalRowsCount,
+    isTruncated: Boolean(data.isTruncated),
+    rowLimit: typeof data.rowLimit === "number" ? data.rowLimit : null,
+  };
+}
+
+function getReportDesignerErrorMessage(error: unknown) {
+  return error instanceof ReportDesignerUserError ? error.message : REPORT_PREVIEW_ERROR;
+}
+
 export function ReportDesigner({
   defaultType = "progress",
   userRoles = ["admin"]
@@ -128,6 +167,8 @@ export function ReportDesigner({
   const [generating, setGenerating] = useState(false);
   const [previewRows, setPreviewRows] = useState<Record<string, unknown>[]>([]);
   const [totalRowsCount, setTotalRowsCount] = useState<number | null>(null);
+  const [previewIsTruncated, setPreviewIsTruncated] = useState(false);
+  const [previewRowLimit, setPreviewRowLimit] = useState<number | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -148,20 +189,27 @@ export function ReportDesigner({
     setShowPreview(true);
     try {
       const res = await fetch(`/api/v1/reports/preview?type=${reportType}`);
+      const payload = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error("Не удалось загрузить предварительный просмотр");
+        throw new ReportDesignerUserError(readReportPreviewError(payload));
       }
-      const { data } = await res.json();
+      const data = readReportPreviewData(payload);
       setPreviewRows(data.previewRows);
       setTotalRowsCount(data.totalRowsCount);
+      setPreviewIsTruncated(data.isTruncated);
+      setPreviewRowLimit(data.rowLimit);
     } catch (err) {
-      setPreviewError(err instanceof Error ? err.message : "Неизвестная ошибка");
+      setPreviewError(getReportDesignerErrorMessage(err));
     } finally {
       setLoadingPreview(false);
     }
   };
 
   const currentType = allowedReportDefs.find((t) => t.id === reportType) ?? allowedReportDefs[0] ?? REPORT_TYPES[0];
+
+  if (allowedReportDefs.length === 0) {
+    return null;
+  }
 
   function openDesigner() {
     setSelectedColumns(new Set(currentType.columns.filter((c) => c.defaultOn).map((c) => c.key)));
@@ -226,6 +274,8 @@ export function ReportDesigner({
                   setShowPreview(false);
                   setPreviewRows([]);
                   setTotalRowsCount(null);
+                  setPreviewIsTruncated(false);
+                  setPreviewRowLimit(null);
                 }}
                 className={cn(
                   "rounded-lg border px-4 py-2 text-sm font-medium transition-all text-left",
@@ -304,7 +354,9 @@ export function ReportDesigner({
                 </span>
                 {totalRowsCount !== null && (
                   <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                    Всего строк: {totalRowsCount}
+                    {previewIsTruncated && previewRowLimit !== null
+                      ? `Показано строк: ${totalRowsCount} из лимита ${previewRowLimit}`
+                      : `Всего строк: ${totalRowsCount}`}
                   </span>
                 )}
               </div>

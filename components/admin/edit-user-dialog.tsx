@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
 import { updateUserAction, deleteUserAction } from "@/server/actions/admin";
 import { toast } from "sonner";
+import { DELETE_USER_ERROR, UPDATE_USER_ERROR, getSafeUserActionError, readUserActionResultError } from "./user-action-errors";
 
 export function EditUserDialog({
   user,
@@ -23,13 +24,15 @@ export function EditUserDialog({
     setPending(true);
     try {
       const result = await updateUserAction(formData);
-      if (result.success) {
-        toast.success("Пользователь обновлён");
-        setOpen(false);
-        router.refresh();
+      if (!result.success) {
+        toast.error(readUserActionResultError(result, UPDATE_USER_ERROR));
+        return;
       }
+      toast.success("Пользователь обновлён");
+      setOpen(false);
+      router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeUserActionError(err, UPDATE_USER_ERROR));
     } finally {
       setPending(false);
     }
@@ -38,13 +41,14 @@ export function EditUserDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary" size="sm">
+        <Button variant="secondary" size="sm" aria-label="Редактировать пользователя">
           <Pencil className="h-3.5 w-3.5" />
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Редактировать пользователя</DialogTitle>
+          <DialogDescription>Измените отображаемое имя, реальное имя и статус учетной записи.</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div>
@@ -58,7 +62,7 @@ export function EditUserDialog({
             <Input id="realName" name="realName" defaultValue={user.realName ?? ""} placeholder="Иван Петров" />
           </div>
           <div>
-            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <label htmlFor="email" className="text-sm font-medium">Эл. почта</label>
             <Input id="email" value={user.email} disabled className="bg-muted" />
           </div>
           <div>
@@ -91,19 +95,21 @@ export function DeleteUserButton({ userId }: { userId: string }) {
     setPending(true);
     try {
       const result = await deleteUserAction(userId);
-      if (result.success) {
-        toast.success("Пользователь деактивирован");
-        router.refresh();
+      if (!result.success) {
+        toast.error(readUserActionResultError(result, DELETE_USER_ERROR));
+        return;
       }
+      toast.success("Пользователь деактивирован");
+      router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeUserActionError(err, DELETE_USER_ERROR));
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <Button variant="ghost" size="sm" onClick={handleDelete} disabled={pending} className="text-muted-foreground hover:text-red-600">
+    <Button variant="ghost" size="sm" onClick={handleDelete} disabled={pending} className="text-muted-foreground hover:text-red-600" aria-label="Деактивировать пользователя">
       {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
     </Button>
   );

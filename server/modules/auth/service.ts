@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { getPrisma } from "@/lib/prisma";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 import { hashPassword } from "@/lib/auth/password";
 import { logAudit } from "@/server/modules/audit/service";
 import { createNotification, sendEmail } from "@/server/modules/notifications/service";
@@ -32,7 +32,7 @@ export async function requestPasswordReset(emailInput: string) {
       `Для сброса пароля перейдите по ссылке: ${resetLink}`
     );
   } catch (error) {
-    console.error(`Failed to send password reset email to ${email}`, error);
+    console.error("[Auth] Failed to send password reset email", getSafeErrorMetadata(error));
   }
 
   await logAudit({ actorId: user.id, action: "auth.password_reset_requested", entity: "user", entityId: user.id });

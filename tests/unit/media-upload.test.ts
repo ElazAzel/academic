@@ -36,6 +36,18 @@ describe("upload validation schema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("returns a Russian message for disallowed MIME types", () => {
+    const result = mediaUploadSchema.safeParse({
+      filename: "script.exe",
+      contentType: "application/x-msdownload",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe("Недопустимый тип файла");
+    }
+  });
+
   it("rejects file exceeding max size", () => {
     const result = mediaUploadSchema.safeParse({
       filename: "huge.mp4",
@@ -117,6 +129,18 @@ describe("fallback upload policy", () => {
       contentType: "image/png",
     });
     expect(result.success).toBe(false);
+  });
+
+  it("returns a Russian message for unmanaged fallback keys", () => {
+    const result = fallbackUploadParamsSchema.safeParse({
+      key: "avatars/1710000000000-abcdef12.png",
+      contentType: "image/png",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe("Недопустимый ключ хранилища");
+    }
   });
 
   it("extracts prefix only from managed keys", () => {

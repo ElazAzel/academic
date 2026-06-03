@@ -104,7 +104,7 @@ export function CommandPalette() {
 
     fetch(`/api/v1/search?q=${encodeURIComponent(debouncedQuery)}`, { signal: controller.signal })
       .then((res) => {
-        if (!res.ok) throw new Error("Search failed");
+        if (!res.ok) throw new Error("Не удалось выполнить поиск");
         return res.json();
       })
       .then((data) => {

@@ -10,7 +10,7 @@ export async function POST() {
     return NextResponse.json({
       error: {
         code: "not_implemented",
-        message: "GraphQL runtime is scaffolded. Use REST endpoints for MVP."
+        message: "Серверная часть GraphQL пока не реализована. Используйте REST-эндпоинты текущей версии."
       }
     }, { status: 501 });
   } catch (error) {

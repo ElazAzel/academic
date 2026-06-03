@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
-import { ApiError, errorResponse } from "@/lib/http";
+import { ApiError, errorResponse, getSafeErrorMetadata } from "@/lib/http";
 import { processReportJobs } from "@/server/modules/reports/processor";
 
 /**
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("[Scheduled Reports] Error:", error);
+    console.error("[Scheduled Reports] Error", getSafeErrorMetadata(error));
     return errorResponse(new ApiError("internal_error", "Не удалось обработать плановые отчёты", 500));
   }
 }

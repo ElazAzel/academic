@@ -24,6 +24,24 @@ export class ApiError extends Error {
   }
 }
 
+export function getSafeErrorMetadata(error: unknown) {
+  const errorType = error instanceof Error ? error.name : typeof error;
+  if (error && typeof error === "object") {
+    const record = error as { code?: unknown; status?: unknown; statusCode?: unknown };
+    return {
+      errorType,
+      code: typeof record.code === "string" ? record.code : undefined,
+      statusCode: typeof record.statusCode === "number" || typeof record.statusCode === "string"
+        ? record.statusCode
+        : typeof record.status === "number" || typeof record.status === "string"
+          ? record.status
+          : undefined,
+    };
+  }
+
+  return { errorType };
+}
+
 export function ok<T>(data: T, status = 200) {
   return NextResponse.json({ data }, { status });
 }
@@ -58,7 +76,7 @@ export function errorResponse(error: unknown) {
   }
 
   const safeMessage = "Внутренняя ошибка сервера";
-  console.error("[API Error]", error);
+  console.error("[API Error]", getSafeErrorMetadata(error));
   return NextResponse.json(
     { error: { code: "internal_error", message: safeMessage } },
     { status: 500 }
@@ -85,17 +103,18 @@ export function verifyCsrf(request: Request) {
 
   const source = origin ?? referer;
   if (!source) {
-    throw new ApiError("forbidden", "CSRF: missing origin header", 403);
+    throw new ApiError("forbidden", "CSRF: отсутствует заголовок Origin или Referer", 403);
   }
 
+  let sourceUrl: URL;
   try {
-    const sourceUrl = new URL(source);
-    const requestUrl = new URL(request.url);
-
-    if (sourceUrl.hostname !== requestUrl.hostname || sourceUrl.port !== requestUrl.port) {
-      throw new ApiError("forbidden", "CSRF: origin mismatch", 403);
-    }
+    sourceUrl = new URL(source);
   } catch {
-    throw new ApiError("forbidden", "CSRF: invalid origin", 403);
+    throw new ApiError("forbidden", "CSRF: некорректный источник запроса", 403);
+  }
+
+  const requestUrl = new URL(request.url);
+  if (sourceUrl.hostname !== requestUrl.hostname || sourceUrl.port !== requestUrl.port) {
+    throw new ApiError("forbidden", "CSRF: источник запроса не совпадает", 403);
   }
 }

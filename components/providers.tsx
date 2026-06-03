@@ -18,16 +18,19 @@ import { VisitTracker } from "@/components/lms/visit-tracker";
  * ошибок вида "Cannot read properties of undefined (reading 'length')",
  * которые возникают вне React-дерева (setTimeout, Promise).
  */
+export function getGlobalErrorMetadata(event: Pick<ErrorEvent, "error" | "filename" | "lineno" | "colno">) {
+  return {
+    errorType: event.error instanceof Error ? event.error.name : typeof event.error,
+    hasSource: Boolean(event.filename),
+    lineno: event.lineno,
+    colno: event.colno,
+  };
+}
+
 function useGlobalErrorHandler() {
   useEffect(() => {
     const handler = (event: ErrorEvent) => {
-      console.error("[Global Error]", {
-        message: event.message,
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-        stack: event.error?.stack,
-      });
+      console.error("[Global Error]", getGlobalErrorMetadata(event));
     };
     window.addEventListener("error", handler);
     return () => window.removeEventListener("error", handler);

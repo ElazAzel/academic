@@ -1,4 +1,4 @@
-import { getStorageClient } from "@/lib/storage";
+import { getStorageClient, getStorageErrorMetadata } from "@/lib/storage";
 
 const SCORM_BUCKET = "scorm-packages";
 
@@ -18,7 +18,7 @@ export async function uploadScormFile(
   });
 
   if (error) {
-    console.error("[ScormStorage] Upload error:", error.message);
+    console.error("[ScormStorage] Upload error", getStorageErrorMetadata(error));
     return null;
   }
   return storagePath;

@@ -44,7 +44,7 @@ export async function GET(_request: Request, context: Context) {
       await logForbiddenMediaAccess({
         userId: user.id,
         lessonId,
-        reason: "Lesson not found",
+        reason: "Урок не найден",
       });
       return errorResponse(new ApiError("not_found", "Урок не найден", 404));
     }
@@ -59,7 +59,7 @@ export async function GET(_request: Request, context: Context) {
       await logForbiddenMediaAccess({
         userId: user.id,
         lessonId,
-        reason: "No active enrollment",
+        reason: "Нет активного зачисления",
       });
       return errorResponse(new ApiError("forbidden", "Нет доступа к этому уроку", 403));
     }
@@ -90,7 +90,7 @@ export async function GET(_request: Request, context: Context) {
             userId: user.id,
             lessonId,
             courseId,
-            reason: "Sequential lock: previous required lessons not completed",
+            reason: "Последовательная блокировка: предыдущие обязательные уроки не завершены",
           });
           return errorResponse(new ApiError("forbidden", "Сначала завершите предыдущие обязательные уроки", 403));
         }

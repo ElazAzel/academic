@@ -4,9 +4,18 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 
 const prisma = getPrisma();
+
+function throwActivityAnalyticsError(error: unknown): never {
+  if (error instanceof ApiError) {
+    throw error;
+  }
+
+  console.error("[getActivityAnalytics]", getSafeErrorMetadata(error));
+  throw new ApiError("internal_error", "Не удалось получить аналитику активности", 500);
+}
 
 const GetActivityAnalyticsSchema = z.object({
   days: z.number().min(7).max(180).optional(),
@@ -103,7 +112,6 @@ export async function getActivityAnalytics(days = 30, cohortId?: string, courseI
     filters: { cohorts, courses, selectedCohortId: cohortId ?? null, selectedCourseId: courseId ?? null },
   };
   } catch (error) {
-    console.error("[getActivityAnalytics]", error);
-    throw error;
+    throwActivityAnalyticsError(error);
   }
 }

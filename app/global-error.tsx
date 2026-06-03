@@ -1,6 +1,18 @@
 "use client";
 
+import { useEffect } from "react";
+
+const GLOBAL_ERROR_DESCRIPTION = "Произошла критическая ошибка приложения. Попробуйте обновить страницу.";
+
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => {
+    console.error("[Global Error Boundary]", {
+      message: "Критическая ошибка приложения",
+      digest: error.digest,
+      errorType: error.name,
+    });
+  }, [error]);
+
   return (
     <html lang="ru">
       <head>
@@ -8,22 +20,10 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F8FA] px-6 antialiased">
-        {/* Decorative gradient blobs */}
-        <div
-          className="pointer-events-none absolute -left-28 -top-28 h-96 w-96 rounded-full opacity-50"
-          style={{ background: "radial-gradient(circle, rgba(220,38,38,0.08), transparent 70%)" }}
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -bottom-40 -right-40 h-[30rem] w-[30rem] rounded-full opacity-50"
-          style={{ background: "radial-gradient(circle, rgba(101,67,186,0.06), transparent 70%)" }}
-          aria-hidden
-        />
-
         <section className="relative z-10 mx-auto max-w-lg text-center">
           {/* Large 500 */}
           <p
-            className="select-none text-[8rem] font-bold leading-none tracking-tighter sm:text-[10rem]"
+            className="select-none text-[8rem] font-bold leading-none sm:text-[10rem]"
             style={{ color: "rgba(220,38,38,0.10)" }}
             aria-hidden
           >
@@ -47,9 +47,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           </h1>
 
           <p className="mt-3 text-sm leading-relaxed sm:text-base" style={{ color: "#6B7280" }}>
-            {error.message && error.message !== "Application error"
-              ? error.message
-              : "Произошла критическая ошибка приложения. Попробуйте обновить страницу."}
+            {GLOBAL_ERROR_DESCRIPTION}
           </p>
 
           {error.digest && (

@@ -3,11 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Loader2, CheckCircle2 } from "lucide-react";
 import { resolveRiskAction } from "@/server/actions/risk-management";
 import { createRiskAction, getStudentsForRisk } from "@/server/actions/risk-management";
 import { toast } from "sonner";
+import {
+  CREATE_RISK_ERROR,
+  LOAD_RISK_STUDENTS_ERROR,
+  RESOLVE_RISK_ERROR,
+  getSafeSuperCuratorActionError,
+  readSuperCuratorActionResultError,
+} from "@/app/super-curator/action-errors";
 
 export function RiskActions() {
   const router = useRouter();
@@ -18,8 +25,12 @@ export function RiskActions() {
   async function openDialog() {
     setOpen(true);
     if (students.length === 0) {
-      const list = await getStudentsForRisk();
-      setStudents(list);
+      try {
+        const list = await getStudentsForRisk();
+        setStudents(list);
+      } catch (err) {
+        toast.error(getSafeSuperCuratorActionError(err, LOAD_RISK_STUDENTS_ERROR));
+      }
     }
   }
 
@@ -31,9 +42,11 @@ export function RiskActions() {
         toast.success("Риск создан");
         setOpen(false);
         router.refresh();
+      } else {
+        toast.error(readSuperCuratorActionResultError(result, CREATE_RISK_ERROR));
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeSuperCuratorActionError(err, CREATE_RISK_ERROR));
     } finally {
       setPending(false);
     }
@@ -48,6 +61,7 @@ export function RiskActions() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Создать риск</DialogTitle>
+            <DialogDescription>Выберите слушателя, тип и уровень риска для ручной фиксации в зоне ответственности.</DialogDescription>
           </DialogHeader>
           <form action={handleSubmit} className="space-y-4">
             <div>
@@ -69,9 +83,9 @@ export function RiskActions() {
               </div>
               <div>
                 <label htmlFor="severity" className="text-sm font-medium">Уровень</label>
-                <select id="severity" name="severity" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
+                <select id="severity" name="severity" defaultValue="medium" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm">
                   <option value="low">Низкий</option>
-                  <option value="medium" selected>Средний</option>
+                  <option value="medium">Средний</option>
                   <option value="high">Высокий</option>
                   <option value="critical">Критичный</option>
                 </select>
@@ -99,16 +113,27 @@ export function ResolveRiskButton({ riskId }: { riskId: string }) {
     if (!confirm("Закрыть этот риск?")) return;
     setPending(true);
     try {
-      await resolveRiskAction(riskId);
-      toast.success("Риск закрыт");
-      router.refresh();
-    } catch {
-      toast.error("Ошибка");
+      const result = await resolveRiskAction(riskId);
+      if (result.success) {
+        toast.success("Риск закрыт");
+        router.refresh();
+      } else {
+        toast.error(readSuperCuratorActionResultError(result, RESOLVE_RISK_ERROR));
+      }
+    } catch (err) {
+      toast.error(getSafeSuperCuratorActionError(err, RESOLVE_RISK_ERROR));
     } finally { setPending(false); }
   }
 
   return (
-    <Button variant="ghost" size="sm" onClick={handleResolve} disabled={pending} className="text-muted-foreground hover:text-emerald-600">
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleResolve}
+      disabled={pending}
+      aria-label="Закрыть риск"
+      className="text-muted-foreground hover:text-emerald-600"
+    >
       {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
     </Button>
   );

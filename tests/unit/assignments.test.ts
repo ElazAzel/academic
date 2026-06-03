@@ -183,6 +183,42 @@ describe("submitAssignment", () => {
     expect(result.fileUrl).toBe("/uploads/doc.pdf");
     expect(result.status).toBe("SUBMITTED");
   });
+
+  it("does not leak raw XP or achievement failures after a successful submission", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockFindUnique.mockResolvedValue({ id: "a1", maxAttempts: 3, courseId: "c1" });
+    mockEnrollmentFindUnique.mockResolvedValue({ status: "ACTIVE" });
+    mockTxCount.mockResolvedValue(0);
+    mockTxCreate.mockResolvedValue({
+      id: "sub3",
+      assignmentId: "a1",
+      userId: "u1",
+      answerText: "hello",
+      attemptNumber: 1,
+      status: "SUBMITTED",
+    });
+    mockUserUpdate.mockRejectedValueOnce(new Error("postgres://secret-assignment-xp"));
+    mockAchievementUpsert.mockRejectedValueOnce(new Error("postgres://secret-assignment-achievement"));
+
+    try {
+      const result = await submitAssignment({ assignmentId: "a1", userId: "u1", answerText: "hello" });
+
+      expect(result.status).toBe("SUBMITTED");
+      expect(result.xp).toBeNull();
+      expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("secret-assignment-xp");
+      expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("secret-assignment-achievement");
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[submitAssignment] Failed to award XP",
+        expect.objectContaining({ code: "internal_error", statusCode: 500 }),
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[submitAssignment] Failed to check achievements",
+        expect.objectContaining({ errorType: "Error" }),
+      );
+    } finally {
+      consoleSpy.mockRestore();
+    }
+  });
 });
 
 describe("reviewSubmission", () => {

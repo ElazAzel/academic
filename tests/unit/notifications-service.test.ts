@@ -5,6 +5,7 @@ const mockNotificationPreferenceFindMany = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
 const mockSendPushToUser = vi.hoisted(() => vi.fn());
+const mockSendMail = vi.hoisted(() => vi.fn());
 const mockEnv = vi.hoisted(() => ({
   FEATURE_EMAIL_NOTIFICATIONS: false,
   FEATURE_PUSH_NOTIFICATIONS: false,
@@ -19,6 +20,14 @@ vi.mock("@/lib/env", () => ({
 
 vi.mock("@/server/modules/notifications/push", () => ({
   sendPushToUser: mockSendPushToUser,
+}));
+
+vi.mock("nodemailer", () => ({
+  default: {
+    createTransport: () => ({
+      sendMail: mockSendMail,
+    }),
+  },
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -72,6 +81,8 @@ describe("createNotificationInternal (sync path)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockEnv.FEATURE_PUSH_NOTIFICATIONS = false;
+    mockEnv.FEATURE_EMAIL_NOTIFICATIONS = false;
+    mockSendMail.mockResolvedValue({ messageId: "mail-1" });
     mockNotificationPreferenceFindMany.mockResolvedValue([]);
     mockNotificationCreate.mockResolvedValue({ id: "notification-1" });
     mockUserFindUnique.mockResolvedValue({ email: "student@academy.local" });
@@ -213,6 +224,45 @@ describe("createNotificationInternal (sync path)", () => {
           refId: "certificate-1",
         }),
       }),
+    );
+  });
+
+  it("does not log recipient email or raw SMTP errors", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockEnv.FEATURE_EMAIL_NOTIFICATIONS = true;
+    mockSendMail.mockRejectedValueOnce(new Error("smtp://secret-notification-provider"));
+
+    await createNotificationInternal({
+      userId: "student-1",
+      event: "password_changed",
+      channel: "email",
+    });
+
+    const serializedCalls = JSON.stringify(consoleError.mock.calls);
+    expect(serializedCalls).not.toContain("student@academy.local");
+    expect(serializedCalls).not.toContain("secret-notification-provider");
+    expect(consoleError).toHaveBeenCalledWith(
+      "[Notifications] Failed to send email notification",
+      expect.objectContaining({ errorType: "Error" }),
+    );
+  });
+
+  it("does not log raw push provider errors from notification delivery", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockEnv.FEATURE_PUSH_NOTIFICATIONS = true;
+    mockSendPushToUser.mockRejectedValueOnce(new Error("https://push.example/secret-notification-token"));
+
+    await createNotificationInternal({
+      userId: "student-1",
+      event: "new_message",
+      channel: "in_app",
+    });
+
+    const serializedCalls = JSON.stringify(consoleError.mock.calls);
+    expect(serializedCalls).not.toContain("secret-notification-token");
+    expect(consoleError).toHaveBeenCalledWith(
+      "[Notifications] Failed to send push notification",
+      expect.objectContaining({ errorType: "Error" }),
     );
   });
 });

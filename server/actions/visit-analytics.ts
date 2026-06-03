@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { getPrisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 
 const prisma = getPrisma();
 
@@ -188,7 +188,7 @@ export async function getVisitAnalytics(
       dailyVisits,
     };
   } catch (error) {
-    console.error("[getVisitAnalytics]", error);
+    console.error("[getVisitAnalytics]", getSafeErrorMetadata(error));
     throw error;
   }
 }
@@ -275,7 +275,7 @@ export async function getUserVisitDetail(
       })),
     };
   } catch (error) {
-    console.error("[getUserVisitDetail]", error);
+    console.error("[getUserVisitDetail]", getSafeErrorMetadata(error));
     throw error;
   }
 }
@@ -349,7 +349,7 @@ export async function getTimingAnalytics(days = 30): Promise<TimingAnalytics> {
 
     return { messagesByHour, lessonsByHour, quizzesByHour };
   } catch (error) {
-    console.error("[getTimingAnalytics]", error);
+    console.error("[getTimingAnalytics]", getSafeErrorMetadata(error));
     throw error;
   }
 }

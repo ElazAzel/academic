@@ -7,6 +7,8 @@ const prisma = getPrisma();
 
 const ALLOWED_REPORT_TYPES = new Set(["progress", "risk", "assignments", "certificates", "curator_workload"]);
 const ALLOWED_REPORT_FORMATS = new Set(["csv", "xlsx", "pdf"]);
+const REPORT_FIELD_TOKEN = /^[A-Za-z][A-Za-z0-9_]*$/;
+const MAX_REPORT_FIELDS = 30;
 
 function getSafeReportDownloadUrl(value: unknown) {
   if (typeof value !== "string" || !value.startsWith("/api/v1/reports?")) {
@@ -16,14 +18,29 @@ function getSafeReportDownloadUrl(value: unknown) {
   try {
     const url = new URL(value, "http://localhost");
     if (url.pathname !== "/api/v1/reports") return undefined;
-    if (url.searchParams.size !== 2) return undefined;
+
+    const typeValues = url.searchParams.getAll("type");
+    const formatValues = url.searchParams.getAll("format");
+    const fieldValues = url.searchParams.getAll("fields");
+    const knownParamCount = typeValues.length + formatValues.length + fieldValues.length;
+    if (url.searchParams.size !== knownParamCount) return undefined;
+    if (typeValues.length !== 1 || formatValues.length !== 1 || fieldValues.length > 1) return undefined;
 
     const type = url.searchParams.get("type");
     const format = url.searchParams.get("format");
     if (!type || !format) return undefined;
     if (!ALLOWED_REPORT_TYPES.has(type) || !ALLOWED_REPORT_FORMATS.has(format)) return undefined;
 
-    return `${url.pathname}?type=${encodeURIComponent(type)}&format=${encodeURIComponent(format)}`;
+    const fieldsValue = fieldValues[0];
+    let fieldsQuery = "";
+    if (fieldsValue !== undefined) {
+      const fields = fieldsValue.split(",");
+      if (fields.length === 0 || fields.length > MAX_REPORT_FIELDS) return undefined;
+      if (fields.some((field) => !REPORT_FIELD_TOKEN.test(field))) return undefined;
+      fieldsQuery = `&fields=${encodeURIComponent(fields.join(","))}`;
+    }
+
+    return `${url.pathname}?type=${encodeURIComponent(type)}&format=${encodeURIComponent(format)}${fieldsQuery}`;
   } catch {
     return undefined;
   }

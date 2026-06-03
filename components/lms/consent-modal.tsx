@@ -5,6 +5,8 @@ import { FileText, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { getSafeClientErrorMetadata } from "@/lib/client-error";
 
 interface ConsentStatus {
   consented: boolean;
@@ -47,9 +49,13 @@ export function ConsentModal() {
       if (res.ok) {
         setConsented(true);
         setOpen(false);
+        return;
       }
+      console.error("[ConsentModal] Failed to accept consent", { statusCode: res.status });
+      toast.error("Не удалось подтвердить согласие");
     } catch (err) {
-      console.error("[ConsentModal] Failed to accept consent:", err);
+      console.error("[ConsentModal] Failed to accept consent", getSafeClientErrorMetadata(err));
+      toast.error("Не удалось подтвердить согласие");
     } finally {
       setAccepting(false);
     }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
-import { ApiError, errorResponse } from "@/lib/http";
+import { ApiError, errorResponse, getSafeErrorMetadata } from "@/lib/http";
 import { processReportJobs } from "@/server/modules/reports/processor";
 import { processNotificationEvents } from "@/server/modules/notifications/outbox-handler";
 
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("[Outbox Processor] Error:", error);
+    console.error("[Outbox Processor] Error", getSafeErrorMetadata(error));
     return errorResponse(new ApiError("internal_error", "Не удалось обработать фоновые задачи", 500));
   }
 }

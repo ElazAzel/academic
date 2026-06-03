@@ -24,7 +24,7 @@ vi.mock("@/server/modules/outbox/service", () => ({
 
 const { POST } = await import("@/app/api/v1/reports/job/route");
 
-function jobRequest(payload = { type: "progress", format: "csv" }) {
+function jobRequest(payload: unknown = { type: "progress", format: "csv" }) {
   return new Request("http://localhost/api/v1/reports/job", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -76,6 +76,30 @@ describe("reports job API access", () => {
       format: "xlsx",
       userId: "curator-1",
     });
+  });
+
+  it("queues selected fields for async report jobs", async () => {
+    const response = await POST(jobRequest({ type: "progress", format: "csv", fields: ["studentName", "email"] }));
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(body).toEqual({ jobId: "job-1", status: "pending" });
+    expect(mockWriteOutboxEvent).toHaveBeenCalledWith("report.generate", {
+      reportType: "progress",
+      format: "csv",
+      userId: "curator-1",
+      fields: ["studentName", "email"],
+    });
+  });
+
+  it("rejects unsafe selected fields before queuing report jobs", async () => {
+    const response = await POST(jobRequest({ type: "progress", format: "csv", fields: ["studentName", "bad-field"] }));
+    const body = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(body.error.code).toBe("validation_error");
+    expect(mockGetAvailableReportsForRoles).not.toHaveBeenCalled();
+    expect(mockWriteOutboxEvent).not.toHaveBeenCalled();
   });
 
   it("returns structured rate-limit errors before parsing and queuing report jobs", async () => {

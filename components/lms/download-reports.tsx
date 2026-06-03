@@ -57,7 +57,7 @@ export function DownloadReports({ reports }: { reports: ReportType[] }) {
                 <div className="space-y-1 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-3">
                   {r.scope ? (
                     <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
-                      <span className="font-label-md text-label-md text-m3-on-surface">Scope:</span> {r.scope}
+                      <span className="font-label-md text-label-md text-m3-on-surface">Область:</span> {r.scope}
                     </p>
                   ) : null}
                   {r.decision ? (

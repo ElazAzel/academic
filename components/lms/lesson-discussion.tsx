@@ -9,6 +9,8 @@ import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import { readApiData, readApiErrorMessage } from "@/lib/api-client";
+import { getSafeDiscussionActionError } from "@/components/lms/discussion-action-errors";
 
 /* ── Types ──────────────────────────────────────────────────────────── */
 
@@ -137,11 +139,11 @@ function PostCard({
                     if (res.ok) {
                       toast.success("Пост удалён");
                     } else {
-                      const err = await res.json().catch(() => ({}));
-                      toast.error(err.error?.message ?? "Не удалось удалить пост");
+                      const message = await readApiErrorMessage(res, "Не удалось удалить пост");
+                      toast.error(getSafeDiscussionActionError(new Error(message), "Не удалось удалить пост"));
                     }
                   } catch {
-                    toast.error("Ошибка сети");
+                    toast.error("Не удалось удалить пост");
                   }
                 }}
                 className="flex items-center gap-1 text-[11px] text-m3-on-surface-variant/50 transition-colors hover:text-destructive"
@@ -158,6 +160,7 @@ function PostCard({
       {isReplyOpen && (
         <div className="ml-8 space-y-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-3">
           <Textarea
+            aria-label="Ответ в обсуждении"
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="Напишите ответ..."
@@ -212,8 +215,10 @@ export function LessonDiscussion({ lessonId }: { lessonId: string }) {
     queryKey: ["lesson-discussion", lessonId],
     queryFn: async () => {
       const res = await fetch(`/api/v1/lessons/${lessonId}/discussion`);
-      if (!res.ok) throw new Error("Failed to load discussion");
-      return res.json();
+      if (!res.ok) {
+        throw new Error(await readApiErrorMessage(res, "Не удалось загрузить обсуждение"));
+      }
+      return readApiData<Discussion>(res);
     },
   });
 
@@ -225,10 +230,9 @@ export function LessonDiscussion({ lessonId }: { lessonId: string }) {
         body: JSON.stringify({ text, parentId }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error?.message ?? "Ошибка при отправке");
+        throw new Error(await readApiErrorMessage(res, "Ошибка при отправке"));
       }
-      return res.json();
+      return readApiData<Post>(res);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lesson-discussion", lessonId] });
@@ -237,8 +241,8 @@ export function LessonDiscussion({ lessonId }: { lessonId: string }) {
       setReplyToId(null);
       toast.success("Сообщение опубликовано");
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err) => {
+      toast.error(getSafeDiscussionActionError(err));
     },
   });
 
@@ -275,6 +279,7 @@ export function LessonDiscussion({ lessonId }: { lessonId: string }) {
       {/* New post form */}
       <div className="space-y-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-4 shadow-m3-soft">
         <Textarea
+          aria-label="Новое сообщение обсуждения"
           value={newPostText}
           onChange={(e) => setNewPostText(e.target.value)}
           placeholder="Напишите сообщение для обсуждения..."

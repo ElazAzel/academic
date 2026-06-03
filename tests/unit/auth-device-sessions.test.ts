@@ -142,6 +142,40 @@ describe("auth device sessions", () => {
     expect(MAX_ACTIVE_DEVICE_SESSIONS).toBe(2);
   });
 
+  it("does not log raw device-limit notification errors", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const startedAt = new Date("2026-05-29T10:00:00.000Z");
+    mockAuthDeviceSessionCreate.mockResolvedValue({ id: "session-new", startedAt });
+    mockAuthDeviceSessionFindMany.mockResolvedValue([
+      {
+        id: "session-old",
+        startedAt: new Date("2026-05-29T08:00:00.000Z"),
+        lastSeenAt: new Date("2026-05-29T08:05:00.000Z"),
+        ipAddress: null,
+        userAgent: null,
+      },
+      {
+        id: "session-current",
+        startedAt: new Date("2026-05-29T09:00:00.000Z"),
+        lastSeenAt: new Date("2026-05-29T09:05:00.000Z"),
+        ipAddress: null,
+        userAgent: null,
+      },
+    ]);
+    mockAuthDeviceSessionUpdateMany.mockResolvedValue({ count: 1 });
+    mockAuditLogCreate.mockResolvedValue({ id: "audit-1" });
+    mockCreateNotification.mockRejectedValueOnce(new Error("postgres://secret-device-notification"));
+
+    const result = await registerAuthDeviceSession({ userId: "user-1" });
+
+    expect(result.revokedSessionIds).toEqual(["session-old"]);
+    expect(JSON.stringify(consoleError.mock.calls)).not.toContain("secret-device-notification");
+    expect(consoleError).toHaveBeenCalledWith(
+      "[auth-device-sessions] Failed to create device limit notification",
+      expect.objectContaining({ errorType: "Error" }),
+    );
+  });
+
   it("checks whether a device session is still active", async () => {
     mockAuthDeviceSessionFindFirst.mockResolvedValueOnce({ id: "session-1" });
     await expect(isAuthDeviceSessionActive("user-1", "session-1")).resolves.toBe(true);

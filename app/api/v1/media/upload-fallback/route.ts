@@ -20,31 +20,31 @@ export async function PUT(request: Request) {
 
     const prefix = parseMediaUploadPrefixFromKey(input.key);
     if (!prefix) {
-      throw new ApiError("bad_request", "Unsupported storage key", 400);
+      throw new ApiError("bad_request", "Недопустимый ключ хранилища", 400);
     }
 
     await requireUser(getUploadPermissionForPrefix(prefix));
 
     const contentLength = Number(request.headers.get("content-length") ?? 0);
     if (contentLength > getUploadMaxFileSizeBytes()) {
-      throw new ApiError("bad_request", "File is too large", 413);
+      throw new ApiError("bad_request", "Файл слишком большой", 413);
     }
 
     const arrayBuffer = await request.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     if (buffer.length === 0) {
-      throw new ApiError("bad_request", "File is empty", 400);
+      throw new ApiError("bad_request", "Файл пустой", 400);
     }
 
     if (buffer.length > getUploadMaxFileSizeBytes()) {
-      throw new ApiError("bad_request", "File is too large", 413);
+      throw new ApiError("bad_request", "Файл слишком большой", 413);
     }
 
     const publicUrl = await uploadFileToSupabase(input.key, buffer, input.contentType);
 
     if (!publicUrl) {
-      throw new ApiError("service_unavailable", "Storage upload failed", 503);
+      throw new ApiError("service_unavailable", "Не удалось загрузить файл в хранилище", 503);
     }
 
     return NextResponse.json({ success: true, publicUrl });

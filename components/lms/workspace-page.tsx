@@ -1,7 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 export function WorkspacePage({
   title,
@@ -19,13 +18,12 @@ export function WorkspacePage({
         {items.map((item) => (
           <Card key={item}>
             <CardHeader>
-              <Badge className="w-fit">MVP</Badge>
               <CardTitle>{item}</CardTitle>
-              <CardDescription>Экран готов как production scaffold с REST-контрактами и пустыми состояниями.</CardDescription>
+              <CardDescription>Раздел будет показывать доступные данные и действия по роли пользователя.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-lg border border-dashed bg-muted/40 p-5 text-sm text-muted-foreground">
-                Данные подключаются через server modules и React Query без прямого доступа UI к базе.
+                Пока здесь нет данных для отображения.
               </div>
             </CardContent>
           </Card>

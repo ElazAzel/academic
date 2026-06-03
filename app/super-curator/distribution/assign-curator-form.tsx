@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { assignCuratorFromSupervisorAction } from "@/server/actions/admin";
 import { toast } from "sonner";
+import {
+  ASSIGN_CURATOR_ERROR,
+  getSafeSuperCuratorActionError,
+  readSuperCuratorActionResultError,
+} from "@/app/super-curator/action-errors";
 
 export function AssignCuratorForm({
   studentId,
@@ -33,9 +38,11 @@ export function AssignCuratorForm({
       if (result.success) {
         toast.success("Куратор назначен");
         router.refresh();
+      } else {
+        toast.error(readSuperCuratorActionResultError(result, ASSIGN_CURATOR_ERROR));
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeSuperCuratorActionError(err, ASSIGN_CURATOR_ERROR));
     } finally {
       setPending(false);
     }
@@ -44,6 +51,7 @@ export function AssignCuratorForm({
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
       <select
+        aria-label="Куратор"
         value={selectedCurator}
         onChange={(event) => setSelectedCurator(event.target.value)}
         className="min-w-56 rounded-lg border bg-background px-3 py-1.5 text-sm"

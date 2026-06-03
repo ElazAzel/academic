@@ -8,6 +8,26 @@ import { ApiError } from "@/lib/http";
 import { parseMediaUploadPrefixFromKey } from "@/lib/media-upload-policy";
 
 const prisma = getPrisma();
+const UPLOAD_LESSON_MEDIA_ERROR = "Не удалось сохранить медиафайл урока";
+const DELETE_LESSON_MEDIA_ERROR = "Произошла ошибка при удалении файла";
+
+function getSafeActionErrorMetadata(error: unknown) {
+  const errorType = error instanceof Error ? error.name : typeof error;
+  if (error && typeof error === "object") {
+    const record = error as { code?: unknown; status?: unknown; statusCode?: unknown };
+    return {
+      errorType,
+      code: typeof record.code === "string" ? record.code : undefined,
+      statusCode: typeof record.statusCode === "number" || typeof record.statusCode === "string"
+        ? record.statusCode
+        : typeof record.status === "number" || typeof record.status === "string"
+          ? record.status
+          : undefined,
+    };
+  }
+
+  return { errorType };
+}
 
 const UploadLessonMediaActionSchema = z.object({
   lessonId: z.string().min(1, "ID урока обязателен"),
@@ -103,7 +123,8 @@ export async function uploadLessonMediaAction(lessonId: string, type: string, fi
     return media;
   } catch (error) {
     if (!(error instanceof ApiError)) {
-      console.error("[uploadLessonMediaAction]", error);
+      console.error("[uploadLessonMediaAction]", getSafeActionErrorMetadata(error));
+      throw new ApiError("internal_error", UPLOAD_LESSON_MEDIA_ERROR, 500);
     }
     throw error;
   }
@@ -141,7 +162,7 @@ export async function deleteLessonMediaAction(mediaId: string) {
     if (error instanceof ApiError) {
       return { success: false, error: error.message };
     }
-    console.error("[deleteLessonMediaAction]", error);
-    return { success: false, error: "Произошла ошибка при удалении файла" };
+    console.error("[deleteLessonMediaAction]", getSafeActionErrorMetadata(error));
+    return { success: false, error: DELETE_LESSON_MEDIA_ERROR };
   }
 }

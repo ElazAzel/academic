@@ -1,5 +1,5 @@
 import { getPrisma } from "@/lib/prisma";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 import { Prisma, EnrollmentStatus } from "@prisma/client";
 import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
@@ -115,13 +115,13 @@ export async function submitAssignment(input: {
   try {
     xpResult = await awardXp(input.userId, "assignment_submit");
   } catch (err) {
-    console.error("Failed to award assignment XP:", err);
+    console.error("[submitAssignment] Failed to award XP", getSafeErrorMetadata(err));
   }
 
   try {
     await checkAndAward(input.userId, "assignment_submit");
   } catch (err) {
-    console.error("Failed to check achievements for assignment:", err);
+    console.error("[submitAssignment] Failed to check achievements", getSafeErrorMetadata(err));
   }
 
   await logAudit({

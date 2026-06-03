@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { enrollStudentAction } from "@/server/actions/admin";
+import {
+  ENROLL_STUDENT_ERROR,
+  getSafeEnrollmentActionError,
+  readEnrollmentActionResultError,
+} from "@/components/admin/enrollment-action-errors";
 
 interface EnrollStudentFormProps {
   data: {
@@ -29,9 +34,11 @@ export function EnrollStudentForm({ data, onSuccess }: EnrollStudentFormProps) {
       const result = await enrollStudentAction(formData);
       if (result.success) {
         onSuccess?.();
+      } else {
+        setError(readEnrollmentActionResultError(result, ENROLL_STUDENT_ERROR));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Произошла ошибка");
+      setError(getSafeEnrollmentActionError(err, ENROLL_STUDENT_ERROR));
     } finally {
       setPending(false);
     }

@@ -2,6 +2,856 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-03 — Activity analytics action не раскрывает raw query errors
+
+**Что сделано:**
+
+- `server/actions/activity-analytics.ts` больше не логирует raw DB/query exceptions в `getActivityAnalytics()`; console payload ограничен `getSafeErrorMetadata()`.
+- Controlled validation/RBAC `ApiError` в activity analytics сохраняются без stderr-noise и без лишних DB-запросов.
+- Unexpected analytics failures теперь возвращают контролируемый `ApiError("internal_error", "Не удалось получить аналитику активности", 500)` вместо raw backend exception.
+- Добавлен `tests/unit/activity-analytics-safe-logging.test.ts`: validation no-log, RBAC no-log, query failure no-leak.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/activity-analytics-safe-logging.test.ts tests/unit/actions-analytics.test.ts` — 9/9 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 816/816 Vitest tests, production build.
+
+## 2026-06-03 — User batch importer показывает safe import error вместо raw console-only failure
+
+**Что сделано:**
+
+- `components/admin/user-batch-importer.tsx` больше не логирует raw action exception при сбое пакетного импорта пользователей; console payload ограничен `getSafeClientErrorMetadata()`.
+- Добавлено явное `role="alert"` состояние на шаге предпросмотра: администратор видит контролируемое сообщение `Не удалось импортировать пользователей` вместо тихого отказа.
+- `tests/unit/components/user-batch-importer.test.tsx` покрывает валидный CSV → preview → failed import action: raw secret не появляется в DOM и не попадает в console payload.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/user-batch-importer.test.tsx tests/unit/russian-first-admin-copy.test.ts` — 2/2 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 813/813 Vitest tests, production build.
+
+## 2026-06-03 — Users export API не логирует raw database errors
+
+**Что сделано:**
+
+- `app/api/v1/users/export/route.ts` больше не логирует raw exception object при сбое CSV-выгрузки пользователей; console payload ограничен `getSafeErrorMetadata()`.
+- `tests/unit/users-export-api.test.ts` теперь проверяет отсутствие raw DB secret не только в API response, но и в console payload.
+- CSV/RBAC контракт выгрузки сохранён: `admin` и `super_curator`, BOM-prefixed CSV, escaping quotes и защита от formula injection.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/users-export-api.test.ts` — 4/4 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 812/812 Vitest tests, production build.
+
+## 2026-06-03 — XP/gamification logs fail closed и не раскрывают raw errors
+
+**Что сделано:**
+
+- `server/actions/xp.ts` больше не логирует raw persistence errors в `awardXp()`, `getUserXp()`, `getLeaderboard()` и `getLeaderboardForActor()`; неожиданные ошибки превращаются в контролируемый `ApiError` без backend details.
+- Исправлен async error boundary в `getLeaderboard()` и `getLeaderboardForActor()`: Prisma calls теперь await-ятся внутри `try`, поэтому `catch` реально перехватывает rejected Promise.
+- `server/modules/quizzes/service.ts` и `server/modules/assignments/service.ts` больше не логируют raw XP/achievement exceptions после успешной попытки теста или отправки домашнего задания; фоновые сбои остаются non-blocking.
+- Добавлен `tests/unit/xp-safe-logging.test.ts` для no-leak проверок XP actions и leaderboard errors.
+- Добавлен `tests/unit/quiz-submit-safe-logging.test.ts`, а `tests/unit/assignments.test.ts` расширен проверкой no-leak фоновой геймификации после успешного submit.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/xp-safe-logging.test.ts tests/unit/xp-leaderboard.test.ts tests/unit/assignments.test.ts tests/unit/quiz-submit-safe-logging.test.ts` — 22/22 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 812/812 Vitest tests, production build.
+
+## 2026-06-03 — Popup active/diag API logs не раскрывают raw route errors
+
+**Что сделано:**
+
+- `app/api/v1/popups/active/route.ts` больше не логирует raw exception при поиске активного popup; неожиданные ошибки ограничены `getSafeErrorMetadata()`.
+- Controlled auth `ApiError` в active popup endpoint больше не создает stderr-шум и возвращается как структурированный API-ответ.
+- `app/api/v1/popups/diag/route.ts` больше не логирует raw diagnostic query exception; console payload содержит только safe metadata.
+- Добавлен `tests/unit/popups-active-api.test.ts`: покрывает no-leak service failure и controlled auth no-log path.
+- `tests/unit/popups-diag-api.test.ts` расширен no-leak проверкой для diagnostic query failure.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/popups-active-api.test.ts tests/unit/popups-diag-api.test.ts tests/unit/popups-api.test.ts` — 11/11 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 805/805 Vitest tests, production build.
+
+## 2026-06-03 — Visit analytics logs не раскрывают raw query errors
+
+**Что сделано:**
+
+- `server/actions/visit-analytics.ts` больше не логирует raw Prisma/query exceptions в `getVisitAnalytics()`, `getUserVisitDetail()` и `getTimingAnalytics()`; console payload ограничен `getSafeErrorMetadata()`.
+- `components/admin/visit-analytics-block.tsx` больше не логирует raw analytics load exception и использует общий safe client metadata helper.
+- `tests/unit/visit-analytics-safe-logging.test.ts` добавляет no-leak проверки для трех server action negative paths.
+- `tests/unit/components/visit-analytics-block.test.tsx` теперь проверяет не только отсутствие технической ошибки в DOM, но и отсутствие raw details в console payload.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/visit-analytics-safe-logging.test.ts tests/unit/components/visit-analytics-block.test.tsx` — 4/4 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 802/802 Vitest tests, production build.
+
+## 2026-06-03 — Consent/Popup modal acknowledgements fail closed и не раскрывают raw errors
+
+**Что сделано:**
+
+- Добавлен `lib/client-error.ts` с общим `getSafeClientErrorMetadata()` для client-side logging без raw `Error.message`.
+- `components/lms/consent-modal.tsx` больше не логирует raw exception object при сбое принятия юридических документов; non-2xx и network errors показывают контролируемый русский toast.
+- `components/lms/popup-modal.tsx` теперь проверяет `res.ok` при acknowledge: HTTP 500 больше не скрывает popup как успешно подтвержденный, а показывает безопасный toast и оставляет окно открытым.
+- `components/lms/notifications-dropdown.tsx` переведен на общий client helper без изменения UI-контракта.
+- Добавлен `tests/unit/components/modal-acknowledgement-errors.test.tsx`: проверяет no-leak для consent network error и popup acknowledge response body, включая сохранение popup открытым при non-2xx.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/modal-acknowledgement-errors.test.tsx tests/unit/components/notifications-dropdown.test.tsx` — 4/4 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 799/799 Vitest tests, production build.
+
+## 2026-06-03 — Notifications dropdown не раскрывает raw mark-all errors
+
+**Что сделано:**
+
+- `components/lms/notifications-dropdown.tsx` больше не читает и не логирует raw `res.text()` при сбое `PATCH /api/v1/notifications`.
+- Network/throw ошибки в mark-all-read flow теперь логируются только безопасной client metadata (`errorType`, `code`, `statusCode`), без raw `Error.message` и backend/provider details.
+- Non-2xx ответ сервера теперь дает пользователю контролируемый русский toast вместо тихого отказа.
+- Добавлен `tests/unit/components/notifications-dropdown.test.tsx`: проверяет no-leak для raw response body и network exception, а также отсутствие оптимистического `setNotifications()` при сбое.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/notifications-dropdown.test.tsx` — 2/2 passed.
+- `npm run test -- tests/unit/components/notifications-dropdown.test.tsx tests/unit/components/notification-preferences-form.test.tsx tests/unit/notifications-api.test.ts tests/unit/notifications-service.test.ts` — 17/17 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 797/797 Vitest tests, production build.
+
+## 2026-06-03 — Report/outbox API logs не раскрывают raw route/processor errors
+
+**Что сделано:**
+
+- `app/api/v1/reports/route.ts` и `app/api/v1/reports/preview/route.ts` больше не логируют raw exception object при сбоях report download/preview; route-level console payload ограничен `getSafeErrorMetadata()`.
+- `app/api/v1/reports/scheduled/route.ts` и `app/api/v1/outbox/process/route.ts` больше не логируют raw processor exception при cron/outbox failure; ответы остаются стабильными `internal_error` без provider/database details.
+- `tests/unit/reports-api-route.test.ts` добавляет no-leak проверки для download/preview route errors.
+- `tests/unit/cron-routes-success.test.ts` теперь проверяет no-leak console payload для unified outbox endpoint и scheduled reports endpoint.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/reports-api-route.test.ts tests/unit/cron-routes-success.test.ts` — 14/14 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 795/795 Vitest tests, production build.
+
+## 2026-06-03 — Report generation logs не раскрывают raw render/processor errors
+
+**Что сделано:**
+
+- `server/modules/reports/service.ts` больше не логирует raw report renderer exception при fallback PDF/XLSX → CSV; console payload содержит только `format` и safe metadata.
+- `server/modules/reports/processor.ts` больше не логирует raw async report job exception; `markFailed()` по-прежнему получает безопасное русское сообщение, а console payload содержит `eventId` и safe metadata.
+- `tests/unit/reports-service.test.ts` добавляет no-leak проверку для renderer fallback, `tests/unit/reports-processor.test.ts` теперь проверяет no-leak не только outbox state, но и console payload.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/reports-service.test.ts tests/unit/reports-processor.test.ts` — 17/17 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 792/792 Vitest tests, production build.
+
+## 2026-06-03 — Notification/Auth delivery logs не раскрывают email и provider secrets
+
+**Что сделано:**
+
+- `server/modules/auth/service.ts` больше не логирует email получателя и raw SMTP/provider exception при отправке письма сброса пароля.
+- `server/modules/notifications/service.ts` больше не логирует email пользователя и raw SMTP/Web Push provider errors при best-effort доставке уведомлений.
+- `server/modules/auth/device-sessions.ts` больше не логирует raw exception object при сбое создания device-limit notification.
+- Все три участка используют `getSafeErrorMetadata()` и сохраняют прежнее best-effort/fail-closed поведение без изменения пользовательского результата.
+- Добавлены negative-path tests для password reset email, notification email/push delivery и device-limit notification logging.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/notifications-service.test.ts tests/unit/auth-device-sessions.test.ts tests/unit/auth-password-reset-safe-logging.test.ts` — 18/18 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 791/791 Vitest tests, production build.
+
+## 2026-06-03 — Auth session logs не раскрывают raw session/DB errors
+
+**Что сделано:**
+
+- `lib/auth/session.ts` сохраняет fail-closed поведение при сбоях `getServerSession()` и device-session DB revalidation, но больше не логирует raw exception object.
+- Session provider и DB revalidation failures теперь пишутся в console только через `getSafeErrorMetadata()` (`errorType`, `statusCode`, `code`) без raw `Error.message`/connection details.
+- `tests/unit/auth-session.test.ts` расширен negative-path проверками: raw `postgres://...` не попадает в console payload при сбое session provider и при сбое DB revalidation.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/auth-session.test.ts tests/unit/http.test.ts` — 8/8 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 787/787 Vitest tests, production build.
+
+## 2026-06-03 — Central API и browser error logs используют safe metadata
+
+**Что сделано:**
+
+- `lib/http.ts` больше не логирует raw generic `Error` object в `errorResponse()`; API response и console payload ограничены безопасными metadata (`errorType`, `statusCode`, `code`).
+- `components/providers.tsx` больше не отправляет в browser console raw `event.message`, `event.filename` или `event.error.stack`; глобальный client error handler пишет только тип ошибки, наличие source и координаты строки/колонки.
+- Добавлен `tests/unit/components/providers-safe-logging.test.tsx`; `tests/unit/http.test.ts` теперь проверяет no-leak не только в response body, но и в console payload.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/http.test.ts tests/unit/components/providers-safe-logging.test.tsx` — 6/6 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 785/785 Vitest tests, production build.
+
+## 2026-06-03 — Lesson media и SCORM storage не раскрывают raw persistence/provider errors
+
+**Что сделано:**
+
+- `server/actions/files.ts` больше не логирует raw exception object при upload/delete lesson media; generic сбои пишутся только безопасными metadata (`errorType`, `statusCode`, `code`).
+- `uploadLessonMediaAction()` больше не пробрасывает произвольный backend `Error.message`; неожиданные persistence-сбои заменяются на безопасный `ApiError("internal_error")` с русским сообщением.
+- `deleteLessonMediaAction()` сохраняет контролируемые доменные `ApiError` для UI, но generic delete failure возвращает стабильное русское сообщение без raw DB details.
+- `server/modules/scorm/storage.ts` больше не логирует raw Supabase provider `error.message` при upload SCORM-файлов; используется общий `getStorageErrorMetadata()`.
+- `lib/storage.ts` экспортирует `getStorageErrorMetadata()` для повторного использования storage-adapter слоями.
+- Добавлены no-leak проверки в `tests/unit/actions-files.test.ts` и новый `tests/unit/scorm-storage-safe-logging.test.ts`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/actions-files.test.ts tests/unit/scorm-storage-safe-logging.test.ts tests/unit/storage-safe-logging.test.ts` — 11/11 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 784/784 Vitest tests, production build.
+
+## 2026-06-03 — Storage и push logs не раскрывают raw provider errors
+
+**Что сделано:**
+
+- `lib/storage.ts` больше не логирует raw S3/Supabase `error.message`, exception object или signed-url exception details; вместо этого пишет безопасные metadata (`errorType`, `statusCode`, `code`).
+- `server/modules/notifications/push.ts` больше не логирует raw Web Push provider message и не печатает endpoint подписки при 404/410 deactivation.
+- Добавлены `tests/unit/storage-safe-logging.test.ts` и `tests/unit/push-safe-logging.test.ts`: проверяют, что raw `postgres://...`, provider token и endpoint token не попадают в console payload.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/storage-safe-logging.test.ts tests/unit/push-safe-logging.test.ts tests/unit/storage.test.ts` — 7/7 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 781/781 Vitest tests, production build.
+
+## 2026-06-03 — Error boundaries скрывают raw error messages
+
+**Что сделано:**
+
+- `app/error.tsx`, `app/global-error.tsx` и `components/lms/error-fallback.tsx` больше не показывают raw `error.message` пользователю.
+- `app/error.tsx` и `app/global-error.tsx` теперь логируют безопасный console payload с типом ошибки и digest без `error.message`/stack.
+- Error recovery screens очищены от декоративных gradient blobs и negative tracking; интерфейс остается служебным, спокойным и recovery-focused.
+- `components/lms/error-fallback.tsx` сохраняет отображение безопасного `digest`, но скрывает технический текст исключения.
+- Добавлен `tests/unit/components/error-boundaries.test.tsx`: проверяет no-leak для visible copy и console payload на raw `postgres://...` ошибках.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/error-boundaries.test.tsx` — 3/3 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 777/777 Vitest tests, production build.
+
+## 2026-06-03 — Sessions start API не логирует raw persistence errors
+
+**Что сделано:**
+
+- `app/api/v1/sessions/start/route.ts` больше не пишет `error.message` и stack в console payload при сбое создания visit session.
+- Generic persistence failures по-прежнему проходят через `errorResponse()` и возвращают безопасный русский `internal_error` без raw backend details.
+- Добавлен `tests/unit/sessions-start-api.test.ts`: покрывает successful visit session start, initial `PAGE_VIEW` log и no-leak проверку для raw `postgres://...` exception в response/console payload.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/sessions-start-api.test.ts tests/unit/russian-first-runtime-copy.test.ts` — 3/3 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 774/774 Vitest tests, production build.
+
+## 2026-06-03 — LessonDiscussion читает API envelope и скрывает raw post errors
+
+**Что сделано:**
+
+- `components/lms/lesson-discussion.tsx` теперь читает стандартный `{ data }` envelope через `readApiData()`, поэтому пустое состояние обсуждения корректно отображается после ответа `GET /discussion`.
+- Ошибки создания поста больше не выводят произвольный `Error.message` в toast; unexpected сбои заменяются на `Не удалось отправить сообщение`.
+- Добавлен helper `components/lms/discussion-action-errors.ts` с whitelist контролируемых ошибок обсуждений (`Родительский пост не найден`, `Пост не найден`, `Нет прав на удаление` и др.).
+- Удаление поста теперь читает API error envelope через `readApiErrorMessage()` и не показывает raw network exception text.
+- Textarea нового сообщения и ответа получили доступные имена `Новое сообщение обсуждения` и `Ответ в обсуждении`.
+- `tests/unit/components/lesson-discussion.test.tsx` покрывает чтение `{ data }` envelope, raw post-create suppression и сохранение controlled API error.
+- `tests/unit/russian-first-runtime-copy.test.ts` блокирует возврат старого `toast.error(err.message)` fallback.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/lesson-discussion.test.tsx tests/unit/russian-first-runtime-copy.test.ts` — 4/4 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 772/772 Vitest tests, production build.
+
+## 2026-06-03 — Deadline и popup клиенты скрывают raw action errors
+
+**Что сделано:**
+
+- `app/admin/cohorts/[cohortId]/deadline-manager.tsx` и `app/instructor/deadlines/client.tsx` больше не показывают произвольный `Error.message` при сохранении дедлайнов; неожиданные сбои заменяются на `Не удалось сохранить дедлайны`.
+- Добавлен helper `components/lms/deadline-action-errors.ts` с whitelist ожидаемых deadline-доменных сообщений.
+- `app/admin/popups/client.tsx` и `app/curator/popups/client.tsx` больше не выводят raw create exceptions в toast; controlled API/client ошибки сохраняются через `components/lms/popup-client-errors.ts`.
+- Date inputs для дедлайнов получили доступные имена, popup icon-only actions получили `aria-label`, а кликабельные role/cohort/student элементы получили `aria-pressed`, keyboard handling и понятные accessible names.
+- `tests/unit/components/deadline-popup-clients.test.tsx` покрывает raw-error suppression и доступные имена для admin/instructor deadline и admin/curator popup клиентов.
+- `tests/unit/russian-first-runtime-copy.test.ts` теперь блокирует возврат старого `toast.error(... error.message ...)` fallback для deadline/popup клиентов.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/deadline-popup-clients.test.tsx tests/unit/russian-first-runtime-copy.test.ts` — 5/5 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 769/769 Vitest tests, production build.
+
+## 2026-06-03 — Student assignment upload скрывает raw upload errors
+
+**Что сделано:**
+
+- `components/lms/assignment-block.tsx` и `app/student/assignments/[assignmentId]/assignment-view.tsx` больше не показывают произвольный `Error.message` из `uploadMedia()` в toast.
+- Добавлен helper `components/lms/assignment-upload-errors.ts` с безопасным fallback `Не удалось загрузить файл задания` и whitelist ожидаемых upload-доменных ошибок.
+- Ожидаемые ошибки загрузки вроде `Недопустимый тип файла` остаются видимыми, а raw transport/backend details заменяются на безопасный русский fallback.
+- `AssignmentView` получил `aria-label="Загрузить файл к заданию"` для зоны загрузки и `aria-label="Удалить файл"` для icon-only кнопки удаления прикрепленного файла.
+- `tests/unit/components/assignment-upload-errors.test.tsx` покрывает suppression raw upload exception и сохранение controlled upload error.
+- `tests/unit/russian-first-runtime-copy.test.ts` теперь охватывает оба assignment upload компонента и блокирует возврат старого `err.message` fallback.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/assignment-upload-errors.test.tsx tests/unit/russian-first-runtime-copy.test.ts` — 3/3 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 765/765 Vitest tests, production build.
+
+## 2026-06-03 — Super-curator RiskActions скрывает raw action errors и убирает warning
+
+**Что сделано:**
+
+- `app/super-curator/risks/risk-actions.tsx` теперь безопасно обрабатывает сбой загрузки списка слушателей через fallback `Не удалось загрузить список слушателей`.
+- Создание и закрытие риска теперь обрабатывают `{ success: false, error }` и не выводят raw action exceptions в toast; неизвестные сбои заменяются на `Не удалось создать риск` / `Не удалось закрыть риск`.
+- Dialog создания риска получил `DialogDescription`, а icon-only кнопка закрытия риска получила `aria-label="Закрыть риск"`.
+- React warning по `selected` на `<option>` устранен через `defaultValue="medium"` на select уровня риска.
+- `tests/unit/components/super-curator-risk-actions.test.tsx` покрывает raw-error suppression при загрузке списка, controlled create failure-result и raw resolve exception.
+- `tests/unit/russian-first-admin-copy.test.ts` получил file-specific guard для старых raw/generic fallback-паттернов в `RiskActions`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/super-curator-risk-actions.test.tsx tests/unit/russian-first-admin-copy.test.ts` — 4/4 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 763/763 Vitest tests, production build.
+
+## 2026-06-03 — Super-curator assignment forms скрывают raw action errors
+
+**Что сделано:**
+
+- `app/super-curator/cohorts/[id]/add-student-form.tsx`, `app/super-curator/curators/add-curator-form.tsx` и `app/super-curator/distribution/assign-curator-form.tsx` теперь обрабатывают `{ success: false, error }` от server actions.
+- Raw action exceptions больше не попадают в toast; неизвестные сбои заменяются на безопасные русские fallback-сообщения `Не удалось добавить участника в поток`, `Не удалось добавить куратора` и `Не удалось назначить куратора`.
+- Добавлен helper `app/super-curator/action-errors.ts` с whitelist контролируемых ошибок супер-кураторских операций.
+- Диалоги добавления участника и куратора получили `DialogDescription`, а select назначения куратора получил `aria-label`.
+- Видимые labels `Email слушателя` / `Email` заменены на `Почта слушателя` / `Почта куратора`.
+- `tests/unit/components/super-curator-assignment-forms.test.tsx` покрывает raw-error suppression и controlled failure-result для этих форм.
+- `tests/unit/russian-first-admin-copy.test.ts` получил file-specific guards для старых raw `err.message` fallback-паттернов.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/super-curator-assignment-forms.test.tsx tests/unit/russian-first-admin-copy.test.ts` — 4/4 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 760/760 Vitest tests, production build.
+
+## 2026-06-03 — Admin enrollment forms скрывают raw action errors
+
+**Что сделано:**
+
+- `components/admin/enroll-student-form.tsx` теперь обрабатывает `{ success: false, error }` от `enrollStudentAction` и показывает только whitelisted доменные ошибки либо безопасный fallback `Не удалось зачислить слушателя`.
+- `components/admin/delete-enrollment-button.tsx` больше не выводит произвольный `err.message` в toast при удалении зачисления; неизвестные сбои заменяются на `Не удалось удалить зачисление`.
+- Добавлен helper `components/admin/enrollment-action-errors.ts` с safe fallback-сообщениями и whitelist контролируемых ошибок зачислений.
+- Icon-only кнопка удаления зачисления получила `aria-label="Удалить зачисление"`.
+- `tests/unit/components/admin-enrollment-forms.test.tsx` покрывает controlled enroll failure-result, suppression raw enroll exception и suppression raw delete exception.
+- `tests/unit/russian-first-admin-copy.test.ts` получил file-specific guards для старых raw `err.message` fallback-паттернов в формах зачисления.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/admin-enrollment-forms.test.tsx tests/unit/russian-first-admin-copy.test.ts` — 4/4 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 757/757 Vitest tests, production build.
+
+## 2026-06-03 — Admin create user modal скрывает raw action errors
+
+**Что сделано:**
+
+- `components/admin/create-user-modal.tsx` теперь обрабатывает `{ success: false, error }` от `createUserAction` и показывает безопасную inline-ошибку вместо молчаливого отказа.
+- Raw action exceptions больше не выводятся в видимое состояние формы создания пользователя; неизвестные сбои заменяются на `Не удалось создать пользователя`, а ожидаемые доменные ошибки проходят через whitelist helper `components/admin/user-action-errors.ts`.
+- Icon-only кнопка закрытия получила `aria-label="Закрыть окно создания пользователя"`.
+- `tests/unit/components/create-user-modal.test.tsx` покрывает suppression raw exception вида `postgres://secret-user-create`.
+- `tests/unit/russian-first-admin-copy.test.ts` получил file-specific guard, блокирующий возврат старого raw `err.message` fallback в `CreateUserModal`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/create-user-modal.test.tsx tests/unit/russian-first-admin-copy.test.ts` — 2/2 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 754/754 Vitest tests, production build.
+
+## 2026-06-03 — Admin user dialog скрывает raw action errors и получает доступные icon buttons
+
+**Что сделано:**
+
+- `components/admin/edit-user-dialog.tsx` теперь обрабатывает `{ success: false, error }` для update/delete user actions.
+- Добавлен helper `components/admin/user-action-errors.ts` с safe fallback-сообщениями и whitelist контролируемых ошибок пользователя.
+- Raw action exceptions больше не выводятся в toast при редактировании или деактивации пользователя.
+- Icon-only кнопки редактирования и деактивации получили `aria-label`; dialog редактирования получил `DialogDescription`.
+- `tests/unit/components/edit-user-dialog.test.tsx` покрывает controlled update failure-result и suppression raw delete exception.
+- `tests/unit/russian-first-admin-copy.test.ts` получил file-specific guard для `EditUserDialog`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/edit-user-dialog.test.tsx tests/unit/russian-first-admin-copy.test.ts` — 3/3 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 753/753 Vitest tests, production build.
+
+## 2026-06-03 — Super-curator cohort dialog скрывает raw action errors и получает DialogDescription
+
+**Что сделано:**
+
+- `app/super-curator/cohorts/cohort-form.tsx` теперь обрабатывает `{ success: false, error }` для create/update/archive cohort actions.
+- Добавлен helper `app/super-curator/cohorts/cohort-form-errors.ts` с safe fallback-сообщениями и whitelist контролируемых ошибок.
+- Raw action exceptions больше не выводятся в toast при создании, редактировании и архивации потоков.
+- В create/edit dialogs добавлен `DialogDescription`, убирающий Radix a11y warning и дающий ассистивным технологиям описание назначения диалога.
+- `tests/unit/components/super-curator-cohort-form.test.tsx` покрывает controlled archive failure-result и suppression raw archive exception.
+- `tests/unit/russian-first-admin-copy.test.ts` получил file-specific guard для super-curator cohort form.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/super-curator-cohort-form.test.tsx tests/unit/russian-first-admin-copy.test.ts` — 3/3 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 751/751 Vitest tests, production build.
+
+## 2026-06-03 — Admin cohort forms обрабатывают failure-result и скрывают raw action errors
+
+**Что сделано:**
+
+- `app/admin/cohorts/new/create-cohort-form.tsx` и `app/admin/cohorts/[cohortId]/edit-cohort-form.tsx` теперь обрабатывают `{ success: false, error }` от cohort server actions, а не молча игнорируют отказ.
+- Добавлен общий helper `app/admin/cohorts/cohort-form-errors.ts` с безопасными fallback-сообщениями `Не удалось создать поток` / `Не удалось обновить поток` и whitelist контролируемых ошибок.
+- Raw action exceptions больше не выводятся в toast при создании/редактировании потока.
+- `tests/unit/components/admin-cohort-forms.test.tsx` покрывает controlled create failure-result и suppression raw update exception.
+- `tests/unit/russian-first-admin-copy.test.ts` получил file-specific guards для admin cohort forms.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/admin-cohort-forms.test.tsx tests/unit/russian-first-admin-copy.test.ts` — 3/3 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 749/749 Vitest tests, production build.
+
+## 2026-06-03 — GlossaryEditor обрабатывает failure-result и скрывает raw action errors
+
+**Что сделано:**
+
+- `app/admin/glossary/glossary-editor.tsx` теперь обрабатывает `{ success: false, error }` от create/update/delete server actions и не игнорирует отказ операции.
+- Для create/update/delete введены безопасные русские fallback-сообщения и whitelist контролируемых доменных ошибок глоссария.
+- Raw action exceptions больше не попадают в toast; техническая строка заменяется на `Не удалось добавить запись в глоссарий`, `Не удалось обновить запись глоссария` или `Не удалось удалить запись глоссария`.
+- `tests/unit/components/glossary-editor.test.tsx` покрывает controlled failure-result и suppression raw exception при удалении записи.
+- `tests/unit/russian-first-admin-copy.test.ts` получил file-specific guard для `GlossaryEditor`, чтобы старый `toast.error(err instanceof Error ? err.message : "Ошибка")` не вернулся в этот файл.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/glossary-editor.test.tsx tests/unit/russian-first-admin-copy.test.ts` — 3/3 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 747/747 Vitest tests, production build.
+
+## 2026-06-03 — Настройки пользователя скрывают raw action/network errors
+
+**Что сделано:**
+
+- `components/lms/settings-forms.tsx` больше не показывает произвольный `Error.message` из profile/password server actions в toast-сообщениях.
+- Для профиля и пароля введён whitelist ожидаемых русских доменных ошибок; сетевые/рантайм-сбои заменяются на безопасные fallback-сообщения `Не удалось обновить профиль` и `Не удалось обновить пароль`.
+- `components/lms/notification-preferences-form.tsx` больше не пробрасывает raw mutation errors из React Query в toast и использует стабильный русский fallback `Не удалось сохранить настройку уведомлений`.
+- `tests/unit/components/settings-forms.test.tsx` и `tests/unit/components/notification-preferences-form.test.tsx` покрывают suppression технических строк вида `postgres://secret-*` и сохранение ожидаемой доменной ошибки пароля.
+- `tests/unit/russian-first-runtime-copy.test.ts` теперь включает пользовательские настройки и блокирует возврат старых raw `err.message` fallback-паттернов в этих файлах.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/settings-forms.test.tsx tests/unit/components/notification-preferences-form.test.tsx` — 4/4 passed.
+- `npm run test -- tests/unit/russian-first-runtime-copy.test.ts tests/unit/components/settings-forms.test.tsx tests/unit/components/notification-preferences-form.test.tsx` — 5/5 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 745/745 Vitest tests, production build.
+
+## 2026-06-03 — ReportDesigner preview скрывает raw network errors
+
+**Что сделано:**
+
+- `components/lms/report-designer.tsx` теперь читает preview API через стандартный `{ data }` / `{ error }` envelope.
+- Controlled API errors из `error.message` показываются пользователю, а raw network exceptions и некорректный payload заменяются на безопасное русское сообщение `Не удалось загрузить предварительный просмотр`.
+- Preview payload проходит минимальную структурную проверку перед записью в UI state: `previewRows` должен быть массивом, `totalRowsCount` — числом.
+- `tests/unit/components/report-designer.test.tsx` расширен до 6 тестов и покрывает controlled preview API error envelope, raw network failure suppression и прежний capped-preview label.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/report-designer.test.tsx` — 6/6 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 741/741 Vitest tests, production build.
+
+## 2026-06-03 — CertificatesDashboard читает API envelope и скрывает raw network errors
+
+**Что сделано:**
+
+- `components/admin/certificates-dashboard.tsx` теперь читает стандартные API envelopes `{ data }` и `{ error }` для ручной выдачи/отзыва сертификатов.
+- Ошибки API берутся только из `error.message`; произвольный top-level `message` и raw network exceptions больше не выводятся в видимый error state.
+- Добавлены безопасные fallback-сообщения для выдачи и отзыва сертификата, а некорректный успешный payload обрабатывается как контролируемая пользовательская ошибка.
+- `tests/unit/components/certificates-dashboard.test.tsx` покрывает controlled `error.message` из API envelope и отказ `fetch()` с технической строкой, которая не должна попасть в DOM.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/certificates-dashboard.test.tsx` — 2/2 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 739/739 Vitest tests, production build.
+
+## 2026-06-03 — Certificate designer скрывает raw action errors
+
+**Что сделано:**
+
+- `components/admin/certificate-designer.tsx` больше не возвращает произвольный `error.message` в видимый error state конструктора сертификатов.
+- Для ожидаемых локальных ошибок загрузки PNG/preview введен `CertificateDesignerUserError`; неизвестные исключения из server actions/API показываются через безопасные русские fallback-сообщения.
+- `tests/unit/components/certificate-designer.test.tsx` покрывает отказ `getCertificateTemplateAction()` и проверяет, что техническая строка ошибки не попадает в DOM.
+- `tests/unit/russian-first-admin-copy.test.ts` теперь включает certificate designer и блокирует возврат паттерна `return error instanceof Error ? error.message : fallback;`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/certificate-designer.test.tsx tests/unit/russian-first-admin-copy.test.ts` — 2/2 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 737/737 Vitest tests, production build.
+
+## 2026-06-03 — Admin visit analytics error state скрывает технические ошибки
+
+**Что сделано:**
+
+- `components/admin/visit-analytics-block.tsx` больше не показывает `error.message` из server actions в видимом error state блока посещаемости.
+- Пользователь видит стабильную русскую подсказку `Попробуйте обновить страницу или открыть раздел позже.`, а техническая причина остается только в серверном `console.error`.
+- `tests/unit/components/visit-analytics-block.test.tsx` покрывает отказ `getVisitAnalytics()` и проверяет, что технический текст ошибки не попадает в DOM.
+- `tests/unit/russian-first-admin-copy.test.ts` теперь включает `components/admin/visit-analytics-block.tsx` и блокирует возврат прямого `loadError = error instanceof Error ? error.message`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/visit-analytics-block.test.tsx tests/unit/russian-first-admin-copy.test.ts` — 2/2 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 736/736 Vitest tests, production build.
+
+## 2026-06-03 — Push subscribe silent reason переведен на русский
+
+**Что сделано:**
+
+- `app/api/v1/push/subscribe/route.ts` сохраняет silent `200` behavior для фоновых PWA subscribe/unsubscribe попыток без входа, но больше не возвращает `reason: "unauthenticated"`.
+- POST и DELETE теперь возвращают `{ success: false, reason: "Требуется вход" }` без rate-limit/storage side effects.
+- `tests/unit/push-subscribe-api.test.ts` покрывает оба unauthenticated background paths.
+- `tests/unit/russian-first-runtime-copy.test.ts` расширен на push subscribe route и запрещает возврат `reason: "unauthenticated"`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/push-subscribe-api.test.ts tests/unit/russian-first-runtime-copy.test.ts` — 7/7 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 735/735 Vitest tests, production build.
+
+## 2026-06-03 — GraphQL not_implemented copy очищен от runtime/endpoints терминологии
+
+**Что сделано:**
+
+- `app/api/v1/graphql/route.ts` теперь возвращает русское `501 not_implemented` сообщение без англоязычной формулировки `GraphQL runtime` / `REST endpoints MVP`.
+- `tests/unit/graphql-route.test.ts` обновлен под новое сообщение.
+- `tests/unit/russian-first-runtime-copy.test.ts` дополнительно запрещает возврат `GraphQL runtime` и `REST endpoints MVP` в GraphQL route/resolvers.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/graphql-route.test.ts tests/unit/russian-first-runtime-copy.test.ts` — 2/2 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 733/733 Vitest tests, production build.
+
+## 2026-06-03 — WorkspacePage очищен от служебной MVP/scaffold-копии
+
+**Что сделано:**
+
+- `components/lms/workspace-page.tsx` больше не показывает пользователю бейдж `MVP`.
+- Видимый текст `production scaffold`, `REST-контракты`, `server modules`, `React Query` и описание прямого доступа UI к базе заменены на нейтральное русское пустое состояние.
+- `tests/unit/russian-first-admin-copy.test.ts` расширен на `components/lms/workspace-page.tsx` и запрещает возврат выбранной служебной/англоязычной copy.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/russian-first-admin-copy.test.ts` — 1/1 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 733/733 Vitest tests, production build.
+
+## 2026-06-03 — Media access audit reasons переведены на русский
+
+**Что сделано:**
+
+- `app/api/v1/lessons/[lessonId]/video-playback/route.ts` больше не пишет английские причины в audit metadata для отсутствующего урока, отсутствующего активного зачисления и последовательной блокировки.
+- `app/api/v1/lessons/[lessonId]/media/[mediaId]/signed-url/route.ts` переведен на русские причины audit/security metadata для отсутствующего урока, отсутствующего зачисления, sequential lock, guessed foreign media ID и повторных запросов signed URL.
+- `tests/unit/security-privacy.test.ts` теперь проверяет русские `metadata.reason` для no-enrollment video, sequential lock и guessed media ID.
+- `tests/unit/russian-first-runtime-copy.test.ts` расширен на оба media routes и запрещает возврат старых английских audit reasons.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/security-privacy.test.ts tests/unit/russian-first-runtime-copy.test.ts` — 17/17 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 733/733 Vitest tests, production build.
+
+## 2026-06-03 — GraphQL scaffold переведен на Russian-first runtime copy
+
+**Что сделано:**
+
+- `app/api/v1/graphql/route.ts` больше не возвращает английское scaffold-сообщение в `501 not_implemented`.
+- `server/graphql/resolvers.ts` очищен от англоязычных scaffold-ошибок для `me`, `courses`, `createCourse` и feature-flag guard.
+- Добавлен `tests/unit/graphql-route.test.ts`, фиксирующий русское structured-сообщение заглушки GraphQL endpoint.
+- `tests/unit/russian-first-runtime-copy.test.ts` расширен на GraphQL route/resolvers и запрещает возврат старых scaffold-строк.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/graphql-route.test.ts tests/unit/russian-first-runtime-copy.test.ts` — 2/2 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 733/733 Vitest tests, production build.
+
+## 2026-06-03 — Admin enrollments page убрал raw Unauthorized throw
+
+**Что сделано:**
+
+- В `app/admin/enrollments/page.tsx` удален повторный `getCurrentUser()` после `requireRolePage(["admin"])`.
+- Страница теперь использует пользователя, которого уже возвращает `requireRolePage()`, а недостижимый `throw new Error("Unauthorized")` удален.
+- `tests/unit/russian-first-runtime-copy.test.ts` расширен на `app/admin/enrollments/page.tsx` и запрещает возврат `Unauthorized`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/russian-first-runtime-copy.test.ts` — 1/1 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 732/732 Vitest tests, production build.
+
+## 2026-06-03 — Chat action access errors переведены на русский
+
+**Что сделано:**
+
+- В `server/actions/chat.ts` controlled access errors для student/receiver boundaries переведены с английского на русский:
+  - `Student id is required` → `ID слушателя обязателен`;
+  - `Students can only open their own chat` → `Слушатель может открыть только свой чат`;
+  - `Student is not assigned to this curator` → `Слушатель не закреплен за этим куратором`;
+  - `Receiver id is required` → `ID получателя обязателен`.
+- `tests/unit/actions-chat.test.ts` теперь проверяет русскую причину для незакрепленного student chat и отсутствие `receiverId` при отправке curator message.
+- `tests/unit/russian-first-runtime-copy.test.ts` расширен на `server/actions/chat.ts` и запрещает возврат этих английских controlled errors.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/actions-chat.test.ts tests/unit/russian-first-runtime-copy.test.ts` — 14/14 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 732/732 Vitest tests, production build.
+
+## 2026-06-03 — Readiness endpoints возвращают русский service_unavailable
+
+**Что сделано:**
+
+- `app/api/readyz/route.ts` и `app/api/v1/readyz/route.ts` больше не возвращают английское `Database is not reachable`.
+- Ошибка недоступной БД теперь возвращается как structured `503 service_unavailable` с сообщением `База данных недоступна`, без raw database details.
+- Добавлен `tests/unit/readyz-routes.test.ts`: покрыты success payloads обоих endpoints и failure payloads обоих endpoints с проверкой, что raw backend detail не попадает в JSON.
+- `tests/unit/russian-first-runtime-copy.test.ts` расширен на readiness routes и запрещает возврат `Database is not reachable`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/readyz-routes.test.ts tests/unit/russian-first-runtime-copy.test.ts tests/integration/health.test.ts` — 6/6 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 731/731 Vitest tests, production build.
+
+## 2026-06-03 — CSRF helper возвращает русские structured 403 причины
+
+**Что сделано:**
+
+- В `lib/http.ts` `verifyCsrf()` больше не возвращает английские сообщения `CSRF: missing origin header`, `CSRF: origin mismatch`, `CSRF: invalid origin`.
+- URL parsing отделен от origin/referer comparison: cross-origin mismatch теперь остается отдельной причиной `CSRF: источник запроса не совпадает`, а malformed source получает `CSRF: некорректный источник запроса`.
+- `tests/unit/security.test.ts` расширен проверкой конкретных русских CSRF reasons, включая malformed origin.
+- `tests/unit/russian-first-runtime-copy.test.ts` теперь покрывает `lib/http.ts` и запрещает возврат старых английских CSRF fallback strings.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/security.test.ts tests/unit/http.test.ts tests/unit/russian-first-runtime-copy.test.ts` — 28/28 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 727/727 Vitest tests, production build.
+
+## 2026-06-03 — SCORM manifest import очищен от английских fallback-сообщений
+
+**Что сделано:**
+
+- В `server/modules/scorm/manifest-parser.ts` ошибка отсутствующего `<manifest>` переведена на русский: `Некорректный манифест SCORM: отсутствует корневой элемент <manifest>`.
+- Default title для SCORM-пакета без metadata/title заменен с `SCORM Package` на `SCORM-пакет`.
+- В `server/modules/scorm/import.ts` parse error больше не пробрасывает произвольный raw parser message наружу: известная root-ошибка возвращается по-русски, прочие XML-сбои получают безопасный generic reason.
+- `tests/unit/scorm/manifest-parser.test.ts` расширен проверкой русского fallback title.
+- Добавлен `tests/unit/scorm-import-service.test.ts`, который фиксирует безопасный русский `422 bad_request` для невалидного manifest без загрузки файлов и создания `ScormPackage`.
+- `tests/unit/russian-first-runtime-copy.test.ts` теперь также покрывает SCORM parser и запрещает возврат `Invalid SCORM manifest` / `SCORM Package`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/scorm/manifest-parser.test.ts tests/unit/scorm-import-service.test.ts tests/unit/russian-first-runtime-copy.test.ts` — 5/5 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 726/726 Vitest tests, production build.
+
+## 2026-06-03 — Отключенные billing endpoints возвращают Russian-first 410
+
+**Что сделано:**
+
+- В `server/modules/billing/service.ts` вынесены единые русскоязычные сообщения для отключенного checkout и Stripe webhook.
+- `app/api/v1/payments/checkout/route.ts` и `app/api/v1/webhooks/stripe/route.ts` теперь возвращают те же Russian-first `410 Gone` payloads, не раскрывая англоязычную модель публичных платежей.
+- `tests/integration/stripe-webhook.test.ts` проверяет и сервисные `ApiError`, и JSON-ответы самих route handlers.
+- `tests/unit/russian-first-runtime-copy.test.ts` расширен на billing stubs и запрещает возврат `Payments are disabled` / `Stripe webhooks are disabled`.
+- `docs/api/openapi.yaml` синхронизирован с русскоязычным описанием отключенных payment endpoints.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/russian-first-runtime-copy.test.ts tests/integration/stripe-webhook.test.ts` — 4/4 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 724/724 Vitest tests, production build.
+
+## 2026-06-03 — Command palette search fallback переведён на русский
+
+**Что сделано:**
+
+- В `components/lms/command-palette.tsx` fallback-ошибка поиска заменена с `Search failed` на `Не удалось выполнить поиск`.
+- `tests/unit/russian-first-runtime-copy.test.ts` расширен: теперь guard также покрывает command palette и запрещает возврат `Search failed`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/russian-first-runtime-copy.test.ts` — 1/1 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 723/723 Vitest tests, production build.
+
+## 2026-06-03 — Curator assistant получил max-length hardening
+
+**Что сделано:**
+
+- В `server/actions/assistant.ts` для `getQuestionSuggestionsAction()` добавлен верхний лимит `questionText` в 2000 символов.
+- Role gate по-прежнему выполняется первым, затем Zod-валидация отклоняет слишком длинный текст до вызова `getAnswerSuggestions()` и PostgreSQL FTS/glossary поиска.
+- `tests/unit/actions-assistant.test.ts` расширен проверкой oversized input: сервис подсказок не вызывается, stderr не шумит, наружу возвращается контролируемый русский `bad_request`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/actions-assistant.test.ts` — 5/5 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 723/723 Vitest tests, production build.
+
+## 2026-06-03 — Report preview показывает лимитированную выборку явно
+
+**Что сделано:**
+
+- В `server/modules/reports/service.ts` preview-контракт дополнен полями `isTruncated` и `rowLimit`, чтобы UI мог отличать полный результат от результата, упершегося в `QUERY_LIMITS.reportRows`.
+- В `components/lms/report-designer.tsx` бейдж предпросмотра больше не всегда пишет `Всего строк`: при достижении cap он показывает `Показано строк: N из лимита M`.
+- Это закрывает аналитический UX drift, при котором `ReportDesigner` мог показывать ограниченную выборку как полный объём отчёта.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/reports-service.test.ts tests/unit/components/report-designer.test.tsx` — 16/16 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 722/722 Vitest tests, production build.
+
+## 2026-06-03 — Admin/instructor operational labels переведены на Russian-first copy
+
+**Что сделано:**
+
+- В `app/admin/settings/page.tsx`, `app/instructor/settings/page.tsx`, `app/instructor/attendance/client.tsx`, `components/admin/certificates-dashboard.tsx`, `components/admin/create-user-modal.tsx`, `components/admin/edit-user-dialog.tsx` и `components/admin/user-batch-importer.tsx` видимые английские labels заменены на русские: `Email`, `Feature Flags`, `Email & SMTP`, `SMTP Host`, `SMTP Port`, `Bypass progress requirements`.
+- Технические идентификаторы формы и env-настроек (`email`, `SMTP_HOST`, `SMTP_PORT`) не переименовывались, чтобы не ломать данные и actions; изменен только пользовательский текст.
+- Добавлен `tests/unit/russian-first-admin-copy.test.ts`: guard запрещает возврат выбранных английских labels в операционные admin/instructor экраны.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/russian-first-admin-copy.test.ts` — 1/1 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 720/720 Vitest tests, production build.
+
+## 2026-06-03 — Runtime fallback copy дополнительно очищен от английских ошибок
+
+**Что сделано:**
+
+- В `app/curator/popups/client.tsx`, `components/lms/lesson-discussion.tsx`, `components/lms/notifications-list.tsx`, `components/lms/deadline-alerts.tsx`, `app/instructor/deadlines/client.tsx` и `app/admin/cohorts/[cohortId]/deadline-manager.tsx` fallback-ошибки загрузки заменены с `Failed to fetch` / `Failed to load discussion` на русские сообщения.
+- В `lib/upload-with-compress.ts` fallback `Upload failed` заменен на `Не удалось загрузить файл`, чтобы chat upload flow не отдавал англоязычную ошибку при пустом `err.error`.
+- Добавлен `tests/unit/russian-first-runtime-copy.test.ts`: guard запрещает возврат типовых английских fallback-строк в runtime-файлах upload, popup, discussion, notification и deadline поверхностей.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/russian-first-runtime-copy.test.ts` — 1/1 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 719/719 Vitest tests, production build.
+
+## 2026-06-03 — Media upload и popup fallback errors переведены на Russian-first contract
+
+**Что сделано:**
+
+- В `lib/media-upload-policy.ts`, `app/api/v1/media/uploads/route.ts` и `app/api/v1/media/upload-fallback/route.ts` английские negative-path сообщения (`Unsupported file type`, `Unsupported storage key`, `File is too large`, `File is empty`, `Storage upload failed`) заменены на русские structured messages.
+- В `app/admin/popups/client.tsx` убраны английские fallback errors для загрузки, создания, переключения и удаления попапов.
+- В `components/lms/chat-panel.tsx` fallback upload error заменён на русское `Не удалось загрузить файл`.
+- `tests/unit/media-upload.test.ts` и `tests/unit/media-upload-routes.test.ts` расширены проверками русских schema/API ошибок для недопустимого типа файла, ключа хранилища, пустого файла, превышения размера и сбоя fallback storage upload.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/media-upload.test.ts tests/unit/media-upload-routes.test.ts` — 25/25 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 718/718 Vitest tests, production build.
+
+## 2026-06-03 — Curator assistant fail-closed hardening
+
+**Что сделано:**
+
+- В `server/actions/assistant.ts` подсказки куратора теперь сначала проходят `requireRole(["curator", "super_curator", "admin"])`, а уже затем Zod-валидацию текста и поиск по глоссарию.
+- Controlled `ApiError` больше не логируется в stderr: forbidden/bad_request возвращаются как структурированные ошибки без шума, а неожиданные сбои заворачиваются в безопасное русское сообщение `Ошибка при получении подсказок`.
+- Добавлен `tests/unit/actions-assistant.test.ts`: проверяет role gate до поиска, validation no-service-call, успешный возврат подсказок и отсутствие raw backend details в ошибке действия.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/actions-assistant.test.ts` — 4/4 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 714/714 Vitest tests, production build.
+
+## 2026-06-03 — ReportDesigner скрыт для ролей без доступных отчётов
+
+**Что сделано:**
+
+- В `components/lms/report-designer.tsx` добавлен fail-closed UI guard: если `userRoles` не дают ни одного разрешенного типа отчёта, компонент не показывает кнопку настройки и не формирует fallback download URL.
+- Это закрывает UX/security drift, при котором ошибочно смонтированный `ReportDesigner` мог предлагать запрещенное действие роли без report-доступа; серверный RBAC всё равно оставался защитой, но UI теперь не вводит пользователя в заблуждение.
+- `tests/unit/components/report-designer.test.tsx` расширен проверкой для `student`: компонент должен рендерить пустой DOM вместо controls.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/report-designer.test.tsx` — 3/3 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 710/710 Vitest tests, production build.
+
+## 2026-06-03 — Async report jobs сохраняют выбранные поля экспорта
+
+**Что сделано:**
+
+- В `app/api/v1/reports/job/route.ts` async job API теперь принимает безопасный список `fields` для CSV/XLSX/PDF отчётов и передает его в outbox payload только после Zod-валидации имен колонок.
+- В `server/modules/reports/processor.ts` обработчик `report.generate` передает `fields` в `generateReportDownload()` и сохраняет download URL с тем же набором колонок, чтобы асинхронный экспорт не отличался от интерактивного `ReportDesigner`.
+- В `app/api/v1/reports/job/status/route.ts` safe-download sanitizer теперь допускает только внутренний `/api/v1/reports` URL с `type`, `format` и опциональным безопасным `fields`, отбрасывая внешние, лишние или небезопасные параметры.
+- Добавлены regression-тесты для queue API, processor и status API: выбранные поля сохраняются, небезопасные имена колонок не ставятся в очередь и не возвращаются клиенту в download URL.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/reports-job-api.test.ts tests/unit/reports-processor.test.ts tests/unit/reports-job-status-api.test.ts` — 18/18 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 709/709 Vitest tests, production build.
+
+## 2026-06-03 — Report download cache учитывает выбранные поля экспорта
+
+**Что сделано:**
+
+- В `server/modules/reports/service.ts` cache key для `generateReportDownload()` теперь включает `fields`, поэтому кастомные экспорты из `ReportDesigner` не переиспользуют CSV/XLSX/PDF, сгенерированные для другого набора колонок.
+- Это закрывает риск, при котором один запрос мог закэшировать отчёт без нужных полей, а следующий запрос с `status`/`revokedAt` или другими колонками получал старый cached content.
+- `tests/unit/reports-service.test.ts` добавил regression-тест: два progress CSV с разными `fields` должны генерироваться отдельно и возвращать разный контент.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/reports-service.test.ts` — 11/11 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 704/704 Vitest tests, production build.
+
+## 2026-06-03 — Report API negative-path ошибки переведены на русский
+
+**Что сделано:**
+
+- В `server/modules/reports/service.ts` ошибки отсутствующего и неизвестного типа отчёта больше не возвращают `Report type is required` / `Unknown report type`; контракт теперь отдаёт русские `ApiError`: `Не указан тип отчёта` и `Неизвестный тип отчёта`.
+- Fallback reason при сбое XLSX/PDF генерации также русифицирован: вместо английского `generation failed` пользователь получает безопасное русское объяснение о выдаче CSV.
+- `tests/unit/reports-service.test.ts` расширен negative-path проверкой русских structured errors для missing/unknown report type.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/reports-service.test.ts` — 10/10 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 703/703 Vitest tests, production build.
+
+## 2026-06-03 — DownloadReports переведён на Russian-first display metadata
+
+**Что сделано:**
+
+- В `server/modules/reports/service.ts` русифицированы owner-labels для `REPORT_DEFINITIONS` и `getDisplayReportsForRole()`: роли и владельцы отчётов больше не выводятся как `Admin`, `Instructor`, `Customer observer` и т.п.
+- В `components/lms/download-reports.tsx` видимая подпись `Scope:` заменена на `Область:`.
+- Добавлены regression-тесты: `tests/unit/reports-service.test.ts` проверяет русские owner/scope для customer observer, `tests/unit/components/download-reports.test.tsx` проверяет русскую подпись в UI и корректный download href.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/reports-service.test.ts tests/unit/components/download-reports.test.tsx` — 10/10 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 702/702 Vitest tests, production build.
+
+## 2026-06-03 — ReportDesigner синхронизирован с revoked-статусом сертификатов
+
+**Что сделано:**
+
+- В `components/lms/report-designer.tsx` отчёт `certificates` теперь по умолчанию выбирает колонки `status` и `revokedAt` вместе с номером, слушателем, email, курсом и датой выдачи.
+- Это закрывает drift между серверными CSV/XLSX/PDF-экспортами и клиентским конструктором отчётов: пользователь больше не получает стандартный сертификатный экспорт без признака отзыва.
+- Добавлен `tests/unit/components/report-designer.test.tsx`: проверяет default-поля сертификатного отчёта и fallback для `customer_observer`, если ему передан запрещённый тип отчёта `assignments`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/report-designer.test.tsx` — 2/2 passed.
+- `npm run typecheck` — passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 700/700 Vitest tests, production build.
+
 ## 2026-06-02 — CSP fix: report-uri + хэш заблокированного inline-скрипта на /student/certificates
 
 **Что сделано:**

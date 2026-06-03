@@ -131,8 +131,10 @@ describe("media upload routes", () => {
       "http://localhost/api/v1/media/upload-fallback?key=avatars/1710000000000-abcdef12.png&contentType=image/png",
       { method: "PUT", body: "file-content" },
     ));
+    const data = await response.json();
 
     expect(response.status).toBe(422);
+    expect(data.error.message).toBe("Некорректные данные запроса");
     expect(mockRequireUser).not.toHaveBeenCalled();
     expect(mockUploadFileToSupabase).not.toHaveBeenCalled();
   });
@@ -146,8 +148,35 @@ describe("media upload routes", () => {
         headers: { "content-length": String(UPLOAD.MAX_FILE_SIZE_BYTES + 1) },
       },
     ));
+    const data = await response.json();
 
     expect(response.status).toBe(413);
+    expect(data.error.message).toBe("Файл слишком большой");
     expect(mockUploadFileToSupabase).not.toHaveBeenCalled();
+  });
+
+  it("rejects empty fallback uploads with a Russian error", async () => {
+    const response = await uploadFallback(new Request(
+      "http://localhost/api/v1/media/upload-fallback?key=covers/1710000000000-abcdef12.png&contentType=image/png",
+      { method: "PUT", body: "" },
+    ));
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error.message).toBe("Файл пустой");
+    expect(mockUploadFileToSupabase).not.toHaveBeenCalled();
+  });
+
+  it("returns a Russian service error when fallback storage upload fails", async () => {
+    mockUploadFileToSupabase.mockResolvedValueOnce(null);
+
+    const response = await uploadFallback(new Request(
+      "http://localhost/api/v1/media/upload-fallback?key=covers/1710000000000-abcdef12.png&contentType=image/png",
+      { method: "PUT", body: "file-content", headers: { "content-length": "12" } },
+    ));
+    const data = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(data.error.message).toBe("Не удалось загрузить файл в хранилище");
   });
 });

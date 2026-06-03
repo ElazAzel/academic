@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { readApiErrorMessage } from "@/lib/api-client";
 import { uploadMedia } from "@/lib/upload-with-compress";
+import { getSafeAssignmentUploadError } from "@/components/lms/assignment-upload-errors";
 import { toast } from "sonner";
 import { StatusBadge } from "@/components/lms/status-badge";
 import type { BadgeStatus } from "@/components/lms/status-badge";
@@ -33,7 +34,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
       setFileName(result.fileName);
       toast.success("Файл загружен");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка сети при загрузке файла");
+      toast.error(getSafeAssignmentUploadError(err));
     } finally {
       setUploading(false);
     }
@@ -120,6 +121,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
               <div
                 role="button"
                 tabIndex={0}
+                aria-label="Загрузить файл к заданию"
                 className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/30 p-6 transition-colors hover:border-primary/30 hover:bg-primary/5"
                 onClick={() => fileInputRef.current?.click()}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInputRef.current?.click(); } }}
@@ -134,6 +136,8 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
                     <File className="h-5 w-5 text-primary" />
                     <span className="text-sm font-medium">{fileName ?? "Файл прикреплён"}</span>
                     <button
+                      type="button"
+                      aria-label="Удалить файл"
                       onClick={(e) => { e.stopPropagation(); removeFile(); }}
                       className="ml-2 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                     >

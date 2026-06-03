@@ -80,7 +80,40 @@ describe("processReportJobs", () => {
     expect(mockMarkFailed).not.toHaveBeenCalled();
   });
 
+  it("preserves selected fields in generated report jobs", async () => {
+    mockDequeuePendingEvents.mockResolvedValue([
+      {
+        id: "event-1",
+        eventType: "report.generate",
+        payload: { reportType: "progress", format: "csv", userId: "admin-1", fields: ["studentName", "email"] },
+      },
+    ]);
+
+    const result = await processReportJobs();
+
+    expect(result).toBe(1);
+    expect(mockGenerateReportDownload).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "progress",
+        format: "csv",
+        fields: ["studentName", "email"],
+        user: expect.objectContaining({ id: "admin-1" }),
+      }),
+    );
+    expect(mockOutboxUpdate).toHaveBeenCalledWith({
+      where: { id: "event-1" },
+      data: expect.objectContaining({
+        status: "sent",
+        payload: expect.objectContaining({
+          downloadUrl: "/api/v1/reports?type=progress&format=csv&fields=studentName%2Cemail",
+          fields: ["studentName", "email"],
+        }),
+      }),
+    });
+  });
+
   it("does not persist raw report generation errors into outbox state", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
     mockDequeuePendingEvents.mockResolvedValue([
       {
         id: "event-1",
@@ -95,5 +128,10 @@ describe("processReportJobs", () => {
     expect(result).toBe(1);
     expect(mockMarkFailed).toHaveBeenCalledWith("event-1", "Не удалось сформировать отчет");
     expect(JSON.stringify(mockMarkFailed.mock.calls)).not.toContain("secret-report-error");
+    expect(JSON.stringify(consoleError.mock.calls)).not.toContain("secret-report-error");
+    expect(consoleError).toHaveBeenCalledWith(
+      "[Reports Processor] Failed job",
+      expect.objectContaining({ eventId: "event-1", errorType: "Error" }),
+    );
   });
 });

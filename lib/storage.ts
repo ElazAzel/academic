@@ -11,6 +11,23 @@ let s3AvailabilityCache: { checkedAt: number; available: boolean } | null = null
 const BUCKET = "academy-media";
 const S3_AVAILABILITY_CACHE_MS = 30_000;
 
+function getSafeErrorType(error: unknown) {
+  return error instanceof Error ? error.name : typeof error;
+}
+
+export function getStorageErrorMetadata(error: unknown) {
+  if (error && typeof error === "object") {
+    const record = error as { name?: unknown; statusCode?: unknown; code?: unknown };
+    return {
+      errorType: typeof record.name === "string" ? record.name : getSafeErrorType(error),
+      statusCode: typeof record.statusCode === "number" || typeof record.statusCode === "string" ? record.statusCode : undefined,
+      code: typeof record.code === "string" ? record.code : undefined,
+    };
+  }
+
+  return { errorType: getSafeErrorType(error) };
+}
+
 export function getStorageClient() {
   if (supabaseStorageChecked) return supabaseStorageClient;
 
@@ -64,8 +81,7 @@ async function isS3BucketAvailable(client: S3Client): Promise<boolean> {
     s3AvailabilityCache = { checkedAt: now, available: true };
     return true;
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.warn(`[Storage] S3 bucket unavailable, using upload fallback: ${message}`);
+    console.warn("[Storage] S3 bucket unavailable, using upload fallback", getStorageErrorMetadata(error));
     s3AvailabilityCache = { checkedAt: now, available: false };
     return false;
   }
@@ -143,7 +159,7 @@ export async function uploadFileToSupabase(
     });
 
     if (error) {
-      console.error("[Storage] Supabase upload error:", error.message, error);
+      console.error("[Storage] Supabase upload error", getStorageErrorMetadata(error));
       return null;
     }
 
@@ -155,7 +171,7 @@ export async function uploadFileToSupabase(
     const supabaseUrl = env.STORAGE_SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || process.env.storage_SUPABASE_URL;
     return `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${data.path}`;
   } catch (err) {
-    console.error("[Storage] Supabase upload exception:", err);
+    console.error("[Storage] Supabase upload exception", getStorageErrorMetadata(err));
     return null;
   }
 }
@@ -174,14 +190,14 @@ export async function getSupabaseStorageSignedUrl(
 
     const { data, error } = await client.storage.from(bucket).createSignedUrl(path, expiresInSeconds);
     if (error) {
-      console.error("[Storage] Supabase signed URL error:", error.message);
+      console.error("[Storage] Supabase signed URL error", getStorageErrorMetadata(error));
       return null;
     }
     if (!data?.signedUrl) return null;
 
     return data.signedUrl;
   } catch (err) {
-    console.error("[Storage] Supabase signed URL exception:", err);
+    console.error("[Storage] Supabase signed URL exception", getStorageErrorMetadata(err));
     return null;
   }
 }

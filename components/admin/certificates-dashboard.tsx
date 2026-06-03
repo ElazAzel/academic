@@ -54,6 +54,39 @@ interface CertificatesDashboardProps {
   initialCertificates: Certificate[];
 }
 
+const ISSUE_CERTIFICATE_ERROR = "Не удалось выпустить сертификат";
+const REVOKE_CERTIFICATE_ERROR = "Не удалось отозвать сертификат";
+const INVALID_CERTIFICATE_RESPONSE_ERROR = "Некорректный ответ сервера сертификатов";
+
+class CertificatesDashboardUserError extends Error {}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readString(value: unknown, fallback: string) {
+  return typeof value === "string" && value.trim().length > 0 ? value : fallback;
+}
+
+function readApiEnvelopeData(payload: unknown): Record<string, unknown> {
+  const envelope = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
+  if (!isRecord(envelope)) {
+    throw new CertificatesDashboardUserError(INVALID_CERTIFICATE_RESPONSE_ERROR);
+  }
+  return envelope;
+}
+
+function readApiErrorMessage(payload: unknown, fallback: string) {
+  if (isRecord(payload) && isRecord(payload.error) && typeof payload.error.message === "string") {
+    return payload.error.message;
+  }
+  return fallback;
+}
+
+function getDashboardErrorMessage(error: unknown, fallback: string) {
+  return error instanceof CertificatesDashboardUserError ? error.message : fallback;
+}
+
 export function CertificatesDashboard({
   initialStudents,
   initialCourses,
@@ -121,22 +154,25 @@ export function CertificatesDashboard({
         })
       });
 
-      const data = await response.json();
+      const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.message || "Ошибка при выпуске сертификата");
+        throw new CertificatesDashboardUserError(readApiErrorMessage(payload, ISSUE_CERTIFICATE_ERROR));
       }
+
+      const data = readApiEnvelopeData(payload);
 
       // Add newly issued certificate to local state
       const studentObj = students.find(s => s.id === selectedStudent);
       const courseObj = courses.find(c => c.id === selectedCourse);
+      const certificateNumber = readString(data.number, "Сертификат");
 
       const newCert: Certificate = {
-        id: data.id || Math.random().toString(),
-        number: data.number,
-        verificationCode: data.verificationCode,
-        verificationUrl: data.verificationUrl,
-        issuedAt: new Date().toISOString(),
+        id: readString(data.id, Math.random().toString()),
+        number: certificateNumber,
+        verificationCode: readString(data.verificationCode, ""),
+        verificationUrl: readString(data.verificationUrl, ""),
+        issuedAt: readString(data.issuedAt, new Date().toISOString()),
         revokedAt: null,
         studentName: studentObj?.name || studentObj?.email || "Слушатель",
         studentEmail: studentObj?.email || "",
@@ -145,7 +181,7 @@ export function CertificatesDashboard({
       };
 
       setCertificates(prev => [newCert, ...prev]);
-      setSuccess(`Сертификат ${data.number} успешно выпущен для ${newCert.studentName}!`);
+      setSuccess(`Сертификат ${certificateNumber} успешно выпущен для ${newCert.studentName}!`);
       
       // Reset form
       setSelectedStudent("");
@@ -158,7 +194,7 @@ export function CertificatesDashboard({
       }, 2000);
 
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Не удалось выпустить сертификат";
+      const message = getDashboardErrorMessage(err, ISSUE_CERTIFICATE_ERROR);
       setError(message);
     } finally {
       setLoading(false);
@@ -180,8 +216,8 @@ export function CertificatesDashboard({
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Не удалось отозвать сертификат");
+        const payload = await response.json().catch(() => null);
+        throw new CertificatesDashboardUserError(readApiErrorMessage(payload, REVOKE_CERTIFICATE_ERROR));
       }
 
       // Update certificate status locally
@@ -192,7 +228,7 @@ export function CertificatesDashboard({
       setSuccess("Сертификат успешно отозван.");
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Не удалось отозвать сертификат";
+      const message = getDashboardErrorMessage(err, REVOKE_CERTIFICATE_ERROR);
       setError(message);
     } finally {
       setRevokingId(null);
@@ -530,7 +566,7 @@ export function CertificatesDashboard({
                 {/* Step 3: Force Bypass Checkbox */}
                 <div className="flex items-center justify-between p-4 bg-muted/20 rounded-lg border">
                   <div className="space-y-0.5">
-                    <Label className="text-sm font-medium">Bypass progress requirements</Label>
+                    <Label className="text-sm font-medium">Выдать без проверки прогресса</Label>
                     <p className="text-xs text-muted-foreground">
                       Выдать в обход проверок успеваемости, автоматически зачислив и завершив курс
                     </p>

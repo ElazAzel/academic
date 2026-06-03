@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { QuizQuestion, EnrollmentStatus } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 import { toJsonValue } from "@/lib/json";
 import { logAudit } from "@/server/modules/audit/service";
 import { markLessonProgress } from "@/server/modules/progress/service";
@@ -312,7 +312,7 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
   try {
     xpResult = await awardXp(userId, result.passed ? "quiz_pass" : "quiz_attempt");
   } catch (err) {
-    console.error("Failed to award quiz XP:", err);
+    console.error("[submitQuizAttempt] Failed to award XP", getSafeErrorMetadata(err));
   }
 
   try {
@@ -321,7 +321,7 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
       await checkAndAward(userId, "quiz_perfect");
     }
   } catch (err) {
-    console.error("Failed to check achievements for quiz:", err);
+    console.error("[submitQuizAttempt] Failed to check achievements", getSafeErrorMetadata(err));
   }
 
   if (result.passed && quiz.lessonId) {

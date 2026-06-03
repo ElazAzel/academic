@@ -47,8 +47,8 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[POST /api/v1/sessions/start]", {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+      error: "Не удалось начать сессию посещения",
+      errorType: error instanceof Error ? error.name : typeof error,
     });
     return errorResponse(error);
   }

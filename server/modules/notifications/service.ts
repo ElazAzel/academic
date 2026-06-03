@@ -1,6 +1,7 @@
 import { getPrisma } from "@/lib/prisma";
 import { toJsonValue } from "@/lib/json";
 import { env } from "@/lib/env";
+import { getSafeErrorMetadata } from "@/lib/http";
 import { getUserNotificationPreferences } from "@/server/modules/notifications/preferences";
 import { NOTIFICATION_CHANNELS } from "@/lib/constants";
 
@@ -216,7 +217,7 @@ export async function createNotificationInternal(input: {
       try {
         await sendEmail(user.email, rendered.title, rendered.body);
       } catch (error) {
-        console.error(`Failed to send email notification to ${user.email}`, error);
+        console.error("[Notifications] Failed to send email notification", getSafeErrorMetadata(error));
       }
     }
   }
@@ -233,7 +234,7 @@ export async function createNotificationInternal(input: {
         tag: notification ? `${input.event}-${notification.id}` : `${input.event}-${Date.now()}`,
       });
     } catch (error) {
-      console.error("[Push] Failed to send push notification:", error);
+      console.error("[Notifications] Failed to send push notification", getSafeErrorMetadata(error));
     }
   }
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createCohortAction } from "@/server/actions/admin";
 import { toast } from "sonner";
+import { CREATE_COHORT_ERROR, getSafeCohortActionError, readCohortActionResultError } from "../cohort-form-errors";
 
 export function CreateCohortForm({ courses }: { courses: { id: string; title: string }[] }) {
   const router = useRouter();
@@ -16,13 +17,15 @@ export function CreateCohortForm({ courses }: { courses: { id: string; title: st
     try {
       const formData = new FormData(event.currentTarget);
       const result = await createCohortAction(formData);
-      if (result.success) {
-        toast.success("Поток создан");
-        router.push("/admin/cohorts");
-        router.refresh();
+      if (!result.success) {
+        toast.error(readCohortActionResultError(result, CREATE_COHORT_ERROR));
+        return;
       }
+      toast.success("Поток создан");
+      router.push("/admin/cohorts");
+      router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeCohortActionError(err, CREATE_COHORT_ERROR));
     } finally {
       setPending(false);
     }

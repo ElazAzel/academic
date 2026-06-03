@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
-import { ApiError, errorResponse } from "@/lib/http";
+import { ApiError, errorResponse, getSafeErrorMetadata } from "@/lib/http";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { generateReportPreview } from "@/server/modules/reports/service";
 
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ data: preview });
   } catch (err) {
     if (!(err instanceof ApiError)) {
-      console.error("Reports preview API error:", err);
+      console.error("[Reports Preview API] Error", getSafeErrorMetadata(err));
     }
     return errorResponse(err);
   }

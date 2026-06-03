@@ -84,7 +84,7 @@ export async function sendPushToSubscription(
 
     if (statusCode === 410 || statusCode === 404) {
       // Subscription expired or invalid — deactivate it
-      console.log(`[Push] Subscription expired (${statusCode}), deactivating: ${subscription.endpoint.slice(0, 60)}...`);
+      console.log("[Push] Subscription expired, deactivating", { statusCode });
       try {
         await prisma.pushSubscription.updateMany({
           where: { endpoint: subscription.endpoint },
@@ -96,8 +96,10 @@ export async function sendPushToSubscription(
       return false;
     }
 
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("[Push] Send failed:", message);
+    console.error("[Push] Send failed", {
+      statusCode,
+      errorType: error instanceof Error ? error.name : typeof error,
+    });
     return false;
   }
 }

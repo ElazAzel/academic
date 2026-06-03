@@ -99,7 +99,34 @@ describe("cron route — authorized", () => {
     expect(response.status).toBe(500);
     expect(body.error.code).toBe("internal_error");
     expect(body.error.message).not.toContain("database connection details");
-    expect(consoleSpy).toHaveBeenCalledWith("[Outbox Processor] Error:", expect.any(Error));
+    expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("database connection details");
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[Outbox Processor] Error",
+      expect.objectContaining({ errorType: "Error" }),
+    );
+    consoleSpy.mockRestore();
+  });
+
+  it("does not leak raw processor errors from the scheduled reports endpoint", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockProcessReportJobs.mockRejectedValueOnce(new Error("postgres://secret-scheduled-report"));
+
+    const response = await scheduledRoute.POST(
+      new Request("http://localhost/api/v1/reports/scheduled", {
+        method: "POST",
+        headers: { authorization: "Bearer this-is-a-32-plus-char-secret-for-cron-jobs!" },
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error.code).toBe("internal_error");
+    expect(JSON.stringify(body)).not.toContain("secret-scheduled-report");
+    expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("secret-scheduled-report");
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[Scheduled Reports] Error",
+      expect.objectContaining({ errorType: "Error" }),
+    );
     consoleSpy.mockRestore();
   });
 });

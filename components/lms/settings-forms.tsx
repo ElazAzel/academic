@@ -8,6 +8,28 @@ import { updateProfileSettingsAction, updatePasswordAction } from "@/server/acti
 import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
 
+const PROFILE_SETTINGS_ERROR_MESSAGE = "Не удалось обновить профиль";
+const PASSWORD_SETTINGS_ERROR_MESSAGE = "Не удалось обновить пароль";
+
+const SAFE_SETTINGS_ACTION_MESSAGES = new Set([
+  PROFILE_SETTINGS_ERROR_MESSAGE,
+  PASSWORD_SETTINGS_ERROR_MESSAGE,
+  "Текущий пароль обязателен",
+  "Пароль должен быть минимум 10 символов",
+  "Подтверждение пароля обязательно",
+  "Новые пароли не совпадают",
+  "Учетная запись не найдена",
+  "Неверный текущий пароль",
+]);
+
+function getSafeSettingsErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && SAFE_SETTINGS_ACTION_MESSAGES.has(error.message)) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
 export function ProfileSettingsForm({ user }: { user: { name: string | null; email: string; } }) {
   const [isPending, startTransition] = useTransition();
 
@@ -17,7 +39,7 @@ export function ProfileSettingsForm({ user }: { user: { name: string | null; ema
         await updateProfileSettingsAction(formData);
         toast.success("Профиль успешно обновлен");
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Ошибка при обновлении профиля");
+        toast.error(getSafeSettingsErrorMessage(err, PROFILE_SETTINGS_ERROR_MESSAGE));
       }
     });
   }
@@ -63,7 +85,7 @@ export function SecuritySettingsForm() {
         toast.success("Пароль успешно изменен");
         formRef.current?.reset();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Ошибка при изменении пароля");
+        toast.error(getSafeSettingsErrorMessage(err, PASSWORD_SETTINGS_ERROR_MESSAGE));
       }
     });
   }

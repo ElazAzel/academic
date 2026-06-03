@@ -256,6 +256,15 @@ describe("Platform Negative Security Boundaries", () => {
 
       expect(response.status).toBe(403);
       expect(data.error.message).toContain("Нет доступа к этому уроку");
+      expect(mockAuditLogCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: "security.forbidden_media_access",
+          metadata: expect.objectContaining({
+            lessonId: "lesson-1",
+            reason: "Нет активного зачисления",
+          }),
+        }),
+      });
     });
 
     it("enforces sequential lock when previous required lessons are not completed", async () => {
@@ -285,6 +294,15 @@ describe("Platform Negative Security Boundaries", () => {
 
       expect(response.status).toBe(403);
       expect(data.error.message).toContain("обязательные уроки");
+      expect(mockAuditLogCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: "security.locked_lesson_access_attempt",
+          metadata: expect.objectContaining({
+            courseId: "course-1",
+            reason: "Последовательная блокировка: предыдущие обязательные уроки не завершены",
+          }),
+        }),
+      });
     });
   });
 
@@ -369,6 +387,15 @@ describe("Platform Negative Security Boundaries", () => {
 
       expect(response.status).toBe(404);
       expect(data.error.code).toBe("not_found");
+      expect(mockAuditLogCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: "security.forbidden_media_access",
+          metadata: expect.objectContaining({
+            lessonId: "lesson-1",
+            reason: "Файл не относится к этому уроку",
+          }),
+        }),
+      });
     });
 
     it("does not fall back to a public media URL when managed storage signing fails", async () => {

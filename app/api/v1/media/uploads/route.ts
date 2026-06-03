@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const filename = input.filename;
     const contentType = input.contentType;
     if (!filename || !contentType) {
-      throw new ApiError("bad_request", "Upload filename and content type are required", 400);
+      throw new ApiError("bad_request", "Не указаны имя файла или тип содержимого", 400);
     }
 
     await requireUser(getUploadPermissionForPrefix(prefix));

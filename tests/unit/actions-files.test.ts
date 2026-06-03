@@ -119,6 +119,28 @@ describe("lesson media file actions", () => {
     expect(mockLogAudit).not.toHaveBeenCalled();
   });
 
+  it("does not expose raw upload persistence errors", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockLessonMediaCreate.mockRejectedValue(new Error("postgres://secret-media-upload"));
+
+    await expect(
+      uploadLessonMediaAction(
+        "lesson-1",
+        "file",
+        "https://storage.example/public/course-builder/1710000000000-abcdef12.pdf",
+        "guide.pdf",
+        "course-builder/1710000000000-abcdef12.pdf",
+      ),
+    ).rejects.toMatchObject({
+      code: "internal_error",
+      status: 500,
+      message: "Не удалось сохранить медиафайл урока",
+    });
+
+    expect(JSON.stringify(consoleError.mock.calls)).not.toContain("secret-media-upload");
+    expect(JSON.stringify(consoleError.mock.calls)).toContain("Error");
+  });
+
   it("deletes lesson media through instructor/admin roles", async () => {
     const result = await deleteLessonMediaAction("media-1");
 
@@ -149,5 +171,20 @@ describe("lesson media file actions", () => {
     expect(result).toMatchObject({ success: false });
     expect(mockLessonMediaDelete).not.toHaveBeenCalled();
     expect(mockLogAudit).not.toHaveBeenCalled();
+  });
+
+  it("does not expose raw delete persistence errors", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockLessonMediaDelete.mockRejectedValue(new Error("postgres://secret-media-delete"));
+
+    const result = await deleteLessonMediaAction("media-1");
+
+    expect(result).toEqual({
+      success: false,
+      error: "Произошла ошибка при удалении файла",
+    });
+    expect(JSON.stringify(result)).not.toContain("secret-media-delete");
+    expect(JSON.stringify(consoleError.mock.calls)).not.toContain("secret-media-delete");
+    expect(JSON.stringify(consoleError.mock.calls)).toContain("Error");
   });
 });

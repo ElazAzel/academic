@@ -91,7 +91,8 @@ describe("users export API", () => {
     expect(response.status).toBe(500);
     expect(body.error.code).toBe("internal_error");
     expect(body.error.message).not.toContain("secret-password");
-    expect(consoleSpy).toHaveBeenCalledWith("[Users Export] Error:", expect.any(Error));
+    expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("secret-password");
+    expect(consoleSpy).toHaveBeenCalledWith("[Users Export] Error", expect.objectContaining({ errorType: "Error" }));
     consoleSpy.mockRestore();
   });
 });

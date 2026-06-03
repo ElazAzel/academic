@@ -14,6 +14,7 @@ import { Plus, Trash2, Eye, EyeOff, Send, Users } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { ROLE_LABELS, type RoleKey } from "@/types/domain";
+import { getSafePopupActionError } from "@/components/lms/popup-client-errors";
 
 interface Popup {
   id: string;
@@ -58,7 +59,7 @@ export function AdminPopupManagerClient() {
     queryKey: ["admin-popups"],
     queryFn: async () => {
       const res = await fetch("/api/v1/popups");
-      if (!res.ok) throw new Error("Failed to fetch");
+      if (!res.ok) throw new Error("Не удалось загрузить попапы");
       const json = await res.json();
       return json.data ?? [];
     },
@@ -68,7 +69,7 @@ export function AdminPopupManagerClient() {
     queryKey: ["admin-cohorts"],
     queryFn: async () => {
       const res = await fetch("/api/v1/cohorts");
-      if (!res.ok) throw new Error("Failed to fetch");
+      if (!res.ok) throw new Error("Не удалось загрузить потоки");
       const json = await res.json();
       return json.data ?? [];
     },
@@ -92,7 +93,7 @@ export function AdminPopupManagerClient() {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error?.message || "Failed to create");
+        throw new Error(err.error?.message || "Не удалось создать попап");
       }
       return res.json();
     },
@@ -104,14 +105,14 @@ export function AdminPopupManagerClient() {
       toast.success("Попап создан и отправлен выбранным ролям");
     },
     onError: (error) => {
-      toast.error(`Ошибка: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`);
+      toast.error(getSafePopupActionError(error));
     },
   });
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id }: { id: string }) => {
       const res = await fetch(`/api/v1/popups/${id}/toggle`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to toggle");
+      if (!res.ok) throw new Error("Не удалось изменить статус попапа");
       return res.json();
     },
     onSuccess: () => {
@@ -126,7 +127,7 @@ export function AdminPopupManagerClient() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/v1/popups/${id}/toggle`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) throw new Error("Не удалось удалить попап");
       return res.json();
     },
     onSuccess: () => {
@@ -242,7 +243,17 @@ export function AdminPopupManagerClient() {
                     key={role}
                     variant={form.targetRoles.includes(role) ? "default" : "outline"}
                     className="cursor-pointer select-none"
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={form.targetRoles.includes(role)}
+                    aria-label={`${form.targetRoles.includes(role) ? "Убрать роль" : "Выбрать роль"} ${ROLE_LABELS[role]}`}
                     onClick={() => toggleRole(role)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        toggleRole(role);
+                      }
+                    }}
                   >
                     {ROLE_LABELS[role]}
                   </Badge>
@@ -274,7 +285,17 @@ export function AdminPopupManagerClient() {
                         key={cohort.id}
                         variant={form.targetCohortIds.includes(cohort.id) ? "default" : "outline"}
                         className="cursor-pointer select-none"
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={form.targetCohortIds.includes(cohort.id)}
+                        aria-label={`${form.targetCohortIds.includes(cohort.id) ? "Убрать поток" : "Выбрать поток"} ${cohort.name}`}
                         onClick={() => toggleCohort(cohort.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            toggleCohort(cohort.id);
+                          }
+                        }}
                       >
                         {cohort.name}
                         {cohort.courseTitle && (
@@ -300,6 +321,7 @@ export function AdminPopupManagerClient() {
             <div className="flex items-center gap-2">
               <Switch
                 checked={form.isActive}
+                aria-label="Активен сразу после создания"
                 onCheckedChange={(v) => setForm((p) => ({ ...p, isActive: v }))}
               />
               <Label>Активен сразу после создания</Label>
@@ -384,6 +406,7 @@ export function AdminPopupManagerClient() {
                         size="sm"
                         onClick={() => toggleMutation.mutate({ id: popup.id })}
                         title={popup.isActive ? "Деактивировать" : "Активировать"}
+                        aria-label={popup.isActive ? "Деактивировать попап" : "Активировать попап"}
                       >
                         {popup.isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
@@ -397,6 +420,7 @@ export function AdminPopupManagerClient() {
                         }}
                         className="text-destructive hover:text-destructive"
                         title="Удалить"
+                        aria-label="Удалить попап"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

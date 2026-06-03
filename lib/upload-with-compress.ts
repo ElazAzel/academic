@@ -148,7 +148,7 @@ export async function uploadChatFile(file: File): Promise<{
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error ?? "Upload failed");
+    throw new Error(err.error ?? "Не удалось загрузить файл");
   }
 
   const json = await res.json();

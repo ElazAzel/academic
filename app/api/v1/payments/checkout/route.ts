@@ -1,12 +1,7 @@
 import { ApiError, errorResponse } from "@/lib/http";
+import { BILLING_DISABLED_MESSAGE } from "@/server/modules/billing/service";
 
-/** Payments are disabled. The platform uses invite-based access. */
+/** Платежи отключены. Платформа использует доступ по инвайтам. */
 export async function POST() {
-  return errorResponse(
-    new ApiError(
-      "gone",
-      "Payments are disabled for the invite-only academy profile. Use invite links for access.",
-      410
-    )
-  );
+  return errorResponse(new ApiError("gone", BILLING_DISABLED_MESSAGE, 410));
 }

@@ -75,4 +75,22 @@ describe("popups diagnostic API scope", () => {
     expect(mockNotificationCount).not.toHaveBeenCalled();
     expect(mockEnrollmentCount).not.toHaveBeenCalled();
   });
+
+  it("does not log raw diagnostic query errors", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockUserFindUnique.mockRejectedValueOnce(new Error("postgres://secret-popup-diag"));
+
+    const response = await diagRoute.GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error.code).toBe("internal_error");
+    expect(JSON.stringify(body)).not.toContain("secret-popup-diag");
+    expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("secret-popup-diag");
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[popups/diag] Fatal error",
+      expect.objectContaining({ errorType: "Error" }),
+    );
+    consoleSpy.mockRestore();
+  });
 });

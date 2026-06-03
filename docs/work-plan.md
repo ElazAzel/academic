@@ -56,6 +56,51 @@ Definition of Done и правило остановки описаны в `docs/
 - Playwright E2E больше не использует `networkidle`; навигация переведена на `domcontentloaded` для совместимости с SSE.
 - Внешние release-задачи DPA, ротации Supabase-пароля и git purge остаются runbook-задачами WP6/Security.
 
+**Текущее изменение 2026-06-03:**
+- WP5 усилен: `ReportDesigner` теперь выбирает `status` и `revokedAt` для сертификатных экспортов по умолчанию.
+- WP4/WP5 усилены: `DownloadReports` и серверный display-config отчётов используют русские owner/scope labels без видимых `Admin`/`Instructor`/`Customer observer`/`Scope:`.
+- WP5 усилен: Report API negative-path ошибки missing/unknown report type и fallback reason генерации отчёта переведены на русский structured contract.
+- WP5 усилен: cache key для `generateReportDownload()` теперь включает `fields`, чтобы кастомные экспорты не получали stale cached content от другого набора колонок.
+- WP5/WP2 усилены: async report jobs теперь сохраняют выбранные `fields` в outbox payload, processor generation и sanitized status download URL; небезопасные имена колонок не ставятся в очередь и не возвращаются клиенту.
+- WP4/WP2 усилены: `ReportDesigner` теперь скрывается для ролей без разрешенных типов отчётов и не показывает fallback action для запрещенного report-доступа.
+- WP2/WP4 усилены: curator assistant server action проверяет роль до поиска подсказок, не логирует controlled `ApiError` и возвращает безопасную русскую ошибку при неожиданных сбоях.
+- WP4/WP2 усилены: media upload schema/routes, admin popup manager и chat upload fallback больше не отдают английские пользовательские ошибки; русские negative-path сообщения закреплены unit-тестами.
+- WP4/WP2 усилены: curator popups, lesson discussion, notifications, deadline alerts, instructor/admin deadline managers и upload-with-compress очищены от типовых английских runtime fallback errors; возврат строк `Failed to fetch`, `Failed to load discussion`, `Upload failed` и upload/popup fallback strings блокируется guard-тестом.
+- WP4 усилен: admin/instructor operational labels в настройках, посещаемости, выдаче сертификатов, создании/редактировании пользователей и bulk import переведены на Russian-first copy; возврат выбранных английских labels блокируется guard-тестом.
+- WP5/WP4 усилены: report preview contract теперь возвращает `isTruncated`/`rowLimit`, а `ReportDesigner` явно показывает лимитированную выборку вместо безусловного `Всего строк`.
+- WP2/WP4 усилены: curator assistant action получил max-length validation для `questionText`, отклоняя oversized input до FTS/glossary поиска.
+- WP4 усилен: command palette search fallback переведён на русский и включён в общий runtime-copy guard.
+- WP2/WP4 усилены: отключенные billing endpoints `/api/v1/payments/checkout` и `/api/v1/webhooks/stripe` возвращают Russian-first `410 Gone` payloads, покрыты сервисными/route tests и общим runtime-copy guard.
+- WP2/WP4 усилены: SCORM manifest parser/import больше не возвращает английские fallback-сообщения и не пробрасывает raw parser details; русский contract покрыт parser/import tests и общим runtime-copy guard.
+- WP2 усилен: `verifyCsrf()` возвращает русские structured `403` причины для missing/malformed/mismatched request source и больше не смешивает parsing failure с origin mismatch.
+- WP2/WP6 усилены: readiness endpoints `/api/readyz` и `/api/v1/readyz` возвращают русский structured `503 service_unavailable` без raw database details; success/failure payloads покрыты route tests.
+- WP2/WP4 усилены: chat action access errors для student/receiver boundaries переведены на русский и закреплены action/runtime-copy tests.
+- WP2/WP3 усилены: `/admin/enrollments` использует возвращенного `requireRolePage()` пользователя и больше не содержит raw `Unauthorized` throw после page guard.
+- WP2/WP4 усилены: GraphQL scaffold route/resolvers больше не возвращают англоязычные runtime/scaffold-сообщения; русский contract закреплен route/runtime-copy tests.
+- WP2/WP4 усилены: lesson media/video access audit reasons для no-enrollment, sequential lock, missing lesson, guessed media ID и repeated signed URL requests переведены на русский и закреплены security/privacy + runtime-copy tests.
+- WP4 усилен: shared `WorkspacePage` очищен от visible `MVP`, scaffold, REST/server modules/React Query copy и теперь показывает нейтральное русское пустое состояние.
+- WP4 усилен: GraphQL `501 not_implemented` copy очищен от смешанной `runtime`/`REST endpoints MVP` формулировки и закреплен route/runtime-copy tests.
+- WP2/WP4 усилены: push subscribe/unsubscribe silent unauthenticated paths возвращают русскую причину без rate-limit/storage side effects и закреплены push API/runtime-copy tests.
+- WP4/WP5 усилены: admin visit analytics error state больше не показывает raw `error.message` из server actions и использует стабильную русскую recovery-подсказку, закрепленную component/admin-copy tests.
+- WP4/WP5 усилены: certificate designer разделяет ожидаемые локальные ошибки upload/preview и неизвестные action/API exceptions, не показывая raw `error.message` в видимом состоянии ошибки.
+- WP4/WP5 усилены: CertificatesDashboard приведен к стандартному `{ data }`/`{ error }` API envelope и скрывает raw network/API exception text при ручной выдаче сертификатов.
+- WP4/WP5 усилены: ReportDesigner preview читает стандартный preview API envelope, валидирует форму payload и скрывает raw network exception text в панели предпросмотра.
+- WP2/WP4 усилены: пользовательские формы профиля/пароля и настройки уведомлений больше не выводят произвольный raw `Error.message` в toast; ожидаемые доменные ошибки пароля сохранены через whitelist, а network/runtime сбои заменяются безопасными русскими fallback-сообщениями.
+- WP2/WP4 усилены: `GlossaryEditor` теперь обрабатывает `{ success: false, error }` от glossary actions и скрывает raw action exceptions за безопасными русскими toast fallback-сообщениями.
+- WP2/WP4 усилены: admin cohort create/edit forms теперь обрабатывают `{ success: false, error }` и скрывают raw create/update action exceptions за безопасными русскими toast fallback-сообщениями.
+- WP2/WP4 усилены: super-curator cohort create/edit/archive dialog теперь обрабатывает `{ success: false, error }`, скрывает raw action exceptions и имеет `DialogDescription` для доступности.
+- WP2/WP4 усилены: admin user edit/delete dialog теперь обрабатывает `{ success: false, error }`, скрывает raw action exceptions и добавляет доступные подписи icon-only controls.
+- WP2/WP4 усилены: admin create user modal теперь обрабатывает `{ success: false, error }`, скрывает raw action exceptions за безопасной inline-ошибкой и добавляет доступную подпись кнопке закрытия.
+- WP2/WP4 усилены: admin enrollment forms теперь обрабатывают `{ success: false, error }`, скрывают raw enroll/delete action exceptions и добавляют доступную подпись icon-only кнопке удаления зачисления.
+- WP2/WP4 усилены: super-curator assignment forms теперь обрабатывают `{ success: false, error }`, скрывают raw add-student/add-curator/assign-curator action exceptions и получают доступные описания/подписи.
+- WP2/WP4 усилены: super-curator `RiskActions` теперь скрывает raw student-list/create/resolve action exceptions, обрабатывает failed results и убирает React warning по `selected` option.
+- WP2/WP4 усилены: student assignment upload теперь скрывает raw `uploadMedia()` exceptions, сохраняет whitelisted upload-domain errors и добавляет доступные подписи upload/remove controls.
+- WP2/WP4 усилены: admin/instructor deadline clients и admin/curator popup clients теперь скрывают raw action/network exceptions, сохраняют controlled доменные ошибки и добавляют доступные подписи/keyboard handling для date inputs, icon-only actions и кликабельных role/cohort/student элементов.
+- WP2/WP4 усилены: `LessonDiscussion` теперь читает стандартный `{ data }` API envelope, корректно показывает empty state и скрывает raw post-create/delete exceptions за безопасными русскими fallback-сообщениями.
+- WP2 усилен: `/api/v1/sessions/start` больше не пишет raw persistence `error.message`/stack в server console payload и покрыт no-leak route-тестом.
+- WP2/WP4 усилены: app/global/component error boundaries больше не показывают raw `error.message`, не логируют raw message/stack и используют спокойный recovery-focused UI без gradient blobs.
+- WP2 усилен: storage и Web Push logging больше не раскрывают raw provider errors, exception objects или push endpoint tokens; добавлены focused no-leak tests.
+
 ---
 
 ## Задача 1: Отключение самосброса пароля

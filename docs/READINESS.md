@@ -1,6 +1,6 @@
 # Release Readiness — AI Strategic Academy
 
-Дата актуализации: 2026-06-02
+Дата актуализации: 2026-06-03
 
 Этот документ — единая рабочая матрица готовности платформы. Он не заменяет подробные планы, а фиксирует текущую операционную правду: что уже доказано, что только реализовано в коде, и что блокирует production-ready статус.
 
@@ -8,7 +8,7 @@
 
 **Текущий итог:** `partial`
 
-Последний закрытый слой: остаточный `/student/reports/loading.tsx` удалён, а navigation guard закрепляет отсутствие `/student/reports` в desktop-nav, bottom-nav и route tree; предыдущий certificate/report privacy proof сохраняет проверку PDF scope/revoked state и явный статус `Отозван` в экспортах.
+Последний закрытый слой: activity analytics action больше не раскрывает raw DB/query errors и сохраняет controlled validation/RBAC errors без stderr-noise. Предыдущий слой закрыл user batch importer safe error UX.
 
 Платформа имеет широкий реализованный функционал и зелёный repo-local gate по последним итерациям, но production-ready статус не закрыт до сценарного proof по ролям, negative-path security proof и operational drill в целевом окружении.
 
@@ -52,7 +52,7 @@
 | Banned patterns | `done` | Включён в `npm run verify` |
 | Zero-warning lint | `done` | Последние записи `updates.md` фиксируют 0 errors / 0 warnings |
 | TypeScript | `done` | Последние repo-local проверки зелёные |
-| Unit/integration tests | `done` | Последний `npm run verify`: 698/698 Vitest tests |
+| Unit/integration tests | `done` | Последний `npm run verify`: 816/816 Vitest tests |
 | Production build | `done` | Последний `npm run verify`: production build зелёный |
 | E2E smoke | `partial` | Smoke есть, но full six-role workflow proof ещё не закрыт |
 | Accessibility smoke | `partial` | Axe smoke есть; full WCAG/keyboard proof не закрыт |

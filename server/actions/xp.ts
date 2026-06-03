@@ -3,7 +3,7 @@
 import { EnrollmentStatus, type Prisma } from "@prisma/client";
 import { z } from "zod";
 import { getPrisma } from "@/lib/prisma";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 import type { CourseAccessActor } from "@/server/modules/courses/access";
 
 const XP_LESSON_COMPLETE = 50;
@@ -12,6 +12,15 @@ const XP_QUIZ_FAIL = 5;
 const XP_ASSIGNMENT_SUBMIT = 40;
 
 export type XpAction = "lesson_complete" | "quiz_pass" | "quiz_attempt" | "assignment_submit";
+
+function rethrowSafeXpError(error: unknown, label: string, message: string): never {
+  if (error instanceof ApiError) {
+    throw error;
+  }
+
+  console.error(label, getSafeErrorMetadata(error));
+  throw new ApiError("internal_error", message, 500);
+}
 
 /**
  * Начислить XP пользователю и вернуть текущий баланс.
@@ -39,8 +48,7 @@ export async function awardXp(userId: string, action: XpAction): Promise<{ xp: n
 
     return { xp: user.xp, earned };
   } catch (error) {
-    console.error("[awardXp]", error);
-    throw error;
+    rethrowSafeXpError(error, "[awardXp]", "Не удалось начислить XP");
   }
 }
 
@@ -77,8 +85,7 @@ export async function getUserXp(userId: string): Promise<number> {
     });
     return user?.xp ?? 0;
   } catch (error) {
-    console.error("[getUserXp]", error);
-    throw error;
+    rethrowSafeXpError(error, "[getUserXp]", "Не удалось получить XP пользователя");
   }
 }
 
@@ -87,15 +94,14 @@ export async function getUserXp(userId: string): Promise<number> {
  */
 export async function getLeaderboard(limit = 10) {
   try {
-    return getPrisma().user.findMany({
+    return await getPrisma().user.findMany({
       where: { xp: { gt: 0 } },
       orderBy: { xp: "desc" },
       take: limit,
       select: { id: true, name: true, xp: true },
     });
   } catch (error) {
-    console.error("[getLeaderboard]", error);
-    throw error;
+    rethrowSafeXpError(error, "[getLeaderboard]", "Не удалось получить рейтинг XP");
   }
 }
 
@@ -214,7 +220,7 @@ function leaderboardVisibilityWhere(actor: CourseAccessActor): Prisma.UserWhereI
 
 export async function getLeaderboardForActor(actor: CourseAccessActor, limit = 10) {
   try {
-    return getPrisma().user.findMany({
+    return await getPrisma().user.findMany({
       where: {
         xp: { gt: 0 },
         ...leaderboardVisibilityWhere(actor),
@@ -224,8 +230,7 @@ export async function getLeaderboardForActor(actor: CourseAccessActor, limit = 1
       select: { id: true, name: true, xp: true },
     });
   } catch (error) {
-    console.error("[getLeaderboardForActor]", error);
-    throw error;
+    rethrowSafeXpError(error, "[getLeaderboardForActor]", "Не удалось получить рейтинг XP");
   }
 }
 

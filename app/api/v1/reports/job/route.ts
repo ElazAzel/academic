@@ -9,6 +9,7 @@ import { z } from "zod";
 const createJobSchema = z.object({
   type: z.enum(["progress", "risk", "assignments", "certificates", "curator_workload"]),
   format: z.enum(["csv", "xlsx", "pdf"]),
+  fields: z.array(z.string().regex(/^[A-Za-z][A-Za-z0-9_]*$/)).min(1).max(30).optional(),
 });
 
 export async function POST(request: Request) {
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
       reportType: payload.type,
       format: payload.format,
       userId: user.id,
+      ...(payload.fields ? { fields: payload.fields } : {}),
     });
 
     return NextResponse.json({ jobId: event.id, status: "pending" }, { status: 201 });

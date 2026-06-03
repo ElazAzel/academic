@@ -4,6 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import { getVisitAnalytics, getTimingAnalytics, type VisitAnalytics, type TimingAnalytics } from "@/server/actions/visit-analytics";
 import { PerUserVisitTable } from "@/components/admin/per-user-visit-table";
 import type { DashboardMetric } from "@/types/domain";
+import { getSafeClientErrorMetadata } from "@/lib/client-error";
 
 const SLOT_LABELS: Record<string, string> = {
   "0-3": "Ночь (0–3)",
@@ -13,8 +14,10 @@ const SLOT_LABELS: Record<string, string> = {
   "12-15": "Полдень (12–15)",
   "15-18": "После обеда (15–18)",
   "18-21": "Вечер (18–21)",
-  "21-24": "Поздний вечер (21–24)",
+  "21-24": "Поздний вечер (21-24)",
 };
+
+const VISIT_ANALYTICS_SAFE_ERROR_MESSAGE = "Попробуйте обновить страницу или открыть раздел позже.";
 
 function formatDuration(sec: number): string {
   if (sec < 60) return `${sec} сек`;
@@ -72,8 +75,8 @@ export async function VisitAnalyticsBlock({
     visitData = vd;
     timingData = td;
   } catch (error) {
-    loadError = error instanceof Error ? error.message : "Неизвестная ошибка";
-    console.error("[VisitAnalyticsBlock] Failed to load analytics:", error);
+    loadError = VISIT_ANALYTICS_SAFE_ERROR_MESSAGE;
+    console.error("[VisitAnalyticsBlock] Failed to load analytics", getSafeClientErrorMetadata(error));
   }
 
   if (loadError || !visitData || !timingData) {

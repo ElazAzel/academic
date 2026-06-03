@@ -56,6 +56,45 @@ describe("reports job status API privacy", () => {
     });
   });
 
+  it("returns sanitized download URLs with selected fields", async () => {
+    mockOutboxEventFindUnique.mockResolvedValue({
+      id: "job-1",
+      status: "sent",
+      error: null,
+      payload: {
+        userId: "user-1",
+        downloadUrl: "/api/v1/reports?type=certificates&format=csv&fields=number,status,revokedAt",
+      },
+    });
+
+    const response = await GET(statusRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      status: "completed",
+      downloadUrl: "/api/v1/reports?type=certificates&format=csv&fields=number%2Cstatus%2CrevokedAt",
+    });
+  });
+
+  it("does not return download URLs with unsafe selected fields", async () => {
+    mockOutboxEventFindUnique.mockResolvedValue({
+      id: "job-1",
+      status: "sent",
+      error: null,
+      payload: {
+        userId: "user-1",
+        downloadUrl: "/api/v1/reports?type=progress&format=csv&fields=studentName,bad-field",
+      },
+    });
+
+    const response = await GET(statusRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ status: "completed" });
+  });
+
   it("denies polling another user's report job", async () => {
     mockRequireUser.mockResolvedValue({ id: "user-2", roles: ["curator"] });
 

@@ -88,12 +88,12 @@ async function getLessonContextForStudent(studentId: string, lessonId: string) {
 
 async function assertCanAccessStudentChat(user: { id: string; roles: RoleKey[] }, studentId: string) {
   if (!studentId) {
-    throw new ApiError("bad_request", "Student id is required", 400);
+    throw new ApiError("bad_request", "ID слушателя обязателен", 400);
   }
 
   if (user.roles.includes("student")) {
     if (studentId !== user.id) {
-      throw new ApiError("forbidden", "Students can only open their own chat", 403);
+      throw new ApiError("forbidden", "Слушатель может открыть только свой чат", 403);
     }
     return;
   }
@@ -108,7 +108,7 @@ async function assertCanAccessStudentChat(user: { id: string; roles: RoleKey[] }
   });
 
   if (!assignment) {
-    throw new ApiError("forbidden", "Student is not assigned to this curator", 403);
+    throw new ApiError("forbidden", "Слушатель не закреплен за этим куратором", 403);
   }
 }
 
@@ -314,7 +314,7 @@ export async function sendMessageAction(formData: FormData) {
       toUserId = assignment.curatorId;
     } else {
       if (!toUserId) {
-        throw new ApiError("bad_request", "Receiver id is required", 400);
+        throw new ApiError("bad_request", "ID получателя обязателен", 400);
       }
 
       if (roles.includes("curator") && !isElevatedChatRole(roles)) {

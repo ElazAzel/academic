@@ -137,12 +137,19 @@ describe("CSRF verification", () => {
     const request = new Request("http://localhost:3000/api/v1/test", {
       headers: { origin: "https://evil-site.com" }
     });
-    expect(() => verifyCsrf(request)).toThrow();
+    expect(() => verifyCsrf(request)).toThrow("CSRF: источник запроса не совпадает");
   });
 
   it("blocks requests without origin header", () => {
     const request = new Request("http://localhost:3000/api/v1/test");
-    expect(() => verifyCsrf(request)).toThrow();
+    expect(() => verifyCsrf(request)).toThrow("CSRF: отсутствует заголовок Origin или Referer");
+  });
+
+  it("blocks malformed origin headers with a Russian reason", () => {
+    const request = new Request("http://localhost:3000/api/v1/test", {
+      headers: { origin: "://bad-origin" }
+    });
+    expect(() => verifyCsrf(request)).toThrow("CSRF: некорректный источник запроса");
   });
 
   it("allows same-origin via referer", () => {

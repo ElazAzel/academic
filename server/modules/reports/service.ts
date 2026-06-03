@@ -1,7 +1,8 @@
 import { RoleKey } from "@prisma/client";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { getPrisma } from "@/lib/prisma";
+import { QUERY_LIMITS } from "@/lib/query-limits";
 import {
   fetchAssignmentData,
   fetchCertificateData,
@@ -86,7 +87,7 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     filenameBase: "progress_report",
     desc: "Прогресс слушателей по курсам",
     icon: "trending_up",
-    owner: "Academic operations",
+    owner: "Академические операции",
     decision: "Кто проходит курс, где есть отставание и какой поток требует внимания.",
     allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
   },
@@ -96,7 +97,7 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     filenameBase: "risk_report",
     desc: "Риски и проблемные зоны",
     icon: "warning",
-    owner: "Curator operations",
+    owner: "Кураторская служба",
     decision: "Какие риски нужно разобрать до потери темпа обучения.",
     allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
   },
@@ -106,7 +107,7 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     filenameBase: "assignments_report",
     desc: "Отправки, статусы проверки и баллы",
     icon: "checklist",
-    owner: "Review operations",
+    owner: "Проверка заданий",
     decision: "Какие работы ждут проверки, где нужна доработка и кто проверяет.",
     allowedRoles: ["admin", "instructor", "curator", "super_curator"],
   },
@@ -116,7 +117,7 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     filenameBase: "certificates_report",
     desc: "Выпущенные сертификаты",
     icon: "verified",
-    owner: "Certification",
+    owner: "Сертификация",
     decision: "Какие сертификаты выпущены в разрешенном scope.",
     allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
   },
@@ -126,7 +127,7 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     filenameBase: "curator_workload_report",
     desc: "Очереди, риски и закрепленные слушатели",
     icon: "group",
-    owner: "Super curator operations",
+    owner: "Операции супер-куратора",
     decision: "Где перегрузка кураторов и какие очереди нужно перераспределить.",
     allowedRoles: ["admin", "super_curator"],
   },
@@ -162,9 +163,9 @@ function unique(values: string[]) {
 }
 
 function normalizeReportType(type: string | null): ReportType {
-  if (!type) throw new ApiError("bad_request", "Report type is required", 400);
+  if (!type) throw new ApiError("bad_request", "Не указан тип отчёта", 400);
   const normalized = REPORT_TYPE_ALIASES[type];
-  if (!normalized) throw new ApiError("bad_request", "Unknown report type", 400);
+  if (!normalized) throw new ApiError("bad_request", "Неизвестный тип отчёта", 400);
   return normalized;
 }
 
@@ -283,6 +284,10 @@ function scopeCacheKey(access: ReportAccessContext) {
   ].join(":");
 }
 
+function fieldsCacheKey(fields?: string[]) {
+  return fields && fields.length > 0 ? fields.join(".") : "all-fields";
+}
+
 async function countRows(type: ReportType, scope: ReportDataScope): Promise<number> {
   const rows = await (async () => {
     switch (type) {
@@ -394,11 +399,14 @@ async function renderReport(type: ReportType, format: ReportFormat, scope: Repor
       }
     }
   } catch (error) {
-    console.warn(`[Reports] ${format} generation failed, falling back to CSV:`, error);
+    console.warn("[Reports] Report generation failed, falling back to CSV", {
+      format,
+      ...getSafeErrorMetadata(error),
+    });
     const fallback: RenderedReport = await renderReport(type, "csv", scope, fields);
     return {
       ...fallback,
-      fallbackReason: `${format} generation failed, CSV provided instead`,
+      fallbackReason: `${format.toUpperCase()} не удалось сформировать. Вместо него выдан CSV.`,
     };
   }
 
@@ -415,12 +423,12 @@ export function getAvailableReportsForRoles(roles: string[]) {
 // ── Display config for DownloadReports component ──────────────────────
 
 const REPORT_ROLE_META: Record<DomainRoleKey, { owner: string; scope: string }> = {
-  admin: { owner: "Admin", scope: "Вся академия" },
-  super_curator: { owner: "Super curator", scope: "Зона ответственности" },
-  curator: { owner: "Curator", scope: "Только закрепленные слушатели" },
-  instructor: { owner: "Instructor", scope: "Только курсы преподавателя" },
-  customer_observer: { owner: "Customer observer", scope: "Только разрешенные проекты" },
-  student: { owner: "Student", scope: "Только мои данные" },
+  admin: { owner: "Администратор", scope: "Вся академия" },
+  super_curator: { owner: "Супер-куратор", scope: "Зона ответственности" },
+  curator: { owner: "Куратор", scope: "Только закрепленные слушатели" },
+  instructor: { owner: "Преподаватель", scope: "Только курсы преподавателя" },
+  customer_observer: { owner: "Наблюдатель", scope: "Только разрешенные проекты" },
+  student: { owner: "Слушатель", scope: "Только мои данные" },
 };
 
 function getReportTypeAlias(role: DomainRoleKey, type: ReportType): string | undefined {
@@ -474,7 +482,7 @@ export async function generateReportDownload(input: {
   const access = await resolveReportScope(input.user);
   assertReportAllowed(definition, access.actorRole);
 
-  const cacheKey = `report:${type}:${input.format}:${input.user.id}:${scopeCacheKey(access)}`;
+  const cacheKey = `report:${type}:${input.format}:${input.user.id}:${scopeCacheKey(access)}:${fieldsCacheKey(input.fields)}`;
   const cached = await cacheGet<ReportDownload>(cacheKey);
   if (cached) return cached;
 
@@ -522,6 +530,8 @@ export async function generateReportPreview(input: {
     type,
     definition,
     totalRowsCount: rows.length,
+    isTruncated: rows.length >= QUERY_LIMITS.reportRows,
+    rowLimit: QUERY_LIMITS.reportRows,
     previewRows: rows.slice(0, 5),
   };
 }

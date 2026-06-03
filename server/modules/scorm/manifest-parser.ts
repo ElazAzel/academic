@@ -1,5 +1,9 @@
 import { XMLParser } from "fast-xml-parser";
 
+export const SCORM_MANIFEST_ROOT_ERROR =
+  "Некорректный манифест SCORM: отсутствует корневой элемент <manifest>";
+export const SCORM_DEFAULT_TITLE = "SCORM-пакет";
+
 export interface ScormResource {
   identifier: string;
   href?: string;
@@ -27,7 +31,7 @@ export function parseManifest(xmlContent: string): ParsedManifest {
   });
   const doc = parser.parse(xmlContent);
   const manifest = doc.manifest ?? doc.Manifest;
-  if (!manifest) throw new Error("Invalid SCORM manifest: no <manifest> root");
+  if (!manifest) throw new Error(SCORM_MANIFEST_ROOT_ERROR);
 
   const meta = manifest.metadata ?? manifest.Metadata ?? {};
   const schemaver = meta.schemaversion ?? meta.SchemaVersion ?? meta.schemaversion ?? "";
@@ -44,7 +48,7 @@ export function parseManifest(xmlContent: string): ParsedManifest {
     identifier: String(o["@_identifier"] ?? o["@_id"] ?? ""),
     title: String(o["@_title"] ?? o["title"] ?? ""),
   }));
-  const resolvedTitle = title || organizations[0]?.title || "SCORM Package";
+  const resolvedTitle = title || organizations[0]?.title || SCORM_DEFAULT_TITLE;
 
   const resRaw = manifest.resources ?? manifest.Resources ?? {};
   const resList = resRaw.resource ?? resRaw.Resource ?? [];

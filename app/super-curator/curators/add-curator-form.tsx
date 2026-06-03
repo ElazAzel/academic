@@ -4,10 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { addCuratorAction } from "@/server/actions/super-curator";
 import { toast } from "sonner";
+import {
+  ADD_CURATOR_ERROR,
+  getSafeSuperCuratorActionError,
+  readSuperCuratorActionResultError,
+} from "@/app/super-curator/action-errors";
 
 export function AddCuratorDialog() {
   const router = useRouter();
@@ -22,9 +27,11 @@ export function AddCuratorDialog() {
         toast.success("Куратор добавлен");
         setOpen(false);
         router.refresh();
+      } else {
+        toast.error(readSuperCuratorActionResultError(result, ADD_CURATOR_ERROR));
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка");
+      toast.error(getSafeSuperCuratorActionError(err, ADD_CURATOR_ERROR));
     } finally {
       setPending(false);
     }
@@ -41,10 +48,11 @@ export function AddCuratorDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Добавить куратора</DialogTitle>
+          <DialogDescription>Укажите почту и имя сотрудника, которому нужно выдать роль куратора.</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <label htmlFor="email" className="text-sm font-medium">Почта куратора</label>
             <Input id="email" name="email" type="email" required placeholder="curator@example.com" />
           </div>
           <div>

@@ -277,7 +277,7 @@ export function ChatPanel({
       const res = await fetch("/api/v1/chat/upload", { method: "POST", body });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Upload failed");
+        throw new Error(err.error ?? "Не удалось загрузить файл");
       }
       const { publicUrl, attachmentType } = await res.json();
       const formData = new FormData();

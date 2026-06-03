@@ -43,6 +43,29 @@ beforeEach(() => {
 });
 
 describe("push subscribe API", () => {
+  it("returns a Russian silent reason for unauthenticated background subscription attempts", async () => {
+    mockRequireUser.mockRejectedValue(new Error("no session"));
+
+    const response = await pushSubscribeRoute.POST(jsonRequest("POST", validSubscription));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ success: false, reason: "Требуется вход" });
+    expect(mockCheckRateLimit).not.toHaveBeenCalled();
+    expect(mockPushSubscriptionUpsert).not.toHaveBeenCalled();
+  });
+
+  it("returns a Russian silent reason for unauthenticated background unsubscribe attempts", async () => {
+    mockRequireUser.mockRejectedValue(new Error("no session"));
+
+    const response = await pushSubscribeRoute.DELETE(jsonRequest("DELETE", { endpoint: validSubscription.endpoint }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ success: false, reason: "Требуется вход" });
+    expect(mockPushSubscriptionUpdateMany).not.toHaveBeenCalled();
+  });
+
   it("returns a structured rate-limit error before storing a subscription", async () => {
     mockCheckRateLimit.mockResolvedValue({ allowed: false, remaining: 0, resetAt: Date.now() + 60000 });
 

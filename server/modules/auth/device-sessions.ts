@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { toJsonValue } from "@/lib/json";
+import { getSafeErrorMetadata } from "@/lib/http";
 import { createNotification } from "@/server/modules/notifications/service";
 
 export const MAX_ACTIVE_DEVICE_SESSIONS = 2;
@@ -122,7 +123,7 @@ export async function registerAuthDeviceSession(input: {
         },
       });
     } catch (error) {
-      console.error("[auth-device-sessions] Failed to create device limit notification", error);
+      console.error("[auth-device-sessions] Failed to create device limit notification", getSafeErrorMetadata(error));
     }
   }
 

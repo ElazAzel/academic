@@ -58,7 +58,7 @@ export default async function AdminSettingsPage() {
             <Input id="name" name="name" className="mt-1" defaultValue={user?.name ?? ""}/>
           </div>
           <div>
-            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <label htmlFor="email" className="text-sm font-medium">Эл. почта</label>
             <Input id="email" className="mt-1" defaultValue={user?.email} disabled/>
           </div>
          </div>
@@ -103,14 +103,14 @@ export default async function AdminSettingsPage() {
      ),
     },
 {
-      label: "Feature Flags",
+     label: "Флаги функций",
       content: (
        <form action={updateAppSettingsAction}>
         <Card className="rounded-lg">
          <CardHeader>
           <div className="flex items-center gap-2">
            <Icon name="flag" className="text-m3-primary" size={20} />
-           <CardTitle className="text-headline-sm">Feature Flags</CardTitle>
+           <CardTitle className="text-headline-sm">Флаги функций</CardTitle>
           </div>
           <CardDescription>Включение/отключение функций платформы.</CardDescription>
          </CardHeader>
@@ -144,13 +144,13 @@ export default async function AdminSettingsPage() {
          <CardHeader>
           <div className="flex items-center gap-2">
            <Icon name="mail" className="text-m3-primary" size={20} />
-           <CardTitle className="text-headline-sm">Email & SMTP</CardTitle>
+           <CardTitle className="text-headline-sm">Почта и SMTP</CardTitle>
           </div>
          </CardHeader>
          <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
            <div>
-            <label htmlFor="setting_SMTP_HOST" className="text-sm font-medium">SMTP Host</label>
+            <label htmlFor="setting_SMTP_HOST" className="text-sm font-medium">SMTP-хост</label>
             <Input
               id="setting_SMTP_HOST"
               name="setting_SMTP_HOST"
@@ -158,7 +158,7 @@ export default async function AdminSettingsPage() {
               defaultValue={appSettings.SMTP_HOST as string ?? "localhost"}/>
            </div>
            <div>
-            <label htmlFor="setting_SMTP_PORT" className="text-sm font-medium">SMTP Port</label>
+            <label htmlFor="setting_SMTP_PORT" className="text-sm font-medium">SMTP-порт</label>
             <Input
               id="setting_SMTP_PORT"
               name="setting_SMTP_PORT"

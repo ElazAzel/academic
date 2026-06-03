@@ -4,24 +4,22 @@ import { useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const ERROR_DESCRIPTION = "Мы уже получили сигнал об ошибке. Попробуйте обновить страницу.";
+
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error("[Error Boundary]", {
-      message: error.message,
+      message: "Ошибка клиентского рендера",
       digest: error.digest,
-      stack: error.stack,
+      errorType: error.name,
     });
   }, [error]);
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6">
-      {/* Decorative gradient blobs */}
-      <div className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-destructive/5 blur-3xl" aria-hidden />
-      <div className="pointer-events-none absolute -bottom-32 -right-32 h-[26rem] w-[26rem] rounded-full bg-m3-tertiary/5 blur-3xl" aria-hidden />
-
       <section className="relative z-10 mx-auto max-w-lg text-center">
         {/* Large error code */}
-        <p className="select-none text-[8rem] font-bold leading-none tracking-tighter text-destructive/10 sm:text-[10rem]"
+        <p className="select-none text-[8rem] font-bold leading-none text-destructive/10 sm:text-[10rem]"
            aria-hidden>
           500
         </p>
@@ -36,9 +34,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
         </h1>
 
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-          {error.message && error.message !== "Application error"
-            ? error.message
-            : "Мы уже получили сигнал об ошибке. Попробуйте обновить страницу."}
+          {ERROR_DESCRIPTION}
         </p>
 
         {error.digest && (
