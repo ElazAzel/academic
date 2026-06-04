@@ -14,6 +14,18 @@ export const DEFAULT_BRAND_ACCENT_CONTAINER_COLOR = "#00857a";
 export const DEFAULT_BRAND_BACKGROUND_COLOR = "#f8f9fc";
 export const DEFAULT_BRAND_SURFACE_COLOR = "#ffffff";
 
+export const DEFAULT_BRAND_FONT_SANS = "Inter";
+export const DEFAULT_BRAND_FONT_HEADING = "Inter";
+export const DEFAULT_BRAND_FONT_MONO = "JetBrains Mono";
+export const DEFAULT_BRAND_CUSTOM_CSS = "";
+
+export const DEFAULT_BRAND_DARK_PRIMARY_COLOR = "#b8caff";
+export const DEFAULT_BRAND_DARK_PRIMARY_CONTAINER_COLOR = "#2b4da0";
+export const DEFAULT_BRAND_DARK_ACCENT_COLOR = "#5eead4";
+export const DEFAULT_BRAND_DARK_ACCENT_CONTAINER_COLOR = "#134e4a";
+export const DEFAULT_BRAND_DARK_BACKGROUND_COLOR = "#121418";
+export const DEFAULT_BRAND_DARK_SURFACE_COLOR = "#08090b";
+
 export interface BrandingConfig {
   name: string;
   shortName: string;
@@ -29,6 +41,16 @@ export interface BrandingConfig {
   accentContainerColor: string;
   backgroundColor: string;
   surfaceColor: string;
+  fontSans: string;
+  fontHeading: string;
+  fontMono: string;
+  customCss: string;
+  darkPrimaryColor: string;
+  darkPrimaryContainerColor: string;
+  darkAccentColor: string;
+  darkAccentContainerColor: string;
+  darkBackgroundColor: string;
+  darkSurfaceColor: string;
 }
 
 function readPublicEnv(value: string | undefined, fallback: string) {
@@ -60,4 +82,23 @@ export const BRANDING: Readonly<BrandingConfig> = Object.freeze({
   ),
   backgroundColor: readPublicEnv(process.env.NEXT_PUBLIC_BRAND_BACKGROUND_COLOR, DEFAULT_BRAND_BACKGROUND_COLOR),
   surfaceColor: readPublicEnv(process.env.NEXT_PUBLIC_BRAND_SURFACE_COLOR, DEFAULT_BRAND_SURFACE_COLOR),
+  fontSans: readPublicEnv(process.env.NEXT_PUBLIC_BRAND_FONT_SANS, DEFAULT_BRAND_FONT_SANS),
+  fontHeading: readPublicEnv(process.env.NEXT_PUBLIC_BRAND_FONT_HEADING, DEFAULT_BRAND_FONT_HEADING),
+  fontMono: readPublicEnv(process.env.NEXT_PUBLIC_BRAND_FONT_MONO, DEFAULT_BRAND_FONT_MONO),
+  customCss: readPublicEnv(process.env.NEXT_PUBLIC_BRAND_CUSTOM_CSS, DEFAULT_BRAND_CUSTOM_CSS),
+  darkPrimaryColor: readPublicEnv(process.env.NEXT_PUBLIC_BRAND_DARK_PRIMARY_COLOR, DEFAULT_BRAND_DARK_PRIMARY_COLOR),
+  darkPrimaryContainerColor: readPublicEnv(
+    process.env.NEXT_PUBLIC_BRAND_DARK_PRIMARY_CONTAINER_COLOR,
+    DEFAULT_BRAND_DARK_PRIMARY_CONTAINER_COLOR,
+  ),
+  darkAccentColor: readPublicEnv(process.env.NEXT_PUBLIC_BRAND_DARK_ACCENT_COLOR, DEFAULT_BRAND_DARK_ACCENT_COLOR),
+  darkAccentContainerColor: readPublicEnv(
+    process.env.NEXT_PUBLIC_BRAND_DARK_ACCENT_CONTAINER_COLOR,
+    DEFAULT_BRAND_DARK_ACCENT_CONTAINER_COLOR,
+  ),
+  darkBackgroundColor: readPublicEnv(
+    process.env.NEXT_PUBLIC_BRAND_DARK_BACKGROUND_COLOR,
+    DEFAULT_BRAND_DARK_BACKGROUND_COLOR,
+  ),
+  darkSurfaceColor: readPublicEnv(process.env.NEXT_PUBLIC_BRAND_DARK_SURFACE_COLOR, DEFAULT_BRAND_DARK_SURFACE_COLOR),
 });

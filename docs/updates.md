@@ -2,6 +2,23 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-04 - Расширенная кастомизация White Label (шрифты, темная тема, пресеты, кастомный CSS)
+
+**Что сделано:**
+
+- В `/admin/settings` во вкладке `Бренд` добавлена мощная кастомизация шрифтов (Sans, Heading, Mono), раздельные цветовые палитры для светлой и темной тем, готовые темы-пресеты (в один клик) и инжектор пользовательского CSS.
+- `lib/branding.ts` и `server/modules/branding/service.ts` расширены для хранения, парсинга и валидации новых настроек. Добавлен хелпер `generateBrandingCss` для генерации переменных тем и кастомного CSS.
+- `server/actions/settings.ts` теперь валидирует новые параметры через Zod-схему (включая проверку шрифтов по белому списку разрешенных Google Fonts) и сохраняет их в `app_settings`.
+- Создан новый интерактивный клиентский компонент `components/admin/brand-settings-form.tsx` с real-time превью (Mini-Mockup), позволяющий видеть изменения интерфейса и переключать светлую/темную тему на лету.
+- `app/layout.tsx` динамически формирует ссылку на Google Fonts и инжектирует переменные темы и кастомный CSS в `<style>` тег в `<head>` с использованием CSP nonce.
+- В `app/manifest.ts` добавлено автоматическое определение MIME-типа иконки PWA по расширению файла.
+- Обновлены тесты `tests/unit/branding.test.ts` и `tests/unit/actions-settings.test.ts` для поддержки новых полей.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/branding.test.ts tests/unit/actions-settings.test.ts` - passed.
+- `npm run verify` - lint, typecheck, tests, build.
+
 ## 2026-06-04 - Admin-managed brand customization
 
 **Что сделано:**

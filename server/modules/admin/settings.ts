@@ -30,6 +30,16 @@ const DEFAULT_SETTINGS: AppSettings = {
   BRAND_ACCENT_CONTAINER_COLOR: BRANDING.accentContainerColor,
   BRAND_BACKGROUND_COLOR: BRANDING.backgroundColor,
   BRAND_SURFACE_COLOR: BRANDING.surfaceColor,
+  BRAND_FONT_SANS: BRANDING.fontSans,
+  BRAND_FONT_HEADING: BRANDING.fontHeading,
+  BRAND_FONT_MONO: BRANDING.fontMono,
+  BRAND_CUSTOM_CSS: BRANDING.customCss,
+  BRAND_DARK_PRIMARY_COLOR: BRANDING.darkPrimaryColor,
+  BRAND_DARK_PRIMARY_CONTAINER_COLOR: BRANDING.darkPrimaryContainerColor,
+  BRAND_DARK_ACCENT_COLOR: BRANDING.darkAccentColor,
+  BRAND_DARK_ACCENT_CONTAINER_COLOR: BRANDING.darkAccentContainerColor,
+  BRAND_DARK_BACKGROUND_COLOR: BRANDING.darkBackgroundColor,
+  BRAND_DARK_SURFACE_COLOR: BRANDING.darkSurfaceColor,
 };
 
 export async function getAppSetting<T>(key: string, defaultValue: T): Promise<T> {

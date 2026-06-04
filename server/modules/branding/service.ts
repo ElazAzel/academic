@@ -17,6 +17,16 @@ export const BRANDING_SETTING_KEYS = {
   accentContainerColor: "BRAND_ACCENT_CONTAINER_COLOR",
   backgroundColor: "BRAND_BACKGROUND_COLOR",
   surfaceColor: "BRAND_SURFACE_COLOR",
+  fontSans: "BRAND_FONT_SANS",
+  fontHeading: "BRAND_FONT_HEADING",
+  fontMono: "BRAND_FONT_MONO",
+  customCss: "BRAND_CUSTOM_CSS",
+  darkPrimaryColor: "BRAND_DARK_PRIMARY_COLOR",
+  darkPrimaryContainerColor: "BRAND_DARK_PRIMARY_CONTAINER_COLOR",
+  darkAccentColor: "BRAND_DARK_ACCENT_COLOR",
+  darkAccentContainerColor: "BRAND_DARK_ACCENT_CONTAINER_COLOR",
+  darkBackgroundColor: "BRAND_DARK_BACKGROUND_COLOR",
+  darkSurfaceColor: "BRAND_DARK_SURFACE_COLOR",
 } as const;
 
 type BrandingSettingName = keyof typeof BRANDING_SETTING_KEYS;
@@ -41,7 +51,7 @@ export function normalizeHexColor(value: string, fallback: string) {
   return normalized.toLowerCase();
 }
 
-function hexToHslToken(hex: string) {
+export function hexToHslToken(hex: string) {
   const normalized = normalizeHexColor(hex, BRANDING.primaryColor).slice(1);
   const r = Number.parseInt(normalized.slice(0, 2), 16) / 255;
   const g = Number.parseInt(normalized.slice(2, 4), 16) / 255;
@@ -96,6 +106,34 @@ export function resolveBrandingFromSettings(settings: AppSettings): BrandingConf
       BRANDING.backgroundColor,
     ),
     surfaceColor: normalizeHexColor(readStringSetting(settings, "surfaceColor", BRANDING.surfaceColor), BRANDING.surfaceColor),
+    fontSans: readStringSetting(settings, "fontSans", BRANDING.fontSans),
+    fontHeading: readStringSetting(settings, "fontHeading", BRANDING.fontHeading),
+    fontMono: readStringSetting(settings, "fontMono", BRANDING.fontMono),
+    customCss: readStringSetting(settings, "customCss", BRANDING.customCss),
+    darkPrimaryColor: normalizeHexColor(
+      readStringSetting(settings, "darkPrimaryColor", BRANDING.darkPrimaryColor),
+      BRANDING.darkPrimaryColor,
+    ),
+    darkPrimaryContainerColor: normalizeHexColor(
+      readStringSetting(settings, "darkPrimaryContainerColor", BRANDING.darkPrimaryContainerColor),
+      BRANDING.darkPrimaryContainerColor,
+    ),
+    darkAccentColor: normalizeHexColor(
+      readStringSetting(settings, "darkAccentColor", BRANDING.darkAccentColor),
+      BRANDING.darkAccentColor,
+    ),
+    darkAccentContainerColor: normalizeHexColor(
+      readStringSetting(settings, "darkAccentContainerColor", BRANDING.darkAccentContainerColor),
+      BRANDING.darkAccentContainerColor,
+    ),
+    darkBackgroundColor: normalizeHexColor(
+      readStringSetting(settings, "darkBackgroundColor", BRANDING.darkBackgroundColor),
+      BRANDING.darkBackgroundColor,
+    ),
+    darkSurfaceColor: normalizeHexColor(
+      readStringSetting(settings, "darkSurfaceColor", BRANDING.darkSurfaceColor),
+      BRANDING.darkSurfaceColor,
+    ),
   };
 }
 
@@ -128,6 +166,58 @@ export function createBrandingCssVariables(branding: BrandingConfig): BrandingCs
     "--m3-surface-container-lowest": branding.surfaceColor,
     "--m3-surface-container-low": `color-mix(in srgb, ${branding.surfaceColor} 92%, ${branding.primaryColor})`,
     "--m3-surface-container": `color-mix(in srgb, ${branding.surfaceColor} 88%, ${branding.primaryColor})`,
-    "--m3-surface-container-high": `color-mix(in srgb, ${branding.surfaceColor} 82%, ${branding.primaryColor})`,
+    "--m3-surface-container-high: animate": `color-mix(in srgb, ${branding.surfaceColor} 82%, ${branding.primaryColor})`,
   };
+}
+
+export function generateBrandingCss(branding: BrandingConfig): string {
+  const lightPrimaryHsl = hexToHslToken(branding.primaryColor);
+  const darkPrimaryHsl = hexToHslToken(branding.darkPrimaryColor);
+
+  return `
+    :root {
+      --font-inter: "${branding.fontSans}", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "${branding.fontMono}", ui-monospace, SFMono-Regular, monospace;
+      --font-heading: "${branding.fontHeading}", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --primary: ${lightPrimaryHsl};
+      --ring: ${lightPrimaryHsl};
+      --accent-foreground: ${lightPrimaryHsl};
+      --m3-primary: ${branding.primaryColor};
+      --m3-primary-container: ${branding.primaryContainerColor};
+      --m3-primary-fixed: color-mix(in srgb, ${branding.primaryColor} 14%, white);
+      --m3-primary-fixed-dim: color-mix(in srgb, ${branding.primaryColor} 26%, white);
+      --m3-tertiary: ${branding.accentColor};
+      --m3-tertiary-container: ${branding.accentContainerColor};
+      --academy-accent: ${branding.accentColor};
+      --academy-accent-container: color-mix(in srgb, ${branding.accentColor} 18%, white);
+      --m3-background: ${branding.backgroundColor};
+      --m3-surface: ${branding.backgroundColor};
+      --m3-surface-container-lowest: ${branding.surfaceColor};
+      --m3-surface-container-low: color-mix(in srgb, ${branding.surfaceColor} 92%, ${branding.primaryColor});
+      --m3-surface-container: color-mix(in srgb, ${branding.surfaceColor} 88%, ${branding.primaryColor});
+      --m3-surface-container-high: color-mix(in srgb, ${branding.surfaceColor} 82%, ${branding.primaryColor});
+    }
+
+    .dark {
+      --primary: ${darkPrimaryHsl};
+      --ring: ${darkPrimaryHsl};
+      --accent-foreground: ${darkPrimaryHsl};
+      --m3-primary: ${branding.darkPrimaryColor};
+      --m3-primary-container: ${branding.darkPrimaryContainerColor};
+      --m3-primary-fixed: color-mix(in srgb, ${branding.darkPrimaryColor} 14%, white);
+      --m3-primary-fixed-dim: color-mix(in srgb, ${branding.darkPrimaryColor} 26%, white);
+      --m3-tertiary: ${branding.darkAccentColor};
+      --m3-tertiary-container: ${branding.darkAccentContainerColor};
+      --academy-accent: ${branding.darkAccentColor};
+      --academy-accent-container: color-mix(in srgb, ${branding.darkAccentColor} 18%, white);
+      --m3-background: ${branding.darkBackgroundColor};
+      --m3-surface: ${branding.darkBackgroundColor};
+      --m3-surface-container-lowest: ${branding.darkSurfaceColor};
+      --m3-surface-container-low: color-mix(in srgb, ${branding.darkSurfaceColor} 92%, ${branding.darkPrimaryColor});
+      --m3-surface-container: color-mix(in srgb, ${branding.darkSurfaceColor} 88%, ${branding.darkPrimaryColor});
+      --m3-surface-container-high: color-mix(in srgb, ${branding.darkSurfaceColor} 82%, ${branding.darkPrimaryColor});
+    }
+
+    ${branding.customCss}
+  `;
 }

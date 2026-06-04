@@ -60,6 +60,31 @@ const logoUrlSchema = optionalBrandText(500).refine(
   "Логотип должен быть относительным адресом платформы или HTTPS-ссылкой"
 );
 
+const ALLOWED_FONTS = new Set([
+  "Inter",
+  "Outfit",
+  "Montserrat",
+  "Roboto",
+  "Rubik",
+  "Manrope",
+  "Playfair Display",
+  "Merriweather",
+  "Cormorant Garamond",
+  "JetBrains Mono",
+  "Fira Code",
+  "Roboto Mono",
+]);
+
+const fontName = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim() : ""),
+  z.string().refine((val) => ALLOWED_FONTS.has(val), "Недопустимый шрифт")
+);
+
+const customCssSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value : ""),
+  z.string().max(10000, "Превышен максимальный размер CSS-кода (10000 символов)")
+);
+
 const BrandingSettingsSchema = z.object({
   name: brandText(80, "Название бренда обязательно"),
   shortName: brandText(32, "Короткое название обязательно"),
@@ -78,6 +103,16 @@ const BrandingSettingsSchema = z.object({
   accentContainerColor: hexColor,
   backgroundColor: hexColor,
   surfaceColor: hexColor,
+  fontSans: fontName,
+  fontHeading: fontName,
+  fontMono: fontName,
+  customCss: customCssSchema,
+  darkPrimaryColor: hexColor,
+  darkPrimaryContainerColor: hexColor,
+  darkAccentColor: hexColor,
+  darkAccentContainerColor: hexColor,
+  darkBackgroundColor: hexColor,
+  darkSurfaceColor: hexColor,
 });
 
 function validationError(error: z.ZodError) {
@@ -278,6 +313,16 @@ export async function updateBrandingSettingsAction(formData: FormData) {
       accentContainerColor: formData.get("brand_accentContainerColor"),
       backgroundColor: formData.get("brand_backgroundColor"),
       surfaceColor: formData.get("brand_surfaceColor"),
+      fontSans: formData.get("brand_fontSans"),
+      fontHeading: formData.get("brand_fontHeading"),
+      fontMono: formData.get("brand_fontMono"),
+      customCss: formData.get("brand_customCss"),
+      darkPrimaryColor: formData.get("brand_darkPrimaryColor"),
+      darkPrimaryContainerColor: formData.get("brand_darkPrimaryContainerColor"),
+      darkAccentColor: formData.get("brand_darkAccentColor"),
+      darkAccentContainerColor: formData.get("brand_darkAccentContainerColor"),
+      darkBackgroundColor: formData.get("brand_darkBackgroundColor"),
+      darkSurfaceColor: formData.get("brand_darkSurfaceColor"),
     });
 
     if (!parsed.success) {
@@ -306,6 +351,25 @@ export async function updateBrandingSettingsAction(formData: FormData) {
       ),
       [BRANDING_SETTING_KEYS.backgroundColor]: normalizeHexColor(branding.backgroundColor, branding.backgroundColor),
       [BRANDING_SETTING_KEYS.surfaceColor]: normalizeHexColor(branding.surfaceColor, branding.surfaceColor),
+      [BRANDING_SETTING_KEYS.fontSans]: branding.fontSans,
+      [BRANDING_SETTING_KEYS.fontHeading]: branding.fontHeading,
+      [BRANDING_SETTING_KEYS.fontMono]: branding.fontMono,
+      [BRANDING_SETTING_KEYS.customCss]: branding.customCss,
+      [BRANDING_SETTING_KEYS.darkPrimaryColor]: normalizeHexColor(branding.darkPrimaryColor, branding.darkPrimaryColor),
+      [BRANDING_SETTING_KEYS.darkPrimaryContainerColor]: normalizeHexColor(
+        branding.darkPrimaryContainerColor,
+        branding.darkPrimaryContainerColor,
+      ),
+      [BRANDING_SETTING_KEYS.darkAccentColor]: normalizeHexColor(branding.darkAccentColor, branding.darkAccentColor),
+      [BRANDING_SETTING_KEYS.darkAccentContainerColor]: normalizeHexColor(
+        branding.darkAccentContainerColor,
+        branding.darkAccentContainerColor,
+      ),
+      [BRANDING_SETTING_KEYS.darkBackgroundColor]: normalizeHexColor(
+        branding.darkBackgroundColor,
+        branding.darkBackgroundColor,
+      ),
+      [BRANDING_SETTING_KEYS.darkSurfaceColor]: normalizeHexColor(branding.darkSurfaceColor, branding.darkSurfaceColor),
     });
 
     revalidatePath("/", "layout");

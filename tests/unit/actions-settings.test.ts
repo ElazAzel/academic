@@ -332,6 +332,16 @@ describe("updateBrandingSettingsAction", () => {
     fd.set("brand_accentContainerColor", "#115e59");
     fd.set("brand_backgroundColor", "#f8fafc");
     fd.set("brand_surfaceColor", "#ffffff");
+    fd.set("brand_fontSans", "Inter");
+    fd.set("brand_fontHeading", "Inter");
+    fd.set("brand_fontMono", "JetBrains Mono");
+    fd.set("brand_customCss", ".some-class { color: red; }");
+    fd.set("brand_darkPrimaryColor", "#b8caff");
+    fd.set("brand_darkPrimaryContainerColor", "#2b4da0");
+    fd.set("brand_darkAccentColor", "#5eead4");
+    fd.set("brand_darkAccentContainerColor", "#134e4a");
+    fd.set("brand_darkBackgroundColor", "#121418");
+    fd.set("brand_darkSurfaceColor", "#08090b");
     return fd;
   }
 
@@ -354,6 +364,16 @@ describe("updateBrandingSettingsAction", () => {
       BRAND_ACCENT_CONTAINER_COLOR: "#115e59",
       BRAND_BACKGROUND_COLOR: "#f8fafc",
       BRAND_SURFACE_COLOR: "#ffffff",
+      BRAND_FONT_SANS: "Inter",
+      BRAND_FONT_HEADING: "Inter",
+      BRAND_FONT_MONO: "JetBrains Mono",
+      BRAND_CUSTOM_CSS: ".some-class { color: red; }",
+      BRAND_DARK_PRIMARY_COLOR: "#b8caff",
+      BRAND_DARK_PRIMARY_CONTAINER_COLOR: "#2b4da0",
+      BRAND_DARK_ACCENT_COLOR: "#5eead4",
+      BRAND_DARK_ACCENT_CONTAINER_COLOR: "#134e4a",
+      BRAND_DARK_BACKGROUND_COLOR: "#121418",
+      BRAND_DARK_SURFACE_COLOR: "#08090b",
     });
     expect(mockRevalidatePath).toHaveBeenCalledWith("/", "layout");
     expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/settings", "layout");

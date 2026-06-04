@@ -65,6 +65,16 @@ describe("BRANDING", () => {
       accentContainerColor: "#00857a",
       backgroundColor: "#f8f9fc",
       surfaceColor: "#ffffff",
+      fontSans: "Inter",
+      fontHeading: "Inter",
+      fontMono: "JetBrains Mono",
+      customCss: "",
+      darkPrimaryColor: "#b8caff",
+      darkPrimaryContainerColor: "#2b4da0",
+      darkAccentColor: "#5eead4",
+      darkAccentContainerColor: "#134e4a",
+      darkBackgroundColor: "#121418",
+      darkSurfaceColor: "#08090b",
     });
   });
 
@@ -101,6 +111,16 @@ describe("BRANDING", () => {
       accentContainerColor: "#115e59",
       backgroundColor: "#f8fafc",
       surfaceColor: "#ffffff",
+      fontSans: "Inter",
+      fontHeading: "Inter",
+      fontMono: "JetBrains Mono",
+      customCss: "",
+      darkPrimaryColor: "#b8caff",
+      darkPrimaryContainerColor: "#2b4da0",
+      darkAccentColor: "#5eead4",
+      darkAccentContainerColor: "#134e4a",
+      darkBackgroundColor: "#121418",
+      darkSurfaceColor: "#08090b",
     });
   });
 

@@ -6,7 +6,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { PWARegister } from "@/components/lms/pwa-register";
 import { Heartbeat } from "@/components/lms/heartbeat";
-import { createBrandingCssVariables, getRuntimeBranding } from "@/server/modules/branding/service";
+import { createBrandingCssVariables, getRuntimeBranding, generateBrandingCss } from "@/server/modules/branding/service";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -64,14 +64,34 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // React автоматически применяет nonce ко всем <script> тегам при SSR.
   const nonce = (await headers()).get("x-nonce") ?? "";
   const branding = await getRuntimeBranding();
-  const brandStyle = createBrandingCssVariables(branding);
+  
+  const fontSansFamily = branding.fontSans;
+  const fontHeadingFamily = branding.fontHeading;
+  const fontMonoFamily = branding.fontMono;
+
+  const families = [];
+  families.push(`family=${encodeURIComponent(fontSansFamily)}:wght@300;400;500;600;700`);
+  if (fontHeadingFamily !== fontSansFamily) {
+    families.push(`family=${encodeURIComponent(fontHeadingFamily)}:wght@300;400;500;600;700`);
+  }
+  if (fontMonoFamily !== fontSansFamily && fontMonoFamily !== fontHeadingFamily) {
+    families.push(`family=${encodeURIComponent(fontMonoFamily)}:wght@400;500`);
+  }
+  const googleFontsUrl = `https://fonts.googleapis.com/css2?${families.join("&")}&display=swap`;
 
   return (
-    <html lang="ru" nonce={nonce} suppressHydrationWarning data-scroll-behavior="smooth" style={brandStyle}>
+    <html lang="ru" nonce={nonce} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
+        <link href={googleFontsUrl} rel="stylesheet" nonce={nonce} />
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..200&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..200&display=swap"
           rel="stylesheet"
+          nonce={nonce}
+        />
+        <style
+          id="academy-branding-css"
+          nonce={nonce}
+          dangerouslySetInnerHTML={{ __html: generateBrandingCss(branding) }}
         />
       </head>
       <body className={`${inter.variable} ${jetBrainsMono.variable}`}>
