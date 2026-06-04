@@ -4,7 +4,7 @@ import { z } from "zod";
 import { maskStudentName } from "@/lib/utils";
 import { getPrisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/session";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 import { assertCourseAnalyticsAccess } from "@/server/modules/courses/access";
 
 export interface LessonAttendanceRow {
@@ -25,6 +25,12 @@ export interface StudentAttendanceDetail {
   lessonsViewed: number;
   totalLessons: number;
   progressPercent: number;
+}
+
+function throwAttendanceActionError(error: unknown, label: string, message: string): never {
+  if (error instanceof ApiError) throw error;
+  console.error(label, getSafeErrorMetadata(error));
+  throw new ApiError("internal_error", message, 500);
 }
 
 /**
@@ -90,8 +96,7 @@ export async function getCourseAttendance(courseId: string): Promise<LessonAtten
       };
     });
   } catch (error) {
-    console.error("[getCourseAttendance]", error);
-    throw error;
+    throwAttendanceActionError(error, "[getCourseAttendance]", "Не удалось загрузить посещаемость курса");
   }
 }
 
@@ -179,8 +184,7 @@ export async function getLessonAttendanceDetail(lessonId: string): Promise<Stude
       };
     });
   } catch (error) {
-    console.error("[getLessonAttendanceDetail]", error);
-    throw error;
+    throwAttendanceActionError(error, "[getLessonAttendanceDetail]", "Не удалось загрузить посещаемость урока");
   }
 }
 
@@ -190,13 +194,12 @@ export async function getLessonAttendanceDetail(lessonId: string): Promise<Stude
 export async function getInstructorCourses() {
   try {
     const user = await requireUser("courses:read");
-    return getPrisma().course.findMany({
+    return await getPrisma().course.findMany({
       where: { instructors: { some: { userId: user.id } } },
       select: { id: true, title: true, status: true },
       orderBy: { title: "asc" },
     });
   } catch (error) {
-    console.error("[getInstructorCourses]", error);
-    throw error;
+    throwAttendanceActionError(error, "[getInstructorCourses]", "Не удалось загрузить курсы преподавателя");
   }
 }

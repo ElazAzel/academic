@@ -8,7 +8,7 @@
 
 **Текущий итог:** `partial`
 
-Последний закрытый слой: quiz result clients корректно читают стандартный API envelope `{ data }`, inline-тест больше не показывает 0% после правильного ответа, а standalone quiz result открывает конкретную попытку через `attemptId`. Параллельно analytics actions больше не раскрывают raw report/risk errors в stderr. Предыдущий слой закрыл activity analytics safe logging.
+Последний закрытый слой: attendance actions для посещаемости курса, посещаемости урока и списка курсов преподавателя больше не раскрывают raw backend errors, не логируют controlled `ApiError` в stderr и удерживают rejected Prisma promises внутри action-boundary. Предыдущие слои закрыли super-curator actions, glossary actions, risk-management actions, student quiz/assignment actions и quiz result clients.
 
 Платформа имеет широкий реализованный функционал и зелёный repo-local gate по последним итерациям, но production-ready статус не закрыт до сценарного proof по ролям, negative-path security proof и operational drill в целевом окружении.
 
@@ -52,7 +52,7 @@
 | Banned patterns | `done` | Включён в `npm run verify` |
 | Zero-warning lint | `done` | Последние записи `updates.md` фиксируют 0 errors / 0 warnings |
 | TypeScript | `done` | Последние repo-local проверки зелёные |
-| Unit/integration tests | `done` | Последний `npm run verify`: 820/820 Vitest tests |
+| Unit/integration tests | `done` | Последний `npm run verify`: 850/850 Vitest tests |
 | Production build | `done` | Последний `npm run verify`: production build зелёный |
 | E2E smoke | `partial` | Smoke есть, но full six-role workflow proof ещё не закрыт |
 | Accessibility smoke | `partial` | Axe smoke есть; full WCAG/keyboard proof не закрыт |

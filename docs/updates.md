@@ -2,6 +2,76 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-04 — Attendance actions не раскрывают raw ошибки посещаемости
+
+**Что сделано:**
+
+- `server/actions/attendance.ts` больше не логирует controlled `ApiError` как raw exception в `getCourseAttendance()`, `getLessonAttendanceDetail()` и `getInstructorCourses()`.
+- Unexpected failures в отчетах посещаемости курса, деталях посещаемости урока и списке курсов преподавателя теперь оборачиваются в безопасный `ApiError("internal_error", ...)` с русскоязычным сообщением.
+- `getInstructorCourses()` теперь await-ит Prisma-запрос внутри `try/catch`, поэтому rejected promise больше не выходит мимо server action boundary.
+- Расширен `tests/unit/attendance-actions.test.ts`: scope gate no-stderr, validation no-stderr, course/lesson attendance no-leak и instructor course list async-boundary no-leak.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/attendance-actions.test.ts tests/unit/lesson-route.test.ts tests/unit/course-route.test.ts` — 11/11 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 850/850 Vitest tests, production build.
+
+## 2026-06-04 — Super-curator actions не раскрывают raw ошибки операций
+
+**Что сделано:**
+
+- `server/actions/super-curator.ts` получил единый безопасный action-boundary для read и mutation paths супер-куратора.
+- Read actions для потоков, деталей потока, списка кураторов, активности куратора, распределения, рисков и отчетных данных теперь сохраняют controlled `ApiError` без stderr-noise, а неожиданные failures оборачивают в безопасный `ApiError("internal_error", ...)` с русскоязычным сообщением.
+- Mutation actions для потоков, студентов и кураторов сохраняют текущий `{ success: false, error }` контракт для неожиданных сбоев, но логируют только `getSafeErrorMetadata()` и больше не пишут controlled `ApiError` как raw exception.
+- Добавлен `tests/unit/super-curator-actions.test.ts`: cohort list no-leak, detail validation no-stderr, create-cohort controlled no-stderr/no-leak, distribution no-leak и report-data no-leak.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/super-curator-actions.test.ts tests/unit/super-curator-dashboard.test.ts tests/unit/components/super-curator-cohort-form.test.tsx tests/unit/components/super-curator-assignment-forms.test.tsx tests/unit/components/super-curator-risk-actions.test.tsx` — 15/15 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 846/846 Vitest tests, production build.
+
+## 2026-06-04 — Glossary actions не раскрывают raw ошибки глоссария
+
+**Что сделано:**
+
+- `server/actions/glossary.ts` больше не логирует controlled `ApiError` как raw exception в read/mutation paths глоссария.
+- Read actions `getGlossaryEntries()`, `getGlossaryCategories()` и `getGlossaryDirections()` fail-closed оборачивают unexpected failures в безопасный `ApiError` с русскоязычным сообщением.
+- `getGlossaryEntries()` теперь await-ит Prisma-запрос внутри `try/catch`, поэтому rejected promise больше не выходит за пределы action-boundary.
+- Create/update/delete glossary actions сохраняют текущий `{ success: false, error }` контракт для неожиданных сбоев, но логируют только `getSafeErrorMetadata()`.
+- Добавлен `tests/unit/glossary-actions.test.ts`: validation no-stderr, read no-leak, create/update/delete no-leak и async-boundary coverage.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/glossary-actions.test.ts tests/unit/components/glossary-editor.test.tsx` — 9/9 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 840/840 Vitest tests, production build.
+
+## 2026-06-04 — Risk management actions не раскрывают raw ошибки рисков
+
+**Что сделано:**
+
+- `server/actions/risk-management.ts` больше не логирует controlled `ApiError` как raw exception в сценариях обзора, создания, закрытия риска и загрузки списка слушателей.
+- Unexpected failures в risk overview/student list теперь fail-closed оборачиваются в безопасный `ApiError` с русскоязычным сообщением, а create/resolve mutation paths возвращают безопасный `{ success: false, error }`.
+- `getStudentsForRisk()` теперь await-ит Prisma-запрос внутри `try/catch`, поэтому rejected promise больше не уходит мимо action-boundary.
+- Добавлен `tests/unit/risk-management-actions.test.ts`: validation no-stderr, overview no-leak, create/resolve controlled no-stderr, create/resolve no-leak и student-list async-boundary no-leak.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/risk-management-actions.test.ts tests/unit/components/super-curator-risk-actions.test.tsx` — 10/10 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 833/833 Vitest tests, production build.
+
+## 2026-06-04 — Student actions не раскрывают raw ошибки попыток и отправок
+
+**Что сделано:**
+
+- `server/actions/student.ts` больше не возвращает rejected Prisma promises за пределы `try/catch`: загрузка попыток тестов и отправленных заданий теперь await-ится внутри action и fail-closed оборачивает неожиданные ошибки в безопасный `ApiError`.
+- Submit actions для домашних заданий и тестов сохраняют controlled `ApiError` без stderr-noise, а неожиданные failures логируют только через `getSafeErrorMetadata()` и возвращают русскоязычную безопасную ошибку.
+- Добавлен `tests/unit/actions-student.test.ts`: покрывает no-log для controlled read/submit ошибок, no-leak для raw ошибок списков попыток/заданий и no-leak для raw submit failures.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/actions-student.test.ts tests/unit/components/quiz-result-client.test.tsx tests/unit/quiz.test.ts tests/unit/quiz-submit-safe-logging.test.ts` — 35/35 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 826/826 Vitest tests, production build.
+
 ## 2026-06-04 — Результаты тестов студента читают стандартный API envelope
 
 **Что сделано:**

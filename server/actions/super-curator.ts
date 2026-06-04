@@ -6,13 +6,25 @@ import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
 import { logAudit } from "@/server/modules/audit/service";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
 import { createNotification } from "@/server/modules/notifications/service";
 import { maskStudentName } from "@/lib/utils";
 import { QuestionStatus } from "@prisma/client";
 
 const prisma = getPrisma();
+
+function throwSuperCuratorReadActionError(error: unknown, label: string, message: string): never {
+  if (error instanceof ApiError) throw error;
+  console.error(label, getSafeErrorMetadata(error));
+  throw new ApiError("internal_error", message, 500);
+}
+
+function toSuperCuratorMutationResult(error: unknown, label: string, fallback: string) {
+  if (error instanceof ApiError) throw error;
+  console.error(label, getSafeErrorMetadata(error));
+  return { success: false, error: fallback };
+}
 
 // ─── Cohort CRUD ────────────────────────────────────────────────────
 
@@ -49,8 +61,7 @@ export async function getSuperCuratorCohorts() {
       createdAt: c.createdAt.toISOString(),
     }));
   } catch (error) {
-    console.error("[getSuperCuratorCohorts]", error);
-    throw error;
+    throwSuperCuratorReadActionError(error, "[getSuperCuratorCohorts]", "Не удалось загрузить потоки");
   }
 }
 
@@ -85,9 +96,7 @@ export async function createCohortAction(formData: FormData) {
     revalidatePath("/super-curator/cohorts");
     return { success: true };
   } catch (error) {
-    console.error("[createCohortAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при создании потока" };
+    return toSuperCuratorMutationResult(error, "[createCohortAction]", "Произошла ошибка при создании потока");
   }
 }
 
@@ -123,9 +132,7 @@ export async function updateCohortAction(formData: FormData) {
     revalidatePath("/super-curator/cohorts");
     return { success: true };
   } catch (error) {
-    console.error("[updateCohortAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при обновлении потока" };
+    return toSuperCuratorMutationResult(error, "[updateCohortAction]", "Произошла ошибка при обновлении потока");
   }
 }
 
@@ -157,9 +164,7 @@ export async function deleteCohortAction(id: string) {
     revalidatePath("/super-curator/cohorts");
     return { success: true };
   } catch (error) {
-    console.error("[deleteCohortAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при архивации потока" };
+    return toSuperCuratorMutationResult(error, "[deleteCohortAction]", "Произошла ошибка при архивации потока");
   }
 }
 
@@ -235,8 +240,7 @@ export async function getCohortDetail(cohortId: string) {
       curators: Array.from(curatorMap.values()),
     };
   } catch (error) {
-    console.error("[getCohortDetail]", error);
-    throw error;
+    throwSuperCuratorReadActionError(error, "[getCohortDetail]", "Не удалось загрузить поток");
   }
 }
 
@@ -295,9 +299,7 @@ export async function addStudentToCohortAction(formData: FormData) {
     revalidatePath(`/super-curator/cohorts/${cohortId}`);
     return { success: true };
   } catch (error) {
-    console.error("[addStudentToCohortAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при добавлении студента" };
+    return toSuperCuratorMutationResult(error, "[addStudentToCohortAction]", "Произошла ошибка при добавлении студента");
   }
 }
 
@@ -326,9 +328,7 @@ export async function removeStudentFromCohortAction(enrollmentId: string) {
     revalidatePath("/super-curator/cohorts");
     return { success: true };
   } catch (error) {
-    console.error("[removeStudentFromCohortAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при удалении студента" };
+    return toSuperCuratorMutationResult(error, "[removeStudentFromCohortAction]", "Произошла ошибка при удалении студента");
   }
 }
 
@@ -413,8 +413,7 @@ export async function getSuperCuratorCurators() {
       })),
     }));
   } catch (error) {
-    console.error("[getSuperCuratorCurators]", error);
-    throw error;
+    throwSuperCuratorReadActionError(error, "[getSuperCuratorCurators]", "Не удалось загрузить кураторов");
   }
 }
 
@@ -445,9 +444,7 @@ export async function addCuratorAction(formData: FormData) {
     revalidatePath("/super-curator/curators");
     return { success: true, userId: newUser.id };
   } catch (error) {
-    console.error("[addCuratorAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при добавлении куратора" };
+    return toSuperCuratorMutationResult(error, "[addCuratorAction]", "Произошла ошибка при добавлении куратора");
   }
 }
 
@@ -486,9 +483,7 @@ export async function removeCuratorAction(curatorId: string) {
     revalidatePath("/super-curator/curators");
     return { success: true };
   } catch (error) {
-    console.error("[removeCuratorAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при удалении куратора" };
+    return toSuperCuratorMutationResult(error, "[removeCuratorAction]", "Произошла ошибка при удалении куратора");
   }
 }
 
@@ -639,8 +634,7 @@ export async function getCuratorActivity(curatorId: string) {
     studentResponseBreakdown,
   };
   } catch (error) {
-    console.error("[getCuratorActivity]", error);
-    throw error;
+    throwSuperCuratorReadActionError(error, "[getCuratorActivity]", "Не удалось загрузить активность куратора");
   }
 }
 
@@ -730,8 +724,7 @@ export async function getSuperCuratorDistributionData() {
 
     return { unassignedStudents, assignedStudents, curators: normalizedCurators };
   } catch (error) {
-    console.error("[getSuperCuratorDistributionData]", error);
-    throw error;
+    throwSuperCuratorReadActionError(error, "[getSuperCuratorDistributionData]", "Не удалось загрузить распределение кураторов");
   }
 }
 
@@ -837,8 +830,7 @@ export async function getSuperCuratorRisks() {
       };
     });
   } catch (error) {
-    console.error("[getSuperCuratorRisks]", error);
-    throw error;
+    throwSuperCuratorReadActionError(error, "[getSuperCuratorRisks]", "Не удалось загрузить риски потоков");
   }
 }
 
@@ -910,7 +902,6 @@ export async function getSuperCuratorReportData() {
 
     return cohortProgress;
   } catch (error) {
-    console.error("[getSuperCuratorReportData]", error);
-    throw error;
+    throwSuperCuratorReadActionError(error, "[getSuperCuratorReportData]", "Не удалось загрузить данные отчета супер-куратора");
   }
 }

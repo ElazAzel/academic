@@ -7,10 +7,22 @@ import { getPrisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { logAudit } from "@/server/modules/audit/service";
 import { maskStudentName } from "@/lib/utils";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
 
 const prisma = getPrisma();
+
+function throwRiskReadActionError(error: unknown, label: string, message: string): never {
+  if (error instanceof ApiError) throw error;
+  console.error(label, getSafeErrorMetadata(error));
+  throw new ApiError("internal_error", message, 500);
+}
+
+function toRiskMutationResult(error: unknown, label: string, fallback: string) {
+  if (error instanceof ApiError) throw error;
+  console.error(label, getSafeErrorMetadata(error));
+  return { success: false, error: fallback };
+}
 
 const GetRiskOverviewSchema = z.object({
   cohortId: z.string().optional(),
@@ -162,8 +174,7 @@ export async function getRiskOverview(filters?: {
     total: risks.length,
   };
   } catch (error) {
-    console.error("[getRiskOverview]", error);
-    throw error;
+    throwRiskReadActionError(error, "[getRiskOverview]", "Не удалось загрузить риски");
   }
 }
 
@@ -204,9 +215,7 @@ export async function createRiskAction(formData: FormData) {
     revalidatePath("/curator/risks");
     return { success: true };
   } catch (error) {
-    console.error("[createRiskAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при создании риска" };
+    return toRiskMutationResult(error, "[createRiskAction]", "Произошла ошибка при создании риска");
   }
 }
 
@@ -238,9 +247,7 @@ export async function resolveRiskAction(flagId: string) {
     revalidatePath("/curator/risks");
     return { success: true };
   } catch (error) {
-    console.error("[resolveRiskAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при разрешении риска" };
+    return toRiskMutationResult(error, "[resolveRiskAction]", "Произошла ошибка при разрешении риска");
   }
 }
 
@@ -249,7 +256,7 @@ export async function getStudentsForRisk() {
     const actor = await requireRole(["admin", "super_curator"]);
     const scope = await getSuperCuratorScope(actor);
 
-    return prisma.user.findMany({
+    const students = await prisma.user.findMany({
       where: {
         roles: { some: { role: { key: "student" } } },
         ...(scope.isGlobal ? {} : { id: { in: scope.studentIds } }),
@@ -258,9 +265,9 @@ export async function getStudentsForRisk() {
       orderBy: { name: "asc" },
       take: 500,
     });
+    return students;
   } catch (error) {
-    console.error("[getStudentsForRisk]", error);
-    throw error;
+    throwRiskReadActionError(error, "[getStudentsForRisk]", "Не удалось загрузить список слушателей");
   }
 }
 

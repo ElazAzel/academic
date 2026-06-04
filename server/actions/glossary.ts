@@ -5,9 +5,21 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 
 const prisma = getPrisma();
+
+function throwGlossaryReadActionError(error: unknown, label: string, message: string): never {
+  if (error instanceof ApiError) throw error;
+  console.error(label, getSafeErrorMetadata(error));
+  throw new ApiError("internal_error", message, 500);
+}
+
+function toGlossaryMutationResult(error: unknown, label: string, fallback: string) {
+  if (error instanceof ApiError) throw error;
+  console.error(label, getSafeErrorMetadata(error));
+  return { success: false, error: fallback };
+}
 
 const GetGlossaryEntriesSchema = z.object({
   search: z.string().optional(),
@@ -29,10 +41,10 @@ export async function getGlossaryEntries(search?: string) {
           ],
         }
       : {};
-    return prisma.glossaryEntry.findMany({ where, orderBy: [{ direction: "asc" }, { category: "asc" }, { updatedAt: "desc" }] });
+    const entries = await prisma.glossaryEntry.findMany({ where, orderBy: [{ direction: "asc" }, { category: "asc" }, { updatedAt: "desc" }] });
+    return entries;
   } catch (error) {
-    console.error("[getGlossaryEntries]", error);
-    throw error;
+    throwGlossaryReadActionError(error, "[getGlossaryEntries]", "Не удалось загрузить глоссарий");
   }
 }
 
@@ -46,8 +58,7 @@ export async function getGlossaryCategories() {
     });
     return entries.map((e) => e.category);
   } catch (error) {
-    console.error("[getGlossaryCategories]", error);
-    throw error;
+    throwGlossaryReadActionError(error, "[getGlossaryCategories]", "Не удалось загрузить категории глоссария");
   }
 }
 
@@ -61,8 +72,7 @@ export async function getGlossaryDirections() {
     });
     return entries.map((e) => e.direction);
   } catch (error) {
-    console.error("[getGlossaryDirections]", error);
-    throw error;
+    throwGlossaryReadActionError(error, "[getGlossaryDirections]", "Не удалось загрузить направления глоссария");
   }
 }
 
@@ -90,9 +100,7 @@ export async function createGlossaryEntryAction(formData: FormData) {
     revalidatePath("/curator/glossary");
     return { success: true };
   } catch (error) {
-    console.error("[createGlossaryEntryAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при создании записи" };
+    return toGlossaryMutationResult(error, "[createGlossaryEntryAction]", "Произошла ошибка при создании записи");
   }
 }
 
@@ -112,9 +120,7 @@ export async function updateGlossaryEntryAction(formData: FormData) {
     revalidatePath("/curator/glossary");
     return { success: true };
   } catch (error) {
-    console.error("[updateGlossaryEntryAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при обновлении записи" };
+    return toGlossaryMutationResult(error, "[updateGlossaryEntryAction]", "Произошла ошибка при обновлении записи");
   }
 }
 
@@ -134,8 +140,6 @@ export async function deleteGlossaryEntryAction(id: string) {
     revalidatePath("/curator/glossary");
     return { success: true };
   } catch (error) {
-    console.error("[deleteGlossaryEntryAction]", error);
-    if (error instanceof ApiError) throw error;
-    return { success: false, error: "Произошла ошибка при удалении записи" };
+    return toGlossaryMutationResult(error, "[deleteGlossaryEntryAction]", "Произошла ошибка при удалении записи");
   }
 }

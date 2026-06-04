@@ -4,16 +4,29 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 
 import { submitAssignment } from "@/server/modules/assignments/service";
 import { submitQuizAttempt } from "@/server/modules/quizzes/service";
 
 const prisma = getPrisma();
 
+function throwStudentReadActionError(error: unknown, label: string, message: string): never {
+  if (error instanceof ApiError) throw error;
+  console.error(label, getSafeErrorMetadata(error));
+  throw new ApiError("internal_error", message, 500);
+}
+
+function toStudentMutationError(error: unknown, label: string, fallback: string) {
+  if (error instanceof ApiError) return error.message;
+  console.error(label, getSafeErrorMetadata(error));
+  return fallback;
+}
+
 export async function getStudentQuizAttemptsAction() {
   try {
     const user = await requireRole(["student"]);
-    return prisma.quizAttempt.findMany({
+    const attempts = await prisma.quizAttempt.findMany({
       where: { userId: user.id },
       select: {
         id: true,
@@ -34,16 +47,16 @@ export async function getStudentQuizAttemptsAction() {
       },
       orderBy: { startedAt: "desc" },
     });
+    return attempts;
   } catch (error) {
-    console.error("[getStudentQuizAttemptsAction]", error);
-    throw error;
+    throwStudentReadActionError(error, "[getStudentQuizAttemptsAction]", "Не удалось загрузить попытки тестов");
   }
 }
 
 export async function getStudentAssignmentSubmissionsAction() {
   try {
     const user = await requireRole(["student"]);
-    return prisma.assignmentSubmission.findMany({
+    const submissions = await prisma.assignmentSubmission.findMany({
       where: { userId: user.id },
       select: {
         id: true,
@@ -67,9 +80,9 @@ export async function getStudentAssignmentSubmissionsAction() {
       },
       orderBy: { submittedAt: "desc" },
     });
+    return submissions;
   } catch (error) {
-    console.error("[getStudentAssignmentSubmissionsAction]", error);
-    throw error;
+    throwStudentReadActionError(error, "[getStudentAssignmentSubmissionsAction]", "Не удалось загрузить отправленные задания");
   }
 }
 
@@ -99,8 +112,7 @@ export async function submitAssignmentAction(assignmentId: string, answerText?: 
     revalidatePath(`/student/assignments/${assignmentId}`);
     return { success: true };
   } catch (error) {
-    console.error("[submitAssignmentAction]", error);
-    return { success: false, error: "Произошла ошибка при отправке задания" };
+    return { success: false, error: toStudentMutationError(error, "[submitAssignmentAction]", "Произошла ошибка при отправке задания") };
   }
 }
 
@@ -124,7 +136,6 @@ export async function submitQuizAction(quizId: string, answers: Record<string, u
     revalidatePath(`/student/quizzes/${quizId}`);
     return { success: true, passed: result.passed, score: result.score };
   } catch (error) {
-    console.error("[submitQuizAction]", error);
-    return { success: false, error: "Произошла ошибка при отправке теста" };
+    return { success: false, error: toStudentMutationError(error, "[submitQuizAction]", "Произошла ошибка при отправке теста") };
   }
 }
