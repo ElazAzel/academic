@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { UserPlus, Upload, BookOpen, Users } from "lucide-react";
+import { getRuntimeBranding } from "@/server/modules/branding/service";
 
 export const metadata = {
   title: "Приглашения — Администрирование",
@@ -47,12 +48,13 @@ const TOOLS = [
 
 export default async function AdminInvitesPage() {
   await requireRolePage(["admin"]);
+  const branding = await getRuntimeBranding();
 
   return (
     <AppShell role="admin">
       <PageHeader
         title="Приглашения и доступ"
-        description="AI Strategic Academy работает по приглашениям. Управляйте пользователями и их доступом к курсам."
+        description={`${branding.name} работает по приглашениям. Управляйте пользователями и их доступом к курсам.`}
       />
 
       <div className="mt-6 space-y-6">
@@ -104,7 +106,7 @@ npm run users:provision
 npx tsx scripts/provision-users.ts --email user@example.com --password Secret123 --role student`}</code>
             </pre>
             <p className="text-xs text-muted-foreground">
-              Скрипт использует Argon2id для хеширования паролей. Передавайте credentials слушателям
+              Скрипт использует Argon2id для хеширования паролей. Передавайте учётные данные слушателям
               защищённым каналом.
             </p>
           </CardContent>

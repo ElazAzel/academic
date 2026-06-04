@@ -41,7 +41,7 @@ describe("LoginForm", () => {
     expect(screen.queryByRole("button", { name: "GitHub" })).not.toBeInTheDocument();
   });
 
-  it("shows error alert after failed sign-in", async () => {
+  it("shows an accessible error alert after failed sign-in", async () => {
     mockSignIn.mockResolvedValue({ error: "Invalid credentials" });
     const user = userEvent.setup();
 
@@ -51,9 +51,17 @@ describe("LoginForm", () => {
     await user.type(screen.getByLabelText(/Пароль/), "wrong");
     await user.click(screen.getByRole("button", { name: /Войти в систему/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText("Неверный логин или пароль")).toBeInTheDocument();
-    });
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Неверный логин или пароль");
+    expect(alert).toHaveAttribute("id", "login-form-error");
+    expect(alert).toHaveAttribute("aria-live", "assertive");
+    expect(alert).toHaveAttribute("aria-atomic", "true");
+    expect(alert).toHaveFocus();
+
+    expect(screen.getByLabelText(/E-mail/)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText(/E-mail/)).toHaveAttribute("aria-describedby", "login-form-error");
+    expect(screen.getByLabelText(/Пароль/)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText(/Пароль/)).toHaveAttribute("aria-describedby", "login-form-error");
   });
 
   it("redirects after successful sign-in", async () => {

@@ -101,6 +101,18 @@ Definition of Done и правило остановки описаны в `docs/
 - WP2/WP4 усилены: app/global/component error boundaries больше не показывают raw `error.message`, не логируют raw message/stack и используют спокойный recovery-focused UI без gradient blobs.
 - WP2 усилен: storage и Web Push logging больше не раскрывают raw provider errors, exception objects или push endpoint tokens; добавлены focused no-leak tests.
 
+**Текущее изменение 2026-06-04:**
+- WP4 усилен: добавлен public auth keyboard proof для skip-link, login form tab order и закрытой регистрации с проверкой на Chromium и Pixel 7.
+- WP4/WP2 усилены: `Heartbeat` возвращен внутрь `Providers`/`SessionProvider`, поэтому публичные страницы больше не падают в dev/runtime из-за `useSession()` вне provider boundary; regression закреплен unit guard.
+- WP4 усилен: login failure alert получил stable live-region/focus contract и связан с e-mail/password через `aria-describedby`/`aria-invalid`.
+- WP1/WP4 evidence уточнен: authenticated keyboard smoke не запускался против remote Supabase, потому что DB guard отказал `test:e2e` без explicit remote override.
+- White-label доведен до runtime-финала: metadata, offline/global error surfaces, PWA manifest/service worker, 2FA issuer, SMTP fallback, support email, admin/register/consent copy, отчеты и сертификаты используют `BRANDING`.
+- Добавлен динамический `/manifest.webmanifest` с `NEXT_PUBLIC_BRAND_*` и unit guard, который запрещает legacy brand literals в `app/components/lib/server/public` вне `lib/branding.ts`; последний `npm run verify` зеленый: 858/858 Vitest tests.
+- WP2/WP4 усилены customer observer read-only guard: новый unit-тест проверяет точный RBAC `customer_observer`, observer-only desktop/mobile navigation, отсутствие certificate issue/revoke affordances, mutating API calls и cross-role links в `app/customer-observer/**/*.tsx`.
+- `/customer-observer/settings` зафиксирован как self-service аккаунтная зона: профиль, пароль и уведомления разрешены, системные app settings/build actions запрещены; targeted proof `npm run test -- tests/unit/customer-observer-readonly.test.ts tests/unit/security.test.ts tests/unit/reports-service.test.ts` зеленый: 39/39.
+- WP4/white-label усилены: администратор теперь меняет бренд через `/admin/settings` → `Бренд`; значения сохраняются в `app_settings` и применяются к metadata, viewport theme color, `/manifest.webmanifest`, CSS variables, login/header/PWA install surfaces, support email и disabled reset APIs без пересборки.
+- CSP/report boundary обновлен для динамического брендинга: `/api/v1/csp-report` публичен, login/root inline runtime hash добавлен в CSP; browser smoke `/login` зеленый без console errors/framework overlay.
+
 ---
 
 ## Задача 1: Отключение самосброса пароля
@@ -321,6 +333,6 @@ Definition of Done и правило остановки описаны в `docs/
 |-----|----------|--------|
 | 13.1 | Провести WCAG 2.2 AA-oriented audit: contrast, focus, keyboard, status semantics, target size | ⏳ |
 | 13.2 | Добавить Playwright responsive smoke для core routes на phone/tablet/desktop | 🟡 ручной smoke: `/login`, `/student`, 375/768/1024/1440 |
-| 13.3 | Добавить keyboard smoke для login, continue lesson, quiz, assignment, curator answer, certificate issue | ⏳ |
+| 13.3 | Добавить keyboard smoke для login, continue lesson, quiz, assignment, curator answer, certificate issue | 🟡 public auth keyboard proof закрыт; authenticated core workflows pending |
 | 13.4 | Проверить sticky header/bottom nav/dialog focus clipping и reduced motion | 🟡 частично через no-overflow smoke |
 | 13.5 | Зафиксировать результаты в `docs/updates.md` после каждой UX партии | ✅ |

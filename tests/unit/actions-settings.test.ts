@@ -35,7 +35,7 @@ vi.mock("@/lib/prisma", () => ({
 const {
   updateProfileSettingsAction, updatePasswordAction,
   getNotificationPreferencesAction, updateNotificationPreferencesAction,
-  incrementBuildVersionAction, getAppSettingsAction, updateAppSettingsAction,
+  incrementBuildVersionAction, getAppSettingsAction, updateAppSettingsAction, updateBrandingSettingsAction,
 } = await import("@/server/actions/settings");
 
 const testUser = { id: "u1", email: "user@test.com", name: "User", roles: ["admin"] };
@@ -312,6 +312,74 @@ describe("updateAppSettingsAction", () => {
     } finally {
       consoleError.mockRestore();
     }
+  });
+});
+
+describe("updateBrandingSettingsAction", () => {
+  function validBrandingForm() {
+    const fd = new FormData();
+    fd.set("brand_name", "Академия клиента");
+    fd.set("brand_shortName", "Клиент LMS");
+    fd.set("brand_subtitle", "закрытая программа");
+    fd.set("brand_description", "Закрытая платформа обучения клиента");
+    fd.set("brand_metadataDescription", "LMS клиента для потоков и отчётности.");
+    fd.set("brand_logoIcon", "workspace_premium");
+    fd.set("brand_logoUrl", "/brand/client-logo.svg");
+    fd.set("brand_supportEmail", "support@example.com");
+    fd.set("brand_primaryColor", "#123abc");
+    fd.set("brand_primaryContainerColor", "#234bcd");
+    fd.set("brand_accentColor", "#0f766e");
+    fd.set("brand_accentContainerColor", "#115e59");
+    fd.set("brand_backgroundColor", "#f8fafc");
+    fd.set("brand_surfaceColor", "#ffffff");
+    return fd;
+  }
+
+  it("updates validated branding settings", async () => {
+    await updateBrandingSettingsAction(validBrandingForm());
+
+    expect(mockRequireUser).toHaveBeenCalledWith("settings:manage");
+    expect(mockSetAppSettings).toHaveBeenCalledWith({
+      BRAND_NAME: "Академия клиента",
+      BRAND_SHORT_NAME: "Клиент LMS",
+      BRAND_SUBTITLE: "закрытая программа",
+      BRAND_DESCRIPTION: "Закрытая платформа обучения клиента",
+      BRAND_METADATA_DESCRIPTION: "LMS клиента для потоков и отчётности.",
+      BRAND_LOGO_ICON: "workspace_premium",
+      BRAND_LOGO_URL: "/brand/client-logo.svg",
+      BRAND_SUPPORT_EMAIL: "support@example.com",
+      BRAND_PRIMARY_COLOR: "#123abc",
+      BRAND_PRIMARY_CONTAINER_COLOR: "#234bcd",
+      BRAND_ACCENT_COLOR: "#0f766e",
+      BRAND_ACCENT_CONTAINER_COLOR: "#115e59",
+      BRAND_BACKGROUND_COLOR: "#f8fafc",
+      BRAND_SURFACE_COLOR: "#ffffff",
+    });
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/", "layout");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/settings", "layout");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/manifest.webmanifest");
+  });
+
+  it("rejects invalid branding colors before writes", async () => {
+    const fd = validBrandingForm();
+    fd.set("brand_primaryColor", "blue");
+
+    await expect(updateBrandingSettingsAction(fd)).rejects.toMatchObject({
+      code: "bad_request",
+      status: 400,
+    });
+    expect(mockSetAppSettings).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsafe logo URLs before writes", async () => {
+    const fd = validBrandingForm();
+    fd.set("brand_logoUrl", "javascript:alert(1)");
+
+    await expect(updateBrandingSettingsAction(fd)).rejects.toMatchObject({
+      code: "bad_request",
+      status: 400,
+    });
+    expect(mockSetAppSettings).not.toHaveBeenCalled();
   });
 });
 

@@ -1,10 +1,11 @@
 import fs from "fs";
 import path from "path";
 import { notFound } from "next/navigation";
+import { BRANDING } from "@/lib/branding";
 
 export const metadata = {
   title: "Документация",
-  description: "Документация платформы AI Strategic Academy.",
+  description: `Документация платформы ${BRANDING.name}.`,
 };
 
 

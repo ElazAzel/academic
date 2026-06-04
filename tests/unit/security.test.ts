@@ -164,7 +164,9 @@ describe("Public asset middleware exemptions", () => {
   it("allows PWA assets without authentication", () => {
     expect(isPublicRoute("/sw.js")).toBe(true);
     expect(isPublicRoute("/manifest.json")).toBe(true);
+    expect(isPublicRoute("/manifest.webmanifest")).toBe(true);
     expect(isPublicRoute("/icon.svg")).toBe(true);
+    expect(isPublicRoute("/api/v1/csp-report")).toBe(true);
   });
 
   it("keeps the consent route public", () => {

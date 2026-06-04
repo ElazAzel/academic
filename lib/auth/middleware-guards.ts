@@ -38,6 +38,7 @@ export const PUBLIC_PATH_PREFIXES = [
   "/api/v1/certificates/verify",
   "/api/v1/build-version",
   "/api/v1/heartbeat",
+  "/api/v1/csp-report",
   "/api/v1/outbox/process",
   "/api/v1/reports/scheduled",
   "/api/v1/webhooks/stripe",
@@ -54,11 +55,10 @@ export const PUBLIC_PATH_PREFIXES = [
   "/_next/image",
   "/favicon.ico",
   "/icon.svg",
-  "/manifest.json",
   "/sw.js",
+  "/manifest.json",
+  "/manifest.webmanifest",
   "/assets",
-  "/sw.js",
-  "/manifest.json",
 ];
 
 export const ROLE_ROUTE_PREFIXES: Record<string, string[]> = {

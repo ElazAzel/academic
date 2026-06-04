@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useSyncExternalStore, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { getDefaultRolePath } from "@/lib/auth/role-redirect";
@@ -11,6 +11,7 @@ import type { RoleKey } from "@/types/domain";
 
 const REDIRECT_TARGET_RETRIES = 20;
 const REDIRECT_TARGET_RETRY_DELAY_MS = 250;
+const LOGIN_ERROR_ID = "login-form-error";
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -51,6 +52,7 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const errorRef = useRef<HTMLParagraphElement>(null);
   const hasOAuth = oauthProviders.google || oauthProviders.github;
 
   const hydrated = useSyncExternalStore(
@@ -58,6 +60,12 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
     () => true,
     () => false,
   );
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.focus();
+    }
+  }, [error]);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -102,6 +110,8 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
             type="email"
             autoComplete="email"
             required
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? LOGIN_ERROR_ID : undefined}
             placeholder="Введите ваш e-mail"
             className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest/90 py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] placeholder:text-m3-outline transition-[background-color,border-color,box-shadow] focus:border-m3-primary focus:bg-m3-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
             onChange={() => setError("")}
@@ -125,6 +135,8 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
             type="password"
             autoComplete="current-password"
             required
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? LOGIN_ERROR_ID : undefined}
             placeholder="Введите пароль"
             className="w-full rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest/90 py-[10px] pl-xxl pr-md text-body-md font-body-md text-m3-on-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] placeholder:text-m3-outline transition-[background-color,border-color,box-shadow] focus:border-m3-primary focus:bg-m3-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-m3-primary/20"
             onChange={() => setError("")}
@@ -136,6 +148,8 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
       <AnimatePresence mode="wait">
         {error ? (
           <motion.p
+            ref={errorRef}
+            id={LOGIN_ERROR_ID}
             key={error}
             initial={{ opacity: 0, height: 0, scale: 0.95, x: 0 }}
             animate={{
@@ -151,6 +165,9 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
             }}
             className="overflow-hidden rounded-md bg-m3-error-container px-md py-sm text-body-sm font-body-sm text-m3-error"
             role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+            tabIndex={-1}
           >
             {error}
           </motion.p>

@@ -10,8 +10,10 @@ import { Avatar } from "@/components/ui/avatar";
 import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCurrentUser } from "@/lib/auth/session";
-import { updateProfileSettingsAction, updatePasswordAction, getAppSettingsAction, updateAppSettingsAction, incrementBuildVersionAction } from "@/server/actions/settings";
+import { updateProfileSettingsAction, updatePasswordAction, getAppSettingsAction, updateAppSettingsAction, incrementBuildVersionAction, updateBrandingSettingsAction } from "@/server/actions/settings";
 import { TwoFactorSettings } from "@/components/admin/two-factor-settings";
+import { BrandMark } from "@/components/layout/brand-mark";
+import { resolveBrandingFromSettings } from "@/server/modules/branding/service";
 
 export const metadata = {
   title: "Настройки — Администрирование",
@@ -30,10 +32,11 @@ export default async function AdminSettingsPage() {
   await requireRolePage(["admin"]);
   const user = await getCurrentUser();
   const appSettings = await getAppSettingsAction();
+  const branding = resolveBrandingFromSettings(appSettings);
 
  return (
   <AppShell role="admin">
-   <PageHeader title="Настройки платформы" description="Feature flags, интеграции, уведомления и безопасность."/>
+   <PageHeader title="Настройки платформы" description="Бренд, интеграции, уведомления и безопасность."/>
    <Tabs tabs={[
     {
      label: "Профиль",
@@ -69,6 +72,105 @@ export default async function AdminSettingsPage() {
        </Card>
       </form>
      ),
+    },
+    {
+      label: "Бренд",
+      content: (
+       <form action={updateBrandingSettingsAction}>
+        <Card className="rounded-lg">
+         <CardHeader>
+          <div className="flex items-center gap-2">
+           <Icon name="palette" className="text-m3-primary" size={20} />
+           <CardTitle className="text-headline-sm">Бренд академии</CardTitle>
+          </div>
+          <CardDescription>
+           Эти значения меняют название, логотип, контакт поддержки, манифест приложения и основные цвета интерфейса без пересборки.
+          </CardDescription>
+         </CardHeader>
+         <CardContent className="space-y-6">
+          <div className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest p-4">
+           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+             <BrandMark branding={branding} size="lg" />
+             <div>
+              <p className="text-title-lg font-semibold text-m3-on-surface">{branding.name}</p>
+              <p className="text-body-sm text-m3-on-surface-variant">{branding.subtitle}</p>
+             </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+             <span className="h-8 w-8 rounded-lg border border-m3-outline-variant" style={{ backgroundColor: branding.primaryColor }} aria-label="Основной цвет" />
+             <span className="h-8 w-8 rounded-lg border border-m3-outline-variant" style={{ backgroundColor: branding.accentColor }} aria-label="Акцентный цвет" />
+             <span className="h-8 w-8 rounded-lg border border-m3-outline-variant" style={{ backgroundColor: branding.backgroundColor }} aria-label="Фон" />
+             <span className="h-8 w-8 rounded-lg border border-m3-outline-variant" style={{ backgroundColor: branding.surfaceColor }} aria-label="Поверхность" />
+            </div>
+           </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+           <div>
+            <label htmlFor="brand_name" className="text-sm font-medium">Название платформы</label>
+            <Input id="brand_name" name="brand_name" className="mt-1" defaultValue={branding.name} maxLength={80} required />
+           </div>
+           <div>
+            <label htmlFor="brand_shortName" className="text-sm font-medium">Короткое название</label>
+            <Input id="brand_shortName" name="brand_shortName" className="mt-1" defaultValue={branding.shortName} maxLength={32} required />
+           </div>
+           <div>
+            <label htmlFor="brand_subtitle" className="text-sm font-medium">Подзаголовок в шапке</label>
+            <Input id="brand_subtitle" name="brand_subtitle" className="mt-1" defaultValue={branding.subtitle} maxLength={80} required />
+           </div>
+           <div>
+            <label htmlFor="brand_supportEmail" className="text-sm font-medium">Email поддержки</label>
+            <Input id="brand_supportEmail" name="brand_supportEmail" type="email" className="mt-1" defaultValue={branding.supportEmail} maxLength={120} required />
+           </div>
+           <div className="lg:col-span-2">
+            <label htmlFor="brand_description" className="text-sm font-medium">Описание на экране входа</label>
+            <Input id="brand_description" name="brand_description" className="mt-1" defaultValue={branding.description} maxLength={180} required />
+           </div>
+           <div className="lg:col-span-2">
+            <label htmlFor="brand_metadataDescription" className="text-sm font-medium">Описание для браузера и PWA</label>
+            <Input id="brand_metadataDescription" name="brand_metadataDescription" className="mt-1" defaultValue={branding.metadataDescription} maxLength={240} required />
+           </div>
+           <div>
+            <label htmlFor="brand_logoIcon" className="text-sm font-medium">Название иконки</label>
+            <Input id="brand_logoIcon" name="brand_logoIcon" className="mt-1" defaultValue={branding.logoIcon} maxLength={48} required />
+           </div>
+           <div>
+            <label htmlFor="brand_logoUrl" className="text-sm font-medium">Адрес логотипа</label>
+            <Input id="brand_logoUrl" name="brand_logoUrl" className="mt-1" defaultValue={branding.logoUrl} placeholder="/brand/logo.svg" maxLength={500} />
+            <p className="mt-1 text-xs text-muted-foreground">Если поле пустое, используется указанная иконка.</p>
+           </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+           {[
+            ["brand_primaryColor", "Основной цвет", branding.primaryColor],
+            ["brand_primaryContainerColor", "Цвет основного контейнера", branding.primaryContainerColor],
+            ["brand_accentColor", "Акцентный цвет", branding.accentColor],
+            ["brand_accentContainerColor", "Цвет акцентного контейнера", branding.accentContainerColor],
+            ["brand_backgroundColor", "Фон приложения", branding.backgroundColor],
+            ["brand_surfaceColor", "Поверхности карточек", branding.surfaceColor],
+           ].map(([id, label, value]) => (
+            <div key={id}>
+             <label htmlFor={id} className="text-sm font-medium">{label}</label>
+             <div className="mt-1 flex items-center gap-2">
+              <Input id={id} name={id} type="color" className="h-10 w-14 shrink-0 p-1" defaultValue={value} required />
+              <code className="rounded-md border bg-muted px-2 py-1 font-mono text-xs uppercase text-muted-foreground">{value}</code>
+             </div>
+            </div>
+           ))}
+          </div>
+
+          <div className="flex justify-end">
+           <Button type="submit">
+            <Icon name="save" size={16} className="mr-1.5" />
+            Сохранить бренд
+           </Button>
+          </div>
+         </CardContent>
+        </Card>
+       </form>
+      ),
     },
     {
      label: "Безопасность",
@@ -171,7 +273,7 @@ export default async function AdminSettingsPage() {
               id="setting_SMTP_FROM"
               name="setting_SMTP_FROM"
               className="mt-1"
-              defaultValue={appSettings.SMTP_FROM as string ?? "AI Strategic Academy <noreply@example.com>"}/>
+              defaultValue={appSettings.SMTP_FROM as string ?? `${branding.name} <noreply@example.com>`}/>
            </div>
           </div>
           <Button type="submit">Сохранить</Button>

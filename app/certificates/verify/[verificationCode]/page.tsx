@@ -5,10 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { verifyCertificateByCode } from "@/server/modules/certificates/service";
+import { BRANDING } from "@/lib/branding";
 
 export const metadata = {
   title: "Проверка сертификата",
-  description: "Проверка подлинности сертификата AI Strategic Academy.",
+  description: `Проверка подлинности сертификата ${BRANDING.name}.`,
 };
 
 

@@ -46,6 +46,9 @@ describe("getAllAppSettings", () => {
     expect(result.FEATURE_PUSH_NOTIFICATIONS).toBe(true);
     expect(result.SMTP_PORT).toBe("1025");
     expect(result.CERTIFICATE_COMPLETION_THRESHOLD).toBe(85);
+    expect(result.BRAND_NAME).toBe("AI Strategic Academy");
+    expect(result.BRAND_PRIMARY_COLOR).toBe("#1a4494");
+    expect(result.BRAND_LOGO_URL).toBe("");
   });
 
   it("returns defaults when table is empty", async () => {
@@ -55,6 +58,8 @@ describe("getAllAppSettings", () => {
     expect(result.SMTP_HOST).toBe("localhost");
     expect(result.SMTP_PORT).toBe("1025");
     expect(result.FEATURE_PUSH_NOTIFICATIONS).toBe(false);
+    expect(result.BRAND_SHORT_NAME).toBe("AI Academy");
+    expect(result.BRAND_SURFACE_COLOR).toBe("#ffffff");
   });
 });
 

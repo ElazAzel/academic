@@ -120,7 +120,7 @@ async function subscribeToPush(registration: ServiceWorkerRegistration) {
  * Registers the service worker and handles the PWA install prompt.
  * Also listens for build update messages from the SW and subscribes to push.
  */
-export function PWARegister() {
+export function PWARegister({ brandName }: { brandName: string }) {
   const subscribed = useRef(false);
 
   useEffect(() => {
@@ -186,8 +186,8 @@ export function PWARegister() {
 
     // Handle successful install
     const handleAppInstalled = () => {
-      toast.success("Приложение установлено!", {
-        description: "AI Strategic Academy теперь доступна с рабочего стола.",
+        toast.success("Приложение установлено!", {
+        description: `${brandName} теперь доступна с рабочего стола.`,
         duration: 5000,
       });
     };
@@ -197,7 +197,7 @@ export function PWARegister() {
       window.removeEventListener("appinstalled", handleAppInstalled);
       navigator.serviceWorker?.removeEventListener("message", handleMessage);
     };
-  }, []);
+  }, [brandName]);
 
   return null;
 }

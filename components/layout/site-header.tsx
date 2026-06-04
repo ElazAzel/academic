@@ -8,6 +8,8 @@ import { NotificationsDropdown } from "@/components/lms/notifications-dropdown";
 import { NAV_BY_ROLE } from "@/components/layout/navigation";
 import type { RoleKey } from "@/types/domain";
 import { AUTH_ROUTES } from "@/lib/constants";
+import { getRuntimeBranding } from "@/server/modules/branding/service";
+import { BrandMark } from "@/components/layout/brand-mark";
 
 const HEADER_LINKS_COUNT: Record<string, number> = {
   student: 3,
@@ -28,7 +30,7 @@ function getHeaderLinks(roles: string[]) {
 }
 
 export async function SiteHeader() {
-  const user = await getCurrentUser();
+  const [user, branding] = await Promise.all([getCurrentUser(), getRuntimeBranding()]);
 
   return (
     <header className="sticky top-0 z-30 bg-m3-surface-container-lowest/75 shadow-[0_1px_0_var(--academy-line),0_8px_32px_rgba(15,23,42,0.04)] backdrop-blur-2xl site-header">
@@ -36,17 +38,14 @@ export async function SiteHeader() {
         {/* Logo — compact on mobile */}
         <Link
           href="/"
-          aria-label="На главную AI Strategic Academy"
+          aria-label={`На главную ${branding.name}`}
           className="group flex shrink-0 items-center gap-2.5 font-semibold"
         >
-          <span className="academy-brand-mark flex h-8 w-8 items-center justify-center rounded-xl text-white md:h-9 md:w-9 transition-all group-hover:shadow-[0_0_20px_rgba(26,68,148,0.3)]">
-            <Icon name="school" size={20} className="md:hidden" aria-hidden />
-            <Icon name="school" size={24} className="hidden md:block" aria-hidden />
-          </span>
+          <BrandMark branding={branding} size="sm" className="md:h-9 md:w-9 transition-all group-hover:shadow-[0_0_20px_var(--m3-primary)]" />
           <span className="hidden sm:flex sm:flex-col sm:leading-none">
-            <span className="text-sm text-m3-primary md:text-base font-semibold tracking-tight">AI Strategic Academy</span>
+            <span className="text-sm text-m3-primary md:text-base font-semibold tracking-tight">{branding.name}</span>
             <span className="mt-1 hidden text-[11px] font-medium text-m3-on-surface-variant/60 md:inline">
-              закрытая академия
+              {branding.subtitle}
             </span>
           </span>
         </Link>

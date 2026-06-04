@@ -1,10 +1,15 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AUTH_ROUTES } from "@/lib/constants";
+import { getRuntimeBranding } from "@/server/modules/branding/service";
 
-export const metadata = {
-  title: "AI Strategic Academy",
-  description: "Закрытая LMS академии для AI-стратегии, обучения и аналитики.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getRuntimeBranding();
+  return {
+    title: branding.name,
+    description: branding.metadataDescription,
+  };
+}
 
 
 export default function HomePage() {

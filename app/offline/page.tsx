@@ -1,13 +1,20 @@
+import type { Metadata } from "next";
 import { GraduationCap, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { RetryButton } from "./retry-button";
 import { AUTH_ROUTES } from "@/lib/constants";
+import { getRuntimeBranding } from "@/server/modules/branding/service";
 
-export const metadata = {
-  title: "Нет подключения — AI Strategic Academy",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getRuntimeBranding();
+  return {
+    title: `Нет подключения — ${branding.name}`,
+  };
+}
 
-export default function OfflinePage() {
+export default async function OfflinePage() {
+  const branding = await getRuntimeBranding();
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-6">
       <div className="flex flex-col items-center gap-6 text-center max-w-sm">
@@ -25,7 +32,7 @@ export default function OfflinePage() {
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <GraduationCap className="h-4 w-4" />
-          <span>AI Strategic Academy</span>
+          <span>{branding.name}</span>
         </div>
 
         <RetryButton />

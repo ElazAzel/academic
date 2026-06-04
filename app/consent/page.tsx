@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Button } from "@/components/ui/button";
 import { AUTH_ROUTES } from "@/lib/constants";
+import { getRuntimeBranding } from "@/server/modules/branding/service";
 
 export const metadata = {
   title: "Согласие на обработку данных",
@@ -11,7 +12,9 @@ export const metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default function ConsentPage() {
+export default async function ConsentPage() {
+  const branding = await getRuntimeBranding();
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -19,7 +22,7 @@ export default function ConsentPage() {
         <div className="space-y-3">
           <h1 className="text-3xl font-semibold text-m3-on-surface">Согласие</h1>
           <p className="text-body-md leading-relaxed text-m3-on-surface-variant">
-            AI Strategic Academy фиксирует согласие пользователя после входа в закрытый кабинет.
+            {branding.name} фиксирует согласие пользователя после входа в закрытый кабинет.
             Перед продолжением обучения ознакомьтесь с юридическими документами платформы.
           </p>
         </div>

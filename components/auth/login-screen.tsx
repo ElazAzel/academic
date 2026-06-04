@@ -4,6 +4,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { LoginForm } from "@/components/auth/login-form";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
+import type { BrandingConfig } from "@/lib/branding";
+import { BrandMark } from "@/components/layout/brand-mark";
 
 const containerVariants = {
   hidden: {},
@@ -28,9 +30,11 @@ const itemVariants = {
 export function LoginScreen({
   oauthProviders,
   reason,
+  branding,
 }: {
   oauthProviders: OAuthProviderFlags;
   reason?: "device-limit";
+  branding: BrandingConfig;
 }) {
   return (
     <main className="academy-login-shell relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden px-4 py-8 selection:bg-m3-primary/20 selection:text-m3-primary">
@@ -43,7 +47,7 @@ export function LoginScreen({
           className="absolute -inset-[50%] opacity-[0.06]"
           style={{
             background:
-              "conic-gradient(from 180deg at 50% 50%, #1a4494 0%, #006b5e 30%, #805ad5 60%, #1a4494 100%)",
+              "conic-gradient(from 180deg at 50% 50%, var(--m3-primary) 0%, var(--m3-tertiary) 30%, var(--m3-primary-container) 60%, var(--m3-primary) 100%)",
             backgroundSize: "200% 200%",
           }}
           animate={{ rotate: [0, 360] }}
@@ -55,7 +59,7 @@ export function LoginScreen({
       <motion.div
         className="pointer-events-none absolute -left-24 -top-24 h-[480px] w-[480px] rounded-full opacity-[0.05]"
         style={{
-          background: "radial-gradient(circle, #805ad5 0%, transparent 70%)",
+          background: "radial-gradient(circle, var(--m3-primary-container) 0%, transparent 70%)",
         }}
         animate={{ scale: [1, 1.15, 1], x: [0, 20, 0] }}
         transition={{
@@ -67,7 +71,7 @@ export function LoginScreen({
       <motion.div
         className="pointer-events-none absolute -bottom-24 -right-24 h-[480px] w-[480px] rounded-full opacity-[0.05]"
         style={{
-          background: "radial-gradient(circle, #1a4494 0%, transparent 70%)",
+          background: "radial-gradient(circle, var(--m3-primary) 0%, transparent 70%)",
         }}
         animate={{ scale: [1, 1.2, 1], x: [0, -20, 0] }}
         transition={{
@@ -93,20 +97,12 @@ export function LoginScreen({
               закрытый вход
             </span>
             <div className="flex flex-col items-center gap-sm">
-              <div className="academy-brand-mark mb-sm flex h-14 w-14 items-center justify-center rounded-2xl text-white">
-                <span
-                  className="material-symbols-outlined text-[28px] text-white"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                  aria-hidden="true"
-                >
-                  school
-                </span>
-              </div>
+              <BrandMark branding={branding} size="lg" className="mb-sm" />
               <h1 className="text-headline-lg-mobile font-semibold text-gradient-primary md:text-headline-lg tracking-tight">
-                AI Strategic Academy
+                {branding.name}
               </h1>
               <p className="text-body-md font-body-md text-m3-on-surface-variant/80">
-                Закрытая образовательная платформа
+                {branding.description}
               </p>
             </div>
           </div>

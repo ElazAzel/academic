@@ -2,6 +2,99 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-04 - Admin-managed brand customization
+
+**Что сделано:**
+
+- В `/admin/settings` добавлена вкладка `Бренд`: администратор может менять название платформы, короткое название, подзаголовок, описание экрана входа, описание для браузера/манифеста приложения, email поддержки, иконку, адрес логотипа и основные цвета интерфейса.
+- Runtime branding теперь хранится в `app_settings` поверх env/default fallback: `BRANDING` остаётся базовым white-label дефолтом, а `server/modules/branding/service.ts` собирает актуальный бренд из системных настроек.
+- Root metadata, viewport theme color, `/manifest.webmanifest`, CSS variables, login screen, site header, PWA install toast, `/forgot-password`, disabled reset APIs, `/register`, `/consent` и admin invites используют runtime branding без пересборки приложения.
+- Добавлен общий `BrandMark`, который показывает заданный URL логотипа или fallback-иконку.
+- `updateBrandingSettingsAction` валидирует brand-поля отдельно от общих system settings: обязательные тексты, email поддержки, безопасный адрес логотипа, имя иконки и hex-цвета.
+- CSP/report boundary усилен: `/api/v1/csp-report` стал публичным endpoint, а CSP получил новый стабильный hash для login/root inline runtime после динамического брендинга.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/branding.test.ts tests/unit/admin-settings.test.ts tests/unit/actions-settings.test.ts tests/unit/security.test.ts tests/unit/russian-first-admin-copy.test.ts` - 61/61 passed.
+- `npm run typecheck` - passed.
+- Browser smoke `/login` на `http://127.0.0.1:3000`: страница рендерится, runtime CSS variables применены, console errors/warnings отсутствуют, framework overlay пустой.
+- `npm run verify` - passed: banned-patterns, lint 0 warnings, typecheck, 866/866 Vitest tests, production build.
+
+## 2026-06-04 - Customer observer read-only guard
+
+**Что сделано:**
+
+- Добавлен `tests/unit/customer-observer-readonly.test.ts`, который закрепляет read-only контракт роли `customer_observer` по учебным и административным данным.
+- Тест проверяет, что RBAC наблюдателя ограничен только `courses:read`, `certificates:read`, `analytics:read` и `reports:read`, а все остальные permissions остаются недоступны.
+- Навигация desktop/mobile для наблюдателя теперь покрыта регрессионным guard: ссылки должны оставаться внутри `/customer-observer` и не вести в кабинеты admin/instructor/curator/super-curator/student.
+- Route-tree `app/customer-observer/**/*.tsx` сканируется на админские certificate mutation surfaces, issue/revoke affordances, прямые mutating API calls и cross-role links.
+- Страница `/customer-observer/settings` явно зафиксирована как self-service зона аккаунта: профиль, пароль и настройки уведомлений разрешены, системные app settings/build actions запрещены.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/customer-observer-readonly.test.ts tests/unit/security.test.ts tests/unit/reports-service.test.ts` - 39/39 passed.
+
+## 2026-06-04 - White-label runtime finalization
+
+**Что сделано:**
+
+- White-label теперь доведен до runtime-поверхностей: публичные metadata страниц, offline-экран, global error title, admin invites copy, consent/register copy, `SiteHeader`, `LoginScreen`, PDF/XLSX отчеты, сертификаты, 2FA issuer и SMTP fallback используют единый `BRANDING`.
+- Статический `public/manifest.json` удален, вместо него добавлен динамический `app/manifest.ts` на `/manifest.webmanifest`, чтобы PWA name/short_name/description брались из `NEXT_PUBLIC_BRAND_*`.
+- Service worker больше не показывает legacy brand в offline fallback, push fallback title и cache keys; PWA cache переведен на `/manifest.webmanifest`.
+- Контакт восстановления доступа вынесен в `BRANDING.supportEmail` / `NEXT_PUBLIC_BRAND_SUPPORT_EMAIL`; страница `/forgot-password` и disabled reset API больше не хардкодят `admin@aistrategic.kz`.
+- Middleware public exemptions расширены для `/manifest.webmanifest`, сохранив совместимость с `/manifest.json`.
+- `tests/unit/branding.test.ts` расширен проверками manifest override, TOTP issuer, support email override и runtime-сканом `app/components/lib/server/public`, который запрещает legacy brand literals вне `lib/branding.ts`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/branding.test.ts tests/unit/auth-public-routes.test.ts tests/unit/security.test.ts` - 34/34 passed.
+- `npm run verify` - passed: banned-patterns, lint 0 warnings, typecheck, 858/858 Vitest tests, production build.
+
+## 2026-06-04 — Login failure accessibility и guarded authenticated e2e boundary
+
+**Что сделано:**
+
+- `LoginForm` теперь связывает ошибку входа с полями e-mail и пароля через `aria-describedby="login-form-error"` и помечает оба поля `aria-invalid="true"` после неудачной попытки входа.
+- Сообщение `Неверный логин или пароль` получило стабильный `id`, `role="alert"`, `aria-live="assertive"`, `aria-atomic="true"` и программный фокус, чтобы keyboard/screen-reader пользователь сразу попадал к причине отказа.
+- Существующий authenticated keyboard smoke проверен через guarded command: запуск был остановлен до Playwright, потому что текущий `.env` указывает на remote Supabase host. `ALLOW_REMOTE_DATABASE_MUTATION` не использовался.
+
+**Проверка:**
+
+- `npm run test:e2e -- tests/e2e/keyboard-smoke.spec.ts --project=chromium` — безопасно остановлен DB guard: remote host `aws-1-us-east-1.pooler.supabase.com`.
+- `npm run test -- tests/unit/components/login-form.test.tsx tests/unit/local-database-guard.test.ts` — 10/10 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 855/855 Vitest tests, production build.
+
+## 2026-06-04 — Public auth keyboard proof и исправление Heartbeat provider boundary
+
+**Что сделано:**
+
+- Исправлен runtime-дефект корневого layout: `Heartbeat` использовал `useSession()`, но был смонтирован за пределами `SessionProvider`, из-за чего dev server падал на публичных страницах с ошибкой `useSession must be wrapped in a <SessionProvider />`.
+- `app/layout.tsx` теперь оборачивает `main`, `PWARegister` и `Heartbeat` в `Providers`, сохраняя skip-link и `main-content` как рабочую цель фокуса.
+- Добавлен unit guard в `tests/unit/release-hardening-readiness.test.ts`, который не позволяет вернуть `Heartbeat` за пределы `Providers`.
+- Добавлен `tests/e2e/keyboard-public.spec.ts`: skip-link переносит фокус в `#main-content`, основные controls login form доступны в keyboard order, закрытая регистрация возвращает на login через клавиатуру.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/release-hardening-readiness.test.ts` — 9/9 passed.
+- `npx playwright test tests/e2e/keyboard-public.spec.ts --project=chromium` — 3/3 passed.
+- `npx playwright test tests/e2e/keyboard-public.spec.ts --project=mobile` — 3/3 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 855/855 Vitest tests, production build.
+
+## 2026-06-04 — White-label branding baseline без смены текущего бренда
+
+**Что сделано:**
+
+- Добавлен единый `lib/branding.ts` с public env-переопределениями `NEXT_PUBLIC_BRAND_*` и дефолтами текущей платформы: `AI Strategic Academy`, `AI Academy`, `закрытая академия`, `Закрытая образовательная платформа`, иконка `school`.
+- `t("app.name")` теперь возвращает имя бренда из `BRANDING`, сохраняя остальные ключи локализации из `locales/ru.json`.
+- Брендинг подключен к root metadata/PWA title, `SiteHeader`, `LoginScreen`, PDF/XLSX генераторам отчетов и PDF-сертификатам.
+- AI-модули из внешнего `implementation_plan.md` не включены в этот слой: выбор LLM-провайдера/API-ключа и расписание dropout prediction требуют отдельного продуктового решения и не являются блокером `FULL-OPTIMIZATION-GOAL.md`.
+- Добавлен `tests/unit/branding.test.ts`: дефолты, env override, fallback для пустых env и связка `t("app.name")`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/branding.test.ts tests/unit/reports/xlsx-generator.test.ts tests/unit/reports/pdf-generator.test.ts tests/unit/certificates-service.test.ts` — 32/32 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 854/854 Vitest tests, production build.
+
 ## 2026-06-04 — Исправление центрирования активного индикатора в MobileBottomNav
 
 **Что сделано:**

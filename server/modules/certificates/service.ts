@@ -7,6 +7,7 @@ import path from "path";
 import { env } from "@/lib/env";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
+import { BRANDING } from "@/lib/branding";
 import { logAudit } from "@/server/modules/audit/service";
 import { createNotification } from "@/server/modules/notifications/service";
 
@@ -540,7 +541,7 @@ export async function generateCertificatePdf(certificateId: string) {
   });
 
   // Typography and Layout — все тексты на русском
-  const textTitle = "AI Strategic Academy";
+  const textTitle = BRANDING.name;
   const titleWidth = bold.widthOfTextAtSize(textTitle, 36);
   page.drawText(textTitle, { x: (pageWidth - titleWidth) / 2, y: 500, size: 36, font: bold, color: rgb(0.12, 0.23, 0.47) });
 
@@ -693,7 +694,7 @@ export async function generateDraftCertificatePdf(courseId: string, customConfig
     borderColor: rgb(0.85, 0.73, 0.35), borderWidth: 1,
   });
 
-  const textTitle = "AI Strategic Academy";
+  const textTitle = BRANDING.name;
   const titleWidth = bold.widthOfTextAtSize(textTitle, 36);
   page.drawText(textTitle, { x: (pageWidth - titleWidth) / 2, y: 500, size: 36, font: bold, color: rgb(0.12, 0.23, 0.47) });
 

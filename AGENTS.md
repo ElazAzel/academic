@@ -51,6 +51,12 @@ proxy.ts        — Next.js middleware (route guard, CSRF, rate limit)
   `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (client) — same value
 - CSP uses per-request nonce-based `script-src`; keep `'unsafe-inline'` only in
   `style-src`
+- White-label defaults live in `lib/branding.ts` and `NEXT_PUBLIC_BRAND_*`;
+  admin-managed runtime branding lives in `app_settings` and is resolved through
+  `server/modules/branding/service.ts`. Runtime UI/metadata/PWA/support surfaces
+  should use the runtime branding service when server-rendered, and `BRANDING`
+  only as fallback/default. PWA uses dynamic `/manifest.webmanifest` instead of
+  `public/manifest.json`.
 - `var/` dir is gitignored (credentials output, temp files)
 - `__dbcheck.mjs` in git history contained hardcoded Supabase password — do not
   commit secrets

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { BRANDING } from "@/lib/branding";
 
 const GLOBAL_ERROR_DESCRIPTION = "Произошла критическая ошибка приложения. Попробуйте обновить страницу.";
 
@@ -16,7 +17,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   return (
     <html lang="ru">
       <head>
-        <title>Критическая ошибка — AI Strategic Academy</title>
+        <title>{`Критическая ошибка — ${BRANDING.name}`}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F8FA] px-6 antialiased">

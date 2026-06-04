@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, RiskRow } from "./types";
 import { groupByCourse } from "./data";
+import { BRANDING } from "@/lib/branding";
 
 // ── Font loading ────────────────────────────────────────────────────
 
@@ -90,7 +91,7 @@ function drawFooter(page: PDFPage, font: PDFFont, pageNum: number, totalPages: n
     thickness: 0.5,
     color: rgb(0.8, 0.8, 0.85),
   });
-  page.drawText(`AI Strategic Academy  |  ${new Date().toLocaleDateString("ru-RU")}`, {
+  page.drawText(`${BRANDING.name}  |  ${new Date().toLocaleDateString("ru-RU")}`, {
     x: MARGIN, y: footerY - 2, size: 6, font,
     color: rgb(0.6, 0.6, 0.65),
   });

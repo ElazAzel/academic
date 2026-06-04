@@ -1,16 +1,19 @@
 import { MailQuestion, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AUTH_ROUTES } from "@/lib/constants";
+import { getRuntimeBranding } from "@/server/modules/branding/service";
 
 export const metadata = {
   title: "Восстановление пароля",
   description: "Восстановите доступ к своей учётной записи.",
 };
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const branding = await getRuntimeBranding();
+
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6 rounded-lg border bg-card p-8 text-center shadow-sm">
@@ -20,8 +23,8 @@ export default function ForgotPasswordPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Восстановление пароля</h1>
         <p className="text-muted-foreground">
           Самостоятельный сброс пароля отключён. Для восстановления доступа напишите на почту{" "}
-          <a href="mailto:admin@aistrategic.kz" className="font-medium text-primary underline underline-offset-4">
-            admin@aistrategic.kz
+          <a href={`mailto:${branding.supportEmail}`} className="font-medium text-primary underline underline-offset-4">
+            {branding.supportEmail}
           </a>
           , указав свои ФИО. Мы поможем восстановить доступ.
         </p>

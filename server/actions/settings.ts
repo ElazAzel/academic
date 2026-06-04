@@ -7,6 +7,7 @@ import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { revalidatePath } from "next/cache";
 import { getUserNotificationPreferences, setNotificationPreferences, type NotificationChannel } from "@/server/modules/notifications/preferences";
 import { getAllAppSettings, setAppSettings, type AppSettings } from "@/server/modules/admin/settings";
+import { BRANDING_SETTING_KEYS, normalizeHexColor } from "@/server/modules/branding/service";
 import { createNotification } from "@/server/modules/notifications/service";
 import { logAudit } from "@/server/modules/audit/service";
 import { ApiError } from "@/lib/http";
@@ -41,6 +42,42 @@ const PasswordSettingsSchema = z.object({
 }).refine((data) => data.newPassword === data.confirmPassword, {
   path: ["confirmPassword"],
   message: "Новые пароли не совпадают",
+});
+
+const brandText = (max: number, message: string) =>
+  z.preprocess((value) => (typeof value === "string" ? value.trim() : ""), z.string().min(1, message).max(max));
+
+const optionalBrandText = (max: number) =>
+  z.preprocess((value) => (typeof value === "string" ? value.trim() : ""), z.string().max(max));
+
+const hexColor = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim() : ""),
+  z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/u, "Цвет должен быть в формате #RRGGBB")
+);
+
+const logoUrlSchema = optionalBrandText(500).refine(
+  (value) => value === "" || (value.startsWith("/") && !value.startsWith("//")) || value.startsWith("https://"),
+  "Логотип должен быть относительным адресом платформы или HTTPS-ссылкой"
+);
+
+const BrandingSettingsSchema = z.object({
+  name: brandText(80, "Название бренда обязательно"),
+  shortName: brandText(32, "Короткое название обязательно"),
+  subtitle: brandText(80, "Подзаголовок обязателен"),
+  description: brandText(180, "Описание обязательно"),
+  metadataDescription: brandText(240, "Описание для браузера обязательно"),
+  logoIcon: brandText(48, "Иконка обязательна").refine(
+    (value) => /^[a-z0-9_]+$/u.test(value),
+    "Название иконки должно быть без пробелов и специальных символов"
+  ),
+  logoUrl: logoUrlSchema,
+  supportEmail: brandText(120, "Email поддержки обязателен").pipe(z.string().email("Некорректный email поддержки")),
+  primaryColor: hexColor,
+  primaryContainerColor: hexColor,
+  accentColor: hexColor,
+  accentContainerColor: hexColor,
+  backgroundColor: hexColor,
+  surfaceColor: hexColor,
 });
 
 function validationError(error: z.ZodError) {
@@ -220,5 +257,61 @@ export async function updateAppSettingsAction(formData: FormData) {
     revalidatePath("/admin/settings", "layout");
   } catch (err) {
     throwSafeSettingsError(err, "[updateAppSettingsAction]", "Не удалось обновить системные настройки");
+  }
+}
+
+export async function updateBrandingSettingsAction(formData: FormData) {
+  try {
+    await requireUser("settings:manage");
+    const parsed = BrandingSettingsSchema.safeParse({
+      name: formData.get("brand_name"),
+      shortName: formData.get("brand_shortName"),
+      subtitle: formData.get("brand_subtitle"),
+      description: formData.get("brand_description"),
+      metadataDescription: formData.get("brand_metadataDescription"),
+      logoIcon: formData.get("brand_logoIcon"),
+      logoUrl: formData.get("brand_logoUrl"),
+      supportEmail: formData.get("brand_supportEmail"),
+      primaryColor: formData.get("brand_primaryColor"),
+      primaryContainerColor: formData.get("brand_primaryContainerColor"),
+      accentColor: formData.get("brand_accentColor"),
+      accentContainerColor: formData.get("brand_accentContainerColor"),
+      backgroundColor: formData.get("brand_backgroundColor"),
+      surfaceColor: formData.get("brand_surfaceColor"),
+    });
+
+    if (!parsed.success) {
+      throw validationError(parsed.error);
+    }
+
+    const branding = parsed.data;
+    await setAppSettings({
+      [BRANDING_SETTING_KEYS.name]: branding.name,
+      [BRANDING_SETTING_KEYS.shortName]: branding.shortName,
+      [BRANDING_SETTING_KEYS.subtitle]: branding.subtitle,
+      [BRANDING_SETTING_KEYS.description]: branding.description,
+      [BRANDING_SETTING_KEYS.metadataDescription]: branding.metadataDescription,
+      [BRANDING_SETTING_KEYS.logoIcon]: branding.logoIcon,
+      [BRANDING_SETTING_KEYS.logoUrl]: branding.logoUrl,
+      [BRANDING_SETTING_KEYS.supportEmail]: branding.supportEmail,
+      [BRANDING_SETTING_KEYS.primaryColor]: normalizeHexColor(branding.primaryColor, branding.primaryColor),
+      [BRANDING_SETTING_KEYS.primaryContainerColor]: normalizeHexColor(
+        branding.primaryContainerColor,
+        branding.primaryContainerColor,
+      ),
+      [BRANDING_SETTING_KEYS.accentColor]: normalizeHexColor(branding.accentColor, branding.accentColor),
+      [BRANDING_SETTING_KEYS.accentContainerColor]: normalizeHexColor(
+        branding.accentContainerColor,
+        branding.accentContainerColor,
+      ),
+      [BRANDING_SETTING_KEYS.backgroundColor]: normalizeHexColor(branding.backgroundColor, branding.backgroundColor),
+      [BRANDING_SETTING_KEYS.surfaceColor]: normalizeHexColor(branding.surfaceColor, branding.surfaceColor),
+    });
+
+    revalidatePath("/", "layout");
+    revalidatePath("/admin/settings", "layout");
+    revalidatePath("/manifest.webmanifest");
+  } catch (err) {
+    throwSafeSettingsError(err, "[updateBrandingSettingsAction]", "Не удалось обновить бренд платформы");
   }
 }

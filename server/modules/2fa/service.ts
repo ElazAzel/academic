@@ -1,10 +1,11 @@
 import { generateSecret, generateURI, verifySync } from "otplib";
 import { createHash, randomBytes } from "node:crypto";
 import { getPrisma } from "@/lib/prisma";
+import { BRANDING } from "@/lib/branding";
 
 const prisma = getPrisma();
 
-const ISSUER = "AI Strategic Academy";
+const ISSUER = BRANDING.name;
 
 /**
  * Generate a new TOTP secret for a user.

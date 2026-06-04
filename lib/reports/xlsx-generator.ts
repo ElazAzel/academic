@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, RiskRow } from "./types";
 import { groupByCourse } from "./data";
+import { BRANDING } from "@/lib/branding";
 
 // ── Shared helpers ───────────────────────────────────────────────────
 
@@ -43,6 +44,12 @@ function freezeHeader(ws: ExcelJS.Worksheet) {
   ws.views = [{ state: "frozen", ySplit: 1 }];
 }
 
+function applyWorkbookMetadata(wb: ExcelJS.Workbook) {
+  wb.creator = BRANDING.name;
+  wb.created = new Date();
+  wb.modified = new Date();
+}
+
 // ── Colors for severity ──────────────────────────────────────────────
 
 const SEVERITY_FILLS: Record<string, ExcelJS.Fill> = {
@@ -56,9 +63,7 @@ const SEVERITY_FILLS: Record<string, ExcelJS.Fill> = {
 
 export async function generateProgressXlsx(rows: ProgressRow[], fields?: string[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "AI Strategic Academy";
-  wb.created = new Date();
-  wb.modified = new Date();
+  applyWorkbookMetadata(wb);
 
   const ws = wb.addWorksheet("Прогресс");
 
@@ -188,9 +193,7 @@ export async function generateProgressXlsx(rows: ProgressRow[], fields?: string[
 
 export async function generateRiskXlsx(rows: RiskRow[], fields?: string[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "AI Strategic Academy";
-  wb.created = new Date();
-  wb.modified = new Date();
+  applyWorkbookMetadata(wb);
 
   const ws = wb.addWorksheet("Риски");
 
@@ -266,9 +269,7 @@ export async function generateRiskXlsx(rows: RiskRow[], fields?: string[]): Prom
 
 export async function generateCertificateXlsx(rows: CertificateRow[], fields?: string[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "AI Strategic Academy";
-  wb.created = new Date();
-  wb.modified = new Date();
+  applyWorkbookMetadata(wb);
 
   const ws = wb.addWorksheet("Сертификаты");
 
@@ -342,9 +343,7 @@ export async function generateCertificateXlsx(rows: CertificateRow[], fields?: s
 
 export async function generateAssignmentXlsx(rows: AssignmentRow[], fields?: string[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "AI Strategic Academy";
-  wb.created = new Date();
-  wb.modified = new Date();
+  applyWorkbookMetadata(wb);
 
   const ws = wb.addWorksheet("Задания");
   ws.columns = [
@@ -418,9 +417,7 @@ export async function generateAssignmentXlsx(rows: AssignmentRow[], fields?: str
 
 export async function generateCuratorWorkloadXlsx(rows: CuratorWorkloadRow[], fields?: string[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "AI Strategic Academy";
-  wb.created = new Date();
-  wb.modified = new Date();
+  applyWorkbookMetadata(wb);
 
   const ws = wb.addWorksheet("Нагрузка кураторов");
   ws.columns = [

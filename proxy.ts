@@ -69,6 +69,8 @@ function checkCsrfOrigin(req: NextRequest): NextResponse | null {
 // Известные хэши (production 2026-06):
 // - sha256-J9cZHZf5nVZbsm7Pqxc8RsURv1AIXkMgbhfrZvoOs/A= — inline скрипт
 //   на /student/certificates без nonce (вероятно RSC flight data)
+// - sha256-UnthrFpGFotkvMOTp/ghVMSXoZZj9Y6epaMsaBAbUtg= — inline скрипт
+//   login/root runtime после динамического брендинга
 
 function buildCspPolicy(nonce: string, isDev: boolean): string {
   const devExtra = isDev
@@ -78,11 +80,14 @@ function buildCspPolicy(nonce: string, isDev: boolean): string {
   // addenv: Если хэш меняется на новом деплое — замени значение ниже.
   // Можно удалить когда nonce propagation будет чинить во всех Next.js-
   // скриптах.
-  const scriptHash = " 'sha256-J9cZHZf5nVZbsm7Pqxc8RsURv1AIXkMgbhfrZvoOs/A='";
+  const scriptHashes = [
+    "'sha256-J9cZHZf5nVZbsm7Pqxc8RsURv1AIXkMgbhfrZvoOs/A='",
+    "'sha256-UnthrFpGFotkvMOTp/ghVMSXoZZj9Y6epaMsaBAbUtg='",
+  ].join(" ");
 
   return [
     "default-src 'self'",
-    `script-src 'nonce-${nonce}' 'strict-dynamic'${scriptHash}${devExtra}`,
+    `script-src 'nonce-${nonce}' 'strict-dynamic' ${scriptHashes}${devExtra}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https: http:",
     "font-src 'self' data: https://fonts.gstatic.com",

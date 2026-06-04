@@ -95,6 +95,17 @@ describe("release hardening readiness contract", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("keeps session-dependent root side effects inside the app providers", () => {
+    const layoutSource = readFileSync(path.join(root, "app", "layout.tsx"), "utf8");
+    const providersOpen = layoutSource.indexOf("<Providers>");
+    const heartbeat = layoutSource.indexOf("<Heartbeat />");
+    const providersClose = layoutSource.indexOf("</Providers>");
+
+    expect(providersOpen).toBeGreaterThan(-1);
+    expect(heartbeat).toBeGreaterThan(providersOpen);
+    expect(heartbeat).toBeLessThan(providersClose);
+  });
+
   it("tracks all seven release hardening work packages with owners and evidence", () => {
     expect(releaseHardeningContractVersion).toBe("2026-05-31");
     expect(releaseWorkPackages.map((workPackage) => workPackage.id)).toEqual([

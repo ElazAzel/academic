@@ -15,9 +15,13 @@ Repo-local v1 boundary cleanup выполнен: прямой Prisma Client уд
 
 E2E-навигация больше не использует `networkidle`; проверки переведены на `domcontentloaded`, чтобы SSE-стрим уведомлений не удерживал сеть активной и не создавал ложные таймауты.
 
-Последние repo-local gates по `docs/updates.md`: `npm run verify` проходит, включая banned-patterns, lint 0 warnings, typecheck, 850/850 Vitest tests и production build. Это подтверждает repo-local code health, но не закрывает release-ready статус.
+Последние repo-local gates по `docs/updates.md`: `npm run verify` проходит, включая banned-patterns, lint 0 warnings, typecheck, 858/858 Vitest tests и production build. Это подтверждает repo-local code health, но не закрывает release-ready статус.
 
-Последний закрытый слой: attendance actions для посещаемости курса, посещаемости урока и списка курсов преподавателя больше не раскрывают raw backend errors, не логируют controlled `ApiError` в stderr и удерживают rejected Prisma promises внутри action-boundary. Предыдущие слои закрыли super-curator actions, glossary actions, risk-management actions, student quiz/assignment actions и quiz result clients.
+Последний закрытый слой: white-label runtime finalization. Публичные metadata, offline/global error surfaces, PWA manifest/service worker, 2FA issuer, SMTP fallback, support email, admin/register/consent copy, отчеты и сертификаты используют единый `BRANDING`; динамический `/manifest.webmanifest` получает `NEXT_PUBLIC_BRAND_*`, а runtime guard запрещает legacy brand literals вне `lib/branding.ts`. Предыдущие слои закрыли login failure accessibility, guarded authenticated e2e boundary, public auth keyboard proof, runtime provider boundary, white-label branding baseline, attendance actions, super-curator actions, glossary actions, risk-management actions, student quiz/assignment actions и quiz result clients.
+
+WP2/WP4 дополнительно усилены customer observer read-only guard: `tests/unit/customer-observer-readonly.test.ts` проверяет точный RBAC роли `customer_observer`, desktop/mobile навигацию только внутри `/customer-observer`, отсутствие админских certificate mutation surfaces, прямых mutating API calls и cross-role links в observer route-tree. `/customer-observer/settings` оставлен как self-service зона аккаунта и отдельно проверяется на отсутствие system app settings/build actions.
+
+WP4/white-label дополнительно усилены admin-managed brand customization: `/admin/settings` получил вкладку `Бренд`, настройки сохраняются в `app_settings`, а runtime branding управляет root metadata, viewport theme color, `/manifest.webmanifest`, CSS variables, login/header/PWA install surfaces, support email на `/forgot-password` и disabled reset APIs. CSP/report boundary обновлён для чистого browser smoke после динамического брендинга.
 
 Release-ready остаётся `partial`: WP1, WP2, WP4 и WP5 требуют сценарного proof, WP6 остаётся `blocked` до staging/production `verify:release`, backup/restore/rollback evidence, DPA и ротации скомпрометированного Supabase-пароля.
 
