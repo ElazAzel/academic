@@ -8,9 +8,22 @@ import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { StatusBadge } from "@/components/lms/status-badge";
+import { readApiData } from "@/lib/api-client";
 import type { StudentQuizDetail } from "@/types/domain";
 
 type QuizPhase = "idle" | "active" | "result" | "review";
+type QuizAttemptResponse = {
+  score?: number;
+  passed?: boolean;
+  grading?: {
+    score?: number;
+    passed?: boolean;
+  };
+  xp?: {
+    earned?: number;
+    xp?: number;
+  } | null;
+};
 
 function isMultiChoice(type: string): boolean {
   return type === "MULTIPLE_CHOICE";
@@ -62,11 +75,15 @@ export function QuizBlock({ quiz }: { quiz: StudentQuizDetail }) {
         body: JSON.stringify({ answers }),
       });
       if (res.ok) {
-        const data = await res.json();
-        setResult({ score: data.grading?.score ?? data.score, passed: data.passed });
+        const data = await readApiData<QuizAttemptResponse>(res);
+        setResult({
+          score: data.grading?.score ?? data.score ?? 0,
+          passed: data.grading?.passed ?? data.passed ?? false,
+        });
         setPhase("result");
-        if (data.xp && data.xp.earned > 0) {
-          toast.success(`Вы заработали +${data.xp.earned} XP! Всего: ${data.xp.xp} XP`);
+        const earnedXp = data.xp?.earned ?? 0;
+        if (earnedXp > 0) {
+          toast.success(`Вы заработали +${earnedXp} XP! Всего: ${data.xp?.xp ?? 0} XP`);
         }
         router.refresh();
       } else {

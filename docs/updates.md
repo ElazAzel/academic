@@ -2,6 +2,33 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-04 — Результаты тестов студента читают стандартный API envelope
+
+**Что сделано:**
+
+- Найдена причина, почему студент после правильного ответа в inline-тесте урока видел неверный результат: `components/lms/quiz-block.tsx` читал ответ `POST /api/v1/quizzes/[quizId]/attempts` как плоский объект, хотя API возвращает стандартный envelope `{ data: ... }`.
+- `QuizBlock` теперь использует `readApiData()` и берет `grading.score`, `grading.passed`, `xp` из распакованного payload; правильный ответ больше не превращается визуально в `0%`/не пройден.
+- `app/student/quizzes/[quizId]/quiz-view.tsx` теперь после submit открывает результат конкретной попытки через `?attemptId=...`, чтобы повторная успешная попытка не могла показать старый результат.
+- Добавлен `tests/unit/components/quiz-result-client.test.tsx`: проверяет inline result из `{ data }` и переход standalone quiz на точный `attemptId`.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/components/quiz-result-client.test.tsx tests/unit/quiz.test.ts tests/unit/quiz-submit-safe-logging.test.ts` — 29/29 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 820/820 Vitest tests, production build.
+
+## 2026-06-04 — Analytics actions не раскрывают raw report/risk errors
+
+**Что сделано:**
+
+- `server/actions/analytics.ts` больше не логирует raw exceptions в `generateReportAction()`, `createRiskFlagAction()` и `resolveRiskFlagAction()`; неожиданные ошибки ограничены `getSafeErrorMetadata()`.
+- Controlled `ApiError` paths сохраняются без stderr-noise и без изменения клиентского контракта.
+- `tests/unit/actions-analytics.test.ts` расширен no-leak проверками для генерации отчета, создания риска и закрытия риска.
+
+**Проверка:**
+
+- `npm run test -- tests/unit/actions-analytics.test.ts tests/unit/activity-analytics-safe-logging.test.ts` — 11/11 passed.
+- `npm run verify` — passed: banned-patterns, lint 0 warnings, typecheck, 820/820 Vitest tests, production build.
+
 ## 2026-06-03 — Activity analytics action не раскрывает raw query errors
 
 **Что сделано:**

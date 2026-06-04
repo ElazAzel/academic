@@ -5,9 +5,13 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { readApiErrorMessage } from "@/lib/api-client";
+import { readApiData, readApiErrorMessage } from "@/lib/api-client";
 import { toast } from "sonner";
 import type { StudentQuizDetail } from "@/types/domain";
+
+type QuizAttemptResponse = {
+  id?: string;
+};
 
 function isMultiChoice(type: string): boolean {
   return type === "MULTIPLE_CHOICE";
@@ -60,7 +64,9 @@ export function QuizView({ quiz }: { quiz: StudentQuizDetail }) {
       });
 
       if (response.ok) {
-        router.push(`/student/quizzes/${quiz.id}/result`);
+        const attempt = await readApiData<QuizAttemptResponse>(response);
+        const attemptQuery = attempt.id ? `?attemptId=${encodeURIComponent(attempt.id)}` : "";
+        router.push(`/student/quizzes/${quiz.id}/result${attemptQuery}`);
         return;
       }
 

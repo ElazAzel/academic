@@ -64,7 +64,8 @@ describe("generateReportAction", () => {
       message: "Внутренняя ошибка сервера",
     } satisfies Partial<ApiError>);
     expect((caught as Error).message).not.toContain("secret-analytics-report");
-    expect(consoleSpy).toHaveBeenCalledWith("[generateReportAction]", expect.any(Error));
+    expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("secret-analytics-report");
+    expect(consoleSpy).toHaveBeenCalledWith("[generateReportAction]", expect.objectContaining({ errorType: "Error" }));
 
     consoleSpy.mockRestore();
   });
@@ -90,6 +91,29 @@ describe("createRiskFlagAction", () => {
 
     await expect(createRiskFlagAction("u1", "inactive_login")).rejects.toThrow("Доступ запрещен");
   });
+
+  it("wraps unexpected risk creation errors without leaking details", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockRiskFlagCreate.mockRejectedValue(new Error("postgres://secret-risk-create"));
+
+    let caught: unknown;
+    try {
+      await createRiskFlagAction("u1", "inactive_login", "c1", "coh1");
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toMatchObject({
+      code: "internal_error",
+      status: 500,
+      message: "Внутренняя ошибка сервера",
+    } satisfies Partial<ApiError>);
+    expect((caught as Error).message).not.toContain("secret-risk-create");
+    expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("secret-risk-create");
+    expect(consoleSpy).toHaveBeenCalledWith("[createRiskFlagAction]", expect.objectContaining({ errorType: "Error" }));
+
+    consoleSpy.mockRestore();
+  });
 });
 
 describe("resolveRiskFlagAction", () => {
@@ -110,6 +134,29 @@ describe("resolveRiskFlagAction", () => {
     mockRiskFlagFindUnique.mockResolvedValue(null);
     await expect(resolveRiskFlagAction("bad-id")).rejects.toThrow("Флаг риска не найден");
     expect(consoleSpy).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+
+  it("wraps unexpected risk resolve errors without leaking details", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockRiskFlagFindUnique.mockRejectedValue(new Error("postgres://secret-risk-resolve"));
+
+    let caught: unknown;
+    try {
+      await resolveRiskFlagAction("flag1");
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toMatchObject({
+      code: "internal_error",
+      status: 500,
+      message: "Внутренняя ошибка сервера",
+    } satisfies Partial<ApiError>);
+    expect((caught as Error).message).not.toContain("secret-risk-resolve");
+    expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("secret-risk-resolve");
+    expect(consoleSpy).toHaveBeenCalledWith("[resolveRiskFlagAction]", expect.objectContaining({ errorType: "Error" }));
+
     consoleSpy.mockRestore();
   });
 });

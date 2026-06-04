@@ -4,13 +4,13 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/page-guards";
 import { getPrisma } from "@/lib/prisma";
 import { logAudit } from "@/server/modules/audit/service";
-import { ApiError } from "@/lib/http";
+import { ApiError, getSafeErrorMetadata } from "@/lib/http";
 
 const prisma = getPrisma();
 
 function throwAnalyticsActionError(error: unknown, label: string): never {
   if (error instanceof ApiError) throw error;
-  console.error(label, error);
+  console.error(label, getSafeErrorMetadata(error));
   throw new ApiError("internal_error", "Внутренняя ошибка сервера", 500);
 }
 

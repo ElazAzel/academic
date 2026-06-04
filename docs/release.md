@@ -4,20 +4,20 @@
 
 ## 1. Release Hardening Plan
 
-Дата актуализации: 2026-06-03
+Дата актуализации: 2026-06-04
 Статус: active execution baseline для доведения платформы до доказуемой release-ready готовности.
 
 Итоговый краткий статус вынесен в `docs/READINESS.md`. Этот файл хранит подробный release-hardening baseline и runbook.
 
-### Текущий статус 2026-06-03
+### Текущий статус 2026-06-04
 
 Repo-local v1 boundary cleanup выполнен: прямой Prisma Client удален из `app/**/page.tsx` и `components/**`, данные для страниц вынесены в `server/modules/page-data/service.ts`, а `tests/unit/release-hardening-readiness.test.ts` теперь блокирует возврат `@/lib/prisma`, `getPrisma()` и `prisma.*` в UI-слой.
 
 E2E-навигация больше не использует `networkidle`; проверки переведены на `domcontentloaded`, чтобы SSE-стрим уведомлений не удерживал сеть активной и не создавал ложные таймауты.
 
-Последние repo-local gates по `docs/updates.md`: `npm run verify` проходит, включая banned-patterns, lint 0 warnings, typecheck, 816/816 Vitest tests и production build. Это подтверждает repo-local code health, но не закрывает release-ready статус.
+Последние repo-local gates по `docs/updates.md`: `npm run verify` проходит, включая banned-patterns, lint 0 warnings, typecheck, 820/820 Vitest tests и production build. Это подтверждает repo-local code health, но не закрывает release-ready статус.
 
-Последний закрытый слой: activity analytics action больше не раскрывает raw DB/query errors и сохраняет controlled validation/RBAC errors без stderr-noise. Предыдущий слой закрыл user batch importer safe error UX.
+Последний закрытый слой: quiz result clients корректно читают стандартный API envelope `{ data }`, inline-тест больше не показывает 0% после правильного ответа, а standalone quiz result открывает конкретную попытку через `attemptId`. Параллельно analytics actions больше не раскрывают raw report/risk errors в stderr. Предыдущий слой закрыл activity analytics safe logging.
 
 Release-ready остаётся `partial`: WP1, WP2, WP4 и WP5 требуют сценарного proof, WP6 остаётся `blocked` до staging/production `verify:release`, backup/restore/rollback evidence, DPA и ротации скомпрометированного Supabase-пароля.
 
