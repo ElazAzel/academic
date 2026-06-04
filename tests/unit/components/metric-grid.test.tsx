@@ -39,7 +39,7 @@ describe("MetricGrid", () => {
     const link = criticalValue.closest("a");
     expect(link).toHaveAttribute("href", "/super-curator/risks");
     // Critical priority adds a visual ring
-    const card = link?.querySelector(".rounded-lg");
+    const card = link?.querySelector(".academy-metric-card");
     expect(card?.className).toBeDefined();
     expect(card?.className).toContain("ring-m3-error");
 

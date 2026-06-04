@@ -80,10 +80,9 @@ const config: Config = {
       },
 
       borderRadius: {
-        /* M3-aware radii (shadcn uses --radius: 12px as base)
-           rounded-sm = 4px, rounded-md = 8px, rounded-lg = 12px
-           rounded-xl = 16px (tailwind default), rounded-2xl = 24px
-           rounded-3xl = 32px (tailwind default) */
+        /* M3-aware radii (shadcn uses --radius: 14px as base)
+           rounded-sm = 6px, rounded-md = 10px, rounded-lg = 14px
+           rounded-xl = 18px, rounded-2xl = 24px */
         lg: "var(--radius)",
         md: "calc(var(--radius) - 4px)",
         sm: "calc(var(--radius) - 8px)",
@@ -97,10 +96,10 @@ const config: Config = {
 
       fontSize: {
         /* M3 type scale */
-        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "0", fontWeight: "700" }],
-        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "0", fontWeight: "600" }],
-        "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }],
-        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
+        "headline-lg-mobile": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }],
+        "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }],
         "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "600" }],
         "title-lg": ["18px", { lineHeight: "26px", fontWeight: "600" }],
         "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
@@ -128,16 +127,18 @@ const config: Config = {
       },
 
       boxShadow: {
-        /* M3 elevation */
-        "m3-soft": "0 1px 2px rgba(15, 23, 42, 0.04)",
-        "m3-soft-hover": "0 1px 3px rgba(15, 23, 42, 0.08)",
-        "m3-modal": "0 16px 48px rgba(15, 23, 42, 0.16)",
-        /* Legacy */
-        glass: "0 1px 2px rgba(15, 23, 42, 0.04)",
-        panel: "0 1px 2px rgba(15, 23, 42, 0.06)",
-        "bottom-nav": "0 -1px 2px rgba(15, 23, 42, 0.05)",
-        "card-hover": "0 1px 3px rgba(15, 23, 42, 0.08)",
-        "mobile-top": "0 -1px 2px rgba(15, 23, 42, 0.04)",
+        /* M3 elevation — luminous depth */
+        "m3-soft": "0 1px 2px rgba(15, 23, 42, 0.03), 0 2px 8px rgba(15, 23, 42, 0.04)",
+        "m3-soft-hover": "0 2px 8px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.08)",
+        "m3-modal": "0 8px 32px rgba(15, 23, 42, 0.12), 0 24px 64px rgba(15, 23, 42, 0.16)",
+        "m3-glow": "0 0 32px rgba(26, 68, 148, 0.08)",
+        "m3-glow-lg": "0 0 48px rgba(26, 68, 148, 0.12)",
+        /* Legacy compat */
+        glass: "0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06)",
+        panel: "0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06)",
+        "bottom-nav": "0 -1px 2px rgba(15, 23, 42, 0.04), 0 -8px 24px rgba(15, 23, 42, 0.06)",
+        "card-hover": "0 2px 8px rgba(15, 23, 42, 0.06), 0 12px 32px rgba(15, 23, 42, 0.10)",
+        "mobile-top": "0 -1px 2px rgba(15, 23, 42, 0.03)",
       },
 
       spacing: {
@@ -173,29 +174,44 @@ const config: Config = {
           to: { opacity: "1" },
         },
         "slide-up": {
-          from: { opacity: "0", transform: "translateY(8px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
-        },
-        "scale-in": {
-          from: { opacity: "0", transform: "scale(0.95)" },
-          to: { opacity: "1", transform: "scale(1)" },
-        },
-        "slide-up-fade": {
           from: { opacity: "0", transform: "translateY(12px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
-        "slide-down": {
-          from: { opacity: "0", transform: "translateY(-8px)" },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.96)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
+        "slide-up-fade": {
+          from: { opacity: "0", transform: "translateY(16px)" },
           to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-down": {
+          from: { opacity: "0", transform: "translateY(-12px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "shimmer": {
+          from: { backgroundPosition: "-200% 0" },
+          to: { backgroundPosition: "200% 0" },
+        },
+        "glow-pulse": {
+          "0%, 100%": { opacity: "0.4" },
+          "50%": { opacity: "1" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-4px)" },
         },
       },
 
       animation: {
-        "fade-in": "fade-in 0.3s ease-out",
-        "slide-up": "slide-up 0.3s ease-out",
-        "slide-down": "slide-down 0.3s ease-out",
-        "scale-in": "scale-in 0.2s ease-out",
-        "slide-up-fade": "slide-up-fade 0.4s ease-out",
+        "fade-in": "fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-up": "slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-down": "slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        "scale-in": "scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-up-fade": "slide-up-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+        "shimmer": "shimmer 2s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        "float": "float 3s ease-in-out infinite",
       },
     }
   },

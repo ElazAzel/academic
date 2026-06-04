@@ -4,18 +4,18 @@ import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const fadeIn: Variants = {
-  hidden: { opacity: 1, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
 };
 
 const slideUp: Variants = {
-  hidden: { opacity: 1, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
 
 const scaleIn: Variants = {
-  hidden: { opacity: 1, scale: 0.95 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: "easeOut" } },
+  hidden: { opacity: 0, scale: 0.96 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
 };
 
 export function FadeIn({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
@@ -66,7 +66,7 @@ export function ScaleIn({ children, className, delay = 0 }: { children: React.Re
 export function Stagger({
   children,
   className,
-  staggerDelay = 0.05,
+  staggerDelay = 0.06,
 }: {
   children: React.ReactNode;
   className?: string;
@@ -86,10 +86,15 @@ export function Stagger({
 }
 
 export function CardHover({ children, className }: { children: React.ReactNode; className?: string }) {
+  const shouldReduce = useReducedMotion();
   return (
-    <div className={cn("transition-colors", className)}>
+    <motion.div
+      className={cn("transition-shadow duration-200", className)}
+      whileHover={shouldReduce ? undefined : { scale: 1.012, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+      whileTap={shouldReduce ? undefined : { scale: 0.985 }}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
@@ -97,9 +102,9 @@ export function PageTransition({ children, className }: { children: React.ReactN
   const shouldReduce = useReducedMotion();
   return (
     <motion.div
-      initial={shouldReduce ? { opacity: 1 } : { opacity: 1, y: 8 }}
+      initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={shouldReduce ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
+      transition={shouldReduce ? { duration: 0 } : { duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className={className}
     >
       {children}

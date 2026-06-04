@@ -2,6 +2,22 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-04 — Модернизация дизайн-системы Strategic Academy → 2026
+
+**Что сделано:**
+
+- Полностью модернизирован визуальный стиль приложения в соответствии с трендами 2025-2026 годов (layered glass, luminous depth, округлые углы `--radius: 14px`, мягкие тени и микро-взаимодействия).
+- В `app/globals.css` и `tailwind.config.ts` обновлены дизайн-токены: заменена плоская сетка фонового рисунка на мягкий радиальный градиент с фоновым шумом, улучшены стеклянные эффекты для панелей, обновлены тени и добавлены новые анимации (`glow-pulse`, `shimmer`, `float`).
+- Обновлены и адаптированы более 15 базовых UI-компонентов (`Button`, `Card`, `Input`, `Badge`, `Tabs`, `Progress`, `Table`, `Dialog`, `Sheet`, `Switch`, `DropdownMenu`, `Skeleton`, `Pagination`, `Textarea`, `Separator`, `Label`, `Avatar`).
+- Модернизированы ключевые layout-компоненты (`SiteHeader`, `AppShell`, `NavLinks`, `MobileBottomNav`) и виджеты LMS (`PageHeader`, `EmptyState`, `StatusBadge`).
+- Починены анимации появления (`FadeIn`, `SlideUp`, `ScaleIn` в `animations.tsx`), у которых до этого свойство `opacity` в начальном состоянии было равно `1`.
+- Переработан экран авторизации (`LoginScreen`) с использованием conic gradient анимации, размытых интерактивных сфер и двухслойных стеклянных панелей.
+- Адаптированы unit-тесты (`tests/unit/components/metric-grid.test.tsx` и `tests/unit/components/status-badge.test.tsx`) под новые стилевые переменные и классы скруглений.
+
+**Проверка:**
+
+- `npm run verify` — успешно пройдено: линтинг (0 warnings), typecheck, все 850 тестов Vitest и сборка продакшен-бандла (`next build`) выполнены без ошибок.
+
 ## 2026-06-04 — Attendance actions не раскрывают raw ошибки посещаемости
 
 **Что сделано:**

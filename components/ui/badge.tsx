@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 type BadgeVariant = "default" | "secondary" | "outline" | "destructive";
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: "border-m3-primary/25 bg-m3-primary-fixed/45 text-m3-primary",
-  secondary: "border-m3-outline-variant bg-m3-surface-container-low text-m3-on-surface-variant",
-  outline: "border-m3-outline-variant bg-m3-surface-container-lowest/70 text-m3-on-surface-variant",
-  destructive: "border-m3-error/30 bg-m3-error-container/60 text-m3-error",
+  default: "border-m3-primary/20 bg-m3-primary-fixed/35 text-m3-primary backdrop-blur-sm",
+  secondary: "border-m3-outline-variant/60 bg-m3-surface-container-low/80 text-m3-on-surface-variant backdrop-blur-sm",
+  outline: "border-m3-outline-variant/50 bg-m3-surface-container-lowest/60 text-m3-on-surface-variant backdrop-blur-sm",
+  destructive: "border-m3-error/20 bg-m3-error-container/40 text-m3-error backdrop-blur-sm",
 };
 
 export function Badge({
@@ -18,7 +18,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] transition-colors",
+        "inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[11px] font-semibold leading-5 transition-colors",
         variantStyles[variant],
         className
       )}

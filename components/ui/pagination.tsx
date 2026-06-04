@@ -29,21 +29,21 @@ export function Pagination({
 
   return (
     <nav className="flex items-center justify-between gap-4" aria-label="Пагинация">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-m3-on-surface-variant">
         Страница {currentPage} из {totalPages}
       </p>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 rounded-xl border border-m3-outline-variant/30 bg-m3-surface-container/40 p-1 backdrop-blur-sm">
         {currentPage > 1 ? (
           <Link
             href={href(currentPage - 1)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors hover:bg-muted"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm text-m3-on-surface-variant transition-all hover:bg-m3-surface-container-high/60 hover:text-m3-on-surface"
           >
             <ChevronLeft className="h-4 w-4" />
           </Link>
         ) : null}
         {pages.map((page, i) =>
           page === "..." ? (
-            <span key={`ellipsis-${i}`} className="inline-flex h-9 w-9 items-center justify-center text-sm text-muted-foreground">
+            <span key={`ellipsis-${i}`} className="inline-flex h-9 w-9 items-center justify-center text-sm text-m3-on-surface-variant/50">
               ...
             </span>
           ) : (
@@ -51,10 +51,10 @@ export function Pagination({
               key={page}
               href={href(page)}
               className={cn(
-                "inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors",
+                "inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition-all",
                 page === currentPage
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-muted"
+                  ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.2)]"
+                  : "text-m3-on-surface-variant hover:bg-m3-surface-container-high/60 hover:text-m3-on-surface"
               )}
             >
               {page}
@@ -64,7 +64,7 @@ export function Pagination({
         {currentPage < totalPages ? (
           <Link
             href={href(currentPage + 1)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors hover:bg-muted"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm text-m3-on-surface-variant transition-all hover:bg-m3-surface-container-high/60 hover:text-m3-on-surface"
           >
             <ChevronRight className="h-4 w-4" />
           </Link>

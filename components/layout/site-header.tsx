@@ -31,7 +31,7 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-m3-outline-variant/70 bg-m3-surface-container-lowest/88 shadow-[0_8px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl site-header">
+    <header className="sticky top-0 z-30 bg-m3-surface-container-lowest/75 shadow-[0_1px_0_var(--academy-line),0_8px_32px_rgba(15,23,42,0.04)] backdrop-blur-2xl site-header">
       <div className="mx-auto flex h-14 md:h-16 max-w-7xl items-center justify-between px-3 md:px-6">
         {/* Logo — compact on mobile */}
         <Link
@@ -39,13 +39,13 @@ export async function SiteHeader() {
           aria-label="На главную AI Strategic Academy"
           className="group flex shrink-0 items-center gap-2.5 font-semibold"
         >
-          <span className="academy-brand-mark flex h-8 w-8 items-center justify-center rounded-lg text-white md:h-9 md:w-9">
+          <span className="academy-brand-mark flex h-8 w-8 items-center justify-center rounded-xl text-white md:h-9 md:w-9 transition-all group-hover:shadow-[0_0_20px_rgba(26,68,148,0.3)]">
             <Icon name="school" size={20} className="md:hidden" aria-hidden />
             <Icon name="school" size={24} className="hidden md:block" aria-hidden />
           </span>
           <span className="hidden sm:flex sm:flex-col sm:leading-none">
-            <span className="text-sm text-m3-primary md:text-base">AI Strategic Academy</span>
-            <span className="mt-1 hidden text-[11px] font-medium text-m3-on-surface-variant md:inline">
+            <span className="text-sm text-m3-primary md:text-base font-semibold tracking-tight">AI Strategic Academy</span>
+            <span className="mt-1 hidden text-[11px] font-medium text-m3-on-surface-variant/60 md:inline">
               закрытая академия
             </span>
           </span>
@@ -57,9 +57,9 @@ export async function SiteHeader() {
           const { links } = getHeaderLinks(user.roles);
           if (links.length === 0) return null;
           return (
-            <nav className="hidden items-center gap-1 rounded-lg border border-m3-outline-variant/60 bg-m3-surface-container-low/70 p-1 lg:flex" aria-label="Основная навигация">
+            <nav className="hidden items-center gap-0.5 rounded-xl border border-m3-outline-variant/30 bg-m3-surface-container/40 p-1 backdrop-blur-sm lg:flex" aria-label="Основная навигация">
               {links.map((item) => (
-                <Button key={item.href} asChild variant="ghost" size="sm" className="h-8 min-h-8 px-3">
+                <Button key={item.href} asChild variant="ghost" size="sm" className="h-8 min-h-8 px-3 rounded-lg">
                   <Link href={item.href}>{item.label}</Link>
                 </Button>
               ))}
@@ -68,7 +68,7 @@ export async function SiteHeader() {
         })()}
 
         {/* Right actions */}
-        <div className="flex items-center gap-1 md:gap-2">
+        <div className="flex items-center gap-1 md:gap-1.5">
           <ThemeToggle />
           {user ? (
             <>

@@ -12,7 +12,9 @@ export function Avatar({ name, image, className }: { name: string; image?: strin
   return (
     <span
       className={cn(
-        "relative inline-flex h-9 w-9 overflow-hidden items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary",
+        "relative inline-flex h-9 w-9 overflow-hidden items-center justify-center rounded-full",
+        "bg-gradient-to-br from-primary/15 to-primary/5 text-sm font-semibold text-primary",
+        "ring-1 ring-m3-outline-variant/20",
         className,
       )}
       aria-label={name}

@@ -5,8 +5,9 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        "academy-panel rounded-lg text-m3-on-surface",
-        "transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out",
+        "academy-panel rounded-xl text-m3-on-surface",
+        "transition-all duration-200 ease-out",
+        "hover:shadow-card-hover hover:-translate-y-0.5",
         className
       )}
       {...props}
@@ -15,12 +16,12 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 }
 
 export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("space-y-1.5 p-4", className)} {...props} />;
+  return <div className={cn("space-y-1.5 p-5", className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   // eslint-disable-next-line jsx-a11y/heading-has-content
-  return <h3 className={cn("text-headline-sm font-headline-sm text-m3-on-surface", className)} {...props} />;
+  return <h3 className={cn("text-headline-sm font-headline-sm text-m3-on-surface tracking-tight", className)} {...props} />;
 }
 
 export function CardDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
@@ -28,5 +29,5 @@ export function CardDescription({ className, ...props }: HTMLAttributes<HTMLPara
 }
 
 export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("p-4 pt-0", className)} {...props} />;
+  return <div className={cn("p-5 pt-0", className)} {...props} />;
 }

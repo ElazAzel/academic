@@ -72,20 +72,31 @@ const STATUS_CONFIG: Record<BadgeStatus, StatusBadgeConfig> = {
   upcoming: { label: "Дедлайн", variant: "warning" },
 };
 
+const DOT_COLORS: Record<string, string> = {
+  success: "bg-emerald-500",
+  warning: "bg-amber-500",
+  danger: "bg-rose-500",
+  info: "bg-sky-500",
+  neutral: "bg-m3-outline",
+  primary: "bg-m3-primary",
+};
+
 const VARIANT_CLASSES: Record<string, string> = {
   success:
-    "border-m3-tertiary-fixed-dim bg-m3-tertiary-fixed text-m3-tertiary dark:border-m3-tertiary-container dark:bg-m3-tertiary-container/30 dark:text-m3-tertiary",
+    "border-emerald-500/20 bg-emerald-500/8 text-emerald-700 dark:border-emerald-500/15 dark:bg-emerald-500/10 dark:text-emerald-400",
   warning:
-    "border-m3-secondary-fixed-dim bg-m3-secondary-fixed text-m3-secondary dark:border-m3-secondary-container dark:bg-m3-secondary-container/30 dark:text-m3-secondary",
+    "border-amber-500/20 bg-amber-500/8 text-amber-700 dark:border-amber-500/15 dark:bg-amber-500/10 dark:text-amber-400",
   danger:
-    "border-m3-error-fixed-dim bg-m3-error-fixed text-m3-error dark:border-m3-error-container dark:bg-m3-error-container/30 dark:text-m3-error",
+    "border-rose-500/20 bg-rose-500/8 text-rose-700 dark:border-rose-500/15 dark:bg-rose-500/10 dark:text-rose-400",
   info:
-    "border-m3-primary-fixed-dim bg-m3-primary-fixed text-m3-primary dark:border-m3-primary-container dark:bg-m3-primary-container/30 dark:text-m3-primary",
+    "border-sky-500/20 bg-sky-500/8 text-sky-700 dark:border-sky-500/15 dark:bg-sky-500/10 dark:text-sky-400",
   neutral:
-    "border-m3-outline-variant bg-m3-surface-container-high text-m3-on-surface-variant",
+    "border-m3-outline-variant/40 bg-m3-surface-container-high/50 text-m3-on-surface-variant",
   primary:
-    "border-m3-primary-fixed-dim/60 bg-m3-primary-fixed text-m3-primary",
+    "border-m3-primary/20 bg-m3-primary/8 text-m3-primary",
 };
+
+const PULSE_VARIANTS = new Set<BadgeStatus>(["ACTIVE", "open", "IN_PROGRESS"]);
 
 export function StatusBadge({
   status,
@@ -109,13 +120,15 @@ export function StatusBadge({
 
   const finalLabel = label ?? config.label;
   const ariaLabel = props["aria-label"] || `Статус: ${finalLabel}`;
+  const shouldPulse = PULSE_VARIANTS.has(status);
 
   return (
     <Badge 
-      className={`${VARIANT_CLASSES[config.variant]} ${className}`}
+      className={`gap-1.5 ${VARIANT_CLASSES[config.variant]} ${className}`}
       aria-label={ariaLabel}
       {...props}
     >
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${DOT_COLORS[config.variant]} ${shouldPulse ? "animate-glow-pulse" : ""}`} />
       {finalLabel}
     </Badge>
   );

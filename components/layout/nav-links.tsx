@@ -67,7 +67,7 @@ export function NavLinks({ links }: { links: NavItem[] }) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-unit">
+    <div className="flex flex-col gap-0.5">
       {links.map((item) => {
         const isActive = activeHref === item.href;
         const badgeKey = BADGE_MAP[item.icon];
@@ -79,19 +79,19 @@ export function NavLinks({ links }: { links: NavItem[] }) {
             href={item.href}
             prefetch={false}
             className={cn(
-              "group relative flex items-center gap-sm rounded-lg border px-sm py-sm text-label-lg font-label-lg",
-              "transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out",
+              "group relative flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-label-lg font-label-lg",
+              "transition-all duration-200 ease-out",
               isActive
-                ? "border-m3-primary/20 bg-m3-primary-fixed/45 font-bold text-m3-primary shadow-[inset_3px_0_0_var(--m3-primary),0_8px_18px_rgba(22,63,130,0.08)]"
-                : "border-transparent text-m3-on-surface-variant hover:border-m3-outline-variant/70 hover:bg-m3-surface-container-high/80 hover:text-m3-on-surface"
+                ? "border-m3-primary/15 bg-m3-primary-fixed/30 font-bold text-m3-primary shadow-[inset_3px_0_0_var(--m3-primary),0_0_16px_rgba(26,68,148,0.06)]"
+                : "border-transparent text-m3-on-surface-variant hover:border-m3-outline-variant/40 hover:bg-m3-surface-container-high/50 hover:text-m3-on-surface"
             )}
           >
             <span
               className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-[background-color,color,transform] duration-200",
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
                 isActive
-                  ? "bg-m3-surface-container-lowest text-m3-primary"
-                  : "bg-transparent text-m3-on-surface-variant group-hover:bg-m3-surface-container-lowest group-hover:text-m3-primary"
+                  ? "bg-m3-surface-container-lowest text-m3-primary shadow-m3-soft"
+                  : "bg-transparent text-m3-on-surface-variant group-hover:bg-m3-surface-container-lowest/80 group-hover:text-m3-primary"
               )}
               aria-hidden="true"
             >
@@ -99,7 +99,7 @@ export function NavLinks({ links }: { links: NavItem[] }) {
             </span>
             <span className="flex-1">{item.label}</span>
             {showBadge ? (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-m3-error px-1.5 text-[10px] font-bold text-white shadow-[0_4px_10px_rgba(186,26,26,0.2)]">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-m3-error px-1.5 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(198,40,40,0.20)] animate-glow-pulse">
                 {badgeCount}
               </span>
             ) : null}
@@ -113,11 +113,11 @@ export function NavLinks({ links }: { links: NavItem[] }) {
             window.dispatchEvent(new CustomEvent("pwa-trigger-install"));
           }}
           className={cn(
-            "group mt-2 flex items-center gap-sm rounded-lg border px-sm py-sm text-left text-label-lg font-label-lg transition-all duration-200 ease-out",
-            "border-m3-primary/15 bg-m3-primary-fixed/35 text-m3-primary hover:border-m3-primary/30 hover:bg-m3-primary-fixed/55"
+            "group mt-3 flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-label-lg font-label-lg transition-all duration-200 ease-out",
+            "border-m3-primary/12 bg-m3-primary-fixed/25 text-m3-primary hover:border-m3-primary/25 hover:bg-m3-primary-fixed/40 hover:shadow-m3-glow"
           )}
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-m3-surface-container-lowest text-m3-primary">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-m3-surface-container-lowest text-m3-primary shadow-m3-soft">
             <Icon name="download" size={20} className="transition-transform group-hover:scale-110" />
           </span>
           <span className="flex-1 font-semibold">Установить приложение</span>

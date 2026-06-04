@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 function labelToValue(label: string): string {
@@ -20,6 +21,7 @@ export function Tabs({
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const shouldReduce = useReducedMotion();
   const [localActive, setLocalActive] = useState(defaultIndex);
 
   let active: number;
@@ -37,7 +39,10 @@ export function Tabs({
 
   return (
     <div className={className}>
-      <div className="flex gap-1 rounded-lg bg-muted/60 p-1" role="tablist">
+      <div
+        className="relative flex gap-1 rounded-xl bg-m3-surface-container/60 p-1 backdrop-blur-sm border border-m3-outline-variant/30"
+        role="tablist"
+      >
         {tabs.map((tab, i) => (
           <button
             key={tab.label}
@@ -53,12 +58,24 @@ export function Tabs({
               }
             }}
             className={cn(
-              "flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all",
+              "relative flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors z-[1]",
               active === i
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
+                ? "text-m3-on-surface"
+                : "text-m3-on-surface-variant hover:text-m3-on-surface",
             )}
           >
+            {active === i && (
+              <motion.span
+                layoutId={shouldReduce ? undefined : "tab-indicator"}
+                className="absolute inset-0 rounded-lg bg-m3-surface-container-lowest shadow-m3-soft"
+                style={{ zIndex: -1 }}
+                transition={
+                  shouldReduce
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 400, damping: 30 }
+                }
+              />
+            )}
             {tab.label}
           </button>
         ))}

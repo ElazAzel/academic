@@ -10,17 +10,18 @@ const containerVariants = {
   visible: {
     transition: {
       staggerChildren: 0.12,
-      delayChildren: 0.15,
+      delayChildren: 0.1,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 28, filter: "blur(4px)" },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+    filter: "blur(0px)",
+    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
   },
 };
 
@@ -33,47 +34,47 @@ export function LoginScreen({
 }) {
   return (
     <main className="academy-login-shell relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden px-4 py-8 selection:bg-m3-primary/20 selection:text-m3-primary">
-      {/* Animated gradient background */}
+      {/* Animated mesh gradient background */}
       <motion.div
         className="pointer-events-none absolute inset-0"
         aria-hidden="true"
       >
         <motion.div
-          className="absolute -inset-[100%] opacity-[0.07]"
+          className="absolute -inset-[50%] opacity-[0.06]"
           style={{
             background:
-              "linear-gradient(135deg, #163f82 0%, #7c4dff 50%, #163f82 100%)",
-            backgroundSize: "400% 400%",
+              "conic-gradient(from 180deg at 50% 50%, #1a4494 0%, #006b5e 30%, #805ad5 60%, #1a4494 100%)",
+            backgroundSize: "200% 200%",
           }}
-          animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-          transition={{ duration: 20, ease: "linear", repeat: Infinity }}
+          animate={{ rotate: [0, 360] }}
+          transition={{ duration: 60, ease: "linear", repeat: Infinity }}
         />
       </motion.div>
 
-      {/* Decorative pulsing orbs */}
+      {/* Decorative ambient orbs */}
       <motion.div
-        className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full opacity-[0.04]"
+        className="pointer-events-none absolute -left-24 -top-24 h-[480px] w-[480px] rounded-full opacity-[0.05]"
         style={{
-          background: "radial-gradient(circle, #7c4dff 0%, transparent 70%)",
+          background: "radial-gradient(circle, #805ad5 0%, transparent 70%)",
         }}
-        animate={{ scale: [1, 1.1, 1] }}
+        animate={{ scale: [1, 1.15, 1], x: [0, 20, 0] }}
         transition={{
-          duration: 8,
+          duration: 12,
           ease: "easeInOut",
           repeat: Infinity,
         }}
       />
       <motion.div
-        className="pointer-events-none absolute -bottom-32 -right-32 h-96 w-96 rounded-full opacity-[0.04]"
+        className="pointer-events-none absolute -bottom-24 -right-24 h-[480px] w-[480px] rounded-full opacity-[0.05]"
         style={{
-          background: "radial-gradient(circle, #163f82 0%, transparent 70%)",
+          background: "radial-gradient(circle, #1a4494 0%, transparent 70%)",
         }}
-        animate={{ scale: [1, 1.15, 1] }}
+        animate={{ scale: [1, 1.2, 1], x: [0, -20, 0] }}
         transition={{
-          duration: 10,
+          duration: 14,
           ease: "easeInOut",
           repeat: Infinity,
-          delay: 2,
+          delay: 3,
         }}
       />
 
@@ -85,14 +86,14 @@ export function LoginScreen({
       >
         <motion.div
           variants={itemVariants}
-          className="academy-login-panel flex w-full flex-col gap-lg rounded-lg p-lg md:p-xl"
+          className="academy-login-panel flex w-full flex-col gap-lg rounded-2xl p-lg md:p-xl"
         >
-          <div className="flex flex-col items-center gap-sm border-b border-m3-outline-variant/25 pb-lg text-center">
-            <span className="rounded-full border border-m3-primary/20 bg-m3-primary-fixed/45 px-3 py-1 text-body-sm font-semibold text-m3-primary">
+          <div className="flex flex-col items-center gap-sm border-b border-m3-outline-variant/15 pb-lg text-center">
+            <span className="rounded-full border border-m3-primary/15 bg-m3-primary/8 px-3 py-1 text-body-sm font-semibold text-m3-primary">
               закрытый вход
             </span>
             <div className="flex flex-col items-center gap-sm">
-              <div className="academy-brand-mark mb-sm flex h-14 w-14 items-center justify-center rounded-lg text-white">
+              <div className="academy-brand-mark mb-sm flex h-14 w-14 items-center justify-center rounded-2xl text-white">
                 <span
                   className="material-symbols-outlined text-[28px] text-white"
                   style={{ fontVariationSettings: "'FILL' 1" }}
@@ -101,10 +102,10 @@ export function LoginScreen({
                   school
                 </span>
               </div>
-              <h1 className="text-headline-lg-mobile font-semibold text-m3-primary md:text-headline-lg">
+              <h1 className="text-headline-lg-mobile font-semibold text-gradient-primary md:text-headline-lg tracking-tight">
                 AI Strategic Academy
               </h1>
-              <p className="text-body-md font-body-md text-m3-on-surface-variant">
+              <p className="text-body-md font-body-md text-m3-on-surface-variant/80">
                 Закрытая образовательная платформа
               </p>
             </div>
@@ -112,11 +113,11 @@ export function LoginScreen({
 
           {reason === "device-limit" ? (
             <motion.div
-              initial={{ opacity: 0, height: 0, scale: 0.95 }}
+              initial={{ opacity: 0, height: 0, scale: 0.96 }}
               animate={{ opacity: 1, height: "auto", scale: 1 }}
-              exit={{ opacity: 0, height: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden rounded-lg border border-m3-error/30 bg-m3-error-container/70 px-md py-sm text-body-sm font-body-sm text-m3-error shadow-[0_8px_18px_rgba(186,26,26,0.08)]"
+              exit={{ opacity: 0, height: 0, scale: 0.96 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden rounded-xl border border-rose-500/20 bg-rose-500/8 px-md py-sm text-body-sm font-body-sm text-rose-700 dark:text-rose-400 shadow-[0_0_16px_rgba(198,40,40,0.06)]"
               role="alert"
             >
               Сеанс завершен: под этой учетной записью выполнен вход на третьем устройстве. Доступ разрешен максимум с двух устройств; не передавайте логин и пароль третьим лицам.
@@ -128,16 +129,16 @@ export function LoginScreen({
 
         <motion.footer
           variants={itemVariants}
-          className="mt-lg flex flex-wrap justify-center gap-x-md gap-y-xs rounded-lg border border-m3-outline-variant/45 bg-m3-surface-container-lowest/70 px-4 py-3 text-body-sm font-body-sm text-m3-on-surface-variant/80 backdrop-blur"
+          className="mt-lg flex flex-wrap justify-center gap-x-md gap-y-xs rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest/50 px-4 py-3 text-body-sm font-body-sm text-m3-on-surface-variant/60 backdrop-blur-md"
         >
           <Link href="/privacy" className="transition-colors hover:text-m3-primary hover:underline">
             Политика конфиденциальности
           </Link>
-          <span className="hidden text-m3-outline-variant md:inline">•</span>
+          <span className="hidden text-m3-outline-variant/40 md:inline">•</span>
           <Link href="/terms" className="transition-colors hover:text-m3-primary hover:underline">
             Условия использования
           </Link>
-          <span className="hidden text-m3-outline-variant md:inline">•</span>
+          <span className="hidden text-m3-outline-variant/40 md:inline">•</span>
           <Link href="/docs/cookie-notice" className="transition-colors hover:text-m3-primary hover:underline">
             Файлы Cookie
           </Link>
