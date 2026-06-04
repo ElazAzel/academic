@@ -48,7 +48,8 @@ export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
               {isActive && (
                 <motion.span
                   layoutId={shouldReduce ? undefined : "bottom-nav-indicator"}
-                  className="absolute -bottom-1 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-full bg-m3-primary shadow-[0_0_8px_var(--m3-primary)]"
+                  className="absolute -bottom-1 h-[3px] w-6 rounded-full bg-m3-primary shadow-[0_0_8px_var(--m3-primary)]"
+                  style={{ left: "calc(50% - 0.75rem)" }}
                   transition={shouldReduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 35 }}
                 />
               )}
