@@ -10,10 +10,13 @@ import { Avatar } from "@/components/ui/avatar";
 import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCurrentUser } from "@/lib/auth/session";
-import { updateProfileSettingsAction, updatePasswordAction, getAppSettingsAction, updateAppSettingsAction, incrementBuildVersionAction, updateBrandingSettingsAction } from "@/server/actions/settings";
+import fs from "fs";
+import path from "path";
+import { updateProfileSettingsAction, updatePasswordAction, getAppSettingsAction, updateAppSettingsAction, incrementBuildVersionAction, updateBrandingSettingsAction, updateLegalDocumentAction } from "@/server/actions/settings";
 import { TwoFactorSettings } from "@/components/admin/two-factor-settings";
 import { resolveBrandingFromSettings } from "@/server/modules/branding/service";
 import { BrandSettingsForm } from "@/components/admin/brand-settings-form";
+import { LegalDocumentsForm } from "@/components/admin/legal-documents-form";
 
 export const metadata = {
   title: "Настройки — Администрирование",
@@ -30,8 +33,37 @@ const FEATURE_FLAGS = [
 export default async function AdminSettingsPage() {
   await requireRolePage(["admin"]);
   const user = await getCurrentUser();
-  const appSettings = await getAppSettingsAction();
+  const appSettings = (await getAppSettingsAction()) || {};
   const branding = resolveBrandingFromSettings(appSettings);
+
+  const readLegalFile = (filename: string) => {
+    try {
+      const filePath = path.join(process.cwd(), "docs", "legal", filename);
+      if (fs.existsSync(filePath)) {
+        return fs.readFileSync(filePath, "utf-8");
+      }
+    } catch {}
+    return "";
+  };
+
+  const privacyFallback = readLegalFile("privacy-policy.md");
+  const termsFallback = readLegalFile("terms-of-use.md");
+  const cookieFallback = readLegalFile("cookie-notice.md");
+
+  const initialDocs = {
+    "privacy-policy": {
+      content: (appSettings.LEGAL_CONTENT_PRIVACY_POLICY as string) || privacyFallback,
+      version: (appSettings.LEGAL_VERSION_PRIVACY_POLICY as string) || "2026-05-01",
+    },
+    "terms-of-use": {
+      content: (appSettings.LEGAL_CONTENT_TERMS_OF_USE as string) || termsFallback,
+      version: (appSettings.LEGAL_VERSION_TERMS_OF_USE as string) || "2026-05-01",
+    },
+    "cookie-notice": {
+      content: (appSettings.LEGAL_CONTENT_COOKIE_NOTICE as string) || cookieFallback,
+      version: (appSettings.LEGAL_VERSION_COOKIE_NOTICE as string) || "2026-05-01",
+    },
+  };
 
  return (
   <AppShell role="admin">
@@ -209,11 +241,17 @@ export default async function AdminSettingsPage() {
                className="mt-1 max-w-[200px]"
                defaultValue={appSettings.CERTIFICATE_COMPLETION_THRESHOLD as number ?? 85}/>
            </div>
-           <Button type="submit">Сохранить</Button>
-          </CardContent>
-         </Card>
-        </form>
-       ),
+            <Button type="submit">Сохранить</Button>
+           </CardContent>
+          </Card>
+         </form>
+        ),
+       },
+      {
+        label: "Документы",
+        content: (
+          <LegalDocumentsForm initialDocs={initialDocs} action={updateLegalDocumentAction} />
+        ),
       },
      {
        label: "Кэш",

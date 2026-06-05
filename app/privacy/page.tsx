@@ -1,13 +1,13 @@
 import fs from "fs";
 import path from "path";
 import { SiteHeader } from "@/components/layout/site-header";
+import { getAllAppSettings } from "@/server/modules/admin/settings";
 
 export const metadata = {
   title: "Политика конфиденциальности",
   description: "Политика обработки и защиты персональных данных.",
 };
 
-export const dynamic = "force-static";
 export const revalidate = 86400; // 24 hours
 
 function renderMarkdown(md: string): string {
@@ -55,9 +55,15 @@ function renderMarkdown(md: string): string {
   return html.join("\n");
 }
 
-export default function PrivacyPage() {
-  const filePath = path.join(process.cwd(), "docs", "legal", "privacy-policy.md");
-  const content = fs.readFileSync(filePath, "utf-8");
+export default async function PrivacyPage() {
+  const settings = await getAllAppSettings();
+  let content = settings.LEGAL_CONTENT_PRIVACY_POLICY as string | undefined;
+
+  if (!content) {
+    const filePath = path.join(process.cwd(), "docs", "legal", "privacy-policy.md");
+    content = fs.readFileSync(filePath, "utf-8");
+  }
+
   const html = renderMarkdown(content);
 
   return (

@@ -379,3 +379,49 @@ export async function updateBrandingSettingsAction(formData: FormData) {
     throwSafeSettingsError(err, "[updateBrandingSettingsAction]", "Не удалось обновить бренд платформы");
   }
 }
+
+const LegalDocumentSchema = z.object({
+  slug: z.enum(["privacy-policy", "terms-of-use", "cookie-notice"]),
+  content: z.string().min(1, "Содержимое документа не может быть пустым"),
+  incrementVersion: z.boolean(),
+});
+
+export async function updateLegalDocumentAction(formData: FormData) {
+  try {
+    await requireUser("settings:manage");
+    const raw = {
+      slug: formData.get("slug"),
+      content: formData.get("content"),
+      incrementVersion: formData.get("incrementVersion") === "true",
+    };
+    const parsed = LegalDocumentSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw validationError(parsed.error);
+    }
+    const { slug, content, incrementVersion } = parsed.data;
+
+    const contentKey = `LEGAL_CONTENT_${slug.toUpperCase().replace(/-/g, "_")}`;
+    const versionKey = `LEGAL_VERSION_${slug.toUpperCase().replace(/-/g, "_")}`;
+
+    const updateData: Record<string, string> = {
+      [contentKey]: content,
+    };
+
+    if (incrementVersion) {
+      const now = new Date();
+      const timestamp = now.getTime();
+      const versionStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}-${timestamp}`;
+      updateData[versionKey] = versionStr;
+    }
+
+    await setAppSettings(updateData);
+
+    revalidatePath("/privacy");
+    revalidatePath("/terms");
+    revalidatePath("/docs/[slug]", "page");
+    revalidatePath("/admin/settings", "layout");
+  } catch (err) {
+    throwSafeSettingsError(err, "[updateLegalDocumentAction]", "Не удалось обновить юридический документ");
+  }
+}
+

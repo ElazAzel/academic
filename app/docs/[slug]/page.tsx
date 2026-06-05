@@ -2,12 +2,12 @@ import fs from "fs";
 import path from "path";
 import { notFound } from "next/navigation";
 import { BRANDING } from "@/lib/branding";
+import { getAllAppSettings } from "@/server/modules/admin/settings";
 
 export const metadata = {
   title: "Документация",
   description: `Документация платформы ${BRANDING.name}.`,
 };
-
 
 export const revalidate = 86400; // ISR: revalidate once per day
 export const dynamicParams = true; // Allow generating new slugs on-demand
@@ -67,25 +67,32 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
     notFound();
   }
 
-  const dirsToCheck = [
-    path.join(process.cwd(), "docs", "legal"),
-    path.join(process.cwd(), "docs"),
-  ];
+  const dbKey = `LEGAL_CONTENT_${slug.toUpperCase().replace(/-/g, "_")}`;
+  const settings = await getAllAppSettings();
+  let content = settings[dbKey] as string | undefined;
 
-  let filePath: string | null = null;
-  for (const dir of dirsToCheck) {
-    const candidate = path.join(dir, `${slug}.md`);
-    if (fs.existsSync(candidate)) {
-      filePath = candidate;
-      break;
+  if (!content) {
+    const dirsToCheck = [
+      path.join(process.cwd(), "docs", "legal"),
+      path.join(process.cwd(), "docs"),
+    ];
+
+    let filePath: string | null = null;
+    for (const dir of dirsToCheck) {
+      const candidate = path.join(dir, `${slug}.md`);
+      if (fs.existsSync(candidate)) {
+        filePath = candidate;
+        break;
+      }
     }
+
+    if (!filePath) {
+      notFound();
+    }
+
+    content = fs.readFileSync(filePath, "utf-8");
   }
 
-  if (!filePath) {
-    notFound();
-  }
-
-  const content = fs.readFileSync(filePath, "utf-8");
   const html = renderMarkdown(content);
 
   const titles: Record<string, string> = {

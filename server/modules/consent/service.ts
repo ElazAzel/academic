@@ -1,14 +1,18 @@
 import { getPrisma } from "@/lib/prisma";
+import { getAllAppSettings } from "@/server/modules/admin/settings";
 
 const prisma = getPrisma();
 
 export const CONSENT_TYPES = ["privacy_policy", "terms_of_use", "cookie_notice"] as const;
 
-export const CONSENT_VERSIONS: Record<string, string> = {
-  privacy_policy: "2026-05-01",
-  terms_of_use: "2026-05-01",
-  cookie_notice: "2026-05-01",
-};
+export async function getConsentVersions(): Promise<Record<string, string>> {
+  const settings = await getAllAppSettings();
+  return {
+    privacy_policy: (settings.LEGAL_VERSION_PRIVACY_POLICY as string) ?? "2026-05-01",
+    terms_of_use: (settings.LEGAL_VERSION_TERMS_OF_USE as string) ?? "2026-05-01",
+    cookie_notice: (settings.LEGAL_VERSION_COOKIE_NOTICE as string) ?? "2026-05-01",
+  };
+}
 
 export async function hasUserConsented(userId: string): Promise<boolean> {
   const accepted = await prisma.consentLog.findMany({
@@ -29,8 +33,9 @@ export async function hasUserConsented(userId: string): Promise<boolean> {
     }
   }
 
+  const versions = await getConsentVersions();
   return CONSENT_TYPES.every(
-    (t) => latestByType.has(t) && latestByType.get(t) === CONSENT_VERSIONS[t],
+    (t) => latestByType.has(t) && latestByType.get(t) === versions[t],
   );
 }
 
@@ -40,11 +45,12 @@ export async function acceptConsent(
   userAgent?: string,
 ) {
   const now = new Date();
+  const versions = await getConsentVersions();
   const records = CONSENT_TYPES.map((type) => ({
     userId,
     type,
     status: "ACCEPTED" as const,
-    version: CONSENT_VERSIONS[type],
+    version: versions[type],
     ipAddress: ipAddress ?? null,
     userAgent: userAgent ?? null,
     acceptedAt: now,
@@ -53,3 +59,4 @@ export async function acceptConsent(
   await prisma.consentLog.createMany({ data: records });
   return { success: true };
 }
+
