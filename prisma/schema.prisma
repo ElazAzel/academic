@@ -273,6 +273,7 @@ model User {
   scormLaunches              ScormLaunch[]
   userAchievements           UserAchievement[]
   dailyActivities            DailyActivity[]
+  courseSurveys              CourseSurvey[]
 
   @@map("users")
 }
@@ -328,6 +329,7 @@ model Course {
   cohorts        Cohort[]
   enrollments    Enrollment[]
   courseProgress CourseProgress[]
+  courseSurveys  CourseSurvey[]
   quizzes        Quiz[]
   assignments    Assignment[]
   certificates   Certificate[]
@@ -1126,6 +1128,21 @@ model LessonRating {
 
   @@unique([lessonId, userId])
   @@map("lesson_ratings")
+}
+
+model CourseSurvey {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  courseId   String   @map("course_id")
+  data      Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("course_surveys")
 }
 
 model Message {
