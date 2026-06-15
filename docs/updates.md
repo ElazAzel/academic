@@ -2,15 +2,23 @@
 
 Правило: новые записи добавляются сверху.
 
-## 2026-06-04 — Настройка пользовательских соглашений и юридических документов из админки
+## 2026-06-15 — Productivity Score, product docs, type fixes
 
 **Что сделано:**
 
-- Добавлена новая вкладка «Документы» в `/admin/settings`, позволяющая изменять текст Политики конфиденциальности, Пользовательского соглашения и Уведомления об использовании cookie в формате Markdown с интерактивным предпросмотром.
-- Реализована опция «Принудительно обновить версию для повторного согласия», которая генерирует новую версию документа в `app_settings` и заставляет всех пользователей платформы повторно принять новые правила при следующем действии.
-- Бэкенд согласий (`server/modules/consent/service.ts`) переведен на динамическую проверку версий на основе настроек базы данных.
-- Страницы документов `/docs/[slug]`, `/privacy` и `/terms` переведены на асинхронный Server-Side рендеринг, динамически загружая измененный текст из БД с фоллбеком на файлы Markdown на диске.
-- Создан новый набор модульных тестов `tests/unit/legal-documents.test.ts` (5 тестов) для проверки динамических версий, согласия пользователей и сохранения документов.
+- Созданы 7 файлов product-документации (`docs/product/`): positioning, AI Productivity Bootcamp, pricing, customer-report-template, final-project-rubric, success-metrics, implementation-roadmap.
+- Реализован сервис `server/modules/productivity-score/service.ts` с расчётом Productivity Score 0–100 на лету (без новых таблиц БД). Компоненты: тесты (20%), задания (30%), финальная работа (20%), активность (10%), диагностика (20%, not_available). При недоступности компонента вес перераспределяется между доступными.
+- Полный RBAC для всех 6 ролей с проверками scope (student — только себе, curator — назначенные, instructor — свои курсы, super_curator — scope, admin — все, customer_observer — только свой поток).
+- 25 модульных тестов (`tests/unit/productivity-score.test.ts`): core calculation, RBAC, cohort aggregation, edge cases (empty cohort, non-existent course/cohort, 404/403).
+- Исправлены type-ошибки в service.ts (некорректный `where` cast, вызов `getSuperCuratorScope` с `actor.id` вместо объекта, вызов `getScopedStudentIdsForObserver` с 2 аргументами вместо 1, потенциальный `undefined` observedIds).
+
+**Проверка:**
+
+- `npm run lint` — passed.
+- `npm run typecheck` — passed.
+- `npm run test -- tests/unit/productivity-score.test.ts` — 25/25 passed.
+- `npm run build` — passed (79 static pages, 0 errors).
+- Push `82d7e00` на `origin/main`, деплой на Vercel в процессе.
 
 **Проверка:**
 
