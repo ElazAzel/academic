@@ -325,7 +325,13 @@ export async function submitQuizAttempt(quizId: string, userId: string, answers:
   }
 
   if (result.passed && quiz.lessonId) {
-    await markLessonProgress(userId, quiz.lessonId, 100);
+    try {
+      await markLessonProgress(userId, quiz.lessonId, 100);
+    } catch (err) {
+      // Попытка уже создана. Если markLessonProgress упал (sequential lock и т.п.),
+      // не ломаем ответ — студент пересдаст, когда урок откроется.
+      console.warn("[submitQuizAttempt] Lesson progress update skipped", getSafeErrorMetadata(err));
+    }
   }
 
   return { ...attempt, grading: result, xp: xpResult };

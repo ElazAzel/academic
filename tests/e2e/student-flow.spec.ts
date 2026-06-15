@@ -56,10 +56,44 @@ async function prepareQuizApiFixture(email: string) {
         orderBy: { order: "asc" },
         select: { id: true, correctAnswer: true },
       },
+      lesson: {
+        include: {
+          module: {
+            include: {
+              course: {
+                select: { traversalMode: true },
+                include: {
+                  modules: {
+                    include: { lessons: { select: { id: true, order: true, isRequired: true } } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     orderBy: { createdAt: "asc" },
   });
   if (!quiz) throw new Error(`No quiz fixture available for ${email}`);
+
+  // Sequential unlock: mark all previous required lessons as COMPLETED so the
+  // quiz's lesson is accessible.
+  if (quiz.lesson?.module.course.traversalMode === "SEQUENTIAL") {
+    const course = quiz.lesson.module.course;
+    const orderedLessons = course.modules
+      .flatMap((m) => m.lessons.map((l) => ({ ...l, moduleOrder: m.order ?? 0 })))
+      .sort((a, b) => a.moduleOrder - b.moduleOrder || a.order - b.order);
+    const currentIndex = orderedLessons.findIndex((l) => l.id === quiz.lesson!.id);
+    const previousRequired = orderedLessons.slice(0, Math.max(currentIndex, 0)).filter((l) => l.isRequired);
+    for (const lesson of previousRequired) {
+      await prisma.lessonProgress.upsert({
+        where: { userId_lessonId: { userId, lessonId: lesson.id } },
+        update: { status: "COMPLETED" as const, percent: 100 },
+        create: { userId, lessonId: lesson.id, status: "COMPLETED" as const, percent: 100 },
+      });
+    }
+  }
 
   return {
     quizId: quiz.id,
