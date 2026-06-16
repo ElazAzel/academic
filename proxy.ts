@@ -87,7 +87,7 @@ function buildCspPolicy(nonce: string, isDev: boolean): string {
 
   return [
     "default-src 'self'",
-    `script-src 'nonce-${nonce}' 'strict-dynamic' ${scriptHashes}${devExtra}`,
+    `script-src 'nonce-${nonce}' 'strict-dynamic' 'self' ${scriptHashes}${devExtra}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https: http:",
     "font-src 'self' data: https://fonts.gstatic.com",

@@ -2,6 +2,15 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-16 — Week 1: CSP fix + development plan
+
+**Что сделано:**
+- CSP: добавлен `'self'` в `script-src` для корректной загрузки чанков на `/student`.
+- Создан `docs/product/development-plan.md` — план развития на 3 трека (A: операционная готовность, B: коммерческие фичи, C: Release Readiness).
+
+**Проверка:**
+- `npm run typecheck` — passed.
+
 ## 2026-06-16 — Stage 5 (ReportDesigner) + Stage 6 (UX Dashboard improvements)
 
 **Что сделано:**
