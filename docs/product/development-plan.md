@@ -23,15 +23,15 @@
 | A1 | Починить CI — E2E quiz (403 sequential unlock) + accessibility flaky test | 🟡 | ⬜ |
 | A2 | CSP: `'self'` в `script-src` для чанков на `/student` | 🟢 | ⬜ |
 | A3 | E2E smoke по 6 ролям (admin, student, curator, instructor, super_curator, observer) | 🟡 | ⬜ |
-| A4 | SMTP production wiring | 🟢 | ⬜ |
+| A4 | SMTP production wiring | 🟢 | ✅ |
 
 ### 🔵 Track B: Коммерческие фичи
 
 | # | Задача | Сложность | Статус |
 |---|--------|:---------:|:------:|
-| B1 | Weekly Cohort Report (по шаблону `customer-report-template.md`) | 🔴 | ⬜ |
-| B2 | Final Cohort Report (итоговый отчёт со Score, NPS, артефактами) | 🔴 | ⬜ |
-| B3 | Observer: Productivity Score distribution по потоку | 🟡 | ⬜ |
+| B1 | Weekly Cohort Report (по шаблону `customer-report-template.md`) | 🔴 | ✅ |
+| B2 | Final Cohort Report (итоговый отчёт со Score, NPS, артефактами) | 🔴 | ✅ |
+| B3 | Observer: Productivity Score distribution по потоку | 🟡 | ✅ |
 | B4 | Onboarding Flow: admin workflow «клиент → поток → импорт студентов» | 🔴 | ⬜ |
 
 ### 🟣 Track C: Release Readiness
@@ -48,9 +48,9 @@
 
 ```
 Неделя 1: A1 + A2 + A3    (CI, CSP, E2E smoke)
-Неделя 2: B1              (Weekly Report)
-Неделя 3: B2              (Final Report)
-Неделя 4: B3 + A4         (Score для observer + SMTP)
+Неделя 2: B1 ✅           (Weekly Report)
+Неделя 3: B2 ✅ ✅        (Final Report)
+Неделя 4: B3 ✅ + A4 ✅   (Score для observer + SMTP) — ✅ сделано
 Далее:    B4 / C1 / C2    (Onboarding / Backup / Security)
 ```
 
