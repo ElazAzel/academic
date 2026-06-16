@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { requireRole } from "@/lib/auth/page-guards";
 import { calculateForUser } from "@/server/modules/productivity-score/service";
 import { getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 import type { ProductivityLevel } from "@/server/modules/productivity-score/service";
@@ -26,9 +27,9 @@ const ReportScopeSchema = z.object({
 });
 
 export async function getProductivityDistribution(
-  actor: { id: string; role: string },
   scope: unknown,
 ): Promise<ProductivityDistribution | null> {
+  const actor = await requireRole(["admin", "instructor", "curator", "super_curator", "customer_observer"]);
   const parsedScope = ReportScopeSchema.parse(scope);
 
   const scopedIds = actor.role === "customer_observer"

@@ -11,6 +11,10 @@ vi.mock("@/server/modules/observer/scope", () => ({
   getScopedStudentIdsForObserver: mockGetScopedStudentIdsForObserver,
 }));
 
+vi.mock("@/lib/auth/page-guards", () => ({
+  requireRole: vi.fn(() => Promise.resolve({ id: "obs-1", role: "customer_observer" })),
+}));
+
 const { getProductivityDistribution } = await import(
   "@/server/actions/reports/productivity-distribution"
 );
@@ -29,11 +33,11 @@ describe("getProductivityDistribution", () => {
       totalScore: 45, level: "practitioner" as const,
       userId: "s3", courseId: "course-1", components: [], calculatedAt: "2026-01-01",
     });
+    mockGetScopedStudentIdsForObserver.mockResolvedValue(["s1", "s2", "s3"]);
 
-    const result = await getProductivityDistribution(
-      { id: "obs-1", role: "customer_observer" },
-      { type: "cohort", cohortId: "coh-1", courseIds: ["course-1"], studentIds: ["s1", "s2", "s3"], organizationId: undefined },
-    );
+    const result = await getProductivityDistribution({
+      type: "cohort", cohortId: "coh-1", courseIds: ["course-1"], studentIds: ["s1", "s2", "s3"], organizationId: undefined,
+    });
 
     expect(result).not.toBeNull();
     expect(result!.totalStudents).toBe(3);
@@ -44,10 +48,9 @@ describe("getProductivityDistribution", () => {
   });
 
   it("returns null for empty scope", async () => {
-    const result = await getProductivityDistribution(
-      { id: "obs-1", role: "customer_observer" },
-      { type: "cohort", cohortId: "empty", courseIds: [], studentIds: [], organizationId: undefined },
-    );
+    const result = await getProductivityDistribution({
+      type: "cohort", cohortId: "empty", courseIds: [], studentIds: [], organizationId: undefined,
+    });
     expect(result).toBeNull();
   });
 
@@ -61,11 +64,11 @@ describe("getProductivityDistribution", () => {
       totalScore: 50, level: "practitioner" as const,
       userId: "s3", courseId: "course-1", components: [], calculatedAt: "2026-01-01",
     });
+    mockGetScopedStudentIdsForObserver.mockResolvedValue(["s1", "s2", "s3"]);
 
-    const result = await getProductivityDistribution(
-      { id: "obs-1", role: "customer_observer" },
-      { type: "cohort", cohortId: "coh-2", courseIds: ["course-1"], studentIds: ["s1", "s2", "s3"], organizationId: undefined },
-    );
+    const result = await getProductivityDistribution({
+      type: "cohort", cohortId: "coh-2", courseIds: ["course-1"], studentIds: ["s1", "s2", "s3"], organizationId: undefined,
+    });
 
     expect(result).not.toBeNull();
     expect(result!.totalStudents).toBe(2);
