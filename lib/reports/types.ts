@@ -64,6 +64,25 @@ export interface ReportData<T> {
   summary: Record<string, number>;
 }
 
+export interface ProductivityScoreRow {
+  studentName: string;
+  email: string;
+  course: string;
+  cohort: string;
+  totalScore: number;
+  level: string;
+  /** Tests component score 0–100 */
+  testsScore: number;
+  /** Assignments component score 0–100 */
+  assignmentsScore: number;
+  /** Final project component score 0–100 */
+  finalProjectScore: number;
+  /** Activity component score 0–100 */
+  activityScore: number;
+  /** Diagnostics component score 0–100 (usually N/A) */
+  diagnosticsScore: number;
+}
+
 export interface ReportDataScope {
   studentIds?: string[];
   courseIds?: string[];
@@ -72,4 +91,4 @@ export interface ReportDataScope {
 }
 
 export type ReportFormat = "csv" | "xlsx" | "pdf";
-export type ReportType = "progress" | "risk" | "assignments" | "certificates" | "curator_workload";
+export type ReportType = "progress" | "risk" | "assignments" | "certificates" | "curator_workload" | "productivity_score";

@@ -277,10 +277,11 @@ describe("reports service access and scope", () => {
 
   it("lists only reports available to the active role priority", () => {
     const observerReports = getAvailableReportsForRoles(["customer_observer"]).map((report) => report.type);
-    expect(observerReports).toEqual(["progress", "risk", "certificates"]);
+    expect(observerReports).toEqual(["progress", "risk", "certificates", "productivity_score"]);
 
     const superCuratorReports = getAvailableReportsForRoles(["super_curator"]).map((report) => report.type);
     expect(superCuratorReports).toContain("curator_workload");
+    expect(superCuratorReports).toContain("productivity_score");
 
     expect(getAvailableReportsForRoles(["student"])).toEqual([]);
   });
@@ -292,8 +293,10 @@ describe("reports service access and scope", () => {
       "Наблюдатель",
       "Наблюдатель",
       "Наблюдатель",
+      "Наблюдатель",
     ]);
     expect(observerReports.map((report) => report.scope)).toEqual([
+      "Только разрешенные проекты",
       "Только разрешенные проекты",
       "Только разрешенные проекты",
       "Только разрешенные проекты",

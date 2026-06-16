@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-type ReportTypeId = "progress" | "risk" | "assignments" | "certificates" | "curator_workload";
+type ReportTypeId = "progress" | "risk" | "assignments" | "certificates" | "curator_workload" | "productivity_score";
 type FormatId = "csv" | "xlsx" | "pdf";
 
 interface ColumnDef {
@@ -101,6 +101,24 @@ const REPORT_TYPES: ReportTypeDef[] = [
       { key: "criticalRisks", label: "Критические", defaultOn: true },
     ],
   },
+  {
+    id: "productivity_score",
+    title: "Productivity Score",
+    desc: "Комплексная оценка продуктивности",
+    columns: [
+      { key: "studentName", label: "Слушатель", defaultOn: true },
+      { key: "email", label: "Email", defaultOn: true },
+      { key: "course", label: "Курс", defaultOn: true },
+      { key: "cohort", label: "Поток", defaultOn: true },
+      { key: "totalScore", label: "Общий балл", defaultOn: true },
+      { key: "level", label: "Уровень", defaultOn: true },
+      { key: "testsScore", label: "Тесты", defaultOn: true },
+      { key: "assignmentsScore", label: "Задания", defaultOn: true },
+      { key: "finalProjectScore", label: "Фин. работа", defaultOn: true },
+      { key: "activityScore", label: "Активность", defaultOn: true },
+      { key: "diagnosticsScore", label: "Диагностика", defaultOn: false },
+    ],
+  },
 ];
 
 const FORMATS: { id: FormatId; label: string; icon: typeof FileText }[] = [
@@ -115,6 +133,7 @@ const ALLOWED_ROLES_MAP: Record<ReportTypeId, string[]> = {
   certificates: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
   assignments: ["admin", "instructor", "curator", "super_curator"],
   curator_workload: ["admin", "super_curator"],
+  productivity_score: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
 };
 
 const REPORT_PREVIEW_ERROR = "Не удалось загрузить предварительный просмотр";

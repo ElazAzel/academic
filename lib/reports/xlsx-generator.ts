@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, RiskRow } from "./types";
+import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProductivityScoreRow, ProgressRow, RiskRow } from "./types";
 import { groupByCourse } from "./data";
 import { BRANDING } from "@/lib/branding";
 
@@ -482,6 +482,45 @@ export async function generateCuratorWorkloadXlsx(rows: CuratorWorkloadRow[], fi
     });
   }
 
+  const buf = await wb.xlsx.writeBuffer();
+  return Buffer.from(buf);
+}
+
+// -- Productivity Score report ------------------------------------------
+
+export async function generateProductivityScoreXlsx(rows: ProductivityScoreRow[], fields?: string[]): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  applyWorkbookMetadata(wb);
+  const ws = wb.addWorksheet("Productivity Score");
+  const COLS = [
+    { header: "���������", key: "studentName", width: 28 },
+    { header: "Email", key: "email", width: 32 },
+    { header: "����", key: "course", width: 24 },
+    { header: "�����", key: "cohort", width: 20 },
+    { header: "����� ����", key: "totalScore", width: 14 },
+    { header: "�������", key: "level", width: 16 },
+    { header: "�����", key: "testsScore", width: 12 },
+    { header: "�������", key: "assignmentsScore", width: 12 },
+    { header: "���. ������", key: "finalProjectScore", width: 14 },
+    { header: "����������", key: "activityScore", width: 14 },
+    { header: "�����������", key: "diagnosticsScore", width: 14 },
+  ];
+  const filteredCols = fields ? COLS.filter(c => fields!.includes(c.key)) : COLS;
+  ws.columns = filteredCols;
+  styleHeader(ws);
+  applyAutoFilter(ws, ws.columns.length);
+  freezeHeader(ws);
+  const colKeys = ws.columns.map(c => c.key).filter((k): k is string => k != null);
+  for (const r of rows) {
+    const values: Record<string, unknown> = {};
+    for (const k of colKeys) { values[k] = (r as unknown as Record<string, unknown>)[k] ?? "—"; }
+    const row = ws.addRow(colKeys.map(key => values[key]));
+    row.eachCell((cell) => {
+      cell.border = BORDER;
+      cell.alignment = { vertical: "middle" };
+      cell.font = { name: "Calibri", size: 11 };
+    });
+  }
   const buf = await wb.xlsx.writeBuffer();
   return Buffer.from(buf);
 }

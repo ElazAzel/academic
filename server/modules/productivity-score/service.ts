@@ -279,7 +279,7 @@ function calcDiagnostics(): ScoreComponent {
 
 // ── Core calculation ──────────────────────────────────────────────────
 
-async function calculateForUser(
+export async function calculateForUser(
   userId: string,
   courseId: string,
 ): Promise<ProductivityScoreResult> {

@@ -18,7 +18,7 @@ export async function getCustomerObserverDashboard() {
     const certFilter = { userId: { in: scopedStudentIds ?? [] } };
     const progressFilter = { userId: { in: scopedStudentIds ?? [] } };
 
-    const [projects, cohorts, certCount, progressAgg, openRisksCount] = await Promise.all([
+    const [projects, cohorts, certCount, progressAgg, openRisksCount, artifacts] = await Promise.all([
       prisma.project.count({ where: projectFilter }),
       prisma.cohort.findMany({
         where: cohortFilter,
@@ -32,6 +32,19 @@ export async function getCustomerObserverDashboard() {
       prisma.certificate.count({ where: certFilter }),
       prisma.courseProgress.aggregate({ _avg: { percent: true }, where: progressFilter }),
       prisma.riskFlag.count({ where: { userId: { in: scopedStudentIds ?? [] }, status: "open", resolvedAt: null } }),
+      prisma.assignmentSubmission.findMany({
+        where: {
+          userId: { in: scopedStudentIds ?? [] },
+          status: "ACCEPTED",
+          metadata: { path: "$.showInReport", equals: true },
+        } as any,
+        include: {
+          assignment: { select: { title: true, courseId: true } },
+          user: { select: { id: true, name: true, email: true } },
+        },
+        orderBy: { submittedAt: "desc" },
+        take: 50,
+      }),
     ]);
 
     const avgProgress = Math.round(progressAgg._avg.percent ?? 0);
@@ -84,6 +97,6 @@ export async function getCustomerObserverDashboard() {
       },
     ];
 
-    return { metrics, cohorts: cohortSummaries };
+    return { metrics, cohorts: cohortSummaries, artifacts };
   }, null);
 }

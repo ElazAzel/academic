@@ -1,7 +1,16 @@
 import { getPrisma } from "@/lib/prisma";
 import { QUERY_LIMITS } from "@/lib/query-limits";
 import { Prisma, QuestionStatus } from "@prisma/client";
-import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, ReportDataScope, RiskRow } from "./types";
+import { calculateForUser } from "@/server/modules/productivity-score/service";
+import type {
+  AssignmentRow,
+  CertificateRow,
+  CuratorWorkloadRow,
+  ProductivityScoreRow,
+  ProgressRow,
+  ReportDataScope,
+  RiskRow,
+} from "./types";
 
 const prisma = getPrisma();
 
@@ -336,6 +345,58 @@ export async function fetchCuratorWorkloadData(input?: ReportDataScope | string[
   });
 
   return rows.sort((a, b) => b.criticalRisks - a.criticalRisks || b.activeRisks - a.activeRisks || b.pendingAssignments - a.pendingAssignments);
+}
+
+export async function fetchProductivityScoreData(input?: ReportDataScope | string[]) {
+  const scope = normalizeScope(input);
+  if (hasEmptyExplicitScope(scope)) return [];
+
+  const enrollments = await prisma.enrollment.findMany({
+    where: {
+      ...buildEnrollmentWhere(scope),
+      status: "ACTIVE",
+    },
+    include: {
+      user: { select: { name: true, email: true } },
+      course: { select: { title: true } },
+      cohort: { select: { name: true } },
+    },
+    orderBy: [{ course: { title: "asc" } }, { cohort: { name: "asc" } }, { user: { name: "asc" } }],
+    take: QUERY_LIMITS.reportRows,
+  });
+
+  const rows: ProductivityScoreRow[] = [];
+
+  for (const enrollment of enrollments) {
+    if (!enrollment.courseId) continue;
+    try {
+      const score = await calculateForUser(enrollment.userId, enrollment.courseId);
+      const testsComp = score.components.find((c) => c.key === "tests");
+      const assignmentsComp = score.components.find((c) => c.key === "assignments");
+      const finalProjectComp = score.components.find((c) => c.key === "final_project");
+      const activityComp = score.components.find((c) => c.key === "activity");
+      const diagnosticsComp = score.components.find((c) => c.key === "diagnostics");
+
+      rows.push({
+        studentName: enrollment.user.name || enrollment.user.email,
+        email: enrollment.user.email,
+        course: enrollment.course.title,
+        cohort: enrollment.cohort?.name || "Без потока",
+        totalScore: score.totalScore,
+        level: score.level,
+        testsScore: testsComp?.score ?? 0,
+        assignmentsScore: assignmentsComp?.score ?? 0,
+        finalProjectScore: finalProjectComp?.score ?? 0,
+        activityScore: activityComp?.score ?? 0,
+        diagnosticsScore: diagnosticsComp?.score ?? 0,
+      });
+    } catch {
+      // Silently skip students where score calculation fails
+      continue;
+    }
+  }
+
+  return rows;
 }
 
 export function groupByCourse<T extends { course: string }>(rows: T[]) {

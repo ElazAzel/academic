@@ -78,6 +78,17 @@ function ActionButton({ student, onChat }: { student: CuratorStudentOperation; o
   );
 }
 
+function SlaStatus({ hours }: { hours: number }) {
+  const color = hours <= 2 ? "text-emerald-600" : hours <= 8 ? "text-amber-600" : "text-m3-error";
+  const label = hours <= 2 ? "Оперативно" : hours <= 8 ? "В норме" : "Просрочено";
+  return (
+    <span className={cn("inline-flex items-center gap-1", color)}>
+      <Icon name="timer" className="text-[14px]" />
+      SLA: {hours.toFixed(1)} ч · {label}
+    </span>
+  );
+}
+
 function CounterPill({
   icon,
   label,
@@ -112,6 +123,13 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
   const [searchQuery, setSearchQuery] = useState("");
   const [riskFilter, setRiskFilter] = useState<"all" | "high_crit" | "med_low" | "none">("all");
   const [actionFilter, setActionFilter] = useState<"all" | "reply" | "assignments" | "urgent">("all");
+  const [cohortFilter, setCohortFilter] = useState("all");
+
+  // Extract unique cohort names for filter
+  const cohortNames = useMemo(() => {
+    const names = new Set(students.map((s) => s.cohortName).filter(Boolean));
+    return Array.from(names).sort() as string[];
+  }, [students]);
 
   const summary = useMemo(() => ({
     urgent: students.filter((student) => student.nextAction.tone === "danger").length,
@@ -141,7 +159,9 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
         if (riskFilter === "med_low" && risk !== "medium" && risk !== "low") return false;
         if (riskFilter === "none" && risk !== undefined && risk !== null) return false;
       }
-      // 3. Action filter
+      // 3. Cohort filter
+      if (cohortFilter !== "all" && student.cohortName !== cohortFilter) return false;
+      // 4. Action filter
       if (actionFilter !== "all") {
         if (actionFilter === "reply" && student.openQuestions === 0) return false;
         if (actionFilter === "assignments" && student.pendingAssignments === 0) return false;
@@ -149,7 +169,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
       }
       return true;
     });
-  }, [students, searchQuery, riskFilter, actionFilter]);
+  }, [students, searchQuery, riskFilter, cohortFilter, actionFilter]);
 
   const handleOpenChat = (student: CuratorStudentOperation) => {
     setChatInitialText("");
@@ -260,6 +280,30 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
               </button>
             </div>
           </div>
+
+          {/* Cohort Filter Segmented Pill */}
+          {cohortNames.length > 1 && (
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-m3-on-surface-variant/80">Поток:</span>
+            <div className="flex rounded-lg border border-m3-outline-variant bg-m3-surface-container-high/60 p-0.5 max-w-[320px] overflow-x-auto">
+              <button
+                onClick={() => setCohortFilter("all")}
+                className={cn("whitespace-nowrap rounded-full px-3 py-1 font-medium transition-all duration-300", cohortFilter === "all" ? "bg-m3-primary text-m3-on-primary shadow-sm scale-105" : "text-m3-on-surface-variant hover:text-m3-on-surface hover:bg-m3-surface-container-highest/40")}
+              >
+                Все
+              </button>
+              {cohortNames.map((name) => (
+                <button
+                  key={name}
+                  onClick={() => setCohortFilter(name)}
+                  className={cn("whitespace-nowrap rounded-full px-3 py-1 font-medium transition-all duration-300", cohortFilter === name ? "bg-m3-primary text-m3-on-primary shadow-sm scale-105" : "text-m3-on-surface-variant hover:text-m3-on-surface hover:bg-m3-surface-container-highest/40")}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
+          )}
 
           {/* Action Queue Segmented Pill */}
           <div className="flex items-center gap-2">
@@ -414,10 +458,13 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
               </div>
 
               <div className="mt-4 flex flex-col gap-2 border-t border-m3-outline-variant pt-3 font-body-sm text-body-sm text-m3-on-surface-variant sm:flex-row sm:items-center sm:justify-between">
-                <span className="inline-flex items-center gap-1.5">
-                  <Icon name="schedule" className="text-[14px]" />
-                  Последний вход: {formatLastLogin(student.daysSinceLogin)}
-                </span>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Icon name="schedule" className="text-[14px]" />
+                    Последний вход: {formatLastLogin(student.daysSinceLogin)}
+                  </span>
+                  <SlaStatus hours={student.avgResponseHours} />
+                </div>
                 <span className="font-medium text-m3-on-surface">{student.nextAction.reason}</span>
               </div>
             </article>

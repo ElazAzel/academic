@@ -2,7 +2,7 @@ import { PDFDocument, PDFFont, PDFPage, rgb, StandardFonts } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import fs from "fs";
 import path from "path";
-import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, RiskRow } from "./types";
+import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProductivityScoreRow, ProgressRow, RiskRow } from "./types";
 import { groupByCourse } from "./data";
 import { BRANDING } from "@/lib/branding";
 
@@ -602,6 +602,78 @@ export async function generateCuratorWorkloadPdf(rows: CuratorWorkloadRow[], fie
       activeRisks: row.activeRisks,
       criticalRisks: row.criticalRisks,
       cohorts: row.cohorts,
+    })),
+    font,
+    boldFont,
+    y,
+  );
+
+  const totalPages = pages.length;
+  for (let i = 0; i < totalPages; i++) {
+    drawFooter(pages[i], font, i + 1, totalPages);
+  }
+
+  return doc.save();
+}
+
+// ── Productivity Score report ──────────────────────────────────────────
+
+export async function generateProductivityScorePdf(rows: ProductivityScoreRow[], fields?: string[]): Promise<Uint8Array> {
+  const { regular, bold } = getFonts();
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+
+  const font = regular
+    ? await doc.embedFont(regular, { subset: true })
+    : await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = bold
+    ? await doc.embedFont(bold, { subset: true })
+    : await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const pages: PDFPage[] = [addPage(doc)];
+  const page = pages[0];
+  let y = PAGE_H - 80;
+
+  drawHeader(page, font, boldFont, "Отчёт по Productivity Score", new Date().toLocaleDateString("ru-RU"));
+  y -= 12;
+
+  const avg = rows.length > 0 ? Math.round(rows.reduce((s, r) => s + r.totalScore, 0) / rows.length) : 0;
+  page.drawText("Сводка", { x: MARGIN, y, size: 12, font: boldFont, color: rgb(0.12, 0.23, 0.47) });
+  y -= 18;
+  const summaryItems = [
+    `Слушателей: ${rows.length}`,
+    `Средний балл: ${avg}`,
+    `Курсов: ${new Set(rows.map((r) => r.course)).size}`,
+  ];
+  for (const item of summaryItems) {
+    page.drawText(`- ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+    y -= 14;
+  }
+  y -= 8;
+
+  const columns: TableColumn[] = [
+    { header: "Слушатель", key: "studentName", width: 96 },
+    { header: "Балл", key: "totalScore", width: 30, align: "center" },
+    { header: "Уровень", key: "level", width: 56, align: "center" },
+    { header: "Тесты", key: "testsScore", width: 38, align: "center" },
+    { header: "Задания", key: "assignmentsScore", width: 44, align: "center" },
+    { header: "Фин.раб", key: "finalProjectScore", width: 40, align: "center" },
+    { header: "Активн.", key: "activityScore", width: 42, align: "center" },
+  ];
+  const activeCols = fields ? columns.filter((c) => fields.includes(c.key)) : columns;
+
+  drawTable(
+    doc,
+    pages,
+    activeCols,
+    rows.map((row) => ({
+      studentName: row.studentName,
+      totalScore: String(row.totalScore),
+      level: row.level,
+      testsScore: String(row.testsScore),
+      assignmentsScore: String(row.assignmentsScore),
+      finalProjectScore: String(row.finalProjectScore),
+      activityScore: String(row.activityScore),
     })),
     font,
     boldFont,

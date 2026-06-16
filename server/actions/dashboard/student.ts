@@ -139,7 +139,53 @@ export async function getStudentDashboard() {
       { day: "Вс", active: activeDays.has(6) },
     ];
 
-    return { userId: user.id, metrics, coursesProgress, continueLearning, questions: formattedQuestions, deadlines, learningPaths, weeklyTrack };
+    // ── Certificate path enrichment ──────────────────────────────────
+    let enrichedContinueLearning = continueLearning
+      ? { ...continueLearning }
+      : null;
+    if (continueLearning) {
+      const [cert, course] = await Promise.all([
+        prisma.certificate.findFirst({
+          where: { userId: user.id, courseId: continueLearning.courseId },
+          select: { id: true },
+        }),
+        prisma.course.findUnique({
+          where: { id: continueLearning.courseId },
+          select: { completionThreshold: true, finalAssignmentId: true },
+        }),
+      ]);
+      if (course) {
+        enrichedContinueLearning = {
+          ...continueLearning,
+          completionThreshold: course.completionThreshold,
+          certificateIssued: !!cert,
+          certificateId: cert?.id ?? null,
+        };
+        if (course.finalAssignmentId) {
+          const sub = await prisma.assignmentSubmission.findFirst({
+            where: { userId: user.id, assignmentId: course.finalAssignmentId },
+            orderBy: { submittedAt: "desc" },
+            select: { status: true },
+          });
+          if (sub) {
+            enrichedContinueLearning.finalProjectSubmitted = true;
+            enrichedContinueLearning.finalProjectApproved =
+              sub.status === "ACCEPTED";
+          }
+        }
+      }
+    }
+
+    return {
+      userId: user.id,
+      metrics,
+      coursesProgress,
+      continueLearning: enrichedContinueLearning,
+      questions: formattedQuestions,
+      deadlines,
+      learningPaths,
+      weeklyTrack,
+    };
   }, null);
 }
 

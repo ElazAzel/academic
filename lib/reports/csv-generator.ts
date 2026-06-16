@@ -1,4 +1,4 @@
-import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProgressRow, RiskRow } from "./types";
+import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProductivityScoreRow, ProgressRow, RiskRow } from "./types";
 import { groupByCourse } from "./data";
 
 function esc(val: string | number): string {
@@ -263,6 +263,41 @@ export function generateCuratorWorkloadCsv(rows: CuratorWorkloadRow[], fields?: 
 
   lines.push(activeCols.map(c => c.label).join(","));
 
+  for (const r of rows) {
+    lines.push(activeCols.map(c => c.get(r)).join(","));
+  }
+
+  return lines.join("\n");
+}
+
+// ── Productivity Score report ──────────────────────────────────────────
+
+export function generateProductivityScoreCsv(rows: ProductivityScoreRow[], fields?: string[]): string {
+  const lines: string[] = [];
+
+  lines.push(...headerBlock("ОТЧЁТ ПО PRODUCTIVITY SCORE"));
+  lines.push(`Всего слушателей: ${rows.length}`);
+  const avg = rows.length > 0 ? Math.round(rows.reduce((s, r) => s + r.totalScore, 0) / rows.length) : 0;
+  lines.push(`Средний балл: ${avg}`);
+  lines.push(`Курсов: ${new Set(rows.map((r) => r.course)).size}`);
+  lines.push("");
+
+  const COLS = [
+    { key: "studentName", label: "Слушатель", get: (r: ProductivityScoreRow) => esc(r.studentName) },
+    { key: "email", label: "Email", get: (r: ProductivityScoreRow) => esc(r.email) },
+    { key: "course", label: "Курс", get: (r: ProductivityScoreRow) => esc(r.course) },
+    { key: "cohort", label: "Поток", get: (r: ProductivityScoreRow) => esc(r.cohort) },
+    { key: "totalScore", label: "Общий балл", get: (r: ProductivityScoreRow) => String(r.totalScore) },
+    { key: "level", label: "Уровень", get: (r: ProductivityScoreRow) => esc(r.level) },
+    { key: "testsScore", label: "Тесты (0–100)", get: (r: ProductivityScoreRow) => String(r.testsScore) },
+    { key: "assignmentsScore", label: "Задания (0–100)", get: (r: ProductivityScoreRow) => String(r.assignmentsScore) },
+    { key: "finalProjectScore", label: "Фин. работа (0–100)", get: (r: ProductivityScoreRow) => String(r.finalProjectScore) },
+    { key: "activityScore", label: "Активность (0–100)", get: (r: ProductivityScoreRow) => String(r.activityScore) },
+    { key: "diagnosticsScore", label: "Диагностика (0–100)", get: (r: ProductivityScoreRow) => String(r.diagnosticsScore) },
+  ];
+  const activeCols = fields ? COLS.filter(c => fields!.includes(c.key)) : COLS;
+
+  lines.push(activeCols.map(c => c.label).join(","));
   for (const r of rows) {
     lines.push(activeCols.map(c => c.get(r)).join(","));
   }

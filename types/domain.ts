@@ -484,6 +484,12 @@ export interface ContinueLearning {
   modulePercent: number;
   deadlineDate?: string | null;
   deadlineDaysLeft?: number | null;
+  /** Certificate eligibility — populated by student dashboard, not by getContinueLearning */
+  completionThreshold?: number;
+  certificateIssued?: boolean;
+  certificateId?: string | null;
+  finalProjectSubmitted?: boolean;
+  finalProjectApproved?: boolean;
 }
 
 // ── Тесты ───────────────────────────────────────────────────────────

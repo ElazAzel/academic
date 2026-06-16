@@ -1,6 +1,7 @@
 export {
   getProductivityScore,
   getCohortProductivity,
+  calculateForUser,
 } from "./service";
 export {
   saveFinalProjectRubric,

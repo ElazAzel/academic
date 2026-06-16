@@ -2,6 +2,30 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-16 — Stage 5 (ReportDesigner) + Stage 6 (UX Dashboard improvements)
+
+**Что сделано:**
+
+### Stage 5: Productivity Score в ReportDesigner
+- Добавлен тип отчёта `productivity_score`: `ProductivityScoreRow`, `fetchProductivityScoreData()`, CSV/XLSX/PDF генераторы.
+- Интеграция в `server/modules/reports/service.ts`: `REPORT_DEFINITIONS`, switch-case для countRows/renderReport/generateReportPreview.
+- Экспорт `calculateForUser` из модуля productivity-score.
+- UI: новый пункт `productivity_score` в `REPORT_TYPES` и `ALLOWED_ROLES_MAP` в `report-designer.tsx`.
+- Исправлены типы: cast `(r as unknown as Record<string, unknown>)` в xlsx-generator.
+- Обновлены тесты `reports-service.test.ts` (добавлен `productivity_score` в ожидаемые списки).
+
+### Stage 6: UX Improvements by Role
+- **Student dashboard** — карточка «Путь к сертификату» в `ContinueLearningCard`: прогресс до порога, статус финальной работы, ссылка на готовый сертификат. Расширен `ContinueLearning` interface, добавлена загрузка данных сертификата и финальной работы в `getStudentDashboard()`.
+- **Curator dashboard** — фильтр по потоку (когорте) в `CuratorOperationsBoard` + SLA-индикатор времени ответа (оперативно / в норме / просрочено).
+- **Customer observer dashboard** — колонка `Статус` (Активен / Отозван) в таблице сертификатов; новая вкладка `Артефакты` с финальными работами студентов.
+- Все изменения — только frontend + data fetching, без новых роутов/API.
+
+**Проверка:**
+- `npm run typecheck` — passed.
+- `npm run test` — 933/933 passed (165 files).
+- `npm run build` — passed (production build).
+- `npm run lint` — passed.
+
 ## 2026-06-15 — Productivity Score, product docs, type fixes
 
 **Что сделано:**

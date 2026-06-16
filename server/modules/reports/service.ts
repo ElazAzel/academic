@@ -7,6 +7,7 @@ import {
   fetchAssignmentData,
   fetchCertificateData,
   fetchCuratorWorkloadData,
+  fetchProductivityScoreData,
   fetchProgressData,
   fetchRiskData,
 } from "@/lib/reports/data";
@@ -14,6 +15,7 @@ import {
   generateAssignmentCsv,
   generateCertificateCsv,
   generateCuratorWorkloadCsv,
+  generateProductivityScoreCsv,
   generateProgressCsv,
   generateRiskCsv,
 } from "@/lib/reports/csv-generator";
@@ -21,6 +23,7 @@ import {
   generateAssignmentXlsx,
   generateCertificateXlsx,
   generateCuratorWorkloadXlsx,
+  generateProductivityScoreXlsx,
   generateProgressXlsx,
   generateRiskXlsx,
 } from "@/lib/reports/xlsx-generator";
@@ -28,6 +31,7 @@ import {
   generateAssignmentPdf,
   generateCertificatePdf,
   generateCuratorWorkloadPdf,
+  generateProductivityScorePdf,
   generateProgressPdf,
   generateRiskPdf,
 } from "@/lib/reports/pdf-generator";
@@ -130,6 +134,16 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     owner: "Операции супер-куратора",
     decision: "Где перегрузка кураторов и какие очереди нужно перераспределить.",
     allowedRoles: ["admin", "super_curator"],
+  },
+  productivity_score: {
+    type: "productivity_score",
+    title: "Productivity Score",
+    filenameBase: "productivity_score_report",
+    desc: "Комплексная оценка продуктивности слушателей",
+    icon: "bar_chart",
+    owner: "Академические операции",
+    decision: "Какие слушатели показывают высокую/низкую продуктивность и где нужна интервенция.",
+    allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
   },
 };
 
@@ -301,6 +315,8 @@ async function countRows(type: ReportType, scope: ReportDataScope): Promise<numb
         return fetchCertificateData(scope);
       case "curator_workload":
         return fetchCuratorWorkloadData(scope);
+      case "productivity_score":
+        return fetchProductivityScoreData(scope);
     }
   })();
   return (rows as unknown[]).length;
@@ -328,6 +344,10 @@ async function renderReport(type: ReportType, format: ReportFormat, scope: Repor
       case "curator_workload": {
         const rows = await fetchCuratorWorkloadData(scope);
         return { content: generateCuratorWorkloadCsv(rows, fields), format };
+      }
+      case "productivity_score": {
+        const rows = await fetchProductivityScoreData(scope);
+        return { content: generateProductivityScoreCsv(rows, fields), format };
       }
     }
   }
@@ -373,6 +393,10 @@ async function renderReport(type: ReportType, format: ReportFormat, scope: Repor
           const rows = await fetchCuratorWorkloadData(scope);
           return { content: await generateCuratorWorkloadXlsx(rows, fields), format };
         }
+        case "productivity_score": {
+          const rows = await fetchProductivityScoreData(scope);
+          return { content: await generateProductivityScoreXlsx(rows, fields), format };
+        }
       }
     }
 
@@ -396,6 +420,10 @@ async function renderReport(type: ReportType, format: ReportFormat, scope: Repor
       case "curator_workload": {
         const rows = await fetchCuratorWorkloadData(scope);
         return { content: await generateCuratorWorkloadPdf(rows, fields), format };
+      }
+      case "productivity_score": {
+        const rows = await fetchProductivityScoreData(scope);
+        return { content: await generateProductivityScorePdf(rows, fields), format };
       }
     }
   } catch (error) {
@@ -523,6 +551,8 @@ export async function generateReportPreview(input: {
         return fetchCertificateData(access.scope);
       case "curator_workload":
         return fetchCuratorWorkloadData(access.scope);
+      case "productivity_score":
+        return fetchProductivityScoreData(access.scope);
     }
   })();
 

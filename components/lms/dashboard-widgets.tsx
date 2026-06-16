@@ -135,6 +135,10 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
   const deadlineStatus =
     data.deadlineDaysLeft != null && data.deadlineDaysLeft < 0 ? "overdue" : "upcoming";
 
+  const certThreshold = data.completionThreshold ?? 85;
+  const certProgressPercent = Math.min(100, Math.round((data.coursePercent / certThreshold) * 100));
+  const certAvailable = data.coursePercent >= certThreshold;
+
   return (
     <FadeIn>
     <Card className="academy-learning-panel h-full overflow-hidden border-m3-outline-variant">
@@ -173,6 +177,69 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
             <Progress value={data.modulePercent} className="h-2 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
           </div>
         </div>
+
+        {/* ── Путь к сертификату ──────────────────────────────────── */}
+        {data.completionThreshold != null && (
+          <div className="rounded-lg border border-m3-outline-variant/60 bg-m3-surface-container-lowest/60 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
+            <div className="mb-2 flex items-center gap-2 font-label-md text-label-md text-m3-on-surface">
+              <Icon name="workspace_premium" className="text-[18px] text-amber-600" />
+              Путь к сертификату
+            </div>
+            <div className="space-y-1.5">
+              {!certAvailable ? (
+                <>
+                  <div className="flex items-center justify-between font-body-sm text-body-sm">
+                    <span className="text-m3-on-surface-variant">Прогресс</span>
+                    <span className="font-semibold tabular-nums text-m3-primary">
+                      {data.coursePercent}% из {certThreshold}%
+                    </span>
+                  </div>
+                  <Progress
+                    value={certProgressPercent}
+                    className="h-2 bg-m3-surface-container-high [&>div]:bg-amber-500"
+                  />
+                  <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
+                    Осталось {certThreshold - data.coursePercent}% до получения сертификата
+                  </p>
+                </>
+              ) : data.certificateIssued ? (
+                <Link
+                  href={`/student/certificates`}
+                  className="inline-flex items-center gap-1.5 font-label-md text-label-md text-m3-primary hover:underline"
+                >
+                  <Icon name="check_circle" className="text-[16px]" />
+                  Сертификат получен — открыть
+                </Link>
+              ) : data.finalProjectSubmitted && !data.finalProjectApproved ? (
+                <div className="space-y-1">
+                  <p className="font-body-sm text-body-sm text-amber-600">
+                    <Icon name="hourglass_top" className="mr-1 inline text-[16px]" />
+                    Финальная работа на проверке
+                  </p>
+                  <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
+                    После проверки сертификат будет доступен
+                  </p>
+                </div>
+              ) : data.finalProjectSubmitted && data.finalProjectApproved ? (
+                <Link
+                  href={`/student/certificates`}
+                  className="inline-flex items-center gap-1.5 font-label-md text-label-md text-emerald-600 hover:underline"
+                >
+                  <Icon name="check_circle" className="text-[16px]" />
+                  Сертификат готов — получить
+                </Link>
+              ) : (
+                <div className="space-y-1">
+                  <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
+                    <Icon name="task_alt" className="mr-1 inline text-[16px]" />
+                    Прогресс {data.coursePercent}% — осталось сдать финальную работу
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col gap-3 border-t border-m3-outline-variant/30 pt-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="max-w-xl font-body-sm text-body-sm text-m3-on-surface-variant/80">
             Откройте урок, чтобы продолжить материалы, контрольные задания и поддержку куратора в текущем контексте курса.
