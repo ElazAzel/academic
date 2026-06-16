@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProductivityScoreRow, ProgressRow, RiskRow } from "./types";
+import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, FinalCohortGraduateRow, FinalCohortRiskSummaryRow, FinalCohortRow, FinalCohortScoreDistributionRow, ProductivityScoreRow, ProgressRow, RiskRow, WeeklyCohortModuleRow, WeeklyCohortQuestionRow, WeeklyCohortRiskRow, WeeklyCohortRow } from "./types";
 import { groupByCourse } from "./data";
 import { BRANDING } from "@/lib/branding";
 
@@ -480,6 +480,192 @@ export async function generateCuratorWorkloadXlsx(rows: CuratorWorkloadRow[], fi
       cell.font = { name: "Calibri", size: 11 };
       cell.border = BORDER;
     });
+  }
+
+  const buf = await wb.xlsx.writeBuffer();
+  return Buffer.from(buf);
+}
+
+// ── Final Cohort Report ──────────────────────────────────────────────
+
+export async function generateFinalCohortXlsx(
+  rows: FinalCohortRow[],
+  fields?: string[],
+): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  applyWorkbookMetadata(wb);
+
+  // ── Summary sheet ───────────────────────────────────────────────────
+  const ws = wb.addWorksheet("Сводка");
+  const SUMMARY_COLS: { header: string; key: string; width: number }[] = [
+    { header: "Поток", key: "cohortName", width: 28 },
+    { header: "Курс", key: "course", width: 30 },
+    { header: "Зачислено", key: "totalEnrolled", width: 12 },
+    { header: "Завершили", key: "completedCount", width: 12 },
+    { header: "Завершили %", key: "completedPercent", width: 14 },
+    { header: "Фин. работа", key: "finalProjectSubmitted", width: 14 },
+    { header: "Фин. работа %", key: "finalProjectPercent", width: 14 },
+    { header: "Сертификатов", key: "certificatesIssued", width: 14 },
+    { header: "Сертификаты %", key: "certificatesPercent", width: 14 },
+    { header: "Score (avg)", key: "avgProductivityScore", width: 14 },
+    { header: "Тесты (avg)", key: "avgTestScore", width: 12 },
+    { header: "Задания (avg)", key: "avgAssignmentScore", width: 14 },
+    { header: "Фин.раб. (avg)", key: "avgFinalProjectScore", width: 14 },
+    { header: "Satisfaction", key: "satisfactionScore", width: 14 },
+    { header: "NPS", key: "nps", width: 10 },
+  ];
+  const filteredCols = fields
+    ? SUMMARY_COLS.filter((c) => fields!.includes(c.key))
+    : SUMMARY_COLS;
+  ws.columns = filteredCols;
+  styleHeader(ws);
+  applyAutoFilter(ws, ws.columns.length);
+  freezeHeader(ws);
+
+  const colKeys = ws.columns.map((c) => c.key).filter((k): k is string => k != null);
+  for (const r of rows) {
+    const values: Record<string, unknown> = {};
+    for (const k of colKeys) {
+      values[k] = (r as unknown as Record<string, unknown>)[k] ?? "—";
+    }
+    const row = ws.addRow(colKeys.map((key) => values[key]));
+    row.eachCell((cell) => {
+      cell.border = BORDER;
+      cell.alignment = { vertical: "middle" };
+      cell.font = { name: "Calibri", size: 11 };
+    });
+  }
+
+  // ── Metrics sheet ──────────────────────────────────────────────────
+  const ms = wb.addWorksheet("Итоговые метрики");
+  ms.columns = [
+    { header: "Метрика", key: "metric", width: 40 },
+    { header: "Значение", key: "value", width: 20 },
+  ];
+  styleHeader(ms);
+
+  for (const cohort of rows) {
+    if (rows.length > 1) {
+      ms.addRow([`── ${cohort.cohortName} ──`]).eachCell((cell) => {
+        cell.font = { bold: true, name: "Calibri", size: 11, color: { argb: "FF1E3A5F" } };
+      });
+    }
+    const metrics = [
+      ["Всего зачислено", cohort.totalEnrolled],
+      ["Завершили курс", `${cohort.completedCount} (${cohort.completedPercent}%)`],
+      ["Сдали финальную работу", `${cohort.finalProjectSubmitted} (${cohort.finalProjectPercent}%)`],
+      ["Получили сертификат", `${cohort.certificatesIssued} (${cohort.certificatesPercent}%)`],
+      ["AI Productivity Score (avg)", `${cohort.avgProductivityScore} / 100`],
+      ["Средняя оценка тестов", `${cohort.avgTestScore}%`],
+      ["Средняя оценка заданий", `${cohort.avgAssignmentScore} / 100`],
+      ["Финальная работа (avg)", `${cohort.avgFinalProjectScore} / 100`],
+      ["Satisfaction", cohort.satisfactionScore > 0 ? `${cohort.satisfactionScore} / 5` : "—"],
+      ["NPS", cohort.nps !== 0 ? `+${cohort.nps}` : "—"],
+      ["Автоматизированных задач", cohort.automatedTasksCount],
+    ];
+    for (const [metric, value] of metrics) {
+      const row = ms.addRow([metric, value]);
+      row.eachCell((cell) => {
+        cell.font = { name: "Calibri", size: 11 };
+        cell.border = BORDER;
+        cell.alignment = { vertical: "middle" };
+      });
+    }
+    ms.addRow([]);
+  }
+
+  const buf = await wb.xlsx.writeBuffer();
+  return Buffer.from(buf);
+}
+
+// ── Weekly Cohort Report ──────────────────────────────────────────────
+
+export async function generateWeeklyCohortXlsx(
+  rows: WeeklyCohortRow[],
+  fields?: string[],
+): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  applyWorkbookMetadata(wb);
+
+  // ── Summary sheet ───────────────────────────────────────────────────
+  const ws = wb.addWorksheet("Сводка");
+  const SUMMARY_COLS: { header: string; key: string; width: number }[] = [
+    { header: "Поток", key: "cohortName", width: 28 },
+    { header: "Курс", key: "course", width: 30 },
+    { header: "Всего", key: "totalStudents", width: 10 },
+    { header: "Активных", key: "activeStudents", width: 12 },
+    { header: "Активность %", key: "activePercent", width: 14 },
+    { header: "Прогресс %", key: "moduleProgressPercent", width: 14 },
+    { header: "Завершили", key: "completedWeekCount", width: 12 },
+    { header: "Завершили %", key: "completedWeekPercent", width: 14 },
+    { header: "Отстают", key: "behindCount", width: 10 },
+    { header: "Отстают %", key: "behindPercent", width: 12 },
+    { header: "Крит. риски", key: "criticalRisks", width: 14 },
+    { header: "Вопросы", key: "totalQuestions", width: 10 },
+    { header: "Ср. ответ (ч)", key: "avgResponseTimeHours", width: 14 },
+    { header: "Заданий сдано", key: "submittedAssignments", width: 16 },
+    { header: "Ср. оценка", key: "avgAssignmentScore", width: 12 },
+    { header: "Модуль", key: "currentModule", width: 24 },
+  ];
+  const filteredCols = fields
+    ? SUMMARY_COLS.filter((c) => fields!.includes(c.key))
+    : SUMMARY_COLS;
+  ws.columns = filteredCols;
+  styleHeader(ws);
+  applyAutoFilter(ws, ws.columns.length);
+  freezeHeader(ws);
+
+  const colKeys = ws.columns.map((c) => c.key).filter((k): k is string => k != null);
+  for (const r of rows) {
+    const values: Record<string, unknown> = {};
+    for (const k of colKeys) {
+      values[k] = (r as unknown as Record<string, unknown>)[k] ?? "—";
+    }
+    const row = ws.addRow(colKeys.map((key) => values[key]));
+    row.eachCell((cell) => {
+      cell.border = BORDER;
+      cell.alignment = { vertical: "middle" };
+      cell.font = { name: "Calibri", size: 11 };
+    });
+  }
+
+  // ── Metrics sheet ──────────────────────────────────────────────────
+  const ms = wb.addWorksheet("Метрики");
+  ms.columns = [
+    { header: "Метрика", key: "metric", width: 40 },
+    { header: "Значение", key: "value", width: 20 },
+    { header: "Комментарий", key: "comment", width: 40 },
+  ];
+  styleHeader(ms);
+
+  for (const cohort of rows) {
+    if (rows.length > 1) {
+      ms.addRow([`── ${cohort.cohortName} ──`]).eachCell((cell) => {
+        cell.font = { bold: true, name: "Calibri", size: 11, color: { argb: "FF1E3A5F" } };
+      });
+    }
+    const metrics = [
+      ["Всего слушателей", cohort.totalStudents, "—"],
+      ["Активных (%)", `${cohort.activeStudents} (${cohort.activePercent}%)`, "Входили за неделю"],
+      ["Прохождение модуля (%)", `${cohort.moduleProgressPercent}%`, "Средний прогресс"],
+      ["Завершивших неделю", `${cohort.completedWeekCount} (${cohort.completedWeekPercent}%)`, "Все уроки модуля"],
+      ["Отстающих", `${cohort.behindCount} (${cohort.behindPercent}%)`, "Есть открытые риски"],
+      ["Критических рисков", cohort.criticalRisks, "severity = critical"],
+      ["Всего вопросов", cohort.totalQuestions, "—"],
+      ["Среднее время ответа", `${cohort.avgResponseTimeHours} ч`, "SLA"],
+      ["Сданных заданий", cohort.submittedAssignments, "За неделю"],
+      ["Оценок", `avg ${cohort.avgAssignmentScore}/100`, "—"],
+      ["Текущий модуль", cohort.currentModule || "—", "Большинство"],
+    ];
+    for (const [metric, value, comment] of metrics) {
+      const row = ms.addRow([metric, value, comment]);
+      row.eachCell((cell) => {
+        cell.font = { name: "Calibri", size: 11 };
+        cell.border = BORDER;
+        cell.alignment = { vertical: "middle" };
+      });
+    }
+    ms.addRow([]);
   }
 
   const buf = await wb.xlsx.writeBuffer();

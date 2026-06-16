@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-type ReportTypeId = "progress" | "risk" | "assignments" | "certificates" | "curator_workload" | "productivity_score";
+type ReportTypeId = "progress" | "risk" | "assignments" | "certificates" | "curator_workload" | "productivity_score" | "weekly_cohort" | "final_cohort";
 type FormatId = "csv" | "xlsx" | "pdf";
 
 interface ColumnDef {
@@ -119,6 +119,47 @@ const REPORT_TYPES: ReportTypeDef[] = [
       { key: "diagnosticsScore", label: "Диагностика", defaultOn: false },
     ],
   },
+  {
+    id: "weekly_cohort",
+    title: "Еженедельный отчёт по потоку",
+    desc: "Сводка за неделю: активность, риски, вопросы, прогресс",
+    columns: [
+      { key: "cohortName", label: "Поток", defaultOn: true },
+      { key: "course", label: "Курс", defaultOn: true },
+      { key: "totalStudents", label: "Всего слушателей", defaultOn: true },
+      { key: "activeStudents", label: "Активных", defaultOn: true },
+      { key: "activePercent", label: "Активность %", defaultOn: true },
+      { key: "moduleProgressPercent", label: "Прогресс %", defaultOn: true },
+      { key: "completedWeekCount", label: "Завершили неделю", defaultOn: true },
+      { key: "behindCount", label: "Отстающих", defaultOn: true },
+      { key: "criticalRisks", label: "Крит. риски", defaultOn: true },
+      { key: "totalQuestions", label: "Вопросов", defaultOn: true },
+      { key: "avgResponseTimeHours", label: "Ср. время ответа (ч)", defaultOn: false },
+      { key: "submittedAssignments", label: "Сданных заданий", defaultOn: true },
+      { key: "avgAssignmentScore", label: "Ср. оценка", defaultOn: false },
+      { key: "currentModule", label: "Текущий модуль", defaultOn: false },
+    ],
+  },
+  {
+    id: "final_cohort",
+    title: "Итоговый отчёт по потоку",
+    desc: "Итоговые метрики, Score, сертификаты, риски",
+    columns: [
+      { key: "cohortName", label: "Поток", defaultOn: true },
+      { key: "course", label: "Курс", defaultOn: true },
+      { key: "totalEnrolled", label: "Зачислено", defaultOn: true },
+      { key: "completedCount", label: "Завершили", defaultOn: true },
+      { key: "completedPercent", label: "Завершили %", defaultOn: true },
+      { key: "finalProjectSubmitted", label: "Фин.работа сдана", defaultOn: true },
+      { key: "certificatesIssued", label: "Сертификатов", defaultOn: true },
+      { key: "avgProductivityScore", label: "Score (avg)", defaultOn: true },
+      { key: "avgTestScore", label: "Тесты (avg)", defaultOn: true },
+      { key: "avgAssignmentScore", label: "Задания (avg)", defaultOn: true },
+      { key: "avgFinalProjectScore", label: "Фин.работа (avg)", defaultOn: false },
+      { key: "satisfactionScore", label: "Satisfaction", defaultOn: false },
+      { key: "nps", label: "NPS", defaultOn: false },
+    ],
+  },
 ];
 
 const FORMATS: { id: FormatId; label: string; icon: typeof FileText }[] = [
@@ -134,6 +175,8 @@ const ALLOWED_ROLES_MAP: Record<ReportTypeId, string[]> = {
   assignments: ["admin", "instructor", "curator", "super_curator"],
   curator_workload: ["admin", "super_curator"],
   productivity_score: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
+  weekly_cohort: ["admin", "super_curator", "curator", "customer_observer"],
+  final_cohort: ["admin", "super_curator", "curator", "customer_observer"],
 };
 
 const REPORT_PREVIEW_ERROR = "Не удалось загрузить предварительный просмотр";

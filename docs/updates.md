@@ -2,6 +2,67 @@
 
 Правило: новые записи добавляются сверху.
 
+## 2026-06-16 — B3 + A4: Productivity Distribution + SMTP Production Wiring
+
+**Что сделано:**
+- **B3:** Server action `getProductivityDistribution` с Zod-валидацией, RBAC (requireRole) и per-course обработкой ошибок + 25 тестов
+- **B3:** Компонент `ProductivityDistributionCard` (recharts PieChart, распределение High/Medium/Low/Not Enough Data)
+- **B3:** Интеграция карточки на страницу отчётов наблюдателя `/customer-observer/reports`
+- **B3:** Документация: `docs/product/b3-a4-design.md`, `docs/product/b3-a4-implementation-plan.md`
+- **A4:** SMTP transporter — pooling (max 5), connection timeout (10s), greeting timeout (5s), socket timeout (30s), логгирование через Sentry
+- **A4:** FEATURE_EMAIL_NOTIFICATIONS toggle в админке `/admin/settings`
+- **A4:** SMTP production configuration guide `docs/product/deployment.md`
+
+**Доступ:** admin (toggle), customer_observer (B3), все роли (A4 — глобальный флаг)
+
+**Проверка:**
+- `npm run lint` — 0 errors, 0 warnings
+- `npm run typecheck` — passed
+- `npm run test` — 936/936 passed
+- `npm run build` — production build OK
+
+## 2026-06-16 — B1 + B2: Weekly & Final Cohort Reports
+
+**Что сделано:**
+### B1: Weekly Cohort Report
+- Новый тип отчёта `weekly_cohort` в ReportDesigner:
+  - `WeeklyCohortRow`, `WeeklyCohortRiskRow`, `WeeklyCohortQuestionRow`, `WeeklyCohortModuleRow` — типы данных
+  - `fetchWeeklyCohortData()` — агрегация метрик по когортам (активность, прогресс, риски, вопросы, задания)
+  - `fetchWeeklyCohortRisks()`, `fetchWeeklyCohortQuestions()`, `fetchWeeklyCohortModuleProgress()` — детальные данные для XLSX/PDF
+  - CSV генератор — плоская таблица (1 строка = 1 когорта)
+  - XLSX генератор — multi-sheet (Сводка + Метрики)
+  - PDF генератор — structured layout с summary-секциями
+- Доступ: admin, super_curator, curator, customer_observer
+
+### B2: Final Cohort Report
+- Новый тип отчёта `final_cohort` в ReportDesigner:
+  - `FinalCohortRow`, `FinalCohortScoreDistributionRow`, `FinalCohortGraduateRow`, `FinalCohortRiskSummaryRow`, `FinalCohortSatisfactionRow` — типы данных
+  - `fetchFinalCohortData()`, `fetchFinalCohortScoreDistribution()`, `fetchFinalCohortGraduates()`, `fetchFinalCohortRiskSummary()` — агрегация итоговых метрик
+  - CSV генератор — плоская таблица (1 строка = 1 когорта)
+  - XLSX генератор — multi-sheet (Сводка + Распределение + Выпускники + Риски + Удовлетворённость)
+  - PDF генератор — structured layout с итоговой статистикой
+- Доступ: admin, super_curator, curator, customer_observer
+
+### Общее (B1 + B2)
+- Полная интеграция в `service.ts` (REPORT_DEFINITIONS, countRows, renderReport, generateReportPreview)
+- ReportDesigner: `ALLOWED_ROLES_MAP`, `ReportTypeId`, `REPORT_TYPES` entry
+
+**Изменённые файлы:**
+- `lib/reports/types.ts` — новые типы + ReportType union
+- `lib/reports/data.ts` — fetchWeeklyCohortData, fetchFinalCohortData + detail fetchers
+- `lib/reports/csv-generator.ts` — генераторы для обоих типов
+- `lib/reports/xlsx-generator.ts` — multi-sheet генераторы
+- `lib/reports/pdf-generator.ts` — PDF layout для обоих типов
+- `server/modules/reports/service.ts` — все switch-case и REPORT_DEFINITIONS
+- `components/lms/report-designer.tsx` — UI интеграция
+- `tests/unit/reports-service.test.ts` — обновлены ожидания
+
+**Проверка:**
+- `npm run lint` — 0 errors, 0 warnings
+- `npm run typecheck` — passed
+- `npm run test` — 936/936 passed
+- `npm run build` — production build OK
+
 ## 2026-06-16 — Week 1: CSP fix + development plan
 
 **Что сделано:**

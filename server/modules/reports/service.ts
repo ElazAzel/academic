@@ -10,6 +10,8 @@ import {
   fetchProductivityScoreData,
   fetchProgressData,
   fetchRiskData,
+  fetchFinalCohortData,
+  fetchWeeklyCohortData,
 } from "@/lib/reports/data";
 import {
   generateAssignmentCsv,
@@ -18,6 +20,8 @@ import {
   generateProductivityScoreCsv,
   generateProgressCsv,
   generateRiskCsv,
+  generateFinalCohortCsv,
+  generateWeeklyCohortCsv,
 } from "@/lib/reports/csv-generator";
 import {
   generateAssignmentXlsx,
@@ -26,6 +30,8 @@ import {
   generateProductivityScoreXlsx,
   generateProgressXlsx,
   generateRiskXlsx,
+  generateFinalCohortXlsx,
+  generateWeeklyCohortXlsx,
 } from "@/lib/reports/xlsx-generator";
 import {
   generateAssignmentPdf,
@@ -34,6 +40,8 @@ import {
   generateProductivityScorePdf,
   generateProgressPdf,
   generateRiskPdf,
+  generateFinalCohortPdf,
+  generateWeeklyCohortPdf,
 } from "@/lib/reports/pdf-generator";
 import { getObserverScope, getScopedStudentIdsForObserver } from "@/server/modules/observer/scope";
 import { getSuperCuratorScope } from "@/server/modules/super-curator/scope";
@@ -62,6 +70,10 @@ const REPORT_TYPE_ALIASES: Record<string, ReportType> = {
   certificates: "certificates",
   curator_workload: "curator_workload",
   workload: "curator_workload",
+  weekly_cohort: "weekly_cohort",
+  weekly: "weekly_cohort",
+  final_cohort: "final_cohort",
+  final: "final_cohort",
 };
 
 const ROLE_PRIORITY: DomainRoleKey[] = [
@@ -144,6 +156,26 @@ export const REPORT_DEFINITIONS: Record<ReportType, ReportDefinition> = {
     owner: "Академические операции",
     decision: "Какие слушатели показывают высокую/низкую продуктивность и где нужна интервенция.",
     allowedRoles: ["admin", "instructor", "curator", "super_curator", "customer_observer"],
+  },
+  weekly_cohort: {
+    type: "weekly_cohort",
+    title: "Еженедельный отчёт по потоку",
+    filenameBase: "weekly_cohort_report",
+    desc: "Сводка за неделю: активность, риски, вопросы, прогресс",
+    icon: "calendar_month",
+    owner: "Корпоративная отчётность",
+    decision: "Какие потоки требуют внимания, где риски и какова динамика за неделю.",
+    allowedRoles: ["admin", "super_curator", "curator", "customer_observer"],
+  },
+  final_cohort: {
+    type: "final_cohort",
+    title: "Итоговый отчёт по потоку",
+    filenameBase: "final_cohort_report",
+    desc: "Итоговые метрики, Score, сертификаты, риски",
+    icon: "assignment_turned_in",
+    owner: "Корпоративная отчётность",
+    decision: "Какие результаты у потока, сколько завершили, какой Score и NPS.",
+    allowedRoles: ["admin", "super_curator", "curator", "customer_observer"],
   },
 };
 
@@ -317,6 +349,10 @@ async function countRows(type: ReportType, scope: ReportDataScope): Promise<numb
         return fetchCuratorWorkloadData(scope);
       case "productivity_score":
         return fetchProductivityScoreData(scope);
+case "weekly_cohort":
+        return fetchWeeklyCohortData(scope);
+      case "final_cohort":
+        return fetchFinalCohortData(scope);
     }
   })();
   return (rows as unknown[]).length;
@@ -348,6 +384,14 @@ async function renderReport(type: ReportType, format: ReportFormat, scope: Repor
       case "productivity_score": {
         const rows = await fetchProductivityScoreData(scope);
         return { content: generateProductivityScoreCsv(rows, fields), format };
+      }
+      case "final_cohort": {
+        const rows = await fetchFinalCohortData(scope);
+        return { content: generateFinalCohortCsv(rows, fields), format };
+      }
+case "weekly_cohort": {
+        const rows = await fetchWeeklyCohortData(scope);
+        return { content: generateWeeklyCohortCsv(rows, fields), format };
       }
     }
   }
@@ -397,6 +441,14 @@ async function renderReport(type: ReportType, format: ReportFormat, scope: Repor
           const rows = await fetchProductivityScoreData(scope);
           return { content: await generateProductivityScoreXlsx(rows, fields), format };
         }
+        case "final_cohort": {
+          const rows = await fetchFinalCohortData(scope);
+          return { content: await generateFinalCohortXlsx(rows, fields), format };
+        }
+case "weekly_cohort": {
+          const rows = await fetchWeeklyCohortData(scope);
+          return { content: await generateWeeklyCohortXlsx(rows, fields), format };
+        }
       }
     }
 
@@ -424,6 +476,14 @@ async function renderReport(type: ReportType, format: ReportFormat, scope: Repor
       case "productivity_score": {
         const rows = await fetchProductivityScoreData(scope);
         return { content: await generateProductivityScorePdf(rows, fields), format };
+      }
+      case "final_cohort": {
+        const rows = await fetchFinalCohortData(scope);
+        return { content: await generateFinalCohortPdf(rows, fields), format };
+      }
+case "weekly_cohort": {
+        const rows = await fetchWeeklyCohortData(scope);
+        return { content: await generateWeeklyCohortPdf(rows, fields), format };
       }
     }
   } catch (error) {
@@ -553,6 +613,10 @@ export async function generateReportPreview(input: {
         return fetchCuratorWorkloadData(access.scope);
       case "productivity_score":
         return fetchProductivityScoreData(access.scope);
+      case "final_cohort":
+        return fetchFinalCohortData(access.scope);
+case "weekly_cohort":
+        return fetchWeeklyCohortData(access.scope);
     }
   })();
 

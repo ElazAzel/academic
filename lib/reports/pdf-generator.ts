@@ -2,7 +2,7 @@ import { PDFDocument, PDFFont, PDFPage, rgb, StandardFonts } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import fs from "fs";
 import path from "path";
-import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProductivityScoreRow, ProgressRow, RiskRow } from "./types";
+import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, FinalCohortRow, ProductivityScoreRow, ProgressRow, RiskRow, WeeklyCohortRow } from "./types";
 import { groupByCourse } from "./data";
 import { BRANDING } from "@/lib/branding";
 
@@ -607,6 +607,142 @@ export async function generateCuratorWorkloadPdf(rows: CuratorWorkloadRow[], fie
     boldFont,
     y,
   );
+
+  const totalPages = pages.length;
+  for (let i = 0; i < totalPages; i++) {
+    drawFooter(pages[i], font, i + 1, totalPages);
+  }
+
+  return doc.save();
+}
+
+// ── Final Cohort Report ──────────────────────────────────────────────
+
+export async function generateFinalCohortPdf(rows: FinalCohortRow[], fields?: string[]): Promise<Uint8Array> {
+  const { regular, bold } = getFonts();
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+
+  const font = regular
+    ? await doc.embedFont(regular, { subset: true })
+    : await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = bold
+    ? await doc.embedFont(bold, { subset: true })
+    : await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const pages: PDFPage[] = [addPage(doc)];
+  let page = pages[0];
+  let y = PAGE_H - 80;
+
+  const dateStr = `Сформирован: ${new Date().toLocaleDateString("ru-RU", {
+    year: "numeric", month: "long", day: "numeric",
+  })}`;
+
+  drawHeader(page, font, boldFont, "Итоговый отчёт по потоку", dateStr);
+
+  for (const cohort of rows) {
+    // Cohort header
+    y -= 12;
+    page.drawText(cohort.cohortName, { x: MARGIN, y, size: 13, font: boldFont, color: rgb(0.12, 0.23, 0.47) });
+    y -= 16;
+    page.drawText(`${cohort.course}  |  ${cohort.periodStart} – ${cohort.periodEnd}`, {
+      x: MARGIN, y, size: 8, font, color: rgb(0.4, 0.42, 0.5),
+    });
+    y -= 20;
+
+    // Summary metrics
+    const summaryItems = [
+      `Всего зачислено: ${cohort.totalEnrolled}`,
+      `Завершили курс: ${cohort.completedCount} (${cohort.completedPercent}%)`,
+      `Сдали финальную работу: ${cohort.finalProjectSubmitted} (${cohort.finalProjectPercent}%)`,
+      `Получили сертификат: ${cohort.certificatesIssued} (${cohort.certificatesPercent}%)`,
+      `AI Productivity Score (avg): ${cohort.avgProductivityScore} / 100`,
+      `Средняя оценка тестов: ${cohort.avgTestScore}%`,
+      `Средняя оценка заданий: ${cohort.avgAssignmentScore} / 100`,
+      `Финальная работа (avg): ${cohort.avgFinalProjectScore} / 100`,
+      `Satisfaction: ${cohort.satisfactionScore > 0 ? `${cohort.satisfactionScore} / 5` : "—"}`,
+      `NPS: ${cohort.nps !== 0 ? `+${cohort.nps}` : "—"}`,
+    ];
+
+    for (const item of summaryItems) {
+      if (y < 50) {
+        page = addPage(doc);
+        pages.push(page);
+        y = PAGE_H - 80;
+      }
+      page.drawText(`• ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+      y -= 14;
+    }
+    y -= 8;
+  }
+
+  const totalPages = pages.length;
+  for (let i = 0; i < totalPages; i++) {
+    drawFooter(pages[i], font, i + 1, totalPages);
+  }
+
+  return doc.save();
+}
+
+// ── Weekly Cohort Report ──────────────────────────────────────────────
+
+export async function generateWeeklyCohortPdf(rows: WeeklyCohortRow[], fields?: string[]): Promise<Uint8Array> {
+  const { regular, bold } = getFonts();
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+
+  const font = regular
+    ? await doc.embedFont(regular, { subset: true })
+    : await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = bold
+    ? await doc.embedFont(bold, { subset: true })
+    : await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const pages: PDFPage[] = [addPage(doc)];
+  let page = pages[0];
+  let y = PAGE_H - 80;
+
+  const dateStr = `Сформирован: ${new Date().toLocaleDateString("ru-RU", {
+    year: "numeric", month: "long", day: "numeric",
+  })}`;
+
+  drawHeader(page, font, boldFont, "Еженедельный отчёт по потоку", dateStr);
+
+  for (const cohort of rows) {
+    // Cohort header
+    y -= 12;
+    page.drawText(cohort.cohortName, { x: MARGIN, y, size: 13, font: boldFont, color: rgb(0.12, 0.23, 0.47) });
+    y -= 16;
+    page.drawText(`${cohort.course}  |  ${cohort.periodStart} – ${cohort.periodEnd}`, {
+      x: MARGIN, y, size: 8, font, color: rgb(0.4, 0.42, 0.5),
+    });
+    y -= 20;
+
+    // Summary key-value pairs
+    const summaryItems = [
+      `Всего слушателей: ${cohort.totalStudents}`,
+      `Активных: ${cohort.activeStudents} (${cohort.activePercent}%)`,
+      `Прохождение модуля: ${cohort.moduleProgressPercent}%`,
+      `Завершили неделю: ${cohort.completedWeekCount} (${cohort.completedWeekPercent}%)`,
+      `Отстающих: ${cohort.behindCount} (${cohort.behindPercent}%)`,
+      `Критических рисков: ${cohort.criticalRisks}`,
+      `Всего вопросов: ${cohort.totalQuestions}`,
+      `Среднее время ответа: ${cohort.avgResponseTimeHours} ч`,
+      `Сданных заданий: ${cohort.submittedAssignments}`,
+      `Средняя оценка: ${cohort.avgAssignmentScore}/100`,
+    ];
+
+    for (const item of summaryItems) {
+      if (y < 50) {
+        page = addPage(doc);
+        pages.push(page);
+        y = PAGE_H - 80;
+      }
+      page.drawText(`• ${item}`, { x: MARGIN + 4, y, size: FONT_SIZE_BODY, font, color: rgb(0.2, 0.22, 0.3) });
+      y -= 14;
+    }
+    y -= 8;
+  }
 
   const totalPages = pages.length;
   for (let i = 0; i < totalPages; i++) {

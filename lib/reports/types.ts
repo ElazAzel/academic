@@ -64,6 +64,102 @@ export interface ReportData<T> {
   summary: Record<string, number>;
 }
 
+export interface WeeklyCohortRow {
+  cohortName: string;
+  course: string;
+  periodStart: string;
+  periodEnd: string;
+  weekNumber: number;
+  totalStudents: number;
+  activeStudents: number;
+  activePercent: number;
+  moduleProgressPercent: number;
+  completedWeekCount: number;
+  completedWeekPercent: number;
+  behindCount: number;
+  behindPercent: number;
+  criticalRisks: number;
+  totalQuestions: number;
+  avgResponseTimeHours: number;
+  submittedAssignments: number;
+  avgAssignmentScore: number;
+  currentModule: string;
+}
+
+export interface WeeklyCohortRiskRow {
+  studentName: string;
+  email: string;
+  riskType: string;
+  severity: string;
+  action: string;
+  status: string;
+}
+
+export interface WeeklyCohortQuestionRow {
+  studentName: string;
+  email: string;
+  question: string;
+  answer: string;
+  responseTimeHours: number;
+}
+
+export interface WeeklyCohortModuleRow {
+  moduleName: string;
+  completionPercent: number;
+  avgTestScore: number;
+  assignmentSubmittedPercent: number;
+}
+
+// ── Final Cohort Report types ─────────────────────────────────────────
+
+export interface FinalCohortRow {
+  cohortName: string;
+  course: string;
+  periodStart: string;
+  periodEnd: string;
+  totalEnrolled: number;
+  completedCount: number;
+  completedPercent: number;
+  finalProjectSubmitted: number;
+  finalProjectPercent: number;
+  certificatesIssued: number;
+  certificatesPercent: number;
+  avgProductivityScore: number;
+  avgTestScore: number;
+  avgAssignmentScore: number;
+  avgFinalProjectScore: number;
+  satisfactionScore: number;
+  nps: number;
+  automatedTasksCount: number;
+}
+
+export interface FinalCohortScoreDistributionRow {
+  level: string;
+  count: number;
+  percent: number;
+}
+
+export interface FinalCohortGraduateRow {
+  studentName: string;
+  email: string;
+  productivityScore: number;
+  level: string;
+  finalProjectTitle: string;
+  certificateStatus: string;
+}
+
+export interface FinalCohortRiskSummaryRow {
+  riskType: string;
+  totalCount: number;
+  resolvedCount: number;
+  unresolvedCount: number;
+}
+
+export interface FinalCohortSatisfactionRow {
+  metric: string;
+  value: string;
+}
+
 export interface ProductivityScoreRow {
   studentName: string;
   email: string;
@@ -91,4 +187,4 @@ export interface ReportDataScope {
 }
 
 export type ReportFormat = "csv" | "xlsx" | "pdf";
-export type ReportType = "progress" | "risk" | "assignments" | "certificates" | "curator_workload" | "productivity_score";
+export type ReportType = "progress" | "risk" | "assignments" | "certificates" | "curator_workload" | "productivity_score" | "weekly_cohort" | "final_cohort";

@@ -1,4 +1,4 @@
-import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, ProductivityScoreRow, ProgressRow, RiskRow } from "./types";
+import type { AssignmentRow, CertificateRow, CuratorWorkloadRow, FinalCohortRow, ProductivityScoreRow, ProgressRow, RiskRow, WeeklyCohortRow } from "./types";
 import { groupByCourse } from "./data";
 
 function esc(val: string | number): string {
@@ -271,6 +271,82 @@ export function generateCuratorWorkloadCsv(rows: CuratorWorkloadRow[], fields?: 
 }
 
 // ── Productivity Score report ──────────────────────────────────────────
+
+// ── Weekly Cohort Report ─────────────────────────────────────────────
+
+// ── Final Cohort Report ──────────────────────────────────────────────
+
+export function generateFinalCohortCsv(rows: FinalCohortRow[], fields?: string[]): string {
+  const lines: string[] = [];
+
+  lines.push(...headerBlock("ИТОГОВЫЙ ОТЧЁТ ПО ПОТОКУ"));
+  lines.push(`Всего потоков: ${rows.length}`);
+  lines.push("");
+
+  const COLS = [
+    { key: "cohortName", label: "Поток", get: (r: FinalCohortRow) => esc(r.cohortName) },
+    { key: "course", label: "Курс", get: (r: FinalCohortRow) => esc(r.course) },
+    { key: "totalEnrolled", label: "Зачислено", get: (r: FinalCohortRow) => String(r.totalEnrolled) },
+    { key: "completedCount", label: "Завершили", get: (r: FinalCohortRow) => String(r.completedCount) },
+    { key: "completedPercent", label: "Завершили %", get: (r: FinalCohortRow) => `${r.completedPercent}%` },
+    { key: "finalProjectSubmitted", label: "Фин. работа сдана", get: (r: FinalCohortRow) => String(r.finalProjectSubmitted) },
+    { key: "finalProjectPercent", label: "Фин. работа %", get: (r: FinalCohortRow) => `${r.finalProjectPercent}%` },
+    { key: "certificatesIssued", label: "Сертификатов", get: (r: FinalCohortRow) => String(r.certificatesIssued) },
+    { key: "certificatesPercent", label: "Сертификаты %", get: (r: FinalCohortRow) => `${r.certificatesPercent}%` },
+    { key: "avgProductivityScore", label: "Средний Score", get: (r: FinalCohortRow) => String(r.avgProductivityScore) },
+    { key: "avgTestScore", label: "Средний тест", get: (r: FinalCohortRow) => `${r.avgTestScore}%` },
+    { key: "avgAssignmentScore", label: "Среднее задание", get: (r: FinalCohortRow) => `${r.avgAssignmentScore}/100` },
+    { key: "avgFinalProjectScore", label: "Фин. работа (avg)", get: (r: FinalCohortRow) => `${r.avgFinalProjectScore}/100` },
+    { key: "satisfactionScore", label: "Satisfaction", get: (r: FinalCohortRow) => String(r.satisfactionScore) },
+    { key: "nps", label: "NPS", get: (r: FinalCohortRow) => String(r.nps) },
+  ];
+  const activeCols = fields ? COLS.filter(c => fields!.includes(c.key)) : COLS;
+
+  lines.push(activeCols.map(c => c.label).join(","));
+  for (const r of rows) {
+    lines.push(activeCols.map(c => c.get(r)).join(","));
+  }
+
+  return lines.join("\n");
+}
+
+export function generateWeeklyCohortCsv(rows: WeeklyCohortRow[], fields?: string[]): string {
+  const lines: string[] = [];
+
+  lines.push(...headerBlock("ЕЖЕНЕДЕЛЬНЫЙ ОТЧЁТ ПО ПОТОКУ"));
+  lines.push(`Всего потоков: ${rows.length}`);
+  const totalStudentsSum = rows.reduce((s, r) => s + r.totalStudents, 0);
+  lines.push(`Всего слушателей: ${totalStudentsSum}`);
+  lines.push(`Период: ${rows[0]?.periodStart ?? "—"} – ${rows[0]?.periodEnd ?? "—"}`);
+  lines.push("");
+
+  const COLS = [
+    { key: "cohortName", label: "Поток", get: (r: WeeklyCohortRow) => esc(r.cohortName) },
+    { key: "course", label: "Курс", get: (r: WeeklyCohortRow) => esc(r.course) },
+    { key: "totalStudents", label: "Всего слушателей", get: (r: WeeklyCohortRow) => String(r.totalStudents) },
+    { key: "activeStudents", label: "Активных", get: (r: WeeklyCohortRow) => String(r.activeStudents) },
+    { key: "activePercent", label: "Активность %", get: (r: WeeklyCohortRow) => `${r.activePercent}%` },
+    { key: "moduleProgressPercent", label: "Прохождение модуля %", get: (r: WeeklyCohortRow) => `${r.moduleProgressPercent}%` },
+    { key: "completedWeekCount", label: "Завершили неделю", get: (r: WeeklyCohortRow) => String(r.completedWeekCount) },
+    { key: "completedWeekPercent", label: "Завершили %", get: (r: WeeklyCohortRow) => `${r.completedWeekPercent}%` },
+    { key: "behindCount", label: "Отстающих", get: (r: WeeklyCohortRow) => String(r.behindCount) },
+    { key: "behindPercent", label: "Отстающих %", get: (r: WeeklyCohortRow) => `${r.behindPercent}%` },
+    { key: "criticalRisks", label: "Крит. риски", get: (r: WeeklyCohortRow) => String(r.criticalRisks) },
+    { key: "totalQuestions", label: "Вопросов", get: (r: WeeklyCohortRow) => String(r.totalQuestions) },
+    { key: "avgResponseTimeHours", label: "Ср. время ответа (ч)", get: (r: WeeklyCohortRow) => String(r.avgResponseTimeHours) },
+    { key: "submittedAssignments", label: "Сданных заданий", get: (r: WeeklyCohortRow) => String(r.submittedAssignments) },
+    { key: "avgAssignmentScore", label: "Ср. оценка", get: (r: WeeklyCohortRow) => String(r.avgAssignmentScore) },
+    { key: "currentModule", label: "Текущий модуль", get: (r: WeeklyCohortRow) => esc(r.currentModule) },
+  ];
+  const activeCols = fields ? COLS.filter(c => fields!.includes(c.key)) : COLS;
+
+  lines.push(activeCols.map(c => c.label).join(","));
+  for (const r of rows) {
+    lines.push(activeCols.map(c => c.get(r)).join(","));
+  }
+
+  return lines.join("\n");
+}
 
 export function generateProductivityScoreCsv(rows: ProductivityScoreRow[], fields?: string[]): string {
   const lines: string[] = [];
