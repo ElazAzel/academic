@@ -18,6 +18,11 @@ async function getMailer() {
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
       secure: env.SMTP_PORT === 465,
+      pool: true,
+      maxConnections: 5,
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      logger: true,
       auth: env.SMTP_USER ? {
         user: env.SMTP_USER,
         pass: env.SMTP_PASSWORD ?? "",
