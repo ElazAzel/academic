@@ -12,7 +12,7 @@ vi.mock("@/server/modules/observer/scope", () => ({
 }));
 
 vi.mock("@/lib/auth/page-guards", () => ({
-  requireRole: vi.fn(() => Promise.resolve({ id: "obs-1", role: "customer_observer" })),
+  requireRole: vi.fn(() => Promise.resolve({ id: "obs-1", roles: ["customer_observer"] })),
 }));
 
 const { getProductivityDistribution } = await import(

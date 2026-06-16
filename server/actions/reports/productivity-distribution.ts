@@ -32,7 +32,7 @@ export async function getProductivityDistribution(
   const actor = await requireRole(["admin", "instructor", "curator", "super_curator", "customer_observer"]);
   const parsedScope = ReportScopeSchema.parse(scope);
 
-  const scopedIds = actor.role === "customer_observer"
+  const scopedIds = actor.roles.includes("customer_observer")
     ? await getScopedStudentIdsForObserver(actor.id)
     : undefined;
   const studentIds = scopedIds ?? parsedScope.studentIds;

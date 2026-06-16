@@ -5,6 +5,7 @@ import { BarChart } from "@/components/lms/bar-chart";
 import { DownloadReports } from "@/components/lms/download-reports";
 import { ReportDesigner } from "@/components/lms/report-designer";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
+import { ProductivityDistributionCard } from "@/components/lms/productivity-distribution-card";
 import { Icon } from "@/components/ui/icon";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getCustomerObserverDashboard } from "@/server/actions/dashboard";
@@ -47,6 +48,14 @@ export default async function CustomerObserverReportsPage() {
               />
             </CardContent>
           </Card>
+
+          {/* Productivity Score distribution */}
+          <ProductivityDistributionCard scope={{
+            type: "cohort",
+            courseIds: data.cohorts.map((c) => c.courseId).filter(Boolean) as string[],
+            studentIds: [],
+            organizationId: undefined,
+          }} />
         </div>
       ) : (
         <Card className="border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft mb-6">

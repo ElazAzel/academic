@@ -51,6 +51,7 @@ export async function getCustomerObserverDashboard() {
     const cohortSummaries = cohorts.map((c) => ({
       id: c.id,
       name: c.name,
+      courseId: c.courseId,
       courseTitle: c.course?.title ?? "",
       studentsCount: c.enrollments.length,
       avgProgress: c.enrollments.length > 0
