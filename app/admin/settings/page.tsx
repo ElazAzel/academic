@@ -28,6 +28,7 @@ export const dynamic = "force-dynamic";
 const FEATURE_FLAGS = [
   { key: "FEATURE_PUSH_NOTIFICATIONS", label: "Push-уведомления" },
   { key: "FEATURE_GRAPHQL", label: "GraphQL API" },
+  { key: "FEATURE_EMAIL_NOTIFICATIONS", label: "Email-уведомления" },
 ];
 
 export default async function AdminSettingsPage() {
