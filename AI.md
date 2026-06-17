@@ -1,35 +1,26 @@
 # AI Strategic Academy — Project Guide
 
 ## Project Structure
+- `ai/roles/` — AI role definitions.
+- `skills/` — Strategic Project Skills (New Format).
+- `docs/superpowers/` — Plans and Verifiable Specs.
+- `server/modules/` — Core Business Logic (Gold Standard).
+- `server/actions/` — Controllers (Gold Standard).
 
-- `ai/roles/` — AI role definitions (orchestrator, backend, frontend, etc.)
-- `.agents/skills/supabase/` — Supabase skill (MCP, CLI, RLS, auth)
-- `.agents/skills/supabase-postgres-best-practices/` — Postgres optimization rules
-- `docs/` — Specification, implementation plan, updates, todo
-- `server/actions/` — Server actions (Next.js server functions)
-- `server/modules/` — Business logic modules
-- `app/` — Next.js App Router pages
-- `components/` — React components
-- `lib/` — Shared utilities, auth, prisma client
-- `prisma/` — Schema, migrations, seed
-
-## Workflow
-
-1. Read the relevant role from `ai/roles/` before starting a task
-2. Read the system instructions in
-   [ai-agent-instructions.md](file:///c:/Users/i.azelkhanov/Documents/Strategic%20Academy/docs/ai-agent-instructions.md)
-   to understand current constraints
-3. Check `docs/implementation-plan.md` for current status
-4. Update `docs/updates.md` after each change
-5. Update `docs/ai-agent-instructions.md` if any major architectural/product
-   changes are made
-6. Follow the role's input docs and forbidden shortcuts
+## Workflow Protocol
+1. **Deep Context**: Read `docs/PLANNING_PROTOCOL.md` and `docs/ARCHITECTURE_GUIDE.md`.
+2. **Standard Planning**: Always use `set_plan` with context, constraints, and definitions.
+3. **Skill Usage**: Use skills from `skills/` adhering to prerequisites and post-conditions.
+4. **Verifiable Specs**: New features must have a spec in `docs/superpowers/specs/` that passes `npm run verify:specs`.
+5. **Documentation**: Update `docs/updates.md` after EVERY successful task.
 
 ## Key Conventions
+- **Russian-only UI**: Strictly enforced.
+- **No Prisma in UI**: Strictly enforced via `npm run verify`.
+- **ApiError Only**: For server-side exceptions.
 
-- Russian-only UI (no English user-facing strings)
-- Next.js 16 App Router, `proxy.ts` for middleware
-- Prisma ORM with PostgreSQL on Supabase
-- TypeScript strict mode, Zod validation
-- Tests: Vitest (unit), Playwright (E2E)
-- Roles: admin, super_curator, curator, instructor, student, customer_observer
+## AI Tools & Integrations
+- **Superpowers**: Subagent-driven development.
+- **Claw-code**: Embedded logic hints in `SKILL.md`.
+- **Spec-Kit**: Verifiable Markdown specifications.
+- **GStack**: Multi-layered modular monolith.

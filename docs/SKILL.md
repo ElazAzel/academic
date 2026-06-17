@@ -8,50 +8,30 @@ description: AI Strategic Academy — закрытая LMS для управле
 ## Project Overview
 Закрытая LMS одной академии. Реализация: Next.js modular monolith с REST API, Prisma/PostgreSQL и русским интерфейсом.
 
+## Architecture "Golden Standard" (GStack)
+- **Layer 1: Server Modules (`server/modules/`)**: Pure business logic and DB access.
+- **Layer 2: Server Actions (`server/actions/`)**: Controllers, Zod validation, RBAC.
+- **Layer 3: UI Components (`components/`)**: Presentation only. **NO PRISMA**.
+- **Layer 4: API routes (`app/api/`)**: REST endpoints.
+
 ## Tech Stack
 - **Framework:** Next.js 16 App Router, `proxy.ts` middleware
 - **Database:** PostgreSQL 17 + Prisma ORM 7.8, Supabase hosting
 - **Auth:** Auth.js 4 (Credentials + OAuth), Argon2id
 - **UI:** Tailwind CSS, shadcn/ui, lucide-react
-- **Testing:** Vitest (unit), Playwright (E2E)
 - **Validation:** Zod (all server actions)
-- **State:** React hooks, no external state library
-- **Styling:** Tailwind utility classes, CSS variables for theming
+- **Error Handling:** Typical `ApiError` with Russian messages.
 
 ## Key Conventions
-- **Russian-only UI** (no English user-facing strings)
-- **TypeScript strict mode** (strict: true)
-- **Server Actions** in `server/actions/` with Zod validation
-- **Business logic** in `server/modules/`
-- **Prisma** as sole DB access layer (RLS disabled)
-- **Functional** patterns over classes
-- **Loading states** via `loading.tsx` per route dir
-- **Metadata** via `export const metadata` per page
+- **Russian-only UI** (no English user-facing strings).
+- **TypeScript strict mode** (strict: true).
+- **Server Actions** must validate via Zod.
+- **Prisma** usage is forbidden in UI and pages.
 
 ## Roles
-- **admin**: Full access, settings, audit, roles
-- **super_curator**: Curator distribution, cohort risks
-- **curator**: Assignment review, questions, risks
-- **instructor**: Course/lesson/quiz/assignment management
-- **student**: Learning, progress, tests, certificates
-- **customer_observer**: Read-only project/cohort reports
+- **admin**, **super_curator**, **curator**, **instructor**, **student**, **customer_observer**.
 
-## Architecture
-```
-app/               # Next.js App Router pages
-  api/             # Route Handlers (REST)
-components/        # React components (client)
-lib/               # Shared utilities, auth, prisma client
-prisma/            # Schema, migrations, seed
-server/
-  actions/         # Server Actions (Zod-validated)
-  modules/         # Business logic services
-```
-
-## Key Code Quality Rules
-- Functional & modular code, minimal comments
-- Prefer declarative over imperative
-- Proper type system usage
-- No English strings in user-facing code
-- All server actions must have Zod validation
-- All routes must have loading.tsx and metadata
+## Code Quality
+- All routes must have `loading.tsx` and `metadata`.
+- Use `docs/templates/SKILL_TEMPLATE.md` for new skills.
+- Use `docs/templates/SPEC_TEMPLATE.md` for new specifications.

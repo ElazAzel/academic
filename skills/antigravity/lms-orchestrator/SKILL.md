@@ -5,29 +5,32 @@ description: Orchestrate multi-agent work for AI Strategic Academy in Antigravit
 
 # LMS Orchestrator
 
-## Goal
+## Prerequisites
+- [ ] Multi-agent environment setup.
+- [ ] Clear project roadmap from `docs/implementation-plan.md`.
 
-Coordinate specialized agents without losing product, architecture, security, or documentation discipline.
+## Context
+Used to coordinate specialized agents without losing product, architecture, security, or documentation discipline.
 
-## Workflow
+## Definitions
+- **Orchestration**: The process of dividing and sequencing tasks among different AI roles.
 
+## Logic (The "Claw")
 1. Read `ai/roles/README.md`, `docs/implementation-plan.md`, and `docs/updates.md`.
 2. Select the smallest set of roles needed for the task.
-3. Assign each role a clear scope, owned files/modules, expected output, and verification requirement.
-4. Sequence work so dependencies are explicit.
-5. Require each agent to update `docs/updates.md` for its change.
-6. Merge outputs only after QA/release review.
+3. Assign each role a clear scope and file ownership.
+4. Sequence work to manage dependencies.
+5. Require agents to update documentation after their work.
 
-## Guardrails
+### Instructional Hints (Claws)
+> **HINT:** Ensure multiple agents do not edit the same domain without a designated owner.
+> **HINT:** Never skip security/privacy reviews for sensitive domains like billing or PII.
 
-- Do not let multiple agents edit the same domain without an owner.
-- Do not merge role outputs that contradict `docs/specification.md`.
-- Do not skip security/privacy review for auth, billing, reports, consent, or PII.
+## Post-conditions
+- [ ] Tasks are properly assigned and sequenced.
+- [ ] Role outputs are consolidated and verified.
 
-## Output Checklist
-
-- Role assignment.
-- Scope and file ownership.
-- Verification gates.
-- Documentation updates.
-
+## Validation steps
+1. Review the task status in `docs/implementation-plan.md`.
+2. Confirm that all sub-agents have updated `docs/updates.md`.
+3. Ensure no contradictions with `docs/specification.md` exist in merged output.

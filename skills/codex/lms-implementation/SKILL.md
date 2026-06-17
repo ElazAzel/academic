@@ -5,32 +5,35 @@ description: Implement AI Strategic Academy features in Codex using Next.js, Pri
 
 # LMS Implementation
 
-## Goal
+## Prerequisites
+- [ ] Access to the codebase and development environment.
+- [ ] Understanding of the Modular Monolith architecture.
 
-Ship small, typed, production-oriented LMS changes without breaking Clean Architecture boundaries.
+## Context
+Used for shipping small, typed, production-oriented LMS changes without breaking Clean Architecture boundaries.
 
-## Workflow
+## Definitions
+- **Modular Monolith**: Architecture where business logic is separated into independent modules within a single codebase.
+- **Server Modules**: Files in `server/modules/*` where core business logic resides.
 
+## Logic (The "Claw")
 1. Read `docs/implementation-plan.md`, `docs/specification.md`, and relevant server/UI files.
-2. Put business logic in `server/modules/*`.
-3. Keep Route Handlers thin under `app/api/v1/*`.
-4. Use Prisma only in repositories/services, not React components.
-5. Validate input with Zod and enforce RBAC server-side.
-6. Add or update tests for changed behavior.
-7. Run `npm.cmd run lint`, `npm.cmd run typecheck`, and relevant tests.
-8. Update `docs/updates.md`; update `docs/implementation-plan.md` if status changed.
+2. Implement business logic strictly in `server/modules/*`.
+3. Ensure Route Handlers under `app/api/v1/*` remain thin.
+4. Validate input with Zod and enforce RBAC server-side.
+5. Add or update tests for changed behavior.
 
-## Guardrails
+### Instructional Hints (Claws)
+> **HINT:** Do NOT use Prisma Client in `app/**/page.tsx` or components. Use Services instead.
+> **HINT:** Always use `ApiError` for typed exceptions in Server Actions.
+> **HINT:** Do NOT introduce `any` without a documented reason.
 
-- Do not commit secrets or real provider keys.
-- Do not weaken auth, consent, audit, or payment verification.
-- Do not introduce `any` unless there is a documented unavoidable reason.
-- Do not replace REST implementation with GraphQL; GraphQL is scaffolded only.
+## Post-conditions
+- [ ] Business logic is isolated in server modules.
+- [ ] API, schema, and documentation are synchronized.
+- [ ] Tests for the new behavior are passing.
 
-## Output Checklist
-
-- Files changed are scoped.
-- API/schema/docs are synchronized.
-- Checks are reported.
-- Remaining TODOs are explicit.
-
+## Validation steps
+1. Run `npm run verify`.
+2. Check `docs/updates.md` for an update record.
+3. Verify that the architecture boundary scan passes (no Prisma in UI).

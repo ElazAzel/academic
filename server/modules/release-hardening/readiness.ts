@@ -205,11 +205,13 @@ export const releaseWorkPackages = [
       "Move business queries from server pages/components into server modules or actions",
       "Keep Route Handlers thin",
       "Keep modular monolith as the active architecture",
+      "Adhere to GStack Golden Standard (Modules -> Actions -> UI)",
     ],
     exitCriteria: [
       "Critical UI routes consume typed DTOs instead of inline domain queries",
       "No new direct Prisma calls are added to React components",
       "No microservice runtime split is introduced without ADR",
+      "All server actions validate inputs via Zod",
     ],
     evidence: [
       {
