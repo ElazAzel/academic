@@ -7,10 +7,11 @@
 ### Changes
 - **Playwright CI command**: `playwright.config.ts` now runs `npm run dev:next` in CI, avoiding the Windows-only PowerShell startup wrapper on Linux GitHub runners.
 - **WCAG contrast**: Replaced low-contrast `text-emerald-600` status text/icons with `text-emerald-700` across UI surfaces covered by accessibility smoke tests.
+- **E2E fixture compatibility**: Fixed the student-flow quiz fixture query to avoid a Prisma 7 runtime validation error from mixing `select` and `include` in one nested relation.
 
 ### Verification
 - `npm run verify` passed: banned patterns, ESLint with `--max-warnings=0`, typecheck, 936 unit/integration tests, production build and spec validation.
-- GitHub Actions rerun will validate the CI-only Playwright web server command and accessibility smoke path after push.
+- GitHub Actions confirmed local PostgreSQL `db:push`/`db:seed`, TypeScript, ESLint, unit/integration tests and accessibility smoke path; rerun pending for the student-flow fixture fix.
 
 ---
 

@@ -61,7 +61,6 @@ async function prepareQuizApiFixture(email: string) {
           module: {
             include: {
               course: {
-                select: { traversalMode: true },
                 include: {
                   modules: {
                     include: { lessons: { select: { id: true, order: true, isRequired: true } } },
