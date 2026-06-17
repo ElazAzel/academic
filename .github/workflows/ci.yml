@@ -9,6 +9,9 @@ on:
 env:
   NODE_VERSION: "22"
   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/academy_test?schema=public"
+  PRISMA_MIGRATION_DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/academy_test?schema=public"
+  storage_POSTGRES_PRISMA_URL: "postgresql://postgres:postgres@localhost:5432/academy_test?schema=public"
+  storage_POSTGRES_URL_NON_POOLING: "postgresql://postgres:postgres@localhost:5432/academy_test?schema=public"
 
 jobs:
   lint-typecheck-test:

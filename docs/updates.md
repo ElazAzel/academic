@@ -1,5 +1,21 @@
 # Project Updates
 
+## 2026-06-17 — CI PostgreSQL URL Precedence Fix
+
+**Goal**: Stop CI/deploy checks from accidentally connecting to a remote Supabase/PostgreSQL IPv6 endpoint when a local `DATABASE_URL` is explicitly provided.
+
+### Changes
+- **Prisma config precedence**: `prisma.config.ts` now prefers `DATABASE_URL` before `storage_POSTGRES_PRISMA_URL` and only uses non-pooling URLs as explicit migration overrides.
+- **Runtime DB precedence**: `lib/prisma.ts` now prefers `DATABASE_URL` before `storage_POSTGRES_PRISMA_URL`, so CI/local overrides cannot be shadowed by storage aliases.
+- **GitHub CI hardening**: `.github/workflows/ci.yml` now sets `DATABASE_URL`, `PRISMA_MIGRATION_DATABASE_URL`, `storage_POSTGRES_PRISMA_URL` and `storage_POSTGRES_URL_NON_POOLING` to the same local PostgreSQL service.
+
+### Verification
+- Precedence smoke passed: with local `DATABASE_URL` and remote storage alias present, Prisma config selects `localhost`.
+- `npm run verify` passed with local PostgreSQL URL overrides for all DB aliases.
+- Existing non-blocking warnings remain: legacy spec migration warnings, missing Sentry auth token and branding fallback logs when the local test database has no `app_settings` table during build-time metadata fallback.
+
+---
+
 ## 2026-06-17 — Commercial and Tender Readiness Center
 
 **Goal**: Make the platform easier to sell and evaluate for B2B academies, corporate training, quasi-government pilots and formal tender preparation without overstating production readiness.

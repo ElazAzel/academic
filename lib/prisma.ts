@@ -56,8 +56,8 @@ function ensurePgbouncerParam(connectionString: string): string {
 export function getPrisma() {
   if (!globalForPrisma.prisma) {
     const rawConnectionString =
-      process.env.storage_POSTGRES_PRISMA_URL ??
       process.env.DATABASE_URL ??
+      process.env.storage_POSTGRES_PRISMA_URL ??
       (process.env.NODE_ENV === "production"
         ? undefined
         : "postgresql://academy:academy-local-only@localhost:5432/academy?schema=public");
