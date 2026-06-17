@@ -1,0 +1,6 @@
+### Integration of Strategic AI Repositories
+- **Strategic Skills Format**: Transitioned from generic `SKILL.md` to a structured format with `Prerequisites`, `Context`, `Definitions`, `Logic (The Claw)`, `Post-conditions`, and `Validation steps`. This ensures agents have a clear contract of what they can and should do.
+- **Spec-Kit Integration**: Introduced verifiable Markdown specifications. Specifications are no longer just documentation; they are artifacts that can be validated against a standard template/schema using `scripts/validate-specs.ts`.
+- **GStack Golden Standard**: Explicitly defined a 4-layer architecture for the Next.js modular monolith: Server Modules (Logic/Prisma), Server Actions (Controllers/Zod), Route Handlers (REST), and UI Components (Presentation).
+- **Superpowers Planning**: Enforced a stricter protocol for `set_plan`, requiring deep context gathering and explicit constraints/definitions in every plan.
+- **Release Readiness**: Updated the `readiness.ts` contract to include architectural compliance as an exit criterion for release packages.

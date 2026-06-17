@@ -5,29 +5,31 @@ description: Review AI Strategic Academy changes with multiple specialized persp
 
 # Multi-Agent Review
 
-## Goal
+## Prerequisites
+- [ ] Changes submitted for review by an agent.
+- [ ] Access to all project documentation and design guidelines.
 
-Catch cross-domain problems before changes are accepted.
+## Context
+Used to catch cross-domain problems before changes are accepted into the main branch.
 
-## Workflow
+## Definitions
+- **Cross-domain problem**: An issue where a change in one module breaks assumptions or functionality in another.
 
-1. Read changed files, `docs/implementation-plan.md`, `docs/security-review.md`, and `docs/updates.md`.
-2. Review from these perspectives: product fit, architecture, backend correctness, UX/accessibility, security/privacy, QA/release, documentation.
+## Logic (The "Claw")
+1. Read changed files and relevant docs (`docs/implementation-plan.md`, `docs/security-review.md`).
+2. Review from multiple perspectives: product fit, architecture, backend, UX, security, QA.
 3. Prioritize findings by production impact.
-4. Require line/file references for actionable findings.
-5. Confirm `docs/updates.md` reflects the change and verification.
+4. Require line/file references for findings.
 
-## Guardrails
+### Instructional Hints (Claws)
+> **HINT:** Always check for direct DB access from UI — it is a strictly forbidden pattern.
+> **HINT:** Verify that RBAC checks are present on all privileged paths.
 
-- Do not focus on cosmetic preferences before correctness/security.
-- Do not approve undocumented behavior changes.
-- Do not accept direct DB access from UI.
-- Do not accept missing RBAC checks on privileged paths.
+## Post-conditions
+- [ ] Review findings are documented and prioritized.
+- [ ] Required fixes are clearly identified.
 
-## Output Checklist
-
-- Findings first, ordered by severity.
-- Open questions.
-- Required fixes.
-- Release recommendation.
-
+## Validation steps
+1. Confirm that all high-severity findings have associated fix tasks.
+2. Check that `docs/updates.md` reflects the review results.
+3. Ensure the release recommendation is based on evidence.
