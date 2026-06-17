@@ -259,9 +259,9 @@ export function CertificatesDashboard({
           <CardContent className="p-5 flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Активных</p>
-              <p className="text-3xl font-bold tracking-tight text-emerald-600">{activeCerts}</p>
+              <p className="text-3xl font-bold tracking-tight text-emerald-700">{activeCerts}</p>
             </div>
-            <div className="h-12 w-12 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <div className="h-12 w-12 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-700">
               <ShieldCheck className="h-6 w-6" />
             </div>
           </CardContent>

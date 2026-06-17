@@ -106,7 +106,7 @@ function AttendanceTable({
               <span
                 className={
                   row.viewPercent >= 80
-                    ? "text-emerald-600"
+                    ? "text-emerald-700"
                     : row.viewPercent >= 50
                       ? "text-amber-600"
                       : "text-rose-600"

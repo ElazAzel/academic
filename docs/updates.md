@@ -1,5 +1,19 @@
 # Project Updates
 
+## 2026-06-17 — GitHub Actions E2E Stability Fix
+
+**Goal**: Keep CI on the local PostgreSQL service and clear the next blocking E2E failure after the database URL precedence fix.
+
+### Changes
+- **Playwright CI command**: `playwright.config.ts` now runs `npm run dev:next` in CI, avoiding the Windows-only PowerShell startup wrapper on Linux GitHub runners.
+- **WCAG contrast**: Replaced low-contrast `text-emerald-600` status text/icons with `text-emerald-700` across UI surfaces covered by accessibility smoke tests.
+
+### Verification
+- `npm run verify` passed: banned patterns, ESLint with `--max-warnings=0`, typecheck, 936 unit/integration tests, production build and spec validation.
+- GitHub Actions rerun will validate the CI-only Playwright web server command and accessibility smoke path after push.
+
+---
+
 ## 2026-06-17 — CI PostgreSQL URL Precedence Fix
 
 **Goal**: Stop CI/deploy checks from accidentally connecting to a remote Supabase/PostgreSQL IPv6 endpoint when a local `DATABASE_URL` is explicitly provided.

@@ -96,7 +96,7 @@ export function CuratorLeaderboard({ curators }: { curators: CuratorLoad[] }) {
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium truncate">{c.curatorName}</p>
                       {c.isOnline ? (
-                        <span className="flex items-center gap-1 text-[10px] text-emerald-600">
+                        <span className="flex items-center gap-1 text-[10px] text-emerald-700">
                           <Circle className="h-2 w-2 fill-emerald-500" />
                           Онлайн
                         </span>

@@ -132,7 +132,7 @@ export function ResolveRiskButton({ riskId }: { riskId: string }) {
       onClick={handleResolve}
       disabled={pending}
       aria-label="Закрыть риск"
-      className="text-muted-foreground hover:text-emerald-600"
+      className="text-muted-foreground hover:text-emerald-700"
     >
       {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
     </Button>

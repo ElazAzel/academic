@@ -223,7 +223,7 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
               ) : data.finalProjectSubmitted && data.finalProjectApproved ? (
                 <Link
                   href={`/student/certificates`}
-                  className="inline-flex items-center gap-1.5 font-label-md text-label-md text-emerald-600 hover:underline"
+                  className="inline-flex items-center gap-1.5 font-label-md text-label-md text-emerald-700 hover:underline"
                 >
                   <Icon name="check_circle" className="text-[16px]" />
                   Сертификат готов — получить
@@ -552,7 +552,7 @@ export function CuratorLoadTable({ curators }: { curators: CuratorLoad[] }) {
               <StatusBadge status={c.pendingReviews > 5 ? "high" : "ACTIVE"} label={String(c.pendingReviews)} />
             </TableCell>
             <TableCell className="text-center font-body-md text-body-md">
-              <span className={c.avgResponseHours > 4 ? "text-m3-error font-medium" : "text-emerald-600"}>
+              <span className={c.avgResponseHours > 4 ? "text-m3-error font-medium" : "text-emerald-700"}>
                 {c.avgResponseHours} ч
               </span>
             </TableCell>

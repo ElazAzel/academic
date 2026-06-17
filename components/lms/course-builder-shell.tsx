@@ -635,7 +635,7 @@ export function CourseBuilderShell({
       <div className="hidden md:flex flex-wrap items-center justify-between gap-2 border-t border-m3-outline-variant px-4 py-2 font-body-sm text-body-sm text-m3-on-surface-variant lg:px-6 bg-m3-surface-container-lowest">
         <span>{dirty ? "Есть несохраненные изменения" : "Все изменения сохранены"}</span>
         <span className="inline-flex items-center gap-2">
-          <Icon name={readyToPublish ? "check_circle" : "warning"} className={readyToPublish ? "text-emerald-600" : "text-amber-600"} />
+          <Icon name={readyToPublish ? "check_circle" : "warning"} className={readyToPublish ? "text-emerald-700" : "text-amber-600"} />
           {readyToPublish ? "Курс готов к публикации" : "Публикация требует доработки"}
         </span>
         <span>Ctrl+S — сохранить · Esc — панель свойств</span>
@@ -644,7 +644,7 @@ export function CourseBuilderShell({
       <div className="md:hidden flex items-center justify-between border-t border-m3-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-m3-on-surface-variant bg-m3-surface-container-lowest">
         <span className="truncate max-w-[50%]">{dirty ? "Есть изменения" : "Сохранено"}</span>
         <span className="inline-flex items-center gap-1 shrink-0">
-          <Icon name={readyToPublish ? "check_circle" : "warning"} className={readyToPublish ? "text-emerald-600" : "text-amber-600"} size={14} />
+          <Icon name={readyToPublish ? "check_circle" : "warning"} className={readyToPublish ? "text-emerald-700" : "text-amber-600"} size={14} />
           <span>{readyToPublish ? "Готово" : "Требует доработки"}</span>
         </span>
       </div>
@@ -674,7 +674,7 @@ export function CourseBuilderShell({
               >
                 <Icon
                   name={check.passed ? "check_circle" : "error"}
-                  className={`mt-0.5 shrink-0 text-[18px] ${check.passed ? "text-emerald-600" : "text-rose-600"}`}
+                  className={`mt-0.5 shrink-0 text-[18px] ${check.passed ? "text-emerald-700" : "text-rose-600"}`}
                 />
                 <div className="space-y-0.5">
                   <p className="font-title-sm text-title-sm">{check.label}</p>

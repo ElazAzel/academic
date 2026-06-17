@@ -135,7 +135,7 @@ export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
             {preview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             {preview ? "Закрыть предпросмотр" : "Предпросмотр"}
           </Button>
-          <span className={cn("text-sm font-medium", success ? "text-emerald-600" : "text-rose-600")}>{message}</span>
+          <span className={cn("text-sm font-medium", success ? "text-emerald-700" : "text-rose-600")}>{message}</span>
           <Button type="submit" disabled={pending}>
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {pending ? "Сохраняем..." : "Сохранить настройки"}

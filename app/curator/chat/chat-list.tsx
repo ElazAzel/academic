@@ -137,7 +137,7 @@ export function CuratorChatList({
                 <p className="text-sm font-medium truncate">{selectedPartner.name}</p>
                 {selectedPartner.lessonId && (
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1 truncate">
-                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
+                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-700" />
                     <span className="truncate">{selectedPartner.lessonTitle ?? "Контекст урока"}</span>
                   </p>
                 )}

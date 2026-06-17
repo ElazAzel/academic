@@ -132,7 +132,7 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
                           </TableCell>
                           <TableCell className="text-xs">
                             {respHours !== null ? (
-                              <span className={respHours > 24 ? "text-red-600 font-medium" : respHours > 8 ? "text-amber-600" : "text-emerald-600"}>
+                              <span className={respHours > 24 ? "text-red-600 font-medium" : respHours > 8 ? "text-amber-600" : "text-emerald-700"}>
                                 {respHours < 1 ? "<1ч" : `${Math.round(respHours)}ч`}
                               </span>
                             ) : "—"}
@@ -211,13 +211,13 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
                         <TableRow key={s.studentId}>
                           <TableCell className="text-sm">{s.studentName}</TableCell>
                           <TableCell>
-                            <span className={s.avgQuestionHours > 24 ? "text-red-600 font-medium" : s.avgQuestionHours > 8 ? "text-amber-600" : "text-emerald-600"}>
+                            <span className={s.avgQuestionHours > 24 ? "text-red-600 font-medium" : s.avgQuestionHours > 8 ? "text-amber-600" : "text-emerald-700"}>
                               {s.avgQuestionHours > 0 ? `${s.avgQuestionHours}ч` : "—"}
                             </span>
                           </TableCell>
                           <TableCell className="text-xs">{s.questionCount}</TableCell>
                           <TableCell>
-                            <span className={s.avgChatHours > 24 ? "text-red-600 font-medium" : s.avgChatHours > 8 ? "text-amber-600" : "text-emerald-600"}>
+                            <span className={s.avgChatHours > 24 ? "text-red-600 font-medium" : s.avgChatHours > 8 ? "text-amber-600" : "text-emerald-700"}>
                               {s.avgChatHours > 0 ? `${s.avgChatHours}ч` : "—"}
                             </span>
                           </TableCell>

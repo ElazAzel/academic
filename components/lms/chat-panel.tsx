@@ -399,7 +399,7 @@ export function ChatPanel({
                 )}
                 {showResponseState && !m.isMine && responseStateByMessageId.get(m.id) && (
                   <p className={`mt-1 text-label-sm font-label-sm ${
-                    responseStateByMessageId.get(m.id) === "answered" ? "text-emerald-600" : "text-amber-600"
+                    responseStateByMessageId.get(m.id) === "answered" ? "text-emerald-700" : "text-amber-600"
                   }`}>
                     {responseStateByMessageId.get(m.id) === "answered" ? "Ответ отправлен" : "Ожидает ответа"}
                   </p>

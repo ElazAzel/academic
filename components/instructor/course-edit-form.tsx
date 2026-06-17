@@ -120,7 +120,7 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
       </div>
 
       <div className="flex items-center justify-between pt-4">
-        <span className={success ? "text-emerald-600 text-sm" : "text-rose-600 text-sm"}>{message}</span>
+        <span className={success ? "text-emerald-700 text-sm" : "text-rose-600 text-sm"}>{message}</span>
         <Button type="submit" disabled={pending}>
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {pending ? "Сохраняем..." : "Сохранить изменения"}

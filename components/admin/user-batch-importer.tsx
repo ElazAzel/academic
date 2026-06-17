@@ -436,7 +436,7 @@ export function UserBatchImporter({
                       </TableCell>
                       <TableCell>
                         {user.isValid ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                          <span className="inline-flex items-center gap-1 text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
                             <Check className="h-3 w-3" /> Готов
                           </span>
                         ) : (
@@ -490,7 +490,7 @@ export function UserBatchImporter({
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-2 text-xs">
                 <div className="bg-background rounded-lg p-3 border">
-                  <div className="font-bold text-emerald-600 text-lg">
+                  <div className="font-bold text-emerald-700 text-lg">
                     {importResults.filter(r => r.status === "created").length}
                   </div>
                   <div className="text-muted-foreground">Создано</div>
@@ -550,7 +550,7 @@ export function UserBatchImporter({
                         <TableCell className="text-sm font-medium">{res.name || "—"}</TableCell>
                         <TableCell>
                           {res.status === "created" && (
-                            <span className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Создан</span>
+                            <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Создан</span>
                           )}
                           {res.status === "enrolled" && (
                             <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">Зачислен</span>

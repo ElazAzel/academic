@@ -61,7 +61,7 @@ export function CourseSettingsPanel({
             const Icon = check.status === "passed" ? CheckCircle2 : XCircle;
             return (
               <div key={check.id} className="flex gap-2">
-                <Icon className={check.status === "passed" ? "mt-0.5 h-4 w-4 shrink-0 text-emerald-600" : "mt-0.5 h-4 w-4 shrink-0 text-amber-600"} />
+                <Icon className={check.status === "passed" ? "mt-0.5 h-4 w-4 shrink-0 text-emerald-700" : "mt-0.5 h-4 w-4 shrink-0 text-amber-600"} />
                 <div className="min-w-0">
                   <p className="text-sm font-medium">{check.label}</p>
                   <p className="text-xs leading-5 text-muted-foreground">{check.description}</p>

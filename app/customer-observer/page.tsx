@@ -95,7 +95,7 @@ async function CustomerObserverDashboardContent() {
              Отозван · {new Date(cert.revokedAt).toLocaleDateString("ru-RU")}
             </span>
            ) : (
-            <span className="text-emerald-600 flex items-center gap-1">Активен</span>
+            <span className="text-emerald-700 flex items-center gap-1">Активен</span>
            )}
           </TableCell>
          </TableRow>

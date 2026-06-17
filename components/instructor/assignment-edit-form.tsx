@@ -71,7 +71,7 @@ export function AssignmentEditForm({ assignment }: AssignmentEditFormProps) {
           </Button>
         </Link>
         <div className="flex items-center gap-4">
-          <span className={success ? "text-emerald-600 text-sm font-medium" : "text-rose-600 text-sm font-medium"}>{message}</span>
+          <span className={success ? "text-emerald-700 text-sm font-medium" : "text-rose-600 text-sm font-medium"}>{message}</span>
           <Button type="submit" disabled={pending}>
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {pending ? "Сохраняем..." : "Сохранить задание"}

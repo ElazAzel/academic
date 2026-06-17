@@ -87,7 +87,7 @@ export function CuratorRadar({ students }: CuratorRadarProps) {
   }> = [
     { key: "all", label: "Все слушатели", count: countMap.all, icon: <Users className="h-5 w-5" />, tone: "bg-primary/5 text-primary border-primary/20" },
     { key: "leaders", label: "Лидеры (>=70%)", count: countMap.leaders, icon: <Flame className="h-5 w-5" />, tone: "bg-amber-50 text-amber-600 border-amber-200" },
-    { key: "active", label: "В темпе (активные)", count: countMap.active, icon: <CheckCircle className="h-5 w-5" />, tone: "bg-emerald-50 text-emerald-600 border-emerald-200" },
+    { key: "active", label: "В темпе (активные)", count: countMap.active, icon: <CheckCircle className="h-5 w-5" />, tone: "bg-emerald-50 text-emerald-700 border-emerald-200" },
     { key: "lagging", label: "В зоне риска", count: countMap.lagging, icon: <AlertTriangle className="h-5 w-5" />, tone: "bg-red-50 text-red-600 border-red-200" },
   ];
 

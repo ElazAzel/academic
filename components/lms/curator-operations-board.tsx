@@ -79,7 +79,7 @@ function ActionButton({ student, onChat }: { student: CuratorStudentOperation; o
 }
 
 function SlaStatus({ hours }: { hours: number }) {
-  const color = hours <= 2 ? "text-emerald-600" : hours <= 8 ? "text-amber-600" : "text-m3-error";
+  const color = hours <= 2 ? "text-emerald-700" : hours <= 8 ? "text-amber-600" : "text-m3-error";
   const label = hours <= 2 ? "Оперативно" : hours <= 8 ? "В норме" : "Просрочено";
   return (
     <span className={cn("inline-flex items-center gap-1", color)}>
@@ -530,7 +530,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
                         Отсутствует {diagStudent.daysSinceLogin ?? "более 7"} дн.
                       </span>
                     ) : (
-                      <span className="text-emerald-600 flex items-center gap-0.5">
+                      <span className="text-emerald-700 flex items-center gap-0.5">
                         <Icon name="check_circle" size={14} />
                         Активен ({formatLastLogin(diagStudent.daysSinceLogin)})
                       </span>
@@ -564,7 +564,7 @@ export function CuratorOperationsBoard({ students }: { students: CuratorStudentO
                     {diagStudent.progressPercent < 15 ? (
                       <span className="text-amber-500">{diagStudent.progressPercent}% (низкий темп)</span>
                     ) : (
-                      <span className="text-emerald-600">{diagStudent.progressPercent}% (хороший темп)</span>
+                      <span className="text-emerald-700">{diagStudent.progressPercent}% (хороший темп)</span>
                     )}
                   </span>
                 </div>

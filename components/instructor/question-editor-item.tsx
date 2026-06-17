@@ -105,7 +105,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
             <span className="text-[10px] uppercase text-muted-foreground">{data.type === "SINGLE_CHOICE" ? "1 вариант" : data.type === "MULTIPLE_CHOICE" ? "N вариантов" : "Краткий ответ"}</span>
             <span className="text-[10px] text-muted-foreground">· {data.points} балл(ов)</span>
             {data.type !== "TEXT" && options.length > 0 && (
-              <span className="text-[10px] text-emerald-600">
+              <span className="text-[10px] text-emerald-700">
                 ✓ {data.type === "SINGLE_CHOICE" ? `Вариант ${options.indexOf(correctAnswer.value ?? "") + 1}` : `выбрано ${(correctAnswer.values ?? []).length}`}
               </span>
             )}
@@ -212,7 +212,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
             </div>
             <div className="flex items-center gap-2">
               {saveStatus === "saving" && <span className="text-[10px] text-muted-foreground">сохранение...</span>}
-              {saveStatus === "saved" && <span className="text-[10px] text-emerald-600">сохранено</span>}
+              {saveStatus === "saved" && <span className="text-[10px] text-emerald-700">сохранено</span>}
               {saveStatus === "error" && <span className="text-[10px] text-rose-600">ошибка</span>}
             </div>
           </div>

@@ -144,7 +144,7 @@ export default async function QuizResultPage({
             <div className="flex justify-center mb-4">
               {passed ? (
                 <div className="bg-emerald-100 p-4 rounded-full">
-                  <CheckCircle2 className="h-12 w-12 text-emerald-600" />
+                  <CheckCircle2 className="h-12 w-12 text-emerald-700" />
                 </div>
               ) : (
                 <div className="bg-rose-100 p-4 rounded-full">
@@ -178,7 +178,7 @@ export default async function QuizResultPage({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Правильных ответов:</span>
-                <span className="font-medium text-emerald-600">{correctCount}</span>
+                <span className="font-medium text-emerald-700">{correctCount}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Неправильных:</span>
@@ -279,7 +279,7 @@ export default async function QuizResultPage({
                                   <span className="ml-2 text-rose-600">← ваш ответ</span>
                                 )}
                                 {!isSelected && isCorrectOpt && (
-                                  <span className="ml-2 text-emerald-600">✓ правильный ответ</span>
+                                  <span className="ml-2 text-emerald-700">✓ правильный ответ</span>
                                 )}
                               </div>
                             );
@@ -290,10 +290,10 @@ export default async function QuizResultPage({
                       {q.type === "TEXT" && (
                         <div className="space-y-1 text-xs">
                           <p className="text-muted-foreground">
-                            Ваш ответ: <span className={isCorrect ? "text-emerald-600 font-medium" : "text-rose-600 font-medium"}>{studentAnswerStrs.join(", ") || "—"}</span>
+                            Ваш ответ: <span className={isCorrect ? "text-emerald-700 font-medium" : "text-rose-600 font-medium"}>{studentAnswerStrs.join(", ") || "—"}</span>
                           </p>
                           {!isCorrect && (
-                            <p className="text-emerald-600">
+                            <p className="text-emerald-700">
                               Правильный ответ: <span className="font-medium">{correctStrs.join(", ") || "—"}</span>
                             </p>
                           )}
@@ -330,7 +330,7 @@ export default async function QuizResultPage({
                       <div className="flex items-center gap-3 min-w-0">
                         <div className={`shrink-0 rounded-full p-1.5 ${(att.score ?? 0) >= quiz.passThreshold ? "bg-emerald-100" : "bg-rose-100"}`}>
                           {(att.score ?? 0) >= quiz.passThreshold ? (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            <CheckCircle2 className="h-4 w-4 text-emerald-700" />
                           ) : (
                             <XCircle className="h-4 w-4 text-rose-600" />
                           )}
@@ -356,7 +356,7 @@ export default async function QuizResultPage({
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
-                        <span className={`text-sm font-bold ${(att.score ?? 0) >= quiz.passThreshold ? "text-emerald-600" : "text-rose-600"}`}>
+                        <span className={`text-sm font-bold ${(att.score ?? 0) >= quiz.passThreshold ? "text-emerald-700" : "text-rose-600"}`}>
                           {att.score}%
                         </span>
                         {att.id !== attempt.id && (
