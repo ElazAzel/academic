@@ -1,0 +1,203 @@
+AI Strategic Academy: source notes for market, competitor, target audience and gov-readiness report
+Generated: 2026-06-17
+Language of deliverable: Russian
+
+Purpose
+- Support the static executive HTML report:
+  outputs/ai-strategic-academy-market-gov-analysis.html
+- This is a pre-tender product/legal gap analysis, not a formal legal opinion.
+
+Local evidence reviewed
+1. platform-functional-overview.md
+   - Closed academy product identity.
+   - Six roles: Admin, Instructor, Student, Curator, Super Curator, Customer Observer.
+   - One learning chain: course, module, block, lesson, materials, test, assignment, question, rating, completion.
+   - Customer Observer role is read-only and limited to permitted projects/cohorts.
+   - Curator model, risk tracking, reports, certificates, public certificate verification.
+
+2. READINESS.md
+   - Overall readiness status: partial as of 2026-06-04.
+   - Strong local verification evidence exists, including repo-local verify and production build.
+   - Remaining blockers include full six-role scenario proof, security negative paths, authenticated WCAG proof, operational drills.
+   - P1 blockers include DPA with Vercel/Supabase not signed, compromised Supabase password in git history, backup/restore/rollback drill.
+
+3. specification.md
+   - Confirms Next.js/Prisma/PostgreSQL/Auth.js stack and broad MVP feature list.
+   - Confirms core modules: auth, RBAC, courses, progress, tests, assignments, certificates, invites, reports, notifications, risks.
+   - Confirms RLS disabled in current design and server-side RBAC/Zod/security controls by application.
+
+4. security-review.md
+   - Auth.js credentials, Argon2id, self-registration disabled, server-side RBAC.
+   - Max two device sessions per user.
+   - Audit, CSP, CSRF/rate-limit references.
+   - Risks include tenant leakage, overbroad access, credential sharing, provisioning CSV leakage, Supabase password in git history.
+
+5. todo.md
+   - Confirms nearest tasks: DPA, Supabase password rotation, full E2E role suite, SMTP production wiring, full WCAG audit.
+   - Confirms strategic backlog such as AI recommendations/adaptive paths/mobile app.
+
+6. legal/third-party-services-register.md
+   - Vercel active, DPA not signed.
+   - Supabase active, DPA not signed, stores all platform data, possible US/EU location.
+   - GitHub active.
+   - Cross-border and DPA gap marked critical.
+
+7. package manifest
+   - Confirms current web app stack and dependencies such as Next.js, React, Prisma, Auth.js, Sentry, Supabase, Redis, Playwright, Vitest.
+
+Public legal and government sources used
+1. Law of the Republic of Kazakhstan on personal data and their protection
+   URL: https://adilet.zan.kz/rus/docs/Z1300000094
+   Claims supported:
+   - Personal data processing must be treated as a regulated legal area.
+   - Consent, controller/operator roles and cross-border transfer analysis are required before real production use.
+
+2. Law of the Republic of Kazakhstan on informatization
+   URL: https://adilet.zan.kz/rus/docs/Z1500000418
+   Claims supported:
+   - Government or state-integrated SaaS scenarios require classification and analysis under informatization law.
+
+3. Unified ICT and information security requirements
+   URL: https://adilet.zan.kz/rus/docs/P1600000832
+   Claims supported:
+   - Gov-oriented deployment must map technical controls to ICT/IS requirements.
+   - Existing product controls are useful but need an evidence pack and control matrix.
+
+4. Rules for processing limited-access personal data
+   URL: https://adilet.zan.kz/rus/docs/V2300032810
+   Claims supported:
+   - Limited-access personal data processing raises Kazakhstan data residency and hosting architecture questions.
+   - Current Vercel/Supabase uncertainty is a high-risk blocker.
+
+5. Law on public procurement
+   URL: https://adilet.zan.kz/rus/docs/Z2400000106
+   Claims supported:
+   - Formal public procurement requires a tender-ready package: technical specification, SLA, acceptance criteria, security appendix and supplier obligations.
+
+6. Digital Code of the Republic of Kazakhstan
+   URL: https://adilet.zan.kz/rus/docs/K2600000255
+   Claims supported:
+   - The legal analysis should be rechecked after 2026-07-12 for relevant Digital Code changes.
+
+7. Current law on electronic document and digital signature
+   URL: https://adilet.zan.kz/rus/docs/Z030000370_
+   Claims supported:
+   - PDF certificate with public verification is not automatically the same as a legally significant e-document with EDS.
+
+8. Rules for attestation of information systems and government internet resources
+   URL: https://adilet.zan.kz/rus/docs/P1600000298
+   Claims supported:
+   - Attestation path may be required depending on whether the platform becomes a government information system or integrates with government infrastructure.
+
+9. Rules/testing functions of informatization objects for IS requirements
+   URL: https://adilet.zan.kz/rus/docs/V1900018795
+   Claims supported:
+   - State-adjacent use cases can require formal information security testing beyond ordinary app tests.
+
+10. Ministry of Education: education digitization
+    URL: https://www.gov.kz/memleket/entities/edu/activities/3599
+    Claims supported:
+    - Kazakhstan education digitalization emphasizes unified information space, online/distance learning, compatibility, information security and management analytics.
+
+11. AI training and digital skills in Kazakhstan
+    URL: https://www.gov.kz/memleket/entities/maidd/press/news/details/1142334?lang=ru
+    Claims supported:
+    - Public agenda supports AI/digital skills training demand.
+
+12. Universities connected to LMS platforms
+    URL: https://www.gov.kz/memleket/entities/sci/press/news/details/826775?lang=ru
+    Claims supported:
+    - Higher education already has LMS usage; replacing existing LMS is not the easiest wedge.
+
+13. Coursera and Kazakhstan Ministry partnership renewal
+    URL: https://blog.coursera.org/kazakhstans-ministry-of-science-and-higher-education-renews-partnership-with-coursera-further-institutionalizing-world-class-learning-from-leading-companies-and-universities/
+    Claims supported:
+    - Kazakhstan higher education strategy shows demand for verified skills and global online learning.
+
+Competitor and benchmark sources used
+1. Platonus
+   URL: https://platonus.kz/eng
+   Claims supported:
+   - Vendor claims broad local scale across universities, colleges and daily users.
+   - Report uses these as vendor claims, not independently audited metrics.
+
+2. NEXT LMS / Univer app page
+   URL: https://apps.apple.com/kz/app/next-lms-univer/id6755327218
+   Claims supported:
+   - University-oriented LMS workflows: courses, video, tests, classes, chat, grades.
+
+3. BilimLand
+   URL: https://bilimland.kz/en
+   URL: https://bilimland.kz/en/about_us
+   Claims supported:
+   - Interactive lesson content, multi-language education content and local educational ecosystem.
+
+4. Bilim Group
+   URL: https://bilim.group/en/
+   Claims supported:
+   - Group-level ecosystem includes BilimLand, OnlineMektep and other education products.
+
+5. BilimClass
+   URL: https://www.bilimclass.kz/
+   Claims supported:
+   - K-12 content/platform orientation and large lesson catalogue claims.
+
+6. Orleu
+   URL: https://orleu.edu.kz/?lang=en
+   URL: https://mooc.orleu.edu.kz/about/
+   Claims supported:
+   - Orleu is a national professional development provider and MOOC benchmark for teacher CPD.
+
+7. Moodle
+   URL: https://moodle.com/solutions/education/
+   URL: https://moodle.com/about/open-source/
+   URL: https://docs.moodle.org/en/About_Moodle
+   Claims supported:
+   - Open-source, customizable LMS; education use cases; accessibility/security positioning.
+
+8. Canvas
+   URL: https://www.instructure.com/canvas
+   URL: https://community.instructure.com/en/kb/articles/662716-what-is-canvas
+   Claims supported:
+   - Global LMS benchmark; web-based LMS for institutions; vendor claims about scale, uptime and mobile usage.
+
+9. Coursera Government
+   URL: https://www.coursera.org/government
+   Claims supported:
+   - Government learning platform for public-sector skills, global content and government programs.
+
+10. Docebo
+    URL: https://www.docebo.com/
+    URL: https://www.docebo.com/products/learn-lms/
+    Claims supported:
+    - Enterprise learning suite, employee/customer/partner enablement, AI-first positioning.
+
+11. iSpring and Teachbase
+    URL: https://www.ispring.ru/elearning-insights/platforma-onlain-obucheniya
+    URL: https://www.ispring.com/knowledge-hub/best-online-learning-platforms
+    URL: https://teachbase.ru/learning/kak-vybrat-platformu-dlya-obucheniya/
+    Claims supported:
+    - Corporate LMS benchmarks and common L&D platform expectations.
+
+Unsupported or deliberately softened claims
+- No real pricing, ARR, TAM/SAM/SOM, conversion rates or production SLA are claimed.
+- No claim that the platform is fully production-ready.
+- No claim that the platform is formally compliant for Kazakhstan government use today.
+- Competitor usage numbers from vendor pages are described as vendor claims.
+- Gov legal conclusions are framed as pre-tender gaps requiring Kazakhstan legal review.
+
+Core conclusion mapping
+1. Sell as closed operational academy, not generic LMS
+   Evidence: local platform overview, role model, customer observer, curator model, risks, reports, certificates.
+
+2. Best ICP is B2B closed academy / corporate L&D / project education operator
+   Evidence: product strengths align with cohort, curator, reporting and certificate workflows.
+
+3. Avoid head-on replacement of university LMS and K-12 platforms
+   Evidence: Platonus/Univer/Moodle already used in higher education; BilimLand/OnlineMektep strong in school/content ecosystems.
+
+4. Gov production readiness is not yet achieved
+   Evidence: READINESS partial, DPA gaps, Supabase password rotation, hosting/data residency uncertainty, no formal attestation/control evidence.
+
+5. Pilot path is realistic after P1 blockers
+   Evidence: local functionality is broad, but legal/security/ops evidence needs closure before formal tender.

@@ -1,5 +1,21 @@
 # Project Updates
 
+## 2026-06-17 — Commercial and Tender Readiness Center
+
+**Goal**: Make the platform easier to sell and evaluate for B2B academies, corporate training, quasi-government pilots and formal tender preparation without overstating production readiness.
+
+### Changes
+- **Admin Readiness Center**: Added `/admin/readiness` as an admin-only page with segment fit, buyer evidence pack, gov-readiness blockers and a tender roadmap.
+- **Commercial Readiness Module**: Added `server/modules/commercial-readiness/service.ts` to keep B2B/government positioning data outside UI code and preserve the no-Prisma-in-pages rule.
+- **Navigation**: Added "Готовность" to the admin sidebar so commercial/tender preparation is visible during demos and internal readiness reviews.
+- **Tender Positioning**: Explicitly separates B2B pilot readiness from formal government production blockers: DPA, data residency, security evidence, operational drills, WCAG proof and legal/tender documentation.
+
+### Verification
+- `npm run verify` passed: banned patterns, ESLint with `--max-warnings=0`, typecheck, Vitest, production build and spec validation.
+- Existing non-blocking warnings remain: legacy spec migration warnings and missing Sentry auth token for source map upload.
+
+---
+
 ## 2026-06-17 — Integration of Strategic AI Repositories
 
 **Goal**: Align the project with high-quality agentic workflows from `obra/superpower`, `ultraworkers/claw-code`, `anthtopics/skills`, `mattpocock/skills`, `github/spec-kit`, and `garretan/gstack`.

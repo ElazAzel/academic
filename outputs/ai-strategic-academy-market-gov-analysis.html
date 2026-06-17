@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Strategic Academy: рынок, конкуренты, ЦА и gov-readiness РК</title>
+  <style>
+    :root {
+      --blue: #1a4494;
+      --green: #006b5e;
+      --ink: #172033;
+      --muted: #5c667a;
+      --line: #d9deea;
+      --soft: #f8f9fc;
+      --surface: #ffffff;
+      --warn: #9a5b00;
+      --risk: #9c1d2b;
+      --ok: #0f6b4f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--soft);
+      color: var(--ink);
+      font-family: Aptos, "Segoe UI", Arial, sans-serif;
+      font-size: 16px;
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 40px 24px 72px;
+    }
+
+    header,
+    section {
+      margin-bottom: 34px;
+    }
+
+    header {
+      padding: 34px 36px;
+      background: linear-gradient(135deg, #ffffff 0%, #edf3ff 62%, #e8f5f2 100%);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 18px 48px rgba(26, 68, 148, 0.08);
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: "Aptos Display", Aptos, "Segoe UI", Arial, sans-serif;
+      line-height: 1.14;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 900px;
+      color: var(--blue);
+      font-size: clamp(34px, 5vw, 56px);
+      font-weight: 760;
+    }
+
+    h2 {
+      margin-bottom: 14px;
+      color: var(--blue);
+      font-size: 28px;
+    }
+
+    h3 {
+      margin: 18px 0 10px;
+      color: var(--ink);
+      font-size: 20px;
+    }
+
+    p,
+    li {
+      line-height: 1.58;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(26, 68, 148, 0.28);
+    }
+
+    a:hover {
+      border-bottom-color: var(--blue);
+    }
+
+    .eyebrow {
+      margin: 0 0 14px;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 760;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .lede {
+      max-width: 860px;
+      margin: 18px 0 0;
+      color: #33405a;
+      font-size: 20px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #3a465e;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .section-card {
+      padding: 28px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(23, 32, 51, 0.05);
+    }
+
+    .executive-summary-box {
+      padding: 28px;
+      background: #ffffff;
+      border: 2px solid rgba(26, 68, 148, 0.18);
+      border-radius: 22px;
+      box-shadow: 0 20px 48px rgba(26, 68, 148, 0.1);
+    }
+
+    .executive-summary-box ul {
+      margin: 0;
+      padding-left: 22px;
+    }
+
+    .executive-summary-box li + li {
+      margin-top: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      min-height: 136px;
+      padding: 18px;
+      background: #f7fbff;
+      border: 1px solid #d8e5fb;
+      border-radius: 16px;
+    }
+
+    .metric strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--blue);
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.42;
+    }
+
+    .callout {
+      padding: 18px 20px;
+      background: #f3f7ff;
+      border-left: 5px solid var(--blue);
+      border-radius: 14px;
+    }
+
+    .callout.warning {
+      background: #fff8ed;
+      border-left-color: var(--warn);
+    }
+
+    .callout.risk {
+      background: #fff1f3;
+      border-left-color: var(--risk);
+    }
+
+    .table-wrap {
+      margin-top: 16px;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #edf3ff;
+      color: #23345b;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    td {
+      color: #2c354a;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .tag.ok {
+      background: #e5f4ef;
+      color: var(--ok);
+    }
+
+    .tag.warn {
+      background: #fff0d7;
+      color: var(--warn);
+    }
+
+    .tag.risk {
+      background: #ffe0e5;
+      color: var(--risk);
+    }
+
+    .tag.info {
+      background: #e8efff;
+      color: var(--blue);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .plain-list {
+      margin: 12px 0 0;
+      padding-left: 21px;
+    }
+
+    .plain-list li + li {
+      margin-top: 8px;
+    }
+
+    .scoreline {
+      display: grid;
+      grid-template-columns: 220px 1fr 72px;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .scoreline:last-child {
+      border-bottom: 0;
+    }
+
+    .bar {
+      height: 12px;
+      overflow: hidden;
+      background: #e8edf7;
+      border-radius: 999px;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--blue));
+      border-radius: inherit;
+    }
+
+    .score {
+      color: var(--ink);
+      font-weight: 760;
+      text-align: right;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 760px) {
+      main {
+        padding: 24px 14px 48px;
+      }
+
+      header,
+      .section-card,
+      .executive-summary-box {
+        padding: 22px;
+        border-radius: 18px;
+      }
+
+      .grid,
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .scoreline {
+        grid-template-columns: 1fr;
+      }
+
+      .score {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main data-report-audience="B2B and B2G education buyers">
+    <header data-contract-section="title">
+      <p class="eyebrow">Pre-tender gap analysis • Казахстан • 17 июня 2026</p>
+      <h1>AI Strategic Academy: рынок, конкуренты, ЦА и gov-readiness РК</h1>
+      <p class="lede">Исполнительный отчет о том, куда продавать платформу, против кого позиционироваться, насколько продукт готов к B2B/B2G продаже и что мешает формальному применению в госсекторе Казахстана.</p>
+      <div class="meta" aria-label="Контекст отчета">
+        <span class="pill">Язык отчета: русский</span>
+        <span class="pill">Формат: executive HTML</span>
+        <span class="pill">Статус продукта в документах: partial readiness</span>
+        <span class="pill">Не является юридическим заключением</span>
+      </div>
+    </header>
+
+    <section class="executive-summary-box" data-contract-section="executive-summary">
+      <h2>Executive Summary</h2>
+      <ul>
+        <li><strong>Главный вывод: AI Strategic Academy стоит продавать не как универсальную LMS, а как закрытую операционную академию для ответственного cohort-based обучения.</strong> Сильнейшая продуктовая позиция - связка ролей, кураторской поддержки, рисков, отчетов, сертификатов и read-only кабинета заказчика. Это ближе к управляемой академической программе, чем к библиотеке курсов или классической университетской LMS.</li>
+        <li><strong>Коммерчески самый реалистичный ICP - B2B академии, корпоративное обучение, квазигоссектор и проектные образовательные операторы, где заказчик платит за контроль результата.</strong> Прямой бой с Platonus/Univer за университетскую административную LMS или с BilimLand/OnlineMektep за массовую K-12 экосистему не выглядит рациональным.</li>
+        <li><strong>Для формального госиспользования в РК платформа пока не tender-ready: она может быть pilot-ready только в ограниченном контуре после закрытия P1-блокеров.</strong> Ключевые препятствия: неподписанные DPA с Vercel/Supabase, непроясненная дата-резиденция персональных данных, необходимость маппинга к требованиям ИКТ/ИБ, возможная аттестация при интеграции с государственными ИС, доказанная эксплуатационная готовность и проверка режима Цифрового кодекса после 12 июля 2026.</li>
+      </ul>
+    </section>
+
+    <section class="section-card" data-contract-section="key-findings">
+      <h2>Главный Вывод</h2>
+      <p>Платформа уже выглядит как сильный B2B/B2G продуктовый прототип для закрытой академии: есть роли, доступ по инвайтам, учебная цепочка, кураторы, риски, отчеты и сертификаты. Но текущая рыночная ставка должна быть осторожной: продавать можно пилот и внедрение в контролируемой среде, а не обещать полностью доказанную промышленную эксплуатацию для государства.</p>
+
+      <div class="grid" role="list" aria-label="Ключевые оценки">
+        <div class="metric" role="listitem">
+          <strong>8/10</strong>
+          <span>B2B fit для закрытых академий и корпоративных программ после уточнения SLA и операционной поддержки.</span>
+        </div>
+        <div class="metric" role="listitem">
+          <strong>6/10</strong>
+          <span>Квазигоссектор и пилоты с ограниченным объемом персональных данных после закрытия DPA/hosting gap.</span>
+        </div>
+        <div class="metric" role="listitem">
+          <strong>4/10</strong>
+          <span>Формальная госзакупка в production-контуре сегодня: юридические, ИБ и эксплуатационные доказательства неполные.</span>
+        </div>
+      </div>
+
+      <p class="footer-note">Оценки являются качественными и основаны на локальных документах проекта, официальных источниках РК и публичных страницах конкурентов. Они не являются финансовым forecast и не заменяют юридическую экспертизу.</p>
+    </section>
+
+    <section class="section-card">
+      <h2>Project Reality: Что Реально Есть В Продукте</h2>
+      <p>Локальные документы описывают платформу как закрытую академию с русскоязычным интерфейсом, ролевой моделью, контролем доступа, единой цепочкой обучения, кураторской поддержкой, отчетами и сертификатами. При этом READINESS фиксирует общий статус как <strong>partial</strong>: функциональность шире типового MVP, но production/gov evidence еще не закрыт.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Область</th>
+              <th>Текущий статус</th>
+              <th>Доказательство</th>
+              <th>Коммерческий смысл</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Закрытая академия</td>
+              <td><span class="tag ok">Сильная база</span></td>
+              <td>Доступ без публичной регистрации, контролируемые инвайты, шесть ролей, устройство не более двух активных сессий.</td>
+              <td>Подходит для заказчика, который оплачивает поток и хочет управляемый доступ, а не публичный маркетплейс.</td>
+            </tr>
+            <tr>
+              <td>Learning journey</td>
+              <td><span class="tag ok">Дифференциатор</span></td>
+              <td>Единый путь: курс, модуль, блок, урок, материалы, тест, задание, вопрос, рейтинг, завершение.</td>
+              <td>Можно продавать как снижение операционного хаоса между LMS, чатами, таблицами и ручными отчетами.</td>
+            </tr>
+            <tr>
+              <td>Ролевая операционная модель</td>
+              <td><span class="tag ok">Сильная база</span></td>
+              <td>Admin, Instructor, Student, Curator, Super Curator, Customer Observer.</td>
+              <td>Особенно важно для заказчика/спонсора, который хочет read-only контроль без вмешательства в обучение.</td>
+            </tr>
+            <tr>
+              <td>Аналитика и отчеты</td>
+              <td><span class="tag ok">Есть продуктовая основа</span></td>
+              <td>ReportDesigner, ролевой доступ, выгрузки CSV/XLSX/PDF по документации.</td>
+              <td>Хорошо ложится на B2B отчетность по контрактам и потокам.</td>
+            </tr>
+            <tr>
+              <td>Сертификаты</td>
+              <td><span class="tag ok">Есть продуктовая основа</span></td>
+              <td>Автоматическая выдача при критериях прохождения, PDF, уникальный номер, публичная верификация.</td>
+              <td>Создает проверяемый результат для заказчика и участника.</td>
+            </tr>
+            <tr>
+              <td>Release readiness</td>
+              <td><span class="tag warn">Partial</span></td>
+              <td>READINESS отмечает незакрытые сценарии всех ролей, security negative paths, authenticated WCAG, операционные drills.</td>
+              <td>Можно продавать пилот, но в договоре нельзя обещать доказанную промышленную зрелость без закрытия P1/P2.</td>
+            </tr>
+            <tr>
+              <td>Legal/vendor readiness</td>
+              <td><span class="tag risk">Блокер для госсектора</span></td>
+              <td>Регистр третьих сервисов фиксирует неподписанные DPA с Vercel/Supabase и риск трансграничного размещения данных.</td>
+              <td>Для госзаказчика это может остановить tender до изменения архитектуры, договоров или режима данных.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2>Market Context: Казахстан</h2>
+      <div class="two-col">
+        <div>
+          <h3>Почему рынок есть</h3>
+          <ul class="plain-list">
+            <li>Государственные страницы по цифровизации образования описывают единое информационное пространство, дистанционное и онлайн-обучение, совместимость систем, информационную безопасность и аналитику для управленческих решений <a href="https://www.gov.kz/memleket/entities/edu/activities/3599" target="_blank" rel="noreferrer">GOV.KZ</a>.</li>
+            <li>Повестка AI-обучения усилилась: GOV.KZ сообщал о массовом обучении граждан AI-навыкам и региональных IT-хабах <a href="https://www.gov.kz/memleket/entities/maidd/press/news/details/1142334?lang=ru" target="_blank" rel="noreferrer">GOV.KZ</a>.</li>
+            <li>В высшем образовании уже есть LMS-привычка: Миннауки сообщало о подключении университетов к Platonus, Univer, Moodle и другим платформам <a href="https://www.gov.kz/memleket/entities/sci/press/news/details/826775?lang=ru" target="_blank" rel="noreferrer">GOV.KZ</a>.</li>
+            <li>Партнерство МНВО РК с Coursera было продлено в 2026 году, что подтверждает интерес к verified skills и глобальному онлайн-обучению <a href="https://blog.coursera.org/kazakhstans-ministry-of-science-and-higher-education-renews-partnership-with-coursera-further-institutionalizing-world-class-learning-from-leading-companies-and-universities/" target="_blank" rel="noreferrer">Coursera</a>.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Почему рынок сложный</h3>
+          <ul class="plain-list">
+            <li>В K-12 и университетах уже есть сильные платформы, контентные экосистемы и административные системы.</li>
+            <li>Госсектор покупает не только функциональность, но и доказанность: размещение данных, ИБ, закупочная документация, интеграции, эксплуатационные регламенты.</li>
+            <li>Для массового рынка LMS buyer может сравнивать платформу с open-source Moodle и зрелыми enterprise LMS, поэтому AI Strategic Academy должна продавать операционную специализацию, а не список функций.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Практический вывод:</strong> спрос нужно искать там, где есть заказчик, поток, дедлайн, отчетность, кураторы и ответственность за результат. Это корпоративные академии, отраслевые образовательные программы, грантовые/тендерные потоки, квазигоссектор и проектное обучение, а не массовая витрина курсов.
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2>Competitor Landscape: Против Кого Позиционироваться</h2>
+      <p>Конкурентный ландшафт делится на четыре группы: локальные академические LMS, контентные платформы, open-source/global LMS и enterprise learning suites. Ниже - не рейтинг качества, а карта продаж и рисков.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Игрок / категория</th>
+              <th>Сильная сторона</th>
+              <th>Где AI Strategic Academy может выиграть</th>
+              <th>Рекомендуемая позиция</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="https://platonus.kz/eng" target="_blank" rel="noreferrer">Platonus</a></td>
+              <td>Локальная узнаваемость в вузах; вендор заявляет масштаб в университетах, колледжах и ежедневной аудитории.</td>
+              <td>Не конкурировать как SIS/университетская админ-система. Выигрывать в специализированной академии с кураторами, рисками и customer observer.</td>
+              <td><span class="tag warn">Не head-on</span> Продавать как надстройку для проектного обучения и отчетности.</td>
+            </tr>
+            <tr>
+              <td>Univer / <a href="https://apps.apple.com/kz/app/next-lms-univer/id6755327218" target="_blank" rel="noreferrer">NEXT LMS</a></td>
+              <td>Связка с университетскими сценариями: курсы, видео, тесты, занятия, чат, оценки.</td>
+              <td>Сильнее там, где нужен внешний заказчик, кураторская модель, read-only oversight и контрактная отчетность.</td>
+              <td><span class="tag warn">Сегментировать</span> Избегать замены университетской LMS на старте.</td>
+            </tr>
+            <tr>
+              <td><a href="https://bilimland.kz/en" target="_blank" rel="noreferrer">BilimLand</a> / OnlineMektep / BilimClass</td>
+              <td>Контентная K-12 экосистема, интерактивные уроки, многоязычный школьный контент, широкое внедрение в образовании.</td>
+              <td>AI Strategic Academy не должна спорить за школьный контент. Ее зона - закрытая академия для взрослых, профессионального и проектного обучения.</td>
+              <td><span class="tag risk">Не основной ICP</span> K-12 mass market исключить из первого go-to-market.</td>
+            </tr>
+            <tr>
+              <td><a href="https://orleu.edu.kz/?lang=en" target="_blank" rel="noreferrer">Orleu</a> / <a href="https://mooc.orleu.edu.kz/about/" target="_blank" rel="noreferrer">MOOC Orleu</a></td>
+              <td>Национальный центр повышения квалификации педагогов, публичный профиль в CPD.</td>
+              <td>Платформа может быть инструментом закрытых потоков и отчетности для похожих программ, но бренд-доверие Orleu выше в учительском сегменте.</td>
+              <td><span class="tag info">Benchmark</span> Изучать как модель гос/CPD доверия.</td>
+            </tr>
+            <tr>
+              <td><a href="https://moodle.com/solutions/education/" target="_blank" rel="noreferrer">Moodle</a></td>
+              <td>Open-source, гибкость, self-hosting, огромная экосистема, доступность по документации Moodle.</td>
+              <td>Выигрыш возможен за счет готовой операционной модели, UX и ролей заказчика/куратора, если buyer не хочет собирать все из плагинов.</td>
+              <td><span class="tag warn">Self-hosting threat</span> Подготовить аргумент total cost of ownership и managed deployment.</td>
+            </tr>
+            <tr>
+              <td><a href="https://www.instructure.com/canvas" target="_blank" rel="noreferrer">Canvas</a></td>
+              <td>Глобальная LMS, масштаб, мобильность, высокая узнаваемость у университетов и корпораций.</td>
+              <td>Локальная закрытая академия, русскоязычные сценарии, customer observer и кастомная операционная модель могут быть проще и дешевле для узкого проекта.</td>
+              <td><span class="tag info">Enterprise benchmark</span> Не спорить масштабом, спорить точностью под задачу.</td>
+            </tr>
+            <tr>
+              <td><a href="https://www.coursera.org/government" target="_blank" rel="noreferrer">Coursera Government</a></td>
+              <td>Глобальный контент, verified skills, государственные партнерства, известный бренд.</td>
+              <td>AI Strategic Academy может быть платформой управления локальной программой, кураторов, отчетов и сертификатов заказчика, включая внешние контентные провайдеры.</td>
+              <td><span class="tag info">Complement / compete</span> Не продавать как замена библиотеке контента.</td>
+            </tr>
+            <tr>
+              <td><a href="https://www.docebo.com/products/learn-lms/" target="_blank" rel="noreferrer">Docebo</a></td>
+              <td>Enterprise learning suite, AI-first positioning, compliance/customer/partner enablement.</td>
+              <td>Локальная настройка, закрытый академический процесс и потенциально меньшая сложность внедрения для локального заказчика.</td>
+              <td><span class="tag warn">Enterprise competitor</span> Нужны security, DPA, SLA и интеграционные доказательства.</td>
+            </tr>
+            <tr>
+              <td>iSpring / Teachbase</td>
+              <td>Корпоративное обучение, быстрый запуск, familiar L&D workflows.</td>
+              <td>Выигрыш возможен в кураторской модели, проектных потоках, read-only customer observer и проверяемых сертификатах.</td>
+              <td><span class="tag info">B2B benchmark</span> Сравнивать по управлению потоком, а не только по курсам.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2>Target Audience: Кому Продавать</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Сегмент</th>
+              <th>Приоритет</th>
+              <th>Почему покупают</th>
+              <th>Что им показывать в демо</th>
+              <th>Риск продажи</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>B2B академии и образовательные операторы</td>
+              <td><span class="tag ok">Priority 1</span></td>
+              <td>Им нужен контроль потока, кураторы, дедлайны, отчеты заказчику, сертификаты и быстрый запуск закрытой программы.</td>
+              <td>Путь студента, кураторскую очередь, риски, ReportDesigner, read-only кабинет заказчика.</td>
+              <td>Нужны понятные SLA, onboarding и миграция контента.</td>
+            </tr>
+            <tr>
+              <td>Корпоративное обучение и L&D</td>
+              <td><span class="tag ok">Priority 2</span></td>
+              <td>Корпорации покупают управление компетенциями, compliance, прозрачность прогресса и доказательство прохождения.</td>
+              <td>Ролевую отчетность, выгрузки, сертификаты, дедлайны, безопасность доступа.</td>
+              <td>Интеграции с HRIS/SSO и зрелость поддержки могут стать обязательными.</td>
+            </tr>
+            <tr>
+              <td>Квазигоссектор и нацкомпании</td>
+              <td><span class="tag warn">Priority 3 после P1</span></td>
+              <td>Им близок госуровень контроля, но procurement и ИБ могут быть гибче, чем у центральных госорганов.</td>
+              <td>Контроль доступа, аудит, роли, отчеты, дорожную карту data residency и DPA.</td>
+              <td>Требования к ИБ, поставщикам и локализации данных.</td>
+            </tr>
+            <tr>
+              <td>Госорганы и бюджетные организации</td>
+              <td><span class="tag risk">Later</span></td>
+              <td>Потенциально высокий спрос на обучение AI/цифровым навыкам, но закупка и ИБ требуют доказанной готовности.</td>
+              <td>Только после P1: правовую матрицу, hosting design, аттестационный план, эксплуатационный runbook.</td>
+              <td>Сегодня есть tender blockers.</td>
+            </tr>
+            <tr>
+              <td>Университеты</td>
+              <td><span class="tag warn">Niche</span></td>
+              <td>Могут покупать под отдельные программы, акселераторы, microcredentials, но базовая LMS часто уже есть.</td>
+              <td>Проектную академию поверх existing LMS, не замену всего контура.</td>
+              <td>Сильные локальные incumbents.</td>
+            </tr>
+            <tr>
+              <td>K-12 массовый рынок</td>
+              <td><span class="tag risk">Не ICP</span></td>
+              <td>Требует контента, госэкосистемы, дневников, школьных процессов и масштабного внедрения.</td>
+              <td>Не фокусировать go-to-market.</td>
+              <td>BilimLand/OnlineMektep/Kundelik и госэкосистема сильнее по fit.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2>Positioning: Где Выигрывать И Где Не Спорить</h2>
+      <div class="two-col">
+        <div class="callout">
+          <h3>Winning narrative</h3>
+          <p><strong>AI Strategic Academy - закрытая операционная академия для программ, где заказчик платит за управляемый результат.</strong> Не просто уроки и тесты, а контур: доступ, поток, роль, дедлайн, куратор, риск, отчет, сертификат, проверка результата.</p>
+        </div>
+        <div class="callout warning">
+          <h3>Anti-positioning</h3>
+          <p>Не позиционировать как публичный маркетплейс, универсальную замену всем LMS, школьную контентную платформу или готовую государственную ИС. Эти обещания создают слабую продажу и юридический риск.</p>
+        </div>
+      </div>
+
+      <h3>Качественная оценка product-market fit</h3>
+      <div aria-label="Качественная оценка соответствия сегментам">
+        <div class="scoreline">
+          <span>Закрытые B2B академии</span>
+          <div class="bar" aria-hidden="true"><span style="width: 82%"></span></div>
+          <span class="score">8.2</span>
+        </div>
+        <div class="scoreline">
+          <span>Корпоративное L&D</span>
+          <div class="bar" aria-hidden="true"><span style="width: 74%"></span></div>
+          <span class="score">7.4</span>
+        </div>
+        <div class="scoreline">
+          <span>Квазигоссектор pilot</span>
+          <div class="bar" aria-hidden="true"><span style="width: 61%"></span></div>
+          <span class="score">6.1</span>
+        </div>
+        <div class="scoreline">
+          <span>Формальный гос production</span>
+          <div class="bar" aria-hidden="true"><span style="width: 40%"></span></div>
+          <span class="score">4.0</span>
+        </div>
+        <div class="scoreline">
+          <span>Университетская LMS replacement</span>
+          <div class="bar" aria-hidden="true"><span style="width: 38%"></span></div>
+          <span class="score">3.8</span>
+        </div>
+        <div class="scoreline">
+          <span>K-12 массовая платформа</span>
+          <div class="bar" aria-hidden="true"><span style="width: 28%"></span></div>
+          <span class="score">2.8</span>
+        </div>
+      </div>
+      <p class="footer-note">Шкала 0-10 является экспертной qualitative scorecard, а не результатом платного market sizing.</p>
+    </section>
+
+    <section class="section-card">
+      <h2>Gov RK Readiness: Статус На 17 Июня 2026</h2>
+      <p>Ниже - pre-tender gap analysis по применению в РК. Это продуктово-правовая карта рисков, а не юридическое заключение. Для заявки на закупку и обработки реальных персональных данных нужен юрист РК, ИБ-архитектор и подтвержденная схема размещения.</p>
+
+      <div class="callout risk">
+        <strong>Текущий вердикт:</strong> для госсектора платформа пока не готова к production tender. Ее можно готовить к пилоту с ограниченными данными, если сначала закрыть DPA, размещение/локализацию данных, P1 security blockers и эксплуатационные доказательства.
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Требование / зона</th>
+              <th>Нормативная опора</th>
+              <th>Текущий fit</th>
+              <th>Блокер / риск</th>
+              <th>Следующее действие</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Персональные данные и согласие</td>
+              <td><a href="https://adilet.zan.kz/rus/docs/Z1300000094" target="_blank" rel="noreferrer">Закон РК о персональных данных</a></td>
+              <td><span class="tag warn">Нужно подтвердить</span> Платформа хранит профили, прогресс, сертификаты, аудит.</td>
+              <td>Нужны правовые основания, формы согласия, роли владельца/оператора/третьих лиц, регламент доступа и удаления.</td>
+              <td>Подготовить data map, consent flow, privacy notice, retention policy, DPA pack.</td>
+            </tr>
+            <tr>
+              <td>Персональные данные ограниченного доступа</td>
+              <td><a href="https://adilet.zan.kz/rus/docs/V2300032810" target="_blank" rel="noreferrer">Правила обработки ПД ограниченного доступа</a></td>
+              <td><span class="tag risk">Высокий риск</span> Регистр третьих сервисов указывает возможное размещение Supabase/Vercel вне РК.</td>
+              <td>Для ограниченного доступа правила требуют обработку через объекты информатизации, расположенные на территории РК.</td>
+              <td>Спроектировать Kazakhstan data residency или доказать, что пилот не обрабатывает ограниченные ПД.</td>
+            </tr>
+            <tr>
+              <td>Закон об информатизации и госсистемы</td>
+              <td><a href="https://adilet.zan.kz/rus/docs/Z1500000418" target="_blank" rel="noreferrer">Закон РК об информатизации</a></td>
+              <td><span class="tag warn">Зависит от сценария</span> SaaS для госоргана может попасть в более строгий контур при интеграциях.</td>
+              <td>Классификация объекта информатизации, требования к интеграции, хранению, сопровождению и эксплуатации должны быть определены до тендера.</td>
+              <td>Сделать legal/architecture memo: SaaS, on-prem, private cloud или объект информатизации госоргана.</td>
+            </tr>
+            <tr>
+              <td>Единые требования ИКТ/ИБ</td>
+              <td><a href="https://adilet.zan.kz/rus/docs/P1600000832" target="_blank" rel="noreferrer">ПП РК N 832</a></td>
+              <td><span class="tag warn">Частично</span> Есть CSP, RBAC, audit, device limit, Zod, rate limits по документации.</td>
+              <td>Нужен control mapping, подтвержденные журналы, политика уязвимостей, резервное копирование, DR, incident response.</td>
+              <td>Собрать security control matrix и evidence pack по каждому контролю.</td>
+            </tr>
+            <tr>
+              <td>Аттестация / испытания ИБ</td>
+              <td><a href="https://adilet.zan.kz/rus/docs/P1600000298" target="_blank" rel="noreferrer">Правила аттестации</a>, <a href="https://adilet.zan.kz/rus/docs/V1900018795" target="_blank" rel="noreferrer">испытания функций</a></td>
+              <td><span class="tag risk">Не доказано</span> Локальные тесты есть, госаттестации нет.</td>
+              <td>Если система будет госинформсистемой или интегрироваться с госинфраструктурой, может потребоваться аттестационный путь.</td>
+              <td>Получить заключение по необходимости аттестации и календарь сертификационных работ.</td>
+            </tr>
+            <tr>
+              <td>Государственные закупки</td>
+              <td><a href="https://adilet.zan.kz/rus/docs/Z2400000106" target="_blank" rel="noreferrer">Закон о государственных закупках</a></td>
+              <td><span class="tag warn">Не готово как tender pack</span></td>
+              <td>Нужны техническая спецификация, критерии приемки, SLA, сопровождение, ИБ-приложения, требования к поставщикам и гарантиям.</td>
+              <td>Подготовить pre-tender пакет: ТЗ, acceptance criteria, SLA, implementation plan, risk register.</td>
+            </tr>
+            <tr>
+              <td>ЭЦП, электронные документы, Цифровой кодекс</td>
+              <td><a href="https://adilet.zan.kz/rus/docs/Z030000370_" target="_blank" rel="noreferrer">текущий закон об ЭЦП</a>, <a href="https://adilet.zan.kz/rus/docs/K2600000255" target="_blank" rel="noreferrer">Цифровой кодекс</a></td>
+              <td><span class="tag warn">Нужно переоценить после 12 июля 2026</span></td>
+              <td>Сертификаты платформы пока описаны как PDF/публичная верификация, а не юридически значимый электронный документ с ЭЦП.</td>
+              <td>Решить, нужны ли ЭЦП/NCA-интеграция для госзаказчика; обновить правовой анализ после 12 июля 2026.</td>
+            </tr>
+            <tr>
+              <td>Договоры с поставщиками и трансграничная передача</td>
+              <td>Закон о ПД, vendor DPA practice</td>
+              <td><span class="tag risk">P1 blocker</span> Внутренний реестр отмечает неподписанные DPA с Vercel и Supabase.</td>
+              <td>Без DPA и понятного места обработки данных гос/квазигос buyer может остановить проект на legal/security review.</td>
+              <td>Подписать DPA, выбрать регион/хостинг, описать sub-processors, incident notification и deletion terms.</td>
+            </tr>
+            <tr>
+              <td>Доступность и языки</td>
+              <td>WCAG как практический тендерный стандарт; гос UX требования по ТЗ</td>
+              <td><span class="tag warn">Частично</span> Russian-first есть, authenticated WCAG proof не закрыт; казахский язык не заявлен как полный UI.</td>
+              <td>Для госзаказчика может потребоваться казахский интерфейс, доступность и подтвержденный результат тестов.</td>
+              <td>Закрыть WCAG evidence, оценить Kazakh localization scope и bilingual certificates/reports.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card" data-contract-section="recommended-next-steps">
+      <h2>Recommended Next Steps</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Горизонт</th>
+              <th>Что сделать</th>
+              <th>Зачем</th>
+              <th>Критерий готовности</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>0-30 дней</td>
+              <td>Закрыть P1: DPA Vercel/Supabase или заменить hosting design; ротировать скомпрометированный Supabase password; описать data map и обработку ПД.</td>
+              <td>Снять стоп-факторы для любого серьезного B2B/B2G security review.</td>
+              <td>Подписанные/замененные vendor agreements, новый secret, утвержденный data processing register.</td>
+            </tr>
+            <tr>
+              <td>0-30 дней</td>
+              <td>Собрать demo pack для B2B: сценарий заказчика-наблюдателя, кураторская очередь, risk dashboard, сертификат, отчет.</td>
+              <td>Продавать сильные стороны, а не перечень LMS-фич.</td>
+              <td>Один 30-минутный demo script и sample cohort с понятными ролями.</td>
+            </tr>
+            <tr>
+              <td>30-90 дней</td>
+              <td>Закрыть full E2E по шести ролям, authenticated WCAG, backup/restore/rollback drill, SMTP production wiring.</td>
+              <td>Перевести статус из partial в доказанную production-подготовку для коммерческого пилота.</td>
+              <td>READINESS обновлен, evidence pack приложен, тесты и drills воспроизводимы.</td>
+            </tr>
+            <tr>
+              <td>30-90 дней</td>
+              <td>Подготовить procurement-lite пакет: ТЗ, SLA, acceptance criteria, security appendix, implementation plan, RACI.</td>
+              <td>Сократить цикл продажи в квазигоссектор и крупные B2B компании.</td>
+              <td>Пакет документов готов для review buyer legal/security/procurement.</td>
+            </tr>
+            <tr>
+              <td>90-180 дней</td>
+              <td>Решить Kazakhstan data residency: local cloud/private cloud/on-prem option, sub-processor list, logging/backup location.</td>
+              <td>Открыть путь к госсектору и ограниченным персональным данным.</td>
+              <td>Архитектурное решение утверждено, стоимость и SLA понятны, pilot environment готов.</td>
+            </tr>
+            <tr>
+              <td>90-180 дней</td>
+              <td>Провести pilot с B2B/квазигос заказчиком на одном потоке.</td>
+              <td>Получить кейс, фактические метрики прохождения, нагрузку кураторов и качество отчетов.</td>
+              <td>Post-pilot report: activation, completion, curator SLA, certificate verification, buyer satisfaction.</td>
+            </tr>
+            <tr>
+              <td>180+ дней</td>
+              <td>Готовить formal gov tender path: legal opinion, ИБ control mapping, возможная аттестация, интеграции ЭЦП/SSO/ГБД при необходимости.</td>
+              <td>Перейти от пилота к формальной закупке.</td>
+              <td>Юридическое заключение, security evidence pack, tender-ready specification.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <h2>Практические Выводы По Платформе</h2>
+      <ul class="plain-list">
+        <li><strong>Продавать:</strong> закрытая академия под ключ для потока, где заказчик видит прогресс, риски, отчеты и сертификаты.</li>
+        <li><strong>Не продавать на старте:</strong> замена Platonus/Univer/Moodle во всем университете, школьная контентная платформа, публичный marketplace.</li>
+        <li><strong>Первый коммерческий оффер:</strong> 1 поток, 1-3 курса, роли student/curator/customer observer, отчетный пакет, сертификаты, post-pilot findings.</li>
+        <li><strong>Главный продуктовый актив:</strong> customer observer + curator/risk loop + verified certificate. Это редко упаковано в классической LMS как единый операционный контур.</li>
+        <li><strong>Главный blocker:</strong> не функциональность, а доказанность: правовые договоры, data residency, ИБ, accessibility, E2E всех ролей, эксплуатационные процедуры.</li>
+      </ul>
+    </section>
+
+    <section class="section-card" data-contract-section="further-questions">
+      <h2>Further Questions</h2>
+      <ol class="plain-list">
+        <li>Какие категории персональных данных реально будут обрабатываться в первом пилоте: только ФИО/email/progress или также ИИН, должности, оценки, документы, госидентификаторы?</li>
+        <li>Нужен ли заказчику юридически значимый сертификат с ЭЦП/NCA, или достаточно PDF с публичной верификацией по уникальному номеру?</li>
+        <li>Какой deployment mode допустим для целевого buyer: Vercel/Supabase, Kazakhstan cloud, private cloud, on-prem?</li>
+        <li>Нужна ли полная казахская локализация UI, отчетов, сертификатов и уведомлений для госсектора?</li>
+        <li>Какие интеграции станут обязательными в enterprise/gov продаже: SSO, HRIS, eGov, ЕСЭДО, BI, DWH, SMS/email gateway?</li>
+      </ol>
+    </section>
+
+    <section class="section-card" data-contract-section="caveats-and-assumptions">
+      <h2>Caveats and Assumptions</h2>
+      <div class="callout warning">
+        <p>Этот отчет не является юридическим заключением по праву РК и не заменяет tender/legal review. Публичные источники конкурентов часто являются vendor claims, поэтому масштабные метрики помечены как заявления вендоров. Market sizing не рассчитан количественно, потому что не использовались платные базы и приватные данные продаж. Правовой раздел актуален на 17 июня 2026 и требует повторной проверки после вступления релевантных положений Цифрового кодекса после 12 июля 2026.</p>
+      </div>
+    </section>
+
+    <section class="section-card" id="sources">
+      <h2>Ключевые Источники</h2>
+      <div class="two-col">
+        <div>
+          <h3>Локальная доказательная база</h3>
+          <ul class="plain-list">
+            <li>platform-functional-overview.md</li>
+            <li>READINESS.md</li>
+            <li>specification.md</li>
+            <li>security-review.md</li>
+            <li>todo.md</li>
+            <li>third-party-services-register.md</li>
+            <li>package manifest</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Публичные источники</h3>
+          <ul class="plain-list">
+            <li><a href="https://adilet.zan.kz/rus/docs/Z1300000094" target="_blank" rel="noreferrer">Закон РК о персональных данных</a></li>
+            <li><a href="https://adilet.zan.kz/rus/docs/Z1500000418" target="_blank" rel="noreferrer">Закон РК об информатизации</a></li>
+            <li><a href="https://adilet.zan.kz/rus/docs/P1600000832" target="_blank" rel="noreferrer">Единые требования ИКТ/ИБ</a></li>
+            <li><a href="https://adilet.zan.kz/rus/docs/V2300032810" target="_blank" rel="noreferrer">Правила обработки ПД ограниченного доступа</a></li>
+            <li><a href="https://adilet.zan.kz/rus/docs/Z2400000106" target="_blank" rel="noreferrer">Закон о государственных закупках</a></li>
+            <li><a href="https://adilet.zan.kz/rus/docs/K2600000255" target="_blank" rel="noreferrer">Цифровой кодекс РК</a></li>
+            <li><a href="https://www.gov.kz/memleket/entities/edu/activities/3599" target="_blank" rel="noreferrer">GOV.KZ: цифровизация образования</a></li>
+            <li><a href="https://platonus.kz/eng" target="_blank" rel="noreferrer">Platonus</a>, <a href="https://bilimland.kz/en" target="_blank" rel="noreferrer">BilimLand</a>, <a href="https://orleu.edu.kz/?lang=en" target="_blank" rel="noreferrer">Orleu</a>, <a href="https://moodle.com/solutions/education/" target="_blank" rel="noreferrer">Moodle</a>, <a href="https://www.instructure.com/canvas" target="_blank" rel="noreferrer">Canvas</a>, <a href="https://www.coursera.org/government" target="_blank" rel="noreferrer">Coursera Government</a>, <a href="https://www.docebo.com/products/learn-lms/" target="_blank" rel="noreferrer">Docebo</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-note">Подробная карта источников и claim mapping сохранены в supporting source notes рядом с HTML-файлом.</p>
+    </section>
+  </main>
+</body>
+</html>
