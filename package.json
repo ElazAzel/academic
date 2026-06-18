@@ -25,9 +25,12 @@
     "course:create-demo": "tsx scripts/create-demo-course.ts",
     "postinstall": "tsx scripts/check-assets.ts",
     "banned-patterns": "node scripts/check-banned-patterns.mjs",
+    "security:skills": "node scripts/check-security-skills.mjs",
+    "security:dependencies": "npm audit --audit-level=high",
+    "verify:security": "npm run security:skills && npm run security:dependencies",
     "verify:specs": "npx tsx scripts/validate-specs.ts",
-    "verify": "npm run banned-patterns && npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npm run build && npm run verify:specs",
-    "verify:release": "npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npx prisma validate && npm run db:generate && npm run build && npm run test:e2e",
+    "verify": "npm run banned-patterns && npm run security:skills && npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npm run build && npm run verify:specs",
+    "verify:release": "npm run verify:security && npm run lint -- --max-warnings=0 && npm run typecheck && npm run test && npx prisma validate && npm run db:generate && npm run build && npm run test:e2e",
     "lhci": "lhci autorun"
   },
   "dependencies": {

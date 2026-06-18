@@ -1,11 +1,46 @@
 {
   "version": 1,
   "skills": {
+    "analyzing-sbom-for-supply-chain-vulnerabilities": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/analyzing-sbom-for-supply-chain-vulnerabilities/SKILL.md",
+      "computedHash": "3c5340e1aa3114e8281edbbecbe1ddd2685622a2d1c3496d0d59af8862f45aeb"
+    },
     "deploy-to-vercel": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/deploy-to-vercel/SKILL.md",
       "computedHash": "03e0eaaa9bf13ba1e7ffa387f5893de6f324c0868c627001f179395a8feaa7c9"
+    },
+    "detecting-supply-chain-attacks-in-ci-cd": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/detecting-supply-chain-attacks-in-ci-cd/SKILL.md",
+      "computedHash": "31d081058d21bc76729bd3e03b172319bdc425a750471150c2bec049469e7879"
+    },
+    "implementing-devsecops-security-scanning": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/implementing-devsecops-security-scanning/SKILL.md",
+      "computedHash": "d6fec7eaa5813117f9627491549fa3e84baf5ce5a4d17f8224d5875a2e731798"
+    },
+    "implementing-secrets-scanning-in-ci-cd": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/implementing-secrets-scanning-in-ci-cd/SKILL.md",
+      "computedHash": "c67d1e9ab4a81a82d817e6b18053e17dbf9c0d00ec3463d8147089cf045a786e"
+    },
+    "integrating-sast-into-github-actions-pipeline": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/integrating-sast-into-github-actions-pipeline/SKILL.md",
+      "computedHash": "56447dbd13b3ef8e9dbb95da00cfcae4d55bc825d7e56d389fc9fefe0d642265"
     },
     "next-best-practices": {
       "source": "vercel-labs/next-skills",
@@ -25,6 +60,41 @@
       "skillPath": "skills/next-upgrade/SKILL.md",
       "computedHash": "e3aeb1f9e8a68d24df0c1c2e3c8ab97ede09a7251a2c76988318d02254346979"
     },
+    "performing-container-security-scanning-with-trivy": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/performing-container-security-scanning-with-trivy/SKILL.md",
+      "computedHash": "5f23a5bc4a1e0415e2433ce5f27e32636f03f343d299659e93ce4da72e9e50f9"
+    },
+    "performing-csrf-attack-simulation": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/performing-csrf-attack-simulation/SKILL.md",
+      "computedHash": "0758452783f64f1bf174deebbe79a37360cb193c38ef43bf514f1f65569986e8"
+    },
+    "performing-security-headers-audit": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/performing-security-headers-audit/SKILL.md",
+      "computedHash": "969855f3dd64adf846510776413727f8db4a35142d65cc1fca6a7293a671e11b"
+    },
+    "performing-threat-modeling-with-owasp-threat-dragon": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/performing-threat-modeling-with-owasp-threat-dragon/SKILL.md",
+      "computedHash": "9e2960110df8370a63cd1eaf305e92c5272bdeff5e6023b41c245b6bb3ca30b9"
+    },
+    "performing-web-application-vulnerability-triage": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/performing-web-application-vulnerability-triage/SKILL.md",
+      "computedHash": "ee99b5a2b2bfbdf32307d2c8fde196e05c6da545d00b10299cb90b00e2e28b8d"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
@@ -42,6 +112,41 @@
       "sourceType": "github",
       "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
       "computedHash": "8e41c7417894e6f394614ee7ca3ee5322b1e58d890255d441f42dea98732597f"
+    },
+    "testing-api-authentication-weaknesses": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/testing-api-authentication-weaknesses/SKILL.md",
+      "computedHash": "d9abe0034f25d0175fb8ede9151b2911bcb65302390d129b90ce978c37402395"
+    },
+    "testing-api-for-broken-object-level-authorization": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/testing-api-for-broken-object-level-authorization/SKILL.md",
+      "computedHash": "c2f2f08b4ce1593a7bb23ae88ace92e6bc77921a52983f2d55f9e5efa00add33"
+    },
+    "testing-for-broken-access-control": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/testing-for-broken-access-control/SKILL.md",
+      "computedHash": "1cf925e02a8e1efcc2a99e247939117e929778b55504753994baeee2bcf787bf"
+    },
+    "testing-for-sensitive-data-exposure": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/testing-for-sensitive-data-exposure/SKILL.md",
+      "computedHash": "33bfef633bfd457eec1d6a29125a6adce0db99756ff57db89fa6230c4cc88d91"
+    },
+    "testing-for-xss-vulnerabilities": {
+      "source": "mukul975/Anthropic-Cybersecurity-Skills",
+      "ref": "v1.2.0",
+      "sourceType": "github",
+      "skillPath": "skills/testing-for-xss-vulnerabilities/SKILL.md",
+      "computedHash": "fbaf4bfd6a5b69077087d612f4b8413b6f92bc5ba81cd7e6e4e8e966b458f207"
     },
     "vercel-cli-with-tokens": {
       "source": "vercel-labs/agent-skills",
