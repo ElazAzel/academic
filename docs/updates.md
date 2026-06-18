@@ -6,6 +6,7 @@
 
 ### Changes
 - **Dependency remediation**: Upgraded Vitest to 4.1.9, refreshed compatible transitive dependencies, and pinned `tmp` to the patched 0.2.7 release for Lighthouse CI.
+- **Gateway manifest remediation**: Upgraded the independently managed `services/gateway-bff` Vitest dependency and added its lockfile, closing the remaining critical Dependabot alert outside the root package graph.
 - **Secret scanning baseline**: Added a narrow Gitleaks allowlist for the documented `invalid_token_here` test fixture without excluding security skill directories from scanning.
 - **Release contract sync**: Added all 15 installed cybersecurity skills to the machine-readable `technicalSkills` contract.
 - **GitHub security settings**: Enabled repository vulnerability alerts and Dependency Graph so `dependency-review-action` can run on pull requests.
@@ -18,6 +19,7 @@
 - `npm run verify` passes: banned patterns, security skill allowlist, ESLint with zero warnings, typecheck, 936/936 tests, production build and spec validation.
 - Clean `npm ci` succeeds, and the previously blocked GitHub `Dependency review` job passes after enabling Dependency Graph.
 - Trivy 0.70.0 reports zero high/critical Kubernetes misconfigurations across all 10 manifests in `infra/k8s`.
+- `services/gateway-bff` clean `npm ci` and Vitest 4 startup pass; its independent npm audit reports zero vulnerabilities.
 
 ---
 
