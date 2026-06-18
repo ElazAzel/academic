@@ -1,5 +1,24 @@
 # Project Updates
 
+## 2026-06-18 — DevSecOps Security Gate Completion
+
+**Goal**: Finish the new repository security pipeline so it produces actionable results and can pass on the current codebase.
+
+### Changes
+- **Dependency remediation**: Upgraded Vitest to 4.1.9, refreshed compatible transitive dependencies, and pinned `tmp` to the patched 0.2.7 release for Lighthouse CI.
+- **Secret scanning baseline**: Added a narrow Gitleaks allowlist for the documented `invalid_token_here` test fixture without excluding security skill directories from scanning.
+- **Release contract sync**: Added all 15 installed cybersecurity skills to the machine-readable `technicalSkills` contract.
+- **GitHub security settings**: Enabled repository vulnerability alerts and Dependency Graph so `dependency-review-action` can run on pull requests.
+
+### Verification
+- `npm audit --audit-level=high` passes with no high or critical findings; 11 moderate transitive findings remain outside the blocking threshold.
+- Gitleaks 8.24.3 reports `no leaks found` for the security commit after applying the scoped allowlist.
+- Vitest 4 targeted release-hardening test passes: 9/9.
+- `npm run verify` passes: banned patterns, security skill allowlist, ESLint with zero warnings, typecheck, 936/936 tests, production build and spec validation.
+- Clean `npm ci` succeeds, and the previously blocked GitHub `Dependency review` job passes after enabling Dependency Graph.
+
+---
+
 ## 2026-06-17 — GitHub Actions E2E Stability Fix
 
 **Goal**: Keep CI on the local PostgreSQL service and clear the next blocking E2E failure after the database URL precedence fix.

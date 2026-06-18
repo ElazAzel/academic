@@ -156,11 +156,12 @@ npm run dev
 # Проверки
 npm run typecheck       # TypeScript (strict mode)
 npm run lint            # ESLint (0 warnings)
-npm run test            # Unit-тесты (422 теста, 69 файлов)
-npm run test:e2e        # E2E Playwright (52 теста)
-npm run build           # Production сборка (87 страниц)
-npm run verify          # typecheck + lint + test + build
-npm run verify:release  # Полный release gate (включая Prisma validate + E2E)
+npm run test            # Unit/integration Vitest
+npm run test:e2e        # E2E Playwright (Chromium + Pixel 7)
+npm run build           # Production Next.js build
+npm run verify          # banned patterns + lint + typecheck + test + build + specs
+npm run verify:security # Security skills + npm audit (high/critical gate)
+npm run verify:release  # Полный release gate (security + Prisma validate + E2E)
 ```
 
 `db:push`, `db:seed` и `certificate:issue-demo` отказываются мутировать remote database host по умолчанию. Для локального bootstrap используйте `scripts/bootstrap.ps1` или `scripts/bootstrap.sh`; `ALLOW_REMOTE_DATABASE_MUTATION=true` нужен только для намеренной remote-мутации.

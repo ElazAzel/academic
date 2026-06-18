@@ -270,6 +270,13 @@ npm run verify
 - Стандартные generic `Error` в Next.js продакшене автоматически маскируются, что скрывает важные русскоязычные сообщения об ошибках валидации и прав от пользователей.
 - Бросайте ошибки в виде `new ApiError(code, message, status)`. В частности, ошибки валидации Zod обрабатываются как `new ApiError("validation_error", message, 422)`, ошибки авторизации — как `401`/`403`.
 
+### 6. Автоматизированный контроль безопасности
+
+- `npm run verify` проверяет allowlist и наличие закреплённых security skills.
+- `npm run verify:security` запускает проверку security skills и `npm audit --audit-level=high`; high/critical findings блокируют release gate.
+- GitHub workflow `.github/workflows/security.yml` выполняет CodeQL, Gitleaks, dependency review, Trivy и формирует CycloneDX SBOM.
+- Исключения Gitleaks должны быть минимальными: конкретное правило, конкретный путь и конкретный документированный fixture. Запрещено исключать целые каталоги приложения или `.agents/skills`.
+
 ---
 
 ## 10. Порядок сдачи задач (Quality Gate)
@@ -277,16 +284,17 @@ npm run verify
 Задача не может считаться выполненной, если:
 
 1. Не пройдены проверки типов и линтинга (ESLint должен завершаться с `0 errors` и `0 warnings`).
-2. Не пройдены 460+ юнит-тестов (Vitest запускается в `node` окружении).
-3. Не пройдены e2e Playwright-тесты.
-4. Отсутствует обработка пустых и ошибочных состояний в UI.
-5. Не обновлен файл [updates.md](file:///c:/Users/i.azelkhanov/Documents/Strategic%20Academy/docs/updates.md).
-6. При крупных изменениях не обновлен текущий документ (`docs/ai-agent-instructions.md`).
+2. Не пройдён `npm run verify:security` для release-проверки.
+3. Не пройдены 460+ юнит-тестов (Vitest запускается в `node` окружении).
+4. Не пройдены e2e Playwright-тесты.
+5. Отсутствует обработка пустых и ошибочных состояний в UI.
+6. Не обновлен файл [updates.md](file:///c:/Users/i.azelkhanov/Documents/Strategic%20Academy/docs/updates.md).
+7. При крупных изменениях не обновлен текущий документ (`docs/ai-agent-instructions.md`).
 
-Для проверки готовности кода к релизу всегда используйте команду:
+Для repo-local проверки используйте `npm run verify`. Для полной release-проверки, включая security audit и E2E, используйте:
 
 ```bash
-npm run verify
+npm run verify:release
 ```
 
 Если сборка или тесты падают — работа не завершена.

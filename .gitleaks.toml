@@ -1,0 +1,12 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "curl-auth-header"
+
+  [[rules.allowlists]]
+  description = "Документированный невалидный токен в инструкции по тестированию доступа"
+  condition = "AND"
+  regexTarget = "line"
+  regexes = ['''Authorization:\s+Bearer\s+invalid_token_here''']
+  paths = ['''^\.agents/skills/testing-for-broken-access-control/SKILL\.md$''']
