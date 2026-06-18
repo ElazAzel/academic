@@ -9,6 +9,7 @@
 - **Secret scanning baseline**: Added a narrow Gitleaks allowlist for the documented `invalid_token_here` test fixture without excluding security skill directories from scanning.
 - **Release contract sync**: Added all 15 installed cybersecurity skills to the machine-readable `technicalSkills` contract.
 - **GitHub security settings**: Enabled repository vulnerability alerts and Dependency Graph so `dependency-review-action` can run on pull requests.
+- **Kubernetes hardening**: Added non-root pod identities, RuntimeDefault seccomp, dropped capabilities, disabled privilege escalation/service-account token mounts, read-only root filesystems and explicit writable runtime volumes for the web and PostgreSQL workloads.
 
 ### Verification
 - `npm audit --audit-level=high` passes with no high or critical findings; 11 moderate transitive findings remain outside the blocking threshold.
@@ -16,6 +17,7 @@
 - Vitest 4 targeted release-hardening test passes: 9/9.
 - `npm run verify` passes: banned patterns, security skill allowlist, ESLint with zero warnings, typecheck, 936/936 tests, production build and spec validation.
 - Clean `npm ci` succeeds, and the previously blocked GitHub `Dependency review` job passes after enabling Dependency Graph.
+- Trivy 0.70.0 reports zero high/critical Kubernetes misconfigurations across all 10 manifests in `infra/k8s`.
 
 ---
 
