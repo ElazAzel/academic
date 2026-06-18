@@ -11,6 +11,7 @@
 - **Release contract sync**: Added all 15 installed cybersecurity skills to the machine-readable `technicalSkills` contract.
 - **GitHub security settings**: Enabled repository vulnerability alerts and Dependency Graph so `dependency-review-action` can run on pull requests.
 - **Kubernetes hardening**: Added non-root pod identities, RuntimeDefault seccomp, dropped capabilities, disabled privilege escalation/service-account token mounts, read-only root filesystems and explicit writable runtime volumes for the web and PostgreSQL workloads.
+- **E2E rate-limit isolation**: Made the global proxy limiter honor `RATE_LIMIT_MAX_REQUESTS`/`RATE_LIMIT_WINDOW_SECONDS` and raised only the CI limit, preventing the 252-test Playwright suite from exhausting one shared-IP bucket while preserving the production default.
 
 ### Verification
 - `npm audit --audit-level=high` passes with no high or critical findings; 11 moderate transitive findings remain outside the blocking threshold.
@@ -20,6 +21,7 @@
 - Clean `npm ci` succeeds, and the previously blocked GitHub `Dependency review` job passes after enabling Dependency Graph.
 - Trivy 0.70.0 reports zero high/critical Kubernetes misconfigurations across all 10 manifests in `infra/k8s`.
 - `services/gateway-bff` clean `npm ci` and Vitest 4 startup pass; its independent npm audit reports zero vulnerabilities.
+- GitHub E2E baseline reached 251/252 before the shared-IP limiter regression; the failing quiz API boundary is covered by the configurable CI limit fix.
 
 ---
 

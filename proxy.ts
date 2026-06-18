@@ -9,6 +9,14 @@ import {
 import { AUTH_ROUTES, FORBIDDEN_ROUTE } from "@/lib/constants";
 import { rateLimit } from "@/lib/rate-limit";
 
+function positiveIntegerEnv(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+const apiRateLimitMaxRequests = positiveIntegerEnv(process.env.RATE_LIMIT_MAX_REQUESTS, 120);
+const apiRateLimitWindowSeconds = positiveIntegerEnv(process.env.RATE_LIMIT_WINDOW_SECONDS, 60);
+
 // ── CSRF origin check ───────────────────────────────────────────────────
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -148,11 +156,21 @@ export async function proxy(req: NextRequest) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       ?? req.headers.get("x-real-ip")
       ?? "anonymous";
-    const result = await rateLimit(`ratelimit:ip:${ip}`, 120, 60);
+    const result = await rateLimit(
+      `ratelimit:ip:${ip}`,
+      apiRateLimitMaxRequests,
+      apiRateLimitWindowSeconds,
+    );
     if (!result.success) {
       return NextResponse.json(
         { error: { code: "too_many_requests", message: "Слишком много запросов. Попробуйте позже." } },
-        { status: 429, headers: { "X-RateLimit-Limit": "120", "X-RateLimit-Remaining": String(result.remaining) } }
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": String(apiRateLimitMaxRequests),
+            "X-RateLimit-Remaining": String(result.remaining),
+          },
+        }
       );
     }
   }

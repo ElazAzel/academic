@@ -12,6 +12,9 @@ env:
   PRISMA_MIGRATION_DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/academy_test?schema=public"
   storage_POSTGRES_PRISMA_URL: "postgresql://postgres:postgres@localhost:5432/academy_test?schema=public"
   storage_POSTGRES_URL_NON_POOLING: "postgresql://postgres:postgres@localhost:5432/academy_test?schema=public"
+  # The 252-test Playwright suite shares one runner IP; keep rate limiting enabled
+  # while preventing the suite itself from exhausting the production default.
+  RATE_LIMIT_MAX_REQUESTS: "10000"
 
 jobs:
   lint-typecheck-test:
