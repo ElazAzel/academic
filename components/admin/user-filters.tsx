@@ -47,6 +47,7 @@ export function UserFilters({
         <option value="ACTIVE">Активен</option>
         <option value="INACTIVE">Неактивен</option>
         <option value="BLOCKED">Заблокирован</option>
+        <option value="DELETED">Удалён</option>
       </select>
       <Button type="submit" size="sm">Найти</Button>
       <Button variant="ghost" size="sm" type="button" onClick={() => router.push("/admin/users")}>

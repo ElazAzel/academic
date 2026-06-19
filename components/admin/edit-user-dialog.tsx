@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Pencil, Trash2, Loader2 } from "lucide-react";
-import { updateUserAction, deleteUserAction } from "@/server/actions/admin";
+import { Pencil, Trash2, Loader2, RotateCcw } from "lucide-react";
+import { updateUserAction, deleteUserAction, restoreUserAction } from "@/server/actions/admin";
 import { toast } from "sonner";
 import { DELETE_USER_ERROR, UPDATE_USER_ERROR, getSafeUserActionError, readUserActionResultError } from "./user-action-errors";
+
+const RESTORE_USER_ERROR = "Не удалось восстановить пользователя";
 
 export function EditUserDialog({
   user,
@@ -71,6 +73,7 @@ export function EditUserDialog({
               <option value="ACTIVE">Активен</option>
               <option value="INACTIVE">Неактивен</option>
               <option value="BLOCKED">Заблокирован</option>
+              <option value="DELETED">Удалён</option>
             </select>
           </div>
           <div className="flex justify-end gap-2">
@@ -111,6 +114,35 @@ export function DeleteUserButton({ userId }: { userId: string }) {
   return (
     <Button variant="ghost" size="sm" onClick={handleDelete} disabled={pending} className="text-muted-foreground hover:text-red-600" aria-label="Деактивировать пользователя">
       {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+    </Button>
+  );
+}
+
+export function RestoreUserButton({ userId }: { userId: string }) {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+
+  async function handleRestore() {
+    if (!confirm("Восстановить пользователя? Его статус будет установлен в 'Активен'.")) return;
+    setPending(true);
+    try {
+      const result = await restoreUserAction(userId);
+      if (!result.success) {
+        toast.error(readUserActionResultError(result, RESTORE_USER_ERROR));
+        return;
+      }
+      toast.success("Пользователь восстановлен");
+      router.refresh();
+    } catch (err) {
+      toast.error(getSafeUserActionError(err, RESTORE_USER_ERROR));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Button variant="ghost" size="sm" onClick={handleRestore} disabled={pending} className="text-muted-foreground hover:text-green-600" aria-label="Восстановить пользователя">
+      {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
     </Button>
   );
 }

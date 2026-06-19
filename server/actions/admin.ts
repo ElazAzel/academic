@@ -512,6 +512,35 @@ export async function deleteUserAction(userId: string) {
   }
 }
 
+export async function restoreUserAction(userId: string) {
+  try {
+    const actor = await requireRole(["admin"]);
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new ApiError("not_found", "Пользователь не найден", 404);
+    if (user.status !== UserAccountStatus.DELETED) {
+      throw new ApiError("bad_request", "Пользователь не является удалённым", 400);
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { status: UserAccountStatus.ACTIVE },
+    });
+
+    await logAudit({
+      actorId: actor.id,
+      action: "user.restored",
+      entity: "user",
+      entityId: userId,
+    });
+
+    revalidatePath("/admin/users");
+    return { success: true };
+  } catch (error) {
+    throwAdminActionError(error, "[restoreUserAction]");
+  }
+}
+
 function generateTempPassword(length = 12): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
   let pass = "";

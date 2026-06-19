@@ -13,7 +13,7 @@ import { requireRolePage } from "@/lib/auth/page-guards";
 import { getAssignableRolesForActor, listUsers, countUsers } from "@/server/modules/users/service";
 import { ROLE_LABELS, type RoleKey } from "@/types/domain";
 import { UserManagementToolbar } from "@/components/admin/user-management-toolbar";
-import { EditUserDialog, DeleteUserButton } from "@/components/admin/edit-user-dialog";
+import { EditUserDialog, DeleteUserButton, RestoreUserButton } from "@/components/admin/edit-user-dialog";
 import { UserFilters } from "@/components/admin/user-filters";
 import { UserBatchImporter } from "@/components/admin/user-batch-importer";
 import { getActiveCohortsForSelector } from "@/server/modules/cohorts/service";
@@ -98,8 +98,8 @@ export default async function AdminUsersPage(props: {
                       </TableCell>
                       <TableCell>
                         <StatusBadge
-                          status={user.status === UserAccountStatus.ACTIVE ? "ACTIVE" : "BLOCKED"}
-                          label={user.status === UserAccountStatus.ACTIVE ? "Активен" : user.status === UserAccountStatus.INACTIVE ? "Неактивен" : "Заблокирован"}
+                          status={user.status === UserAccountStatus.ACTIVE ? "ACTIVE" : user.status === UserAccountStatus.DELETED ? "CANCELLED" : "BLOCKED"}
+                          label={user.status === UserAccountStatus.ACTIVE ? "Активен" : user.status === UserAccountStatus.INACTIVE ? "Неактивен" : user.status === UserAccountStatus.DELETED ? "Удалён" : "Заблокирован"}
                         />
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{user.lastLoginAt?.toISOString().slice(0, 10) ?? "—"}</TableCell>
@@ -109,7 +109,10 @@ export default async function AdminUsersPage(props: {
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <EditUserDialog user={{ id: user.id, name: user.name, email: user.email, status: user.status, realName: user.organization ?? null }} />
-                          <DeleteUserButton userId={user.id} />
+                          {user.status === UserAccountStatus.DELETED
+                            ? <RestoreUserButton userId={user.id} />
+                            : <DeleteUserButton userId={user.id} />
+                          }
                         </div>
                       </TableCell>
                     </TableRow>
