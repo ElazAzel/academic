@@ -98,7 +98,7 @@ export default async function AdminUsersPage(props: {
                       </TableCell>
                       <TableCell>
                         <StatusBadge
-                          status={user.status === UserAccountStatus.ACTIVE ? "ACTIVE" : user.status === UserAccountStatus.DELETED ? "CANCELLED" : "BLOCKED"}
+                          status={user.status === UserAccountStatus.ACTIVE ? "ACTIVE" : user.status === UserAccountStatus.DELETED ? "ARCHIVED" : "BLOCKED"}
                           label={user.status === UserAccountStatus.ACTIVE ? "Активен" : user.status === UserAccountStatus.INACTIVE ? "Неактивен" : user.status === UserAccountStatus.DELETED ? "Удалён" : "Заблокирован"}
                         />
                       </TableCell>

@@ -39,6 +39,7 @@
   "exclude": [
     "node_modules",
     "services",
-    "prisma.config.ts"
+    "prisma.config.ts",
+    "open-design"
   ]
 }
