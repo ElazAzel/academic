@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { LoginForm } from "@/components/auth/login-form";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
 import type { BrandingConfig } from "@/lib/branding";
@@ -36,6 +36,7 @@ export function LoginScreen({
   reason?: "device-limit";
   branding: BrandingConfig;
 }) {
+  const shouldReduce = useReducedMotion();
   return (
     <main className="academy-login-shell relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden px-4 py-8 selection:bg-m3-primary/20 selection:text-m3-primary">
       {/* Animated mesh gradient background */}
@@ -50,8 +51,8 @@ export function LoginScreen({
               "conic-gradient(from 180deg at 50% 50%, var(--m3-primary) 0%, var(--m3-tertiary) 30%, var(--m3-primary-container) 60%, var(--m3-primary) 100%)",
             backgroundSize: "200% 200%",
           }}
-          animate={{ rotate: [0, 360] }}
-          transition={{ duration: 60, ease: "linear", repeat: Infinity }}
+          animate={shouldReduce ? { rotate: 0 } : { rotate: [0, 360] }}
+          transition={shouldReduce ? { duration: 0 } : { duration: 60, ease: "linear", repeat: Infinity }}
         />
       </motion.div>
 
@@ -61,31 +62,26 @@ export function LoginScreen({
         style={{
           background: "radial-gradient(circle, var(--m3-primary-container) 0%, transparent 70%)",
         }}
-        animate={{ scale: [1, 1.15, 1], x: [0, 20, 0] }}
-        transition={{
-          duration: 12,
-          ease: "easeInOut",
-          repeat: Infinity,
-        }}
+        animate={shouldReduce ? { scale: 1, x: 0 } : { scale: [1, 1.15, 1], x: [0, 20, 0] }}
+        transition={
+          shouldReduce ? { duration: 0 } : { duration: 12, ease: "easeInOut", repeat: Infinity }
+        }
       />
       <motion.div
         className="pointer-events-none absolute -bottom-24 -right-24 h-[480px] w-[480px] rounded-full opacity-[0.05]"
         style={{
           background: "radial-gradient(circle, var(--m3-primary) 0%, transparent 70%)",
         }}
-        animate={{ scale: [1, 1.2, 1], x: [0, -20, 0] }}
-        transition={{
-          duration: 14,
-          ease: "easeInOut",
-          repeat: Infinity,
-          delay: 3,
-        }}
+        animate={shouldReduce ? { scale: 1, x: 0 } : { scale: [1, 1.2, 1], x: [0, -20, 0] }}
+        transition={
+          shouldReduce ? { duration: 0 } : { duration: 14, ease: "easeInOut", repeat: Infinity, delay: 3 }
+        }
       />
 
       <motion.div
         className="flex w-full max-w-[460px] flex-col items-center"
         variants={containerVariants}
-        initial="hidden"
+        initial={shouldReduce ? "visible" : "hidden"}
         animate="visible"
       >
         <motion.div
@@ -109,10 +105,10 @@ export function LoginScreen({
 
           {reason === "device-limit" ? (
             <motion.div
-              initial={{ opacity: 0, height: 0, scale: 0.96 }}
+              initial={shouldReduce ? { opacity: 1, height: "auto", scale: 1 } : { opacity: 0, height: 0, scale: 0.96 }}
               animate={{ opacity: 1, height: "auto", scale: 1 }}
-              exit={{ opacity: 0, height: 0, scale: 0.96 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              exit={shouldReduce ? { opacity: 1, height: "auto", scale: 1 } : { opacity: 0, height: 0, scale: 0.96 }}
+              transition={shouldReduce ? { duration: 0 } : { duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden rounded-xl border border-rose-500/20 bg-rose-500/8 px-md py-sm text-body-sm font-body-sm text-rose-700 dark:text-rose-400 shadow-[0_0_16px_rgba(198,40,40,0.06)]"
               role="alert"
             >

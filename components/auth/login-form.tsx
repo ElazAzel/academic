@@ -3,7 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useSyncExternalStore, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { getDefaultRolePath } from "@/lib/auth/role-redirect";
 import type { OAuthProviderFlags } from "@/server/auth/provider-flags";
@@ -50,6 +50,7 @@ async function resolveRedirectPath() {
 
 export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFlags }) {
   const router = useRouter();
+  const shouldReduce = useReducedMotion();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const errorRef = useRef<HTMLParagraphElement>(null);
@@ -151,18 +152,15 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
             ref={errorRef}
             id={LOGIN_ERROR_ID}
             key={error}
-            initial={{ opacity: 0, height: 0, scale: 0.95, x: 0 }}
+            initial={shouldReduce ? { opacity: 1, height: "auto", scale: 1, x: 0 } : { opacity: 0, height: 0, scale: 0.95, x: 0 }}
             animate={{
               opacity: 1,
               height: "auto",
               scale: 1,
-              x: [0, -10, 10, -8, 8, -4, 4, 0],
+              x: shouldReduce ? 0 : [0, -10, 10, -8, 8, -4, 4, 0],
             }}
-            exit={{ opacity: 0, height: 0, scale: 0.95, x: 0 }}
-            transition={{
-              duration: 0.3,
-              x: { duration: 0.5, ease: "easeInOut" },
-            }}
+            exit={shouldReduce ? { opacity: 1, height: "auto", scale: 1, x: 0 } : { opacity: 0, height: 0, scale: 0.95, x: 0 }}
+            transition={shouldReduce ? { duration: 0 } : { duration: 0.3, x: { duration: 0.5, ease: "easeInOut" } }}
             className="overflow-hidden rounded-md bg-m3-error-container px-md py-sm text-body-sm font-body-sm text-m3-error"
             role="alert"
             aria-live="assertive"
@@ -179,21 +177,21 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
         type="submit"
         disabled={pending || !hydrated}
         className="mt-sm flex w-full items-center justify-center gap-sm rounded-lg bg-m3-primary py-md text-label-lg font-label-lg text-m3-on-primary shadow-[0_10px_24px_rgba(22,63,130,0.22)] transition-[background-color,box-shadow] hover:bg-m3-primary-container hover:shadow-[0_14px_28px_rgba(22,63,130,0.26)] disabled:opacity-50"
-        whileHover={!pending && hydrated ? { scale: 1.015 } : undefined}
-        whileTap={!pending && hydrated ? { scale: 0.98 } : undefined}
+        whileHover={!pending && hydrated && !shouldReduce ? { scale: 1.015 } : undefined}
+        whileTap={!pending && hydrated && !shouldReduce ? { scale: 0.98 } : undefined}
         layout
       >
         <motion.span
           key={pending ? "pending" : "idle"}
-          initial={{ opacity: 0, y: pending ? 8 : -8 }}
+          initial={shouldReduce ? { opacity: 1, y: 0 } : { opacity: 0, y: pending ? 8 : -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={shouldReduce ? { duration: 0 } : { duration: 0.2 }}
         >
           {pending ? "Входим..." : "Войти в систему"}
         </motion.span>
         <motion.span
-          animate={pending ? { rotate: 360 } : { rotate: 0 }}
-          transition={pending ? { duration: 1, ease: "linear", repeat: Infinity } : { duration: 0.3 }}
+          animate={pending && !shouldReduce ? { rotate: 360 } : { rotate: 0 }}
+          transition={pending && !shouldReduce ? { duration: 1, ease: "linear", repeat: Infinity } : { duration: 0.3 }}
         >
           <Icon name={pending ? "progress_activity" : "arrow_forward"} size={20} />
         </motion.span>
@@ -208,8 +206,8 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
               onClick={() => signIn("google")}
               aria-label="Google"
               className="flex items-center justify-center gap-sm rounded-lg border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={shouldReduce ? undefined : { scale: 1.02 }}
+              whileTap={shouldReduce ? undefined : { scale: 0.98 }}
             >
               <Icon name="login" size={20} />
               <span>Google</span>
@@ -221,8 +219,8 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
               onClick={() => signIn("github")}
               aria-label="GitHub"
               className="flex items-center justify-center gap-sm rounded-lg border border-m3-outline-variant bg-m3-surface py-md text-label-lg font-label-lg text-m3-on-surface transition-colors hover:bg-m3-surface-container-low"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={shouldReduce ? undefined : { scale: 1.02 }}
+              whileTap={shouldReduce ? undefined : { scale: 0.98 }}
             >
               <Icon name="code" size={20} />
               <span>GitHub</span>
