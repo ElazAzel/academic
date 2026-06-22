@@ -285,7 +285,7 @@ npm run verify
 
 1. Не пройдены проверки типов и линтинга (ESLint должен завершаться с `0 errors` и `0 warnings`).
 2. Не пройдён `npm run verify:security` для release-проверки.
-3. Не пройдены 460+ юнит-тестов (Vitest запускается в `node` окружении).
+3. Не пройдены 930+ юнит-тестов (Vitest запускается в `node` окружении).
 4. Не пройдены e2e Playwright-тесты.
 5. Отсутствует обработка пустых и ошибочных состояний в UI.
 6. Не обновлен файл [updates.md](file:///c:/Users/i.azelkhanov/Documents/Strategic%20Academy/docs/updates.md).

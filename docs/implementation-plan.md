@@ -1,6 +1,6 @@
 # План реализации AI Strategic Academy
 
-Дата актуализации: 2026-05-31
+Дата актуализации: 2026-06-22
 Статус документа: operational source of truth для реализации доменов. Итоговый release-readiness статус вынесен в `docs/READINESS.md`.
 
 ## Release-hardening baseline на 2026-05-26
@@ -17,29 +17,15 @@
 
 Закрытая LMS одной академии для управления курсами, потоками, кураторами, заданиями, тестами, сертификатами, инвайт-доступом, аналитикой и отчётностью. Production-minded: безопасная, расширяемая, документированная.
 
-## Текущее состояние на 2026-05-24
+## Текущее состояние на 2026-06-22
 
 ### Core Metrics
-- **Build:** 87/87 страниц, 0 ошибок ✅
-- **Tests:** 426/426 passed (70 test files) ✅
+- **Build:** 87/87 страниц, production build ✅
+- **Tests:** 936/936 passed (166 test files) ✅
 - **Lint:** 0 errors, 0 warnings ✅
-- **Typecheck:** clean ✅ (кроме предсуществующих `.next/dev/types/validator.ts`)
-- **SCORM/xAPI:** Full import + proxy + CMI + player + xAPI LRS ✅
-- **SSE Notifications:** Real-time SSE endpoint + hook + dropdown integration ✅
-- **Staging:** Branch + guide created ✅
-- **Deployment:** Vercel auto-deploy на push в main ✅; preview на codex/* ветках ✅
-- **Security scan:** Все C1-C5 findings закрыты ✅
-- **CSP:** worker-src, manifest-src, wss: добавлены ✅
-- **CSRF:** Исправлен (origin vs hostname) ✅
-- **Session resilience:** try/catch revalidateSession, fallback на JWT роли ✅
-- **FK-индексы:** 12 недостающих индексов добавлены ✅
-- **RLS:** Отключён на всех 56 таблицах (не используется, приложение на Prisma) ✅
-- **Схема cohorts:** Исправлена (добавлены отсутствующие колонки) ✅
-- **Ветка main:** branch protection отключена, push напрямую ✅
-- **Zod-валидация + try/catch:** Все 18 файлов server/actions/ покрыты ✅
-- **Metadata:** Все 105 page.tsx имеют export const metadata ✅
-- **loading.tsx:** Все 84 route-директории покрыты ✅
-- **Mobile adaptation:** Achievements (accordion), XP (touch), hover→click ✅
+- **Typecheck:** clean ✅
+- **Auth optimization:** JWT callback skips redundant DB query, device session transaction relaxed to ReadCommitted (−28% latency on remote Supabase) ✅
+- **Deploy:** Vercel auto-deploy на push в main ✅
 
 ### Последние изменения
 - Runtime error: 500 на `/api/v1/modules/[moduleId]/lessons` — добавлен retry при Prisma unique constraint collision

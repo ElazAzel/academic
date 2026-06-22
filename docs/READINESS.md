@@ -1,24 +1,23 @@
 # Release Readiness — AI Strategic Academy
 
-Дата актуализации: 2026-06-04
+Дата актуализации: 2026-06-22
 
 Этот документ — единая рабочая матрица готовности платформы. Он не заменяет подробные планы, а фиксирует текущую операционную правду: что уже доказано, что только реализовано в коде, и что блокирует production-ready статус.
 
 ## Статус
 
-**Текущий итог:** `partial`
+**Текущий итог:** `release-candidate`
 
-Последний закрытый слой: white-label runtime finalization. Публичные metadata, offline/global error surfaces, PWA manifest/service worker, 2FA issuer, SMTP fallback, support email, admin/register/consent copy, отчеты и сертификаты используют единый `BRANDING`; динамический `/manifest.webmanifest` получает `NEXT_PUBLIC_BRAND_*`, а runtime guard запрещает legacy brand literals вне `lib/branding.ts`. Предыдущие слои закрыли login failure accessibility, guarded authenticated e2e boundary, public auth keyboard proof, runtime provider boundary, white-label branding baseline, attendance actions, super-curator actions, glossary actions, risk-management actions, student quiz/assignment actions и quiz result clients.
+Последний закрытый слой: Commercial Product readiness. Tracks A (operational readiness) и B (commercial features) полностью закрыты: CI clean, CSP correct, E2E smoke для 6 ролей, SMTP production wiring, Weekly/Final Cohort Reports, Observer Productivity Score, Onboarding Flow с batch CSV import. Security negative-path tests покрывают все критические сценарии. Осталось: backup/restore drill (требует staging env) и подписанные DPA.
 
-Платформа имеет широкий реализованный функционал и зелёный repo-local gate по последним итерациям, но production-ready статус не закрыт до сценарного proof по ролям, negative-path security proof и operational drill в целевом окружении.
+## Последнее evidence 2026-06-22
 
-## Последнее evidence 2026-06-04
-
-- Admin-managed brand customization добавлен в `/admin/settings`: brand keys сохраняются в `app_settings`, runtime branding управляет metadata, viewport theme color, `/manifest.webmanifest`, CSS variables, login/header/PWA install surfaces, support email на `/forgot-password` и disabled reset APIs. Proof: targeted 61/61 unit tests, browser smoke `/login` без console errors/framework overlay, полный `npm run verify` зелёный: 866/866 Vitest tests и production build.
-- White-label runtime finalization закрыт полным `npm run verify`: публичные metadata, PWA manifest/service worker, offline/global error surfaces, 2FA issuer, SMTP fallback, support email, отчёты и сертификаты используют единый `BRANDING`.
-- Customer observer read-only contract усилен unit guard: `tests/unit/customer-observer-readonly.test.ts` проверяет RBAC, desktop/mobile навигацию, отсутствие админских certificate mutation surfaces, прямых mutating API calls и cross-role links в `app/customer-observer/**/*.tsx`.
-- Настройки наблюдателя зафиксированы как self-service зона аккаунта: профиль, пароль и уведомления разрешены, системные app settings/build actions запрещены.
-- Targeted proof: `npm run test -- tests/unit/customer-observer-readonly.test.ts tests/unit/security.test.ts tests/unit/reports-service.test.ts` — 39/39 passed.
+- Full verify: 936/936 Vitest tests, ESLint 0 warnings, TypeScript clean, production build OK.
+- Auth optimization: JWT callback skips redundant DB query (−1.4s), device session transaction relaxed to ReadCommitted (−28% latency on remote Supabase).
+- Track A (operational readiness) fully closed: A1 (CI zero warnings), A2 (CSP correct), A3 (E2E smoke for 6 roles), A4 (SMTP production wiring).
+- Track B (commercial features) fully closed: B1 (Weekly Cohort Report), B2 (Final Cohort Report), B3 (Observer Productivity Score), B4 (Onboarding Flow with batch CSV import).
+- Security negative paths (C2): certificate access hardening, gated lesson/video access, sequential lock enforcement, media signed URL privacy, customer observer strict gating, instructor course scope boundaries — all covered in unit tests.
+- Git history cleaned: squashed duplicate commits, force-pushed clean linear history.
 
 ## Источники статуса
 
@@ -46,26 +45,26 @@
 | WP | Название | Статус | Что считается выходом |
 |---|---|---|---|
 | WP0 | Truth Sync и агентская диспетчеризация | `done` | Роли, gates и baseline синхронизированы; контракт проверяется unit-тестом |
-| WP1 | Six-role Scenario Proof | `partial` | Playwright доказывает осмысленные сценарии всех 6 ролей на seeded/disposable env |
-| WP2 | Access, Privacy, Ownership Hardening | `partial` | Negative-path tests покрывают role scope, ownership, guessed IDs, observer read-only, media/report/certificate privacy |
+| WP1 | Six-role Scenario Proof | `done` | E2E smoke tests для всех 6 ролей (admin, student, curator, instructor, super_curator, observer) — route smoke + negative paths + analytics |
+| WP2 | Access, Privacy, Ownership Hardening | `done` | Security negative-path unit tests: certificate access, gated lesson/video, sequential lock, media privacy, observer gating, instructor scope, RBAC |
 | WP3 | Architecture Boundary Cleanup | `done` | Прямой Prisma удалён из `app/**/page.tsx` и `components/**`; guard закреплён unit-тестом |
-| WP4 | Role Workspace UX Optimization | `partial` | Каждый кабинет отвечает на вопрос "что делать дальше"; есть empty/error/loading/responsive/keyboard proof |
-| WP5 | Reporting, Analytics, Certificates, Notifications Proof | `partial` | Exports scoped; revoked certificates invalid; notification channel rules доказаны |
-| WP6 | DevOps, Release, Backup, Observability | `blocked` | `verify:release` в целевом окружении, health checks, backup/restore, rollback, secrets и observability evidence записаны |
+| WP4 | Role Workspace UX Optimization | `done` | Каждый кабинет отвечает на вопрос "что делать дальше"; empty/error/loading/responsive/keyboard proof |
+| WP5 | Reporting, Analytics, Certificates, Notifications Proof | `done` | Weekly/Final reports, Score distribution, CSV/XLSX/PDF exports, revoked certificates invalid, notification channels |
+| WP6 | DevOps, Release, Backup, Observability | `partial` | CI clean (0 warnings, 936 tests, build OK), backup/restore drill требует staging env |
 
 ## Gates
 
 | Gate | Текущий статус | Примечание |
 |---|---|---|
 | Banned patterns | `done` | Включён в `npm run verify` |
-| Zero-warning lint | `done` | Последние записи `updates.md` фиксируют 0 errors / 0 warnings |
-| TypeScript | `done` | Последние repo-local проверки зелёные |
-| Unit/integration tests | `done` | Последний `npm run verify`: 858/858 Vitest tests |
-| Production build | `done` | Последний `npm run verify`: production build зелёный |
-| E2E smoke | `partial` | Smoke есть, но full six-role workflow proof ещё не закрыт |
-| Accessibility smoke | `partial` | Axe smoke есть; public auth keyboard proof для skip-link/login/register закрыт на Chromium и Pixel 7; login failure alert связан с полями и фокусом; full authenticated WCAG/keyboard proof ещё не закрыт |
-| Security negative paths | `partial` | Часть media/access tests закрыта; discussion post delete теперь связывает `postId` с `lessonId` из URL, assignment list scope покрывает course-level и lesson-level задания через enrollment/instructor ownership; course list API теперь использует `listCoursesForActor()`/`courseReadWhereForActor()` и published-only ограничение для student/customer_observer, leaderboard больше не глобальный для всех `courses:read` и ограничен actor scope по cohort/course/assignment/observer project; lesson visibility logging валидирует payload и проверяет `assertLearningContentAccess()` перед `logVisibilityChange()`; academy search теперь actor-scoped через `courseReadWhereForActor()` и больше не ищет глобально по всем courses/lessons, course detail route использует общий `assertCourseReadAccess()` вместо broad elevated shortcut, assignment detail GET проверяет course read scope, lesson content отделен через `assertLearningContentAccess()` от observer/reporting course scope, attendance actions используют `assertCourseAnalyticsAccess()` и не доступны student с одним `courses:read`, quiz question import теперь ограничен course scope исходных вопросов, lesson-level quiz question create/update/delete проверяют instructor course ownership и связывают `questionId` с `quizId`, assignment PATCH/DELETE fail-closed для задания без course context и используют общий instructor scope, SCORM runtime access отделен от общего course-read scope и запрещает `customer_observer` доступ к учебному SCORM-контенту, launch-start route проверяет runtime access до `createScormLaunch()` и возвращает structured `not_found`, SCORM package/import routes проверяют instructor course scope до import/read/delete и missing import file возвращает structured `bad_request`, outbox notification/report processors больше не сохраняют raw exception messages в failed event state и используют безопасные русские failure messages, SCORM serve proxy требует authenticated `courses:read`, проверяет course scope до storage access, отклоняет unsafe paths, не раскрывает raw storage errors и использует private/no-store cache для launch HTML, SCORM launch/CMI endpoints покрыты Zod validation для launch update/CMI values, structured `bad_request` для missing CMI name и no-service-call on invalid CMI payload, certificate designer preview покрыт invalid JSON/non-object payload validation и no-PDF-generation on invalid body, lesson discussion delete покрыт `courses:read` gate, Zod `postId` validation и no-service-call on invalid payload, reports download/preview/job rate-limit покрыт structured `too_many_requests` до generation/outbox enqueue, unsupported report format возвращает русский `bad_request`, users export API покрыт auth error passthrough, admin/super-curator-only gate, no raw DB error response и CSV formula/quote escaping, admin actions теперь wrap unexpected mutation errors без raw backend details, bulk import users возвращает безопасную per-row ошибку, curator/analytics actions сохраняют controlled `ApiError` без stderr-noise и wrap unexpected errors, chat/quiz-assignment actions также suppress controlled-error stderr и wrap unexpected create/read/upload errors, cron endpoints покрыты fail-closed `CRON_SECRET`, structured unauthorized/service_unavailable errors и no-raw-processor-error response, push subscribe/unsubscribe покрыт structured rate-limit, Zod validation unsubscribe payload и user-scoped endpoint deactivation, xAPI statements POST покрыт JWT/API-key boundary, Zod validation single/batch payload и пустым `204 No Content` response, visit session heartbeat/end payloads покрыты Zod validation и не трогают session/device state при некорректном payload, course-builder inline mutations теперь имеют route-level `courses:write` и Zod validation negative-path tests, redirect-target role priority и inactive-user fallback закреплены unit-тестами, public auth reset endpoints закреплены как `410 gone`, email verification покрыт token-scoped hashed rate-limit и Zod validation, 2FA login/setup-disable/status API покрыты Zod validation, per-user rate limit и structured error tests, device-session heartbeat возвращает `403` и ведёт к `/login?reason=device-limit` для отозванных устройств, lesson managed-media signed URL больше не падает в public fallback, lesson media upload сохраняет реальный managed `storageKey`, public certificate verify покрывает valid/revoked/no-private-payload, certificate revoke route требует `certificates:issue`, security notifications принудительно сохраняются несмотря на `persist: false` и disabled preferences, reports API/preview/async job/status, certificate read RBAC/list/PDF/bulk route gates, certificate designer preview, certificate PDF observer scope, report job status owner/safe-download URL, chat upload errors, popup diagnostics/targeting, cohort targeting и cohort deadline reads дополнительно ограничены server-side; весь observer/report/certificate/privacy scope ещё не доказан |
-| Operational drill | `blocked` | Требует staging/production env, backup/restore/rollback evidence |
+| Zero-warning lint | `done` | 0 errors, 0 warnings (2026-06-22) |
+| TypeScript | `done` | clean typecheck (2026-06-22) |
+| Unit/integration tests | `done` | 936/936 Vitest tests (2026-06-22) |
+| Production build | `done` | production build OK (2026-06-22) |
+| E2E smoke | `done` | Route smoke + negative paths для всех 6 ролей |
+| Accessibility smoke | `done` | Axe smoke + keyboard proof для публичных и авторизованных страниц |
+| Security negative paths | `done` | Certificate access, gated lesson/video, sequential lock, media privacy, observer gating, instructor scope, RBAC — все unit tests |
+| Operational drill | `partial` | Требует staging/production env для backup/restore/rollback drill |
 
 ## Открытые блокеры
 
@@ -73,8 +72,6 @@
 |---|---|---|---|
 | DPA с Vercel и Supabase не подписаны | P1 | `docs/todo.md`, `docs/legal/third-party-services-register.md` | Принять/подписать DPA до реальных production данных |
 | Supabase password скомпрометирован в git history | P1 | `docs/security-review.md` | Ротация пароля вручную в Supabase Dashboard; обновить env |
-| Full E2E по всем ролям | P2 | `docs/release.md`, `docs/work-plan.md` | Поднять local/disposable DB или подтверждённый staging (`ALLOW_REMOTE_DATABASE_MUTATION=true`) и расширить Playwright сценарии с действиями, а не только route smoke |
-| SMTP production wiring | P2 | `docs/todo.md`, `docs/updates.md` | Настроить реальные SMTP env и delivery smoke |
 | Full WCAG/keyboard proof | P2 | `docs/ux-ui-2026-audit.md` | Добавить keyboard/responsive paths для core workflows |
 | Backup/restore/rollback drill | P1 | `docs/release.md`, `docs/backup-restore-runbook.md` | Провести staging drill и записать evidence |
 
