@@ -93,6 +93,7 @@ const providers: NonNullable<AuthOptions["providers"]> = [
         name: user.name,
         image: user.image,
         roles,
+        requires2fa: user.totpEnabled === true,
         ...(loginContext.ipAddress ? { loginIpAddress: loginContext.ipAddress } : {}),
         ...(loginContext.userAgent ? { loginUserAgent: loginContext.userAgent } : {}),
       };
@@ -157,7 +158,17 @@ export const authOptions: AuthOptions = {
       }
 
       if (user) {
-        const userId = user.id ?? token.sub;
+        // User data already available from authorize — skip redundant DB query
+        const u = user as typeof user & { requires2fa?: boolean };
+        token.id = u.id;
+        token.roles = u.roles;
+        token.email = u.email;
+        token.name = u.name;
+        token.picture = u.image;
+        token.requires2fa = u.requires2fa === true;
+      } else if (trigger !== "signIn") {
+        // Subsequent requests: refresh from DB only when needed
+        const userId = readString(token.id) ?? readString(token.sub);
         if (userId) {
           const dbUser = await prisma.user.findUnique({
             where: { id: userId },
@@ -173,7 +184,6 @@ export const authOptions: AuthOptions = {
           }
         }
       }
-
       const tokenUserId = readString(token.id) ?? readString(token.sub);
       const tokenDeviceSessionId = readString(token.authDeviceSessionId);
       const shouldCreateDeviceSession = Boolean(user) || !tokenDeviceSessionId;

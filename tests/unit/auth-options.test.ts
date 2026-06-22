@@ -90,6 +90,7 @@ describe("credentials provider authorization", () => {
       name: "Admin",
       image: null,
       roles: ["admin"],
+      requires2fa: false,
     });
     expect(mockUserFindUnique).toHaveBeenCalledWith(
       expect.objectContaining({

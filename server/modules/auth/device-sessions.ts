@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { toJsonValue } from "@/lib/json";
 import { getSafeErrorMetadata } from "@/lib/http";
@@ -103,7 +102,7 @@ export async function registerAuthDeviceSession(input: {
         revokedSessionIds,
       };
     },
-    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    { timeout: 10_000 },
   );
 
   if (result.revokedSessionIds.length > 0) {
