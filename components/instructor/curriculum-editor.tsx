@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, CheckCircle2, FileText, GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { BookOpen, CheckCircle2, FileText, FolderOpen, GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
 import { readApiData, readApiErrorMessage } from "@/lib/api-client";
 
 interface Lesson {
@@ -55,10 +56,17 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
       return;
     }
 
-    const response = await fetch(`/api/v1/modules/${moduleId}`, { method: "DELETE" });
-    if (response.ok) {
-      setModules((current) => current.filter((moduleItem) => moduleItem.id !== moduleId));
-      router.refresh();
+    try {
+      const response = await fetch(`/api/v1/modules/${moduleId}`, { method: "DELETE" });
+      if (response.ok) {
+        setModules((current) => current.filter((moduleItem) => moduleItem.id !== moduleId));
+        router.refresh();
+      } else {
+        const msg = await readApiErrorMessage(response, "Не удалось удалить модуль");
+        toast.error(msg);
+      }
+    } catch {
+      toast.error("Ошибка сети при удалении модуля");
     }
   }
 
@@ -67,15 +75,22 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
       return;
     }
 
-    const response = await fetch(`/api/v1/lessons/${lessonId}`, { method: "DELETE" });
-    if (response.ok) {
-      setModules((current) =>
-        current.map((moduleItem) => ({
-          ...moduleItem,
-          lessons: moduleItem.lessons.filter((lesson) => lesson.id !== lessonId),
-        })),
-      );
-      router.refresh();
+    try {
+      const response = await fetch(`/api/v1/lessons/${lessonId}`, { method: "DELETE" });
+      if (response.ok) {
+        setModules((current) =>
+          current.map((moduleItem) => ({
+            ...moduleItem,
+            lessons: moduleItem.lessons.filter((lesson) => lesson.id !== lessonId),
+          })),
+        );
+        router.refresh();
+      } else {
+        const msg = await readApiErrorMessage(response, "Не удалось удалить урок");
+        toast.error(msg);
+      }
+    } catch {
+      toast.error("Ошибка сети при удалении урока");
     }
   }
 
@@ -253,6 +268,15 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
         </Card>
       ) : null}
 
+      {modules.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/10 px-6 py-16 text-center">
+          <FolderOpen className="mb-3 h-12 w-12 text-muted-foreground/40" />
+          <h3 className="text-lg font-semibold">Нет модулей</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Нажмите «Добавить модуль», чтобы создать первый учебный модуль курса.
+          </p>
+        </div>
+      ) : (
       <div className="space-y-6">
         {modules.map((moduleItem) => (
           <div key={moduleItem.id} className="space-y-4">
@@ -398,6 +422,7 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

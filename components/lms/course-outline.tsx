@@ -3,7 +3,9 @@
 import { useState, useCallback, useRef } from "react";
 import { Plus, ChevronRight, ChevronDown, FileText, Video, HelpCircle, CheckSquare, Trash2, FolderOpen, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import type { BuilderModuleDetail, BuilderBlockDetail } from "@/types/domain";
+import { EmptyState } from "@/components/lms/empty-state";
 
 type SelectedNode =
   | { type: "course" }
@@ -96,7 +98,9 @@ export function CourseOutline({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title }),
       });
-    } catch { /* optimistic update already applied */ }
+    } catch {
+      toast.error("Ошибка при переименовании");
+    }
   }, []);
 
   const toggleCollapse = useCallback((id: string) => {
@@ -126,7 +130,9 @@ export function CourseOutline({
         };
         onModulesChange([...modules, newModule]);
       }
-    } catch {}
+    } catch {
+      toast.error("Ошибка при создании модуля");
+    }
   }, [courseId, modules, onModulesChange]);
 
   const addBlock = useCallback(async (moduleId: string, moduleIndex: number) => {
@@ -150,7 +156,9 @@ export function CourseOutline({
         };
         onModulesChange(updated);
       }
-    } catch {}
+    } catch {
+      toast.error("Ошибка при создании блока");
+    }
   }, [modules, onModulesChange]);
 
   const addLesson = useCallback(async (moduleId: string, moduleIndex: number, blockId?: string) => {
@@ -196,7 +204,9 @@ export function CourseOutline({
         }
         onModulesChange(updated);
       }
-    } catch {} finally {
+    } catch {
+      toast.error("Ошибка при создании урока");
+    } finally {
       setPendingLessonTarget((current) => (current === targetKey ? null : current));
     }
   }, [modules, onModulesChange, pendingLessonTarget]);
@@ -207,7 +217,9 @@ export function CourseOutline({
     try {
       await fetch(`/api/v1/modules/${moduleId}`, { method: "DELETE" });
       onModulesChange(modules.filter((m) => m.id !== moduleId));
-    } catch {}
+    } catch {
+      toast.error("Ошибка при удалении модуля");
+    }
   }, [modules, onModulesChange]);
 
   const deleteBlock = useCallback(async (moduleIndex: number, blockId: string, e: React.MouseEvent) => {
@@ -221,7 +233,9 @@ export function CourseOutline({
         blocks: (updated[moduleIndex].blocks ?? []).filter((b) => b.id !== blockId),
       };
       onModulesChange(updated);
-    } catch {}
+    } catch {
+      toast.error("Ошибка при удалении блока");
+    }
   }, [modules, onModulesChange]);
 
   const deleteLesson = useCallback(async (lessonId: string, moduleIndex: number, blockId: string | undefined, e: React.MouseEvent) => {
@@ -243,7 +257,9 @@ export function CourseOutline({
         };
       }
       onModulesChange(updated);
-    } catch {}
+    } catch {
+      toast.error("Ошибка при удалении урока");
+    }
   }, [modules, onModulesChange]);
 
   return (
@@ -285,6 +301,17 @@ export function CourseOutline({
           </button>
         </div>
       </div>
+
+      {/* Empty state */}
+      {modules.length === 0 && (
+        <div className="px-3 py-8">
+          <EmptyState
+            icon={FolderOpen}
+            title="Нет модулей"
+            description="Добавьте первый модуль, чтобы начать построение учебного плана."
+          />
+        </div>
+      )}
 
       {/* Modules */}
       {modules.map((mod, mi) => (

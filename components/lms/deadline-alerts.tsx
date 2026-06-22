@@ -21,7 +21,7 @@ interface DeadlineAlert {
 }
 
 export function DeadlineAlerts() {
-  const { data: alerts = [] } = useQuery<DeadlineAlert[]>({
+  const { data: alerts = [], isLoading, isError } = useQuery<DeadlineAlert[]>({
     queryKey: ["deadline-alerts"],
     queryFn: async () => {
       const res = await fetch("/api/v1/deadline-alerts");
@@ -31,6 +31,32 @@ export function DeadlineAlerts() {
     },
     refetchInterval: 60_000, // Refresh every minute
   });
+
+  if (isLoading) {
+    return (
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Clock className="h-5 w-5 text-muted-foreground animate-pulse" />
+            <span className="text-muted-foreground">Загрузка дедлайнов...</span>
+          </CardTitle>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="border-destructive/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-sm text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+            Не удалось загрузить дедлайны
+          </CardTitle>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   if (alerts.length === 0) return null;
 

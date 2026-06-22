@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useMediaQuery } from "usehooks-ts";
 import { Drawer } from "vaul";
 import { useEffect, useState } from "react";
+import { AlertCircle } from "lucide-react";
 import { AchievementsGrid } from "@/components/gamification/achievements-grid";
 import { StreakWidget } from "@/components/gamification/streak-widget";
 import { LeaderboardPanel } from "@/components/gamification/leaderboard-panel";
@@ -44,10 +45,16 @@ export function XpCenterModal({ isOpen, onClose, xp, levelInfo }: XpCenterModalP
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [gamification, setGamification] = useState<GamificationData | null>(null);
 
+  const [gamificationError, setGamificationError] = useState(false);
+
   useEffect(() => {
     if (!isOpen) return;
     getGamificationData()
-      .then((data) => setGamification(data as unknown as GamificationData));
+      .then((data) => {
+        setGamification(data as unknown as GamificationData);
+        setGamificationError(false);
+      })
+      .catch(() => setGamificationError(true));
   }, [isOpen]);
   const currentLevelIdx = XP_LEVELS.findIndex((l) => l.level === levelInfo.level);
   const nextLevel = currentLevelIdx !== -1 && currentLevelIdx < XP_LEVELS.length - 1
@@ -189,7 +196,12 @@ export function XpCenterModal({ isOpen, onClose, xp, levelInfo }: XpCenterModalP
                   },
                   {
                     label: "Ачивки",
-                    content: !gamification ? (
+                    content: gamificationError ? (
+                      <p className="flex items-center justify-center gap-2 py-8 text-sm text-rose-600">
+                        <AlertCircle className="h-4 w-4" />
+                        Не удалось загрузить достижения
+                      </p>
+                    ) : !gamification ? (
                       <p className="py-8 text-center text-sm text-muted-foreground">Загрузка...</p>
                     ) : (
                       <AchievementsGrid achievements={gamification.achievements} />
@@ -197,7 +209,12 @@ export function XpCenterModal({ isOpen, onClose, xp, levelInfo }: XpCenterModalP
                   },
                   {
                     label: "Streak",
-                    content: !gamification ? (
+                    content: gamificationError ? (
+                      <p className="flex items-center justify-center gap-2 py-8 text-sm text-rose-600">
+                        <AlertCircle className="h-4 w-4" />
+                        Не удалось загрузить данные
+                      </p>
+                    ) : !gamification ? (
                       <p className="py-8 text-center text-sm text-muted-foreground">Загрузка...</p>
                     ) : (
                       <StreakWidget
@@ -253,25 +270,35 @@ export function XpCenterModal({ isOpen, onClose, xp, levelInfo }: XpCenterModalP
               ),
             },
             {
-              label: "Ачивки",
-              content: !gamification ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">Загрузка...</p>
-              ) : (
-                <AchievementsGrid achievements={gamification.achievements} />
-              ),
-            },
-            {
-              label: "Streak",
-              content: !gamification ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">Загрузка...</p>
-              ) : (
-                <StreakWidget
-                  currentStreak={gamification.streak}
-                  longestStreak={gamification.longestStreak}
-                  heatmap={gamification.heatmap}
-                />
-              ),
-            },
+            label: "Ачивки",
+            content: gamificationError ? (
+              <p className="flex items-center justify-center gap-2 py-8 text-sm text-rose-600">
+                <AlertCircle className="h-4 w-4" />
+                Не удалось загрузить достижения
+              </p>
+            ) : !gamification ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">Загрузка...</p>
+            ) : (
+              <AchievementsGrid achievements={gamification.achievements} />
+            ),
+          },
+          {
+            label: "Streak",
+            content: gamificationError ? (
+              <p className="flex items-center justify-center gap-2 py-8 text-sm text-rose-600">
+                <AlertCircle className="h-4 w-4" />
+                Не удалось загрузить данные
+              </p>
+            ) : !gamification ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">Загрузка...</p>
+            ) : (
+              <StreakWidget
+                currentStreak={gamification.streak}
+                longestStreak={gamification.longestStreak}
+                heatmap={gamification.heatmap}
+              />
+            ),
+          },
             {
               label: "Топ",
               content: <LeaderboardPanel />,

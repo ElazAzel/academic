@@ -138,7 +138,7 @@ export function LessonBlockEditor({
       fetch(`/api/v1/lessons/${lessonId}/scorm/package`)
         .then((r) => r.ok ? r.json() : null)
         .then((j) => setScormPackageInfo(j?.data ?? null))
-        .catch(() => {});
+        .catch(() => { setScormPackageInfo(null); });
     }
   }, [blocks, lessonId]);
 

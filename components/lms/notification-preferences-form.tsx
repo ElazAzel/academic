@@ -31,7 +31,7 @@ const SAVE_NOTIFICATION_PREFERENCE_ERROR = "Не удалось сохранит
 export function NotificationPreferencesForm() {
   const queryClient = useQueryClient();
 
-  const { data: preferences, isLoading } = useQuery<UserNotificationPreferences>({
+  const { data: preferences, isLoading, isError } = useQuery<UserNotificationPreferences>({
     queryKey: ["notification-preferences"],
     queryFn: async () => {
       const res = await fetch("/api/v1/notification-preferences");
@@ -72,6 +72,17 @@ export function NotificationPreferencesForm() {
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="rounded-lg border-destructive/20">
+        <CardContent className="p-8 text-center">
+          <p className="text-sm text-destructive">Не удалось загрузить настройки уведомлений</p>
+          <p className="mt-1 text-xs text-muted-foreground">Попробуйте обновить страницу.</p>
         </CardContent>
       </Card>
     );

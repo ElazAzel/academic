@@ -87,7 +87,7 @@ export function NotificationsList() {
   const queryClient = useQueryClient();
   const [popupView, setPopupView] = useState<{ n: NotificationItem } | null>(null);
 
-  const { data: notifications = [], isLoading } = useQuery<NotificationItem[]>({
+  const { data: notifications = [], isLoading, isError } = useQuery<NotificationItem[]>({
     queryKey: ["notifications"],
     queryFn: async () => {
       const res = await fetch("/api/v1/notifications");
@@ -198,6 +198,14 @@ export function NotificationsList() {
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-m3-primary border-t-transparent" />
           <span className="sr-only">Загрузка уведомлений...</span>
         </div>
+      ) : isError ? (
+        <Card className="rounded-lg border border-destructive/20 bg-m3-surface-container-lowest shadow-m3-soft">
+          <CardContent className="py-12 text-center">
+            <Icon name="error" size={40} className="mx-auto mb-3 text-destructive/60" />
+            <p className="text-body-md font-body-md text-destructive">Не удалось загрузить уведомления</p>
+            <p className="mt-1 text-body-sm font-body-sm text-m3-on-surface-variant">Попробуйте обновить страницу.</p>
+          </CardContent>
+        </Card>
       ) : notifications.length === 0 ? (
         <Card className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
           <CardContent className="py-16 text-center">

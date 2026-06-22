@@ -1,5 +1,27 @@
 # Project Updates
 
+## 2026-06-22 — P1 State Coverage (empty/loading/error states)
+
+**Goal**: Eliminate empty catch blocks, add empty/loading/error states to data components.
+
+### Changes
+- **🔴 Critical — empty catch blocks fixed**:
+  - `course-outline.tsx`: 7 empty `catch {}` → toast.error (rename, add, delete module/block/lesson); added `EmptyState` when no modules
+  - `lesson-block-editor.tsx`: SCORM package fetch `.catch(() => {})` → sets null state
+  - `curriculum-editor.tsx`: `handleDeleteModule`/`handleDeleteLesson` — added try/catch with toast.error
+- **🟡 Empty states added**:
+  - `dashboard-widgets.tsx`: `MetricGrid`, `CourseProgressGrid`, `CourseManageGrid`, `CuratorLoadTable` — each shows `EmptyState` when data is empty
+  - `curriculum-editor.tsx`: shows dashed border placeholder when no modules
+- **🟡 Loading states added**:
+  - `deadline-alerts.tsx`: loading skeleton while fetching, error card on failure
+  - `xp-center-modal.tsx`: error state (AlertCircle) when gamification data fails to load
+- **🟡 Error states added**:
+  - `notifications-list.tsx`: error card with "Не удалось загрузить уведомления"
+  - `notification-preferences-form.tsx`: error card when preferences fail to load
+
+### Validation
+- `npm run verify` — lint 0 warnings ✅, typecheck ✅, 936/936 tests ✅, build ✅
+
 ## 2026-06-22 — Auth Optimization + Track A Completion
 
 **Goal**: Optimize auth flow for remote Supabase latency and close Track A (operational readiness).

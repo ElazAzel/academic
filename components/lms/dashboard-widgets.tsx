@@ -62,6 +62,11 @@ const TONE_ICON_NAMES: Record<DashboardMetric["tone"], string> = {
 
 // ── Метрики ─────────────────────────────────────────────────────────
 export function MetricGrid({ metrics }: { metrics: DashboardMetric[] }) {
+  if (metrics.length === 0) {
+    return (
+      <EmptyState icon="analytics" title="Нет данных" description="Метрики появятся после начала учебной деятельности." />
+    );
+  }
   return (
     <Stagger className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
       {metrics.map((m) => (
@@ -288,6 +293,11 @@ function pluralizeRu(value: number, one: string, few: string, many: string) {
 
 // ── Сетка курсов с прогрессом ───────────────────────────────────────
 export function CourseProgressGrid({ courses }: { courses: StudentProgress[] }) {
+  if (courses.length === 0) {
+    return (
+      <EmptyState icon="menu_book" title="Нет курсов" description="Вы ещё не записаны ни на один курс. Курсы появятся после зачисления." />
+    );
+  }
   return (
     <Stagger className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {courses.map((c) => (
@@ -330,6 +340,11 @@ export function CourseManageGrid({
   courses: CourseSummary[];
   builderBasePath?: "/instructor/courses" | "/admin/courses";
 }) {
+  if (courses.length === 0) {
+    return (
+      <EmptyState icon="school" title="Курсы не найдены" description="У вас пока нет курсов для управления. Создайте новый курс." />
+    );
+  }
   return (
     <Stagger className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {courses.map((c) => (
@@ -522,6 +537,15 @@ export function RisksList({ risks }: { risks: RiskItem[] }) {
 
 // ── Таблица кураторов ───────────────────────────────────────────────
 export function CuratorLoadTable({ curators }: { curators: CuratorLoad[] }) {
+  if (curators.length === 0) {
+    return (
+      <div className="overflow-x-auto rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
+        <div className="p-6">
+          <EmptyState icon="group" title="Нет кураторов" description="Список кураторов пуст. Добавьте кураторов в системе." />
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="overflow-x-auto rounded-lg border border-m3-outline-variant bg-m3-surface-container-lowest shadow-m3-soft">
     <Table>
