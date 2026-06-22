@@ -308,8 +308,7 @@ export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
                     ) : (
                       <div className="space-y-2">
                         {bankQuestions.map((q) => (
-                          // eslint-disable-next-line jsx-a11y/label-has-associated-control
-                          <label key={q.id} className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/30">
+                              <label key={q.id} className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/30">
                             <input
                               type="checkbox"
                               checked={selectedQs.has(q.id)}
