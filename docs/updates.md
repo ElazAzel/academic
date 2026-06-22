@@ -1,5 +1,23 @@
 # Project Updates
 
+## 2026-06-22 — Auth Optimization + Track A Completion
+
+**Goal**: Optimize auth flow for remote Supabase latency and close Track A (operational readiness).
+
+### Changes
+- **Auth JWT optimization**: JWT callback in `server/auth/options.ts` now uses `authorize()` return data instead of redundant `prisma.user.findUnique` on first login. Saves ~1.4s per login.
+- **Device session transaction**: Changed `server/modules/auth/device-sessions.ts` transaction isolation from `Serializable` to `ReadCommitted` with 10s timeout, reducing latency on remote Supabase pooler.
+- **Auth test sync**: Updated `tests/unit/auth-options.test.ts` to expect `requires2fa` field in authorize return value.
+- **Zero-warning lint**: Removed unused `eslint-disable` directives from `components/instructor/quiz-edit-form.tsx` and `components/ui/card.tsx`.
+- **Development plan updated**: Marked A1 (CI cleanup), A2 (CSP verification), A3 (E2E smoke for 6 roles), B4 (Onboarding flow) as complete.
+
+### Verification
+- `npm run verify`: 936/936 tests pass, zero warnings lint, typecheck clean, production build OK.
+- Auth login time improved: 5004ms → 3601ms (−28%) on remote Supabase.
+- Git history cleaned: squashed duplicate commits, reworded to reflect actual content.
+
+---
+
 ## 2026-06-18 — DevSecOps Security Gate Completion
 
 **Goal**: Finish the new repository security pipeline so it produces actionable results and can pass on the current codebase.
