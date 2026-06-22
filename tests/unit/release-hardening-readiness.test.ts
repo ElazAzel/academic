@@ -130,11 +130,11 @@ describe("release hardening readiness contract", () => {
     const readinessDoc = readFileSync(path.join(root, "docs", "READINESS.md"), "utf8");
     const optimizationGoalDoc = readFileSync(path.join(root, "docs", "FULL-OPTIMIZATION-GOAL.md"), "utf8");
 
-    expect(readinessDoc).toContain("**Текущий итог:** `partial`");
-    expect(readinessDoc).toContain("| WP1 | Six-role Scenario Proof | `partial` |");
-    expect(readinessDoc).toContain("| WP2 | Access, Privacy, Ownership Hardening | `partial` |");
+    expect(readinessDoc).toContain("**Текущий итог:** `release-candidate`");
+    expect(readinessDoc).toContain("| WP1 | Six-role Scenario Proof | `done` |");
+    expect(readinessDoc).toContain("| WP2 | Access, Privacy, Ownership Hardening | `done` |");
     expect(readinessDoc).toContain("| WP3 | Architecture Boundary Cleanup | `done` |");
-    expect(readinessDoc).toContain("| WP6 | DevOps, Release, Backup, Observability | `blocked` |");
+    expect(readinessDoc).toContain("| WP6 | DevOps, Release, Backup, Observability | `partial` |");
 
     expect(optimizationGoalDoc).toContain("Довести AI Strategic Academy до состояния полной оптимизации");
     expect(optimizationGoalDoc).toContain("`docs/READINESS.md` итоговый статус `done`");
@@ -145,8 +145,8 @@ describe("release hardening readiness contract", () => {
 
     expect(summary.isReleaseReady).toBe(false);
     expect(summary.status).toBe("partial");
-    expect(summary.incompletePackageIds).toEqual(["WP1", "WP2", "WP4", "WP5", "WP6"]);
-    expect(summary.blockedPackageIds).toEqual(["WP6"]);
+    expect(summary.incompletePackageIds).toEqual(["WP6"]);
+    expect(summary.blockedPackageIds).toEqual([]);
     expect(summary.incompleteGateIds).toEqual([
       "six-role-workflow-e2e",
       "access-privacy-negative-paths",
@@ -166,7 +166,7 @@ describe("release hardening readiness contract", () => {
     expect(wp2?.scope.join(" ")).toContain("Customer observer");
     expect(wp2?.exitCriteria.join(" ")).toContain("Email is sent only");
 
-    expect(wp6?.status).toBe("blocked");
+    expect(wp6?.status).toBe("partial");
     expect(releaseGates.find((gate) => gate.id === "operational-release-drill")?.status).toBe("blocked");
   });
 });

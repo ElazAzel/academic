@@ -88,15 +88,15 @@ export default async function SuperCuratorRisksPage(props: {
           <Table>
             <TableHeader>
               <TableRow className="border-b-m3-outline-variant">
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Студент</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Реальное имя</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Тип</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Уровень</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Куратор</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Поток</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Курс</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Вход</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider text-right">Действия</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Студент</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Реальное имя</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Тип</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Уровень</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Куратор</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Поток</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Курс</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Вход</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking text-right">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

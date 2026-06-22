@@ -28,7 +28,7 @@ export function CourseSettingsPanel({
   if (selected.type === "course") {
     return (
       <div className="space-y-5">
-        <h3 className="text-xs font-semibold uppercase text-muted-foreground">Настройки курса</h3>
+        <h3 className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Настройки курса</h3>
         <div className="space-y-2">
           <span className="text-xs text-muted-foreground">Режим прохождения</span>
           <p className="text-sm font-medium capitalize">{detail.traversalMode === "sequential" ? "Последовательный" : "Свободный"}</p>
@@ -56,7 +56,7 @@ export function CourseSettingsPanel({
           </p>
         </div>
         <div className="space-y-3 rounded-lg border bg-background p-3">
-          <h4 className="text-xs font-semibold uppercase text-muted-foreground">Готовность к публикации</h4>
+          <h4 className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Готовность к публикации</h4>
           {publishChecks.map((check) => {
             const Icon = check.status === "passed" ? CheckCircle2 : XCircle;
             return (
@@ -83,7 +83,7 @@ export function CourseSettingsPanel({
   if (selected.type === "module" && mod) {
     return (
       <div className="space-y-5">
-        <h3 className="text-xs font-semibold uppercase text-muted-foreground">Настройки модуля</h3>
+        <h3 className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Настройки модуля</h3>
         <div className="space-y-2">
           <span className="text-xs text-muted-foreground">Статус</span>
           <p className="text-sm font-medium">{mod.status === "DRAFT" ? "Черновик" : mod.status === "PUBLISHED" ? "Опубликован" : "Архив"}</p>
@@ -107,7 +107,7 @@ export function CourseSettingsPanel({
   if (selected.type === "lesson" && lesson) {
     return (
       <div className="space-y-5">
-        <h3 className="text-xs font-semibold uppercase text-muted-foreground">Настройки урока</h3>
+        <h3 className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Настройки урока</h3>
         <div className="space-y-2">
           <span className="text-xs text-muted-foreground">Тип</span>
           <p className="text-sm font-medium capitalize">{lesson.type === "MIXED" ? "Смешанный" : lesson.type}</p>

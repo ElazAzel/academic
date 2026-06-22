@@ -82,7 +82,7 @@ export function CourseContentsDrawer({
                   {lessonGroups.map((group) => (
                     <div key={group.id} className="space-y-0.5">
                       {hasBlocks && (
-                        <p className="truncate px-2 pt-1 text-[11px] font-semibold uppercase text-m3-on-surface-variant">
+                        <p className="truncate px-2 pt-1 text-[11px] font-semibold uppercase uppercase-tracking text-m3-on-surface-variant">
                           {group.isBlock ? formatOrdinalLabel(group.title, "блок", group.order) : group.title}
                         </p>
                       )}

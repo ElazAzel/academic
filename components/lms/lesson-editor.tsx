@@ -29,7 +29,7 @@ export function LessonEditor({
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="space-y-2">
-        <label htmlFor="lessonTitle" className="text-xs font-semibold uppercase text-muted-foreground">Название урока</label>
+        <label htmlFor="lessonTitle" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Название урока</label>
         <input
           id="lessonTitle"
           className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
@@ -38,7 +38,7 @@ export function LessonEditor({
         />
       </div>
       <div className="space-y-2">
-        <label htmlFor="lessonSummary" className="text-xs font-semibold uppercase text-muted-foreground">Краткое описание</label>
+        <label htmlFor="lessonSummary" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Краткое описание</label>
         <textarea
           id="lessonSummary"
           className="w-full min-h-[80px] rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
@@ -48,7 +48,7 @@ export function LessonEditor({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <label htmlFor="lessonType" className="text-xs font-semibold uppercase text-muted-foreground">Тип</label>
+          <label htmlFor="lessonType" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Тип</label>
           <select
             id="lessonType"
             className="w-full h-10 rounded-lg border bg-background px-3 text-sm"
@@ -64,7 +64,7 @@ export function LessonEditor({
           </select>
         </div>
         <div className="space-y-2">
-          <label htmlFor="durationMinutes" className="text-xs font-semibold uppercase text-muted-foreground">Длительность (мин)</label>
+          <label htmlFor="durationMinutes" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Длительность (мин)</label>
           <input
             id="durationMinutes"
             type="number"
@@ -74,7 +74,7 @@ export function LessonEditor({
           />
         </div>
         <div className="space-y-2">
-          <label htmlFor="isRequired" className="text-xs font-semibold uppercase text-muted-foreground">Обязательный</label>
+          <label htmlFor="isRequired" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Обязательный</label>
           <select
             id="isRequired"
             className="w-full h-10 rounded-lg border bg-background px-3 text-sm"
@@ -88,7 +88,7 @@ export function LessonEditor({
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="videoUrl" className="text-xs font-semibold uppercase text-muted-foreground">URL видео (если применимо)</label>
+        <label htmlFor="videoUrl" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">URL видео (если применимо)</label>
         <input
           id="videoUrl"
           className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
@@ -102,7 +102,7 @@ export function LessonEditor({
       <div className="space-y-4 border-t pt-4">
         {(lesson.quizzes?.length ?? 0) > 0 && (
           <div className="w-full space-y-2">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Тесты в уроке</p>
+            <p className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Тесты в уроке</p>
             <div className="space-y-1.5">
               {(lesson.quizzes ?? []).map((q) => (
                 <div key={q.id} className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm">
@@ -127,7 +127,7 @@ export function LessonEditor({
         
         {(lesson.assignments?.length ?? 0) > 0 && (
           <div className="w-full space-y-2">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Задания в уроке</p>
+            <p className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Задания в уроке</p>
             <div className="space-y-1.5">
               {(lesson.assignments ?? []).map((a) => (
                 <div key={a.id} className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm">

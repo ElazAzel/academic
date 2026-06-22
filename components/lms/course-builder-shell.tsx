@@ -424,7 +424,7 @@ export function CourseBuilderShell({
                 {selected.type === "course" && (
                   <div className="mx-auto max-w-3xl space-y-4 md:space-y-6">
                     <div className="space-y-2">
-                      <label htmlFor="courseTitle" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название курса</label>
+                      <label htmlFor="courseTitle" className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Название курса</label>
                       <input
                         id="courseTitle"
                         name="courseTitle"
@@ -434,7 +434,7 @@ export function CourseBuilderShell({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="description" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
+                      <label htmlFor="description" className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Описание</label>
                       <textarea
                         id="description"
                         name="description"
@@ -445,7 +445,7 @@ export function CourseBuilderShell({
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <label htmlFor="goal" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Цель</label>
+                        <label htmlFor="goal" className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Цель</label>
                         <input
                           id="goal"
                           name="goal"
@@ -455,7 +455,7 @@ export function CourseBuilderShell({
                         />
                       </div>
                       <div className="space-y-2">
-                        <label htmlFor="durationHours" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Длительность, часов</label>
+                        <label htmlFor="durationHours" className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Длительность, часов</label>
                         <input
                           id="durationHours"
                           name="durationHours"
@@ -466,7 +466,7 @@ export function CourseBuilderShell({
                         />
                       </div>
                       <div className="space-y-2">
-                        <label htmlFor="traversalMode" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Режим прохождения</label>
+                        <label htmlFor="traversalMode" className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Режим прохождения</label>
                         <select
                           id="traversalMode"
                           name="traversalMode"
@@ -479,7 +479,7 @@ export function CourseBuilderShell({
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label htmlFor="completionThreshold" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Порог завершения, %</label>
+                        <label htmlFor="completionThreshold" className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Порог завершения, %</label>
                         <input
                           id="completionThreshold"
                           name="completionThreshold"
@@ -491,7 +491,7 @@ export function CourseBuilderShell({
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="cover-upload" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Обложка</label>
+                      <label htmlFor="cover-upload" className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Обложка</label>
                       {detail.coverUrl && (
                         <div className="relative mb-2 overflow-hidden rounded-lg">
                           <Image src={detail.coverUrl} alt="Обложка курса" width={512} height={128} className="h-32 w-full object-cover" />
@@ -547,7 +547,7 @@ export function CourseBuilderShell({
                 {selected.type === "block" && selectedBlock && (
                   <div className="mx-auto max-w-2xl space-y-6">
                     <div className="space-y-2">
-                      <label htmlFor="blockTitle" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Название блока</label>
+                      <label htmlFor="blockTitle" className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Название блока</label>
                       <input
                         id="blockTitle"
                         name="blockTitle"
@@ -567,7 +567,7 @@ export function CourseBuilderShell({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="blockDescription" className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Описание</label>
+                      <label htmlFor="blockDescription" className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Описание</label>
                       <textarea
                         id="blockDescription"
                         name="blockDescription"

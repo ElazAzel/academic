@@ -67,11 +67,11 @@ export function CreateCourseForm({
     <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-6">
       <h3 className="text-lg font-semibold">Новый курс</h3>
       <div className="space-y-1">
-        <label htmlFor="title" className="text-xs font-medium uppercase text-muted-foreground">Название</label>
+        <label htmlFor="title" className="text-xs font-medium uppercase uppercase-tracking text-muted-foreground">Название</label>
         <Input id="title" name="title" required minLength={3} placeholder="Напр: Основы AI" />
       </div>
       <div className="space-y-1">
-        <label htmlFor="description" className="text-xs font-medium uppercase text-muted-foreground">Описание</label>
+        <label htmlFor="description" className="text-xs font-medium uppercase uppercase-tracking text-muted-foreground">Описание</label>
         <textarea
           id="description"
           name="description"
@@ -83,11 +83,11 @@ export function CreateCourseForm({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label htmlFor="durationHours" className="text-xs font-medium uppercase text-muted-foreground">Часы</label>
+          <label htmlFor="durationHours" className="text-xs font-medium uppercase uppercase-tracking text-muted-foreground">Часы</label>
           <Input id="durationHours" name="durationHours" type="number" required min={0} defaultValue="10" />
         </div>
         <div className="space-y-1">
-          <label htmlFor="traversalMode" className="text-xs font-medium uppercase text-muted-foreground">Режим</label>
+          <label htmlFor="traversalMode" className="text-xs font-medium uppercase uppercase-tracking text-muted-foreground">Режим</label>
           <select id="traversalMode" name="traversalMode" className="h-10 w-full rounded-lg border bg-background px-3 text-sm">
             <option value="sequential">Последовательный</option>
             <option value="open">Свободный</option>

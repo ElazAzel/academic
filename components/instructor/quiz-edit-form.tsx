@@ -367,15 +367,15 @@ export function QuizEditForm({ quiz, courseId }: QuizEditFormProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="title" className="text-xs font-semibold uppercase text-muted-foreground">Название теста</label>
+                  <label htmlFor="title" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Название теста</label>
                   <Input id="title" name="title" defaultValue={quiz.title} required />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="passThreshold" className="text-xs font-semibold uppercase text-muted-foreground">Порог прохождения (%)</label>
+                  <label htmlFor="passThreshold" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Порог прохождения (%)</label>
                   <Input id="passThreshold" name="passThreshold" type="number" min={0} max={100} defaultValue={quiz.passThreshold} />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="maxAttempts" className="text-xs font-semibold uppercase text-muted-foreground">Макс. попыток</label>
+                  <label htmlFor="maxAttempts" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Макс. попыток</label>
                   <Input id="maxAttempts" name="maxAttempts" type="number" min={1} defaultValue={quiz.maxAttempts} />
                 </div>
               </CardContent>

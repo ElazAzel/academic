@@ -6,7 +6,7 @@ export function MetricGridSkeleton() {
   return (
     <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6">
       {Array.from({ length: 6 }).map((_, i) => (
-        <Card key={i} className="rounded-lg border-l-4 border-l-m3-outline-variant">
+        <Card key={i} className="rounded-lg">
           <CardHeader className="pb-2">
             <Skeleton className="h-3 w-24" />
             <Skeleton className="mt-3 h-11 w-20" />

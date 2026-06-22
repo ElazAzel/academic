@@ -152,7 +152,7 @@ export function StudentAchievements({ xp, levelInfo, coursesProgress, questionsC
                 <div
                   key={item.day}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-lg border py-1.5 text-[10px] font-semibold uppercase",
+                    "flex flex-col items-center gap-1 rounded-lg border py-1.5 text-[10px] font-semibold uppercase uppercase-tracking",
                     item.active
                       ? "border-m3-primary-fixed-dim bg-m3-primary-fixed/20 text-m3-primary"
                       : "border-transparent bg-muted/30 text-muted-foreground",

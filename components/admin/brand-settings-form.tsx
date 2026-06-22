@@ -463,7 +463,7 @@ export function BrandSettingsForm({
                         onChange={(e) => (setter as (v: string) => void)(e.target.value)}
                         required
                       />
-                      <code className="rounded-md border bg-muted px-2 py-1 font-mono text-xs uppercase text-muted-foreground">{value as string}</code>
+                      <code className="rounded-md border bg-muted px-2 py-1 font-mono text-xs uppercase uppercase-tracking text-muted-foreground">{value as string}</code>
                     </div>
                   </div>
                 ))}
@@ -493,7 +493,7 @@ export function BrandSettingsForm({
                         onChange={(e) => (setter as (v: string) => void)(e.target.value)}
                         required
                       />
-                      <code className="rounded-md border bg-muted px-2 py-1 font-mono text-xs uppercase text-muted-foreground">{value as string}</code>
+                      <code className="rounded-md border bg-muted px-2 py-1 font-mono text-xs uppercase uppercase-tracking text-muted-foreground">{value as string}</code>
                     </div>
                   </div>
                 ))}

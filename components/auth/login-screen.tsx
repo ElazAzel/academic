@@ -127,15 +127,15 @@ export function LoginScreen({
           variants={itemVariants}
           className="mt-lg flex flex-wrap justify-center gap-x-md gap-y-xs rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest/50 px-4 py-3 text-body-sm font-body-sm text-m3-on-surface-variant/60 backdrop-blur-md"
         >
-          <Link href="/privacy" className="transition-colors hover:text-m3-primary hover:underline">
+          <Link href="/privacy" className="transition-colors hover:text-m3-on-surface-variant hover:underline">
             Политика конфиденциальности
           </Link>
           <span className="hidden text-m3-outline-variant/40 md:inline">•</span>
-          <Link href="/terms" className="transition-colors hover:text-m3-primary hover:underline">
+          <Link href="/terms" className="transition-colors hover:text-m3-on-surface-variant hover:underline">
             Условия использования
           </Link>
           <span className="hidden text-m3-outline-variant/40 md:inline">•</span>
-          <Link href="/docs/cookie-notice" className="transition-colors hover:text-m3-primary hover:underline">
+          <Link href="/docs/cookie-notice" className="transition-colors hover:text-m3-on-surface-variant hover:underline">
             Файлы Cookie
           </Link>
         </motion.footer>

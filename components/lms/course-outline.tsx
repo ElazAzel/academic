@@ -260,7 +260,7 @@ export function CourseOutline({
 
       {/* Collapse/Expand header */}
       <div className="flex items-center justify-between px-3 pt-1 pb-1">
-        <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Структура</span>
+        <span className="text-[10px] font-semibold uppercase uppercase-tracking text-muted-foreground">Структура</span>
         <div className="flex gap-1">
           <button
             onClick={() => {

@@ -9,7 +9,7 @@
   /* shadcn/ui semantic tokens (HSL) — warmer, more vibrant */
   --background: 220 20% 98%;
   --foreground: 222 20% 10%;
-  --card: 0 0% 100%;
+  --card: 0 0% 99%;
   --card-foreground: 222 20% 10%;
   --primary: 224 76% 32%;
   --primary-foreground: 0 0% 100%;
@@ -30,7 +30,7 @@
   --m3-surface: #f8f9fc;
   --m3-surface-dim: #dce2eb;
   --m3-surface-bright: #fcfcfe;
-  --m3-surface-container-lowest: #ffffff;
+  --m3-surface-container-lowest: #fcfcfc;
   --m3-surface-container-low: #f3f5f9;
   --m3-surface-container: #ebeff5;
   --m3-surface-container-high: #e3e8f0;
@@ -638,4 +638,15 @@ img[loading="lazy"]:not([src=""]) {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ── Typography craft: ALL CAPS tracking ────────────────────────────── */
+/* Open Design typography craft rule: ALL CAPS requires 0.06em–0.1em letter-spacing.
+   Use this class on any text-transform: uppercase element that is not a single character.
+   Tailwind equivalents: tracking-widest = 0.1em (✔), tracking-wider = 0.05em (✘ too low). */
+
+@layer utilities {
+  .uppercase-tracking {
+    letter-spacing: 0.06em;
+  }
 }

@@ -85,11 +85,11 @@ export function ModuleEditForm({ module }: ModuleEditFormProps) {
         <CardContent className="space-y-6 pt-6">
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="title" className="text-xs font-semibold uppercase text-muted-foreground">Название модуля *</label>
+              <label htmlFor="title" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Название модуля *</label>
               <Input id="title" name="title" defaultValue={module.title} required minLength={2} />
             </div>
             <div className="space-y-2">
-              <label htmlFor="status" className="text-xs font-semibold uppercase text-muted-foreground">Статус</label>
+              <label htmlFor="status" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Статус</label>
               <select id="status" name="status" defaultValue={module.status} className="w-full h-10 rounded-lg border bg-background px-3 text-sm">
                 <option value="DRAFT">Черновик</option>
                 <option value="PUBLISHED">Опубликован</option>
@@ -99,7 +99,7 @@ export function ModuleEditForm({ module }: ModuleEditFormProps) {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="description" className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
+            <label htmlFor="description" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Описание</label>
             <textarea
               id="description"
               name="description"
@@ -109,7 +109,7 @@ export function ModuleEditForm({ module }: ModuleEditFormProps) {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="recommendedDays" className="text-xs font-semibold uppercase text-muted-foreground">Рекомендуемых дней на прохождение</label>
+            <label htmlFor="recommendedDays" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Рекомендуемых дней на прохождение</label>
             <Input id="recommendedDays" name="recommendedDays" type="number" min={1} defaultValue={module.recommendedDays} />
           </div>
         </CardContent>

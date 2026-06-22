@@ -22,6 +22,8 @@ import {
   EyeOff,
   Layers,
   Palette,
+  Leaf,
+  Sparkle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,13 +92,13 @@ const PRESET_THEMES = [
   {
     name: "nature",
     label: "Природа",
-    icon: "🌿",
+    icon: "leaf",
     colors: { studentName: "#166534", courseTitle: "#1a1a1a", durationHours: "#333333", serialNumber: "#808080", issuedAt: "#808080" },
   },
   {
     name: "modern",
     label: "Современный",
-    icon: "✨",
+    icon: "sparkle",
     colors: { studentName: "#0f172a", courseTitle: "#334155", durationHours: "#475569", serialNumber: "#94a3b8", issuedAt: "#94a3b8" },
   },
 ];
@@ -986,7 +988,7 @@ export function CertificateDesigner({ courseId, backUrl }: CertificateDesignerPr
                     className="flex flex-col items-center gap-1 p-2 rounded-lg border hover:bg-muted/20 transition-colors"
                     title={theme.label}
                   >
-                    <span className="text-lg">{theme.icon}</span>
+                    {theme.icon === "leaf" ? <Leaf className="h-5 w-5 text-m3-primary" /> : <Sparkle className="h-5 w-5 text-m3-primary" />}
                     <span className="text-xs font-medium">{theme.label}</span>
                     <div className="flex gap-0.5 mt-1">
                       {Object.values(theme.colors).map((c, i) => (

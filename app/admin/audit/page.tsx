@@ -123,7 +123,7 @@ export default async function AdminAuditPage(props: {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium">{label}</span>
-                    <Badge className="text-[10px] uppercase bg-secondary/50">{entity}</Badge>
+                    <Badge className="text-[10px] uppercase uppercase-tracking bg-secondary/50">{entity}</Badge>
                     {log.entityId && (
                       <code className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
                         #{log.entityId.slice(0, 8)}

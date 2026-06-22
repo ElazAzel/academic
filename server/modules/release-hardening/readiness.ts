@@ -149,7 +149,7 @@ export const releaseWorkPackages = [
   {
     id: "WP1",
     title: "Six-role Scenario Proof",
-    status: "partial",
+    status: "done",
     owners: ["qa-release", "product-owner", "frontend-lms-ux"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-qa-release", "multi-agent-review"],
@@ -176,7 +176,7 @@ export const releaseWorkPackages = [
   {
     id: "WP2",
     title: "Access, Privacy, Ownership Hardening",
-    status: "partial",
+    status: "done",
     owners: ["security-privacy", "backend-next-prisma"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-implementation", "lms-qa-release", "multi-agent-review"],
@@ -240,7 +240,7 @@ export const releaseWorkPackages = [
   {
     id: "WP4",
     title: "Role Workspace UX Optimization",
-    status: "partial",
+    status: "done",
     owners: ["frontend-lms-ux", "product-owner"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-qa-release", "multi-agent-review"],
@@ -268,7 +268,7 @@ export const releaseWorkPackages = [
   {
     id: "WP5",
     title: "Reporting, Analytics, Certificates, Notifications Proof",
-    status: "partial",
+    status: "done",
     owners: ["data-analytics", "security-privacy", "qa-release"],
     productRoles: allRoles,
     projectSkills: ["lms-domain-rules", "lms-implementation", "lms-qa-release"],
@@ -295,7 +295,7 @@ export const releaseWorkPackages = [
   {
     id: "WP6",
     title: "DevOps, Release, Backup, Observability",
-    status: "blocked",
+    status: "partial",
     owners: ["devops-platform", "qa-release"],
     productRoles: allRoles,
     projectSkills: ["lms-qa-release", "lms-orchestrator", "multi-agent-review"],

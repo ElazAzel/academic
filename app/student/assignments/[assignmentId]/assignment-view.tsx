@@ -194,7 +194,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
 
             {submission.fileUrl ? (
               <div className="rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-4">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-2 text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">
                   Прикреплённый файл:
                 </p>
                 <div className="flex items-center gap-2">
@@ -213,7 +213,7 @@ export function AssignmentView({ assignment }: { assignment: StudentAssignmentDe
 
             {submission.feedback ? (
               <div className="rounded-lg bg-muted/50 p-4">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-2 text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">
                   Комментарий куратора:
                 </p>
                 <p className="text-sm italic">{submission.feedback}</p>

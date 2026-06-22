@@ -51,7 +51,7 @@ export function EnrollStudentForm({ data, onSuccess }: EnrollStudentFormProps) {
       <h3 className="text-lg font-semibold">Зачислить слушателя</h3>
       
       <div className="space-y-2">
-        <label htmlFor="userId" className="text-xs font-medium text-muted-foreground uppercase">Слушатель</label>
+        <label htmlFor="userId" className="text-xs font-medium text-muted-foreground uppercase uppercase-tracking">Слушатель</label>
         <select id="userId" name="userId" required className="w-full h-10 rounded-lg border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20">
           <option value="">Выберите слушателя...</option>
           {data.students.map(s => (
@@ -61,7 +61,7 @@ export function EnrollStudentForm({ data, onSuccess }: EnrollStudentFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="courseId" className="text-xs font-medium text-muted-foreground uppercase">Курс</label>
+        <label htmlFor="courseId" className="text-xs font-medium text-muted-foreground uppercase uppercase-tracking">Курс</label>
         <select 
           id="courseId"
           name="courseId" 
@@ -78,7 +78,7 @@ export function EnrollStudentForm({ data, onSuccess }: EnrollStudentFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="cohortId" className="text-xs font-medium text-muted-foreground uppercase">Поток (необязательно)</label>
+        <label htmlFor="cohortId" className="text-xs font-medium text-muted-foreground uppercase uppercase-tracking">Поток (необязательно)</label>
         <select id="cohortId" name="cohortId" className="w-full h-10 rounded-lg border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20">
           <option value="">Без потока</option>
           {filteredCohorts.map(c => (
@@ -88,7 +88,7 @@ export function EnrollStudentForm({ data, onSuccess }: EnrollStudentFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="curatorId" className="text-xs font-medium text-muted-foreground uppercase">Куратор (необязательно)</label>
+        <label htmlFor="curatorId" className="text-xs font-medium text-muted-foreground uppercase uppercase-tracking">Куратор (необязательно)</label>
         <select id="curatorId" name="curatorId" className="w-full h-10 rounded-lg border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20">
           <option value="">Без куратора</option>
           {data.curators.map(c => (

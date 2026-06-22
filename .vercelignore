@@ -1,0 +1,28 @@
+# Игнорировать при деплое (дублирует .gitignore — .vercelignore переопределяет .gitignore)
+node_modules/
+.next/
+out/
+dist/
+coverage/
+playwright-report/
+test-results/
+.env
+.env*.local
+.vercel/
+.mcp.json
+*.tsbuildinfo
+*.log
+.codex-temp/
+next-env.d.ts
+storage/
+tmp/
+.tmp/
+var/
+scratch/
+test-*.pdf
+
+# Дизайн-кит Open Design — не рантайм зависимости
+open-design/
+
+# Микросервисные заглушки (не компилируются)
+services/

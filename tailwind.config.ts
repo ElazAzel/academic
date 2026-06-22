@@ -95,24 +95,31 @@ const config: Config = {
       },
 
       fontSize: {
-        /* M3 type scale */
-        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+        /* M3 type scale — typography craft rules applied:
+           - Display 48px+ → -0.02em to -0.03em (letter-spacing: -0.02em)
+           - Headings 32px+ → -0.01em to -0.02em
+           - Small text 11-13px → 0.01em to 0.02em
+           - UI labels & button text → 0.02em
+           - ALL CAPS → handled via uppercase-tracking utility (≥0.06em)  */
+        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "600" }],
         "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
         "headline-lg-mobile": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }],
         "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }],
-        "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "600" }],
-        "title-lg": ["18px", { lineHeight: "26px", fontWeight: "600" }],
-        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
-        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
-        "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
-        "body-xs": ["12px", { lineHeight: "16px", letterSpacing: "0.4px", fontWeight: "400" }],
-        "label-lg": ["14px", { lineHeight: "16px", letterSpacing: "0", fontWeight: "600" }],
-        "label-md": ["12px", { lineHeight: "14px", letterSpacing: "0", fontWeight: "500" }],
-        "mono-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+        "headline-sm": ["20px", { lineHeight: "28px", letterSpacing: "-0.005em", fontWeight: "600" }],
+        "title-lg": ["18px", { lineHeight: "26px", letterSpacing: "0.01em", fontWeight: "600" }],
+        "body-lg": ["18px", { lineHeight: "28px", letterSpacing: "0", fontWeight: "400" }],
+        "body-md": ["16px", { lineHeight: "24px", letterSpacing: "0", fontWeight: "400" }],
+        "body-sm": ["14px", { lineHeight: "20px", letterSpacing: "0", fontWeight: "400" }],
+        "body-xs": ["12px", { lineHeight: "16px", letterSpacing: "0.015em", fontWeight: "400" }],
+        "label-lg": ["14px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }],
+        "label-md": ["12px", { lineHeight: "14px", letterSpacing: "0.02em", fontWeight: "500" }],
+        "mono-sm": ["13px", { lineHeight: "18px", letterSpacing: "0", fontWeight: "400" }],
       },
 
       fontWeight: {
-        "display-lg": "700",
+        /* 3-weight system (Open Design typography craft):
+           400 = Read (body), 500/510 = Emphasize (UI/labels), 600 = Announce (headings) */
+        "display-lg": "600",
         "headline-lg": "600",
         "headline-lg-mobile": "600",
         "headline-md": "600",

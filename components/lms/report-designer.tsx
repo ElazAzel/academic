@@ -325,7 +325,7 @@ export function ReportDesigner({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <span className="text-xs font-semibold uppercase text-muted-foreground">Тип отчёта</span>
+          <span className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Тип отчёта</span>
           <div className="flex flex-wrap gap-2">
             {allowedReportDefs.map((t) => (
               <button
@@ -355,7 +355,7 @@ export function ReportDesigner({
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Колонки ({selectedColumns.size})</label>
+            <label className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Колонки ({selectedColumns.size})</label>
             <div className="flex gap-2 text-xs">
               <button onClick={selectAll} className="text-primary hover:underline">Все</button>
               <button onClick={deselectAll} className="text-muted-foreground hover:underline">Сбросить</button>
@@ -384,7 +384,7 @@ export function ReportDesigner({
         </div>
 
         <div className="space-y-2">
-          <span className="text-xs font-semibold uppercase text-muted-foreground">Формат</span>
+          <span className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Формат</span>
           <div className="flex gap-2">
             {FORMATS.map((f) => {
               const FmtIcon = f.icon;
@@ -411,7 +411,7 @@ export function ReportDesigner({
           <div className="mt-4 border-t pt-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase text-muted-foreground">
+                <span className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">
                   Предварительный просмотр (первые 5 строк)
                 </span>
                 {totalRowsCount !== null && (

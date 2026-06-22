@@ -69,11 +69,11 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="space-y-2">
-          <label htmlFor="title" className="text-xs font-semibold uppercase text-muted-foreground">Название курса</label>
+          <label htmlFor="title" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Название курса</label>
           <Input id="title" name="title" defaultValue={course.title} required minLength={3} />
         </div>
         <div className="space-y-2">
-          <label htmlFor="status" className="text-xs font-semibold uppercase text-muted-foreground">Статус</label>
+          <label htmlFor="status" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Статус</label>
           <select id="status" name="status" defaultValue={course.status} className="w-full h-10 rounded-lg border bg-background px-3 text-sm">
             <option value="DRAFT">Черновик</option>
             <option value="PUBLISHED">Опубликован</option>
@@ -83,7 +83,7 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="description" className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
+        <label htmlFor="description" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Описание</label>
         <textarea
           id="description"
           name="description"
@@ -96,25 +96,25 @@ export function CourseEditForm({ course }: CourseEditFormProps) {
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="space-y-2">
-          <label htmlFor="goal" className="text-xs font-semibold uppercase text-muted-foreground">Главная цель</label>
+          <label htmlFor="goal" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Главная цель</label>
           <Input id="goal" name="goal" defaultValue={course.goal || ""} />
         </div>
         <div className="space-y-2">
-          <label htmlFor="durationHours" className="text-xs font-semibold uppercase text-muted-foreground">Длительность (часов)</label>
+          <label htmlFor="durationHours" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Длительность (часов)</label>
           <Input id="durationHours" name="durationHours" type="number" min={0} defaultValue={course.durationHours} />
         </div>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="space-y-2">
-          <label htmlFor="traversalMode" className="text-xs font-semibold uppercase text-muted-foreground">Режим прохождения</label>
+          <label htmlFor="traversalMode" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Режим прохождения</label>
           <select id="traversalMode" name="traversalMode" defaultValue={course.traversalMode} className="w-full h-10 rounded-lg border bg-background px-3 text-sm">
             <option value="sequential">Последовательный</option>
             <option value="open">Свободный</option>
           </select>
         </div>
         <div className="space-y-2">
-          <label htmlFor="coverUrl" className="text-xs font-semibold uppercase text-muted-foreground">URL обложки</label>
+          <label htmlFor="coverUrl" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">URL обложки</label>
           <Input id="coverUrl" name="coverUrl" defaultValue={course.coverUrl || ""} placeholder="https://..." />
         </div>
       </div>

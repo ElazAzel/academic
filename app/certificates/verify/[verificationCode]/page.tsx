@@ -51,27 +51,27 @@ export default async function CertificateVerificationPage({
             {certificate ? (
               <dl className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-lg border bg-white p-4">
-                  <dt className="text-xs uppercase text-muted-foreground">Номер</dt>
+                  <dt className="text-xs uppercase uppercase-tracking text-muted-foreground">Номер</dt>
                   <dd className="mt-1 font-medium">{certificate.number}</dd>
                 </div>
                 <div className="rounded-lg border bg-white p-4">
-                  <dt className="text-xs uppercase text-muted-foreground">Дата выдачи</dt>
+                  <dt className="text-xs uppercase uppercase-tracking text-muted-foreground">Дата выдачи</dt>
                   <dd className="mt-1 font-medium">{certificate.issuedAt.toISOString().slice(0, 10)}</dd>
                 </div>
                 <div className="rounded-lg border bg-white p-4">
-                  <dt className="text-xs uppercase text-muted-foreground">Слушатель</dt>
+                  <dt className="text-xs uppercase uppercase-tracking text-muted-foreground">Слушатель</dt>
                   <dd className="mt-1 font-medium">{certificate.studentName}</dd>
                 </div>
                 <div className="rounded-lg border bg-white p-4">
-                  <dt className="text-xs uppercase text-muted-foreground">Курс</dt>
+                  <dt className="text-xs uppercase uppercase-tracking text-muted-foreground">Курс</dt>
                   <dd className="mt-1 font-medium">{certificate.courseTitle}</dd>
                 </div>
                 <div className="rounded-lg border bg-white p-4">
-                  <dt className="text-xs uppercase text-muted-foreground">Часы</dt>
+                  <dt className="text-xs uppercase uppercase-tracking text-muted-foreground">Часы</dt>
                   <dd className="mt-1 font-medium">{certificate.durationHours}</dd>
                 </div>
                 <div className="rounded-lg border bg-white p-4">
-                  <dt className="text-xs uppercase text-muted-foreground">Статус</dt>
+                  <dt className="text-xs uppercase uppercase-tracking text-muted-foreground">Статус</dt>
                   <dd className="mt-1 font-medium">{certificate.revokedAt ? "Отозван" : "Действителен"}</dd>
                 </div>
               </dl>

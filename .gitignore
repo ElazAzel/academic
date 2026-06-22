@@ -24,3 +24,6 @@ scratch/
 
 test-*.pdf
 .vercel
+
+# Дизайн-кит Open Design (2.37 GB — не рантайм)
+open-design/

@@ -235,7 +235,7 @@ function SectionGroup({ title, icon: Icon, children }: { title: string; icon: Re
     <div>
       <div className="flex items-center gap-2 px-1 py-1.5">
         <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
+        <span className="text-xs font-medium text-muted-foreground uppercase uppercase-tracking">{title}</span>
       </div>
       <div className="space-y-0.5">{children}</div>
     </div>

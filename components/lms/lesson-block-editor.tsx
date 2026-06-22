@@ -293,7 +293,7 @@ export function LessonBlockEditor({
             <div className="flex items-center gap-2">
               <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground cursor-grab hover:text-foreground" />
               <Icon className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs font-medium text-muted-foreground uppercase">{BLOCK_LABELS[block.type]}</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase uppercase-tracking">{BLOCK_LABELS[block.type]}</span>
               <div className="flex-1" />
               {/* Toggle edit/preview */}
               <button

@@ -69,7 +69,7 @@ export default async function SuperCuratorCuratorsPage() {
 
                   {cur.lastActions.length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Последние действия</p>
+                      <p className="text-[10px] font-medium text-muted-foreground uppercase uppercase-tracking">Последние действия</p>
                       {cur.lastActions.slice(0, 3).map((a, i) => (
                         <p key={i} className="text-xs text-muted-foreground truncate">
                           {a.action} — {new Date(a.createdAt).toLocaleDateString("ru")}

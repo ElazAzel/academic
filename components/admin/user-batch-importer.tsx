@@ -234,7 +234,7 @@ export function UserBatchImporter({
               {/* Left Column: Config */}
               <div className="space-y-4">
                 <fieldset className="space-y-2">
-                  <legend className="text-xs font-bold uppercase text-muted-foreground tracking-wider flex items-center gap-1">
+                  <legend className="text-xs font-bold uppercase uppercase-tracking text-muted-foreground flex items-center gap-1">
                     Роли по умолчанию
                     <span title="Будут назначены пользователям, если роль не указана в строке CSV">
                       <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help" />
@@ -271,7 +271,7 @@ export function UserBatchImporter({
                 </fieldset>
 
                 <div className="space-y-2">
-                  <label htmlFor="cohort" className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
+                  <label htmlFor="cohort" className="text-xs font-bold uppercase uppercase-tracking text-muted-foreground">
                     Автоматически зачислить в поток
                   </label>
                   <select 
@@ -327,7 +327,7 @@ export function UserBatchImporter({
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <label htmlFor="csvText" className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
+                    <label htmlFor="csvText" className="text-xs font-bold uppercase uppercase-tracking text-muted-foreground">
                       Или вставьте текст вручную
                     </label>
                     <span className="text-[10px] text-muted-foreground">Шаблон: email, Имя Фамилия</span>
@@ -532,7 +532,7 @@ export function UserBatchImporter({
 
             {/* In-depth list of results */}
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Подробный лог импорта</h4>
+              <h4 className="text-xs font-bold uppercase uppercase-tracking text-muted-foreground">Подробный лог импорта</h4>
               <div className="border rounded-lg overflow-hidden max-h-[250px] overflow-y-auto">
                 <Table>
                   <TableHeader className="bg-muted/30">

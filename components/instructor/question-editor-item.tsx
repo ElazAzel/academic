@@ -102,7 +102,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{data.prompt}</p>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] uppercase text-muted-foreground">{data.type === "SINGLE_CHOICE" ? "1 вариант" : data.type === "MULTIPLE_CHOICE" ? "N вариантов" : "Краткий ответ"}</span>
+            <span className="text-[10px] uppercase uppercase-tracking text-muted-foreground">{data.type === "SINGLE_CHOICE" ? "1 вариант" : data.type === "MULTIPLE_CHOICE" ? "N вариантов" : "Краткий ответ"}</span>
             <span className="text-[10px] text-muted-foreground">· {data.points} балл(ов)</span>
             {data.type !== "TEXT" && options.length > 0 && (
               <span className="text-[10px] text-emerald-700">
@@ -120,7 +120,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
       {isExpanded && (
         <div className="p-4 border-t bg-card space-y-4">
           <div className="space-y-2">
-            <label htmlFor="prompt" className="text-xs font-semibold uppercase text-muted-foreground">Текст вопроса</label>
+            <label htmlFor="prompt" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Текст вопроса</label>
             <textarea
               id="prompt"
               className="w-full min-h-[80px] rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
@@ -131,7 +131,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="type" className="text-xs font-semibold uppercase text-muted-foreground">Тип</label>
+              <label htmlFor="type" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Тип</label>
               <select
                 id="type"
                 className="w-full h-10 rounded-lg border bg-background px-3 text-sm"
@@ -144,7 +144,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
               </select>
             </div>
             <div className="space-y-2">
-              <label htmlFor="points" className="text-xs font-semibold uppercase text-muted-foreground">Баллы</label>
+              <label htmlFor="points" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Баллы</label>
               <Input
                 id="points"
                 type="number"
@@ -156,7 +156,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
 
           {data.type !== "TEXT" && (
             <div className="space-y-3 pt-2">
-              <label htmlFor="options" className="text-xs font-semibold uppercase text-muted-foreground">Варианты ответов</label>
+              <label htmlFor="options" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Варианты ответов</label>
               {options.map((opt, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <div 
@@ -192,7 +192,7 @@ export function QuestionEditorItem({ question, onUpdate, onDelete }: {
 
           {data.type === "TEXT" && (
             <div className="space-y-2 pt-2">
-              <label htmlFor="correctAnswer" className="text-xs font-semibold uppercase text-muted-foreground">Правильный ответ</label>
+              <label htmlFor="correctAnswer" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Правильный ответ</label>
               <Input
                 id="correctAnswer"
                 value={correctAnswer.value || ""} 

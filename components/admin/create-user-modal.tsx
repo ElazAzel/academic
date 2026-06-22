@@ -46,15 +46,15 @@ export function CreateUserModal({
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-2">
-            <label htmlFor="name" className="text-xs font-semibold uppercase text-muted-foreground">Имя</label>
+            <label htmlFor="name" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Имя</label>
             <Input id="name" name="name" placeholder="Иван Иванов" />
           </div>
           <div className="space-y-2">
-            <label htmlFor="email" className="text-xs font-semibold uppercase text-muted-foreground">Эл. почта</label>
+            <label htmlFor="email" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Эл. почта</label>
             <Input id="email" name="email" type="email" required placeholder="ivan@example.com" />
           </div>
           <fieldset className="space-y-2">
-            <legend className="text-xs font-semibold uppercase text-muted-foreground">Роли</legend>
+            <legend className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Роли</legend>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {assignableRoles.map((role) => (
                 <label key={role} className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted/50 cursor-pointer text-sm">

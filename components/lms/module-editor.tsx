@@ -12,7 +12,7 @@ export function ModuleEditor({
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="space-y-2">
-        <label htmlFor="moduleTitle" className="text-xs font-semibold uppercase text-muted-foreground">Название модуля</label>
+        <label htmlFor="moduleTitle" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Название модуля</label>
         <input
           id="moduleTitle"
           className="w-full rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
@@ -21,7 +21,7 @@ export function ModuleEditor({
         />
       </div>
       <div className="space-y-2">
-        <label htmlFor="moduleDescription" className="text-xs font-semibold uppercase text-muted-foreground">Описание</label>
+        <label htmlFor="moduleDescription" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Описание</label>
         <textarea
           id="moduleDescription"
           className="w-full min-h-[100px] rounded-lg border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
@@ -31,7 +31,7 @@ export function ModuleEditor({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label htmlFor="moduleOrder" className="text-xs font-semibold uppercase text-muted-foreground">Порядок</label>
+          <label htmlFor="moduleOrder" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Порядок</label>
           <input
             id="moduleOrder"
             type="number"
@@ -41,7 +41,7 @@ export function ModuleEditor({
           />
         </div>
         <div className="space-y-2">
-          <label htmlFor="recommendedDays" className="text-xs font-semibold uppercase text-muted-foreground">Рекомендуемых дней</label>
+          <label htmlFor="recommendedDays" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Рекомендуемых дней</label>
           <input
             id="recommendedDays"
             type="number"

@@ -290,7 +290,7 @@ export function CurriculumEditor({ courseId, initialModules }: CurriculumEditorP
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{lesson.title}</p>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{lesson.type}</p>
+                      <p className="text-[10px] uppercase uppercase-tracking text-muted-foreground">{lesson.type}</p>
                     </div>
                     <div className="flex items-center gap-1 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
                       <Button size="sm" variant="ghost" asChild>

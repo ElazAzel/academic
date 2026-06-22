@@ -79,11 +79,11 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
       <CardContent className="space-y-6 pt-6">
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
-            <label htmlFor="title" className="text-xs font-semibold uppercase text-muted-foreground">Название урока *</label>
+            <label htmlFor="title" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Название урока *</label>
             <Input id="title" name="title" defaultValue={lesson.title} required minLength={2} />
           </div>
           <div className="space-y-2">
-            <label htmlFor="type" className="text-xs font-semibold uppercase text-muted-foreground">Тип урока</label>
+            <label htmlFor="type" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Тип урока</label>
             <select id="type" name="type" defaultValue={lesson.type} className="w-full h-10 rounded-lg border bg-background px-3 text-sm">
               <option value="VIDEO">Видео</option>
               <option value="TEXT">Текст</option>
@@ -97,7 +97,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
 
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
-            <label htmlFor="durationMinutes" className="text-xs font-semibold uppercase text-muted-foreground">Длительность (мин.)</label>
+            <label htmlFor="durationMinutes" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Длительность (мин.)</label>
             <Input id="durationMinutes" name="durationMinutes" type="number" min={0} defaultValue={lesson.durationMinutes} />
           </div>
           <div className="flex items-center gap-2 pt-8">
@@ -107,12 +107,12 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="videoUrl" className="text-xs font-semibold uppercase text-muted-foreground">URL видео (если применимо)</label>
+          <label htmlFor="videoUrl" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">URL видео (если применимо)</label>
           <Input id="videoUrl" name="videoUrl" defaultValue={lesson.videoUrl || ""} placeholder="https://..." />
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="summary" className="text-xs font-semibold uppercase text-muted-foreground">Краткое описание (summary)</label>
+          <label htmlFor="summary" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Краткое описание (summary)</label>
           <textarea
             id="summary"
             name="summary"
@@ -122,7 +122,7 @@ export function LessonEditForm({ lesson }: LessonEditFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="contentText" className="text-xs font-semibold uppercase text-muted-foreground">Текстовый контент (Markdown)</label>
+          <label htmlFor="contentText" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Текстовый контент (Markdown)</label>
           <textarea
             id="contentText"
             name="contentText"

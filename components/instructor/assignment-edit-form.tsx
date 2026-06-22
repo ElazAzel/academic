@@ -85,12 +85,12 @@ export function AssignmentEditForm({ assignment }: AssignmentEditFormProps) {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <label htmlFor="title" className="text-xs font-semibold uppercase text-muted-foreground">Название задания *</label>
+            <label htmlFor="title" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Название задания *</label>
             <Input id="title" name="title" defaultValue={assignment.title} required minLength={3} />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="instructions" className="text-xs font-semibold uppercase text-muted-foreground">Инструкции (Markdown)</label>
+            <label htmlFor="instructions" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Инструкции (Markdown)</label>
             <textarea
               id="instructions"
               name="instructions"
@@ -102,11 +102,11 @@ export function AssignmentEditForm({ assignment }: AssignmentEditFormProps) {
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="maxScore" className="text-xs font-semibold uppercase text-muted-foreground">Максимальный балл</label>
+              <label htmlFor="maxScore" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Максимальный балл</label>
               <Input id="maxScore" name="maxScore" type="number" min={1} defaultValue={assignment.maxScore} />
             </div>
             <div className="space-y-2">
-              <label htmlFor="maxAttempts" className="text-xs font-semibold uppercase text-muted-foreground">Макс. попыток</label>
+              <label htmlFor="maxAttempts" className="text-xs font-semibold uppercase uppercase-tracking text-muted-foreground">Макс. попыток</label>
               <Input id="maxAttempts" name="maxAttempts" type="number" min={1} defaultValue={assignment.maxAttempts} />
             </div>
           </div>

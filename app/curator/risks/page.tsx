@@ -105,13 +105,13 @@ export default async function CuratorRisksPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-b-m3-outline-variant">
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Слушатель</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Тип риска</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Уровень</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Прогресс</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Вопросов</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Заданий</TableHead>
-                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase tracking-wider">Последний вход</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Слушатель</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Тип риска</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Уровень</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Прогресс</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Вопросов</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Заданий</TableHead>
+                <TableHead className="font-label-md text-label-md text-m3-on-surface-variant uppercase uppercase-tracking">Последний вход</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
