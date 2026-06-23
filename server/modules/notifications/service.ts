@@ -3,115 +3,17 @@ import { toJsonValue } from "@/lib/json";
 import { env } from "@/lib/env";
 import { getSafeErrorMetadata } from "@/lib/http";
 import { getUserNotificationPreferences } from "@/server/modules/notifications/preferences";
+import { normalizeNotificationChannel, renderNotificationTemplate, resolveNotificationEvent, securityNotificationEvents } from "@/server/modules/notifications/templates";
+import { sendEmail } from "@/server/modules/notifications/email";
 import { NOTIFICATION_CHANNELS } from "@/lib/constants";
 
 const prisma = getPrisma();
 
-let nodemailerTransporter: { sendMail: (opts: Record<string, unknown>) => Promise<unknown> } | null = null;
+// ── Re-exports ────────────────────────────────────────────────────────────────
 
-async function getMailer() {
-  if (!env.FEATURE_EMAIL_NOTIFICATIONS) return null;
-  if (nodemailerTransporter) return nodemailerTransporter;
-  try {
-    const nodemailer = await import("nodemailer");
-    nodemailerTransporter = nodemailer.default.createTransport({
-      host: env.SMTP_HOST,
-      port: env.SMTP_PORT,
-      secure: env.SMTP_PORT === 465,
-      pool: true,
-      maxConnections: 5,
-      connectionTimeout: 10000,
-      greetingTimeout: 5000,
-      logger: true,
-      auth: env.SMTP_USER ? {
-        user: env.SMTP_USER,
-        pass: env.SMTP_PASSWORD ?? "",
-      } : undefined,
-    });
-    return nodemailerTransporter;
-  } catch {
-    return null;
-  }
-}
+export { normalizeNotificationChannel, renderNotificationTemplate, sendEmail };
 
-export async function sendEmail(to: string, subject: string, text: string, html?: string) {
-  const mailer = await getMailer();
-  if (!mailer) return;
-  return mailer.sendMail({ from: env.EMAIL_FROM, to, subject, text, html: html || text });
-}
-
-export type NotificationEvent =
-  | "access_granted"
-  | "course_opened"
-  | "new_lesson_available"
-  | "module_deadline_near"
-  | "user_inactive"
-  | "assignment_reviewed"
-  | "question_answered"
-  | "live_session_soon"
-  | "certificate_available"
-  | "certificate_revoked"
-  | "curator_assigned"
-  | "student_assigned"
-  | "question_received"
-  | "question_forwarded"
-  | "password_changed"
-  | "device_limit_exceeded"
-  | "profile_updated"
-  | "popup"
-  | "new_message"
-  | "block_completed"
-  | "module_completed"
-  | "curator_response_reminder";
-
-const templates: Record<NotificationEvent, { title: string; body: string }> = {
-  device_limit_exceeded: {
-    title: "Ограничение входа по устройствам",
-    body: "Выполнен вход на третьем устройстве. Один из предыдущих сеансов завершен. Не передавайте логин и пароль третьим лицам.",
-  },
-  access_granted: { title: "Доступ выдан", body: "Вам открыт доступ к учебной программе." },
-  course_opened: { title: "Курс открыт", body: "Можно начинать обучение." },
-  new_lesson_available: { title: "Новый урок доступен", body: "Следующий урок уже открыт." },
-  module_deadline_near: { title: "Скоро дедлайн", body: "Проверьте прогресс по модулю." },
-  user_inactive: { title: "Нет активности", body: "Пора вернуться к обучению." },
-  assignment_reviewed: { title: "Задание проверено", body: "Посмотрите комментарий куратора." },
-  question_answered: { title: "Куратор ответил", body: "Ответ доступен в уроке." },
-  live_session_soon: { title: "Скоро трансляция", body: "Не пропустите занятие." },
-  certificate_available: { title: "Сертификат доступен", body: "Сертификат можно скачать в кабинете." },
-  certificate_revoked: { title: "Сертификат отозван", body: "Сертификат больше не считается действительным." },
-  curator_assigned: { title: "Куратор назначен", body: "Теперь у вас есть ответственный куратор." },
-  student_assigned: { title: "Слушатель назначен", body: "Вам назначен слушатель для сопровождения." },
-  question_received: { title: "Новый вопрос", body: "Слушатель задал вопрос по уроку." },
-  question_forwarded: { title: "Вопрос переадресован", body: "Ваш вопрос передан инструктору." },
-  password_changed: { title: "Пароль изменён", body: "Пароль от вашей учётной записи успешно изменён." },
-  profile_updated: { title: "Профиль обновлён", body: "Данные вашего профиля успешно обновлены." },
-  popup: { title: "Важное сообщение", body: "У вас новое сообщение от администрации." },
-  new_message: { title: "Новое сообщение", body: "У вас новое сообщение в чате." },
-  block_completed: { title: "Блок пройден", body: "Вы завершили блок обучения." },
-  module_completed: { title: "Модуль пройден", body: "Поздравляем с завершением модуля!" },
-  curator_response_reminder: { title: "Напоминание: ожидает ответа", body: "Слушатель ждёт вашего ответа уже более 2 часов." },
-};
-
-export function renderNotificationTemplate(event: NotificationEvent, overrides?: Partial<{ title: string; body: string }>) {
-  return { ...templates[event], ...overrides };
-}
-
-type NotificationDeliveryChannel = (typeof NOTIFICATION_CHANNELS)[keyof typeof NOTIFICATION_CHANNELS];
-
-const deliveryChannels = new Set<string>(Object.values(NOTIFICATION_CHANNELS));
-const securityNotificationEvents = new Set([
-  "device_limit_exceeded",
-  "password_changed",
-  "profile_updated",
-  "certificate_revoked",
-]);
-
-export function normalizeNotificationChannel(channel?: string): NotificationDeliveryChannel {
-  if (channel && deliveryChannels.has(channel)) {
-    return channel as NotificationDeliveryChannel;
-  }
-  return NOTIFICATION_CHANNELS.IN_APP;
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
  * Создаёт уведомление синхронно (без outbox).
@@ -176,19 +78,20 @@ export async function createNotificationInternal(input: {
 
   // Проверяем настройки пользователя — если канал отключён, пропускаем
   const preferences = await getUserNotificationPreferences(input.userId);
-  
-  // Системные уведомления безопасности (вход с других устройств, изменение пароля, обновление профиля, отзыв сертификата) не отключаются!
+
+  // Системные уведомления безопасности не отключаются!
   if (!isSecurityEvent) {
-    const prefKey = channel === NOTIFICATION_CHANNELS.EMAIL || channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP
-      ? input.event
-      : channel;
+    const prefKey =
+      channel === NOTIFICATION_CHANNELS.EMAIL || channel === NOTIFICATION_CHANNELS.EMAIL_AND_IN_APP
+        ? input.event
+        : channel;
 
     if (preferences[prefKey] === false) {
       return null; // Пользователь отключил этот тип уведомлений
     }
   }
 
-  const eventKey = Object.keys(templates).includes(input.event) ? input.event as NotificationEvent : "profile_updated";
+  const eventKey = resolveNotificationEvent(input.event);
   const rendered = renderNotificationTemplate(eventKey, { title: input.title, body: input.body });
 
   // persist=false — отправляем email/push без сохранения в БД (silent notification)
@@ -205,14 +108,14 @@ export async function createNotificationInternal(input: {
         data: toJsonValue(input.data ?? {}),
         refType: input.refType ?? null,
         refId: input.refId ?? null,
-      }
+      },
     });
   }
 
   // Fetch user to get their email address
   const user = await prisma.user.findUnique({
     where: { id: input.userId },
-    select: { email: true }
+    select: { email: true },
   });
 
   // Проверяем email-подписку отдельно
@@ -296,6 +199,6 @@ export async function markNotificationAsRead(id: string, userId: string) {
 export async function markAllNotificationsAsRead(userId: string) {
   return prisma.notification.updateMany({
     where: { userId, readAt: null },
-    data: { readAt: new Date(), status: "READ" }
+    data: { readAt: new Date(), status: "READ" },
   });
 }
