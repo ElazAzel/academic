@@ -1,5 +1,43 @@
 # Project Updates
 
+## 2026-06-23 — P1 Animation Discipline Audit (prefers-reduced-motion)
+
+**Goal**: Ensure all framer-motion animations respect `prefers-reduced-motion` via `useReducedMotion()` hook.
+
+### Audit scope
+- **7 components** directly import `framer-motion`:
+  - ✅ `animations.tsx` (centralized) — already had `useReducedMotion()` in all 7 wrappers
+  - ✅ `mobile-bottom-nav.tsx` — already had `useReducedMotion()`
+  - ✅ `tabs.tsx` — already had `useReducedMotion()`
+  - ✅ `theme-toggle.tsx` — already had `useReducedMotion()`
+  - ✅ `pwa-install-prompt.tsx` — already had `useReducedMotion()`
+  - ❌ **`login-screen.tsx`** — was missing `useReducedMotion()`: conic gradient (60s rotation), floating orbs, staggered entrance — **fixed**
+  - ❌ **`login-form.tsx`** — was missing `useReducedMotion()`: button hover scale (1.015), error shake animation, loading spinner rotation, OAuth hover/tap — **fixed**
+
+### What was fixed
+- **`login-screen.tsx`**:
+  - Added `useReducedMotion()` import + const
+  - Conic gradient: skips 60s rotation animation
+  - Floating ambient orbs: skips scale/x animation
+  - Staggered entrance: shows all at once (no stagger)
+  - Device-limit banner: skips height/opacity transition
+- **`login-form.tsx`**:
+  - Added `useReducedMotion()` import + const
+  - Submit button: skips `whileHover: { scale: 1.015 }` / `whileTap: { scale: 0.98 }`
+  - OAuth buttons: skips `whileHover: { scale: 1.02 }` / `whileTap: { scale: 0.98 }`
+  - Error shake: skips x-axis shake animation
+  - Button text: skips opacity/y crossfade
+  - Loading spinner: skips 360° rotation animation
+
+### Global CSS baseline
+- `app/globals.css` already has `@media (prefers-reduced-motion: reduce)` that sets `animation-duration: 0.01ms !important` on all CSS animations — covers Tailwind `animate-*` and `animate-in` classes.
+
+### Verification
+- Lint: 0 errors, 0 warnings ✅
+- TypeScript: clean ✅
+- Tests: 936/936 passed ✅
+- Production build: OK ✅
+
 ## 2026-06-22 — P1 State Coverage (empty/loading/error states)
 
 **Goal**: Eliminate empty catch blocks, add empty/loading/error states to data components.
