@@ -38,6 +38,26 @@
 - Tests: 936/936 passed ✅
 - Production build: OK ✅
 
+## 2026-06-23 — Dependabot vulnerability fixes (nodemailer + uuid + undici)
+
+**Goal**: Fix actionable Dependabot alerts for production dependencies.
+
+### Changes
+- **nodemailer@8.0.11 → 9.0.1** (HIGH: SSRF + arbitrary file read via `raw` option) — production dep
+- **uuid@8.3.2 → 11.1.1** (MODERATE: missing buffer bounds check) — direct dep
+- **undici@7.25.0 → 7.28.0** (3 HIGH, 2 MEDIUM, 2 LOW) — transitive test dep (jsdom), fixed via `npm audit fix`
+- Remaining dev-only unfixable alerts (12 moderate) accepted as risk:
+  - `@hono/node-server` (Prisma dev tool transitive)
+  - `js-yaml` in `@lhci/cli` (dev tool)
+  - `postcss` in `next` (transitive)
+  - `uuid@8.3.2` in `exceljs`/`next-auth` (transitive, can't force-upgrade)
+
+### Verification
+- Lint: 0 errors ✅
+- TypeScript: clean ✅
+- Tests: 936/936 passed ✅
+- Production build: OK ✅
+
 ## 2026-06-22 — P1 State Coverage (empty/loading/error states)
 
 **Goal**: Eliminate empty catch blocks, add empty/loading/error states to data components.
