@@ -1,5 +1,45 @@
 # Project Updates
 
+## 2026-06-23 — Phase 3: Notification Service Extraction (templates / email)
+
+**Goal**: Split 301-line `server/modules/notifications/service.ts` into focused files.
+
+### Changes
+- **Created `server/modules/notifications/templates.ts`**: `NotificationEvent` type, `templates` (21 notification templates), `renderNotificationTemplate()`, `normalizeNotificationChannel()`, `securityNotificationEvents`, `resolveNotificationEvent()`
+- **Created `server/modules/notifications/email.ts`**: `sendEmail()` with lazy-initialized nodemailer SMTP transport via `getMailer()`, `nodemailerTransporter`
+- **Refactored `server/modules/notifications/service.ts`**: Stripped templates and email channel code. Kept `createNotification()`, `createNotificationInternal()`, `listNotifications()`, `getNotificationById()`, `markNotificationAsRead()`, `markAllNotificationsAsRead()`. Re-exports `renderNotificationTemplate`, `sendEmail`, `normalizeNotificationChannel`.
+- **All 24 external consumers** unchanged — same public exports.
+
+### Verification
+- **Typecheck**: Clean.
+- **Lint**: 0 errors, 0 warnings.
+- **Tests**: 936/936 passed (166 files).
+
+---
+
+## 2026-06-23 — Phase 3: Report Service Extraction (definitions / scope / renderer)
+
+**Goal**: Split 666-line `server/modules/reports/service.ts` into focused single-responsibility files.
+
+### Changes
+- **Created `server/modules/reports/definitions.ts`**: `REPORT_DEFINITIONS`, `ReportDefinition`, `EXT`, `REPORT_TYPE_ALIASES`, `ROLE_PRIORITY`, `pickActorRole()`, `unique()`, `normalizeReportType()`, `parseReportFormat()`, `assertReportAllowed()`
+- **Created `server/modules/reports/scope.ts`**: `resolveReportScope()`, `ReportAccessContext`, `scopeCacheKey()`, `fieldsCacheKey()`, `getCourseIdsForCohorts()`
+- **Created `server/modules/reports/renderer.ts`**: `renderReport()`, `countRows()`, `RenderedReport` (all 8 types × 3 formats = 24 branches + PDF/XLSX row-count guardrails + CSV fallback on error)
+- **Refactored `server/modules/reports/service.ts`**: Stripped extracted code (~460 lines removed), kept public API: `generateReportDownload()`, `generateReportPreview()`, `getAvailableReportsForRoles()`, `getDisplayReportsForRole()`, `parseReportFormat()`, `getReportUser()`, `getStudentReportsDashboardData()`. All imports from sub-modules.
+- **`processor.ts` unchanged** — imports from `service.ts` transparently.
+- **All external consumers** (`app/api/v1/reports/*`) unchanged — same public exports.
+
+### Verification
+- **Typecheck**: Clean (`tsc --noEmit`).
+- **Lint**: 0 errors, 0 warnings.
+- **Tests**: 936/936 passed (166 files).
+- **Build**: Production build OK.
+
+### Next
+- Notification service extraction (templates.ts + email.ts)
+
+---
+
 ## 2026-06-23 — P1 Animation Discipline Audit (prefers-reduced-motion)
 
 **Goal**: Ensure all framer-motion animations respect `prefers-reduced-motion` via `useReducedMotion()` hook.
