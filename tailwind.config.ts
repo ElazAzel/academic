@@ -117,8 +117,9 @@ const config: Config = {
       },
 
       fontWeight: {
-        /* 3-weight system (Open Design typography craft):
-           400 = Read (body), 500/510 = Emphasize (UI/labels), 600 = Announce (headings) */
+        /* 4-weight system (Open Design typography craft):
+            400 = Read (body), 500/510 = Emphasize (UI/labels), 600 = Announce (headings)
+            510 = Linear-inspired between-weight for subtle emphasis */
         "display-lg": "600",
         "headline-lg": "600",
         "headline-lg-mobile": "600",
@@ -131,6 +132,7 @@ const config: Config = {
         "body-xs": "400",
         "label-lg": "600",
         "label-md": "500",
+        "510": "510",
       },
 
       boxShadow: {
@@ -140,11 +142,14 @@ const config: Config = {
         "m3-modal": "0 8px 32px rgba(15, 23, 42, 0.12), 0 24px 64px rgba(15, 23, 42, 0.16)",
         "m3-glow": "0 0 32px rgba(26, 68, 148, 0.08)",
         "m3-glow-lg": "0 0 48px rgba(26, 68, 148, 0.12)",
+        /* Multi-layer dialog shadow (Linear Level 5 stack) */
+        "dialog": "0 8px 2px rgba(0, 0, 0, 0.01), 0 5px 2px rgba(0, 0, 0, 0.02), 0 3px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.07), 0 24px 64px rgba(15, 23, 42, 0.16)",
         /* Legacy compat */
         glass: "0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06)",
         panel: "0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06)",
         "bottom-nav": "0 -1px 2px rgba(15, 23, 42, 0.04), 0 -8px 24px rgba(15, 23, 42, 0.06)",
         "card-hover": "0 2px 8px rgba(15, 23, 42, 0.06), 0 12px 32px rgba(15, 23, 42, 0.10)",
+        "card-hover-glow": "0 2px 8px rgba(15, 23, 42, 0.06), 0 12px 32px rgba(15, 23, 42, 0.10), 0 0 24px rgba(26, 68, 148, 0.06)",
         "mobile-top": "0 -1px 2px rgba(15, 23, 42, 0.03)",
       },
 
@@ -208,6 +213,10 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-4px)" },
         },
+        "list-item-enter": {
+          "0%": { opacity: "0", transform: "translateY(8px) scale(0.98)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
       },
 
       animation: {
@@ -219,6 +228,7 @@ const config: Config = {
         "shimmer": "shimmer 2s ease-in-out infinite",
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
         "float": "float 3s ease-in-out infinite",
+        "list-item-enter": "list-item-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both",
       },
     }
   },

@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -109,6 +110,38 @@ export function PageTransition({ children, className }: { children: React.ReactN
     >
       {children}
     </motion.div>
+  );
+}
+
+/**
+ * ListStagger — последовательный вход элементов списка с CSS animation.
+ * Использует класс .list-item-enter с кастомной animation-delay через style.
+ * Альтернатива framer-motion Stagger для простых списков без перерендера.
+ */
+export function ListStagger({
+  children,
+  className,
+  staggerDelay = 60,
+  baseDelay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  staggerDelay?: number;
+  baseDelay?: number;
+}) {
+  const items = React.Children.toArray(children);
+  return (
+    <div className={className}>
+      {items.map((child, i) => (
+        <div
+          key={i}
+          className="list-item-enter"
+          style={{ animationDelay: `${baseDelay + i * staggerDelay}ms` }}
+        >
+          {child}
+        </div>
+      ))}
+    </div>
   );
 }
 

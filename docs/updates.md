@@ -1,5 +1,52 @@
 # Project Updates
 
+## 2026-06-24 — Design System Refinement (Open Design / Linear-inspired)
+
+**Goal**: Enhance platform UX/UI using Open Design design system resources — typography craft, surface elevation stepping, glass system upgrades, and component refinements.
+
+### Changes
+- **`app/globals.css`**:
+  - Added `font-feature-settings: "cv01", "ss03"` to body — Inter geometric alternates (Linear-inspired)
+  - Added surface luminance stepping system (`--surface-level-0` through `--surface-level-5`) for consistent elevation
+  - Enhanced glass system with `--academy-glass-bg-subtle/elevated/dialog` and `--academy-glass-highlight-top`
+  - Added multi-layer dialog shadow (`--academy-shadow-dialog`) based on Linear Level 5 stack
+  - Added `list-item-enter` keyframe for staggered list entrance
+  - Added `.glass-panel-elevated` CSS class for elevated surfaces
+  - Updated `.academy-panel::before` to use `var(--academy-glass-highlight-top)`
+  - Updated `.bottom-nav-bar` to use `--academy-glass-bg-elevated`
+
+- **`tailwind.config.ts`**:
+  - Added `font-510` weight (Linear-inspired between-weight for subtle emphasis)
+  - Added `shadow-dialog` (multi-layer stack), `shadow-card-hover-glow` (with glow)
+  - Added `animate-list-item-enter` for staggered list CSS animations
+
+- **`components/ui/card.tsx`**:
+  - Updated hover from `shadow-card-hover` to `shadow-card-hover-glow` for ambient glow
+  - Added `CardFooter` component with top border separator
+
+- **`components/ui/button.tsx`**:
+  - Added `ghostAlt` variant (Linear-inspired: `bg-white/[0.03]`, subtle border, muted text)
+
+- **`components/ui/badge.tsx`**:
+  - Added `success` (emerald) and `warning` (amber) variants
+  - Updated font-weight to `font-510`
+
+- **`components/ui/dialog.tsx`**:
+  - Enhanced shadow from `shadow-m3-modal` to `shadow-dialog` (multi-layer stack)
+  - Added `max-h-[85dvh] flex flex-col` for scroll safety
+  - Added `DialogBody` component with `flex-1 overflow-y-auto`
+
+- **`components/lms/animations.tsx`**:
+  - Added `ListStagger` component — CSS animation-based staggered list entrance (no framer-motion dependency, respects `prefers-reduced-motion`)
+
+### Verification
+- **Typecheck**: Clean.
+- **Lint**: 0 errors, 0 warnings.
+- **Tests**: 936/936 passed (166 files).
+- **Build**: Production build OK (79 pages, all routes).
+
+---
+
 ## 2026-06-23 — Phase 3: Notification Service Extraction (templates / email)
 
 **Goal**: Split 301-line `server/modules/notifications/service.ts` into focused files.

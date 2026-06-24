@@ -31,7 +31,8 @@ export function DialogContent({ className, children, ...props }: DialogPrimitive
       <DialogPrimitive.Content
         className={cn(
           "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2",
-          "rounded-2xl border border-m3-outline-variant/40 bg-m3-surface-container-lowest/95 backdrop-blur-xl shadow-m3-modal",
+          "rounded-2xl border border-m3-outline-variant/40 bg-m3-surface-container-lowest/95 backdrop-blur-xl shadow-dialog",
+          "max-h-[85dvh] flex flex-col",
           "duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-top-[2%] data-[state=open]:slide-in-from-top-[2%]",
           className
         )}
@@ -44,6 +45,10 @@ export function DialogContent({ className, children, ...props }: DialogPrimitive
       </DialogPrimitive.Content>
     </DialogPortal>
   );
+}
+
+export function DialogBody({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("flex-1 overflow-y-auto p-6", className)} {...props} />;
 }
 
 export function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

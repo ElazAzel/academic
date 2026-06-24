@@ -7,7 +7,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
       className={cn(
         "academy-panel rounded-xl text-m3-on-surface",
         "transition-all duration-200 ease-out",
-        "hover:shadow-card-hover hover:-translate-y-0.5",
+        "hover:shadow-card-hover-glow hover:-translate-y-0.5",
         className
       )}
       {...props}
@@ -29,4 +29,16 @@ export function CardDescription({ className, ...props }: HTMLAttributes<HTMLPara
 
 export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("p-5 pt-0", className)} {...props} />;
+}
+
+export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 border-t border-[var(--academy-line)] px-5 py-4",
+        className
+      )}
+      {...props}
+    />
+  );
 }

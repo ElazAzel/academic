@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "ghost" | "ghostAlt" | "danger";
   size?: "sm" | "md" | "lg" | "icon";
   asChild?: boolean;
 };
@@ -37,6 +37,11 @@ export function Button({ className, variant = "primary", size = "md", asChild, .
         variant === "ghost" && [
           "bg-transparent text-m3-on-surface",
           "hover:bg-m3-surface-container-low/80 hover:text-m3-primary",
+          "focus-visible:ring-primary",
+        ],
+        variant === "ghostAlt" && [
+          "bg-white/[0.03] text-m3-on-surface-variant border border-m3-outline-variant/30",
+          "hover:bg-white/[0.06] hover:text-m3-on-surface hover:border-m3-outline-variant/50",
           "focus-visible:ring-primary",
         ],
         variant === "danger" && [

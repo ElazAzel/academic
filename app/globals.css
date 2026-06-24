@@ -71,9 +71,34 @@
   --academy-shadow-raised: 0 4px 16px rgba(15, 23, 42, 0.08), 0 16px 48px rgba(15, 23, 42, 0.10);
   --academy-shadow-focus: 0 0 0 3px rgba(26, 68, 148, 0.18);
   --academy-shadow-glow: 0 0 32px rgba(26, 68, 148, 0.08);
-  --academy-glass-bg: rgba(255, 255, 255, 0.72);
+
+  /* ── Surface luminance stepping (Linear-inspired) ─────────────── */
+  /* Each level increases white opacity for subtle elevation on light backgrounds.
+     Dark mode uses the inverse (black opacity increases with elevation). */
+  --surface-level-0: rgba(255, 255, 255, 0.00);
+  --surface-level-1: rgba(255, 255, 255, 0.45);
+  --surface-level-2: rgba(255, 255, 255, 0.60);
+  --surface-level-3: rgba(255, 255, 255, 0.72);
+  --surface-level-4: rgba(255, 255, 255, 0.82);
+  --surface-level-5: rgba(255, 255, 255, 0.92);
+
+  /* ── Enhanced glass system ────────────────────────────────────── */
+  --academy-glass-bg: var(--surface-level-3);
+  --academy-glass-bg-subtle: var(--surface-level-1);
+  --academy-glass-bg-elevated: var(--surface-level-4);
+  --academy-glass-bg-dialog: var(--surface-level-5);
   --academy-glass-border: rgba(255, 255, 255, 0.55);
+  --academy-glass-border-subtle: rgba(255, 255, 255, 0.30);
   --academy-glass-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 100%);
+  --academy-glass-highlight-top: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.70), transparent);
+
+  /* ── Multi-layer dialog shadow (Linear Level 5 inspired) ──────── */
+  --academy-shadow-dialog:
+    0 8px 2px rgba(0, 0, 0, 0.01),
+    0 5px 2px rgba(0, 0, 0, 0.02),
+    0 3px 2px rgba(0, 0, 0, 0.04),
+    0 1px 1px rgba(0, 0, 0, 0.07),
+    0 24px 64px rgba(15, 23, 42, 0.16);
 
   /* Mobile bottom nav */
   --nav-height: 64px;
@@ -135,9 +160,32 @@
   --academy-shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.32), 0 16px 48px rgba(0, 0, 0, 0.36);
   --academy-shadow-focus: 0 0 0 3px rgba(184, 202, 255, 0.22);
   --academy-shadow-glow: 0 0 40px rgba(184, 202, 255, 0.06);
-  --academy-glass-bg: rgba(18, 20, 24, 0.78);
+
+  /* Surface luminance stepping (dark — black opacity increases with elevation) */
+  --surface-level-0: rgba(18, 20, 24, 0.00);
+  --surface-level-1: rgba(18, 20, 24, 0.55);
+  --surface-level-2: rgba(18, 20, 24, 0.68);
+  --surface-level-3: rgba(18, 20, 24, 0.78);
+  --surface-level-4: rgba(18, 20, 24, 0.86);
+  --surface-level-5: rgba(18, 20, 24, 0.94);
+
+  /* Glass system (dark) */
+  --academy-glass-bg: var(--surface-level-3);
+  --academy-glass-bg-subtle: var(--surface-level-1);
+  --academy-glass-bg-elevated: var(--surface-level-4);
+  --academy-glass-bg-dialog: var(--surface-level-5);
   --academy-glass-border: rgba(255, 255, 255, 0.06);
+  --academy-glass-border-subtle: rgba(255, 255, 255, 0.04);
   --academy-glass-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+  --academy-glass-highlight-top: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+
+  /* Dialog shadow (dark) */
+  --academy-shadow-dialog:
+    0 8px 2px rgba(0, 0, 0, 0.12),
+    0 5px 2px rgba(0, 0, 0, 0.16),
+    0 3px 2px rgba(0, 0, 0, 0.20),
+    0 1px 1px rgba(0, 0, 0, 0.24),
+    0 24px 64px rgba(0, 0, 0, 0.36);
 }
 
 /* ── Material Symbols ────────────────────────────────────────────── */
@@ -191,6 +239,7 @@ html {
 body {
   margin: 0;
   font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-feature-settings: "cv01", "ss03"; /* Inter geometric alternates (Linear-inspired) */
   color: hsl(var(--foreground));
   background-color: var(--m3-background);
   background-image:
@@ -199,6 +248,11 @@ body {
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark mode preserves font-feature-settings (inherited from body) */
+.dark body {
+  font-feature-settings: "cv01", "ss03";
 }
 
 .dark body {
@@ -301,9 +355,22 @@ a {
   box-shadow: var(--academy-shadow-panel);
 }
 
-.dark .glass-panel {
+.glass-panel-elevated {
+  background: var(--academy-glass-bg-elevated);
+  backdrop-filter: blur(20px) saturate(1.7);
+  -webkit-backdrop-filter: blur(20px) saturate(1.7);
+  border: 1px solid var(--academy-glass-border);
+  box-shadow: var(--academy-shadow-raised);
+}
+
+.dark .glass-panel,
+.dark .glass-panel-elevated {
   background: var(--academy-glass-bg);
   border-color: var(--academy-glass-border);
+}
+
+.dark .glass-panel-elevated {
+  background: var(--academy-glass-bg-elevated);
 }
 
 .academy-panel {
@@ -320,7 +387,7 @@ a {
   position: absolute;
   inset: 0 0 auto 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--academy-glass-border), transparent);
+  background: var(--academy-glass-highlight-top);
   pointer-events: none;
   border-radius: inherit;
 }
@@ -488,7 +555,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  background: var(--academy-glass-bg);
+  background: var(--academy-glass-bg-elevated);
   backdrop-filter: blur(24px) saturate(1.8);
   -webkit-backdrop-filter: blur(24px) saturate(1.8);
   border-top: 1px solid var(--academy-glass-border);
@@ -499,7 +566,7 @@ a {
 }
 
 .dark .bottom-nav-bar {
-  background: var(--academy-glass-bg);
+  background: var(--academy-glass-bg-elevated);
   box-shadow:
     0 -1px 2px rgba(0, 0, 0, 0.24),
     0 -8px 24px rgba(0, 0, 0, 0.28);
@@ -583,6 +650,17 @@ img[loading="lazy"]:not([src=""]) {
 @keyframes notification-slide-in {
   0% { opacity: 0; transform: translateX(calc(100% + 24px)); }
   100% { opacity: 1; transform: translateX(0); }
+}
+
+/* ── List stagger entrance ──────────────────────────────────────── */
+
+@keyframes list-item-enter {
+  0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.list-item-enter {
+  animation: list-item-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes notification-progress {
