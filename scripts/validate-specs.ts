@@ -10,7 +10,7 @@ async function validateSpecs() {
   }
 
   const files = fs.readdirSync(specsDir).filter(f => f.endsWith('.md'));
-  let hasError = false;
+  let warningCount = 0;
 
   for (const file of files) {
     const specPath = path.join(specsDir, file);
@@ -20,18 +20,25 @@ async function validateSpecs() {
     // Check for required sections
     for (const section of requiredSections) {
       if (!content.includes(section)) {
+        warningCount += 1;
         console.warn(`WARNING: Spec ${file} is missing required section: ${section} (Migrate to new standard)`);
       }
     }
 
     if (!content.includes('## Validation')) {
+      warningCount += 1;
       console.warn(`WARNING: Spec ${file} is missing '## Validation' section.`);
     }
   }
 
   // We don't exit with 1 for legacy specs during migration to avoid blocking the workflow,
   // but new specs MUST follow the template.
-  console.log('Spec validation completed with warnings for legacy documents.');
+  if (warningCount > 0) {
+    console.log(`Spec validation completed with ${warningCount} warning(s) for legacy documents.`);
+    return;
+  }
+
+  console.log('Spec validation completed without warnings.');
 }
 
 validateSpecs().catch(err => {

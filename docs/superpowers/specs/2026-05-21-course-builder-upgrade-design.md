@@ -6,6 +6,25 @@
 
 ---
 
+## Goals
+
+- Improve instructor editing speed in Course Builder without changing the student learning path.
+- Reduce data-loss risk in quiz and lesson editing through autosave and inline editing.
+- Add media/rich-text workflows that stay inside the existing Module -> Block -> Lesson model.
+
+## Models
+
+- `Course`, `CourseModule`, `LessonBlock`, `Lesson`, `Quiz`, `QuizQuestion`, and `Assignment` remain the core persisted entities.
+- Module cloning creates new module/block/lesson identifiers and intentionally does not clone quiz or assignment links.
+- Uploaded media continues to be represented through existing lesson block data and media upload APIs.
+
+## Architecture
+
+- Page components keep using Course Builder shell components and API routes; database access stays inside `server/modules/**`.
+- Course structure operations are handled by `server/modules/course-builder/service.ts`.
+- Question-bank lookup is owned by course/query services and exposed through role-protected API routes.
+- Rich text is edited on the client, sanitized before persistence, and rendered through the existing lesson block display components.
+
 ## 1. Course Builder — Outline & Navigation
 
 ### 1.1 Drag-and-drop module reorder
@@ -182,6 +201,14 @@ Replace the instructions textarea in `AssignmentBlockEditor` with the same TipTa
 - **Component tests** for auto-save behavior (mock fetch, verify debounced calls)
 - **Component tests** for upload flow in LessonBlockEditor
 - Manual: full flow test in preview environment
+
+## Validation
+
+- `npm run lint -- --max-warnings=0`
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
+- Instructor smoke flow: create course -> reorder module -> clone module -> edit lesson content -> save quiz question.
 
 ---
 

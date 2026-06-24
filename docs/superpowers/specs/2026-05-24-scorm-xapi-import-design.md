@@ -1,8 +1,20 @@
 # SCORM/xAPI Import — Design Spec
 
+## Goals
+
+- Support SCORM 1.2/2004 package import and playback inside the unified lesson player.
+- Preserve same-origin serving and authenticated progress capture for SCORM runtime calls.
+- Add a minimal xAPI LRS for package-generated learning statements without opening public access.
+
 ## Overview
 
 Полный стек импорта и воспроизведения SCORM-пакетов (1.2 + 2004) + минимальный xAPI LRS.
+
+## Models
+
+- `ScormPackage` stores uploaded package metadata, manifest-derived entry points, and storage paths.
+- `ScormLaunch` stores per-user launch state, score, completion status, and CMI values.
+- `XapiStatement` stores accepted xAPI statements as JSONB with optional user and lesson links.
 
 ## Architecture
 
@@ -172,3 +184,10 @@ model XapiStatement {
 Ordered list of DDL changes already applied:
 - `20260522000001_add_scorm_package` — ✅ done (ScormPackage + ScormLaunch)
 - `20260524000001_add_xapi_statements` — ❌ new (XapiStatement table)
+
+## Validation
+
+- Unit tests for manifest parsing, ZIP validation, CMI persistence, and xAPI statement validation.
+- Route tests for import, launch init, CMI read/write, package proxy, and xAPI POST/GET authorization.
+- Student smoke flow: open SCORM lesson -> initialize launch -> commit CMI -> complete package -> verify lesson progress.
+- Release gate: `npm run verify` plus guarded e2e coverage when seeded local data is available.

@@ -6,6 +6,25 @@
 
 ---
 
+## Goals
+
+- Reduce server and client bundle size without changing role behavior or route access.
+- Improve production build speed and runtime responsiveness for dashboard and report-heavy routes.
+- Keep the release gate green while performance work is delivered incrementally.
+
+## Models
+
+- No database schema changes are planned for this optimization track.
+- The affected runtime models are route bundles, client component boundaries, dynamic imports, and media/font assets.
+- Metrics are tracked through bundle size, build time, LCP/TTFB, and smoke-test coverage.
+
+## Architecture
+
+- Heavy libraries move behind route-level or interaction-level dynamic imports.
+- Server-only export/report dependencies stay outside client bundles.
+- Dashboard and analytics pages use streaming/Suspense boundaries where data can load independently.
+- Image and font optimization stay aligned with Next.js 16 App Router conventions.
+
 ## Текущие метрики
 
 | Метрика | Значение |
@@ -151,3 +170,12 @@
 - `npm run test` — все тесты pass
 - `npm run build` — успешно
 - Smoke-тест: login → student → admin → instructor → curator
+
+## Validation
+
+- `npm run lint -- --max-warnings=0`
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
+- Bundle analyzer comparison before/after each optimization batch.
+- Smoke flow across login, student, admin, instructor, and curator dashboards.

@@ -2,6 +2,25 @@
 
 > **Goal:** Decompose monolithic service modules into focused, single-responsibility files.
 
+## Goals
+
+- Split large report and notification service files into focused modules without changing public behavior.
+- Preserve existing public exports so API routes, server actions, and tests continue to call stable interfaces.
+- Keep extraction work mechanical and covered by the existing release gate.
+
+## Models
+
+- No database schema changes are part of Phase 3 service extraction.
+- Report extraction keeps existing report definitions, access scopes, render outputs, and scheduled processor contracts.
+- Notification extraction keeps existing notification event templates, channel preferences, push/email/in-app delivery, and audit behavior.
+
+## Architecture
+
+- Report code is split into `definitions.ts`, `scope.ts`, `renderer.ts`, and a thin public `service.ts`.
+- Notification code is split into `templates.ts`, `email.ts`, and a thin public `service.ts`.
+- Existing route handlers and server actions import only the public service facade unless a type-only import is already established.
+- Deferred search extraction remains out of scope until MeiliSearch infrastructure is available.
+
 ## 1. Report Service Extraction
 
 ### Current State
@@ -75,3 +94,11 @@ Current PostgreSQL ILIKE search (58 lines) will be replaced with MeiliSearch whe
 - [ ] ESLint 0 errors, 0 warnings
 - [ ] Production build OK
 - [ ] docs/updates.md updated
+
+## Validation
+
+- `npm run lint -- --max-warnings=0`
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
+- Targeted report and notification test files remain covered by the full Vitest suite.

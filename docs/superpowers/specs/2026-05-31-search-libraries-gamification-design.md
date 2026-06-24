@@ -7,6 +7,26 @@
 
 ---
 
+## Goals
+
+- Add role-aware global search without exposing data outside each user's permitted scope.
+- Standardize analytics and dashboard charts on integrated libraries instead of one-off SVG widgets.
+- Expand gamification with achievements, streaks, and leaderboard surfaces inside the existing XP model.
+
+## Models
+
+- `Achievement` defines available achievements and XP rewards.
+- `UserAchievement` links users to earned achievements idempotently.
+- `DailyActivity` records per-user activity by date for streak calculations.
+- Search results reuse existing `Course`, `Lesson`, and `User` entities with RBAC-filtered visibility.
+
+## Architecture
+
+- Command palette search calls `/api/v1/search` with debounce and renders grouped results.
+- Chart components wrap `recharts` primitives behind local dashboard components.
+- Uploaded/HLS video playback is isolated in LMS video components and loaded only when needed.
+- Gamification services live in `server/modules/gamification/**` and are called from XP award checkpoints.
+
 ## 1. 🔍 Глобальный поиск в CommandPalette
 
 ### Что меняем
@@ -278,3 +298,12 @@ model DailyActivity {
 ### Batch 3 (зависит от Batch 2)
 8. **UI геймификации** — ачивки, streak, лидерборд в XpCenterModal
 9. **Интеграция checkAndAward** — точки вызова в уроки/тесты/задания
+
+## Validation
+
+- `npm run lint -- --max-warnings=0`
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
+- RBAC smoke checks for search results by role.
+- Student smoke flow for XP modal, achievements, streaks, and leaderboard state.

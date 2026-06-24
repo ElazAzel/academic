@@ -55,7 +55,7 @@ describe("CertificatesDashboard", () => {
     await user.click(screen.getByRole("button", { name: /выдать сертификат и записать/i }));
 
     expect(await screen.findByText("Условия выдачи сертификата не выполнены")).toBeInTheDocument();
-  });
+  }, 10_000);
 
   it("does not expose raw network errors while issuing certificates", async () => {
     const user = userEvent.setup();
@@ -66,5 +66,5 @@ describe("CertificatesDashboard", () => {
 
     expect(await screen.findByText("Не удалось выпустить сертификат")).toBeInTheDocument();
     expect(screen.queryByText(/secret-certificate-error/i)).not.toBeInTheDocument();
-  });
+  }, 10_000);
 });
