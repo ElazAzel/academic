@@ -1,5 +1,21 @@
 # Project Updates
 
+## 2026-06-24 — Spec-Kit Legacy Document Migration
+
+**Goal**: Finish the remaining spec-format migration warnings emitted by `npm run verify:specs`.
+
+### Changes
+- Added standard `## Goals`, `## Models`, `## Architecture`, and `## Validation` sections to legacy design specs where they were missing.
+- Covered Course Builder upgrade, SCORM/xAPI import, build optimizations, search/libraries/gamification, and Phase 3 service extraction specs.
+- Updated `scripts/validate-specs.ts` to count actual legacy warnings and print a clean success message when none remain.
+- Stabilized two slow Vitest areas with scoped 10s timeouts for full-suite runs under load: closed auth self-service route checks and certificate dashboard error handling.
+- Runtime product behavior is unchanged; this affects spec documentation, validation reporting, and test-suite stability only.
+
+### Verification
+- `npm run verify` completed successfully; `verify:specs` reports `Spec validation completed without warnings.`
+
+---
+
 ## 2026-06-24 — Design System Refinement (Open Design / Linear-inspired)
 
 **Goal**: Enhance platform UX/UI using Open Design design system resources — typography craft, surface elevation stepping, glass system upgrades, and component refinements.

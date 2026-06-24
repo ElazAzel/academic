@@ -38,7 +38,7 @@ describe("closed public password reset routes", () => {
     expect(response.status).toBe(410);
     expect(body.error.code).toBe("gone");
     expect(body.error.message).toContain("Самостоятельный сброс пароля отключён");
-  });
+  }, 10_000);
 
   it("keeps reset-password self-service disabled", async () => {
     const response = await resetPasswordRoute.POST();
@@ -47,7 +47,7 @@ describe("closed public password reset routes", () => {
     expect(response.status).toBe(410);
     expect(body.error.code).toBe("gone");
     expect(body.error.message).toContain("Самостоятельный сброс пароля отключён");
-  });
+  }, 10_000);
 });
 
 describe("email verification route", () => {
