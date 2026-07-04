@@ -1,5 +1,35 @@
 # Project Updates
 
+## 2026-07-04 — CSP Violation Fix (Edge → SSR nonce propagation on Vercel)
+
+**Goal**: Fix production CSP violation on Vercel where `_next/static/chunks` bundles were blocked by `strict-dynamic` because the nonce set in Edge middleware didn't propagate to Serverless Function SSR.
+
+### Root Cause
+На Vercel кастомные заголовки, установленные в Edge middleware (`x-nonce`, `Content-Security-Policy`), не гарантированно сериализуются в Serverless Function при SSR. React получает пустой nonce, не применяет его к `<script>` тегам, и `strict-dynamic` блокирует все скрипты без nonce.
+
+### Changes
+- **`proxy.ts`**:
+  - Удалён `buildCspPolicy()` — CSP больше не задаётся через middleware response headers.
+  - Удалены `nextWithCsp()` и `redirectWithCsp()` — заменены на `NextResponse.next()` и `NextResponse.redirect()`.
+  - Удалена генерация `nonce` в middleware.
+
+- **`app/layout.tsx`**:
+  - Добавлен `buildCspPolicy()` — идентичная политика (перенесена из `proxy.ts`).
+  - Добавлен fallback chain nonce: `x-nonce` header → `__academy_nonce` cookie → `crypto.randomUUID()`.
+  - Добавлен `<meta httpEquiv="Content-Security-Policy">` в `<head>` — гарантирует CSP независимо от заголовков Edge→Serverless.
+
+### Verification
+- **Typecheck**: Clean.
+- **Lint**: 0 errors, 0 warnings.
+- **Tests**: 936/936 passed (166 files).
+- **Build**: Production build OK.
+
+### Next Steps
+- Развернуть на Vercel для верификации, что CSP violation на `/student` больше не возникает.
+- Мониторить `/api/v1/csp-report` на предмет оставшихся нарушений.
+
+---
+
 ## 2026-06-24 — Spec-Kit Legacy Document Migration
 
 **Goal**: Finish the remaining spec-format migration warnings emitted by `npm run verify:specs`.

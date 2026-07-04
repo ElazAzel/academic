@@ -64,83 +64,17 @@ function checkCsrfOrigin(req: NextRequest): NextResponse | null {
   return null;
 }
 
-// ── Content-Security-Policy (nonce-based) ──────────────────────────────
-// Next.js 16 извлекает nonce из Content-Security-Policy request header во
-// время SSR (парсит `'nonce-{value}'` в script-src). Поэтому CSP нужно
-// передавать в request headers, а не только в response.
-// Для браузера CSP дублируется в response headers.
-//
-// CSP reporting: /api/v1/csp-report принимает POST от браузера.
-// Если добавлен хэш скрипта, его нужно обновлять при редеплое (хэш RSC
-// flight data меняется per-request, но bootstrap скрипты стабильны).
-//
-// Известные хэши (production 2026-06):
-// - sha256-J9cZHZf5nVZbsm7Pqxc8RsURv1AIXkMgbhfrZvoOs/A= — inline скрипт
-//   на /student/certificates без nonce (вероятно RSC flight data)
-// - sha256-UnthrFpGFotkvMOTp/ghVMSXoZZj9Y6epaMsaBAbUtg= — inline скрипт
-//   login/root runtime после динамического брендинга
-
-function buildCspPolicy(nonce: string, isDev: boolean): string {
-  const devExtra = isDev
-    ? " 'unsafe-eval'"  // нужен для react-hot-loader / HMR
-    : "";
-
-  // addenv: Если хэш меняется на новом деплое — замени значение ниже.
-  // Можно удалить когда nonce propagation будет чинить во всех Next.js-
-  // скриптах.
-  const scriptHashes = [
-    "'sha256-J9cZHZf5nVZbsm7Pqxc8RsURv1AIXkMgbhfrZvoOs/A='",
-    "'sha256-UnthrFpGFotkvMOTp/ghVMSXoZZj9Y6epaMsaBAbUtg='",
-  ].join(" ");
-
-  return [
-    "default-src 'self'",
-    `script-src 'nonce-${nonce}' 'strict-dynamic' 'self' ${scriptHashes}${devExtra}`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: blob: https: http:",
-    "font-src 'self' data: https://fonts.gstatic.com",
-    isDev
-      ? "connect-src 'self' https: http://localhost:* http://127.0.0.1:*"
-      : "connect-src 'self' https: wss:",
-    "frame-src https://www.youtube.com https://player.vimeo.com",
-    "frame-ancestors 'self'",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "worker-src 'self' blob:",
-    "manifest-src 'self'",
-    "report-uri /api/v1/csp-report",
-  ].join("; ");
-}
-
-// Для страниц (NextResponse.next()): CSP на request (SSR nonce) + response (browser)
-function nextWithCsp(req: NextRequest, nonce: string): NextResponse {
-  const isDev = process.env.NODE_ENV === "development";
-  const csp = buildCspPolicy(nonce, isDev);
-  const requestHeaders = new Headers(req.headers);
-  requestHeaders.set("x-nonce", nonce);
-  requestHeaders.set("Content-Security-Policy", csp);
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
-  response.headers.set("Content-Security-Policy", csp);
-  return response;
-}
-
-// Для редиректов: CSP только на response (браузерный)
-function redirectWithCsp(url: URL, nonce: string): NextResponse {
-  const isDev = process.env.NODE_ENV === "development";
-  const csp = buildCspPolicy(nonce, isDev);
-  const response = NextResponse.redirect(url);
-  response.headers.set("Content-Security-Policy", csp);
-  return response;
-}
+// ── CSP перенесён в app/layout.tsx (meta http-equiv) ─────────────────────
+// CSP задаётся через <meta http-equiv="Content-Security-Policy"> в корневом
+// layout, а не в middleware. Причина: на Vercel заголовки из Edge middleware
+// не всегда сериализуются в Serverless Function (SSR), из-за чего nonce
+// не доходит до layout и React не применяет его к <script>. Meta-тег
+// гарантирует, что CSP всегда применяется, независимо от заголовков.
 
 // ── Main proxy handler ─────────────────────────────────────────────────
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-
-  // CSP nonce генерируется на каждый запрос
-  const nonce = crypto.randomUUID();
 
   // CSRF check for mutating API requests (POST/PUT/PATCH/DELETE)
   // Исключаем webhooks и cron — у них нет browser origin
@@ -182,17 +116,17 @@ export async function proxy(req: NextRequest) {
         secret: process.env.NEXTAUTH_SECRET,
       });
       if (token?.authDeviceSessionRevoked) {
-        return nextWithCsp(req, nonce);
+        return NextResponse.next();
       }
       if (token?.roles) {
         const roles = token.roles as string[];
         const homePath = getDefaultRolePath(roles as string[]);
         if (homePath !== FORBIDDEN_ROUTE) {
-          return redirectWithCsp(new URL(homePath, req.url), nonce);
+          return NextResponse.redirect(new URL(homePath, req.url));
         }
       }
     }
-    return nextWithCsp(req, nonce);
+    return NextResponse.next();
   }
 
   const token = await getToken({
@@ -203,13 +137,13 @@ export async function proxy(req: NextRequest) {
   if (!token) {
     const loginUrl = new URL(AUTH_ROUTES.LOGIN, req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
-    return redirectWithCsp(loginUrl, nonce);
+    return NextResponse.redirect(loginUrl);
   }
 
   if (token.authDeviceSessionRevoked) {
     const loginUrl = new URL(AUTH_ROUTES.LOGIN, req.url);
     loginUrl.searchParams.set("reason", "device-limit");
-    return redirectWithCsp(loginUrl, nonce);
+    return NextResponse.redirect(loginUrl);
   }
 
   // ── 2FA check ────────────────────────────────────────────────────────
@@ -225,7 +159,7 @@ export async function proxy(req: NextRequest) {
       (p) => pathname === p || pathname.startsWith(p),
     );
     if (!isAllowed2faPath) {
-      return redirectWithCsp(new URL("/auth/2fa", req.url), nonce);
+      return NextResponse.redirect(new URL("/auth/2fa", req.url));
     }
   }
 
@@ -233,10 +167,10 @@ export async function proxy(req: NextRequest) {
   const allowedRoles = getRouteRoles(pathname);
 
   if (allowedRoles && !allowedRoles.some((r) => roles.includes(r))) {
-    return redirectWithCsp(new URL(FORBIDDEN_ROUTE, req.url), nonce);
+    return NextResponse.redirect(new URL(FORBIDDEN_ROUTE, req.url));
   }
 
-  return nextWithCsp(req, nonce);
+  return NextResponse.next();
 }
 
 export const config = {
