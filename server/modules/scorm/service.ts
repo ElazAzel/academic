@@ -1,4 +1,4 @@
-import type { EnrollmentStatus, ScormLaunchStatus } from "@prisma/client";
+import { EnrollmentStatus, type ScormLaunchStatus } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/http";
 import type { AppSessionUser } from "@/types/domain";
