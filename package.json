@@ -130,7 +130,7 @@
     "config": "prisma.config.ts"
   },
   "engines": {
-    "node": ">=20 <23"
+    "node": ">=20 <25"
   },
   "overrides": {
     "tmp": "0.2.7"
