@@ -64,17 +64,47 @@ function checkCsrfOrigin(req: NextRequest): NextResponse | null {
   return null;
 }
 
-// ── CSP перенесён в app/layout.tsx (meta http-equiv) ─────────────────────
-// CSP задаётся через <meta http-equiv="Content-Security-Policy"> в корневом
-// layout, а не в middleware. Причина: на Vercel заголовки из Edge middleware
-// не всегда сериализуются в Serverless Function (SSR), из-за чего nonce
-// не доходит до layout и React не применяет его к <script>. Meta-тег
-// гарантирует, что CSP всегда применяется, независимо от заголовков.
+// ── CSP Header Builder ──────────────────────────────────────────────────
+
+function buildCspPolicy(nonce: string, isDev: boolean): string {
+  const devExtra = isDev ? " 'unsafe-eval'" : "";
+  const scriptHashes = [
+    "'sha256-J9cZHZf5nVZbsm7Pqxc8RsURv1AIXkMgbhfrZvoOs/A='",
+    "'sha256-UnthrFpGFotkvMOTp/ghVMSXoZZj9Y6epaMsaBAbUtg='",
+  ].join(" ");
+  return [
+    "default-src 'self'",
+    `script-src 'nonce-${nonce}' 'strict-dynamic' 'self' ${scriptHashes}${devExtra}`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: blob: https: http:",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "connect-src 'self' https: wss:",
+    "frame-src https://www.youtube.com https://player.vimeo.com",
+    "frame-ancestors 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+    "report-uri /api/v1/csp-report",
+  ].join("; ");
+}
+
+function responseWithCsp(res: NextResponse, nonce: string): NextResponse {
+  const csp = buildCspPolicy(nonce, process.env.NODE_ENV === "development");
+  res.headers.set("Content-Security-Policy", csp);
+  return res;
+}
 
 // ── Main proxy handler ─────────────────────────────────────────────────
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const nonce = crypto.randomUUID();
+
+  // Create request headers with x-nonce passed to Next.js server components
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
 
   // CSRF check for mutating API requests (POST/PUT/PATCH/DELETE)
   // Исключаем webhooks и cron — у них нет browser origin
@@ -82,7 +112,7 @@ export async function proxy(req: NextRequest) {
   const isCsrfBypass = CSRF_BYPASS_PREFIXES.some((p) => pathname.startsWith(p));
   if (pathname.startsWith("/api/") && !isCsrfBypass) {
     const csrfError = checkCsrfOrigin(req);
-    if (csrfError) return csrfError;
+    if (csrfError) return responseWithCsp(csrfError, nonce);
   }
 
   // Rate limiting for API routes — глобальный per-IP (не per-path)
@@ -96,15 +126,18 @@ export async function proxy(req: NextRequest) {
       apiRateLimitWindowSeconds,
     );
     if (!result.success) {
-      return NextResponse.json(
-        { error: { code: "too_many_requests", message: "Слишком много запросов. Попробуйте позже." } },
-        {
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": String(apiRateLimitMaxRequests),
-            "X-RateLimit-Remaining": String(result.remaining),
-          },
-        }
+      return responseWithCsp(
+        NextResponse.json(
+          { error: { code: "too_many_requests", message: "Слишком много запросов. Попробуйте позже." } },
+          {
+            status: 429,
+            headers: {
+              "X-RateLimit-Limit": String(apiRateLimitMaxRequests),
+              "X-RateLimit-Remaining": String(result.remaining),
+            },
+          }
+        ),
+        nonce
       );
     }
   }
@@ -116,17 +149,26 @@ export async function proxy(req: NextRequest) {
         secret: process.env.NEXTAUTH_SECRET,
       });
       if (token?.authDeviceSessionRevoked) {
-        return NextResponse.next();
+        return responseWithCsp(
+          NextResponse.next({ request: { headers: requestHeaders } }),
+          nonce
+        );
       }
       if (token?.roles) {
         const roles = token.roles as string[];
         const homePath = getDefaultRolePath(roles as string[]);
         if (homePath !== FORBIDDEN_ROUTE) {
-          return NextResponse.redirect(new URL(homePath, req.url));
+          return responseWithCsp(
+            NextResponse.redirect(new URL(homePath, req.url)),
+            nonce
+          );
         }
       }
     }
-    return NextResponse.next();
+    return responseWithCsp(
+      NextResponse.next({ request: { headers: requestHeaders } }),
+      nonce
+    );
   }
 
   const token = await getToken({
@@ -137,13 +179,13 @@ export async function proxy(req: NextRequest) {
   if (!token) {
     const loginUrl = new URL(AUTH_ROUTES.LOGIN, req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+    return responseWithCsp(NextResponse.redirect(loginUrl), nonce);
   }
 
   if (token.authDeviceSessionRevoked) {
     const loginUrl = new URL(AUTH_ROUTES.LOGIN, req.url);
     loginUrl.searchParams.set("reason", "device-limit");
-    return NextResponse.redirect(loginUrl);
+    return responseWithCsp(NextResponse.redirect(loginUrl), nonce);
   }
 
   // ── 2FA check ────────────────────────────────────────────────────────
@@ -159,7 +201,10 @@ export async function proxy(req: NextRequest) {
       (p) => pathname === p || pathname.startsWith(p),
     );
     if (!isAllowed2faPath) {
-      return NextResponse.redirect(new URL("/auth/2fa", req.url));
+      return responseWithCsp(
+        NextResponse.redirect(new URL("/auth/2fa", req.url)),
+        nonce
+      );
     }
   }
 
@@ -167,10 +212,16 @@ export async function proxy(req: NextRequest) {
   const allowedRoles = getRouteRoles(pathname);
 
   if (allowedRoles && !allowedRoles.some((r) => roles.includes(r))) {
-    return NextResponse.redirect(new URL(FORBIDDEN_ROUTE, req.url));
+    return responseWithCsp(
+      NextResponse.redirect(new URL(FORBIDDEN_ROUTE, req.url)),
+      nonce
+    );
   }
 
-  return NextResponse.next();
+  return responseWithCsp(
+    NextResponse.next({ request: { headers: requestHeaders } }),
+    nonce
+  );
 }
 
 export const config = {

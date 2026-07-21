@@ -1,6 +1,18 @@
 # Project Updates
 
-## 2026-07-04 — CSP Violation Fix (Edge → SSR nonce propagation on Vercel)
+## 2026-07-22 — CSP Header Delivery Restoration (`frame-ancestors` & `report-uri` meta fix)
+
+**Goal**: Fix browser errors where `frame-ancestors` and `report-uri` directives were ignored due to delivery via `<meta http-equiv="Content-Security-Policy">`, and restore full header-based CSP delivery.
+
+### Changes
+- **`proxy.ts`**:
+  - Restored `buildCspPolicy()` and `responseWithCsp()` middleware helper functions.
+  - Generates per-request `nonce` and injects `x-nonce` into request headers while returning response `Content-Security-Policy` header.
+- **`app/layout.tsx`**:
+  - Removed `<meta httpEquiv="Content-Security-Policy">` from `<head>`.
+  - Removed duplicated `buildCspPolicy()` function.
+
+---
 
 **Goal**: Fix production CSP violation on Vercel where `_next/static/chunks` bundles were blocked by `strict-dynamic` because the nonce set in Edge middleware didn't propagate to Serverless Function SSR.
 

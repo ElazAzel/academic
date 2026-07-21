@@ -59,36 +59,7 @@ export async function generateViewport(): Promise<Viewport> {
   };
 }
 
-// ── CSP policy builder (sync с proxy.ts) ──────────────────────────────
-// Должен быть идентичен buildCspPolicy() в proxy.ts
-function buildCspPolicy(nonce: string, isDev: boolean): string {
-  const devExtra = isDev ? " 'unsafe-eval'" : "";
-  const scriptHashes = [
-    "'sha256-J9cZHZf5nVZbsm7Pqxc8RsURv1AIXkMgbhfrZvoOs/A='",
-    "'sha256-UnthrFpGFotkvMOTp/ghVMSXoZZj9Y6epaMsaBAbUtg='",
-  ].join(" ");
-  return [
-    "default-src 'self'",
-    `script-src 'nonce-${nonce}' 'strict-dynamic' 'self' ${scriptHashes}${devExtra}`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: blob: https: http:",
-    "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https: wss:",
-    "frame-src https://www.youtube.com https://player.vimeo.com",
-    "frame-ancestors 'self'",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "worker-src 'self' blob:",
-    "manifest-src 'self'",
-    "report-uri /api/v1/csp-report",
-  ].join("; ");
-}
-
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // Nonce пробрасывается из middleware через x-nonce request header.
-  // На Vercel Edge → Serverless Function заголовок может не дойти,
-  // поэтому fallback на генерацию прямо в layout.
   const nonce = (await headers()).get("x-nonce")
     ?? (await cookies()).get("__academy_nonce")?.value
     ?? crypto.randomUUID();
@@ -121,14 +92,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           id="academy-branding-css"
           nonce={nonce}
           dangerouslySetInnerHTML={{ __html: generateBrandingCss(branding) }}
-        />
-        {/* CSP via meta tag (not middleware header) — гарантирует работу
-            на Vercel, где Edge → Serverless Function header propagation
-            ненадёжен. Дублирует политику из proxy.ts. */}
-        <meta
-          httpEquiv="Content-Security-Policy"
-          nonce={nonce}
-          content={buildCspPolicy(nonce, process.env.NODE_ENV === "development")}
         />
       </head>
       <body className={`${inter.variable} ${jetBrainsMono.variable}`}>
