@@ -8,6 +8,7 @@
 - **`proxy.ts`**:
   - Restored `buildCspPolicy()` and `responseWithCsp()` middleware helper functions.
   - Generates per-request `nonce` and injects `x-nonce` into request headers while returning response `Content-Security-Policy` header.
+  - Sets `__academy_nonce` HTTP cookie so Serverless Function SSR in Next.js fallback reads matching nonce when custom request headers drop across Vercel function boundaries.
 - **`app/layout.tsx`**:
   - Removed `<meta httpEquiv="Content-Security-Policy">` from `<head>`.
   - Removed duplicated `buildCspPolicy()` function.

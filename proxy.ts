@@ -93,6 +93,12 @@ function buildCspPolicy(nonce: string, isDev: boolean): string {
 function responseWithCsp(res: NextResponse, nonce: string): NextResponse {
   const csp = buildCspPolicy(nonce, process.env.NODE_ENV === "development");
   res.headers.set("Content-Security-Policy", csp);
+  res.cookies.set("__academy_nonce", nonce, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+  });
   return res;
 }
 
