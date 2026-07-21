@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-page-custom-font */
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { headers, cookies } from "next/headers";
+import { headers } from "next/headers";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { PWARegister } from "@/components/lms/pwa-register";
@@ -61,8 +61,7 @@ export async function generateViewport(): Promise<Viewport> {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const nonce = (await headers()).get("x-nonce")
-    ?? (await cookies()).get("__academy_nonce")?.value
-    ?? crypto.randomUUID();
+    ?? undefined;
   const branding = await getRuntimeBranding();
   
   const fontSansFamily = branding.fontSans;
@@ -102,7 +101,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         >
           Перейти к содержимому
         </a>
-        <Providers>
+        <Providers nonce={nonce}>
           <div id="main-content" role="main" tabIndex={-1} className="outline-none">
             {children}
           </div>

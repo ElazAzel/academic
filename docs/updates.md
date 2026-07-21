@@ -1,5 +1,24 @@
 # Project Updates
 
+## 2026-07-22 — CSP nonce propagation for App Router chunks
+
+**Goal**: Stop production route chunks from being blocked by `script-src 'strict-dynamic'` and prevent stale nonce reuse between requests.
+
+### Changes
+- **`proxy.ts`** now forwards the complete nonce-bearing CSP as a request header as well as a response header, allowing Next.js to apply the same nonce to framework and route scripts.
+- Removed the `__academy_nonce` response cookie; a cookie represents the previous response during SSR and cannot safely carry a per-request nonce.
+- **`app/layout.tsx`** reads only the current request nonce and passes it to the client provider boundary.
+- **`components/providers.tsx`** passes the nonce to `next-themes`, covering its inline theme bootstrap script.
+- Added a release-hardening regression test for the full proxy → layout → theme-provider nonce chain.
+- Production logs showed repeated 300-second timeouts from legacy `/api/v1/notifications/stream` EventSource clients. The current UI already polls `/api/v1/notifications`, so the compatibility stream now returns authenticated HTTP `204`, which instructs old EventSource clients to stop reconnecting and releases serverless capacity that can otherwise surface as `503` responses.
+- Updated the notification architecture notes and added a regression test for the retired stream endpoint.
+
+### Verification
+- Targeted Vitest: 2 files, 11 tests passed.
+- TypeScript: clean (`tsc --noEmit`).
+- ESLint: clean with zero warnings.
+- Production build: passed with the Webpack fallback. The default local Turbopack build could not load the workspace's Windows native SWC binary; unrelated branding lookups logged expected connection errors because local Postgres was not running.
+
 ## 2026-07-22 — CSP Header Delivery Restoration (`frame-ancestors` & `report-uri` meta fix)
 
 **Goal**: Fix browser errors where `frame-ancestors` and `report-uri` directives were ignored due to delivery via `<meta http-equiv="Content-Security-Policy">`, and restore full header-based CSP delivery.

@@ -97,13 +97,29 @@ describe("release hardening readiness contract", () => {
 
   it("keeps session-dependent root side effects inside the app providers", () => {
     const layoutSource = readFileSync(path.join(root, "app", "layout.tsx"), "utf8");
-    const providersOpen = layoutSource.indexOf("<Providers>");
+    const providersOpen = layoutSource.indexOf("<Providers nonce={nonce}>");
     const heartbeat = layoutSource.indexOf("<Heartbeat />");
     const providersClose = layoutSource.indexOf("</Providers>");
 
     expect(providersOpen).toBeGreaterThan(-1);
     expect(heartbeat).toBeGreaterThan(providersOpen);
     expect(heartbeat).toBeLessThan(providersClose);
+  });
+
+  it("keeps the CSP nonce aligned across proxy, Next.js scripts and theme bootstrap", () => {
+    const proxySource = readFileSync(path.join(root, "proxy.ts"), "utf8");
+    const layoutSource = readFileSync(path.join(root, "app", "layout.tsx"), "utf8");
+    const providersSource = readFileSync(path.join(root, "components", "providers.tsx"), "utf8");
+
+    expect(proxySource).toContain('requestHeaders.set("x-nonce", nonce)');
+    expect(proxySource).toMatch(
+      /requestHeaders\.set\(\s*"Content-Security-Policy",\s*buildCspPolicy\(nonce,/,
+    );
+    expect(proxySource).not.toContain("__academy_nonce");
+    expect(layoutSource).not.toContain('cookies().get("__academy_nonce")');
+    expect(layoutSource).toContain("<Providers nonce={nonce}>");
+    expect(providersSource).toContain("<ThemeProvider");
+    expect(providersSource).toContain("nonce={nonce}");
   });
 
   it("tracks all seven release hardening work packages with owners and evidence", () => {

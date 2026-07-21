@@ -37,13 +37,13 @@ function useGlobalErrorHandler() {
   }, []);
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
   const [queryClient] = useState(() => new QueryClient());
   useGlobalErrorHandler();
   return (
     <SessionProvider refetchOnWindowFocus={false}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange nonce={nonce}>
           <NuqsAdapter>
             {children}
           </NuqsAdapter>

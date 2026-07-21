@@ -93,12 +93,6 @@ function buildCspPolicy(nonce: string, isDev: boolean): string {
 function responseWithCsp(res: NextResponse, nonce: string): NextResponse {
   const csp = buildCspPolicy(nonce, process.env.NODE_ENV === "development");
   res.headers.set("Content-Security-Policy", csp);
-  res.cookies.set("__academy_nonce", nonce, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-  });
   return res;
 }
 
@@ -111,6 +105,13 @@ export async function proxy(req: NextRequest) {
   // Create request headers with x-nonce passed to Next.js server components
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
+  // Next.js reads the request CSP to attach the nonce to framework and route
+  // scripts. Setting it only on the response leaves dynamically loaded chunks
+  // without a trusted nonce under `strict-dynamic`.
+  requestHeaders.set(
+    "Content-Security-Policy",
+    buildCspPolicy(nonce, process.env.NODE_ENV === "development"),
+  );
 
   // CSRF check for mutating API requests (POST/PUT/PATCH/DELETE)
   // Исключаем webhooks и cron — у них нет browser origin
