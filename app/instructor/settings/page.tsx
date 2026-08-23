@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,7 @@ export default async function InstructorSettingsPage() {
   const prefs = await getNotificationPreferencesAction();
 
  return (
-  <AppShell role="instructor">
+  <>
    <PageHeader title="Профиль и настройки" description="Настройки аккаунта и уведомлений преподавателя."/>
    <Tabs tabs={[
     {
@@ -153,6 +152,6 @@ export default async function InstructorSettingsPage() {
      ),
     },
       ]}/>
-    </AppShell>
+    </>
   );
 }

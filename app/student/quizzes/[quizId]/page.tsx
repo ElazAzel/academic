@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Button } from "@/components/ui/button";
 import { requireRolePage } from "@/lib/auth/page-guards";
@@ -39,7 +38,7 @@ export default async function StudentQuizPage({ params }: { params: Promise<{ qu
  const lessonHref = quiz.lessonId ? `/student/lessons/${quiz.lessonId}` : courseHref;
 
  return (
-  <AppShell role="student">
+  <>
    <div className="mb-4">
     <Button asChild size="sm" variant="secondary">
      <Link href={lessonHref}>
@@ -53,6 +52,6 @@ export default async function StudentQuizPage({ params }: { params: Promise<{ qu
     description={`${quiz.questionsCount} вопросов · порог ${quiz.passThreshold}% · ${quiz.maxAttempts} попытки`} 
   />
    <QuizView quiz={quiz}/>
-  </AppShell>
+  </>
  );
 }

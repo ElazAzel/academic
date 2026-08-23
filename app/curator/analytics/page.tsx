@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { StudentAnalyticsTable } from "@/components/lms/student-analytics-table";
@@ -24,10 +23,10 @@ export default async function CuratorAnalyticsPage() {
 
   if (students.length === 0 && !demoMode) {
     return (
-      <AppShell role="curator">
+      <>
         <PageHeader title="Аналитика" description="Детальная аналитика по слушателям." />
         <DashboardUnavailable />
-      </AppShell>
+      </>
     );
   }
 
@@ -70,7 +69,7 @@ export default async function CuratorAnalyticsPage() {
   ];
 
   return (
-    <AppShell role="curator">
+    <>
       <PageHeader title="Аналитика" description="Детальная аналитика по слушателям: прогресс, текущий модуль/блок/урок, активность." />
       <div className="space-y-6">
         <MetricGrid metrics={metrics} />
@@ -88,6 +87,6 @@ export default async function CuratorAnalyticsPage() {
         </div>
         <StudentAnalyticsTable students={students} />
       </div>
-    </AppShell>
+    </>
   );
 }

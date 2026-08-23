@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { QuestionsQueue } from "@/components/lms/dashboard-widgets";
 import { Tabs } from "@/components/ui/tabs";
@@ -23,7 +22,7 @@ export default async function SuperCuratorQuestionsPage() {
  ]);
 
  return (
-  <AppShell role="super_curator">
+  <>
    <PageHeader title="Вопросы слушателей" description="Все вопросы от всех кураторов и нераспределённые." />
    <div className="mt-6">
     <Tabs tabs={[
@@ -31,6 +30,6 @@ export default async function SuperCuratorQuestionsPage() {
      { label: `Отвеченные (${answered.length})`, content: <QuestionsQueue questions={answered} /> },
     ]} />
    </div>
-  </AppShell>
+  </>
  );
 }

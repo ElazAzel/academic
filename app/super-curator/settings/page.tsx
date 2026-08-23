@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +32,7 @@ export default async function SuperCuratorSettingsPage() {
   const prefs = await getNotificationPreferencesAction();
 
  return (
-  <AppShell role="super_curator">
+  <>
    <PageHeader title="Профиль и настройки" description="Настройки аккаунта и уведомлений супер-куратора."/>
    <Tabs
     tabs={[
@@ -154,6 +153,6 @@ export default async function SuperCuratorSettingsPage() {
       }
     ]}
   />
-  </AppShell>
+  </>
  );
 }

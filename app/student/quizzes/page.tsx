@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { StatusBadge } from "@/components/lms/status-badge";
 import { EmptyState } from "@/components/lms/empty-state";
@@ -22,7 +21,7 @@ export default async function StudentQuizzesPage() {
  const attempts = await getStudentQuizAttemptsAction();
 
  return (
-  <AppShell role="student">
+  <>
    <PageHeader title="Тесты" description="Список пройденных тестов."/>
    <div className="space-y-4 mt-6">
     {attempts.length > 0 ? (
@@ -52,6 +51,6 @@ export default async function StudentQuizzesPage() {
      <EmptyState icon={FileText} title="Вы ещё не проходили тестов" description="После прохождения теста в рамках урока он появится в этом списке." />
     )}
    </div>
-  </AppShell>
+  </>
  );
 }

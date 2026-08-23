@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/lms/bar-chart";
@@ -24,7 +23,7 @@ export default async function CuratorReportsPage() {
   const data = await getCuratorReportData();
 
   return (
-    <AppShell role="curator">
+    <>
       <PageHeader
         title="Отчёты"
         description="Просмотр и экспорт статистики по вашим слушателям."
@@ -110,6 +109,6 @@ export default async function CuratorReportsPage() {
           </CardContent>
         </Card>
       )}
-    </AppShell>
+    </>
   );
 }

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { BOTTOM_NAV_BY_ROLE, getActiveNavHref } from "@/components/layout/navigation";
 import { cn } from "@/lib/utils";
@@ -10,7 +9,6 @@ import type { RoleKey } from "@/types/domain";
 
 export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
   const pathname = usePathname();
-  const shouldReduce = useReducedMotion();
   const items = BOTTOM_NAV_BY_ROLE[role] ?? BOTTOM_NAV_BY_ROLE.student;
   const activeHref = getActiveNavHref(pathname, items);
 
@@ -29,37 +27,26 @@ export function MobileBottomNav({ role = "student" }: { role?: RoleKey }) {
             className="bottom-nav-item relative"
             aria-current={isActive ? "page" : undefined}
           >
-            <div
+            <span
               className={cn(
-                "relative flex h-8 items-center justify-center rounded-xl px-4 transition-all duration-200",
-                isActive ? "bg-m3-primary-fixed/50" : "bg-transparent"
+                "relative flex h-8 items-center justify-center rounded-lg px-4 transition-colors duration-150",
+                isActive ? "bg-primary/[0.09]" : "bg-transparent"
               )}
             >
               <Icon
                 name={item.icon}
                 size={20}
+                fill={isActive}
                 className={cn(
-                  "transition-colors duration-200",
-                  isActive
-                    ? "text-m3-primary"
-                    : "text-m3-on-surface-variant"
+                  "transition-colors duration-150",
+                  isActive ? "text-primary" : "text-muted-foreground"
                 )}
               />
-              {isActive && (
-                <motion.span
-                  layoutId={shouldReduce ? undefined : "bottom-nav-indicator"}
-                  className="absolute -bottom-1 h-[3px] w-6 rounded-full bg-m3-primary shadow-[0_0_8px_var(--m3-primary)]"
-                  style={{ left: "calc(50% - 0.75rem)" }}
-                  transition={shouldReduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
-            </div>
+            </span>
             <span
               className={cn(
-                "text-[10px] font-medium leading-tight transition-all duration-200",
-                isActive
-                  ? "text-m3-primary font-semibold"
-                  : "text-m3-on-surface-variant"
+                "text-[10px] leading-tight transition-colors duration-150",
+                isActive ? "font-semibold text-primary" : "font-medium text-muted-foreground"
               )}
             >
               {item.label}

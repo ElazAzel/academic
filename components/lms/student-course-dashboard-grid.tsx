@@ -48,7 +48,7 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-m3-outline-variant pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--academy-line)] pb-2">
         <div className="flex flex-wrap gap-1.5">
           {TABS.map((tab) => {
             const count = courses.filter((c) => {
@@ -66,19 +66,19 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
                 aria-pressed={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex min-h-10 items-center gap-1.5 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-m3-primary",
+                  "flex min-h-10 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                   activeTab === tab.id
-                    ? "bg-m3-primary text-m3-on-primary"
-                    : "text-m3-on-surface-variant hover:bg-m3-surface-container-high"
+                    ? "bg-primary/[0.08] text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
                 <Icon name={tab.icon} size={16} />
                 <span>{tab.label}</span>
                 <span className={cn(
-                  "rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none",
+                  "rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none tabular-nums",
                   activeTab === tab.id
-                    ? "bg-m3-on-primary text-m3-primary"
-                    : "bg-m3-surface-container-highest text-m3-on-surface-variant"
+                    ? "bg-primary/10 text-primary"
+                    : "bg-muted text-muted-foreground"
                 )}>
                   {count}
                 </span>
@@ -90,11 +90,11 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
 
       {/* Grid of Courses */}
       {filteredCourses.length === 0 ? (
-        <Card className="border-m3-outline-variant bg-m3-surface-container-lowest p-8 text-center">
+        <Card className="p-8 text-center">
           <CardContent className="space-y-2 py-4">
-            <Icon name="search_off" size={40} className="mx-auto text-m3-outline" />
-            <p className="font-label-lg text-label-lg text-m3-on-surface">Нет курсов в этой категории</p>
-            <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
+            <Icon name="search_off" size={40} className="mx-auto text-muted-foreground/60" />
+            <p className="text-base font-semibold text-foreground">Нет курсов в этой категории</p>
+            <p className="text-sm text-muted-foreground">
               Попробуйте выбрать другую вкладку или дождитесь назначения курса академией.
             </p>
           </CardContent>
@@ -104,18 +104,18 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
           {filteredCourses.map((c) => (
             <FadeIn key={c.courseId}>
               <CardHover>
-                <Card className="border-m3-outline-variant">
+                <Card>
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between mb-2">
                       <StatusBadge status={c.status as BadgeStatus} />
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-m3-primary-fixed/30 text-m3-primary">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/[0.08] text-primary">
                         <Icon name="menu_book" size={18} />
                       </span>
                     </div>
-                    <CardTitle className="line-clamp-2 text-headline-sm font-headline-sm text-m3-on-surface">
+                    <CardTitle className="line-clamp-2 text-headline-sm font-headline-sm text-foreground">
                       {c.courseTitle}
                     </CardTitle>
-                    <CardDescription className="line-clamp-2 min-h-[2.5rem] font-body-sm text-body-sm text-m3-on-surface-variant/90">
+                    <CardDescription className="line-clamp-2 min-h-[2.5rem] font-body-sm text-body-sm text-muted-foreground">
                       {c.currentModuleTitle 
                         ? `${c.currentModuleTitle} ${c.currentLessonTitle ? `→ ${c.currentLessonTitle}` : ""}`
                         : "Уроки ещё не начаты"}
@@ -124,19 +124,20 @@ export function StudentCourseDashboardGrid({ courses }: StudentCourseDashboardGr
 
                   <CardContent className="space-y-4">
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between text-body-sm font-body-sm text-m3-on-surface-variant">
+                      <div className="flex items-center justify-between text-body-sm font-body-sm text-muted-foreground">
                         <span>Прогресс курса</span>
-                        <span className="font-semibold text-m3-primary">{c.percent}%</span>
+                        <span className="font-semibold text-primary">{c.percent}%</span>
                       </div>
-                      <Progress value={c.percent} className="h-1.5 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
+                      <Progress value={c.percent} className="h-1.5 bg-muted [&>div]:bg-primary" />
                     </div>
 
-                    <div className="flex items-center gap-2 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low p-2.5 text-body-xs font-body-xs text-m3-on-surface-variant">
+                    <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-2.5 text-xs text-muted-foreground">
                       <Icon 
                         name={c.percent >= 100 ? "workspace_premium" : c.status === "BLOCKED" ? "pause" : "schedule"} 
                         size={16} 
                         className={cn(
-                          c.percent >= 100 ? "text-emerald-500" : c.status === "BLOCKED" ? "text-amber-500" : "text-m3-primary"
+                          "shrink-0",
+                          c.percent >= 100 ? "text-success" : c.status === "BLOCKED" ? "text-warning" : "text-primary"
                         )}
                       />
                       <span className="line-clamp-2 min-w-0">{getCourseStateText(c)}</span>

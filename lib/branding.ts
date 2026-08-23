@@ -14,8 +14,8 @@ export const DEFAULT_BRAND_ACCENT_CONTAINER_COLOR = "#00857a";
 export const DEFAULT_BRAND_BACKGROUND_COLOR = "#f8f9fc";
 export const DEFAULT_BRAND_SURFACE_COLOR = "#ffffff";
 
-export const DEFAULT_BRAND_FONT_SANS = "Inter";
-export const DEFAULT_BRAND_FONT_HEADING = "Inter";
+export const DEFAULT_BRAND_FONT_SANS = "Manrope";
+export const DEFAULT_BRAND_FONT_HEADING = "Manrope";
 export const DEFAULT_BRAND_FONT_MONO = "JetBrains Mono";
 export const DEFAULT_BRAND_CUSTOM_CSS = "";
 

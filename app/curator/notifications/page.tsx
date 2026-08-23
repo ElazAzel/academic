@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { NotificationsList } from "@/components/lms/notifications-list";
 import { requireRolePage } from "@/lib/auth/page-guards";
@@ -15,7 +14,7 @@ export default async function CuratorNotificationsPage() {
   await requireRolePage(["curator", "super_curator"]);
 
   return (
-    <AppShell role="curator">
+    <>
       <PageHeader
         title="Уведомления"
         description="Уведомления о сообщениях слушателей, вопросах и изменениях."
@@ -23,6 +22,6 @@ export default async function CuratorNotificationsPage() {
       <div className="mt-6">
         <NotificationsList />
       </div>
-    </AppShell>
+    </>
   );
 }

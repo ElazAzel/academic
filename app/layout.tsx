@@ -1,6 +1,5 @@
-/* eslint-disable @next/next/no-page-custom-font */
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Manrope, JetBrains_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 import { Providers } from "@/components/providers";
@@ -8,7 +7,9 @@ import { PWARegister } from "@/components/lms/pwa-register";
 import { Heartbeat } from "@/components/lms/heartbeat";
 import { createBrandingCssVariables, getRuntimeBranding, generateBrandingCss } from "@/server/modules/branding/service";
 
-const inter = Inter({
+// Переменная называется --font-inter для обратной совместимости:
+// её переопределяет рантайм-брендинг (server/modules/branding/service.ts).
+const manrope = Manrope({
   subsets: ["latin", "cyrillic"],
   display: "swap",
   variable: "--font-inter",
@@ -82,18 +83,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="ru" nonce={nonce} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <link href={googleFontsUrl} rel="stylesheet" nonce={nonce} />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..200&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..200&display=swap"
-          rel="stylesheet"
-          nonce={nonce}
-        />
         <style
           id="academy-branding-css"
           nonce={nonce}
           dangerouslySetInnerHTML={{ __html: generateBrandingCss(branding) }}
         />
       </head>
-      <body className={`${inter.variable} ${jetBrainsMono.variable}`}>
+      <body className={`${manrope.variable} ${jetBrainsMono.variable}`}>
         <a
           href="#main-content"
           aria-label="Перейти к основному содержимому"

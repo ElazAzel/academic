@@ -3,37 +3,18 @@ import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
 import { UserAccountNav } from "@/components/layout/user-account-nav";
+import { SearchTrigger } from "@/components/layout/search-trigger";
 import { ThemeToggle } from "@/components/lms/theme-toggle";
 import { NotificationsDropdown } from "@/components/lms/notifications-dropdown";
-import { NAV_BY_ROLE } from "@/components/layout/navigation";
-import type { RoleKey } from "@/types/domain";
 import { AUTH_ROUTES } from "@/lib/constants";
 import { getRuntimeBranding } from "@/server/modules/branding/service";
 import { BrandMark } from "@/components/layout/brand-mark";
-
-const HEADER_LINKS_COUNT: Record<string, number> = {
-  student: 3,
-  curator: 3,
-  super_curator: 3,
-  instructor: 3,
-  admin: 3,
-  customer_observer: 3,
-};
-
-function getHeaderLinks(roles: string[]) {
-  const rolePriority: RoleKey[] = ["admin", "super_curator", "curator", "instructor", "customer_observer", "student"];
-  const primaryRole = rolePriority.find((r) => roles.includes(r));
-  if (!primaryRole) return { links: [], primaryRole: null };
-  const links = NAV_BY_ROLE[primaryRole];
-  const count = HEADER_LINKS_COUNT[primaryRole] ?? 3;
-  return { links: links.slice(0, count), primaryRole };
-}
 
 export async function SiteHeader() {
   const [user, branding] = await Promise.all([getCurrentUser(), getRuntimeBranding()]);
 
   return (
-    <header className="sticky top-0 z-30 bg-m3-surface-container-lowest/75 shadow-[0_1px_0_var(--academy-line),0_8px_32px_rgba(15,23,42,0.04)] backdrop-blur-2xl site-header">
+    <header className="site-header sticky top-0 z-30 border-b border-[var(--academy-line)] bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 md:h-16 max-w-7xl items-center justify-between px-3 md:px-6">
         {/* Logo — compact on mobile */}
         <Link
@@ -41,30 +22,19 @@ export async function SiteHeader() {
           aria-label={`На главную ${branding.name}`}
           className="group flex shrink-0 items-center gap-2.5 font-semibold"
         >
-          <BrandMark branding={branding} size="sm" className="md:h-9 md:w-9 transition-all group-hover:shadow-[0_0_20px_var(--m3-primary)]" />
+          <BrandMark branding={branding} size="sm" className="md:h-9 md:w-9" />
           <span className="hidden sm:flex sm:flex-col sm:leading-none">
-            <span className="text-sm text-m3-primary md:text-base font-semibold tracking-tight">{branding.name}</span>
-            <span className="mt-1 hidden text-[11px] font-medium text-m3-on-surface-variant/60 md:inline">
+            <span className="text-sm text-primary md:text-base font-semibold tracking-tight">
+              {branding.name}
+            </span>
+            <span className="mt-1 hidden text-[11px] font-medium text-muted-foreground md:inline">
               {branding.subtitle}
             </span>
           </span>
         </Link>
 
-        {/* Desktop nav links — hidden on mobile (bottom nav handles it) */}
-        {(() => {
-          if (!user) return null;
-          const { links } = getHeaderLinks(user.roles);
-          if (links.length === 0) return null;
-          return (
-            <nav className="hidden items-center gap-0.5 rounded-xl border border-m3-outline-variant/30 bg-m3-surface-container/40 p-1 backdrop-blur-sm lg:flex" aria-label="Основная навигация">
-              {links.map((item) => (
-                <Button key={item.href} asChild variant="ghost" size="sm" className="h-8 min-h-8 px-3 rounded-lg">
-                  <Link href={item.href}>{item.label}</Link>
-                </Button>
-              ))}
-            </nav>
-          );
-        })()}
+        {/* Search trigger (desktop) */}
+        {user ? <SearchTrigger /> : null}
 
         {/* Right actions */}
         <div className="flex items-center gap-1 md:gap-1.5">

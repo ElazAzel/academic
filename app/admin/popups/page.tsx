@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { AdminPopupManagerClient } from "./client";
@@ -15,7 +14,7 @@ export default async function AdminPopupsPage() {
   await requireRolePage(["admin"]);
 
   return (
-    <AppShell role="admin">
+    <>
       <PageHeader
         title="Управление попапами"
         description="Создание и управление всплывающими уведомлениями для пользователей."
@@ -23,6 +22,6 @@ export default async function AdminPopupsPage() {
       <div className="mt-6">
         <AdminPopupManagerClient />
       </div>
-    </AppShell>
+    </>
   );
 }

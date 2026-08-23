@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +19,7 @@ export default async function SuperCuratorDistributionPage() {
   const data = await getSuperCuratorDistributionData();
 
   return (
-    <AppShell role="super_curator">
+    <>
       <PageHeader
         title="Распределение слушателей"
         description="Назначение и перераспределение только в зоне ответственности супер-куратора."
@@ -134,6 +133,6 @@ export default async function SuperCuratorDistributionPage() {
           </CardContent>
         </Card>
       </div>
-    </AppShell>
+    </>
   );
 }

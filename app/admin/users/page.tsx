@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
 import { UserRoleEditor } from "@/components/admin/user-role-editor";
 import { PageHeader } from "@/components/lms/page-header";
 import { Avatar } from "@/components/ui/avatar";
@@ -50,7 +49,7 @@ export default async function AdminUsersPage(props: {
   const cohorts = await getActiveCohortsForSelector();
 
   return (
-    <AppShell role={actor.roles.includes("admin") ? "admin" : "super_curator"}>
+    <>
       <PageHeader title="Пользователи" description="Выданные аккаунты, статусы и роли." />
       <div className="space-y-6">
         <UserManagementToolbar assignableRoles={assignableRoles} />
@@ -141,6 +140,6 @@ export default async function AdminUsersPage(props: {
           </div>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

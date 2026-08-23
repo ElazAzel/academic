@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { AppShell } from "@/components/layout/app-shell";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
 import { PageSkeleton } from "@/components/lms/page-skeleton";
@@ -22,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 export default function AdminDashboardPage() {
  return (
-  <AppShell role="admin">
+  <>
    <PageHeader
     title="Дашборд администратора"
     description="Обзор всех систем, потоков и выданных сертификатов."
@@ -30,7 +29,7 @@ export default function AdminDashboardPage() {
    <Suspense fallback={<PageSkeleton />}>
     <AdminDashboardContent />
    </Suspense>
-  </AppShell>
+  </>
  );
 }
 

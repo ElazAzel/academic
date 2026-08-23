@@ -2,9 +2,8 @@ import type { LucideIcon } from "lucide-react";
 import { Icon } from "@/components/ui/icon";
 
 /**
- * Компонент пустого состояния.
- * `icon` — либо строка (Material Symbols name), либо компонент LucideIcon.
- * При передаче LucideIcon используется `<Icon>` враппер с Material Symbols.
+ * Пустое состояние: спокойная заглушка с понятным следующим действием.
+ * `icon` — строка (имя из ICON_MAP) или компонент LucideIcon.
  */
 export function EmptyState({
   icon: iconProp,
@@ -17,18 +16,20 @@ export function EmptyState({
   description: string;
   action?: React.ReactNode;
 }) {
-  const LucideIconCmp = typeof iconProp === "string" ? null : iconProp;
+  const LucideCmp = typeof iconProp === "string" ? null : iconProp;
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-m3-outline-variant/30 bg-m3-surface-container-lowest/60 px-6 py-16 text-center shadow-m3-soft backdrop-blur-sm">
-      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-m3-surface-container-high/40 shadow-[0_0_24px_rgba(26,68,148,0.06)]">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 px-6 py-14 text-center">
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
         {typeof iconProp === "string" ? (
-          <Icon name={iconProp} size={28} className="text-m3-on-surface-variant/50" />
-        ) : LucideIconCmp ? (
-          <LucideIconCmp className="h-7 w-7 text-m3-on-surface-variant/50" />
+          <Icon name={iconProp} size={24} />
+        ) : LucideCmp ? (
+          <LucideCmp className="h-6 w-6" aria-hidden="true" />
         ) : null}
       </div>
-      <h3 className="text-headline-sm font-headline-sm text-m3-on-surface tracking-tight">{title}</h3>
-      <p className="mt-1.5 max-w-sm text-body-md font-body-md text-m3-on-surface-variant leading-relaxed">{description}</p>
+      <h3 className="text-title-lg font-title-lg tracking-tight text-foreground">{title}</h3>
+      <p className="mt-1.5 max-w-sm text-body-sm font-body-sm text-muted-foreground leading-relaxed">
+        {description}
+      </p>
       {action && <div className="mt-5">{action}</div>}
     </div>
   );

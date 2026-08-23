@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getInstructorAssignmentEditData } from "@/server/modules/page-data/service";
@@ -22,7 +21,7 @@ export default async function InstructorEditAssignmentPage({ params }: { params:
  if (!assignment) notFound();
 
  return (
-  <AppShell role="instructor">
+  <>
    <PageHeader 
     title="Редактор задания" 
     description={`Редактирование задания: ${assignment.title}. Настройте инструкции и критерии оценки.`} 
@@ -31,6 +30,6 @@ export default async function InstructorEditAssignmentPage({ params }: { params:
    <div className="mt-8">
     <AssignmentEditForm assignment={assignment as unknown as Parameters<typeof AssignmentEditForm>[0]["assignment"]}/>
    </div>
-  </AppShell>
+  </>
  );
 }

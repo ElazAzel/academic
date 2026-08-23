@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { AppShell } from "@/components/layout/app-shell";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
 import { PageSkeleton } from "@/components/lms/page-skeleton";
@@ -25,12 +24,12 @@ export const dynamic = "force-dynamic";
 
 export default function CustomerObserverDashboardPage() {
  return (
-  <AppShell role="customer_observer">
+  <>
    <PageHeader title="Дашборд проекта" description="Прогресс, посещаемость, сертификаты и отчёты."/>
    <Suspense fallback={<PageSkeleton />}>
     <CustomerObserverDashboardContent />
    </Suspense>
-  </AppShell>
+  </>
  );
 }
 

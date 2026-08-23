@@ -166,7 +166,7 @@ export function createBrandingCssVariables(branding: BrandingConfig): BrandingCs
     "--m3-surface-container-lowest": branding.surfaceColor,
     "--m3-surface-container-low": `color-mix(in srgb, ${branding.surfaceColor} 92%, ${branding.primaryColor})`,
     "--m3-surface-container": `color-mix(in srgb, ${branding.surfaceColor} 88%, ${branding.primaryColor})`,
-    "--m3-surface-container-high: animate": `color-mix(in srgb, ${branding.surfaceColor} 82%, ${branding.primaryColor})`,
+    "--m3-surface-container-high": `color-mix(in srgb, ${branding.surfaceColor} 82%, ${branding.primaryColor})`,
   };
 }
 

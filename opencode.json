@@ -1,12 +1,39 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": ["AI.md", "ai/roles/README.md", "docs/SKILL.md", "docs/ai-agent-instructions.md"],
+  "instructions": [
+    "AI.md",
+    "ai/roles/README.md",
+    "docs/SKILL.md",
+    "docs/ai-agent-instructions.md",
+    "docs/ORCHESTRATION.md"
+  ],
   "skills": {
     "paths": [
       ".agents/skills",
       "skills",
-      ".opencode/skill"
+      ".opencode/skill",
+      ".opencode/skills"
     ]
+  },
+  "references": {
+    "humanizer-ru": {
+      "path": "C:/Users/Elaz/Documents/ACADEMIC LMS/tools/humanizer-ru",
+      "description": "humanizer-ru skill source (SKILL.md, references/catalog.md, commands, scan.py). Always consult for Russian text humanization."
+    },
+    "owasp-top10": {
+      "path": "docs/owasp-top10-2025.md",
+      "description": "OWASP Top 10:2025 official list + security checklist. Always consult for security review."
+    }
+  },
+  "agent": {
+    "text-humanizer": {
+      "mode": "subagent",
+      "description": "Очеловечивание русского пользовательского текста по скиллу humanizer-ru."
+    },
+    "security-guard": {
+      "mode": "subagent",
+      "description": "Security-ревью изменений кодовой базы по OWASP Top 10:2025."
+    }
   },
   "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
 }

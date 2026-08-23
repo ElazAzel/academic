@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Award, Download, ExternalLink } from "lucide-react";
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { EmptyState } from "@/components/lms/empty-state";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ export default async function StudentCertificatesPage() {
   const certificates = await listCertificates({ userId: user.id });
 
   return (
-    <AppShell role="student">
+    <>
       <PageHeader title="Мои сертификаты" description="Выданные сертификаты о прохождении курсов." />
 
       {certificates.length > 0 ? (
@@ -124,6 +123,6 @@ export default async function StudentCertificatesPage() {
           />
         </div>
       )}
-    </AppShell>
+    </>
   );
 }

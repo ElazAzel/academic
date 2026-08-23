@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getSuperCuratorChatPageData } from "@/server/modules/page-data/service";
@@ -27,7 +26,7 @@ export default async function SuperCuratorChatPage() {
   // Сортировка: сначала с непрочитанными, потом по дате
   // Группировка по куратору
   return (
-    <AppShell role="super_curator">
+    <>
       <PageHeader
         title="Чат кураторов"
         description="Обзор всех диалогов кураторов со слушателями (только просмотр)."
@@ -86,6 +85,6 @@ export default async function SuperCuratorChatPage() {
           </div>
         ))}
       </div>
-    </AppShell>
+    </>
   );
 }

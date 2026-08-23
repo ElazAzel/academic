@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireRolePage } from "@/lib/auth/page-guards";
@@ -19,7 +18,7 @@ export default async function InstructorDeadlinesPage() {
   const courses = await getInstructorCoursesForDeadlines(user.id);
 
   return (
-    <AppShell role="instructor">
+    <>
       <PageHeader
         title="Дедлайны блоков"
         description="Установите рекомендованные даты завершения блоков для потоков ваших курсов."
@@ -60,6 +59,6 @@ export default async function InstructorDeadlinesPage() {
           </div>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

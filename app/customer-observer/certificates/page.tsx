@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,7 +21,7 @@ export default async function CustomerObserverCertificatesPage() {
  const certificates = await listCertificates({ userIds: scopedIds ?? [] });
 
  return (
-  <AppShell role="customer_observer">
+  <>
    <PageHeader
     title="Сертификаты"
     description="Список выданных сертификатов по проекту и курсам, доступным заказчику."
@@ -59,6 +58,6 @@ export default async function CustomerObserverCertificatesPage() {
      )}
     </CardContent>
    </Card>
-  </AppShell>
+  </>
  );
 }

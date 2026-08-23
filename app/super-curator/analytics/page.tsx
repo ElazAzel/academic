@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { StudentAnalyticsTable } from "@/components/lms/student-analytics-table";
@@ -25,10 +24,10 @@ export default async function SuperCuratorAnalyticsPage() {
 
   if (students.length === 0 && !demoMode) {
     return (
-      <AppShell role="super_curator">
+      <>
         <PageHeader title="Аналитика" description="Детальная аналитика по слушателям." />
         <DashboardUnavailable />
-      </AppShell>
+      </>
     );
   }
 
@@ -71,7 +70,7 @@ export default async function SuperCuratorAnalyticsPage() {
   ];
 
   return (
-    <AppShell role="super_curator">
+    <>
       <PageHeader title="Аналитика" description="Детальная аналитика по слушателям всех кураторов." />
       <div className="space-y-6">
         <MetricGrid metrics={metrics} />
@@ -94,6 +93,6 @@ export default async function SuperCuratorAnalyticsPage() {
           <VisitAnalyticsBlock days={30} roleFilter="student" />
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

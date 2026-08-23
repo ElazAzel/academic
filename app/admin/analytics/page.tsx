@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { StudentAnalyticsTable } from "@/components/lms/student-analytics-table";
@@ -172,7 +171,7 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
   ];
 
   return (
-    <AppShell role="admin">
+    <>
       <PageHeader title="Аналитика" description="Активность пользователей, завершения курсов, тесты и экспорт."/>
       <div className="space-y-6">
         <MetricGrid metrics={metrics}/>
@@ -312,6 +311,6 @@ export default async function AdminAnalyticsPage(props: { searchParams?: Promise
           },
         ]}/>
       </div>
-    </AppShell>
+    </>
   );
 }

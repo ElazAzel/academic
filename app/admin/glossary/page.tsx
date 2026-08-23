@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getGlossaryEntries, getGlossaryCategories } from "@/server/actions/glossary";
@@ -20,9 +19,9 @@ export default async function AdminGlossaryPage() {
   ]);
 
   return (
-    <AppShell role="admin">
+    <>
       <PageHeader title="Глоссарий" description="Управление ответами на частые вопросы кураторов." />
       <GlossaryEditor entries={entries} categories={categories} />
-    </AppShell>
+    </>
   );
 }

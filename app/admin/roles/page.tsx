@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +27,7 @@ export default async function AdminRolesPage() {
  await requireRolePage(["admin"]);
 
  return (
-  <AppShell role="admin">
+  <>
    <PageHeader title="Роли и права" description="RBAC матрица: роли и серверные permissions."/>
    <div className="space-y-4">
     {ROLES.map((r) => (
@@ -48,6 +47,6 @@ export default async function AdminRolesPage() {
      </Card>
     ))}
    </div>
-  </AppShell>
+  </>
  );
 }

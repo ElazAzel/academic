@@ -1,50 +1,234 @@
 import { cn } from "@/lib/utils";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowLeftRight,
+  ArrowRight,
+  Award,
+  BadgeCheck,
+  Ban,
+  BarChart3,
+  Bell,
+  BellRing,
+  Book,
+  BookOpen,
+  Building2,
+  Calendar,
+  CalendarDays,
+  CheckCircle2,
+  CheckCheck,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  ClipboardCheck,
+  ClipboardList,
+  Clock,
+  Code,
+  Download,
+  Eye,
+  EyeOff,
+  FileQuestion,
+  FileSearch,
+  FileText,
+  FileUp,
+  Filter,
+  Flag,
+  FolderOpen,
+  GraduationCap,
+  HelpCircle,
+  History,
+  Home,
+  Hourglass,
+  Image as ImageIcon,
+  KeyRound,
+  Layers,
+  LayoutDashboard,
+  LifeBuoy,
+  ListChecks,
+  ListFilter,
+  Loader2,
+  Lock,
+  LogIn,
+  LogOut,
+  Mail,
+  Medal,
+  Menu as MenuIcon,
+  MessageCircle,
+  MessagesSquare,
+  MonitorPlay,
+  Palette,
+  Paperclip,
+  Pencil,
+  PlayCircle,
+  Plus,
+  RefreshCw,
+  Reply,
+  Rocket,
+  Search,
+  SearchX,
+  Send,
+  Settings,
+  Shuffle,
+  Smile,
+  Star,
+  Sun,
+  Tag,
+  Target,
+  Timer,
+  Trash2,
+  TrendingUp,
+  Trophy,
+  Upload,
+  User,
+  UserCheck,
+  UserPlus,
+  Users,
+  UserX,
+  X,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 /**
- * Обёртка для Material Symbols (Google Fonts icon font).
- *
- * Использование:
- * ```tsx
- * <Icon name="home" />
- * <Icon name="arrow_back" className="text-m3-primary" size={20} />
- * ```
- *
- * Доступные стили: `rounded` (по умолчанию), `outlined`, `sharp`, `two-tone`.
- * Полный список иконок: https://fonts.google.com/icons
+ * Единая иконка проекта. Имена совместимы со старыми Material Symbols,
+ * рендер идёт через lucide-react (tree-shakeable SVG вместо иконочного шрифта).
  */
+const ICON_MAP: Record<string, LucideIcon> = {
+  add: Plus,
+  analytics: TrendingUp,
+  arrow_back: ArrowLeft,
+  arrow_forward: ArrowRight,
+  assignment: ClipboardList,
+  attach_file: Paperclip,
+  award_star: Award,
+  badge: BadgeCheck,
+  bar_chart: BarChart3,
+  block: Ban,
+  book: Book,
+  calendar_today: Calendar,
+  cancel: Ban,
+  category: Tag,
+  chat: MessageCircle,
+  chats: MessagesSquare,
+  check_circle: CheckCircle2,
+  checklist: ListChecks,
+  chevron_right: ChevronRight,
+  clipboard_check: ClipboardCheck,
+  close: X,
+  code: Code,
+  company: Building2,
+  content_copy: FileText,
+  dashboard: LayoutDashboard,
+  delete: Trash2,
+  description: FileText,
+  done_all: CheckCheck,
+  download: Download,
+  edit: Pencil,
+  emoji_emotions: Smile,
+  error: AlertTriangle,
+  event: CalendarDays,
+  expand_more: ChevronDown,
+  expand_less: ChevronDown,
+  fact_check: ListChecks,
+  filter: Filter,
+  filter_list: ListFilter,
+  flag: Flag,
+  folder: FolderOpen,
+  forum: MessagesSquare,
+  goal: Target,
+  grade: Star,
+  group: Users,
+  group_add: UserPlus,
+  groups: Users,
+  help: HelpCircle,
+  help_center: LifeBuoy,
+  history: History,
+  home: Home,
+  hourglass_top: Hourglass,
+  image: ImageIcon,
+  insights: TrendingUp,
+  layers: Layers,
+  light_mode: Sun,
+  lock: Lock,
+  login: LogIn,
+  logout: LogOut,
+  mail: Mail,
+  manage_search: FileSearch,
+  menu: MenuIcon,
+  menu_book: BookOpen,
+  military_tech: Medal,
+  monitoring: BarChart3,
+  notifications: Bell,
+  notifications_active: BellRing,
+  open_in_new: ArrowRight,
+  organization: Building2,
+  password: KeyRound,
+  person: User,
+  person_add: UserPlus,
+  person_check: UserCheck,
+  person_off: UserX,
+  person_remove: UserX,
+  play_arrow: PlayCircle,
+  play_circle: PlayCircle,
+  progress_activity: Loader2,
+  question: FileQuestion,
+  quiz: FileQuestion,
+  rate_review: Star,
+  refresh: RefreshCw,
+  reply: Reply,
+  rocket_launch: Rocket,
+  rule: ListChecks,
+  school: GraduationCap,
+  search: Search,
+  search_off: SearchX,
+  send: Send,
+  settings: Settings,
+  shuffle: Shuffle,
+  swap_horiz: ArrowLeftRight,
+  schedule: Clock,
+  task_alt: CheckCircle2,
+  theme: Palette,
+  timer: Timer,
+  trending_up: TrendingUp,
+  unpublished: Ban,
+  upload: Upload,
+  upload_file: FileUp,
+  verified: BadgeCheck,
+  verified_user: BadgeCheck,
+  video_camera_front: MonitorPlay,
+  video_library: MonitorPlay,
+  visibility: Eye,
+  visibility_off: EyeOff,
+  warning: AlertTriangle,
+  workspace_premium: Trophy,
+};
+
 export function Icon({
   name,
   size = 24,
   weight = 400,
-  grade = 0,
   fill = false,
-  opticalSize = 24,
   className,
   style,
   ...props
 }: {
   name: string;
   size?: number;
-  weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700;
-  grade?: -25 | 0 | 200;
+  weight?: number | string;
   fill?: boolean;
-  opticalSize?: number;
 } & Omit<React.HTMLAttributes<HTMLSpanElement>, "children">) {
+  const key = String(name ?? "").trim();
+  const Lucide = ICON_MAP[key] ?? Circle;
+  const numericWeight = Number(weight) || 400;
+  const strokeWidth = fill ? 2.25 : numericWeight <= 300 ? 1.75 : numericWeight >= 600 ? 2.25 : 2;
+
   return (
     <span
-      className={cn("material-symbols-rounded select-none", className)}
-      style={{
-        fontVariationSettings: `'FILL' ${fill ? 1 : 0}, 'wght' ${weight}, 'GRAD' ${grade}, 'opsz' ${opticalSize}`,
-        fontSize: size,
-        width: size,
-        height: size,
-        lineHeight: 1,
-        ...style,
-      }}
+      className={cn("inline-flex shrink-0 items-center justify-center select-none", className)}
+      style={{ width: size, height: size, ...style }}
       aria-hidden="true"
       {...props}
     >
-      {name}
+      <Lucide size={size} strokeWidth={strokeWidth} aria-hidden="true" focusable="false" />
     </span>
   );
 }

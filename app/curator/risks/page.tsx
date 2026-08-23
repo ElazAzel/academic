@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,7 +60,7 @@ export default async function CuratorRisksPage() {
   ] satisfies DashboardMetric[];
 
   return (
-    <AppShell role="curator">
+    <>
       <PageHeader
         title="Риски слушателей"
         description="Детальная информация о рисках: неактивные, просроченные, отстающие."
@@ -167,6 +166,6 @@ export default async function CuratorRisksPage() {
           </Table>
         </CardContent>
       </Card>
-    </AppShell>
+    </>
   );
 }

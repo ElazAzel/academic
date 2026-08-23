@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getMyConversations } from "@/server/actions/chat";
@@ -25,7 +24,7 @@ export default async function InstructorChatPage() {
   }
 
   return (
-    <AppShell role="instructor">
+    <>
       <PageHeader title="Сообщения" description="Диалоги с кураторами и слушателями." />
       {hasError && (
         <div className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -33,6 +32,6 @@ export default async function InstructorChatPage() {
         </div>
       )}
       <CuratorChatList conversations={conversations} />
-    </AppShell>
+    </>
   );
 }

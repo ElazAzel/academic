@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { EmptyState } from "@/components/lms/empty-state";
 import { CourseProgressGrid } from "@/components/lms/dashboard-widgets";
@@ -19,7 +18,7 @@ export default async function StudentMyCoursesPage() {
  const courses = await getStudentCourseCards(user.id);
 
  return (
-  <AppShell role="student">
+  <>
    <PageHeader title="Мои курсы" description="Назначенные академией курсы, потоки и текущий прогресс."/>
    {courses.length > 0 ? (
     <CourseProgressGrid courses={courses}/>
@@ -30,6 +29,6 @@ export default async function StudentMyCoursesPage() {
      description="Обратитесь к администратору академии для получения доступа."
     />
    )}
-  </AppShell>
+  </>
  );
 }

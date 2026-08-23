@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -88,7 +87,7 @@ export default async function AdminAuditPage(props: {
   const { logs, total, pages } = await getAdminAuditPageData({ page, limit, search });
 
   return (
-    <AppShell role="admin">
+    <>
       <PageHeader
         title="Журнал аудита"
         description={`${total} записей — все действия администраторов и системы`}
@@ -183,6 +182,6 @@ export default async function AdminAuditPage(props: {
           </div>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { AppShell } from "@/components/layout/app-shell";
 import { MetricGrid, CourseManageGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
 import { PageSkeleton } from "@/components/lms/page-skeleton";
@@ -22,12 +21,12 @@ export const dynamic = "force-dynamic";
 
 export default function InstructorDashboardPage() {
  return (
-  <AppShell role="instructor">
+  <>
    <PageHeader title="Дашборд преподавателя" description="Ваши курсы, модули, уроки и аналитика."/>
    <Suspense fallback={<PageSkeleton />}>
     <InstructorDashboardContent />
    </Suspense>
-  </AppShell>
+  </>
  );
 }
 

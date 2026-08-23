@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,7 @@ export default async function InstructorQuestionsPage() {
   const questions = await getForwardedQuestions();
 
   return (
-    <AppShell role="instructor">
+    <>
       <PageHeader title="Вопросы от кураторов" description="Переадресованные вам вопросы слушателей."/>
       <div className="mt-6 space-y-4">
         {questions.length === 0 ? (
@@ -68,6 +67,6 @@ export default async function InstructorQuestionsPage() {
           ))
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

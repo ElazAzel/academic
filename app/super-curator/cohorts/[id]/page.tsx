@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,7 +61,7 @@ export default async function CohortDetailPage(props: { params: Promise<{ id: st
   ] satisfies DashboardMetric[];
 
   return (
-    <AppShell role="super_curator">
+    <>
       <div className="flex items-start justify-between mb-6">
         <PageHeader title={cohort.name} description={cohort.courseTitle} />
         <div className="flex items-center gap-2">
@@ -180,6 +179,6 @@ export default async function CohortDetailPage(props: { params: Promise<{ id: st
           </CardContent>
         </Card>
       </div>
-    </AppShell>
+    </>
   );
 }

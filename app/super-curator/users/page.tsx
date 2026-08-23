@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +23,7 @@ export default async function SuperCuratorUsersPage() {
   const users = await listUsers({ roleKeys: ["student", "curator", "instructor"], take: 300 });
 
   return (
-    <AppShell role="super_curator">
+    <>
       <PageHeader
         title="Участники"
         description="Просмотр участников обучения и их ролей. Для назначения ролей обратитесь к администратору."
@@ -70,6 +69,6 @@ export default async function SuperCuratorUsersPage() {
           })}
         </TableBody>
       </Table>
-    </AppShell>
+    </>
   );
 }

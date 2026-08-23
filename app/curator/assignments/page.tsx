@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { SubmissionsQueue } from "@/components/lms/dashboard-widgets";
 import { Icon } from "@/components/ui/icon";
@@ -42,7 +41,7 @@ export default async function CuratorAssignmentsPage({
   const baseUrl = `/curator/assignments${filterString ? `?${filterString}` : ""}`;
 
   return (
-    <AppShell role="curator">
+    <>
       <PageHeader title="Задания на проверку" description="Работы слушателей, ожидающие вашей оценки." />
 
       {/* Filters */}
@@ -67,6 +66,6 @@ export default async function CuratorAssignmentsPage({
           <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl={baseUrl} />
         </div>
       )}
-    </AppShell>
+    </>
   );
 }

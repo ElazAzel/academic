@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,7 +50,7 @@ export default async function AdminInvitesPage() {
   const branding = await getRuntimeBranding();
 
   return (
-    <AppShell role="admin">
+    <>
       <PageHeader
         title="Приглашения и доступ"
         description={`${branding.name} работает по приглашениям. Управляйте пользователями и их доступом к курсам.`}
@@ -112,6 +111,6 @@ npx tsx scripts/provision-users.ts --email user@example.com --password Secret123
           </CardContent>
         </Card>
       </div>
-    </AppShell>
+    </>
   );
 }

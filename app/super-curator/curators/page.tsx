@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
@@ -22,7 +21,7 @@ export default async function SuperCuratorCuratorsPage() {
   const now = Date.now();
 
   return (
-    <AppShell role="super_curator">
+    <>
       <div className="flex items-start justify-between mb-6">
         <PageHeader title="Кураторы" description="Управление кураторами, нагрузка и активность." />
         <AddCuratorDialog />
@@ -83,6 +82,6 @@ export default async function SuperCuratorCuratorsPage() {
           ))}
         </div>
       )}
-    </AppShell>
+    </>
   );
 }

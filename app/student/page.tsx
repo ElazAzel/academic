@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { AppShell } from "@/components/layout/app-shell";
 import { ContinueLearningCard, MetricGrid } from "@/components/lms/dashboard-widgets";
 import { StudentCourseDashboardGrid } from "@/components/lms/student-course-dashboard-grid";
 import { StudentAchievements } from "@/components/lms/student-achievements";
@@ -39,7 +38,7 @@ export const dynamic = "force-dynamic";
 
 export default function StudentDashboardPage() {
  return (
-  <AppShell role="student">
+  <>
    <PageHeader
     title="Моё обучение"
     description="Продолжайте с того места, где остановились."
@@ -47,7 +46,7 @@ export default function StudentDashboardPage() {
    <Suspense fallback={<PageSkeleton />}>
     <StudentDashboardContent />
    </Suspense>
-  </AppShell>
+  </>
  );
 }
 
@@ -136,47 +135,47 @@ async function withAchievements() {
       <div className="flex items-center justify-between mb-4">
        <h2 id="student-learning-paths-title" className="text-lg font-semibold text-balance">Мои треки обучения</h2>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-       {learningPaths.map((lp) => (
-        <Card key={lp.id} className="border-m3-outline-variant bg-m3-surface-container-lowest">
-         <CardHeader className="pb-2">
-          <div className="flex items-start justify-between gap-3">
-           <div className="flex min-w-0 items-center gap-2">
-            <School className="h-5 w-5 shrink-0 text-m3-primary" aria-hidden />
-            <CardTitle className="line-clamp-2 font-label-lg text-label-lg text-m3-on-surface">
-             {lp.title}
-            </CardTitle>
+       <div className="grid gap-4 sm:grid-cols-2">
+        {learningPaths.map((lp) => (
+         <Card key={lp.id}>
+          <CardHeader className="pb-2">
+           <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+             <School className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+             <CardTitle className="line-clamp-2 font-label-lg text-label-lg text-foreground">
+              {lp.title}
+             </CardTitle>
+            </div>
+            <Badge variant="secondary" className="text-[10px]">
+             {lp.courseCount} курсов
+            </Badge>
            </div>
-           <Badge variant="secondary" className="text-[10px]">
-            {lp.courseCount} курсов
-           </Badge>
-          </div>
-          {lp.description && (
-           <CardDescription className="font-body-sm text-body-sm text-m3-on-surface-variant mt-1">
-            {lp.description.length > 100 ? lp.description.slice(0, 100) + "…" : lp.description}
-           </CardDescription>
-          )}
-         </CardHeader>
-         <CardContent>
-          <div className="space-y-2">
-           <div className="flex items-center justify-between font-body-sm text-body-sm text-m3-on-surface-variant">
-            <span>Прогресс трека</span>
-            <span className="font-label-md text-label-md text-m3-on-surface">{lp.progress}%</span>
+           {lp.description && (
+            <CardDescription className="font-body-sm text-body-sm text-muted-foreground mt-1">
+             {lp.description.length > 100 ? lp.description.slice(0, 100) + "…" : lp.description}
+            </CardDescription>
+           )}
+          </CardHeader>
+          <CardContent>
+           <div className="space-y-2">
+            <div className="flex items-center justify-between font-body-sm text-body-sm text-muted-foreground">
+             <span>Прогресс трека</span>
+             <span className="font-label-md text-label-md text-foreground">{lp.progress}%</span>
+            </div>
+            <div className="h-2 rounded-full overflow-hidden bg-muted">
+             <div
+              className="h-full rounded-full transition-all bg-primary"
+              style={{ width: `${lp.progress}%` }}
+             />
+            </div>
+            <p className="font-body-sm text-body-sm text-muted-foreground">
+             {lp.completedCourses} из {lp.courseCount} курсов завершено
+            </p>
            </div>
-           <div className="h-2 rounded-full overflow-hidden bg-m3-surface-variant">
-            <div
-             className="h-full rounded-full transition-all bg-m3-primary"
-             style={{ width: `${lp.progress}%` }}
-            />
-           </div>
-           <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
-            {lp.completedCourses} из {lp.courseCount} курсов завершено
-           </p>
-          </div>
-         </CardContent>
-        </Card>
-       ))}
-      </div>
+          </CardContent>
+         </Card>
+        ))}
+       </div>
      </section>
     )}
 
@@ -199,18 +198,18 @@ async function withAchievements() {
            <StatusBadge status={q.status as BadgeStatus} />
           </div>
           <p className="mt-1 line-clamp-2 break-words text-sm text-muted-foreground">{q.text}</p>
-          {q.answer && (
-           <div className="mt-3 border-l-2 border-m3-primary/40 pl-3">
-            <p className="line-clamp-3 break-words text-sm text-muted-foreground">{q.answer}</p>
-            {q.lessonId && (
-             <Button asChild variant="ghost" size="sm" className="mt-2 px-0 text-m3-primary hover:bg-transparent">
-              <Link href={`/student/lessons/${q.lessonId}`}>
-               Открыть урок <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-             </Button>
-            )}
-           </div>
-          )}
+           {q.answer && (
+            <div className="mt-3 border-l-2 border-primary/40 pl-3">
+             <p className="line-clamp-3 break-words text-sm text-muted-foreground">{q.answer}</p>
+             {q.lessonId && (
+              <Button asChild variant="ghost" size="sm" className="-ml-2 mt-2 px-2 text-primary">
+               <Link href={`/student/lessons/${q.lessonId}`}>
+                Открыть урок <ArrowRight className="h-4 w-4" aria-hidden />
+               </Link>
+              </Button>
+             )}
+            </div>
+           )}
          </div>
         </CardContent>
        </Card>
@@ -257,17 +256,17 @@ function StudentNextActionsPanel({
   const latestAnswer = questions.find((question) => question.answer);
 
   return (
-    <Card className="h-full border-m3-outline-variant bg-m3-surface-container-lowest">
+    <Card className="h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed/40">
-            <CheckCircle2 className="h-5 w-5 text-m3-primary" aria-hidden />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08]">
+            <CheckCircle2 className="h-5 w-5 text-primary" aria-hidden />
           </span>
           <div className="min-w-0">
-            <CardTitle id="student-next-step-title" className="text-label-lg font-label-lg text-m3-on-surface">
+            <CardTitle id="student-next-step-title" className="text-label-lg font-label-lg text-foreground">
               Ближайшие действия
             </CardTitle>
-            <CardDescription className="text-body-sm font-body-sm text-m3-on-surface-variant">
+            <CardDescription className="text-body-sm font-body-sm text-muted-foreground">
               Учёба, дедлайны и поддержка
             </CardDescription>
           </div>
@@ -350,12 +349,12 @@ function StudentActionRow({
 }) {
   const content = (
     <>
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-m3-surface-container-high">
-        <IconComponent className="h-5 w-5 text-m3-on-surface-variant" aria-hidden />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+        <IconComponent className="h-5 w-5 text-muted-foreground" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium text-m3-on-surface">{title}</span>
-        <span className="mt-0.5 line-clamp-2 break-words text-sm text-m3-on-surface-variant">{description}</span>
+        <span className="block text-sm font-medium text-foreground">{title}</span>
+        <span className="mt-0.5 line-clamp-2 break-words text-sm text-muted-foreground">{description}</span>
       </span>
       {status ? (
         <StatusBadge status={status} label={statusLabel} className="shrink-0" />
@@ -368,7 +367,7 @@ function StudentActionRow({
   );
 
   const className =
-    "flex items-start gap-3 rounded-lg border border-m3-outline-variant bg-m3-surface-container-low px-3 py-3 transition-colors hover:bg-m3-surface-container-high focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-m3-primary";
+    "flex items-start gap-3 rounded-lg border border-border bg-muted/40 px-3 py-3 transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
   if (href) {
     return (

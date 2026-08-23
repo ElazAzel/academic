@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { AppShell } from "@/components/layout/app-shell";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
 import { PageSkeleton } from "@/components/lms/page-skeleton";
@@ -19,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 export default function SuperCuratorDashboardPage() {
   return (
-    <AppShell role="super_curator">
+    <>
       <PageHeader
         title="Дашборд супер-куратора"
         description="Контроль нагрузки кураторов, проблемных вопросов, рисков и распределения по потокам."
@@ -27,7 +26,7 @@ export default function SuperCuratorDashboardPage() {
       <Suspense fallback={<PageSkeleton />}>
         <SuperCuratorDashboardContent />
       </Suspense>
-    </AppShell>
+    </>
   );
 }
 

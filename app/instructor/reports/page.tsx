@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/lms/bar-chart";
@@ -71,7 +70,7 @@ export default async function InstructorReportsPage() {
   ] satisfies DashboardMetric[];
 
   return (
-    <AppShell role="instructor">
+    <>
       <PageHeader title="Отчёты" description="Просмотр и экспорт статистики по вашим курсам." />
 
       <div className="mb-6">
@@ -109,6 +108,6 @@ export default async function InstructorReportsPage() {
 
       {/* Download reports */}
       <DownloadReports reports={getDisplayReportsForRole(user.roles)} />
-    </AppShell>
+    </>
   );
 }

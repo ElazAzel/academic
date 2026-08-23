@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,7 @@ export default async function AdminReadinessPage() {
   const avgScore = Math.round(data.segments.reduce((sum, item) => sum + item.score, 0) / data.segments.length);
 
   return (
-    <AppShell role="admin">
+    <>
       <PageHeader
         title="Готовность к внедрению"
         description="Единый центр для B2B-демо, корпоративного обучения, квазигосударственных пилотов и предтендерной подготовки."
@@ -222,7 +221,7 @@ export default async function AdminReadinessPage() {
           </CardContent>
         </Card>
       </div>
-    </AppShell>
+    </>
   );
 }
 

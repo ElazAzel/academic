@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,7 @@ export default async function NewCohortPage() {
  const courses = await getPublishedCourseOptions();
 
  return (
-  <AppShell role="admin">
+  <>
    <div className="mb-4">
     <Button asChild variant="ghost" size="sm">
      <Link href="/admin/cohorts"><ArrowLeft className="h-4 w-4 mr-1" /> К потокам</Link>
@@ -40,6 +39,6 @@ export default async function NewCohortPage() {
      </CardContent>
     </Card>
    </div>
-  </AppShell>
+  </>
  );
 }

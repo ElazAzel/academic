@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { CourseManageGrid } from "@/components/lms/dashboard-widgets";
 import { Button } from "@/components/ui/button";
@@ -40,7 +39,7 @@ export default async function InstructorCoursesPage() {
  }));
 
  return (
-  <AppShell role="instructor">
+  <>
    <PageHeader title="Мои курсы" description="Управление статусами (черновик, опубликован, архив) и контентом."/>
    <div className="space-y-6 mt-6">
      <Link href="/instructor/courses/new">
@@ -52,6 +51,6 @@ export default async function InstructorCoursesPage() {
      <div className="text-center text-muted-foreground py-10 border rounded-lg">У вас пока нет курсов.</div>
     )}
    </div>
-  </AppShell>
+  </>
  );
 }

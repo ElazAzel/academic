@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { EmptyState } from "@/components/lms/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +22,7 @@ export default async function InstructorQuizzesPage() {
  const quizzes = await getInstructorQuizzesPageData(user.id, user.roles);
 
  return (
-  <AppShell role="instructor">
+  <>
    <PageHeader title="Конструктор тестов" description="Создание тестов, вопросов, вариантов ответа и autograding."/>
    <div className="space-y-6 mt-6">
      <form action={createQuizAction}>
@@ -54,6 +53,6 @@ export default async function InstructorQuizzesPage() {
       )}
     </div>
    </div>
-  </AppShell>
+  </>
  );
 }

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ export default async function EditCohortPage({ params }: { params: Promise<{ coh
  if (!cohort) notFound();
 
  return (
-  <AppShell role="admin">
+  <>
    <div className="mb-4">
     <Button asChild variant="ghost" size="sm">
      <Link href="/admin/cohorts"><ArrowLeft className="h-4 w-4 mr-1" /> К потокам</Link>
@@ -82,6 +81,6 @@ export default async function EditCohortPage({ params }: { params: Promise<{ coh
    <div className="mt-6">
     <DeadlineManager cohortId={cohort.id} cohortName={cohort.name} />
    </div>
-  </AppShell>
+  </>
  );
 }

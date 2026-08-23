@@ -42,6 +42,18 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))"
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))"
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))"
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))"
+        },
 
         /* M3 Surface tokens */
         "m3-surface": "var(--m3-surface)",
@@ -136,20 +148,20 @@ const config: Config = {
       },
 
       boxShadow: {
-        /* M3 elevation — luminous depth */
-        "m3-soft": "0 1px 2px rgba(15, 23, 42, 0.03), 0 2px 8px rgba(15, 23, 42, 0.04)",
-        "m3-soft-hover": "0 2px 8px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.08)",
-        "m3-modal": "0 8px 32px rgba(15, 23, 42, 0.12), 0 24px 64px rgba(15, 23, 42, 0.16)",
-        "m3-glow": "0 0 32px rgba(26, 68, 148, 0.08)",
-        "m3-glow-lg": "0 0 48px rgba(26, 68, 148, 0.12)",
-        /* Multi-layer dialog shadow (Linear Level 5 stack) */
-        "dialog": "0 8px 2px rgba(0, 0, 0, 0.01), 0 5px 2px rgba(0, 0, 0, 0.02), 0 3px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.07), 0 24px 64px rgba(15, 23, 42, 0.16)",
-        /* Legacy compat */
-        glass: "0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06)",
-        panel: "0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06)",
-        "bottom-nav": "0 -1px 2px rgba(15, 23, 42, 0.04), 0 -8px 24px rgba(15, 23, 42, 0.06)",
-        "card-hover": "0 2px 8px rgba(15, 23, 42, 0.06), 0 12px 32px rgba(15, 23, 42, 0.10)",
-        "card-hover-glow": "0 2px 8px rgba(15, 23, 42, 0.06), 0 12px 32px rgba(15, 23, 42, 0.10), 0 0 24px rgba(26, 68, 148, 0.06)",
+        /* Calm Precision elevation — hairline-first, tinted shadows */
+        "m3-soft": "0 1px 2px rgba(23, 32, 54, 0.05)",
+        "m3-soft-hover": "0 1px 2px rgba(23, 32, 54, 0.05), 0 8px 24px -8px rgba(23, 32, 54, 0.14)",
+        "m3-modal": "0 4px 12px rgba(23, 32, 54, 0.08), 0 24px 56px -12px rgba(23, 32, 54, 0.24)",
+        "m3-glow": "0 0 0 1px hsl(var(--primary) / 0.10)",
+        "m3-glow-lg": "0 0 0 1px hsl(var(--primary) / 0.16)",
+        /* Multi-layer dialog shadow */
+        "dialog": "0 1px 2px rgba(23, 32, 54, 0.06), 0 4px 12px rgba(23, 32, 54, 0.08), 0 24px 56px -12px rgba(23, 32, 54, 0.24)",
+        /* Legacy compat keys (значения приведены к спокойной шкале) */
+        glass: "0 1px 2px rgba(23, 32, 54, 0.05)",
+        panel: "0 1px 2px rgba(23, 32, 54, 0.05)",
+        "bottom-nav": "0 -1px 2px rgba(15, 23, 42, 0.04)",
+        "card-hover": "0 1px 2px rgba(23, 32, 54, 0.05), 0 8px 24px -8px rgba(23, 32, 54, 0.14)",
+        "card-hover-glow": "0 1px 2px rgba(23, 32, 54, 0.05), 0 8px 24px -8px rgba(23, 32, 54, 0.14)",
         "mobile-top": "0 -1px 2px rgba(15, 23, 42, 0.03)",
       },
 

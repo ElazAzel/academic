@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getInstructorQuizEditData } from "@/server/modules/page-data/service";
@@ -24,7 +23,7 @@ export default async function InstructorEditQuizPage({ params }: { params: Promi
   if (!quiz || !courseId) notFound();
 
  return (
-  <AppShell role="instructor">
+  <>
    <PageHeader 
     title="Редактор теста" 
     description={`Редактирование теста: ${quiz.title}. Настройте вопросы и порог прохождения.`} 
@@ -33,6 +32,6 @@ export default async function InstructorEditQuizPage({ params }: { params: Promi
    <div className="mt-8">
     <QuizEditForm quiz={quiz as unknown as Parameters<typeof QuizEditForm>[0]["quiz"]} courseId={courseId}/>
    </div>
-  </AppShell>
+  </>
  );
 }

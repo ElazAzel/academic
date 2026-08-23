@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,7 +58,7 @@ export default async function AdminManagementPage() {
   ] satisfies DashboardMetric[];
 
   return (
-    <AppShell role="admin">
+    <>
       <PageHeader
         title="Управление платформой"
         description="Пользователи, потоки и зачисления в одном месте."
@@ -151,6 +150,6 @@ export default async function AdminManagementPage() {
           </div>
         </CardContent>
       </Card>
-    </AppShell>
+    </>
   );
 }

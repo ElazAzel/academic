@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,7 +61,7 @@ export default async function SuperCuratorReportsPage() {
   ] satisfies DashboardMetric[];
 
   return (
-    <AppShell role="super_curator">
+    <>
       <PageHeader
         title="Отчёты"
         description="Просмотр и экспорт статистики по потокам в CSV, Excel или PDF."
@@ -175,6 +174,6 @@ export default async function SuperCuratorReportsPage() {
           },
         ]}
       />
-    </AppShell>
+    </>
   );
 }

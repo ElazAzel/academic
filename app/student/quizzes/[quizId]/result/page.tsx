@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, XCircle, RotateCcw, HelpCircle, Clock, History } from "lucide-react";
-import { AppShell } from "@/components/layout/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -101,14 +100,14 @@ export default async function QuizResultPage({
 
   if (!attempt) {
     return (
-      <AppShell role="student">
+      <>
         <div className="text-center py-20">
           <p className="text-muted-foreground">Попыток не найдено.</p>
           <Button asChild className="mt-4">
             <Link href={`/student/quizzes/${quizId}`}>Пройти тест</Link>
           </Button>
         </div>
-      </AppShell>
+      </>
     );
   }
 
@@ -126,7 +125,7 @@ export default async function QuizResultPage({
   const totalQuestions = quiz.questions.length;
 
   return (
-    <AppShell role="student">
+    <>
       <div className="mb-4">
         <Button asChild size="sm" variant="secondary">
           <Link href={lessonHref}>
@@ -373,6 +372,6 @@ export default async function QuizResultPage({
           </Card>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

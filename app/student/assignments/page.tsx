@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { StatusBadge } from "@/components/lms/status-badge";
 import type { BadgeStatus } from "@/components/lms/status-badge";
@@ -31,7 +30,7 @@ export default async function StudentAssignmentsPage() {
  }
 
  return (
-  <AppShell role="student">
+  <>
    <PageHeader title="Задания" description="Список ваших отправленных заданий."/>
    <div className="space-y-4 mt-6">
     {submissions.length > 0 ? (
@@ -68,6 +67,6 @@ export default async function StudentAssignmentsPage() {
      <EmptyState icon={FileText} title="У вас пока нет отправленных заданий" description="После отправки задания в рамках урока оно появится в этом списке." />
     )}
    </div>
-  </AppShell>
+  </>
  );
 }

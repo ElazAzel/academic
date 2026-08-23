@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -71,7 +70,7 @@ export default async function SuperCuratorRisksPage(props: {
   ] satisfies DashboardMetric[];
 
   return (
-    <AppShell role="super_curator">
+    <>
       <PageHeader title="Риски" description="Управление рисками: фильтры, создание, закрытие." />
 
       <div className="mb-6">
@@ -134,6 +133,6 @@ export default async function SuperCuratorRisksPage(props: {
           </Table>
         </CardContent>
       </Card>
-    </AppShell>
+    </>
   );
 }

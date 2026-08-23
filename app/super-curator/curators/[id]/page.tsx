@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -80,7 +79,7 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
   ] satisfies DashboardMetric[];
 
   return (
-    <AppShell role="super_curator">
+    <>
       <PageHeader
         title={curator.name}
         description={curator.email}
@@ -261,6 +260,6 @@ export default async function CuratorDetailPage(props: { params: Promise<{ id: s
           },
         ]}
       />
-    </AppShell>
+    </>
   );
 }

@@ -32,23 +32,23 @@ import type {
 import { RISK_LABELS } from "@/types/domain";
 import { cn } from "@/lib/utils";
 
-// ── M3 tone classes ──────────────────────────────────────────────────
+// ── Семантические тона метрик ────────────────────────────────────────
 const TONE_CLASSES: Record<DashboardMetric["tone"], string> = {
-  primary: "text-m3-primary",
-  success: "text-m3-tertiary dark:text-m3-tertiary",
-  warning: "text-m3-secondary dark:text-m3-secondary",
-  danger: "text-m3-error",
-  info: "text-m3-on-surface-variant",
-  neutral: "text-m3-on-surface",
+  primary: "text-primary",
+  success: "text-success",
+  warning: "text-warning",
+  danger: "text-destructive",
+  info: "text-muted-foreground",
+  neutral: "text-foreground",
 };
 
 const TONE_BG_CLASSES: Record<DashboardMetric["tone"], string> = {
-  primary: "bg-m3-primary/10",
-  success: "bg-m3-tertiary-fixed/60 dark:bg-m3-tertiary-container/30",
-  warning: "bg-m3-secondary-fixed/60 dark:bg-m3-secondary-container/30",
-  danger: "bg-m3-error-container/30",
-  info: "bg-m3-surface-container-high",
-  neutral: "bg-m3-surface-container-high",
+  primary: "bg-primary/[0.08]",
+  success: "bg-success/[0.09]",
+  warning: "bg-warning/[0.09]",
+  danger: "bg-destructive/[0.08]",
+  info: "bg-muted",
+  neutral: "bg-muted",
 };
 
 const TONE_ICON_NAMES: Record<DashboardMetric["tone"], string> = {
@@ -84,15 +84,15 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
       className={cn(
         "academy-metric-card flex min-h-[132px] h-full flex-col",
         "px-5 py-4",
-        metric.priority === "critical" && "ring-1 ring-m3-error/30",
-        metric.priority === "elevated" && "ring-1 ring-amber-400/30",
+        metric.priority === "critical" && "border-destructive/25",
+        metric.priority === "elevated" && "border-warning/30",
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 max-w-[calc(100%-3rem)]">
-          <p className="text-body-md font-semibold leading-5 text-m3-on-surface">{metric.label}</p>
+          <p className="text-body-md font-semibold leading-5 text-foreground">{metric.label}</p>
           {metric.description ? (
-            <p className="mt-1 line-clamp-2 text-body-sm font-body-sm leading-5 text-m3-on-surface-variant">
+            <p className="mt-1 line-clamp-2 text-body-sm font-body-sm leading-5 text-muted-foreground">
               {metric.description}
             </p>
           ) : null}
@@ -112,7 +112,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
           {metric.value}
         </p>
         {metric.detail || metric.change ? (
-          <p className="mt-3 text-body-sm font-body-sm leading-5 text-m3-on-surface-variant">
+          <p className="mt-3 text-body-sm font-body-sm leading-5 text-muted-foreground">
             {metric.detail ?? metric.change}
           </p>
         ) : null}
@@ -126,7 +126,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
 
   return (
     <CardHover className="h-full">
-      <Link href={metric.href} className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary focus-visible:ring-offset-2">
+      <Link href={metric.href} className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
         {card}
       </Link>
     </CardHover>
@@ -146,10 +146,10 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
 
   return (
     <FadeIn>
-    <Card className="academy-learning-panel h-full overflow-hidden border-m3-outline-variant">
+    <Card className="academy-learning-panel h-full overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge status="ACTIVE" label="Следующий шаг" className="w-fit bg-m3-primary-fixed/30 text-m3-primary" />
+          <StatusBadge status="ACTIVE" label="Следующий шаг" className="w-fit bg-primary/[0.08] text-primary" />
           {deadlineLabel && (
             <StatusBadge
               status={deadlineStatus}
@@ -158,108 +158,94 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
             />
           )}
         </div>
-        <CardTitle className="mt-3 line-clamp-2 text-headline-md text-m3-on-surface">
+        <CardTitle className="mt-3 line-clamp-2 text-headline-md text-foreground">
           {data.courseTitle}
         </CardTitle>
-        <CardDescription className="line-clamp-2 font-body-md text-body-md text-m3-on-surface-variant/90">
+        <CardDescription className="line-clamp-2 font-body-md text-body-md text-muted-foreground">
           {data.moduleTitle} · {data.lessonTitle}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2 rounded-lg border border-m3-outline-variant/70 bg-m3-surface-container-lowest/70 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
-            <div className="flex items-center justify-between gap-3 font-body-sm text-body-sm">
-              <span className="text-m3-on-surface-variant">Курс</span>
-              <span className="font-semibold tabular-nums text-m3-primary">{data.coursePercent}%</span>
-            </div>
-            <Progress value={data.coursePercent} className="h-2 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
-          </div>
-          <div className="space-y-2 rounded-lg border border-m3-outline-variant/70 bg-m3-surface-container-lowest/70 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
-            <div className="flex items-center justify-between gap-3 font-body-sm text-body-sm">
-              <span className="text-m3-on-surface-variant">Модуль</span>
-              <span className="font-semibold tabular-nums text-m3-primary">{data.modulePercent}%</span>
-            </div>
-            <Progress value={data.modulePercent} className="h-2 bg-m3-surface-container-high [&>div]:bg-m3-primary" />
-          </div>
+        <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+          <ProgressBlock label="Курс" percent={data.coursePercent} />
+          <ProgressBlock label="Модуль" percent={data.modulePercent} />
         </div>
 
         {/* ── Путь к сертификату ──────────────────────────────────── */}
         {data.completionThreshold != null && (
-          <div className="rounded-lg border border-m3-outline-variant/60 bg-m3-surface-container-lowest/60 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
-            <div className="mb-2 flex items-center gap-2 font-label-md text-label-md text-m3-on-surface">
-              <Icon name="workspace_premium" className="text-[18px] text-amber-600" />
+          <div className="rounded-lg border border-border bg-muted/40 px-3.5 py-3">
+            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
+              <Icon name="workspace_premium" size={16} className="text-warning" />
               Путь к сертификату
             </div>
             <div className="space-y-1.5">
               {!certAvailable ? (
                 <>
-                  <div className="flex items-center justify-between font-body-sm text-body-sm">
-                    <span className="text-m3-on-surface-variant">Прогресс</span>
-                    <span className="font-semibold tabular-nums text-m3-primary">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Прогресс</span>
+                    <span className="font-semibold tabular-nums text-primary">
                       {data.coursePercent}% из {certThreshold}%
                     </span>
                   </div>
                   <Progress
                     value={certProgressPercent}
-                    className="h-2 bg-m3-surface-container-high [&>div]:bg-amber-500"
+                    className="h-1.5 bg-muted [&>div]:bg-warning"
                   />
-                  <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
+                  <p className="text-sm text-muted-foreground">
                     Осталось {certThreshold - data.coursePercent}% до получения сертификата
                   </p>
                 </>
               ) : data.certificateIssued ? (
                 <Link
                   href={`/student/certificates`}
-                  className="inline-flex items-center gap-1.5 font-label-md text-label-md text-m3-primary hover:underline"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
                 >
-                  <Icon name="check_circle" className="text-[16px]" />
+                  <Icon name="check_circle" size={16} />
                   Сертификат получен — открыть
                 </Link>
               ) : data.finalProjectSubmitted && !data.finalProjectApproved ? (
                 <div className="space-y-1">
-                  <p className="font-body-sm text-body-sm text-amber-600">
-                    <Icon name="hourglass_top" className="mr-1 inline text-[16px]" />
+                  <p className="flex items-center gap-1.5 text-sm text-warning">
+                    <Icon name="hourglass_top" size={16} />
                     Финальная работа на проверке
                   </p>
-                  <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
+                  <p className="text-sm text-muted-foreground">
                     После проверки сертификат будет доступен
                   </p>
                 </div>
               ) : data.finalProjectSubmitted && data.finalProjectApproved ? (
                 <Link
                   href={`/student/certificates`}
-                  className="inline-flex items-center gap-1.5 font-label-md text-label-md text-emerald-700 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-success hover:underline"
                 >
-                  <Icon name="check_circle" className="text-[16px]" />
+                  <Icon name="check_circle" size={16} />
                   Сертификат готов — получить
                 </Link>
               ) : (
-                <div className="space-y-1">
-                  <p className="font-body-sm text-body-sm text-m3-on-surface-variant">
-                    <Icon name="task_alt" className="mr-1 inline text-[16px]" />
-                    Прогресс {data.coursePercent}% — осталось сдать финальную работу
-                  </p>
-                </div>
+                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Icon name="task_alt" size={16} />
+                  Прогресс {data.coursePercent}% — осталось сдать финальную работу
+                </p>
               )}
             </div>
           </div>
         )}
 
-        <div className="flex flex-col gap-3 border-t border-m3-outline-variant/30 pt-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="max-w-xl font-body-sm text-body-sm text-m3-on-surface-variant/80">
+        <div className="flex flex-col gap-3 border-t border-[var(--academy-line)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="max-w-xl text-sm text-muted-foreground">
             Откройте урок, чтобы продолжить материалы, контрольные задания и поддержку куратора в текущем контексте курса.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button asChild variant="secondary" className="whitespace-nowrap">
             <Link href={`/student/courses/${data.courseId}`}>
               Курс
-              <Icon name="menu_book" className="text-[18px]" />
+              <Icon name="menu_book" size={18} />
             </Link>
           </Button>
           <Button asChild className="whitespace-nowrap">
             <Link href={`/student/lessons/${data.lessonId}`}>
               Открыть урок
-              <Icon name="arrow_forward" className="text-[18px]" />
+              <Icon name="arrow_forward" size={18} />
             </Link>
           </Button>
           </div>
@@ -267,6 +253,18 @@ export function ContinueLearningCard({ data }: { data: ContinueLearning }) {
       </CardContent>
     </Card>
     </FadeIn>
+  );
+}
+
+function ProgressBlock({ label, percent }: { label: string; percent: number }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-semibold tabular-nums text-primary">{percent}%</span>
+      </div>
+      <Progress value={percent} className="h-1.5 bg-muted [&>div]:bg-primary" />
+    </div>
   );
 }
 

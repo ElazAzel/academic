@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { EmptyState } from "@/components/lms/empty-state";
 import { StatusBadge } from "@/components/lms/status-badge";
@@ -24,7 +23,7 @@ export default async function InstructorAssignmentsPage() {
  const assignments = await getInstructorAssignmentsPageData(user.id, user.roles);
 
  return (
-  <AppShell role="instructor">
+  <>
    <PageHeader title="Конструктор заданий" description="Инструкции, дедлайны, критерии и проверка попыток."/>
    <div className="space-y-6 mt-6">
      <form action={createAssignmentAction}>
@@ -61,6 +60,6 @@ export default async function InstructorAssignmentsPage() {
       )}
     </div>
    </div>
-  </AppShell>
+  </>
  );
 }

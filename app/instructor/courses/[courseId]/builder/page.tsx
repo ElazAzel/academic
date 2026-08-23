@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { resolveCourseBuilderSelection } from "@/lib/course-builder-selection";
 import { getCourseForBuilder } from "@/server/modules/course-builder/service";
@@ -32,8 +31,8 @@ export default async function CourseBuilderPage({
   }
 
   return (
-    <AppShell role="instructor">
+    <>
       <CourseBuilderShell detail={detail} initialSelected={resolveCourseBuilderSelection(detail, resolvedSearchParams)} />
-    </AppShell>
+    </>
   );
 }

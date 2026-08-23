@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { CourseBuilderShell } from "@/components/lms/course-builder-shell";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { resolveCourseBuilderSelection } from "@/lib/course-builder-selection";
@@ -32,12 +31,12 @@ export default async function AdminCourseBuilderPage({
   }
 
   return (
-    <AppShell role="admin">
+    <>
       <CourseBuilderShell
         detail={detail}
         role="admin"
         initialSelected={resolveCourseBuilderSelection(detail, resolvedSearchParams)}
       />
-    </AppShell>
+    </>
   );
 }

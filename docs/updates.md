@@ -1,5 +1,27 @@
 # Project Updates
 
+## 2026-08-23 — UX/UI редизайн «Calm Precision»: шелл, иконки, шрифты, дашборд слушателя
+
+**Goal**: Полный визуальный рефакторинг платформы: отказ от M3-стекла и Material Symbols, переход на «Calm Precision» (нейтральная база + один акцент, hairline-бордеры), архитектура шелла на ролейных layout'ах.
+
+### Changes
+- **Архитектура шелла**: созданы 6 ролейных layout'ов (`app/{student,curator,instructor,admin,super-curator,customer-observer}/layout.tsx`); обёртки `<AppShell role="...">` удалены из 155 page/loading файлов (остался только динамический shell в `app/notifications/page.tsx`). Дублирование шелла больше невозможно.
+- **Навигация**: `components/layout/navigation.ts` переписан на сгруппированную структуру `NAV_GROUPS_BY_ROLE` (+ плоский `NAV_BY_ROLE` для совместимости). Новый клиентский `sidebar-nav.tsx`: сворачиваемый рейл с localStorage-персистентностью, живые бейджи непрочитанного (polling `/api/v1/unread-counts`), кнопка установки PWA.
+- **Хедер**: убрано дублирующее pill-меню; добавлен триггер поиска с `Ctrl K` (`search-trigger.tsx`, клиентский компонент — открывает CommandPalette через событие `command-palette:open`).
+- **Мобильная навигация**: `mobile-bottom-nav.tsx` — плоский таб-бар без glow, точка-индикатор бейджа при свёрнутом рейле.
+- **Иконки**: Material Symbols полностью удалены (включая Google Fonts stylesheet из root layout). Новый `components/ui/icon.tsx` — shim над lucide-react (~90 маппингов имён), API сохранён.
+- **Шрифты**: Inter → Manrope (next/font, кириллица; переменная `--font-inter` сохранена для контракта с рантайм-брендингом). `DEFAULT_BRAND_FONT_SANS/HEADING` = Manrope.
+- **Дизайн-токены**: `globals.css` — новая шкала поверх существующих переменных бренда (имена сохранены для рантайм-переопределений): solid surfaces вместо glass, hairline-бордеры, calm-тени, семантические success/warning/info. `tailwind.config.ts` дополнен без удаления legacy-ключей.
+- **Компоненты**: Button (solid primary, без градиента/glow), Card (без hover-lift по умолчанию, вариант interactive), Badge (семантические статусы), Skeleton, PageHeader, EmptyState, PageTransition — приведены к новой системе.
+- **Дашборд слушателя**: bento-структура «продолжить обучение + XP + ближайшие действия», метрики/курсы/треки/вопросы переведены на семантические токены; ContinueLearningCard упрощён (без вложенных рамок и инсет-теней).
+- **Фиксы**: опечатка `"--m3-surface-container-high: animate"` в branding-сервисе; неиспользуемый eslint-disable в root layout.
+
+### Verification
+- TypeScript: clean (`tsc --noEmit`).
+- ESLint: clean with zero warnings.
+- Vitest: 938 passed (обновлены тесты metric-grid и branding под новые токены; 1 инфраструктурный flake воркера воспроизведён изолированно — зелёный).
+- Production build: passed (Turbopack, все маршруты собраны; для сбора данных страниц создан локальный `.env` — в git не попадает).
+
 ## 2026-07-22 — CSP nonce propagation for App Router chunks
 
 **Goal**: Stop production route chunks from being blocked by `script-src 'strict-dynamic'` and prevent stale nonce reuse between requests.

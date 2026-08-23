@@ -1,5 +1,4 @@
 import { notFound, redirect } from "next/navigation";
-import { AppShell } from "@/components/layout/app-shell";
 import { LessonPlayerShell } from "@/components/lms/lesson-player-shell";
 import { ApiError } from "@/lib/http";
 import { requireRolePage } from "@/lib/auth/page-guards";
@@ -39,8 +38,8 @@ export default async function StudentLessonPage({ params }: { params: Promise<{ 
   });
 
   return (
-    <AppShell role="student">
+    <>
       <LessonPlayerShell detail={detail} user={user} />
-    </AppShell>
+    </>
   );
 }

@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart } from "@/components/lms/bar-chart";
@@ -24,7 +23,7 @@ export default async function CustomerObserverReportsPage() {
   const data = await getCustomerObserverDashboard();
 
   return (
-    <AppShell role="customer_observer">
+    <>
       <PageHeader title="Отчёты" description="Просмотр и экспорт статистики по доступным потокам." />
 
       {data && data.cohorts.length > 0 ? (
@@ -75,6 +74,6 @@ export default async function CustomerObserverReportsPage() {
 
       {/* Download reports */}
       <DownloadReports reports={getDisplayReportsForRole(user.roles)} />
-    </AppShell>
+    </>
   );
 }

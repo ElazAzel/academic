@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +32,7 @@ export default async function CustomerObserverSettingsPage() {
   const prefs = await getNotificationPreferencesAction();
 
  return (
-  <AppShell role="customer_observer">
+  <>
    <PageHeader title="Профиль и настройки" description="Настройки просмотра и оповещений для заказчика."/>
    <Tabs
     tabs={[
@@ -154,6 +153,6 @@ export default async function CustomerObserverSettingsPage() {
       }
     ]}
   />
-  </AppShell>
+  </>
  );
 }

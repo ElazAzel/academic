@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -33,7 +32,7 @@ export default async function CuratorGlossaryPage(props: {
   }
 
   return (
-    <AppShell role="curator">
+    <>
       <PageHeader title="Глоссарий" description="Быстрые ответы на частые вопросы слушателей." />
 
       {/* Search */}
@@ -83,6 +82,6 @@ export default async function CuratorGlossaryPage(props: {
           ))}
         </div>
       )}
-    </AppShell>
+    </>
   );
 }

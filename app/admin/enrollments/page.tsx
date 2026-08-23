@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,7 @@ export default async function AdminEnrollmentsPage() {
  ]);
 
  return (
-  <AppShell role="admin">
+  <>
    <PageHeader title="Зачисления" description="Управление доступом слушателей к курсам и потокам."/>
    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
     <div className="lg:col-span-2 space-y-6">
@@ -83,6 +82,6 @@ export default async function AdminEnrollmentsPage() {
      <EnrollStudentForm data={formData}/>
     </div>
    </div>
-  </AppShell>
+  </>
  );
 }

@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { CuratorOperationsBoard } from "@/components/lms/curator-operations-board";
 import { DashboardUnavailable } from "@/components/lms/dashboard-unavailable";
 import { PageHeader } from "@/components/lms/page-header";
@@ -18,7 +17,7 @@ export default async function CuratorStudentsPage() {
   const data = await getCuratorDashboard();
 
   return (
-    <AppShell role="curator">
+    <>
       <PageHeader
         title="Мои слушатели"
         description="Закрепленные слушатели с прогрессом, дедлайнами, вопросами, заданиями, рисками и быстрым чатом."
@@ -26,6 +25,6 @@ export default async function CuratorStudentsPage() {
       <div className="mt-6">
         {data ? <CuratorOperationsBoard students={data.students} /> : <DashboardUnavailable />}
       </div>
-    </AppShell>
+    </>
   );
 }

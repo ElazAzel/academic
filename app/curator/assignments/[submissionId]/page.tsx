@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
@@ -57,7 +56,7 @@ export default async function SubmissionDetailPage({
   const isReviewed = submission.status === "ACCEPTED" || submission.status === "REJECTED";
 
   return (
-    <AppShell role="curator">
+    <>
       <PageHeader
         title={submission.assignment.title}
         description={`${submission.student.name ?? submission.student.email} · Попытка #${submission.attemptNumber}`}
@@ -207,6 +206,6 @@ export default async function SubmissionDetailPage({
           )}
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

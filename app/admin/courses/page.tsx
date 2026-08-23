@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { CourseManageGrid } from "@/components/lms/dashboard-widgets";
 import { listCourses } from "@/server/modules/courses/service";
@@ -36,7 +35,7 @@ export default async function AdminCoursesPage() {
  }));
 
  return (
-  <AppShell role="admin">
+  <>
    <PageHeader title="Курсы" description="Все курсы академии: создание, публикация и управление."/>
    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
     <div className="lg:col-span-2 space-y-6">
@@ -49,6 +48,6 @@ export default async function AdminCoursesPage() {
      <CreateCourseForm builderBasePath="/admin/courses" />
     </div>
    </div>
-  </AppShell>
+  </>
  );
 }

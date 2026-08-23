@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowRight, BookOpen, CheckCircle2, PauseCircle } from "lucide-react";
-import { AppShell } from "@/components/layout/app-shell";
 import { Breadcrumbs } from "@/components/lms/breadcrumbs";
 import { CourseSidebar } from "@/components/lms/course-sidebar";
 import { ModuleAccordion } from "@/components/lms/module-accordion";
@@ -165,7 +164,7 @@ export default async function StudentCoursePage({ params }: { params: Promise<{ 
   const nextLesson = findNextLesson(modules, nextLessonId);
 
   return (
-    <AppShell role="student">
+    <>
       <Breadcrumbs items={[
         { href: "/student/my-courses", label: "Мои курсы" },
         { label: course.title },
@@ -222,6 +221,6 @@ export default async function StudentCoursePage({ params }: { params: Promise<{ 
           </main>
         </div>
       )}
-    </AppShell>
+    </>
   );
 }

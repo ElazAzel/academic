@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, BookOpen, Calendar } from "lucide-react";
@@ -20,7 +19,7 @@ export default async function SuperCuratorCohortsPage() {
   const courses = await getCourseOptions();
 
   return (
-    <AppShell role="super_curator">
+    <>
       <div className="flex items-start justify-between mb-6">
         <PageHeader title="Потоки" description="Управление потоками обучения и их участниками." />
         <CreateCohortForm courses={courses.map((c) => ({ id: c.id, title: c.title }))} />
@@ -101,6 +100,6 @@ export default async function SuperCuratorCohortsPage() {
           </details>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

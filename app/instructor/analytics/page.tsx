@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { MetricGrid } from "@/components/lms/dashboard-widgets";
 import { BarChart, DonutChart } from "@/components/lms/bar-chart";
@@ -25,10 +24,10 @@ export default async function InstructorAnalyticsPage() {
 
   if (!data && !demoMode) {
     return (
-      <AppShell role="instructor">
+      <>
         <PageHeader title="Аналитика курса" description="Прогресс, тесты, задания и активность слушателей."/>
         <DashboardUnavailable/>
-      </AppShell>
+      </>
     );
   }
 
@@ -37,7 +36,7 @@ export default async function InstructorAnalyticsPage() {
   const quizStats = data?.quizStats ?? [];
 
   return (
-    <AppShell role="instructor">
+    <>
       <PageHeader title="Аналитика курса" description="Прогресс, тесты, задания и активность слушателей."/>
       <div className="space-y-6">
         <MetricGrid metrics={metrics}/>
@@ -148,6 +147,6 @@ export default async function InstructorAnalyticsPage() {
           },
         ]}/>
       </div>
-    </AppShell>
+    </>
   );
 }

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { AppShell } from "@/components/layout/app-shell";
 import {
   MetricGrid,
   QuestionsQueue,
@@ -27,7 +26,7 @@ export const dynamic = "force-dynamic";
 
 export default function CuratorDashboardPage() {
   return (
-    <AppShell role="curator">
+    <>
       <PageHeader
         title="Дашборд куратора"
         description="Операционные очереди, закрепленные слушатели, риски и быстрый чат."
@@ -35,7 +34,7 @@ export default function CuratorDashboardPage() {
       <Suspense fallback={<PageSkeleton />}>
         <CuratorDashboardContent />
       </Suspense>
-    </AppShell>
+    </>
   );
 }
 

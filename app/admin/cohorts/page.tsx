@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,7 @@ export default async function AdminCohortsPage() {
  const cohorts = await listAdminCohorts();
 
  return (
-  <AppShell role="admin">
+  <>
    <PageHeader title="Потоки (когорты)" description="Управление потоками обучения." />
    <div className="flex justify-end mb-6">
     <Button asChild>
@@ -66,6 +65,6 @@ export default async function AdminCohortsPage() {
      </Card>
     ))}
    </div>
-  </AppShell>
+  </>
  );
 }

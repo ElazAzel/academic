@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/lms/page-header";
 import { requireRolePage } from "@/lib/auth/page-guards";
 import { getAdminCertificatesPageData } from "@/server/modules/page-data/service";
@@ -18,7 +17,7 @@ export default async function AdminCertificatesPage() {
   const { students, courses, certificates } = await getAdminCertificatesPageData();
 
   return (
-    <AppShell role="admin">
+    <>
       <PageHeader
         title="Сертификаты академии"
         description="Выпуск, учет и верификация образовательных сертификатов."
@@ -29,6 +28,6 @@ export default async function AdminCertificatesPage() {
         initialCourses={courses}
         initialCertificates={certificates}
       />
-    </AppShell>
+    </>
   );
 }
