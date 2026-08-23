@@ -1,13 +1,12 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm ci",
-  "regions": ["fra1"],
-  "env": {
-    "NEXT_OUTPUT_MODE": ""
-  },
-  "github": {
-    "silent": false,
-    "autoJobCancelation": true
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
   }
 }
