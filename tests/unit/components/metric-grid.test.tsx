@@ -38,12 +38,12 @@ describe("MetricGrid", () => {
     // Clickable card links to risks page
     const link = criticalValue.closest("a");
     expect(link).toHaveAttribute("href", "/super-curator/risks");
-    // Critical priority adds a visual ring
+    // Critical priority adds a calm destructive border accent
     const card = link?.querySelector(".academy-metric-card");
     expect(card?.className).toBeDefined();
-    expect(card?.className).toContain("ring-m3-error");
+    expect(card?.className).toContain("border-destructive/25");
 
-    // Success metric uses tertiary color
-    expect(screen.getByText("92%").className).toContain("text-m3-tertiary");
+    // Success metric uses the success token
+    expect(screen.getByText("92%").className).toContain("text-success");
   });
 });
