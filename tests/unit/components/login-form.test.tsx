@@ -103,4 +103,45 @@ describe("LoginForm", () => {
     });
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
+
+  it("retries sign-in once when next-auth rejects the callback by CSRF", async () => {
+    const csrfRejected = { error: null, ok: true, status: 200, url: "http://localhost/api/auth/signin?csrf=true" };
+    mockSignIn
+      .mockResolvedValueOnce(csrfRejected)
+      .mockResolvedValueOnce({ error: null, ok: true, status: 200, url: "http://localhost/login" });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      json: () => Promise.resolve({ user: { roles: ["student"] } }),
+    }));
+    const user = userEvent.setup();
+
+    render(<LoginForm oauthProviders={{ google: false, github: false }} />);
+
+    await user.type(screen.getByLabelText(/E-mail/), "student@test.com");
+    await user.type(screen.getByLabelText(/Пароль/), "correct");
+    await user.click(screen.getByRole("button", { name: /Войти в систему/i }));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/student");
+    });
+    expect(mockSignIn).toHaveBeenCalledTimes(2);
+  });
+
+  it("shows an error instead of redirecting to /403 when CSRF rejection repeats", async () => {
+    mockSignIn.mockResolvedValue({ error: null, ok: true, status: 200, url: "http://localhost/api/auth/signin?csrf=true" });
+    const mockFetch = vi.fn();
+    vi.stubGlobal("fetch", mockFetch);
+    const user = userEvent.setup();
+
+    render(<LoginForm oauthProviders={{ google: false, github: false }} />);
+
+    await user.type(screen.getByLabelText(/E-mail/), "student@test.com");
+    await user.type(screen.getByLabelText(/Пароль/), "correct");
+    await user.click(screen.getByRole("button", { name: /Войти в систему/i }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Не удалось войти. Обновите страницу и попробуйте снова.");
+    expect(mockSignIn).toHaveBeenCalledTimes(2);
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
 });
