@@ -2,6 +2,11 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { loginAs } from "./helpers";
 
+// axe проверяет итоговое состояние страницы: без reduced motion он может
+// замерить контраст посреди fade-in перехода (opacity < 1) и дать ложное
+// color-contrast. Приложение уважает prefers-reduced-motion (CSS + framer-motion).
+test.use({ contextOptions: { reducedMotion: "reduce" } });
+
 test.describe("skip-to-content link", () => {
   test("exists on login page", async ({ page }) => {
     await page.goto("/login", { waitUntil: "domcontentloaded" });

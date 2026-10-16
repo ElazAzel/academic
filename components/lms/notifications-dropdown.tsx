@@ -102,17 +102,19 @@ export function NotificationsDropdown() {
     router.push(link);
   }
 
+  const unreadBadge = unreadCount > 9 ? "9+" : unreadCount > 0 ? String(unreadCount) : null;
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
           className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Уведомления"
+          aria-label={unreadBadge ? `Уведомления: ${unreadBadge} непрочитанных` : "Уведомления"}
         >
           <Bell className="h-4 w-4" />
-          {unreadCount > 0 && (
+          {unreadBadge && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
-              {unreadCount > 9 ? "9+" : unreadCount}
+              {unreadBadge}
             </span>
           )}
         </button>
