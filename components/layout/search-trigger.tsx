@@ -12,9 +12,10 @@ export function SearchTrigger() {
         "transition-colors duration-150 hover:bg-muted",
         "md:flex",
       ].join(" ")}
-      aria-label="Поиск по платформе, Ctrl+K"
+      aria-keyshortcuts="Control+K"
     >
       <Icon name="search" size={16} />
+      <span className="sr-only lg:hidden">Поиск</span>
       <span className="hidden lg:inline">Поиск</span>
       <kbd className="ml-auto hidden items-center gap-0.5 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground lg:inline-flex">
         Ctrl K

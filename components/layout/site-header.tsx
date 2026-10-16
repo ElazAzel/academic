@@ -17,11 +17,9 @@ export async function SiteHeader() {
     <header className="site-header sticky top-0 z-30 border-b border-[var(--academy-line)] bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 md:h-16 max-w-7xl items-center justify-between px-3 md:px-6">
         {/* Logo — compact on mobile */}
-        <Link
-          href="/"
-          aria-label={`На главную ${branding.name}`}
-          className="group flex shrink-0 items-center gap-2.5 font-semibold"
-        >
+        <Link href="/" className="group flex shrink-0 items-center gap-2.5 font-semibold">
+          <span className="sr-only">На главную: </span>
+          <span className="sr-only sm:hidden">{branding.name}</span>
           <BrandMark branding={branding} size="sm" className="md:h-9 md:w-9" />
           <span className="hidden sm:flex sm:flex-col sm:leading-none">
             <span className="text-sm text-primary md:text-base font-semibold tracking-tight">

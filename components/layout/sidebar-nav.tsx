@@ -155,7 +155,7 @@ export function SidebarNav({
       {groups.map((group, groupIndex) => (
         <div key={group.label ?? `group-${groupIndex}`} className="flex flex-col gap-0.5">
           {!collapsed && group.label ? (
-            <div className="mb-1 px-3 text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground/70">
+            <div className="mb-1 px-3 text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
               {group.label}
             </div>
           ) : null}
