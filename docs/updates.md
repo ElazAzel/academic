@@ -11,14 +11,20 @@
 - **Audit gate** (`security:dependencies`): runtime-дерево блокирует на high, полное дерево — на critical. Причина: `braces`/`micromatch`/`fast-glob` (через `tailwindcss@3` и `eslint-config-next`) имеют high-advisory без патченной версии; единственный путь — миграция на Tailwind 4 (отдельная задача).
 - **GitHub Actions**: `actions/checkout` 7.0.1, `actions/setup-node` v7, `github/codeql-action` init+analyze 4.38.1 (одновременно — раздельные bump-PR давали CodeQL configuration error).
 - **Dependabot**: npm-группы ограничены minor/patch (мажоры — отдельными PR), `github/codeql-action*` сгруппированы.
+- **E2E впервые после редизайна** (раньше CI падал на ESLint и до E2E не доходил) выявили и закрыли:
+  - a11y (axe, WCAG 2.5.3/1.4.3): `aria-label` логотипа и кнопки поиска не содержал видимый текст; счётчик непрочитанных не входил в имя колокольчика; заголовок группы сайдбара `text-muted-foreground/70` не проходил контраст. В `accessibility-smoke` включён `reducedMotion`, чтобы axe проверял итоговое состояние, а не кадр fade-in.
+  - **Молчаливый провал входа**: гонка CSRF-cookie next-auth v4 — параллельные `/api/auth/session` на странице входа перезаписывали cookie, callback отклонялся (`csrf=true`) без `error`, форма уводила на `/403`. `LoginForm` повторяет `signIn` один раз и показывает понятную ошибку при повторном отказе.
+  - **Дашборд наблюдателя** всегда отдавал fallback: JSON-фильтр Prisma в MySQL-синтаксисе `path: "$.showInReport"` → `["showInReport"]`; регрессионный тест на строковые JSON-пути.
+- `AGENTS.md`: управляемый блок, который `next dev` 16.4 дописывает сам.
 
 ### Verification
 - ESLint `--max-warnings=0`: clean.
 - TypeScript: clean.
-- Vitest: 167 files, 938 tests passed.
+- Vitest: 168 files, 942 tests passed.
 - Production build: passed.
 - `npm run verify:security`: passed; `npm audit --omit=dev`: 0 vulnerabilities.
 - Trivy fs (HIGH,CRITICAL, ignore-unfixed): 0 findings.
+- CI E2E (Chromium + Pixel 7, 252 теста): passed.
 
 ## 2026-08-23 — UX/UI редизайн «Calm Precision»: шелл, иконки, шрифты, дашборд слушателя
 
