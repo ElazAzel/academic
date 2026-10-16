@@ -1,5 +1,25 @@
 # Project Updates
 
+## 2026-10-16 — Починка CI на `main` и разбор Dependabot PR
+
+**Goal**: Вернуть зелёный CI на `main` (ESLint и Security падали на всех PR) и закрыть critical/high advisories.
+
+### Changes
+- **ESLint crash** (`TypeError: expand is not a function`): глобальный override `brace-expansion: 5.0.9` подменял зависимость `minimatch@3` (ESLint, `@eslint/eslintrc`), которой нужен API `brace-expansion@1`. Override разделён по мажорам: `brace-expansion@1 → 1.1.21`, `brace-expansion@5 → 5.0.12` (5.0.9 попал под новые DoS-advisories).
+- **Runtime-уязвимости** закрыты обновлениями: `next` 16.4.2 (critical RCE в 16.0–16.3.7), `nodemailer` 10.1.1 (единственный breaking change 10.x — Node ≥20, совпадает с `engines`), `sharp` 0.35.5, `adm-zip` 0.6.1, `dompurify` 3.4.17, `@tiptap/*` 3.32.0, `prisma`/`@prisma/*` 7.10.1, `vitest` 4.1.12, `eslint-config-next`/`@next/bundle-analyzer` 16.4.2 и транзитивные (`undici`, `prosemirror-view`, `source-map-js`, `js-yaml`, `fast-uri`, `browserslist`) через `npm update`.
+- **`services/gateway-bff`**: `proxy-addr` 2.0.7 → 2.0.8 (critical, ловился Trivy).
+- **Audit gate** (`security:dependencies`): runtime-дерево блокирует на high, полное дерево — на critical. Причина: `braces`/`micromatch`/`fast-glob` (через `tailwindcss@3` и `eslint-config-next`) имеют high-advisory без патченной версии; единственный путь — миграция на Tailwind 4 (отдельная задача).
+- **GitHub Actions**: `actions/checkout` 7.0.1, `actions/setup-node` v7, `github/codeql-action` init+analyze 4.38.1 (одновременно — раздельные bump-PR давали CodeQL configuration error).
+- **Dependabot**: npm-группы ограничены minor/patch (мажоры — отдельными PR), `github/codeql-action*` сгруппированы.
+
+### Verification
+- ESLint `--max-warnings=0`: clean.
+- TypeScript: clean.
+- Vitest: 167 files, 938 tests passed.
+- Production build: passed.
+- `npm run verify:security`: passed; `npm audit --omit=dev`: 0 vulnerabilities.
+- Trivy fs (HIGH,CRITICAL, ignore-unfixed): 0 findings.
+
 ## 2026-08-23 — UX/UI редизайн «Calm Precision»: шелл, иконки, шрифты, дашборд слушателя
 
 **Goal**: Полный визуальный рефакторинг платформы: отказ от M3-стекла и Material Symbols, переход на «Calm Precision» (нейтральная база + один акцент, hairline-бордеры), архитектура шелла на ролейных layout'ах.
