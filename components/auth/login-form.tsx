@@ -48,6 +48,25 @@ async function resolveRedirectPath() {
   return payload?.data?.path ?? "/403";
 }
 
+type CredentialsInput = { email: string; password: string };
+
+function isCsrfRejection(result: Awaited<ReturnType<typeof signIn>>) {
+  return !result?.error && Boolean(result?.url?.includes("csrf=true"));
+}
+
+/**
+ * next-auth v4 выдаёт csrf-cookie первому запросу к /api/auth/* без cookie.
+ * Если на странице входа параллельно идут запросы сессии, их Set-Cookie может
+ * перезаписать токен после того, как signIn уже получил свой из /api/auth/csrf.
+ * Тогда callback отклоняется без `error` (url содержит `csrf=true`), и вход
+ * молча не происходит. Повторная попытка берёт уже устоявшийся токен.
+ */
+async function signInWithCredentials({ email, password }: CredentialsInput) {
+  const attempt = () => signIn("credentials", { email, password, redirect: false });
+  const result = await attempt();
+  return isCsrfRejection(result) ? attempt() : result;
+}
+
 export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFlags }) {
   const router = useRouter();
   const shouldReduce = useReducedMotion();
@@ -76,15 +95,20 @@ export function LoginForm({ oauthProviders }: { oauthProviders: OAuthProviderFla
     setError("");
 
     const formData = new FormData(event.currentTarget);
-    const result = await signIn("credentials", {
+    const result = await signInWithCredentials({
       email: String(formData.get("email") ?? "").trim().toLowerCase(),
       password: String(formData.get("password") ?? ""),
-      redirect: false,
     });
 
     if (result?.error) {
       setPending(false);
       setError("Неверный логин или пароль");
+      return;
+    }
+
+    if (isCsrfRejection(result)) {
+      setPending(false);
+      setError("Не удалось войти. Обновите страницу и попробуйте снова.");
       return;
     }
 

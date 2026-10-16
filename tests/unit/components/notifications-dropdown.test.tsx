@@ -62,6 +62,12 @@ afterEach(() => {
 });
 
 describe("NotificationsDropdown", () => {
+  it("includes the visible unread badge in the trigger's accessible name", () => {
+    render(<NotificationsDropdown />);
+    const trigger = screen.getByRole("button", { name: "Уведомления: 1 непрочитанных" });
+    expect(trigger).toHaveTextContent("1");
+  });
+
   it("does not log raw mark-all response bodies", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     vi.stubGlobal(

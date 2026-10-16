@@ -36,8 +36,8 @@ export async function getCustomerObserverDashboard() {
         where: {
           userId: { in: scopedStudentIds ?? [] },
           status: "ACCEPTED",
-          metadata: { path: "$.showInReport", equals: true },
-        } as any,
+          metadata: { path: ["showInReport"], equals: true },
+        },
         include: {
           assignment: { select: { title: true, courseId: true } },
           user: { select: { id: true, name: true, email: true } },

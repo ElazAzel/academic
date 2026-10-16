@@ -273,7 +273,7 @@ npm run verify
 ### 6. Автоматизированный контроль безопасности
 
 - `npm run verify` проверяет allowlist и наличие закреплённых security skills.
-- `npm run verify:security` запускает проверку security skills и `npm audit --audit-level=high`; high/critical findings блокируют release gate.
+- `npm run verify:security` запускает проверку security skills и двухуровневый `npm audit`: runtime-зависимости (`--omit=dev`) блокируются на high/critical, полное дерево (включая dev-инструменты сборки) — на critical. Dev-only high без патченной версии (например, `braces` через `tailwindcss@3`) не блокируют gate, но фиксируются в `docs/updates.md`.
 - GitHub workflow `.github/workflows/security.yml` выполняет CodeQL, Gitleaks, dependency review, Trivy и формирует CycloneDX SBOM.
 - Исключения Gitleaks должны быть минимальными: конкретное правило, конкретный путь и конкретный документированный fixture. Запрещено исключать целые каталоги приложения или `.agents/skills`.
 
